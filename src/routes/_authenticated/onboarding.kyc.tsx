@@ -39,7 +39,25 @@ export const Route = createFileRoute("/_authenticated/onboarding/kyc")({
   component: KycPage,
 });
 
-type Form = Record<string, string>;
+type Form = {
+  legal_name: string;
+  investor_type: string;
+  email: string;
+  phone: string;
+  date_of_birth: string;
+  tax_id: string;
+  entity_name: string;
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  region: string;
+  postal_code: string;
+  country: string;
+  id_document_type: string;
+  id_document_number: string;
+  id_issuing_country: string;
+  id_expiration: string;
+};
 
 const EMPTY: Form = {
   legal_name: "",
@@ -96,7 +114,7 @@ function KycPage() {
     }));
   }, [data]);
 
-  const set = (key: string) => (value: string) =>
+  const set = (key: keyof Form) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
 
   async function onSubmit(e: React.FormEvent) {
@@ -125,7 +143,7 @@ function KycPage() {
     }
   }
 
-  const isEntity = ["entity", "trust", "ira"].includes(form["investor_type"] ?? "");
+  const isEntity = ["entity", "trust", "ira"].includes(form.investor_type);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -157,7 +175,7 @@ function KycPage() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <Field label="Investor type" error={errors["investor_type"]}>
-                <Select value={form["investor_type"]} onValueChange={set("investor_type")}>
+                <Select value={form.investor_type} onValueChange={set("investor_type")}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="individual">Individual</SelectItem>
@@ -216,7 +234,7 @@ function KycPage() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <Field label="Document type" error={errors["id_document_type"]}>
-                <Select value={form["id_document_type"]} onValueChange={set("id_document_type")}>
+                <Select value={form.id_document_type} onValueChange={set("id_document_type")}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="passport">Passport</SelectItem>
@@ -288,17 +306,17 @@ function Text({
   errors,
 }: {
   label: string;
-  name: string;
+  name: keyof Form;
   type?: string;
-  form: Record<string, string>;
-  set: (key: string) => (value: string) => void;
+  form: Form;
+  set: (key: keyof Form) => (value: string) => void;
   errors: Record<string, string>;
 }) {
   return (
-    <Field label={label} error={errors[name]}>
+    <Field label={label} error={errors[name as string]}>
       <Input
         type={type}
-        value={form[name] ?? ""}
+        value={form[name]}
         maxLength={255}
         onChange={(e) => set(name)(e.target.value)}
       />
