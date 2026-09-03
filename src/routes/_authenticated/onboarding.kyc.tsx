@@ -282,15 +282,17 @@ function KycPage() {
 function Field({
   label,
   error,
+  htmlFor,
   children,
 }: {
   label: string;
   error?: string | undefined;
+  htmlFor?: string | undefined;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label htmlFor={htmlFor}>{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
@@ -313,8 +315,9 @@ function Text({
   errors: Record<string, string>;
 }) {
   return (
-    <Field label={label} error={errors[name as string]}>
+    <Field label={label} error={errors[name as string]} htmlFor={name as string}>
       <Input
+        id={name as string}
         type={type}
         value={form[name]}
         maxLength={255}
