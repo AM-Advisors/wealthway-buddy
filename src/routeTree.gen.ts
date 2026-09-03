@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
+import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
 
 const IndexRoute = IndexRouteImport.update({
@@ -48,6 +49,12 @@ const AuthenticatedOnboardingAmlRoute =
     path: '/onboarding/aml',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOnboardingDocumentsRoute =
+  AuthenticatedOnboardingDocumentsRouteImport.update({
+    id: '/onboarding/documents',
+    path: '/onboarding/documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingKycRoute =
   AuthenticatedOnboardingKycRouteImport.update({
     id: '/onboarding/kyc',
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
+  '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +77,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
+  '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
 }
 export interface FileRoutesById {
@@ -79,6 +88,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
+  '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
 }
 export interface FileRouteTypes {
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
+    | '/onboarding/documents'
     | '/onboarding/kyc'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
+    | '/onboarding/documents'
     | '/onboarding/kyc'
   id:
     | '__root__'
@@ -106,6 +118,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
+    | '/_authenticated/onboarding/documents'
     | '/_authenticated/onboarding/kyc'
   fileRoutesById: FileRoutesById
 }
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingAmlRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/onboarding/documents': {
+      id: '/_authenticated/onboarding/documents'
+      path: '/onboarding/documents'
+      fullPath: '/onboarding/documents'
+      preLoaderRoute: typeof AuthenticatedOnboardingDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/kyc': {
       id: '/_authenticated/onboarding/kyc'
       path: '/onboarding/kyc'
@@ -173,6 +193,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
+  AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
 }
 
@@ -181,6 +202,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,
+  AuthenticatedOnboardingDocumentsRoute: AuthenticatedOnboardingDocumentsRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
 }
 
