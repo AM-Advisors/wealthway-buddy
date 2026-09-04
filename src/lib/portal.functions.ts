@@ -92,6 +92,7 @@ export const getPortal = createServerFn({ method: "GET" })
 
     const documents: PortalDocument[] = (signatures ?? []).map((sig) => ({
       signature_id: sig.id,
+      offering_document_id: sig.offering_document_id,
       title: titleById.get(sig.offering_document_id) ?? "Fund document",
       signer_name: sig.signer_name,
       signed_at: sig.signed_at,
