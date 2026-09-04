@@ -402,8 +402,9 @@ function Portal() {
             <CardHeader>
               <CardTitle className="text-base">Sign your fund documents</CardTitle>
               <CardDescription>
-                Sign the subscription agreement and the private placement memorandum here before you
-                fund. Each signature is stored with a tamper-evident hash, date and audit trail.
+                {useAdobe
+                  ? "Sign the subscription agreement and the private placement memorandum through Adobe Acrobat Sign. Your certified copy returns here automatically, with the exact completion time on record."
+                  : "Sign the subscription agreement and the private placement memorandum here before you fund. Each signature is stored with a tamper-evident hash, date and audit trail."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
