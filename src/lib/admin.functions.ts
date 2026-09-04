@@ -2,15 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Reviewers are admins (all funds) and fund managers (their assigned funds).
+// Row scoping for fund managers is enforced by the database policies.
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
+    .in("role", ["admin", "fund_manager"]);
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin access required.");
+  if (!data || data.length === 0) throw new Error("Forbidden: reviewer access required.");
 }
 
 export const getAdminAccess = createServerFn({ method: "GET" })
@@ -19,11 +20,23 @@ export const getAdminAccess = createServerFn({ method: "GET" })
     const { data } = await context.supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", context.userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    return { isAdmin: Boolean(data) };
+      .eq("user_id", context.userId);
+    const roles = (data ?? []).map((r: any) => r.role as string);
+    const isAdmin = roles.includes("admin");
+    const isFundManager = roles.includes("fund_manager");
+
+    let offeringIds: string[] = [];
+    if (isFundManager && !isAdmin) {
+      const { data: assignments } = await context.supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", context.userId);
+      offeringIds = (assignments ?? []).map((a: any) => a.offering_id as string);
+    }
+
+    return { isAdmin, isFundManager, isReviewer: isAdmin || isFundManager, offeringIds };
   });
+
 
 const queueSchema = z.object({
   filter: z
