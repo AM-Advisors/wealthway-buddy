@@ -12,7 +12,7 @@ function InvestorMessage({
   investorName = 'Investor',
   subject = 'Update on your investment application',
   body = '',
-  offeringName = 'Meridian Capital',
+  offeringName = 'Harmonious',
 }: InvestorMessageProps) {
   const paragraphs = body.split(/\n{2,}/).filter(Boolean)
   return (
@@ -50,6 +50,6 @@ export const template = {
     investorName: 'Jane Doe',
     subject: 'Additional information needed for your application',
     body: 'Thank you for your application.\n\nWe need one more document to complete your accreditation review.',
-    offeringName: 'Meridian Growth Fund II',
+    offeringName: 'Harmonious Growth Fund II',
   },
 } satisfies TemplateEntry

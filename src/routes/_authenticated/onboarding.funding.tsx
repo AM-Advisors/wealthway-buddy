@@ -17,13 +17,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 export const Route = createFileRoute("/_authenticated/onboarding/funding")({
   head: () => ({
     meta: [
-      { title: "Fund Your Subscription — Meridian Investor Portal" },
+      { title: "Fund Your Subscription — Harmonious Investor Portal" },
       {
         name: "description",
         content:
-          "Fund your Meridian subscription by bank wire with a reference code, or authorize an ACH debit from your bank account.",
+          "Fund your Harmonious subscription by bank wire with a reference code, or authorize an ACH debit from your bank account.",
       },
-      { property: "og:title", content: "Fund Your Subscription — Meridian Investor Portal" },
+      { property: "og:title", content: "Fund Your Subscription — Harmonious Investor Portal" },
       { property: "og:description", content: "Choose wire or ACH to complete your capital commitment." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -287,7 +287,7 @@ function FundingStep() {
                     className="mt-1"
                   />
                   <Label htmlFor="authorize" className="font-normal">
-                    I authorize Meridian Capital Partners to debit {money(app?.commitment_cents)} from this
+                    I authorize Harmonious to debit {money(app?.commitment_cents)} from this
                     account for my capital commitment.
                   </Label>
                 </div>

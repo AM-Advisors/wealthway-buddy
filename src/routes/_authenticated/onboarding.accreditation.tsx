@@ -33,16 +33,16 @@ import {
 export const Route = createFileRoute("/_authenticated/onboarding/accreditation")({
   head: () => ({
     meta: [
-      { title: "Accreditation — Meridian Investor Onboarding" },
+      { title: "Accreditation — Harmonious Investor Onboarding" },
       {
         name: "description",
         content:
           "Self-certify accredited investor status for a Reg D 506(b) offering, or upload verification evidence for a 506(c) offering.",
       },
-      { property: "og:title", content: "Accreditation — Meridian" },
+      { property: "og:title", content: "Accreditation — Harmonious" },
       {
         property: "og:description",
-        content: "Step 3 of Meridian investor onboarding: accredited investor status.",
+        content: "Step 3 of Harmonious investor onboarding: accredited investor status.",
       },
     ],
   }),

@@ -297,7 +297,7 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
       .select("offerings(name)")
       .eq("id", data.applicationId)
       .maybeSingle();
-    const offeringName = (offering as any)?.offerings?.name ?? "Meridian Capital";
+    const offeringName = (offering as any)?.offerings?.name ?? "Harmonious";
 
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");

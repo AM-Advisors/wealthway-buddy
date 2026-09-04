@@ -24,13 +24,13 @@ import { prettyStatus, statusTone } from "./admin.index";
 export const Route = createFileRoute("/_authenticated/admin/$applicationId")({
   head: () => ({
     meta: [
-      { title: "Application Review — Meridian Admin" },
+      { title: "Application Review — Harmonious Admin" },
       {
         name: "description",
         content:
           "Review one investor's KYC, AML, accreditation evidence, signed documents and funding, then approve, reject or email them.",
       },
-      { property: "og:title", content: "Application Review — Meridian Admin" },
+      { property: "og:title", content: "Application Review — Harmonious Admin" },
       {
         property: "og:description",
         content: "Compliance detail view for a single investor application.",
@@ -130,7 +130,7 @@ function AdminDetail() {
       <main className="mx-auto max-w-2xl px-4 py-16">
         <h1 className="text-3xl">Restricted</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          This console is limited to Meridian compliance staff.
+          This console is limited to Harmonious compliance staff.
         </p>
       </main>
     );
@@ -396,9 +396,9 @@ function AdminDetail() {
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  setSubject("More information needed for your Meridian subscription");
+                  setSubject("More information needed for your Harmonious subscription");
                   setMessage(
-                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nWhile reviewing your subscription we need additional information before we can complete your accreditation review:\n\n- \n\nPlease upload the documents in your investor portal at your earliest convenience.\n\nKind regards,\nMeridian Capital Partners — Investor Relations`,
+                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nWhile reviewing your subscription we need additional information before we can complete your accreditation review:\n\n- \n\nPlease upload the documents in your investor portal at your earliest convenience.\n\nKind regards,\nHarmonious — Investor Relations`,
                   );
                 }}
               >
@@ -408,9 +408,9 @@ function AdminDetail() {
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  setSubject("Your Meridian subscription has been approved");
+                  setSubject("Your Harmonious subscription has been approved");
                   setMessage(
-                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nYour accreditation and subscription documents have been approved. You may now complete funding by wire or ACH from your investor portal.\n\nKind regards,\nMeridian Capital Partners — Investor Relations`,
+                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nYour accreditation and subscription documents have been approved. You may now complete funding by wire or ACH from your investor portal.\n\nKind regards,\nHarmonious — Investor Relations`,
                   );
                 }}
               >
@@ -420,9 +420,9 @@ function AdminDetail() {
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  setSubject("Update on your Meridian subscription");
+                  setSubject("Update on your Harmonious subscription");
                   setMessage(
-                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nAfter reviewing your application we are unable to accept your subscription at this time.\n\nReason:\n\nPlease reply to this message if you would like to discuss.\n\nKind regards,\nMeridian Capital Partners — Investor Relations`,
+                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nAfter reviewing your application we are unable to accept your subscription at this time.\n\nReason:\n\nPlease reply to this message if you would like to discuss.\n\nKind regards,\nHarmonious — Investor Relations`,
                   );
                 }}
               >
