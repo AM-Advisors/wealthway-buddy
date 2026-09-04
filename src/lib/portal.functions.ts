@@ -33,7 +33,7 @@ export const getPortal = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (!application) {
-      return { profile, application: null, offering: null, documents: [], subscription: null, payment: null };
+      return { profile, application: null, offering: null, documents: [], subscription: null, payment: null, kyc: null };
     }
 
     const [
@@ -91,5 +91,5 @@ export const getPortal = createServerFn({ method: "GET" })
 
     documents.sort((a, b) => a.title.localeCompare(b.title));
 
-    return { profile, application, offering, documents, subscription, payment };
+    return { profile, application, offering, documents, subscription, payment, kyc };
   });
