@@ -156,22 +156,40 @@ function Portal() {
     );
   }, [data?.profile?.legal_name]);
 
-  const signedDocIds = new Set(documents.map((d) => d.offering_document_id));
+  const signatureByDoc = new Map(documents.map((d) => [d.offering_document_id, d]));
+  const completedDocIds = new Set(
+    documents
+      .filter((d) => d.provider !== "adobe_sign" || d.provider_status === "completed")
+      .map((d) => d.offering_document_id),
+  );
   const signableDocs = (data?.offeringDocuments ?? []).filter((d: any) => d.requires_signature);
-  const pendingDocs = signableDocs.filter((d: any) => !signedDocIds.has(d.id));
+  const pendingDocs = signableDocs.filter((d: any) => !completedDocIds.has(d.id));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
+  const useAdobe = providerQuery.data?.provider === "adobe_sign";
 
   async function onSign(documentId: string) {
     if (!consent) {
       toast.error("Please tick the electronic signature consent first.");
       return;
     }
-    if (!signerName.trim()) {
-      toast.error("Enter your full legal name.");
-      return;
-    }
     setSigningId(documentId);
     try {
+      if (useAdobe) {
+        const res = await startAdobe({ data: { offering_document_id: documentId } });
+        if (res.url) {
+          window.open(res.url, "_blank", "noopener,noreferrer");
+          toast.success("Adobe Sign opened in a new tab. This page updates the moment you finish.");
+        } else {
+          toast.success("The document was emailed to you for signature from Adobe Sign.");
+        }
+        await refetch();
+        return;
+      }
+
+      if (!signerName.trim()) {
+        toast.error("Enter your full legal name.");
+        return;
+      }
       await sign({
         data: {
           offering_document_id: documentId,
