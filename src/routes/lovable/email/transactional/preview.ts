@@ -39,7 +39,8 @@ export const Route = createFileRoute("/lovable/email/transactional/preview")({
           const entry = TEMPLATES[name]
           const displayName = entry.displayName || name
 
-          if (!entry.previewData) {
+          const previewData = entry.previewData
+          if (!previewData) {
             results.push({
               templateName: name,
               displayName,
@@ -52,11 +53,11 @@ export const Route = createFileRoute("/lovable/email/transactional/preview")({
 
           try {
             const html = await render(
-              React.createElement(entry.component, entry.previewData)
+              React.createElement(entry.component, previewData)
             )
             const resolvedSubject =
               typeof entry.subject === 'function'
-                ? entry.subject(entry.previewData)
+                ? entry.subject(previewData)
                 : entry.subject
 
             results.push({
