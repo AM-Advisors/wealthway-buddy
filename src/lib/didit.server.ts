@@ -45,7 +45,7 @@ export interface VerifyInput {
 
 export type VerifyResult =
   | { ok: true; variant: SignatureVariant; body: Record<string, any> }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; debug?: Record<string, { got: string; want: string }> };
 
 export function verifyDiditWebhook(input: VerifyInput): VerifyResult {
   const { secret, rawBody } = input;

@@ -38,7 +38,12 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
         });
 
         if (!verified.ok) {
-          console.error("[didit] rejected webhook", verified.reason, rawBody.slice(0, 1000));
+          console.error(
+            "[didit] rejected webhook",
+            verified.reason,
+            "debug" in verified ? JSON.stringify(verified.debug) : "",
+            rawBody.slice(0, 1000),
+          );
           const status = verified.reason === "missing_secret" ? 500 : 401;
           return new Response(JSON.stringify({ error: verified.reason }), {
             status,
