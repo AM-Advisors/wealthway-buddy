@@ -44,7 +44,7 @@ function InvestorMessage({
 
 export const template = {
   component: InvestorMessage,
-  subject: (data: Record<string, any>) => data.subject || 'Update on your investment application',
+  subject: (data: Record<string, any>) => data['subject'] || 'Update on your investment application',
   displayName: 'Investor message',
   previewData: {
     investorName: 'Jane Doe',
