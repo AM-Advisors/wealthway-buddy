@@ -374,3 +374,19 @@ export const decidePayment = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+export const listDiditEvents = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ applicationId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { data: rows, error } = await supabase
+      .from("didit_webhook_events")
+      .select("event_id, webhook_type, status, received_at, error")
+      .eq("application_id", data.applicationId)
+      .order("received_at", { ascending: false })
+      .limit(15);
+    if (error) throw new Error(error.message);
+    return { events: rows ?? [] };
+  });
