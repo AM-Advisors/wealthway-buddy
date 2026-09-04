@@ -92,6 +92,13 @@ function Portal() {
   };
   const [starting, setStarting] = useState(false);
   const sign = useServerFn(signDocument);
+  const startAdobe = useServerFn(startAdobeSigning);
+  const refreshAdobe = useServerFn(refreshAdobeSignatures);
+  const providerQuery = useQuery({
+    queryKey: ["signing-provider"],
+    queryFn: () => getSigningProvider(),
+    staleTime: 5 * 60 * 1000,
+  });
   const [signerName, setSignerName] = useState("");
   const [initials, setInitials] = useState("");
   const [consent, setConsent] = useState(false);
