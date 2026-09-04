@@ -128,7 +128,9 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
           .order("created_at", { ascending: false }),
         supabase
           .from("investor_emails")
-          .select("id, to_email, subject, body, status, provider_error, created_at")
+          .select(
+            "id, to_email, subject, body, status, provider_error, created_at, delivery_event, delivery_event_at, delivery_detail",
+          )
           .eq("application_id", id)
           .order("created_at", { ascending: false }),
       ]);
