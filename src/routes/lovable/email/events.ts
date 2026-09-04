@@ -32,7 +32,7 @@ async function recordDeliveryEvent(eventType: string, event: DeliveryEvent) {
       recipient,
       message_id: event.data.message_id ?? null,
       investor_email_id: emailRow?.id ?? null,
-      payload: event.data as unknown as Record<string, unknown>,
+      payload: JSON.parse(JSON.stringify(event.data)),
     },
     { onConflict: 'event_id', ignoreDuplicates: true },
   )
