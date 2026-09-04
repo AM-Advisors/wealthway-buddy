@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { getPortal } from "@/lib/portal.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { savePdf } from "@/lib/download-pdf";
 import { startIdentityCheck } from "@/lib/didit.functions";
 
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +73,20 @@ function Portal() {
   const download = useServerFn(getSignedDocumentUrl);
   const startCheck = useServerFn(startIdentityCheck);
   const [busy, setBusy] = useState<string | null>(null);
+  const getPdf = useServerFn(downloadOfferingDocument);
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+
+  const downloadPdf = async (documentId: string) => {
+    setPdfBusy(documentId);
+    try {
+      const res = await getPdf({ data: { document_id: documentId } });
+      savePdf(res.filename, res.base64);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not prepare the PDF.");
+    } finally {
+      setPdfBusy(null);
+    }
+  };
   const [starting, setStarting] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
