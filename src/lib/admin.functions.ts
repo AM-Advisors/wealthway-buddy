@@ -337,3 +337,40 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
       return { ok: false, status: "failed" as const, message: "Could not send the email." };
     }
   });
+
+const paymentDecisionSchema = z.object({
+  paymentId: z.string().uuid(),
+  applicationId: z.string().uuid(),
+  outcome: z.enum(["settled", "returned", "cancelled"]),
+});
+
+export const decidePayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => paymentDecisionSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const now = new Date().toISOString();
+
+    const { error } = await supabase
+      .from("payments")
+      .update({
+        status: data.outcome,
+        confirmed_at: data.outcome === "settled" ? now : null,
+        updated_at: now,
+      })
+      .eq("id", data.paymentId);
+    if (error) throw new Error(error.message);
+
+    const { error: appError } = await supabase
+      .from("investor_applications")
+      .update({
+        funding_status: data.outcome,
+        status: data.outcome === "settled" ? "funded" : "submitted",
+        updated_at: now,
+      })
+      .eq("id", data.applicationId);
+    if (appError) throw new Error(appError.message);
+
+    return { ok: true };
+  });
