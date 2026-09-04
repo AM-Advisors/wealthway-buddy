@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { getPortal } from "@/lib/portal.functions";
-import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { getSignedDocumentUrl, signDocument } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { startIdentityCheck } from "@/lib/didit.functions";
