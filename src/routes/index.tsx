@@ -41,9 +41,14 @@ function Index() {
             <Link to={session ? "/onboarding/kyc" : "/auth"}>Begin your application</Link>
           </Button>
           {session && (
-            <Button asChild size="lg" variant="outline">
-              <Link to="/dashboard">View application status</Link>
-            </Button>
+            <>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/dashboard">View application status</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/portal">Investor portal</Link>
+              </Button>
+            </>
           )}
         </div>
         <ol className="mt-16 grid gap-6 sm:grid-cols-2">
