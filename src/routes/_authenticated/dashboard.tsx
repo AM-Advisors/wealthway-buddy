@@ -11,13 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Application Status — Meridian Investor Portal" },
+      { title: "Application Status — Harmonious Investor Portal" },
       {
         name: "description",
         content:
-          "Track your KYC, AML screening, accreditation, document signing and funding status for your Meridian fund subscription.",
+          "Track your KYC, AML screening, accreditation, document signing and funding status for your Harmonious fund subscription.",
       },
-      { property: "og:title", content: "Application Status — Meridian Investor Portal" },
+      { property: "og:title", content: "Application Status — Harmonious Investor Portal" },
       {
         property: "og:description",
         content: "Live status of every step in your investor onboarding.",

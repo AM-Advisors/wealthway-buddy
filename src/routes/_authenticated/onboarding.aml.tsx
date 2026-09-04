@@ -25,16 +25,16 @@ import {
 export const Route = createFileRoute("/_authenticated/onboarding/aml")({
   head: () => ({
     meta: [
-      { title: "AML Questionnaire — Meridian Investor Onboarding" },
+      { title: "AML Questionnaire — Harmonious Investor Onboarding" },
       {
         name: "description",
         content:
           "Declare source of funds, source of wealth, PEP status and sanctions exposure to complete anti-money-laundering screening.",
       },
-      { property: "og:title", content: "AML Questionnaire — Meridian" },
+      { property: "og:title", content: "AML Questionnaire — Harmonious" },
       {
         property: "og:description",
-        content: "Step 2 of Meridian investor onboarding: anti-money-laundering declarations.",
+        content: "Step 2 of Harmonious investor onboarding: anti-money-laundering declarations.",
       },
     ],
   }),

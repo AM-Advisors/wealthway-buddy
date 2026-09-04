@@ -5,13 +5,13 @@ import { useAuth } from "@/hooks/useAuth";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Meridian Capital Partners — Investor Onboarding" },
+      { title: "Harmonious — Investor Onboarding" },
       {
         name: "description",
         content:
-          "Complete KYC identity verification, AML screening, accreditation, document signing and funding for your Meridian fund subscription.",
+          "Complete KYC identity verification, AML screening, accreditation, document signing and funding for your Harmonious fund subscription.",
       },
-      { property: "og:title", content: "Meridian Capital Partners — Investor Onboarding" },
+      { property: "og:title", content: "Harmonious — Investor Onboarding" },
       {
         property: "og:description",
         content: "A guided, compliant subscription process for qualified investors.",
@@ -30,7 +30,7 @@ function Index() {
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Private placement · Qualified investors
         </p>
-        <h1 className="mt-6 text-5xl leading-tight">Meridian Capital Partners</h1>
+        <h1 className="mt-6 text-5xl leading-tight">Harmonious</h1>
         <p className="mt-6 max-w-xl text-muted-foreground">
           Subscribe in one guided flow: identity verification, anti-money-laundering screening,
           accreditation under Rule 506(b) or 506(c), fund document review and e-signature, then wire

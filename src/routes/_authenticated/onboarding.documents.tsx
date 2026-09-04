@@ -28,16 +28,16 @@ import {
 export const Route = createFileRoute("/_authenticated/onboarding/documents")({
   head: () => ({
     meta: [
-      { title: "Fund Documents & E-Signature — Meridian Investor Onboarding" },
+      { title: "Fund Documents & E-Signature — Harmonious Investor Onboarding" },
       {
         name: "description",
         content:
           "Review the private placement memorandum, operating agreement and subscription agreement, then sign electronically with a full audit trail.",
       },
-      { property: "og:title", content: "Fund Documents & E-Signature — Meridian" },
+      { property: "og:title", content: "Fund Documents & E-Signature — Harmonious" },
       {
         property: "og:description",
-        content: "Step 4 of Meridian investor onboarding: review and sign the fund documents.",
+        content: "Step 4 of Harmonious investor onboarding: review and sign the fund documents.",
       },
     ],
   }),

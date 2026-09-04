@@ -11,16 +11,16 @@ import { useAuth } from "@/hooks/useAuth";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Investor Sign In — Meridian Capital Partners" },
+      { title: "Investor Sign In — Harmonious" },
       {
         name: "description",
         content:
           "Sign in or create an investor account to complete identity verification, AML screening and your subscription.",
       },
-      { property: "og:title", content: "Investor Sign In — Meridian Capital Partners" },
+      { property: "og:title", content: "Investor Sign In — Harmonious" },
       {
         property: "og:description",
-        content: "Access the Meridian investor onboarding portal.",
+        content: "Access the Harmonious investor onboarding portal.",
       },
     ],
   }),

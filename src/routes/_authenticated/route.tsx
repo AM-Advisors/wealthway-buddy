@@ -34,7 +34,7 @@ function AuthenticatedLayout() {
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <Link to="/" className="font-display text-lg">
-            Meridian Capital Partners
+            Harmonious
           </Link>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">

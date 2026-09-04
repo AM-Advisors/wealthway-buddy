@@ -23,16 +23,16 @@ import { Badge } from "@/components/ui/badge";
 export const Route = createFileRoute("/_authenticated/onboarding/kyc")({
   head: () => ({
     meta: [
-      { title: "Identity Verification (KYC) — Meridian Investor Onboarding" },
+      { title: "Identity Verification (KYC) — Harmonious Investor Onboarding" },
       {
         name: "description",
         content:
-          "Provide your legal identity, address and government ID details to complete KYC for your Meridian fund subscription.",
+          "Provide your legal identity, address and government ID details to complete KYC for your Harmonious fund subscription.",
       },
-      { property: "og:title", content: "Identity Verification (KYC) — Meridian" },
+      { property: "og:title", content: "Identity Verification (KYC) — Harmonious" },
       {
         property: "og:description",
-        content: "Step 1 of the Meridian investor onboarding: know-your-customer identity details.",
+        content: "Step 1 of the Harmonious investor onboarding: know-your-customer identity details.",
       },
     ],
   }),

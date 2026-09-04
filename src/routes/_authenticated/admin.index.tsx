@@ -11,13 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
-      { title: "Compliance Review Queue — Meridian Admin" },
+      { title: "Compliance Review Queue — Harmonious Admin" },
       {
         name: "description",
         content:
           "Review investor applications: KYC, AML screening, accreditation evidence, signed fund documents and funding status.",
       },
-      { property: "og:title", content: "Compliance Review Queue — Meridian Admin" },
+      { property: "og:title", content: "Compliance Review Queue — Harmonious Admin" },
       {
         property: "og:description",
         content: "Internal console for reviewing and approving investor onboarding applications.",
@@ -74,7 +74,7 @@ function AdminQueue() {
       <main className="mx-auto max-w-2xl px-4 py-16">
         <h1 className="text-3xl">Restricted</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          This console is limited to Meridian compliance staff. If you believe you should have access,
+          This console is limited to Harmonious compliance staff. If you believe you should have access,
           contact the fund administrator.
         </p>
         <Button asChild variant="outline" className="mt-6">
