@@ -26,7 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { listDeliveryLog } from "@/lib/email-delivery.functions";
-import { prettyStatus, statusTone } from "@/lib/status";
+import { money, prettyStatus, statusTone } from "@/lib/status";
 
 export interface ApplicationReviewProps {
   applicationId: string;
