@@ -1,0 +1,2 @@
+CREATE POLICY "own payments insert" ON public.payments FOR INSERT TO authenticated WITH CHECK (public.owns_application(application_id));
+CREATE POLICY "own payments update" ON public.payments FOR UPDATE TO authenticated USING (public.owns_application(application_id)) WITH CHECK (public.owns_application(application_id));
