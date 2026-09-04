@@ -251,8 +251,47 @@ function Portal() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Fund documents</CardTitle>
+              <CardDescription>
+                The full paperwork for {data?.offering?.name ?? "your fund"}, as downloadable PDFs.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(data?.offeringDocuments ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No fund documents have been published yet.
+                </p>
+              ) : (
+                (data?.offeringDocuments ?? []).map((doc: any) => (
+                  <div
+                    key={doc.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                  >
+                    <div>
+                      <p className="font-medium">{doc.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {String(doc.doc_type).replace(/_/g, " ")} ·{" "}
+                        {doc.requires_signature ? "signature required" : "review only"}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={pdfBusy === doc.id}
+                      onClick={() => downloadPdf(doc.id)}
+                    >
+                      {pdfBusy === doc.id ? "Preparing…" : "Download PDF"}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
+
             <CardHeader>
               <CardTitle className="text-base">Your signed documents</CardTitle>
               <CardDescription>
