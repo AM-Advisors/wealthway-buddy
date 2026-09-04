@@ -58,12 +58,14 @@ function AdminQueue() {
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isAdmin;
+  const isReviewer = accessQuery.data?.isReviewer;
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-queue", filter],
     queryFn: () => load({ data: { filter } }),
-    enabled: isAdmin === true,
+    enabled: isReviewer === true,
   });
+
 
   if (accessQuery.isLoading) {
     return <main className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Loading…</main>;
