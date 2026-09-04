@@ -44,8 +44,8 @@ export const Route = createFileRoute("/api/public/webhooks/adobe-sign")({
         try {
           const { syncAdobeAgreement } = await import("@/lib/adobe-sign-complete.server");
           const result = await syncAdobeAgreement(agreementId, {
-            status: status ?? undefined,
-            completedAt: body?.event_date ? new Date(body.event_date).toISOString() : undefined,
+            ...(status ? { status } : {}),
+            ...(body?.event_date ? { completedAt: new Date(body.event_date).toISOString() } : {}),
           });
           console.log("[adobe-sign] webhook", event, agreementId, result.status);
         } catch (e) {

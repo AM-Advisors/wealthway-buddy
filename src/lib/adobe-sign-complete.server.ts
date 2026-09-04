@@ -65,7 +65,7 @@ export async function syncAdobeAgreement(
 
   const { error: updateError } = await supabaseAdmin
     .from("document_signatures")
-    .update(patch)
+    .update(patch as never)
     .eq("id", signature.id);
   if (updateError) throw new Error(updateError.message);
 
@@ -174,6 +174,7 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
     for (const manager of managers ?? []) {
       if (!manager.email) continue;
       await sendTemplateEmail("document-signed", manager.email, {
+        templateData: {
         managerName: manager.legal_name ?? "there",
         investorName: investor?.legal_name ?? "An investor",
         offeringName: offering?.name ?? "your fund",
@@ -181,6 +182,7 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
         signedAt,
         commitmentCents: application.commitment_cents ?? 0,
         portalUrl: `https://onboard.harmonious.co/manager/${applicationId}`,
+        },
       }).catch((e) => console.error("[adobe-sign] manager email failed", e));
     }
 

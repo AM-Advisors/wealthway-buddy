@@ -105,7 +105,7 @@ export const startAdobeSigning = createServerFn({ method: "POST" })
       name: `${offering?.name ?? "Harmonious"} — ${doc.title}`,
       transientDocumentId,
       signerEmail: profile.email,
-      signerName: profile.legal_name ?? undefined,
+      signerName: profile.legal_name ?? profile.email,
       message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
       externalId: `${application.id}:${doc.id}`,
     });
