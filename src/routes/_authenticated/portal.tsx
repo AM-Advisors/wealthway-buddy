@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { getPortal } from "@/lib/portal.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { startIdentityCheck } from "@/lib/didit.functions";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,9 +69,38 @@ function money(cents: number | null | undefined) {
 function Portal() {
   const load = useServerFn(getPortal);
   const download = useServerFn(getSignedDocumentUrl);
+  const startCheck = useServerFn(startIdentityCheck);
   const [busy, setBusy] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
 
-  const { data, isLoading } = useQuery({ queryKey: ["portal"], queryFn: () => load() });
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["portal"],
+    queryFn: () => load(),
+    // Keep polling while any check is still moving so webhook results appear live.
+    refetchInterval: (query) => {
+      const app = query.state.data?.application;
+      if (!app) return false;
+      const open = [app.kyc_status, app.aml_status].some(
+        (s) => s === "pending" || s === "review" || s === "not_started",
+      );
+      return open ? 8000 : false;
+    },
+    refetchOnWindowFocus: true,
+  });
+
+  async function startVerification() {
+    setStarting(true);
+    try {
+      const res = await startCheck({});
+      window.open(res.url, "_blank", "noopener,noreferrer");
+      toast.success("Verification opened in a new tab. This page updates as soon as it completes.");
+      void refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not start identity verification.");
+    } finally {
+      setStarting(false);
+    }
+  }
 
   async function openDocument(signatureId: string) {
     setBusy(signatureId);
@@ -85,6 +116,7 @@ function Portal() {
 
   const app = data?.application;
   const documents = data?.documents ?? [];
+
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -147,6 +179,45 @@ function Portal() {
           </Card>
 
           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-base">Identity verification</CardTitle>
+                <CardDescription>
+                  Verify your ID and selfie with our secure verification partner. Your identity and
+                  watchlist results update here automatically — usually within a minute.
+                </CardDescription>
+              </div>
+              <Badge variant={tone(app.kyc_status)}>{label(app.kyc_status)}</Badge>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-center gap-3">
+              {app.kyc_status === "approved" ? (
+                <p className="text-sm text-muted-foreground">
+                  Your identity is verified. No further action needed.
+                </p>
+              ) : app.kyc_status === "declined" ? (
+                <p className="text-sm text-muted-foreground">
+                  We couldn't verify your identity. Contact the fund team and we'll help you retry.
+                </p>
+              ) : (
+                <>
+                  <Button size="sm" disabled={starting} onClick={startVerification}>
+                    {starting
+                      ? "Opening…"
+                      : data?.kyc?.session_url
+                        ? "Continue verification"
+                        : "Start verification"}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    {app.kyc_status === "review"
+                      ? "Submitted — a reviewer is finishing the check."
+                      : "Opens in a new tab; come back here when you're done."}
+                  </span>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Compliance checks</CardTitle>
               <CardDescription>Updated automatically as each review completes.</CardDescription>
@@ -163,6 +234,7 @@ function Portal() {
               <Row title="Funding" status={app.funding_status} />
             </CardContent>
           </Card>
+
 
           <Card>
             <CardHeader>
