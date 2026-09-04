@@ -332,6 +332,38 @@ export type Database = {
           },
         ]
       }
+      fund_managers: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          offering_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          offering_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          offering_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_managers_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_applications: {
         Row: {
           accreditation_status: Database["public"]["Enums"]["check_status"]
@@ -447,6 +479,38 @@ export type Database = {
           },
         ]
       }
+      investor_fund_access: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          offering_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          offering_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          offering_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_fund_access_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           application_id: string
@@ -505,6 +569,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          failure_reason: string | null
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          success: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       offering_documents: {
         Row: {
@@ -849,7 +946,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "investor"
+      app_role: "admin" | "investor" | "fund_manager"
       check_status:
         | "not_started"
         | "pending"
@@ -994,7 +1091,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "investor"],
+      app_role: ["admin", "investor", "fund_manager"],
       check_status: [
         "not_started",
         "pending",
