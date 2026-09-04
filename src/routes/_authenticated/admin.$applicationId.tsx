@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   addAdminNote,
   decideApplication,
+  decidePayment,
   getAdminAccess,
   getAdminFileUrl,
   getApplicationDetail,
@@ -57,6 +58,7 @@ function AdminDetail() {
   const note = useServerFn(addAdminNote);
   const fileUrl = useServerFn(getAdminFileUrl);
   const email = useServerFn(sendInvestorEmail);
+  const payment = useServerFn(decidePayment);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isAdmin;
@@ -81,6 +83,16 @@ function AdminDetail() {
       decide({ data: { applicationId, ...vars } }),
     onSuccess: () => {
       toast.success("Decision recorded");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const paymentMutation = useMutation({
+    mutationFn: (vars: { paymentId: string; outcome: "settled" | "returned" | "cancelled" }) =>
+      payment({ data: { applicationId, ...vars } }),
+    onSuccess: () => {
+      toast.success("Funding status updated");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -373,7 +385,28 @@ function AdminDetail() {
                     {p.method.toUpperCase()} · {money(p.amount_cents)}
                     {p.reference_code ? ` · ref ${p.reference_code}` : ""}
                   </span>
-                  <Badge variant={statusTone(p.status)}>{prettyStatus(p.status)}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={statusTone(p.status)}>{prettyStatus(p.status)}</Badge>
+                    {p.status !== "settled" && (
+                      <>
+                        <Button
+                          size="sm"
+                          disabled={paymentMutation.isPending}
+                          onClick={() => paymentMutation.mutate({ paymentId: p.id, outcome: "settled" })}
+                        >
+                          Confirm funds received
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={paymentMutation.isPending}
+                          onClick={() => paymentMutation.mutate({ paymentId: p.id, outcome: "returned" })}
+                        >
+                          Returned
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
