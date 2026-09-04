@@ -67,9 +67,38 @@ function money(cents: number | null | undefined) {
 function Portal() {
   const load = useServerFn(getPortal);
   const download = useServerFn(getSignedDocumentUrl);
+  const startCheck = useServerFn(startIdentityCheck);
   const [busy, setBusy] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
 
-  const { data, isLoading } = useQuery({ queryKey: ["portal"], queryFn: () => load() });
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["portal"],
+    queryFn: () => load(),
+    // Keep polling while any check is still moving so webhook results appear live.
+    refetchInterval: (query) => {
+      const app = query.state.data?.application;
+      if (!app) return false;
+      const open = [app.kyc_status, app.aml_status].some(
+        (s) => s === "pending" || s === "review" || s === "not_started",
+      );
+      return open ? 8000 : false;
+    },
+    refetchOnWindowFocus: true,
+  });
+
+  async function startVerification() {
+    setStarting(true);
+    try {
+      const res = await startCheck({});
+      window.open(res.url, "_blank", "noopener,noreferrer");
+      toast.success("Verification opened in a new tab. This page updates as soon as it completes.");
+      void refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not start identity verification.");
+    } finally {
+      setStarting(false);
+    }
+  }
 
   async function openDocument(signatureId: string) {
     setBusy(signatureId);
@@ -85,6 +114,7 @@ function Portal() {
 
   const app = data?.application;
   const documents = data?.documents ?? [];
+
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
