@@ -424,25 +424,27 @@ function Portal() {
                 </div>
               ) : (
                 <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="portal_signer">Full legal name (your signature)</Label>
-                      <Input
-                        id="portal_signer"
-                        value={signerName}
-                        onChange={(e) => setSignerName(e.target.value)}
-                      />
-                      <p className="font-display text-2xl">{signerName || "—"}</p>
+                  {!useAdobe && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="portal_signer">Full legal name (your signature)</Label>
+                        <Input
+                          id="portal_signer"
+                          value={signerName}
+                          onChange={(e) => setSignerName(e.target.value)}
+                        />
+                        <p className="font-display text-2xl">{signerName || "—"}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="portal_initials">Initials</Label>
+                        <Input
+                          id="portal_initials"
+                          value={initials}
+                          onChange={(e) => setInitials(e.target.value.toUpperCase())}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="portal_initials">Initials</Label>
-                      <Input
-                        id="portal_initials"
-                        value={initials}
-                        onChange={(e) => setInitials(e.target.value.toUpperCase())}
-                      />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="flex items-start gap-3">
                     <Checkbox
@@ -451,14 +453,19 @@ function Portal() {
                       onCheckedChange={(v) => setConsent(v === true)}
                     />
                     <Label htmlFor="portal_consent" className="text-sm font-normal leading-relaxed">
-                      I agree to sign electronically and that my typed name is my legal signature
-                      under the U.S. E-SIGN Act.
+                      {useAdobe
+                        ? "I agree to sign this agreement electronically through Adobe Acrobat Sign, under the U.S. E-SIGN Act."
+                        : "I agree to sign electronically and that my typed name is my legal signature under the U.S. E-SIGN Act."}
                     </Label>
                   </div>
 
                   <div className="space-y-3">
                     {signableDocs.map((doc: any) => {
-                      const signed = signedDocIds.has(doc.id);
+                      const sig = signatureByDoc.get(doc.id);
+                      const signed = completedDocIds.has(doc.id);
+                      const waiting =
+                        sig?.provider === "adobe_sign" && sig.provider_status === "out_for_signature";
+                      const completedAt = sig?.provider_completed_at ?? (signed ? sig?.signed_at : null);
                       return (
                         <div
                           key={doc.id}
