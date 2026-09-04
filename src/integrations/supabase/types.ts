@@ -294,6 +294,44 @@ export type Database = {
           },
         ]
       }
+      email_delivery_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          investor_email_id: string | null
+          message_id: string | null
+          payload: Json
+          received_at: string
+          recipient: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          investor_email_id?: string | null
+          message_id?: string | null
+          payload?: Json
+          received_at?: string
+          recipient: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          investor_email_id?: string | null
+          message_id?: string | null
+          payload?: Json
+          received_at?: string
+          recipient?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_delivery_events_investor_email_id_fkey"
+            columns: ["investor_email_id"]
+            isOneToOne: false
+            referencedRelation: "investor_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_applications: {
         Row: {
           accreditation_status: Database["public"]["Enums"]["check_status"]
@@ -358,6 +396,9 @@ export type Database = {
           application_id: string
           body: string
           created_at: string
+          delivery_detail: string | null
+          delivery_event: string | null
+          delivery_event_at: string | null
           id: string
           provider_error: string | null
           sent_by: string
@@ -370,6 +411,9 @@ export type Database = {
           application_id: string
           body: string
           created_at?: string
+          delivery_detail?: string | null
+          delivery_event?: string | null
+          delivery_event_at?: string | null
           id?: string
           provider_error?: string | null
           sent_by: string
@@ -382,6 +426,9 @@ export type Database = {
           application_id?: string
           body?: string
           created_at?: string
+          delivery_detail?: string | null
+          delivery_event?: string | null
+          delivery_event_at?: string | null
           id?: string
           provider_error?: string | null
           sent_by?: string
