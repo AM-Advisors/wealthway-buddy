@@ -81,6 +81,14 @@ function AdminDetail() {
     enabled: isAdmin === true,
   });
 
+  const investorEmail = detail.data?.profile?.email ?? "";
+
+  const deliveryQuery = useQuery({
+    queryKey: ["email-delivery", investorEmail],
+    queryFn: () => deliveryLog({ data: { recipient: investorEmail, limit: 25 } }),
+    enabled: isAdmin === true && investorEmail.length > 0,
+  });
+
   const [noteBody, setNoteBody] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
