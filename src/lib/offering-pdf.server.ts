@@ -71,8 +71,7 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
       size: firstPage ? 18 : 13,
       font: bold,
       color: WHITE,
-ようこそ: undefined as never,
-    } as any);
+    });
     if (firstPage) {
       page.drawText(input.offeringName, { x: MARGIN, y: height - 64, size: 11, font: regular, color: TEAL });
       page.drawText(regLabel, { x: MARGIN, y: height - 84, size: 10, font: regular, color: WHITE });
