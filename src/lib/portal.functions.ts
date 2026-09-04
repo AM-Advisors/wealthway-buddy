@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export interface PortalDocument {
   signature_id: string;
+  offering_document_id: string;
   title: string;
   signer_name: string;
   signed_at: string | null;
