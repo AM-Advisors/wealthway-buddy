@@ -1,0 +1,1 @@
+GRANT INSERT, UPDATE, DELETE ON public.offering_wire_instructions TO authenticated;

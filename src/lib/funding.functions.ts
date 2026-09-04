@@ -65,11 +65,21 @@ export const getFunding = createServerFn({ method: "GET" })
 
     if (!application) return { application: null, offering: null, payment: null, reference: null };
 
-    const { data: offering } = await supabase
+    const { data: offeringRow } = await supabase
       .from("offerings")
-      .select("id, name, wire_instructions, min_investment_cents")
+      .select("id, name, min_investment_cents")
       .eq("id", application.offering_id)
       .maybeSingle();
+
+    const { data: wireRow } = await supabase
+      .from("offering_wire_instructions")
+      .select("details")
+      .eq("offering_id", application.offering_id)
+      .maybeSingle();
+
+    const offering = offeringRow
+      ? { ...offeringRow, wire_instructions: ((wireRow as any)?.details ?? {}) as Record<string, string> }
+      : null;
 
     const { data: payment } = await supabase
       .from("payments")

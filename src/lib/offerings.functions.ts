@@ -3,7 +3,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function assertAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden: admin access required.");
 }
@@ -76,6 +81,14 @@ export const listOfferings = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("offering_id");
 
+    const { data: wireRows } = await context.supabase
+      .from("offering_wire_instructions")
+      .select("offering_id, details");
+
+    const wireByOffering = new Map<string, Record<string, string>>(
+      (wireRows ?? []).map((w: any) => [w.offering_id as string, (w.details ?? {}) as Record<string, string>]),
+    );
+
     const counts: Record<string, number> = {};
     for (const row of applications ?? []) {
       const key = (row as any).offering_id as string;
@@ -85,7 +98,7 @@ export const listOfferings = createServerFn({ method: "GET" })
     return {
       offerings: (offerings ?? []).map((o: any) => ({
         ...o,
-        wire_instructions: (o.wire_instructions ?? {}) as Record<string, string>,
+        wire_instructions: wireByOffering.get(o.id) ?? {},
         documents: (documents ?? []).filter((d: any) => d.offering_id === o.id),
         applicationCount: counts[o.id] ?? 0,
       })),
@@ -106,24 +119,36 @@ export const saveOffering = createServerFn({ method: "POST" })
       min_investment_cents: data.min_investment_cents,
       target_raise_cents: data.target_raise_cents,
       is_open: data.is_open,
-      wire_instructions: Object.fromEntries(
-        Object.entries(data.wire_instructions).filter(([, v]) => String(v).trim() !== ""),
-      ),
     };
 
-    if (data.id) {
-      const { error } = await context.supabase.from("offerings").update(payload).eq("id", data.id);
+    const wireDetails = Object.fromEntries(
+      Object.entries(data.wire_instructions).filter(([, v]) => String(v).trim() !== ""),
+    );
+
+    let offeringId = data.id;
+
+    if (offeringId) {
+      const { error } = await context.supabase.from("offerings").update(payload).eq("id", offeringId);
       if (error) throw new Error(error.message);
-      return { id: data.id };
+    } else {
+      const { data: inserted, error } = await context.supabase
+        .from("offerings")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      offeringId = (inserted as any).id as string;
     }
 
-    const { data: inserted, error } = await context.supabase
-      .from("offerings")
-      .insert(payload)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    return { id: (inserted as any).id as string };
+    const { error: wireError } = await context.supabase
+      .from("offering_wire_instructions")
+      .upsert(
+        { offering_id: offeringId, details: wireDetails, updated_at: new Date().toISOString() },
+        { onConflict: "offering_id" },
+      );
+    if (wireError) throw new Error(wireError.message);
+
+    return { id: offeringId };
   });
 
 export const saveOfferingDocument = createServerFn({ method: "POST" })
