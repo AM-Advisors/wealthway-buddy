@@ -1,0 +1,233 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { getPortal } from "@/lib/portal.functions";
+import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+export const Route = createFileRoute("/_authenticated/portal")({
+  head: () => ({
+    meta: [
+      { title: "Investor Portal — Harmonious" },
+      {
+        name: "description",
+        content:
+          "Your Harmonious investor portal: review your subscription status, compliance checks, funding details and download your signed fund documents.",
+      },
+      { property: "og:title", content: "Investor Portal — Harmonious" },
+      {
+        property: "og:description",
+        content: "Application status, funding details and signed fund documents in one place.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Portal,
+});
+
+const STATUS_LABEL: Record<string, string> = {
+  not_started: "Not started",
+  pending: "Pending",
+  in_progress: "In progress",
+  review: "In review",
+  approved: "Approved",
+  declined: "Declined",
+  awaiting_wire: "Awaiting wire",
+  processing: "Processing",
+  settled: "Received",
+  returned: "Returned",
+  cancelled: "Cancelled",
+  funded: "Funded",
+  draft: "Draft",
+};
+
+function label(value: string | null | undefined) {
+  if (!value) return "Not started";
+  return STATUS_LABEL[value] ?? value.replace(/_/g, " ");
+}
+
+function tone(value: string | null | undefined) {
+  if (value === "approved" || value === "settled" || value === "funded") return "default" as const;
+  if (value === "declined" || value === "returned" || value === "cancelled") return "destructive" as const;
+  return "secondary" as const;
+}
+
+function money(cents: number | null | undefined) {
+  if (!cents && cents !== 0) return "—";
+  return `$${(cents / 100).toLocaleString("en-US")}`;
+}
+
+function Portal() {
+  const load = useServerFn(getPortal);
+  const download = useServerFn(getSignedDocumentUrl);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({ queryKey: ["portal"], queryFn: () => load() });
+
+  async function openDocument(signatureId: string) {
+    setBusy(signatureId);
+    try {
+      const res = await download({ data: { signature_id: signatureId } });
+      window.open(res.url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not open that document.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const app = data?.application;
+  const documents = data?.documents ?? [];
+
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl">Investor portal</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {data?.profile?.legal_name ? `${data.profile.legal_name} — ` : ""}
+            {data?.offering?.name ?? "Your fund subscription"}
+            {data?.offering?.reg_type ? ` (Reg D ${data.offering.reg_type})` : ""}
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/dashboard">Continue onboarding</Link>
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <p className="mt-10 text-sm text-muted-foreground">Loading your application…</p>
+      ) : !app ? (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-base">No application yet</CardTitle>
+            <CardDescription>Start your subscription to see status and documents here.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="sm">
+              <Link to="/onboarding/kyc">Begin your application</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="mt-8 space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-base">Subscription</CardTitle>
+                <CardDescription>Overall status of your commitment.</CardDescription>
+              </div>
+              <Badge variant={tone(app.status)}>{label(app.status)}</Badge>
+            </CardHeader>
+            <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+              <Detail term="Commitment" value={money(data?.subscription?.commitment_cents)} />
+              <Detail term="Title held as" value={data?.subscription?.ownership_title ?? "—"} />
+              <Detail
+                term="Funding method"
+                value={data?.payment?.method ? data.payment.method.toUpperCase() : "Not chosen"}
+              />
+              <Detail term="Reference code" value={data?.payment?.reference_code ?? "—"} />
+              <Detail term="Funds" value={label(data?.payment?.status ?? app.funding_status)} />
+              <Detail
+                term="Confirmed"
+                value={
+                  data?.payment?.confirmed_at
+                    ? new Date(data.payment.confirmed_at).toLocaleDateString()
+                    : "—"
+                }
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Compliance checks</CardTitle>
+              <CardDescription>Updated automatically as each review completes.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <Row title="Identity verification" status={app.kyc_status} />
+              <Separator />
+              <Row title="AML screening" status={app.aml_status} />
+              <Separator />
+              <Row title="Accreditation" status={app.accreditation_status} />
+              <Separator />
+              <Row title="Fund documents" status={app.documents_status} />
+              <Separator />
+              <Row title="Funding" status={app.funding_status} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Your signed documents</CardTitle>
+              <CardDescription>
+                Download links open a secure copy that expires after five minutes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {documents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nothing signed yet. Signed copies appear here as soon as you complete the fund
+                  documents step.
+                </p>
+              ) : (
+                documents.map((doc) => (
+                  <div
+                    key={doc.signature_id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                  >
+                    <div>
+                      <p className="font-medium">{doc.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Signed by {doc.signer_name}
+                        {doc.signed_at ? ` on ${new Date(doc.signed_at).toLocaleDateString()}` : ""}
+                        {doc.document_hash ? ` · ${doc.document_hash.slice(0, 12)}…` : ""}
+                      </p>
+                    </div>
+                    {doc.downloadable ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy === doc.signature_id}
+                        onClick={() => openDocument(doc.signature_id)}
+                      >
+                        {busy === doc.signature_id ? "Preparing…" : "Download"}
+                      </Button>
+                    ) : (
+                      <Badge variant="outline">Preparing copy</Badge>
+                    )}
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </main>
+  );
+}
+
+function Detail({ term, value }: { term: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{term}</p>
+      <p className="font-medium">{value}</p>
+    </div>
+  );
+}
+
+function Row({ title, status }: { title: string; status: string | null }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span>{title}</span>
+      <Badge variant={tone(status)}>{label(status)}</Badge>
+    </div>
+  );
+}
