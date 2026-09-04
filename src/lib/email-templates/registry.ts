@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { template as investorMessage } from './investor-message'
+import { template as documentSigned } from './document-signed'
 
 
 export interface TemplateEntry {
