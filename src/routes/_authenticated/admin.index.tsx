@@ -7,6 +7,9 @@ import { getAdminAccess, listApplications } from "@/lib/admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { prettyStatus, statusTone } from "@/lib/status";
+
+export { prettyStatus, statusTone };
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -39,17 +42,6 @@ const FILTERS = [
 ] as const;
 
 type Filter = (typeof FILTERS)[number]["key"];
-
-export function statusTone(status: string) {
-  if (status === "approved" || status === "settled") return "default" as const;
-  if (status === "declined" || status === "failed" || status === "returned") return "destructive" as const;
-  if (status === "not_started") return "outline" as const;
-  return "secondary" as const;
-}
-
-export function prettyStatus(status: string) {
-  return status.replace(/_/g, " ");
-}
 
 function AdminQueue() {
   const [filter, setFilter] = useState<Filter>("pending");

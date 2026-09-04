@@ -46,9 +46,15 @@ function AuthenticatedLayout() {
             </Button>
             {adminAccess?.isReviewer && (
               <Button asChild variant="ghost" size="sm">
-                <Link to="/admin">{adminAccess.isAdmin ? "Admin" : "Funds"}</Link>
+                <Link to="/manager">Manager</Link>
               </Button>
             )}
+            {adminAccess?.isAdmin && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin">Admin</Link>
+              </Button>
+            )}
+
 
             <Button variant="ghost" size="sm" onClick={signOut}>
               Sign out
