@@ -40,13 +40,26 @@ function AuthPage() {
     if (!loading && session) navigate({ to: "/onboarding/kyc" });
   }, [loading, session, navigate]);
 
+  async function recordAttempt(address: string, success: boolean, reason?: string) {
+    try {
+      await fetch("/api/public/login-attempt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: address, success, reason }),
+      });
+    } catch {
+      /* logging must never block sign-in */
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    const address = email.trim();
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: address,
           password,
           options: { emailRedirectTo: `${window.location.origin}/onboarding/kyc` },
         });
@@ -54,17 +67,21 @@ function AuthPage() {
         toast.success("Account created. You can continue your application.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: address,
           password,
         });
         if (error) throw error;
+        void recordAttempt(address, true);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
+      const message = err instanceof Error ? err.message : "Authentication failed";
+      if (mode === "signin") void recordAttempt(address, false, message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }
   }
+
 
   return (
     <main className="paper-grid flex min-h-screen items-center justify-center px-4 py-16">
