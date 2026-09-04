@@ -9,6 +9,11 @@ import { getSignedDocumentUrl, signDocument } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { startIdentityCheck } from "@/lib/didit.functions";
+import {
+  getSigningProvider,
+  refreshAdobeSignatures,
+  startAdobeSigning,
+} from "@/lib/adobe-sign.functions";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +97,13 @@ function Portal() {
   };
   const [starting, setStarting] = useState(false);
   const sign = useServerFn(signDocument);
+  const startAdobe = useServerFn(startAdobeSigning);
+  const refreshAdobe = useServerFn(refreshAdobeSignatures);
+  const providerQuery = useQuery({
+    queryKey: ["signing-provider"],
+    queryFn: () => getSigningProvider(),
+    staleTime: 5 * 60 * 1000,
+  });
   const [signerName, setSignerName] = useState("");
   const [initials, setInitials] = useState("");
   const [consent, setConsent] = useState(false);
@@ -156,22 +168,58 @@ function Portal() {
     );
   }, [data?.profile?.legal_name]);
 
-  const signedDocIds = new Set(documents.map((d) => d.offering_document_id));
+  const signatureByDoc = new Map(documents.map((d) => [d.offering_document_id, d]));
+  const completedDocIds = new Set(
+    documents
+      .filter((d) => d.provider !== "adobe_sign" || d.provider_status === "completed")
+      .map((d) => d.offering_document_id),
+  );
   const signableDocs = (data?.offeringDocuments ?? []).filter((d: any) => d.requires_signature);
-  const pendingDocs = signableDocs.filter((d: any) => !signedDocIds.has(d.id));
+  const pendingDocs = signableDocs.filter((d: any) => !completedDocIds.has(d.id));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
+  const useAdobe = providerQuery.data?.provider === "adobe_sign";
+  const awaitingAdobe = documents.some(
+    (d) => d.provider === "adobe_sign" && d.provider_status === "out_for_signature",
+  );
+
+  // While a document sits with Adobe, pull its status so the page settles on its own.
+  useEffect(() => {
+    if (!awaitingAdobe) return;
+    const timer = setInterval(async () => {
+      try {
+        const res = await refreshAdobe({});
+        if (res.updated > 0) await refetch();
+      } catch {
+        /* transient; the webhook is the primary path */
+      }
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [awaitingAdobe, refreshAdobe, refetch]);
+
 
   async function onSign(documentId: string) {
     if (!consent) {
       toast.error("Please tick the electronic signature consent first.");
       return;
     }
-    if (!signerName.trim()) {
-      toast.error("Enter your full legal name.");
-      return;
-    }
     setSigningId(documentId);
     try {
+      if (useAdobe) {
+        const res = await startAdobe({ data: { offering_document_id: documentId } });
+        if (res.url) {
+          window.open(res.url, "_blank", "noopener,noreferrer");
+          toast.success("Adobe Sign opened in a new tab. This page updates the moment you finish.");
+        } else {
+          toast.success("The document was emailed to you for signature from Adobe Sign.");
+        }
+        await refetch();
+        return;
+      }
+
+      if (!signerName.trim()) {
+        toast.error("Enter your full legal name.");
+        return;
+      }
       await sign({
         data: {
           offering_document_id: documentId,
@@ -354,8 +402,9 @@ function Portal() {
             <CardHeader>
               <CardTitle className="text-base">Sign your fund documents</CardTitle>
               <CardDescription>
-                Sign the subscription agreement and the private placement memorandum here before you
-                fund. Each signature is stored with a tamper-evident hash, date and audit trail.
+                {useAdobe
+                  ? "Sign the subscription agreement and the private placement memorandum through Adobe Acrobat Sign. Your certified copy returns here automatically, with the exact completion time on record."
+                  : "Sign the subscription agreement and the private placement memorandum here before you fund. Each signature is stored with a tamper-evident hash, date and audit trail."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -375,25 +424,27 @@ function Portal() {
                 </div>
               ) : (
                 <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="portal_signer">Full legal name (your signature)</Label>
-                      <Input
-                        id="portal_signer"
-                        value={signerName}
-                        onChange={(e) => setSignerName(e.target.value)}
-                      />
-                      <p className="font-display text-2xl">{signerName || "—"}</p>
+                  {!useAdobe && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="portal_signer">Full legal name (your signature)</Label>
+                        <Input
+                          id="portal_signer"
+                          value={signerName}
+                          onChange={(e) => setSignerName(e.target.value)}
+                        />
+                        <p className="font-display text-2xl">{signerName || "—"}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="portal_initials">Initials</Label>
+                        <Input
+                          id="portal_initials"
+                          value={initials}
+                          onChange={(e) => setInitials(e.target.value.toUpperCase())}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="portal_initials">Initials</Label>
-                      <Input
-                        id="portal_initials"
-                        value={initials}
-                        onChange={(e) => setInitials(e.target.value.toUpperCase())}
-                      />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="flex items-start gap-3">
                     <Checkbox
@@ -402,14 +453,19 @@ function Portal() {
                       onCheckedChange={(v) => setConsent(v === true)}
                     />
                     <Label htmlFor="portal_consent" className="text-sm font-normal leading-relaxed">
-                      I agree to sign electronically and that my typed name is my legal signature
-                      under the U.S. E-SIGN Act.
+                      {useAdobe
+                        ? "I agree to sign this agreement electronically through Adobe Acrobat Sign, under the U.S. E-SIGN Act."
+                        : "I agree to sign electronically and that my typed name is my legal signature under the U.S. E-SIGN Act."}
                     </Label>
                   </div>
 
                   <div className="space-y-3">
                     {signableDocs.map((doc: any) => {
-                      const signed = signedDocIds.has(doc.id);
+                      const sig = signatureByDoc.get(doc.id);
+                      const signed = completedDocIds.has(doc.id);
+                      const waiting =
+                        sig?.provider === "adobe_sign" && sig.provider_status === "out_for_signature";
+                      const completedAt = sig?.provider_completed_at ?? (signed ? sig?.signed_at : null);
                       return (
                         <div
                           key={doc.id}
@@ -420,6 +476,15 @@ function Portal() {
                             <p className="text-xs text-muted-foreground">
                               {String(doc.doc_type).replace(/_/g, " ")}
                             </p>
+                            {signed && completedAt ? (
+                              <p className="text-xs text-muted-foreground">
+                                Completed {new Date(completedAt).toLocaleString()}
+                              </p>
+                            ) : waiting ? (
+                              <p className="text-xs text-muted-foreground">
+                                Waiting on your signature in Adobe Acrobat Sign
+                              </p>
+                            ) : null}
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
@@ -438,7 +503,13 @@ function Portal() {
                                 disabled={signingId === doc.id || !consent}
                                 onClick={() => onSign(doc.id)}
                               >
-                                {signingId === doc.id ? "Signing…" : "Sign"}
+                                {signingId === doc.id
+                                  ? "Opening…"
+                                  : waiting
+                                    ? "Resume signing"
+                                    : useAdobe
+                                      ? "Sign with Adobe"
+                                      : "Sign"}
                               </Button>
                             )}
                           </div>

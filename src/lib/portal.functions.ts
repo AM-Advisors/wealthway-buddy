@@ -4,6 +4,10 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export interface PortalDocument {
   signature_id: string;
   offering_document_id: string;
+  provider: string;
+  provider_status: string | null;
+  provider_completed_at: string | null;
+  provider_signing_url: string | null;
   title: string;
   signer_name: string;
   signed_at: string | null;
@@ -66,7 +70,7 @@ export const getPortal = createServerFn({ method: "GET" })
           .order("sort_order", { ascending: true }),
         supabase
           .from("document_signatures")
-          .select("id, offering_document_id, signer_name, signed_at, document_hash, pdf_path")
+          .select("id, offering_document_id, signer_name, signed_at, document_hash, pdf_path, provider, provider_status, provider_completed_at, provider_signing_url")
           .eq("application_id", application.id),
         supabase
           .from("subscriptions")
@@ -97,6 +101,10 @@ export const getPortal = createServerFn({ method: "GET" })
       signer_name: sig.signer_name,
       signed_at: sig.signed_at,
       document_hash: sig.document_hash,
+      provider: sig.provider ?? "internal",
+      provider_status: sig.provider_status ?? null,
+      provider_completed_at: sig.provider_completed_at ?? null,
+      provider_signing_url: sig.provider_signing_url ?? null,
       downloadable: Boolean(sig.pdf_path),
     }));
 

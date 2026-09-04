@@ -241,8 +241,15 @@ export type Database = {
           document_hash: string
           id: string
           initials: string | null
+          manager_notified_at: string | null
           offering_document_id: string
           pdf_path: string | null
+          provider: string
+          provider_agreement_id: string | null
+          provider_completed_at: string | null
+          provider_last_event_at: string | null
+          provider_signing_url: string | null
+          provider_status: string | null
           signature_type: string
           signature_value: string
           signed_at: string
@@ -255,8 +262,15 @@ export type Database = {
           document_hash: string
           id?: string
           initials?: string | null
+          manager_notified_at?: string | null
           offering_document_id: string
           pdf_path?: string | null
+          provider?: string
+          provider_agreement_id?: string | null
+          provider_completed_at?: string | null
+          provider_last_event_at?: string | null
+          provider_signing_url?: string | null
+          provider_status?: string | null
           signature_type?: string
           signature_value: string
           signed_at?: string
@@ -269,8 +283,15 @@ export type Database = {
           document_hash?: string
           id?: string
           initials?: string | null
+          manager_notified_at?: string | null
           offering_document_id?: string
           pdf_path?: string | null
+          provider?: string
+          provider_agreement_id?: string | null
+          provider_completed_at?: string | null
+          provider_last_event_at?: string | null
+          provider_signing_url?: string | null
+          provider_status?: string | null
           signature_type?: string
           signature_value?: string
           signed_at?: string

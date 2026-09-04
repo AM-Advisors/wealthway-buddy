@@ -365,10 +365,26 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                   <li key={sig.id} className="rounded-md border p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="font-medium">{sig.document?.title ?? "Document"}</p>
-                        <p className="text-muted-foreground">
-                          Signed by {sig.signer_name} · {new Date(sig.signed_at).toLocaleString()}
+                        <p className="font-medium">
+                          {sig.document?.title ?? "Document"}
+                          {sig.provider === "adobe_sign" && (
+                            <Badge variant="secondary" className="ml-2 align-middle">
+                              Adobe Sign
+                              {sig.provider_status && sig.provider_status !== "completed"
+                                ? ` · ${String(sig.provider_status).replace(/_/g, " ")}`
+                                : ""}
+                            </Badge>
+                          )}
                         </p>
+                        <p className="text-muted-foreground">
+                          Signed by {sig.signer_name} ·{" "}
+                          {new Date(sig.provider_completed_at ?? sig.signed_at).toLocaleString()}
+                        </p>
+                        {sig.provider === "adobe_sign" && sig.provider_agreement_id && (
+                          <p className="break-all font-mono text-[11px] text-muted-foreground">
+                            Adobe agreement {sig.provider_agreement_id}
+                          </p>
+                        )}
                         <p className="break-all font-mono text-[11px] text-muted-foreground">
                           SHA-256 {sig.document_hash}
                         </p>
