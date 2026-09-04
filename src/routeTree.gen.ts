@@ -22,6 +22,7 @@ import { Route as AuthenticatedAdminEmailPreviewRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminFundsRouteImport } from './routes/_authenticated/admin.funds'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
+import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
 import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
@@ -101,6 +102,12 @@ const AuthenticatedManagerIndexRoute =
     path: '/manager/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerApplicationIdRoute =
+  AuthenticatedManagerApplicationIdRouteImport.update({
+    id: '/manager/$applicationId',
+    path: '/manager/$applicationId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingAccreditationRoute =
   AuthenticatedOnboardingAccreditationRouteImport.update({
     id: '/onboarding/accreditation',
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
+  '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -187,6 +195,7 @@ export interface FileRoutesByTo {
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
+  '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -212,6 +221,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/_authenticated/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
+  '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/admin/email-preview'
     | '/admin/funds'
     | '/admin/security'
+    | '/manager/$applicationId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/email-preview'
     | '/admin/funds'
     | '/admin/security'
+    | '/manager/$applicationId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
@@ -284,6 +296,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/email-preview'
     | '/_authenticated/admin/funds'
     | '/_authenticated/admin/security'
+    | '/_authenticated/manager/$applicationId'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
     | '/_authenticated/onboarding/documents'
@@ -401,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/$applicationId': {
+      id: '/_authenticated/manager/$applicationId'
+      path: '/manager/$applicationId'
+      fullPath: '/manager/$applicationId'
+      preLoaderRoute: typeof AuthenticatedManagerApplicationIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/accreditation': {
       id: '/_authenticated/onboarding/accreditation'
       path: '/onboarding/accreditation'
@@ -475,6 +495,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
   AuthenticatedAdminFundsRoute: typeof AuthenticatedAdminFundsRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
+  AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
   AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
@@ -492,6 +513,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
   AuthenticatedAdminFundsRoute: AuthenticatedAdminFundsRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
+  AuthenticatedManagerApplicationIdRoute:
+    AuthenticatedManagerApplicationIdRoute,
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,
