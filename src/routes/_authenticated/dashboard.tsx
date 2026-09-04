@@ -40,6 +40,8 @@ function Dashboard() {
   const { data, isLoading } = useQuery({ queryKey: ["onboarding"], queryFn: () => load() });
 
   const app = data?.application;
+  const unlocked = app?.kyc_status === "approved" && app?.aml_status === "approved";
+
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -56,18 +58,41 @@ function Dashboard() {
         <div className="mt-8 space-y-4">
           <StatusRow title="Identity verification (KYC)" status={app?.kyc_status ?? "not_started"} to="/onboarding/kyc" cta="Review details" />
           <StatusRow title="AML screening" status={app?.aml_status ?? "not_started"} to="/onboarding/aml" cta="Review answers" />
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Accreditation, documents and funding</CardTitle>
-              <CardDescription>
-                These steps unlock once KYC and AML screening are approved by compliance.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex gap-2 text-xs text-muted-foreground">
-              <Badge variant="outline">Accreditation {LABEL[app?.accreditation_status ?? "not_started"]}</Badge>
-              <Badge variant="outline">Documents {LABEL[app?.documents_status ?? "not_started"]}</Badge>
-            </CardContent>
-          </Card>
+          {unlocked ? (
+            <>
+              <StatusRow
+                title="Accreditation"
+                status={app?.accreditation_status ?? "not_started"}
+                to="/onboarding/accreditation"
+                cta={app?.accreditation_status === "not_started" ? "Start" : "Review"}
+              />
+              <StatusRow
+                title="Fund documents"
+                status={app?.documents_status ?? "not_started"}
+                to="/onboarding/documents"
+                cta={app?.documents_status === "not_started" ? "Review & sign" : "View"}
+              />
+              <StatusRow
+                title="Funding"
+                status={app?.funding_status ?? "not_started"}
+                to="/onboarding/funding"
+                cta={app?.funding_status === "not_started" ? "Choose method" : "View"}
+              />
+            </>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Accreditation, documents and funding</CardTitle>
+                <CardDescription>
+                  These steps unlock once KYC and AML screening are approved by compliance.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex gap-2 text-xs text-muted-foreground">
+                <Badge variant="outline">Accreditation {LABEL[app?.accreditation_status ?? "not_started"]}</Badge>
+                <Badge variant="outline">Documents {LABEL[app?.documents_status ?? "not_started"]}</Badge>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </main>
@@ -82,7 +107,12 @@ function StatusRow({
 }: {
   title: string;
   status: string;
-  to: "/onboarding/kyc" | "/onboarding/aml";
+  to:
+    | "/onboarding/kyc"
+    | "/onboarding/aml"
+    | "/onboarding/accreditation"
+    | "/onboarding/documents"
+    | "/onboarding/funding";
   cta: string;
 }) {
   return (
@@ -99,3 +129,4 @@ function StatusRow({
     </Card>
   );
 }
+

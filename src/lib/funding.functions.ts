@@ -16,7 +16,7 @@ export const achSchema = z.object({
 });
 
 function referenceCode(applicationId: string) {
-  return `MER-${applicationId.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+  return `HAR-${applicationId.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
 async function loadFundingApplication(supabase: any, userId: string) {
