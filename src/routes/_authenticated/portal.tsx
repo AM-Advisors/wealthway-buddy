@@ -91,6 +91,11 @@ function Portal() {
     }
   };
   const [starting, setStarting] = useState(false);
+  const sign = useServerFn(signDocument);
+  const [signerName, setSignerName] = useState("");
+  const [initials, setInitials] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [signingId, setSigningId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["portal"],
