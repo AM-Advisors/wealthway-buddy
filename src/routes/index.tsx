@@ -16,6 +16,16 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "A guided, compliant subscription process for qualified investors.",
       },
+      { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: "https://onboard.harmonious.co/og-harmonious.jpg",
+      },
+      { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:image",
+        content: "https://onboard.harmonious.co/og-harmonious.jpg",
+      },
     ],
   }),
   component: Index,
