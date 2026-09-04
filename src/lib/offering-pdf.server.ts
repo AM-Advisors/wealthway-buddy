@@ -7,9 +7,22 @@ const INK = rgb(0.133, 0.122, 0.125); // #221F20
 const MUTED = rgb(0.42, 0.44, 0.5);
 const WHITE = rgb(1, 1, 1);
 
+/** StandardFonts only encode WinAnsi; normalise anything outside it so rendering never throws. */
+function sanitize(text: string): string {
+  return text
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u2018\u2019\u201B]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/\u00A0/g, " ")
+    .replace(/\t/g, "  ")
+    .replace(/[^\n\x20-\x7E\xA0-\xFF]/g, "");
+}
+
 function wrap(text: string, font: any, size: number, maxWidth: number): string[] {
   const lines: string[] = [];
-  for (const paragraph of text.split("\n")) {
+  for (const paragraph of sanitize(text).split("\n")) {
     if (!paragraph.trim()) {
       lines.push("");
       continue;
@@ -73,10 +86,10 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
       color: WHITE,
     });
     if (firstPage) {
-      page.drawText(input.offeringName, { x: MARGIN, y: height - 64, size: 11, font: regular, color: TEAL });
+      page.drawText(sanitize(input.offeringName), { x: MARGIN, y: height - 64, size: 11, font: regular, color: TEAL });
       page.drawText(regLabel, { x: MARGIN, y: height - 84, size: 10, font: regular, color: WHITE });
     } else {
-      page.drawText(input.title, {
+      page.drawText(sanitize(input.title), {
         x: MARGIN,
         y: height - 38,
         size: 9,
