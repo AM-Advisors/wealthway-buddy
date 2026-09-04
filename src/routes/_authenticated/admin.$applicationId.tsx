@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import { supabase } from "@/integrations/supabase/client";
 
 import {
   addAdminNote,
@@ -13,6 +15,7 @@ import {
   getAdminFileUrl,
   getApplicationDetail,
   sendInvestorEmail,
+  sendTestEmail,
 } from "@/lib/admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +62,7 @@ function AdminDetail() {
   const note = useServerFn(addAdminNote);
   const fileUrl = useServerFn(getAdminFileUrl);
   const email = useServerFn(sendInvestorEmail);
+  const testEmail = useServerFn(sendTestEmail);
   const payment = useServerFn(decidePayment);
   const diditEvents = useServerFn(listDiditEvents);
 
@@ -80,6 +84,7 @@ function AdminDetail() {
   const [noteBody, setNoteBody] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [testTo, setTestTo] = useState("");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-application", applicationId] });
@@ -127,6 +132,25 @@ function AdminDetail() {
         toast.warning(result.message);
       }
       invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (active && data.user?.email) setTestTo((prev) => prev || data.user!.email!);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const testMutation = useMutation({
+    mutationFn: () => testEmail({ data: { applicationId, subject, body: message, to: testTo.trim() } }),
+    onSuccess: (result) => {
+      if (result.ok) toast.success(result.message);
+      else toast.warning(result.message);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -500,12 +524,39 @@ function AdminDetail() {
               <Label htmlFor="message">Message</Label>
               <Textarea id="message" rows={8} value={message} onChange={(e) => setMessage(e.target.value)} />
             </div>
-            <Button
-              onClick={() => emailMutation.mutate()}
-              disabled={emailMutation.isPending || subject.trim().length < 2 || message.trim().length < 2}
-            >
-              {emailMutation.isPending ? "Sending…" : "Send email"}
-            </Button>
+            <div className="flex flex-wrap items-end gap-3">
+              <Button
+                onClick={() => emailMutation.mutate()}
+                disabled={emailMutation.isPending || subject.trim().length < 2 || message.trim().length < 2}
+              >
+                {emailMutation.isPending ? "Sending…" : "Send email"}
+              </Button>
+              <div className="space-y-1.5">
+                <Label htmlFor="test_to">Send to a test address</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="test_to"
+                    type="email"
+                    className="w-64"
+                    value={testTo}
+                    onChange={(e) => setTestTo(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => testMutation.mutate()}
+                    disabled={
+                      testMutation.isPending ||
+                      !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(testTo.trim()) ||
+                      subject.trim().length < 2 ||
+                      message.trim().length < 2
+                    }
+                  >
+                    {testMutation.isPending ? "Sending…" : "Send test"}
+                  </Button>
+                </div>
+              </div>
+            </div>
 
             {d?.emails.length ? (
               <>
