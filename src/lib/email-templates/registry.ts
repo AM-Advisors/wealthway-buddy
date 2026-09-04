@@ -1,4 +1,6 @@
 import type { ComponentType } from 'react'
+import { template as investorMessage } from './investor-message'
+
 
 export interface TemplateEntry {
   component: ComponentType<any>
