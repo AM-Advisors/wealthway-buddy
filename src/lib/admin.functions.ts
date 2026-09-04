@@ -338,7 +338,69 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
     }
   });
 
+const testEmailSchema = z.object({
+  to: z.string().trim().email().max(255),
+  subject: z.string().trim().min(2).max(200),
+  body: z.string().trim().min(2).max(5000),
+  applicationId: z.string().uuid().optional(),
+});
+
+const lastTestSendByUser = new Map<string, number>();
+
+export const sendTestEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => testEmailSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const now = Date.now();
+    const last = lastTestSendByUser.get(userId) ?? 0;
+    if (now - last < 15_000) {
+      return {
+        ok: false,
+        message: `Please wait ${Math.ceil((15_000 - (now - last)) / 1000)}s before sending another test.`,
+      };
+    }
+    lastTestSendByUser.set(userId, now);
+
+    let offeringName = "Harmonious";
+    if (data.applicationId) {
+      const { data: offering } = await supabase
+        .from("investor_applications")
+        .select("offerings(name)")
+        .eq("id", data.applicationId)
+        .maybeSingle();
+      offeringName = (offering as any)?.offerings?.name ?? offeringName;
+    }
+
+    try {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      const result = await sendTemplateEmail("investor-message", data.to, {
+        templateData: {
+          investorName: "Test recipient",
+          subject: `[TEST] ${data.subject}`,
+          body: data.body,
+          offeringName,
+        },
+        idempotencyKey: `test-email-${userId}-${now}`,
+      });
+
+      if (!result.sent) {
+        return {
+          ok: false,
+          message: "That address has opted out or previously bounced, so nothing was sent.",
+        };
+      }
+      return { ok: true, message: `Test email sent to ${data.to}.` };
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error";
+      return { ok: false, message: `Could not send the test email. ${detail.slice(0, 200)}` };
+    }
+  });
+
 const paymentDecisionSchema = z.object({
+
   paymentId: z.string().uuid(),
   applicationId: z.string().uuid(),
   outcome: z.enum(["settled", "returned", "cancelled"]),
