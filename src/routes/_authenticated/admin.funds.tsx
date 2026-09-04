@@ -12,6 +12,8 @@ import {
   saveOffering,
   saveOfferingDocument,
 } from "@/lib/offerings.functions";
+import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,6 +131,20 @@ function FundsPage() {
 
   const [editing, setEditing] = useState<OfferingForm | null>(null);
   const [docFor, setDocFor] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+  const getPdf = useServerFn(downloadOfferingDocument);
+
+  const downloadPdf = async (documentId: string) => {
+    setPdfBusy(documentId);
+    try {
+      const res = await getPdf({ data: { document_id: documentId } });
+      savePdf(res.filename, res.base64);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not prepare the PDF.");
+    } finally {
+      setPdfBusy(null);
+    }
+  };
   const [docForm, setDocForm] = useState<DocForm>(blankDoc());
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-offerings"] });
@@ -439,6 +455,14 @@ function FundsPage() {
                       </p>
                     </div>
                     <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={pdfBusy === d.id}
+                        onClick={() => downloadPdf(d.id)}
+                      >
+                        {pdfBusy === d.id ? "Preparing…" : "PDF"}
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"

@@ -11,6 +11,8 @@ import {
   getSignedDocumentUrl,
   subscriptionSchema,
 } from "@/lib/documents.functions";
+import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -79,6 +81,20 @@ function DocumentsPage() {
   const [initials, setInitials] = useState("");
   const [consent, setConsent] = useState(false);
   const [activeDoc, setActiveDoc] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+  const getPdf = useServerFn(downloadOfferingDocument);
+
+  const downloadPdf = async (documentId: string) => {
+    setPdfBusy(documentId);
+    try {
+      const res = await getPdf({ data: { document_id: documentId } });
+      savePdf(res.filename, res.base64);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not prepare the PDF.");
+    } finally {
+      setPdfBusy(null);
+    }
+  };
   const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
   const [signing, setSigning] = useState<string | null>(null);
 
@@ -283,14 +299,25 @@ function DocumentsPage() {
                             : "Review only"}
                       </CardDescription>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setActiveDoc(isOpen ? null : doc.id)}
-                    >
-                      {isOpen ? "Collapse" : "Read document"}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={pdfBusy === doc.id}
+                        onClick={() => downloadPdf(doc.id)}
+                      >
+                        {pdfBusy === doc.id ? "Preparing…" : "Download PDF"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setActiveDoc(isOpen ? null : doc.id)}
+                      >
+                        {isOpen ? "Collapse" : "Read document"}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 {isOpen && (

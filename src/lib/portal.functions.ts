@@ -33,7 +33,16 @@ export const getPortal = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (!application) {
-      return { profile, application: null, offering: null, documents: [], subscription: null, payment: null, kyc: null };
+      return {
+        profile,
+        application: null,
+        offering: null,
+        documents: [],
+        offeringDocuments: [],
+        subscription: null,
+        payment: null,
+        kyc: null,
+      };
     }
 
     const [
@@ -51,7 +60,7 @@ export const getPortal = createServerFn({ method: "GET" })
           .maybeSingle(),
         supabase
           .from("offering_documents")
-          .select("id, title, sort_order")
+          .select("id, title, doc_type, requires_signature, sort_order")
           .eq("offering_id", application.offering_id)
           .order("sort_order", { ascending: true }),
         supabase
@@ -91,5 +100,14 @@ export const getPortal = createServerFn({ method: "GET" })
 
     documents.sort((a, b) => a.title.localeCompare(b.title));
 
-    return { profile, application, offering, documents, subscription, payment, kyc };
+    return {
+      profile,
+      application,
+      offering,
+      documents,
+      offeringDocuments: offeringDocs ?? [],
+      subscription,
+      payment,
+      kyc,
+    };
   });

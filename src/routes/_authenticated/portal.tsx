@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { getPortal } from "@/lib/portal.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { savePdf } from "@/lib/download-pdf";
 import { startIdentityCheck } from "@/lib/didit.functions";
 
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +73,20 @@ function Portal() {
   const download = useServerFn(getSignedDocumentUrl);
   const startCheck = useServerFn(startIdentityCheck);
   const [busy, setBusy] = useState<string | null>(null);
+  const getPdf = useServerFn(downloadOfferingDocument);
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+
+  const downloadPdf = async (documentId: string) => {
+    setPdfBusy(documentId);
+    try {
+      const res = await getPdf({ data: { document_id: documentId } });
+      savePdf(res.filename, res.base64);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not prepare the PDF.");
+    } finally {
+      setPdfBusy(null);
+    }
+  };
   const [starting, setStarting] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
@@ -235,8 +251,47 @@ function Portal() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Fund documents</CardTitle>
+              <CardDescription>
+                The full paperwork for {data?.offering?.name ?? "your fund"}, as downloadable PDFs.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(data?.offeringDocuments ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No fund documents have been published yet.
+                </p>
+              ) : (
+                (data?.offeringDocuments ?? []).map((doc: any) => (
+                  <div
+                    key={doc.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                  >
+                    <div>
+                      <p className="font-medium">{doc.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {String(doc.doc_type).replace(/_/g, " ")} ·{" "}
+                        {doc.requires_signature ? "signature required" : "review only"}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={pdfBusy === doc.id}
+                      onClick={() => downloadPdf(doc.id)}
+                    >
+                      {pdfBusy === doc.id ? "Preparing…" : "Download PDF"}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
+
             <CardHeader>
               <CardTitle className="text-base">Your signed documents</CardTitle>
               <CardDescription>
