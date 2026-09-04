@@ -69,8 +69,8 @@ function AuthPage() {
     <main className="paper-grid flex min-h-screen items-center justify-center px-4 py-16">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">
-            {mode === "signin" ? "Investor sign in" : "Create investor account"}
+          <CardTitle asChild className="text-2xl">
+            <h1>{mode === "signin" ? "Investor sign in" : "Create investor account"}</h1>
           </CardTitle>
           <CardDescription>
             Your application is saved as you go. You can return at any time.
