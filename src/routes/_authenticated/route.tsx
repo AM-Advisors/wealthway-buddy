@@ -1,7 +1,10 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { getAdminAccess } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
+
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -16,6 +19,8 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const access = useServerFn(getAdminAccess);
+  const { data: adminAccess } = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -35,12 +40,18 @@ function AuthenticatedLayout() {
             <Button asChild variant="ghost" size="sm">
               <Link to="/dashboard">Status</Link>
             </Button>
+            {adminAccess?.isAdmin && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin">Admin</Link>
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={signOut}>
               Sign out
             </Button>
           </div>
         </div>
       </header>
+
       <Outlet />
     </div>
   );

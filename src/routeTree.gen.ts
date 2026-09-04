@@ -13,9 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
 import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
+import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_authenticated/onboarding.funding'
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
 
 const IndexRoute = IndexRouteImport.update({
@@ -37,6 +40,17 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminApplicationIdRoute =
+  AuthenticatedAdminApplicationIdRouteImport.update({
+    id: '/admin/$applicationId',
+    path: '/admin/$applicationId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingAccreditationRoute =
   AuthenticatedOnboardingAccreditationRouteImport.update({
     id: '/onboarding/accreditation',
@@ -55,6 +69,12 @@ const AuthenticatedOnboardingDocumentsRoute =
     path: '/onboarding/documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOnboardingFundingRoute =
+  AuthenticatedOnboardingFundingRouteImport.update({
+    id: '/onboarding/funding',
+    path: '/onboarding/funding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingKycRoute =
   AuthenticatedOnboardingKycRouteImport.update({
     id: '/onboarding/kyc',
@@ -66,19 +86,25 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
+  '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
+  '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,10 +112,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
+  '/_authenticated/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,29 +126,38 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/admin/$applicationId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
+    | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/admin/$applicationId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
+    | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/admin/$applicationId'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
     | '/_authenticated/onboarding/documents'
+    | '/_authenticated/onboarding/funding'
     | '/_authenticated/onboarding/kyc'
+    | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +196,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/$applicationId': {
+      id: '/_authenticated/admin/$applicationId'
+      path: '/admin/$applicationId'
+      fullPath: '/admin/$applicationId'
+      preLoaderRoute: typeof AuthenticatedAdminApplicationIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/accreditation': {
       id: '/_authenticated/onboarding/accreditation'
       path: '/onboarding/accreditation'
@@ -179,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/onboarding/funding': {
+      id: '/_authenticated/onboarding/funding'
+      path: '/onboarding/funding'
+      fullPath: '/onboarding/funding'
+      preLoaderRoute: typeof AuthenticatedOnboardingFundingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/kyc': {
       id: '/_authenticated/onboarding/kyc'
       path: '/onboarding/kyc'
@@ -191,19 +250,25 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
   AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
+  AuthenticatedOnboardingFundingRoute: typeof AuthenticatedOnboardingFundingRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,
   AuthenticatedOnboardingDocumentsRoute: AuthenticatedOnboardingDocumentsRoute,
+  AuthenticatedOnboardingFundingRoute: AuthenticatedOnboardingFundingRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

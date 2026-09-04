@@ -432,7 +432,7 @@ function VerificationForm({
               <div className="space-y-2">
                 <Label>Verifier role</Label>
                 <Select
-                  value={form.verifier_role || undefined}
+                  value={form.verifier_role || ""}
                   onValueChange={(v) =>
                     setForm((f) => ({ ...f, verifier_role: v as typeof form.verifier_role }))
                   }
