@@ -12,11 +12,11 @@ async function assertAdmin(supabase: any, userId: string) {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
+    .in("role", ["admin", "fund_manager"]);
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Admins only.");
+  if (!data || data.length === 0) throw new Error("Reviewers only.");
 }
+
 
 export type DeliveryLogEvent = {
   timestamp: string;
