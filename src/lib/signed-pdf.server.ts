@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 const MARGIN = 56;
-const INK = rgb(0.11, 0.13, 0.2);
+const INK = rgb(0.078, 0.149, 0.278); // brand navy #142647
 const MUTED = rgb(0.42, 0.44, 0.5);
 
 function wrap(text: string, font: any, size: number, maxWidth: number): string[] {
