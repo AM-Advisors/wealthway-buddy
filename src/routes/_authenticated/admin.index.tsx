@@ -88,11 +88,24 @@ function AdminQueue() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-3xl">Compliance review queue</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Investor applications awaiting verification, accreditation review, document approval or funding
-        confirmation.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl">Compliance review queue</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Investor applications awaiting verification, accreditation review, document approval or funding
+            confirmation.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link to="/admin/funds">Fund setup</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/admin/email-preview">Email preview</Link>
+          </Button>
+        </div>
+      </div>
+
 
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
