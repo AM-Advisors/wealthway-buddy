@@ -292,46 +292,38 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
       .single();
     if (insertError) throw new Error(insertError.message);
 
-    const apiKey = process.env["RESEND_API_KEY"];
-    const from = process.env["INVESTOR_EMAIL_FROM"] ?? "Meridian Capital <onboarding@resend.dev>";
-
-    if (!apiKey) {
-      await supabase
-        .from("investor_emails")
-        .update({
-          status: "not_configured",
-          provider_error: "No email provider connected. Message logged only.",
-        })
-        .eq("id", row.id);
-      return {
-        ok: false,
-        status: "not_configured" as const,
-        message: "Email delivery is not configured yet — the message was logged but not sent.",
-      };
-    }
+    const { data: offering } = await supabase
+      .from("investor_applications")
+      .select("offerings(name)")
+      .eq("id", data.applicationId)
+      .maybeSingle();
+    const offeringName = (offering as any)?.offerings?.name ?? "Meridian Capital";
 
     try {
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from,
-          to: [to],
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      const result = await sendTemplateEmail("investor-message", to, {
+        templateData: {
+          investorName: profile?.legal_name ?? "Investor",
           subject: data.subject,
-          text: data.body,
-        }),
+          body: data.body,
+          offeringName,
+        },
+        idempotencyKey: `investor-email-${row.id}`,
       });
 
-      if (!response.ok) {
-        const detail = await response.text();
+      if (!result.sent) {
         await supabase
           .from("investor_emails")
-          .update({ status: "failed", provider_error: detail.slice(0, 500) })
+          .update({
+            status: "suppressed",
+            provider_error: "Recipient is suppressed (prior bounce, complaint, or unsubscribe).",
+          })
           .eq("id", row.id);
-        return { ok: false, status: "failed" as const, message: "The email provider rejected the message." };
+        return {
+          ok: false,
+          status: "failed" as const,
+          message: "This address has opted out or previously bounced, so the message was not sent.",
+        };
       }
 
       await supabase.from("investor_emails").update({ status: "sent" }).eq("id", row.id);
@@ -342,6 +334,6 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
         .from("investor_emails")
         .update({ status: "failed", provider_error: detail.slice(0, 500) })
         .eq("id", row.id);
-      return { ok: false, status: "failed" as const, message: "Could not reach the email provider." };
+      return { ok: false, status: "failed" as const, message: "Could not send the email." };
     }
   });
