@@ -36,8 +36,14 @@ export const getPortal = createServerFn({ method: "GET" })
       return { profile, application: null, offering: null, documents: [], subscription: null, payment: null };
     }
 
-    const [{ data: offering }, { data: offeringDocs }, { data: signatures }, { data: subscription }, { data: payment }] =
-      await Promise.all([
+    const [
+      { data: offering },
+      { data: offeringDocs },
+      { data: signatures },
+      { data: subscription },
+      { data: payment },
+      { data: kyc },
+    ] = await Promise.all([
         supabase
           .from("offerings")
           .select("name, reg_type")
@@ -64,7 +70,13 @@ export const getPortal = createServerFn({ method: "GET" })
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from("kyc_verifications")
+          .select("provider, status, session_url, completed_at, updated_at")
+          .eq("application_id", application.id)
+          .maybeSingle(),
       ]);
+
 
     const titleById = new Map((offeringDocs ?? []).map((d) => [d.id, d.title]));
 
