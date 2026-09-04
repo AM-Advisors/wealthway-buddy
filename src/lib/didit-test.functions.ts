@@ -49,7 +49,14 @@ export const sendTestDiditEvent = createServerFn({ method: "POST" })
       decision: {
         kyc: { status: data.status },
         aml: { status: data.status === "Approved" ? "Approved" : "In Review", total_hits: 0 },
+        aml_screenings: [
+          {
+            status: data.status === "Approved" ? "Approved" : data.status === "Declined" ? "Declined" : "In Review",
+            hits: [],
+          },
+        ],
       },
+
     };
 
     const { canonicalJson } = await import("@/lib/didit.server");
