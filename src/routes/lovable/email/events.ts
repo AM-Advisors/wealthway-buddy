@@ -1,7 +1,57 @@
 import { createEmailWebhookHandler } from '@lovable.dev/email-js'
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute("/lovable/email/events")({
+type DeliveryEvent = {
+  event_id: string
+  data: { event?: string; recipient: string; message_id?: string }
+}
+
+const DETAIL: Record<string, string> = {
+  bounced: 'The mailbox rejected this message (bounce). Future sends to this address are blocked.',
+  complained: 'The recipient marked this message as spam. Future sends to this address are blocked.',
+  unsubscribed: 'The recipient unsubscribed. Future sends to this address are blocked.',
+}
+
+async function recordDeliveryEvent(eventType: string, event: DeliveryEvent) {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const recipient = event.data.recipient
+
+  // Attach the event to the most recent onboarding email sent to this address.
+  const { data: emailRow } = await supabaseAdmin
+    .from('investor_emails')
+    .select('id')
+    .eq('to_email', recipient)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const { error } = await supabaseAdmin.from('email_delivery_events').upsert(
+    {
+      event_id: event.event_id,
+      event_type: eventType,
+      recipient,
+      message_id: event.data.message_id ?? null,
+      investor_email_id: emailRow?.id ?? null,
+      payload: event.data as unknown as Record<string, unknown>,
+    },
+    { onConflict: 'event_id', ignoreDuplicates: true },
+  )
+  if (error) throw new Error(error.message)
+
+  if (emailRow?.id) {
+    const { error: updateError } = await supabaseAdmin
+      .from('investor_emails')
+      .update({
+        delivery_event: eventType,
+        delivery_event_at: new Date().toISOString(),
+        delivery_detail: DETAIL[eventType] ?? null,
+      })
+      .eq('id', emailRow.id)
+    if (updateError) throw new Error(updateError.message)
+  }
+}
+
+export const Route = createFileRoute('/lovable/email/events')({
   server: {
     handlers: {
       POST: ({ request }) => {
@@ -13,16 +63,14 @@ export const Route = createFileRoute("/lovable/email/events")({
         const handler = createEmailWebhookHandler({
           apiKey,
           on: {
-            // Placeholder handlers — replace each log with the feature's reaction.
-            // Throw on failure so the delivery is retried.
             'email.bounced': async (event) => {
-              console.log('Email bounced', { event_id: event.event_id })
+              await recordDeliveryEvent('bounced', event as unknown as DeliveryEvent)
             },
             'email.complaint': async (event) => {
-              console.log('Email complaint', { event_id: event.event_id })
+              await recordDeliveryEvent('complained', event as unknown as DeliveryEvent)
             },
             'email.unsubscribed': async (event) => {
-              console.log('Email unsubscribed', { event_id: event.event_id })
+              await recordDeliveryEvent('unsubscribed', event as unknown as DeliveryEvent)
             },
           },
         })
