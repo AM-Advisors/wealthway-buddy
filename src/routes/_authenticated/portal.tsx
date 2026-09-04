@@ -178,6 +178,24 @@ function Portal() {
   const pendingDocs = signableDocs.filter((d: any) => !completedDocIds.has(d.id));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
   const useAdobe = providerQuery.data?.provider === "adobe_sign";
+  const awaitingAdobe = documents.some(
+    (d) => d.provider === "adobe_sign" && d.provider_status === "out_for_signature",
+  );
+
+  // While a document sits with Adobe, pull its status so the page settles on its own.
+  useEffect(() => {
+    if (!awaitingAdobe) return;
+    const timer = setInterval(async () => {
+      try {
+        const res = await refreshAdobe({});
+        if (res.updated > 0) await refetch();
+      } catch {
+        /* transient; the webhook is the primary path */
+      }
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [awaitingAdobe, refreshAdobe, refetch]);
+
 
   async function onSign(documentId: string) {
     if (!consent) {
