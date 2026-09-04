@@ -476,6 +476,15 @@ function Portal() {
                             <p className="text-xs text-muted-foreground">
                               {String(doc.doc_type).replace(/_/g, " ")}
                             </p>
+                            {signed && completedAt ? (
+                              <p className="text-xs text-muted-foreground">
+                                Completed {new Date(completedAt).toLocaleString()}
+                              </p>
+                            ) : waiting ? (
+                              <p className="text-xs text-muted-foreground">
+                                Waiting on your signature in Adobe Acrobat Sign
+                              </p>
+                            ) : null}
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
