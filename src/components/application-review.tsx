@@ -51,6 +51,8 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isReviewer;
+  const isSuperAdmin = accessQuery.data?.isAdmin === true;
+  const testDidit = useServerFn(sendTestDiditEvent);
 
   const detail = useQuery({
     queryKey: ["admin-application", applicationId],
@@ -142,6 +144,17 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     onSuccess: (result) => {
       if (result.ok) toast.success(result.message);
       else toast.warning(result.message);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const diditTestMutation = useMutation({
+    mutationFn: (status: "Approved" | "Declined" | "In Review") =>
+      testDidit({ data: { applicationId, status } }),
+    onSuccess: (res) => {
+      toast.success(`Test verification event sent (${res.status}).`);
+      queryClient.invalidateQueries({ queryKey: ["didit-events", applicationId] });
+      invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -414,6 +427,24 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
               ))
             ) : (
               <p className="text-muted-foreground">No verification events received yet.</p>
+            )}
+            {isSuperAdmin && (
+              <div className="flex flex-wrap items-center gap-2 border-t pt-3">
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Send test verification event
+                </span>
+                {(["Approved", "In Review", "Declined"] as const).map((s) => (
+                  <Button
+                    key={s}
+                    size="sm"
+                    variant={s === "Declined" ? "destructive" : s === "Approved" ? "default" : "outline"}
+                    disabled={diditTestMutation.isPending}
+                    onClick={() => diditTestMutation.mutate(s)}
+                  >
+                    {s}
+                  </Button>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
