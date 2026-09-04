@@ -42,7 +42,7 @@ function Index() {
         <p className="mt-10 text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Private placement · Qualified investors
         </p>
-        <h1 className="mt-6 text-5xl leading-tight">Harmonious — Investor Onboarding</h1>
+        <h1 className="mt-6 text-5xl leading-tight">Investor Onboarding</h1>
         <p className="mt-6 max-w-xl text-muted-foreground">
           Subscribe in one guided flow: identity verification, anti-money-laundering screening,
           accreditation under Rule 506(b) or 506(c), fund document review and e-signature, then wire
