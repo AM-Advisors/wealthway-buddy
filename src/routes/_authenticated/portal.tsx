@@ -503,7 +503,13 @@ function Portal() {
                                 disabled={signingId === doc.id || !consent}
                                 onClick={() => onSign(doc.id)}
                               >
-                                {signingId === doc.id ? "Signing…" : "Sign"}
+                                {signingId === doc.id
+                                  ? "Opening…"
+                                  : waiting
+                                    ? "Resume signing"
+                                    : useAdobe
+                                      ? "Sign with Adobe"
+                                      : "Sign"}
                               </Button>
                             )}
                           </div>
