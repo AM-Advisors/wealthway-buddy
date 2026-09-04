@@ -351,6 +351,123 @@ function Portal() {
           </Card>
 
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Sign your fund documents</CardTitle>
+              <CardDescription>
+                Sign the subscription agreement and the private placement memorandum here before you
+                fund. Each signature is stored with a tamper-evident hash, date and audit trail.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {signableDocs.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No documents currently need your signature.
+                </p>
+              ) : !hasSubscription ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Add your commitment amount and how you'll hold title first — then you can sign
+                    right here.
+                  </p>
+                  <Button asChild size="sm">
+                    <Link to="/onboarding/documents">Add subscription details</Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="portal_signer">Full legal name (your signature)</Label>
+                      <Input
+                        id="portal_signer"
+                        value={signerName}
+                        onChange={(e) => setSignerName(e.target.value)}
+                      />
+                      <p className="font-display text-2xl">{signerName || "—"}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="portal_initials">Initials</Label>
+                      <Input
+                        id="portal_initials"
+                        value={initials}
+                        onChange={(e) => setInitials(e.target.value.toUpperCase())}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="portal_consent"
+                      checked={consent}
+                      onCheckedChange={(v) => setConsent(v === true)}
+                    />
+                    <Label htmlFor="portal_consent" className="text-sm font-normal leading-relaxed">
+                      I agree to sign electronically and that my typed name is my legal signature
+                      under the U.S. E-SIGN Act.
+                    </Label>
+                  </div>
+
+                  <div className="space-y-3">
+                    {signableDocs.map((doc: any) => {
+                      const signed = signedDocIds.has(doc.id);
+                      return (
+                        <div
+                          key={doc.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                        >
+                          <div>
+                            <p className="font-medium">{doc.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {String(doc.doc_type).replace(/_/g, " ")}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={pdfBusy === doc.id}
+                              onClick={() => downloadPdf(doc.id)}
+                            >
+                              {pdfBusy === doc.id ? "Preparing…" : "Read"}
+                            </Button>
+                            {signed ? (
+                              <Badge>Signed</Badge>
+                            ) : (
+                              <Button
+                                size="sm"
+                                disabled={signingId === doc.id || !consent}
+                                onClick={() => onSign(doc.id)}
+                              >
+                                {signingId === doc.id ? "Signing…" : "Sign"}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {pendingDocs.length === 0 ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-sm text-muted-foreground">
+                        Everything is signed — you can fund your commitment now.
+                      </p>
+                      <Button asChild size="sm">
+                        <Link to="/onboarding/funding">Continue to funding</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {pendingDocs.length} document{pendingDocs.length === 1 ? "" : "s"} still need
+                      your signature before funding.
+                    </p>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
 
             <CardHeader>
               <CardTitle className="text-base">Your signed documents</CardTitle>
