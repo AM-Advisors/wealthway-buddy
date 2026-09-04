@@ -170,7 +170,7 @@ function KycPage() {
         <form onSubmit={onSubmit} className="mt-8 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Investor details</CardTitle>
+              <CardTitle><h2 className="font-semibold leading-none tracking-tight">Investor details</h2></CardTitle>
               <CardDescription>Enter your name exactly as it appears on your ID.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -212,7 +212,7 @@ function KycPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Residential address</CardTitle>
+              <CardTitle><h2 className="font-semibold leading-none tracking-tight">Residential address</h2></CardTitle>
               <CardDescription>No P.O. boxes — a physical address is required.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -227,7 +227,7 @@ function KycPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Government identification</CardTitle>
+              <CardTitle><h2 className="font-semibold leading-none tracking-tight">Government identification</h2></CardTitle>
               <CardDescription>
                 Only the last four digits of the document number are stored with your file.
               </CardDescription>

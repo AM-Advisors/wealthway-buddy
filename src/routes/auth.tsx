@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -69,9 +69,9 @@ function AuthPage() {
     <main className="paper-grid flex min-h-screen items-center justify-center px-4 py-16">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">
             {mode === "signin" ? "Investor sign in" : "Create investor account"}
-          </CardTitle>
+          </h1>
           <CardDescription>
             Your application is saved as you go. You can return at any time.
           </CardDescription>
