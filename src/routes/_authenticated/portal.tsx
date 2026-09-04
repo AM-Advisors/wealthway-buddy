@@ -141,6 +141,58 @@ function Portal() {
   const app = data?.application;
   const documents = data?.documents ?? [];
 
+  useEffect(() => {
+    const legal = data?.profile?.legal_name;
+    if (!legal) return;
+    setSignerName((n) => n || legal);
+    setInitials(
+      (i) =>
+        i ||
+        legal
+          .split(/\s+/)
+          .map((p) => p[0] ?? "")
+          .join("")
+          .toUpperCase(),
+    );
+  }, [data?.profile?.legal_name]);
+
+  const signedDocIds = new Set(documents.map((d) => d.offering_document_id));
+  const signableDocs = (data?.offeringDocuments ?? []).filter((d: any) => d.requires_signature);
+  const pendingDocs = signableDocs.filter((d: any) => !signedDocIds.has(d.id));
+  const hasSubscription = Boolean(data?.subscription?.commitment_cents);
+
+  async function onSign(documentId: string) {
+    if (!consent) {
+      toast.error("Please tick the electronic signature consent first.");
+      return;
+    }
+    if (!signerName.trim()) {
+      toast.error("Enter your full legal name.");
+      return;
+    }
+    setSigningId(documentId);
+    try {
+      await sign({
+        data: {
+          offering_document_id: documentId,
+          signer_name: signerName.trim(),
+          signature_type: "typed",
+          signature_value: signerName.trim(),
+          initials: initials.trim(),
+          consent_electronic: true,
+        },
+      });
+      toast.success("Signed. Your countersigned copy is being prepared.");
+      await refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not sign that document.");
+    } finally {
+      setSigningId(null);
+    }
+  }
+
+
+
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
