@@ -131,6 +131,20 @@ function FundsPage() {
 
   const [editing, setEditing] = useState<OfferingForm | null>(null);
   const [docFor, setDocFor] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+  const getPdf = useServerFn(downloadOfferingDocument);
+
+  const downloadPdf = async (documentId: string) => {
+    setPdfBusy(documentId);
+    try {
+      const res = await getPdf({ data: { document_id: documentId } });
+      savePdf(res.filename, res.base64);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not prepare the PDF.");
+    } finally {
+      setPdfBusy(null);
+    }
+  };
   const [docForm, setDocForm] = useState<DocForm>(blankDoc());
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-offerings"] });
