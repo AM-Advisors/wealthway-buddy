@@ -309,6 +309,53 @@ export type Database = {
           },
         ]
       }
+      investor_emails: {
+        Row: {
+          application_id: string
+          body: string
+          created_at: string
+          id: string
+          provider_error: string | null
+          sent_by: string
+          status: string
+          subject: string
+          to_email: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          body: string
+          created_at?: string
+          id?: string
+          provider_error?: string | null
+          sent_by: string
+          status?: string
+          subject: string
+          to_email: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          provider_error?: string | null
+          sent_by?: string
+          status?: string
+          subject?: string
+          to_email?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_emails_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           application_id: string
