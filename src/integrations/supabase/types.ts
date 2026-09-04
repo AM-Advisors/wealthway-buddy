@@ -190,6 +190,50 @@ export type Database = {
           },
         ]
       }
+      didit_webhook_events: {
+        Row: {
+          application_id: string | null
+          error: string | null
+          event_id: string
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          session_id: string | null
+          status: string | null
+          webhook_type: string
+        }
+        Insert: {
+          application_id?: string | null
+          error?: string | null
+          event_id: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          session_id?: string | null
+          status?: string | null
+          webhook_type: string
+        }
+        Update: {
+          application_id?: string | null
+          error?: string | null
+          event_id?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          session_id?: string | null
+          status?: string | null
+          webhook_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "didit_webhook_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_signatures: {
         Row: {
           application_id: string
@@ -361,37 +405,49 @@ export type Database = {
           application_id: string
           completed_at: string | null
           created_at: string
+          decision: Json
+          expired_at: string | null
           id: string
           inquiry_id: string | null
           provider: string
           result: Json
+          session_id: string | null
           session_url: string | null
           status: Database["public"]["Enums"]["check_status"]
           updated_at: string
+          vendor_data: string | null
         }
         Insert: {
           application_id: string
           completed_at?: string | null
           created_at?: string
+          decision?: Json
+          expired_at?: string | null
           id?: string
           inquiry_id?: string | null
           provider?: string
           result?: Json
+          session_id?: string | null
           session_url?: string | null
           status?: Database["public"]["Enums"]["check_status"]
           updated_at?: string
+          vendor_data?: string | null
         }
         Update: {
           application_id?: string
           completed_at?: string | null
           created_at?: string
+          decision?: Json
+          expired_at?: string | null
           id?: string
           inquiry_id?: string | null
           provider?: string
           result?: Json
+          session_id?: string | null
           session_url?: string | null
           status?: Database["public"]["Enums"]["check_status"]
           updated_at?: string
+          vendor_data?: string | null
         }
         Relationships: [
           {

@@ -8,6 +8,7 @@ import {
   addAdminNote,
   decideApplication,
   decidePayment,
+  listDiditEvents,
   getAdminAccess,
   getAdminFileUrl,
   getApplicationDetail,
@@ -59,6 +60,7 @@ function AdminDetail() {
   const fileUrl = useServerFn(getAdminFileUrl);
   const email = useServerFn(sendInvestorEmail);
   const payment = useServerFn(decidePayment);
+  const diditEvents = useServerFn(listDiditEvents);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isAdmin;
@@ -66,6 +68,12 @@ function AdminDetail() {
   const detail = useQuery({
     queryKey: ["admin-application", applicationId],
     queryFn: () => load({ data: { applicationId } }),
+    enabled: isAdmin === true,
+  });
+
+  const eventsQuery = useQuery({
+    queryKey: ["didit-events", applicationId],
+    queryFn: () => diditEvents({ data: { applicationId } }),
     enabled: isAdmin === true,
   });
 
@@ -370,6 +378,28 @@ function AdminDetail() {
               label="Document review decision"
               onDecide={(decision) => decideMutation.mutate({ area: "documents", decision })}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Verification events</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {eventsQuery.data?.events.length ? (
+              eventsQuery.data.events.map((e: any) => (
+                <div key={e.event_id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
+                  <span>
+                    {e.webhook_type}
+                    {e.status ? ` · ${e.status}` : ""}
+                    {e.error ? ` · ${e.error}` : ""}
+                  </span>
+                  <span className="text-muted-foreground">{new Date(e.received_at).toLocaleString()}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">No verification events received yet.</p>
+            )}
           </CardContent>
         </Card>
 
