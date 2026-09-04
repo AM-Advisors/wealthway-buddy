@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getAdminAccess } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 
 
 export const Route = createFileRoute("/_authenticated")({
@@ -33,8 +34,8 @@ function AuthenticatedLayout() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Link to="/" className="font-display text-lg">
-            Harmonious
+          <Link to="/" aria-label="Harmonious home">
+            <Logo variant="navy" className="h-7 w-auto" />
           </Link>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">

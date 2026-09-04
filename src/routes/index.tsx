@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,7 +38,8 @@ function Index() {
   return (
     <main className="paper-grid min-h-screen">
       <section className="mx-auto max-w-3xl px-4 py-24">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+        <Logo variant="navy" className="h-9 w-auto" />
+        <p className="mt-10 text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Private placement · Qualified investors
         </p>
         <h1 className="mt-6 text-5xl leading-tight">Harmonious — Investor Onboarding</h1>
