@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -69,8 +70,9 @@ function AuthPage() {
     <main className="paper-grid flex min-h-screen items-center justify-center px-4 py-16">
       <Card className="w-full max-w-md">
         <CardHeader>
+          <Logo variant="navy" className="mb-4 h-8 w-auto" />
           <h1 className="text-2xl font-semibold leading-none tracking-tight">
-            {mode === "signin" ? "Investor sign in" : "Create investor account"}
+            {mode === "signin" ? "Investor Sign In" : "Create Investor Account"}
           </h1>
           <CardDescription>
             Your application is saved as you go. You can return at any time.

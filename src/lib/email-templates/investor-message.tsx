@@ -1,4 +1,4 @@
-import { Body, Container, Head, Heading, Hr, Html, Preview, Section, Text } from '@react-email/components'
+import { Body, Container, Head, Heading, Hr, Html, Img, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
 interface InvestorMessageProps {
@@ -19,15 +19,23 @@ function InvestorMessage({
     <Html>
       <Head />
       <Preview>{subject}</Preview>
-      <Body style={{ backgroundColor: '#ffffff', fontFamily: 'Poppins, Helvetica, Arial, sans-serif', margin: 0, padding: '24px 0' }}>
-        <Container style={{ backgroundColor: '#ffffff', border: '1px solid #e6ecf3', borderTop: '4px solid #65C7D1', margin: '0 auto', maxWidth: '560px', padding: '40px' }}>
-          <Heading as="h1" style={{ color: '#002753', fontSize: '20px', fontWeight: 300, margin: '0 0 24px' }}>
+      <Body style={{ backgroundColor: '#f4f7fa', fontFamily: 'Poppins, Helvetica, Arial, sans-serif', margin: 0, padding: '24px 0' }}>
+        <Container style={{ backgroundColor: '#ffffff', border: '1px solid #e6ecf3', borderTop: '4px solid #5DC6D1', margin: '0 auto', maxWidth: '560px', padding: '40px' }}>
+          <Section style={{ marginBottom: '24px' }}>
+            <Img
+              src="https://onboard.harmonious.co/__l5e/assets-v1/9bbcb59b-4986-4f16-a7c1-ad0f03953a15/logo-navy.png"
+              alt="Harmonious"
+              height={28}
+              style={{ display: 'block', height: '28px', width: 'auto' }}
+            />
+          </Section>
+          <Heading as="h1" style={{ color: '#142647', fontFamily: 'Rubik, Poppins, Helvetica, Arial, sans-serif', fontSize: '20px', fontWeight: 700, margin: '0 0 24px' }}>
             {offeringName}
           </Heading>
-          <Text style={{ color: '#333333', fontSize: '15px', lineHeight: '24px' }}>Dear {investorName},</Text>
+          <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>Dear {investorName},</Text>
           <Section>
             {paragraphs.map((p, i) => (
-              <Text key={i} style={{ color: '#333333', fontSize: '15px', lineHeight: '24px', whiteSpace: 'pre-line' }}>
+              <Text key={i} style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px', whiteSpace: 'pre-line' }}>
                 {p}
               </Text>
             ))}
