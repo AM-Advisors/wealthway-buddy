@@ -11,6 +11,8 @@ import {
   getSignedDocumentUrl,
   subscriptionSchema,
 } from "@/lib/documents.functions";
+import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -283,14 +285,25 @@ function DocumentsPage() {
                             : "Review only"}
                       </CardDescription>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setActiveDoc(isOpen ? null : doc.id)}
-                    >
-                      {isOpen ? "Collapse" : "Read document"}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={pdfBusy === doc.id}
+                        onClick={() => downloadPdf(doc.id)}
+                      >
+                        {pdfBusy === doc.id ? "Preparing…" : "Download PDF"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setActiveDoc(isOpen ? null : doc.id)}
+                      >
+                        {isOpen ? "Collapse" : "Read document"}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 {isOpen && (
