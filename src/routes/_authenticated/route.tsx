@@ -40,6 +40,9 @@ function AuthenticatedLayout() {
             <Button asChild variant="ghost" size="sm">
               <Link to="/dashboard">Status</Link>
             </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/portal">Portal</Link>
+            </Button>
             {adminAccess?.isAdmin && (
               <Button asChild variant="ghost" size="sm">
                 <Link to="/admin">Admin</Link>
