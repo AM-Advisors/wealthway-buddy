@@ -69,7 +69,7 @@ function AdminDetail() {
   const deliveryLog = useServerFn(listDeliveryLog);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
-  const isAdmin = accessQuery.data?.isAdmin;
+  const isAdmin = accessQuery.data?.isReviewer;
 
   const detail = useQuery({
     queryKey: ["admin-application", applicationId],
