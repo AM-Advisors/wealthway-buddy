@@ -89,10 +89,13 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
       page.drawText(sanitize(input.offeringName), { x: MARGIN, y: height - 64, size: 11, font: regular, color: TEAL });
       page.drawText(regLabel, { x: MARGIN, y: height - 84, size: 10, font: regular, color: WHITE });
     } else {
-      page.drawText(sanitize(input.title), {
-        x: MARGIN,
-        y: height - 38,
-        size: 9,
+      const runningTitle = sanitize(input.title);
+      const size = 9;
+      const w = regular.widthOfTextAtSize(runningTitle, size);
+      page.drawText(runningTitle, {
+        x: Math.max(MARGIN + 130, width - MARGIN - w),
+        y: height - 36,
+        size,
         font: regular,
         color: TEAL,
       });
