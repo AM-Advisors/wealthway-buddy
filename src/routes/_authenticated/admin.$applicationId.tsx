@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { listDeliveryLog } from "@/lib/email-delivery.functions";
 import { prettyStatus, statusTone } from "./admin.index";
 
 export const Route = createFileRoute("/_authenticated/admin/$applicationId")({
@@ -65,6 +66,7 @@ function AdminDetail() {
   const testEmail = useServerFn(sendTestEmail);
   const payment = useServerFn(decidePayment);
   const diditEvents = useServerFn(listDiditEvents);
+  const deliveryLog = useServerFn(listDeliveryLog);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isAdmin;
