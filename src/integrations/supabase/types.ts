@@ -547,6 +547,32 @@ export type Database = {
           },
         ]
       }
+      offering_wire_instructions: {
+        Row: {
+          details: Json
+          offering_id: string
+          updated_at: string
+        }
+        Insert: {
+          details?: Json
+          offering_id: string
+          updated_at?: string
+        }
+        Update: {
+          details?: Json
+          offering_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_wire_instructions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offerings: {
         Row: {
           created_at: string
@@ -559,7 +585,6 @@ export type Database = {
           summary: string | null
           target_raise_cents: number | null
           updated_at: string
-          wire_instructions: Json
         }
         Insert: {
           created_at?: string
@@ -572,7 +597,6 @@ export type Database = {
           summary?: string | null
           target_raise_cents?: number | null
           updated_at?: string
-          wire_instructions?: Json
         }
         Update: {
           created_at?: string
@@ -585,7 +609,6 @@ export type Database = {
           summary?: string | null
           target_raise_cents?: number | null
           updated_at?: string
-          wire_instructions?: Json
         }
         Relationships: []
       }
@@ -823,14 +846,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      owns_application: { Args: { _app_id: string }; Returns: boolean }
+      [_ in never]: never
     }
     Enums: {
       app_role: "admin" | "investor"
