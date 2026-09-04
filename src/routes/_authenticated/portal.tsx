@@ -9,6 +9,11 @@ import { getSignedDocumentUrl, signDocument } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { startIdentityCheck } from "@/lib/didit.functions";
+import {
+  getSigningProvider,
+  refreshAdobeSignatures,
+  startAdobeSigning,
+} from "@/lib/adobe-sign.functions";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
