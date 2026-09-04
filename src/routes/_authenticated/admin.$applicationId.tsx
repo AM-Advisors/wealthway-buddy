@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { listDeliveryLog } from "@/lib/email-delivery.functions";
 import { prettyStatus, statusTone } from "./admin.index";
 
 export const Route = createFileRoute("/_authenticated/admin/$applicationId")({
@@ -65,6 +66,7 @@ function AdminDetail() {
   const testEmail = useServerFn(sendTestEmail);
   const payment = useServerFn(decidePayment);
   const diditEvents = useServerFn(listDiditEvents);
+  const deliveryLog = useServerFn(listDeliveryLog);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isAdmin;
@@ -79,6 +81,14 @@ function AdminDetail() {
     queryKey: ["didit-events", applicationId],
     queryFn: () => diditEvents({ data: { applicationId } }),
     enabled: isAdmin === true,
+  });
+
+  const investorEmail = detail.data?.profile?.email ?? "";
+
+  const deliveryQuery = useQuery({
+    queryKey: ["email-delivery", investorEmail],
+    queryFn: () => deliveryLog({ data: { recipient: investorEmail, limit: 25 } }),
+    enabled: isAdmin === true && investorEmail.length > 0,
   });
 
   const [noteBody, setNoteBody] = useState("");
@@ -566,18 +576,81 @@ function AdminDetail() {
                     <li key={e.id} className="rounded-md border p-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="min-w-0 truncate">{e.subject}</span>
-                        <Badge variant={e.status === "sent" ? "default" : "secondary"}>
-                          {prettyStatus(e.status)}
-                        </Badge>
+                        <span className="flex items-center gap-2">
+                          <Badge variant={e.status === "sent" ? "default" : "secondary"}>
+                            {prettyStatus(e.status)}
+                          </Badge>
+                          {e.delivery_event ? (
+                            <Badge variant="destructive">{prettyStatus(e.delivery_event)}</Badge>
+                          ) : null}
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {e.to_email} · {new Date(e.created_at).toLocaleString()}
                       </p>
+                      {e.delivery_detail ? (
+                        <p className="mt-1 text-xs text-destructive">{e.delivery_detail}</p>
+                      ) : null}
+                      {e.provider_error ? (
+                        <p className="mt-1 text-xs text-muted-foreground">{e.provider_error}</p>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
               </>
             ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Delivery history</CardTitle>
+            <CardDescription>
+              Sends, rejections, bounces, complaints and unsubscribes for this investor's address.
+              Opens and reads aren't tracked.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => deliveryQuery.refetch()}
+              disabled={!investorEmail || deliveryQuery.isFetching}
+            >
+              {deliveryQuery.isFetching ? "Loading…" : "Refresh delivery history"}
+            </Button>
+            {!investorEmail ? (
+              <p className="text-sm text-muted-foreground">No email address on file yet.</p>
+            ) : deliveryQuery.data?.error ? (
+              <p className="text-sm text-muted-foreground">{deliveryQuery.data.error}</p>
+            ) : deliveryQuery.data?.events.length ? (
+              <ul className="space-y-2 text-sm">
+                {deliveryQuery.data.events.map((ev, i) => (
+                  <li
+                    key={`${ev.timestamp}-${i}`}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2"
+                  >
+                    <span>
+                      <Badge variant={ev.event_type === "sent" ? "default" : "secondary"}>
+                        {prettyStatus(ev.event_type)}
+                      </Badge>
+                      {ev.status ? (
+                        <span className="ml-2 text-xs text-muted-foreground">{ev.status}</span>
+                      ) : null}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(ev.timestamp).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {deliveryQuery.isFetched
+                  ? "No delivery events recorded for this address yet."
+                  : "Load the delivery history to see the latest events."}
+              </p>
+            )}
           </CardContent>
         </Card>
 

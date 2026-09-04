@@ -22,6 +22,7 @@ import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authen
 import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
 import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_authenticated/onboarding.funding'
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
@@ -96,6 +97,11 @@ const AuthenticatedOnboardingKycRoute =
     path: '/onboarding/kyc',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksDiditRoute = ApiPublicWebhooksDiditRouteImport.update({
   id: '/api/public/webhooks/didit',
   path: '/api/public/webhooks/didit',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/_authenticated/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/lovable/email/events'
     | '/admin/'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/lovable/email/events'
     | '/admin'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding/documents'
     | '/_authenticated/onboarding/funding'
     | '/_authenticated/onboarding/kyc'
+    | '/lovable/email/events'
     | '/_authenticated/admin/'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -214,6 +226,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingKycRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/didit': {
       id: '/api/public/webhooks/didit'
       path: '/api/public/webhooks/didit'
@@ -362,6 +382,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
