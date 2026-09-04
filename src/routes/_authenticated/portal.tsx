@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { getPortal } from "@/lib/portal.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { startIdentityCheck } from "@/lib/didit.functions";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
