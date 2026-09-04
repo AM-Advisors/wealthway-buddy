@@ -293,7 +293,7 @@ function AdminDetail() {
               disabled={decideMutation.isPending}
               label="Accreditation decision"
               onDecide={(decision) =>
-                decideMutation.mutate({ area: "accreditation", decision, notes: noteBody || undefined })
+                decideMutation.mutate(noteBody ? { area: "accreditation", decision, notes: noteBody } : { area: "accreditation", decision })
               }
             />
           </CardContent>
@@ -504,7 +504,7 @@ function AdminDetail() {
   );
 }
 
-function Row({ label, value }: { label: string; value?: string | null }) {
+function Row({ label, value }: { label: string; value?: string | null | undefined }) {
   return (
     <div className="flex gap-2">
       <span className="text-muted-foreground">{label}:</span>

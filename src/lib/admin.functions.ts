@@ -177,7 +177,7 @@ export const decideApplication = createServerFn({ method: "POST" })
     const column = `${data.area}_status` as const;
     const { error } = await supabase
       .from("investor_applications")
-      .update({ [column]: data.decision, updated_at: now })
+      .update({ [column]: data.decision, updated_at: now } as any)
       .eq("id", data.applicationId);
     if (error) throw new Error(error.message);
 
