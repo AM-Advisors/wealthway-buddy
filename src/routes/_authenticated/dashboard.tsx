@@ -46,11 +46,18 @@ function Dashboard() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <OnboardingStepper current={(app?.current_step as "kyc") ?? "kyc"} />
-      <h1 className="mt-8 text-3xl">Your application</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {data?.offering?.name ?? "Fund subscription"} — compliance review typically completes within
-        two business days.
-      </p>
+      <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl">Your application</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {data?.offering?.name ?? "Fund subscription"} — compliance review typically completes
+            within two business days.
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/portal">Portal & documents</Link>
+        </Button>
+      </div>
 
       {isLoading ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading…</p>
