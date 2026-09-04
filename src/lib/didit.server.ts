@@ -7,6 +7,11 @@ export const DIDIT_MAX_SKEW_SECONDS = 300;
  * Unicode characters preserved (never escaped to \uXXXX).
  */
 export function canonicalJson(value: unknown): string {
+  if (typeof value === "number") {
+    // Didit serialises whole-valued floats as ints (e.g. 36.0 -> 36).
+    if (!Number.isInteger(value) && value % 1 === 0) value = Math.trunc(value);
+    return JSON.stringify(value);
+  }
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
   const entries = Object.entries(value as Record<string, unknown>)
@@ -40,7 +45,7 @@ export interface VerifyInput {
 
 export type VerifyResult =
   | { ok: true; variant: SignatureVariant; body: Record<string, any> }
-  | { ok: false; reason: string };
+  | { ok: false; reason: string; debug?: Record<string, { got: string; want: string }> };
 
 export function verifyDiditWebhook(input: VerifyInput): VerifyResult {
   const { secret, rawBody } = input;
@@ -70,12 +75,24 @@ export function verifyDiditWebhook(input: VerifyInput): VerifyResult {
     return { ok: true, variant: "raw", body };
   }
   if (input.signatureSimple) {
-    const simple = `${input.timestampHeader}:${body["session_id"] ?? ""}:${body["status"] ?? ""}:${body["webhook_type"] ?? ""}`;
+    // Didit signs "{body.timestamp}:{session_id}:{status}:{webhook_type}".
+    const simple = `${body["timestamp"] ?? input.timestampHeader}:${body["session_id"] ?? ""}:${body["status"] ?? ""}:${body["webhook_type"] ?? ""}`;
     if (safeEqual(input.signatureSimple, hmacHex(secret, simple))) {
       return { ok: true, variant: "simple", body };
     }
   }
-  return { ok: false, reason: "bad_signature" };
+  return {
+    ok: false,
+    reason: "bad_signature",
+    debug: {
+      v2: { got: (input.signatureV2 ?? "").slice(0, 12), want: hmacHex(secret, canonicalJson(body)).slice(0, 12) },
+      raw: { got: (input.signature ?? "").slice(0, 12), want: hmacHex(secret, rawBody).slice(0, 12) },
+      simple: {
+        got: (input.signatureSimple ?? "").slice(0, 12),
+        want: hmacHex(secret, `${body["timestamp"] ?? input.timestampHeader}:${body["session_id"] ?? ""}:${body["status"] ?? ""}:${body["webhook_type"] ?? ""}`).slice(0, 12),
+      },
+    },
+  };
 }
 
 export type CheckStatus = "not_started" | "pending" | "review" | "approved" | "declined";
