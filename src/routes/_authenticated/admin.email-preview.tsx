@@ -1,15 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 
 import { getAdminAccess } from "@/lib/admin.functions";
-import { listEmailTemplates, renderEmailPreview } from "@/lib/email-preview.functions";
+import {
+  listEmailTemplates,
+  listPreviewInvestors,
+  renderEmailPreview,
+  sendPreviewTest,
+} from "@/lib/email-preview.functions";
+import {
+  DEFAULT_PORTAL_ORIGIN,
+  ONBOARDING_STEPS,
+  findStep,
+} from "@/lib/email-templates/steps";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 
 export const Route = createFileRoute("/_authenticated/admin/email-preview")({
   head: () => ({
