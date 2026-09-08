@@ -227,6 +227,107 @@ function EmailPreviewPage() {
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-base">Simulate an investor</CardTitle>
+              <CardDescription>
+                Fill the email with a real investor's details, or enter them by hand.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={mode === "investor" ? "default" : "outline"}
+                  onClick={() => setMode("investor")}
+                >
+                  Real investor
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mode === "manual" ? "default" : "outline"}
+                  onClick={() => {
+                    setMode("manual");
+                    setInvestorId("");
+                  }}
+                >
+                  Enter manually
+                </Button>
+              </div>
+
+              {mode === "investor" && (
+                <div className="space-y-2">
+                  <Label htmlFor="investor-search">Find an investor</Label>
+                  <Input
+                    id="investor-search"
+                    placeholder="Search by name, email or fund"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  {investorsQuery.isLoading && (
+                    <p className="text-sm text-muted-foreground">Loading investors…</p>
+                  )}
+                  {!investorsQuery.isLoading && filteredInvestors.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No matching investors.</p>
+                  )}
+                  <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+                    {filteredInvestors.map((i) => (
+                      <button
+                        key={i.applicationId}
+                        type="button"
+                        onClick={() => applyInvestor(i.applicationId)}
+                        className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
+                          investorId === i.applicationId
+                            ? "border-primary bg-primary/5"
+                            : "hover:bg-muted/60"
+                        }`}
+                      >
+                        <span className="block font-medium">{i.investorName}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {i.offeringName}
+                          {i.email ? ` · ${i.email}` : ""}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          Step: {findStep(i.currentStep)?.label ?? i.currentStep}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {supportsSteps ? (
+                <div className="space-y-2">
+                  <Label>Onboarding step</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={currentStep ? "outline" : "default"}
+                      onClick={() => applyStep("")}
+                    >
+                      No step (welcome)
+                    </Button>
+                    {ONBOARDING_STEPS.map((s) => (
+                      <Button
+                        key={s.key}
+                        size="sm"
+                        variant={currentStep === s.key ? "default" : "outline"}
+                        onClick={() => applyStep(s.key)}
+                      >
+                        {s.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  This design does not use onboarding steps.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+
+            <CardHeader>
               <CardTitle className="text-base">Sample content</CardTitle>
               <CardDescription>Edit the wording to see how it looks.</CardDescription>
             </CardHeader>
