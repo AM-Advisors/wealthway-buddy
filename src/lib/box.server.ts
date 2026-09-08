@@ -176,7 +176,7 @@ export function mapSignStatus(
   status: string,
 ): "out_for_signature" | "completed" | "cancelled" | "expired" {
   const s = status.toLowerCase();
-  if (s === "signed" || s === "finalizing" || s === "completed") return "completed";
+  if (s === "signed" || s === "completed") return "completed";
   if (s === "cancelled" || s === "declined" || s.startsWith("error")) return "cancelled";
   if (s === "expired") return "expired";
   return "out_for_signature";
