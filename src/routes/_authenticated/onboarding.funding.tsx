@@ -8,7 +8,7 @@ import {
   acknowledgeFunding,
   chooseWire,
   getFunding,
-  markWireSent,
+  submitWireConfirmation,
   startAchDebit,
 } from "@/lib/funding.functions";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
@@ -59,7 +59,7 @@ function FundingStep() {
   const queryClient = useQueryClient();
   const load = useServerFn(getFunding);
   const wire = useServerFn(chooseWire);
-  const wireSent = useServerFn(markWireSent);
+  const submitWire = useServerFn(submitWireConfirmation);
   const ach = useServerFn(startAchDebit);
   const acknowledge = useServerFn(acknowledgeFunding);
 
@@ -157,6 +157,13 @@ function FundingStep() {
   const allChecked = checked.every(Boolean);
   const statements = method === "wire" ? WIRE_STATEMENTS : ACH_STATEMENTS;
   const reference = payment?.reference_code ?? (data as any)?.reference;
+  const wireConfirmations = ((data as any)?.wireConfirmations ?? []) as any[];
+  const pendingConfirmation = wireConfirmations.find((w) => w.status === "submitted") ?? null;
+  const approvedConfirmation = wireConfirmations.find((w) => w.status === "approved") ?? null;
+  const rejectedConfirmation =
+    !pendingConfirmation && !approvedConfirmation
+      ? (wireConfirmations.find((w) => w.status === "rejected") ?? null)
+      : null;
 
   const copyInstructions = async () => {
     const lines = Object.entries(instructions).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`);
