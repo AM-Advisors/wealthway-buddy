@@ -1,0 +1,3 @@
+CREATE POLICY "managers manage fund managers for their funds" ON public.fund_managers FOR ALL TO authenticated USING (private.manages_offering(offering_id)) WITH CHECK (private.manages_offering(offering_id));
+
+CREATE POLICY "managers manage investor access for their funds" ON public.investor_fund_access FOR ALL TO authenticated USING (private.manages_offering(offering_id)) WITH CHECK (private.manages_offering(offering_id));
