@@ -95,10 +95,22 @@ function FundingStep() {
     onError,
   });
 
-  const wireSentMutation = useMutation({
-    mutationFn: () => wireSent({ data: { expected_date: expectedDate, bank_last4: bankLast4 } }),
+  const wireConfirmMutation = useMutation({
+    mutationFn: () =>
+      submitWire({
+        data: {
+          sent_on: expectedDate,
+          amount: wireAmount,
+          sending_bank_name: sendingBank,
+          sending_account_last4: bankLast4,
+          bank_reference: bankReference,
+          investor_note: wireNote,
+          confirm_accurate: true as const,
+        },
+      }),
     onSuccess: () => {
-      toast.success("Thanks — we'll confirm receipt with the fund administrator.");
+      setWireAccurate(false);
+      toast.success("Wire confirmation submitted for review.");
       invalidate();
     },
     onError,
