@@ -359,6 +359,47 @@ export type Database = {
           },
         ]
       }
+      email_link_clicks: {
+        Row: {
+          clicked_at: string
+          id: string
+          investor_email_id: string | null
+          link_label: string | null
+          recipient: string
+          target_url: string
+          template: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          investor_email_id?: string | null
+          link_label?: string | null
+          recipient: string
+          target_url: string
+          template?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          investor_email_id?: string | null
+          link_label?: string | null
+          recipient?: string
+          target_url?: string
+          template?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_link_clicks_investor_email_id_fkey"
+            columns: ["investor_email_id"]
+            isOneToOne: false
+            referencedRelation: "investor_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_managers: {
         Row: {
           created_at: string

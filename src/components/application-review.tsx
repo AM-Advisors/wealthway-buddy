@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { listDeliveryLog } from "@/lib/email-delivery.functions";
+import { listDeliveryLog, listEmailClicks } from "@/lib/email-delivery.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 
 export interface ApplicationReviewProps {
@@ -50,6 +50,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
   const payment = useServerFn(decidePayment);
   const diditEvents = useServerFn(listDiditEvents);
   const deliveryLog = useServerFn(listDeliveryLog);
+  const emailClicks = useServerFn(listEmailClicks);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isReviewer;
@@ -75,6 +76,13 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     queryFn: () => deliveryLog({ data: { recipient: investorEmail, limit: 25 } }),
     enabled: isAdmin === true && investorEmail.length > 0,
   });
+
+  const clicksQuery = useQuery({
+    queryKey: ["email-clicks"],
+    queryFn: () => emailClicks({ data: { limit: 25 } }),
+    enabled: isAdmin === true,
+  });
+
 
   const [noteBody, setNoteBody] = useState("");
   const [subject, setSubject] = useState("");
@@ -714,8 +722,50 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                   : "Load the delivery history to see the latest events."}
               </p>
             )}
+
+            <Separator className="my-2" />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium">Link clicks</p>
+                <p className="text-xs text-muted-foreground">
+                  Recorded when someone opens a link in an onboarding email.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => clicksQuery.refetch()}
+                disabled={clicksQuery.isFetching}
+              >
+                {clicksQuery.isFetching ? "Loading…" : "Refresh clicks"}
+              </Button>
+            </div>
+            {clicksQuery.data?.error ? (
+              <p className="text-sm text-muted-foreground">{clicksQuery.data.error}</p>
+            ) : clicksQuery.data?.clicks.length ? (
+              <ul className="space-y-2 text-sm">
+                {clicksQuery.data.clicks.map((c) => (
+                  <li
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2"
+                  >
+                    <span>
+                      <Badge>Clicked</Badge>
+                      <span className="ml-2">{c.linkLabel ?? "Link"}</span>
+                      <span className="ml-2 text-xs text-muted-foreground">{c.recipient}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(c.clickedAt).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">No link clicks recorded yet.</p>
+            )}
           </CardContent>
         </Card>
+
 
         <Card>
           <CardHeader>

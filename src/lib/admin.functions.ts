@@ -419,16 +419,25 @@ export const sendOnboardingInvitation = createServerFn({ method: "POST" })
       }
     }
 
+    const { buildTrackedUrl } = await import("@/lib/email-tracking.server");
+    const portalUrl = await buildTrackedUrl({
+      url: "https://onboard.harmonious.co/dashboard",
+      recipient: data.to,
+      template: "investor-invitation",
+      label: "Begin onboarding",
+    });
+
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
     const result = await sendTemplateEmail("investor-invitation", data.to, {
       templateData: {
         investorName,
         offeringName,
-        portalUrl: "https://onboard.harmonious.co/dashboard",
+        portalUrl,
         contactEmail: "operations@harmonious.co",
       },
       idempotencyKey: `invitation-${data.to}-${Date.now()}`,
     });
+
 
     if (!result.sent) {
       return { ok: false, message: "That address has opted out or previously bounced." };
