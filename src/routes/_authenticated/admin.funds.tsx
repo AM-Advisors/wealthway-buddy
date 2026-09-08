@@ -12,7 +12,7 @@ import {
   saveOffering,
   saveOfferingDocument,
 } from "@/lib/offerings.functions";
-import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -143,6 +143,21 @@ function FundsPage() {
       toast.error(err?.message ?? "Could not prepare the PDF.");
     } finally {
       setPdfBusy(null);
+    }
+  };
+
+  const [packetBusy, setPacketBusy] = useState<string | null>(null);
+  const getPacket = useServerFn(downloadOfferingPacket);
+
+  const downloadPacket = async (offeringId: string) => {
+    setPacketBusy(offeringId);
+    try {
+      const res = await getPacket({ data: { offering_id: offeringId } });
+      savePdf(res.filename, res.base64);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not prepare the packet.");
+    } finally {
+      setPacketBusy(null);
     }
   };
   const [docForm, setDocForm] = useState<DocForm>(blankDoc());
@@ -413,9 +428,19 @@ function FundsPage() {
                     </Badge>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => setEditing(toForm(o))}>
-                  Edit fund
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={packetBusy === o.id}
+                    onClick={() => downloadPacket(o.id)}
+                  >
+                    {packetBusy === o.id ? "Preparing…" : "Download packet (PDF)"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditing(toForm(o))}>
+                    Edit fund
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2 border-t pt-4">
