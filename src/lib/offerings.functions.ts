@@ -210,12 +210,10 @@ export const saveOffering = createServerFn({ method: "POST" })
       offeringId = (inserted as any).id as string;
     }
 
-    const { error: wireError } = await context.supabase
-      .from("offering_wire_instructions")
-      .upsert(
-        { offering_id: offeringId, details: wireDetails, updated_at: new Date().toISOString() },
-        { onConflict: "offering_id" },
-      );
+    const { error: wireError } = await context.supabase.rpc("save_wire_instructions", {
+      p_offering_id: offeringId!,
+      p_details: wireDetails as any,
+    });
     if (wireError) throw new Error(wireError.message);
 
     const offeringChanges = diffRecords(previousOffering, payload, OFFERING_FIELDS);
