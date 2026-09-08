@@ -113,6 +113,40 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
   const [message, setMessage] = useState("");
   const [testTo, setTestTo] = useState("");
 
+  // Last test send, kept so it can be tweaked and resent without recomposing.
+  type LastTest = { to: string; subject: string; body: string; at: number };
+  const lastTestKey = `harmonious.lastTestEmail.${applicationId}`;
+  const [lastTest, setLastTest] = useState<LastTest | null>(null);
+  const [resendTo, setResendTo] = useState("");
+  const [resendSubject, setResendSubject] = useState("");
+  const [resendBody, setResendBody] = useState("");
+
+  const applyLastTest = (t: LastTest) => {
+    setLastTest(t);
+    setResendTo(t.to);
+    setResendSubject(t.subject);
+    setResendBody(t.body);
+  };
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(lastTestKey);
+      if (raw) applyLastTest(JSON.parse(raw) as LastTest);
+    } catch {
+      /* ignore unreadable storage */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastTestKey]);
+
+  const rememberTest = (t: LastTest) => {
+    applyLastTest(t);
+    try {
+      window.localStorage.setItem(lastTestKey, JSON.stringify(t));
+    } catch {
+      /* ignore unwritable storage */
+    }
+  };
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-application", applicationId] });
     queryClient.invalidateQueries({ queryKey: ["admin-queue"] });
