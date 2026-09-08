@@ -56,7 +56,11 @@ function AdminQueue() {
     queryKey: ["admin-queue", filter],
     queryFn: () => load({ data: { filter } }),
     enabled: isReviewer === true,
+    // Identity results arrive by webhook, so keep the queue current on its own.
+    refetchInterval: 20000,
+    refetchOnWindowFocus: true,
   });
+
 
 
   if (accessQuery.isLoading) {

@@ -66,13 +66,19 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     queryKey: ["admin-application", applicationId],
     queryFn: () => load({ data: { applicationId } }),
     enabled: isAdmin === true,
+    // Identity decisions arrive asynchronously by webhook.
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
 
   const eventsQuery = useQuery({
     queryKey: ["didit-events", applicationId],
     queryFn: () => diditEvents({ data: { applicationId } }),
     enabled: isAdmin === true,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
+
 
   const investorEmail = detail.data?.profile?.email ?? "";
 
