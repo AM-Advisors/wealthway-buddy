@@ -69,9 +69,7 @@ export const getFundPage = createServerFn({ method: "GET" })
           .eq("offering_id", data.fundId)
           .order("sort_order", { ascending: true }),
         supabase
-          .from("offering_wire_instructions")
-          .select("details, updated_at")
-          .eq("offering_id", data.fundId)
+          .rpc("get_wire_instructions", { p_offering_id: data.fundId })
           .maybeSingle(),
         supabase
           .from("investor_applications")
