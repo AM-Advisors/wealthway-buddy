@@ -99,48 +99,75 @@ function InvestorInvitation({
               margin: '0 0 20px',
             }}
           >
-            Welcome to {offeringName}
+            {heading}
           </Heading>
 
           <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>
             Dear {investorName},
           </Text>
-          <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>
-            Your investor onboarding for {offeringName} is ready. Everything happens in your secure
-            portal — you can pause at any point and pick up exactly where you left off.
-          </Text>
+          <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>{lead}</Text>
 
           <Section style={{ margin: '24px 0' }}>
-            {STEPS.map(([title, detail]) => (
-              <Section
-                key={title}
-                style={{
-                  borderLeft: '3px solid #5DC6D1',
-                  margin: '0 0 14px',
-                  padding: '2px 0 2px 14px',
-                }}
-              >
-                <Text
+            {ONBOARDING_STEPS.filter((s) => s.key !== 'complete').map((s, index) => {
+              const isCurrent = activeIndex === index
+              const isDone = activeIndex > index
+              const accent = isCurrent ? '#5DC6D1' : isDone ? '#9fb3c8' : '#e6ecf3'
+              return (
+                <Section
+                  key={s.key}
                   style={{
-                    color: '#142647',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    lineHeight: '20px',
-                    margin: '0 0 2px',
+                    backgroundColor: isCurrent ? '#f2fbfc' : 'transparent',
+                    borderLeft: `3px solid ${accent}`,
+                    margin: '0 0 14px',
+                    padding: isCurrent ? '10px 12px 10px 14px' : '2px 0 2px 14px',
                   }}
                 >
-                  {title}
-                </Text>
-                <Text style={{ color: '#606060', fontSize: '13px', lineHeight: '20px', margin: 0 }}>
-                  {detail}
-                </Text>
-              </Section>
-            ))}
+                  <Text
+                    style={{
+                      color: isDone ? '#7a8a9a' : '#142647',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      lineHeight: '20px',
+                      margin: '0 0 2px',
+                    }}
+                  >
+                    {isDone ? '\u2713 ' : `${index + 1}. `}
+                    {s.title}
+                    {isCurrent ? (
+                      <span
+                        style={{
+                          backgroundColor: '#5DC6D1',
+                          borderRadius: '4px',
+                          color: '#ffffff',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          marginLeft: '8px',
+                          padding: '2px 7px',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        You are here
+                      </span>
+                    ) : null}
+                  </Text>
+                  <Text
+                    style={{
+                      color: isDone ? '#9fb3c8' : '#606060',
+                      fontSize: '13px',
+                      lineHeight: '20px',
+                      margin: 0,
+                    }}
+                  >
+                    {isDone ? 'Completed' : s.detail}
+                  </Text>
+                </Section>
+              )
+            })}
           </Section>
 
           <Section style={{ margin: '28px 0' }}>
             <Button
-              href={portalUrl}
+              href={buttonHref}
               style={{
                 backgroundColor: '#142647',
                 borderRadius: '6px',
@@ -152,7 +179,7 @@ function InvestorInvitation({
                 textDecoration: 'none',
               }}
             >
-              Begin onboarding
+              {buttonLabel}
             </Button>
           </Section>
 
@@ -176,8 +203,7 @@ function InvestorInvitation({
 
 export const template = {
   component: InvestorInvitation,
-  subject: (data: Record<string, any>) =>
-    `Begin your ${data['offeringName'] || 'Harmonious'} investor onboarding`,
+  subject: (data: Record<string, any>) => invitationSubject(data),
   displayName: 'Investor onboarding invitation',
   previewData: {
     investorName: 'Jane Doe',
@@ -186,3 +212,4 @@ export const template = {
     contactEmail: 'operations@harmonious.co',
   },
 } satisfies TemplateEntry
+
