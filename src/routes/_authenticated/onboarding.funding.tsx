@@ -4,7 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { chooseWire, getFunding, markWireSent, startAchDebit } from "@/lib/funding.functions";
+import {
+  acknowledgeFunding,
+  chooseWire,
+  getFunding,
+  markWireSent,
+  startAchDebit,
+} from "@/lib/funding.functions";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
