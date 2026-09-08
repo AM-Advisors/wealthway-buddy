@@ -98,9 +98,13 @@ function AdminQueue() {
         <div className="flex gap-2">
           {isAdmin && (
             <>
+              <Button asChild size="sm">
+                <Link to="/admin/new-application">New application</Link>
+              </Button>
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/access">Access</Link>
               </Button>
+
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/security">Login activity</Link>
               </Button>
