@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   amlStatusFromDecision,
   collectDecisionWarnings,
+  collectEmails,
+  fetchDiditSessionDecision,
   mapDiditStatus,
   verifyDiditWebhook,
 } from "@/lib/didit.server";
@@ -20,6 +22,7 @@ const KNOWN_EVENTS = new Set([
 ]);
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 
 export const Route = createFileRoute("/api/public/webhooks/didit")({
   server: {
