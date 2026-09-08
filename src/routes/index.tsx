@@ -52,6 +52,11 @@ function Index() {
           <Button asChild size="lg">
             <Link to={session ? "/onboarding/kyc" : "/auth"}>Begin your application</Link>
           </Button>
+          {!session && (
+            <Button asChild size="lg" variant="outline">
+              <Link to="/auth">Sign in to your application</Link>
+            </Button>
+          )}
           {session && (
             <>
               <Button asChild size="lg" variant="outline">
