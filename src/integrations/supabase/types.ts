@@ -806,32 +806,6 @@ export type Database = {
           },
         ]
       }
-      offering_wire_instructions: {
-        Row: {
-          details: Json
-          offering_id: string
-          updated_at: string
-        }
-        Insert: {
-          details?: Json
-          offering_id: string
-          updated_at?: string
-        }
-        Update: {
-          details?: Json
-          offering_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "offering_wire_instructions_offering_id_fkey"
-            columns: ["offering_id"]
-            isOneToOne: true
-            referencedRelation: "offerings"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       offerings: {
         Row: {
           created_at: string
@@ -1174,7 +1148,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_read_wire_instructions: {
+        Args: { _offering_id: string }
+        Returns: boolean
+      }
+      get_wire_instructions: {
+        Args: { p_offering_id: string }
+        Returns: {
+          details: Json
+          offering_id: string
+          updated_at: string
+        }[]
+      }
+      list_wire_instructions: {
+        Args: never
+        Returns: {
+          details: Json
+          offering_id: string
+          updated_at: string
+        }[]
+      }
+      save_wire_instructions: {
+        Args: { p_details: Json; p_offering_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "investor" | "fund_manager"
