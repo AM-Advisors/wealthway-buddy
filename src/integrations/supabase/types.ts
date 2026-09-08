@@ -1100,6 +1100,75 @@ export type Database = {
         }
         Relationships: []
       }
+      wire_confirmations: {
+        Row: {
+          amount_cents: number
+          application_id: string
+          bank_reference: string | null
+          created_at: string
+          id: string
+          investor_note: string | null
+          payment_id: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sending_account_last4: string
+          sending_bank_name: string
+          sent_on: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          application_id: string
+          bank_reference?: string | null
+          created_at?: string
+          id?: string
+          investor_note?: string | null
+          payment_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sending_account_last4: string
+          sending_bank_name: string
+          sent_on: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          application_id?: string
+          bank_reference?: string | null
+          created_at?: string
+          id?: string
+          investor_note?: string | null
+          payment_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sending_account_last4?: string
+          sending_bank_name?: string
+          sent_on?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wire_confirmations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wire_confirmations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
