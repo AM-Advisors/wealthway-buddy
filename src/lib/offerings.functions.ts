@@ -105,6 +105,56 @@ export const listOfferings = createServerFn({ method: "GET" })
     };
   });
 
+async function actorIdentity(supabase: any, userId: string, claims: any) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("legal_name, email")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return {
+    actor_id: userId,
+    actor_name: (data as any)?.legal_name ?? null,
+    actor_email: (data as any)?.email ?? (claims?.email as string | undefined) ?? null,
+  };
+}
+
+async function recordAudit(
+  supabase: any,
+  identity: { actor_id: string; actor_name: string | null; actor_email: string | null },
+  event: {
+    offering_id: string;
+    offering_document_id?: string | null;
+    event_type: OfferingAuditEventType;
+    changes: AuditChange[];
+  },
+) {
+  try {
+    const { error } = await supabase.from("offering_audit_events").insert({
+      offering_id: event.offering_id,
+      offering_document_id: event.offering_document_id ?? null,
+      event_type: event.event_type,
+      changes: event.changes,
+      summary: summarizeChanges(event.event_type, event.changes),
+      ...identity,
+    });
+    if (error) console.error("offering audit insert failed", error.message);
+  } catch (err) {
+    console.error("offering audit insert threw", err);
+  }
+}
+
+const OFFERING_FIELDS = [
+  "name",
+  "slug",
+  "summary",
+  "reg_type",
+  "min_investment_cents",
+  "target_raise_cents",
+  "is_open",
+];
+
+const DOCUMENT_FIELDS = ["title", "doc_type", "requires_signature", "sort_order", "body"];
+
 export const saveOffering = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => offeringSchema.parse(data))
@@ -126,8 +176,26 @@ export const saveOffering = createServerFn({ method: "POST" })
     );
 
     let offeringId = data.id;
+    const identity = await actorIdentity(context.supabase, context.userId, context.claims);
+
+    let previousOffering: Record<string, unknown> | null = null;
+    let previousWire: Record<string, unknown> | null = null;
 
     if (offeringId) {
+      const { data: existing } = await context.supabase
+        .from("offerings")
+        .select("*")
+        .eq("id", offeringId)
+        .maybeSingle();
+      previousOffering = (existing as any) ?? null;
+
+      const { data: existingWire } = await context.supabase
+        .from("offering_wire_instructions")
+        .select("details")
+        .eq("offering_id", offeringId)
+        .maybeSingle();
+      previousWire = ((existingWire as any)?.details ?? null) as Record<string, unknown> | null;
+
       const { error } = await context.supabase.from("offerings").update(payload).eq("id", offeringId);
       if (error) throw new Error(error.message);
     } else {
@@ -148,6 +216,34 @@ export const saveOffering = createServerFn({ method: "POST" })
       );
     if (wireError) throw new Error(wireError.message);
 
+    const offeringChanges = diffRecords(previousOffering, payload, OFFERING_FIELDS);
+    if (!data.id) {
+      await recordAudit(context.supabase, identity, {
+        offering_id: offeringId!,
+        event_type: "offering_created",
+        changes: offeringChanges,
+      });
+    } else if (offeringChanges.length > 0) {
+      await recordAudit(context.supabase, identity, {
+        offering_id: offeringId!,
+        event_type: "offering_updated",
+        changes: offeringChanges,
+      });
+    }
+
+    const wireChanges = diffRecords(
+      previousWire ?? {},
+      Object.fromEntries(WIRE_FIELDS.map((f) => [f, (wireDetails as any)[f] ?? ""])),
+      [...WIRE_FIELDS],
+    );
+    if (wireChanges.length > 0) {
+      await recordAudit(context.supabase, identity, {
+        offering_id: offeringId!,
+        event_type: "wire_updated",
+        changes: wireChanges,
+      });
+    }
+
     return { id: offeringId };
   });
 
@@ -166,12 +262,30 @@ export const saveOfferingDocument = createServerFn({ method: "POST" })
       sort_order: data.sort_order,
     };
 
+    const identity = await actorIdentity(context.supabase, context.userId, context.claims);
+
     if (data.id) {
+      const { data: existing } = await context.supabase
+        .from("offering_documents")
+        .select("*")
+        .eq("id", data.id)
+        .maybeSingle();
+
       const { error } = await context.supabase
         .from("offering_documents")
         .update(payload)
         .eq("id", data.id);
       if (error) throw new Error(error.message);
+
+      const changes = diffRecords((existing as any) ?? null, payload, DOCUMENT_FIELDS);
+      if (changes.length > 0) {
+        await recordAudit(context.supabase, identity, {
+          offering_id: data.offering_id,
+          offering_document_id: data.id,
+          event_type: "document_updated",
+          changes,
+        });
+      }
       return { id: data.id };
     }
 
@@ -181,7 +295,15 @@ export const saveOfferingDocument = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    return { id: (inserted as any).id as string };
+
+    const newId = (inserted as any).id as string;
+    await recordAudit(context.supabase, identity, {
+      offering_id: data.offering_id,
+      offering_document_id: newId,
+      event_type: "document_created",
+      changes: diffRecords(null, payload, DOCUMENT_FIELDS),
+    });
+    return { id: newId };
   });
 
 export const deleteOfferingDocument = createServerFn({ method: "POST" })
@@ -199,7 +321,68 @@ export const deleteOfferingDocument = createServerFn({ method: "POST" })
       throw new Error("This document has already been signed by an investor and cannot be removed.");
     }
 
+    const { data: existing } = await context.supabase
+      .from("offering_documents")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+
     const { error } = await context.supabase.from("offering_documents").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    if (existing) {
+      const identity = await actorIdentity(context.supabase, context.userId, context.claims);
+      await recordAudit(context.supabase, identity, {
+        offering_id: (existing as any).offering_id as string,
+        offering_document_id: data.id,
+        event_type: "document_deleted",
+        changes: [
+          { field: "title", from: (existing as any).title as string, to: null },
+          { field: "doc_type", from: (existing as any).doc_type as string, to: null },
+        ],
+      });
+    }
+
     return { ok: true };
   });
+
+export const listOfferingAuditEvents = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        offering_id: z.string().uuid(),
+        limit: z.number().int().min(1).max(200).default(50),
+        before: z.string().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+
+    let query = context.supabase
+      .from("offering_audit_events")
+      .select("id, event_type, changes, summary, actor_name, actor_email, offering_document_id, created_at")
+      .eq("offering_id", data.offering_id)
+      .order("created_at", { ascending: false })
+      .limit(data.limit);
+
+    if (data.before) query = query.lt("created_at", data.before);
+
+    const { data: rows, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const events = (rows ?? []).map((r: any) => ({
+      id: r.id as string,
+      event_type: r.event_type as OfferingAuditEventType,
+      changes: (r.changes ?? []) as AuditChange[],
+      summary: (r.summary ?? "") as string,
+      actor_name: (r.actor_name ?? null) as string | null,
+      actor_email: (r.actor_email ?? null) as string | null,
+      offering_document_id: (r.offering_document_id ?? null) as string | null,
+      created_at: r.created_at as string,
+    }));
+
+    return { events, hasMore: events.length === data.limit };
+  });
+
