@@ -71,16 +71,26 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
 
   const investorEmail = detail.data?.profile?.email ?? "";
 
+  const [watchEmail, setWatchEmail] = useState("");
+  const [lastSendAt, setLastSendAt] = useState<number | null>(null);
+  const watchedEmail = watchEmail || investorEmail;
+  const pollingWindowMs = 10 * 60 * 1000;
+  const pollingActive = lastSendAt !== null && Date.now() - lastSendAt < pollingWindowMs;
+
   const deliveryQuery = useQuery({
-    queryKey: ["email-delivery", investorEmail],
-    queryFn: () => deliveryLog({ data: { recipient: investorEmail, limit: 25 } }),
-    enabled: isAdmin === true && investorEmail.length > 0,
+    queryKey: ["email-delivery", watchedEmail],
+    queryFn: () => deliveryLog({ data: { recipient: watchedEmail, limit: 25 } }),
+    enabled: isAdmin === true && watchedEmail.length > 0,
+    refetchInterval: () =>
+      lastSendAt !== null && Date.now() - lastSendAt < pollingWindowMs ? 15000 : false,
   });
 
   const clicksQuery = useQuery({
     queryKey: ["email-clicks"],
     queryFn: () => emailClicks({ data: { limit: 25 } }),
     enabled: isAdmin === true,
+    refetchInterval: () =>
+      lastSendAt !== null && Date.now() - lastSendAt < pollingWindowMs ? 15000 : false,
   });
 
 
