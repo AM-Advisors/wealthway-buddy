@@ -12,28 +12,52 @@ import {
   Text,
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { DEFAULT_PORTAL_ORIGIN, ONBOARDING_STEPS, findStep } from './steps'
 
 interface InvestorInvitationProps {
   investorName?: string
   offeringName?: string
   portalUrl?: string
   contactEmail?: string
+  /** Optional onboarding step key — highlights progress and tailors the CTA. */
+  currentStep?: string
+  ctaUrl?: string
+  ctaLabel?: string
 }
 
-const STEPS: Array<[string, string]> = [
-  ['1. Identity verification', 'A short, guided ID check — a photo of your ID and a selfie.'],
-  ['2. AML screening', 'We run standard sanctions and watchlist screening in the background.'],
-  ['3. Accreditation', 'Confirm your Reg D qualification and upload supporting evidence if required.'],
-  ['4. Fund documents', 'Review and electronically sign the subscription agreement and PPM.'],
-  ['5. Funding', 'Choose wire or ACH — your instructions and reference code appear in the portal.'],
-]
+export function invitationHeadline(offeringName: string, currentStep?: string) {
+  const step = findStep(currentStep)
+  if (!step) return `Welcome to ${offeringName}`
+  if (step.key === 'complete') return `You're all set with ${offeringName}`
+  return `Continue your ${offeringName} onboarding`
+}
+
+export function invitationSubject(data: Record<string, any>) {
+  const name = data['offeringName'] || 'Harmonious'
+  const step = findStep(data['currentStep'])
+  if (!step) return `Begin your ${name} investor onboarding`
+  if (step.key === 'complete') return `Your ${name} onboarding is complete`
+  return `Next step for ${name}: ${step.label.toLowerCase()}`
+}
 
 function InvestorInvitation({
   investorName = 'Investor',
   offeringName = 'Harmonious',
-  portalUrl = 'https://onboard.harmonious.co/dashboard',
+  portalUrl = `${DEFAULT_PORTAL_ORIGIN}/dashboard`,
   contactEmail = 'operations@harmonious.co',
+  currentStep,
+  ctaUrl,
+  ctaLabel,
 }: InvestorInvitationProps) {
+  const step = findStep(currentStep)
+  const activeIndex = step ? ONBOARDING_STEPS.findIndex((s) => s.key === step.key) : -1
+  const buttonHref = ctaUrl || portalUrl
+  const buttonLabel = ctaLabel || (step ? step.ctaLabel : 'Begin onboarding')
+  const heading = invitationHeadline(offeringName, currentStep)
+  const lead = step
+    ? step.lead
+    : `Your investor onboarding for ${offeringName} is ready. Everything happens in your secure portal — you can pause at any point and pick up exactly where you left off.`
+
   return (
     <Html>
       <Head />
