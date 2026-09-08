@@ -10,6 +10,7 @@ import {
   addAdminNote,
   decideApplication,
   decidePayment,
+  decideWireConfirmation,
   listDiditEvents,
   getAdminAccess,
   getAdminFileUrl,
