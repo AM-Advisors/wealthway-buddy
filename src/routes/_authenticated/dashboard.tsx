@@ -270,7 +270,12 @@ function Dashboard() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl">Your documents</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl">Your documents</h2>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/documents">View all documents</Link>
+          </Button>
+        </div>
         <Card className="mt-4">
           <CardContent className="pt-6">
             {offeringDocs.length === 0 ? (
