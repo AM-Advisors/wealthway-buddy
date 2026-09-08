@@ -211,11 +211,20 @@ export const getFunding = createServerFn({ method: "GET" })
         : null;
     }
 
+    const { data: wireConfirmations } = await supabase
+      .from("wire_confirmations")
+      .select(
+        "id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, investor_note, status, review_notes, reviewed_at, created_at",
+      )
+      .eq("application_id", application.id)
+      .order("created_at", { ascending: false });
+
     return {
       application,
       offering,
       payment,
       acknowledgements,
+      wireConfirmations: wireConfirmations ?? [],
       reference: referenceCode(application.id),
     };
   });
