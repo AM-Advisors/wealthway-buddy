@@ -15,8 +15,86 @@ export const achSchema = z.object({
   authorize_debit: z.literal(true),
 });
 
+export const acknowledgeSchema = z.object({
+  method: z.enum(["wire", "ach"]),
+  statements: z.array(z.string().trim().min(3).max(400)).min(1).max(6),
+});
+
 function referenceCode(applicationId: string) {
   return `HAR-${applicationId.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+}
+
+async function sha256Hex(input: string) {
+  const bytes = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Fingerprint of exactly what the investor must review, computed server-side only. */
+async function instructionsFingerprint(
+  supabase: any,
+  application: { id: string; offering_id: string; commitment_cents: number | null },
+  method: "wire" | "ach",
+) {
+  const base = {
+    method,
+    offering_id: application.offering_id,
+    amount_cents: application.commitment_cents ?? 0,
+    reference: referenceCode(application.id),
+    instructions: {} as Record<string, string>,
+  };
+
+  if (method === "wire") {
+    const { data: wireRow } = await supabase
+      .from("offering_wire_instructions")
+      .select("details")
+      .eq("offering_id", application.offering_id)
+      .maybeSingle();
+    const details = ((wireRow as any)?.details ?? {}) as Record<string, unknown>;
+    base.instructions = Object.fromEntries(
+      Object.keys(details)
+        .sort()
+        .map((k) => [k, String(details[k] ?? "")]),
+    );
+  }
+
+  return sha256Hex(JSON.stringify(base));
+}
+
+async function latestAcknowledgement(
+  supabase: any,
+  applicationId: string,
+  method: "wire" | "ach",
+) {
+  const { data } = await supabase
+    .from("funding_acknowledgements")
+    .select("id, method, instructions_hash, statements, acknowledged_at")
+    .eq("application_id", applicationId)
+    .eq("method", method)
+    .order("acknowledged_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ?? null;
+}
+
+async function assertAcknowledged(
+  supabase: any,
+  application: { id: string; offering_id: string; commitment_cents: number | null },
+  method: "wire" | "ach",
+) {
+  const ack = await latestAcknowledgement(supabase, application.id, method);
+  const expected = await instructionsFingerprint(supabase, application, method);
+  if (!ack) {
+    throw new Error("Review and confirm the funding instructions before continuing.");
+  }
+  if (ack.instructions_hash !== expected) {
+    throw new Error(
+      "The funding details for this fund have changed. Please review and confirm them again.",
+    );
+  }
+  return ack;
 }
 
 async function loadFundingApplication(supabase: any, userId: string) {
@@ -63,7 +141,17 @@ export const getFunding = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    if (!application) return { application: null, offering: null, payment: null, reference: null };
+    if (!application)
+      return {
+        application: null,
+        offering: null,
+        payment: null,
+        reference: null,
+        acknowledgements: { wire: null, ach: null } as {
+          wire: { acknowledged_at: string; statements: string[]; current: boolean } | null;
+          ach: { acknowledged_at: string; statements: string[]; current: boolean } | null;
+        },
+      };
 
     const { data: offeringRow } = await supabase
       .from("offerings")
@@ -89,7 +177,55 @@ export const getFunding = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    return { application, offering, payment, reference: referenceCode(application.id) };
+    type AckInfo = { acknowledged_at: string; statements: string[]; current: boolean } | null;
+    const acknowledgements: { wire: AckInfo; ach: AckInfo } = { wire: null, ach: null };
+    for (const method of ["wire", "ach"] as const) {
+      const ack = await latestAcknowledgement(supabase, application.id, method);
+      const expected = await instructionsFingerprint(supabase, application as any, method);
+      acknowledgements[method] = ack
+        ? {
+            acknowledged_at: String(ack.acknowledged_at),
+            statements: (ack.statements ?? []) as string[],
+            current: ack.instructions_hash === expected,
+          }
+        : null;
+    }
+
+    return {
+      application,
+      offering,
+      payment,
+      acknowledgements,
+      reference: referenceCode(application.id),
+    };
+  });
+
+export const acknowledgeFunding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => acknowledgeSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const application = await loadFundingApplication(supabase, userId);
+    assertFundable(application);
+    if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
+
+    const hash = await instructionsFingerprint(supabase, application as any, data.method);
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const forwarded = getRequestHeader("x-forwarded-for") ?? "";
+    const ip = forwarded.split(",")[0]?.trim() || null;
+    const userAgent = getRequestHeader("user-agent") ?? null;
+
+    const { error } = await supabase.from("funding_acknowledgements").insert({
+      application_id: application.id,
+      method: data.method,
+      instructions_hash: hash,
+      statements: data.statements,
+      ip_address: ip,
+      user_agent: userAgent,
+    });
+    if (error) throw new Error(error.message);
+
+    return { ok: true };
   });
 
 export const chooseWire = createServerFn({ method: "POST" })
@@ -98,6 +234,7 @@ export const chooseWire = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
     assertFundable(application);
+    await assertAcknowledged(supabase, application as any, "wire");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
     const now = new Date().toISOString();
@@ -172,6 +309,7 @@ export const startAchDebit = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
     assertFundable(application);
+    await assertAcknowledged(supabase, application as any, "ach");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
     const now = new Date().toISOString();

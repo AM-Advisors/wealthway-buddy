@@ -432,6 +432,50 @@ export type Database = {
           },
         ]
       }
+      funding_acknowledgements: {
+        Row: {
+          acknowledged_at: string
+          application_id: string
+          created_at: string
+          id: string
+          instructions_hash: string
+          ip_address: string | null
+          method: Database["public"]["Enums"]["funding_method"]
+          statements: Json
+          user_agent: string | null
+        }
+        Insert: {
+          acknowledged_at?: string
+          application_id: string
+          created_at?: string
+          id?: string
+          instructions_hash: string
+          ip_address?: string | null
+          method: Database["public"]["Enums"]["funding_method"]
+          statements?: Json
+          user_agent?: string | null
+        }
+        Update: {
+          acknowledged_at?: string
+          application_id?: string
+          created_at?: string
+          id?: string
+          instructions_hash?: string
+          ip_address?: string | null
+          method?: Database["public"]["Enums"]["funding_method"]
+          statements?: Json
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_acknowledgements_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_applications: {
         Row: {
           accreditation_status: Database["public"]["Enums"]["check_status"]

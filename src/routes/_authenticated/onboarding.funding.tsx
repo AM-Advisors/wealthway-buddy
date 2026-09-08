@@ -4,7 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { chooseWire, getFunding, markWireSent, startAchDebit } from "@/lib/funding.functions";
+import {
+  acknowledgeFunding,
+  chooseWire,
+  getFunding,
+  markWireSent,
+  startAchDebit,
+} from "@/lib/funding.functions";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,15 +43,33 @@ function money(cents?: number | null) {
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
+const WIRE_STATEMENTS = [
+  "I have reviewed the wire instructions above for this fund.",
+  "I confirm the amount and reference code are correct.",
+  "I understand Harmonious will never email changed bank details, and I will verify any change by phone.",
+];
+
+const ACH_STATEMENTS = [
+  "I have reviewed the debit details above for this fund.",
+  "I confirm the bank account I am about to enter is mine and the details are accurate.",
+  "I authorize Harmonious to debit that account once for my capital commitment.",
+];
+
 function FundingStep() {
   const queryClient = useQueryClient();
   const load = useServerFn(getFunding);
   const wire = useServerFn(chooseWire);
   const wireSent = useServerFn(markWireSent);
   const ach = useServerFn(startAchDebit);
+  const acknowledge = useServerFn(acknowledgeFunding);
 
   const { data, isLoading } = useQuery({ queryKey: ["funding"], queryFn: () => load() });
-  const [method, setMethod] = useState<"wire" | "ach">("wire");
+  const [method, setMethodState] = useState<"wire" | "ach">("wire");
+  const [checked, setChecked] = useState<boolean[]>([false, false, false]);
+  const setMethod = (v: "wire" | "ach") => {
+    setMethodState(v);
+    setChecked([false, false, false]);
+  };
   const [expectedDate, setExpectedDate] = useState("");
   const [bankLast4, setBankLast4] = useState("");
   const [accountHolder, setAccountHolder] = useState("");
@@ -94,10 +118,118 @@ function FundingStep() {
     onError,
   });
 
+  const acknowledgeMutation = useMutation({
+    mutationFn: (m: "wire" | "ach") =>
+      acknowledge({ data: { method: m, statements: m === "wire" ? WIRE_STATEMENTS : ACH_STATEMENTS } }),
+    onSuccess: async (_r, m) => {
+      await queryClient.invalidateQueries({ queryKey: ["funding"] });
+      if (m === "wire") chooseWireMutation.mutate();
+      else toast.success("Confirmed — you can now enter your bank details.");
+    },
+    onError,
+  });
+
   const app = data?.application as any;
   const payment = data?.payment as any;
   const instructions = (data?.offering?.wire_instructions ?? {}) as Record<string, string>;
   const ready = app?.documents_status === "approved" && app?.accreditation_status === "approved";
+  const acks = (data?.acknowledgements ?? {}) as Record<string, any>;
+  const wireAck = acks["wire"] && acks["wire"].current ? acks["wire"] : null;
+  const achAck = acks["ach"] && acks["ach"].current ? acks["ach"] : null;
+  const staleAck = method === "wire" ? acks["wire"] && !acks["wire"].current : acks["ach"] && !acks["ach"].current;
+  const allChecked = checked.every(Boolean);
+  const statements = method === "wire" ? WIRE_STATEMENTS : ACH_STATEMENTS;
+  const reference = payment?.reference_code ?? (data as any)?.reference;
+
+  const copyInstructions = async () => {
+    const lines = Object.entries(instructions).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`);
+    lines.push(`reference: ${reference}`, `amount: ${money(app?.commitment_cents)}`);
+    await navigator.clipboard.writeText(lines.join("\n"));
+    toast.success("Wire instructions copied");
+  };
+
+  const confirmationPanel = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">
+          {method === "wire" ? "Confirm your wire details" : "Confirm your debit details"}
+        </CardTitle>
+        <CardDescription>
+          Review these details for {data?.offering?.name ?? "this fund"} and confirm they are accurate before
+          you continue.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm">
+        {staleAck && (
+          <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
+            The funding details for this fund have changed since you last confirmed them. Please review and
+            confirm again.
+          </p>
+        )}
+
+        <dl className="grid gap-x-8 gap-y-2 rounded-md border p-4 sm:grid-cols-2">
+          <div className="flex gap-2">
+            <dt className="text-muted-foreground">fund:</dt>
+            <dd className="font-medium">{data?.offering?.name ?? "—"}</dd>
+          </div>
+          {method === "wire" &&
+            Object.entries(instructions).map(([k, v]) => (
+              <div key={k} className="flex gap-2">
+                <dt className="text-muted-foreground">{k.replace(/_/g, " ")}:</dt>
+                <dd className="break-words font-medium">{String(v)}</dd>
+              </div>
+            ))}
+          <div className="flex gap-2">
+            <dt className="text-muted-foreground">reference:</dt>
+            <dd className="font-mono font-medium">{reference ?? "—"}</dd>
+          </div>
+          <div className="flex gap-2">
+            <dt className="text-muted-foreground">
+              {method === "wire" ? "amount:" : "amount to be debited:"}
+            </dt>
+            <dd className="font-medium">{money(app?.commitment_cents)}</dd>
+          </div>
+        </dl>
+
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-destructive">
+          These details come from Harmonious. Never act on {method === "wire" ? "wire" : "bank"} details sent
+          to you by email, and call the fund to verify by phone before sending money if anything changes.
+        </p>
+
+        <div className="space-y-3">
+          {statements.map((s, i) => (
+            <div key={s} className="flex items-start gap-3">
+              <Checkbox
+                id={`ack-${method}-${i}`}
+                checked={checked[i] ?? false}
+                onCheckedChange={(v) =>
+                  setChecked((prev) => prev.map((c, idx) => (idx === i ? v === true : c)))
+                }
+                className="mt-1"
+              />
+              <Label htmlFor={`ack-${method}-${i}`} className="font-normal">
+                {s}
+              </Label>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => acknowledgeMutation.mutate(method)}
+            disabled={!allChecked || acknowledgeMutation.isPending || chooseWireMutation.isPending}
+          >
+            {acknowledgeMutation.isPending ? "Confirming…" : "Confirm and continue"}
+          </Button>
+          {method === "wire" && Object.keys(instructions).length > 0 && (
+            <Button variant="outline" onClick={copyInstructions}>
+              Copy instructions
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -157,7 +289,16 @@ function FundingStep() {
             </CardContent>
           </Card>
 
-          {method === "wire" && (
+          {((method === "wire" && !wireAck) || (method === "ach" && !achAck)) && confirmationPanel}
+
+          {(method === "wire" ? wireAck : achAck) && (
+            <p className="text-xs text-muted-foreground">
+              Details confirmed{" "}
+              {new Date((method === "wire" ? wireAck : achAck).acknowledged_at).toLocaleString()}.
+            </p>
+          )}
+
+          {method === "wire" && wireAck && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Wire instructions</CardTitle>
@@ -222,7 +363,7 @@ function FundingStep() {
             </Card>
           )}
 
-          {method === "ach" && (
+          {method === "ach" && achAck && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">ACH debit authorization</CardTitle>

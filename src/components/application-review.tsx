@@ -608,6 +608,37 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             ) : (
               <p className="text-muted-foreground">No funding record yet.</p>
             )}
+
+            <div className="space-y-2 border-t pt-3">
+              <p className="font-medium">Instruction confirmations</p>
+              {(d as any)?.fundingAcknowledgements?.length ? (
+                (d as any).fundingAcknowledgements.map((a: any) => (
+                  <div key={a.id} className="rounded-md border p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium">
+                        {String(a.method).toUpperCase()} details confirmed
+                      </span>
+                      <span className="text-muted-foreground">
+                        {new Date(a.acknowledged_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <ul className="mt-2 list-disc pl-5 text-muted-foreground">
+                      {(a.statements ?? []).map((s: string, i: number) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 font-mono text-xs text-muted-foreground">
+                      instructions fingerprint {String(a.instructions_hash).slice(0, 16)}…
+                      {a.ip_address ? ` · ${a.ip_address}` : ""}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">
+                  The investor has not confirmed the funding instructions yet.
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
