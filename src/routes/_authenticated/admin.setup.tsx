@@ -75,7 +75,7 @@ function SetupPage() {
   const addDocument = useServerFn(saveOfferingDocument);
   const loadDirectory = useServerFn(listAccessDirectory);
   const assign = useServerFn(assignFundAccess);
-  const invite = useServerFn(inviteFundAccess);
+  const invite = useServerFn(inviteToFund);
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState(0);
