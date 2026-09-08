@@ -200,6 +200,7 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
       })),
       audit: audit.data ?? [],
       payments: payments.data ?? [],
+      fundingAcknowledgements: fundingAcknowledgements ?? [],
       notes: notes.data ?? [],
       emails: emails.data ?? [],
     };
