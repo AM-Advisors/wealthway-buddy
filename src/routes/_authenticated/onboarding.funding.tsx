@@ -326,33 +326,111 @@ function FundingStep() {
                       </div>
                     </dl>
 
-                    <div className="grid gap-3 border-t pt-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="expected_date">Date wire was sent</Label>
-                        <Input
-                          id="expected_date"
-                          type="date"
-                          value={expectedDate}
-                          onChange={(e) => setExpectedDate(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="bank_last4">Sending account last 4</Label>
-                        <Input
-                          id="bank_last4"
-                          inputMode="numeric"
-                          maxLength={4}
-                          value={bankLast4}
-                          onChange={(e) => setBankLast4(e.target.value.replace(/\D/g, ""))}
-                        />
-                      </div>
+                    <div className="space-y-4 border-t pt-4">
+                      {pendingConfirmation ? (
+                        <p className="rounded-md border bg-muted/40 p-3">
+                          Wire confirmation submitted{" "}
+                          {new Date(pendingConfirmation.created_at).toLocaleString()} for{" "}
+                          {money(pendingConfirmation.amount_cents)}. Our team is verifying receipt with the
+                          fund administrator and will confirm your funding here.
+                        </p>
+                      ) : (
+                        <>
+                          {rejectedConfirmation && (
+                            <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-destructive">
+                              Your last wire confirmation could not be approved
+                              {rejectedConfirmation.review_notes
+                                ? `: ${rejectedConfirmation.review_notes}`
+                                : "."}{" "}
+                              Please check the details and submit again.
+                            </p>
+                          )}
+                          <p className="font-medium">Confirm the wire you sent</p>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                              <Label htmlFor="expected_date">Date wire was sent</Label>
+                              <Input
+                                id="expected_date"
+                                type="date"
+                                value={expectedDate}
+                                onChange={(e) => setExpectedDate(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="wire_amount">Amount wired (USD)</Label>
+                              <Input
+                                id="wire_amount"
+                                inputMode="decimal"
+                                placeholder="50000"
+                                value={wireAmount}
+                                onChange={(e) => setWireAmount(e.target.value.replace(/[^\d.]/g, ""))}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="sending_bank">Bank you wired from</Label>
+                              <Input
+                                id="sending_bank"
+                                value={sendingBank}
+                                onChange={(e) => setSendingBank(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="bank_last4">Sending account last 4</Label>
+                              <Input
+                                id="bank_last4"
+                                inputMode="numeric"
+                                maxLength={4}
+                                value={bankLast4}
+                                onChange={(e) => setBankLast4(e.target.value.replace(/\D/g, ""))}
+                              />
+                            </div>
+                            <div className="space-y-1.5 sm:col-span-2">
+                              <Label htmlFor="bank_reference">
+                                Bank confirmation / reference number (optional)
+                              </Label>
+                              <Input
+                                id="bank_reference"
+                                value={bankReference}
+                                onChange={(e) => setBankReference(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-1.5 sm:col-span-2">
+                              <Label htmlFor="wire_note">Anything we should know (optional)</Label>
+                              <Input
+                                id="wire_note"
+                                value={wireNote}
+                                onChange={(e) => setWireNote(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              id="wire-accurate"
+                              checked={wireAccurate}
+                              onCheckedChange={(v) => setWireAccurate(v === true)}
+                              className="mt-1"
+                            />
+                            <Label htmlFor="wire-accurate" className="font-normal">
+                              I confirm I have sent this wire and these details are accurate. I understand
+                              Harmonious will verify receipt before my subscription is marked funded.
+                            </Label>
+                          </div>
+                          <Button
+                            onClick={() => wireConfirmMutation.mutate()}
+                            disabled={
+                              wireConfirmMutation.isPending ||
+                              !expectedDate ||
+                              !wireAmount ||
+                              sendingBank.trim().length < 2 ||
+                              bankLast4.length !== 4 ||
+                              !wireAccurate
+                            }
+                          >
+                            {wireConfirmMutation.isPending ? "Submitting…" : "Submit wire confirmation"}
+                          </Button>
+                        </>
+                      )}
                     </div>
-                    <Button
-                      onClick={() => wireSentMutation.mutate()}
-                      disabled={wireSentMutation.isPending || !expectedDate || bankLast4.length !== 4}
-                    >
-                      {wireSentMutation.isPending ? "Saving…" : "I've sent the wire"}
-                    </Button>
                   </>
                 ) : (
                   <Button onClick={() => chooseWireMutation.mutate()} disabled={chooseWireMutation.isPending}>
