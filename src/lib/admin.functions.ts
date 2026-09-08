@@ -387,6 +387,55 @@ const testEmailSchema = z.object({
 
 const lastTestSendByUser = new Map<string, number>();
 
+const invitationSchema = z.object({
+  to: z.string().trim().email().max(255),
+  applicationId: z.string().uuid().optional(),
+});
+
+/** Sends the full onboarding invitation email to one address (admin only). */
+export const sendOnboardingInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => invitationSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    let offeringName = "Harmonious";
+    let investorName = "Investor";
+    if (data.applicationId) {
+      const { data: row } = await supabase
+        .from("investor_applications")
+        .select("user_id, offerings(name)")
+        .eq("id", data.applicationId)
+        .maybeSingle();
+      offeringName = (row as any)?.offerings?.name ?? offeringName;
+      if ((row as any)?.user_id) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("legal_name")
+          .eq("user_id", (row as any).user_id)
+          .maybeSingle();
+        investorName = profile?.legal_name ?? investorName;
+      }
+    }
+
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const result = await sendTemplateEmail("investor-invitation", data.to, {
+      templateData: {
+        investorName,
+        offeringName,
+        portalUrl: "https://onboard.harmonious.co/dashboard",
+        contactEmail: "operations@harmonious.co",
+      },
+      idempotencyKey: `invitation-${data.to}-${Date.now()}`,
+    });
+
+    if (!result.sent) {
+      return { ok: false, message: "That address has opted out or previously bounced." };
+    }
+    return { ok: true, message: `Onboarding email sent to ${data.to}.` };
+  });
+
 export const sendTestEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => testEmailSchema.parse(data))
