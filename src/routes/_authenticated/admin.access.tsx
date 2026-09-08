@@ -109,7 +109,35 @@ function AccessPage() {
         </div>
       </div>
 
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Funds</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Open a fund to see its description, offering documents and wire details.
+          </p>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2">
+          {(data.offerings as any[]).map((o: any) => (
+            <Link
+              key={o.id}
+              to="/admin/fund/$fundId"
+              params={{ fundId: o.id }}
+              className="rounded-md border p-4 transition-colors hover:bg-muted/50"
+            >
+              <p className="font-medium">{o.name}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Reg D {o.reg_type === "506c" ? "506(c)" : "506(b)"} · view fund page
+              </p>
+            </Link>
+          ))}
+          {(data.offerings as any[]).length === 0 && (
+            <p className="text-sm text-muted-foreground">No funds set up yet.</p>
+          )}
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="manager" className="mt-8">
+
         <TabsList>
           <TabsTrigger value="manager">Fund managers</TabsTrigger>
           <TabsTrigger value="investor">Investors</TabsTrigger>
