@@ -715,6 +715,53 @@ export type Database = {
         }
         Relationships: []
       }
+      offering_audit_events: {
+        Row: {
+          actor_email: string | null
+          actor_id: string
+          actor_name: string | null
+          changes: Json
+          created_at: string
+          event_type: string
+          id: string
+          offering_document_id: string | null
+          offering_id: string
+          summary: string
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id: string
+          actor_name?: string | null
+          changes?: Json
+          created_at?: string
+          event_type: string
+          id?: string
+          offering_document_id?: string | null
+          offering_id: string
+          summary?: string
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string
+          actor_name?: string | null
+          changes?: Json
+          created_at?: string
+          event_type?: string
+          id?: string
+          offering_document_id?: string | null
+          offering_id?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_audit_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_documents: {
         Row: {
           body: string
