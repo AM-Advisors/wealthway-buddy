@@ -87,9 +87,7 @@ export const listOfferings = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("offering_id");
 
-    const { data: wireRows } = await context.supabase
-      .from("offering_wire_instructions")
-      .select("offering_id, details");
+    const { data: wireRows } = await context.supabase.rpc("list_wire_instructions");
 
     const wireByOffering = new Map<string, Record<string, string>>(
       (wireRows ?? []).map((w: any) => [w.offering_id as string, (w.details ?? {}) as Record<string, string>]),
