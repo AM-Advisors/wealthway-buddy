@@ -37,15 +37,33 @@ function money(cents?: number | null) {
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
+const WIRE_STATEMENTS = [
+  "I have reviewed the wire instructions above for this fund.",
+  "I confirm the amount and reference code are correct.",
+  "I understand Harmonious will never email changed bank details, and I will verify any change by phone.",
+];
+
+const ACH_STATEMENTS = [
+  "I have reviewed the debit details above for this fund.",
+  "I confirm the bank account I am about to enter is mine and the details are accurate.",
+  "I authorize Harmonious to debit that account once for my capital commitment.",
+];
+
 function FundingStep() {
   const queryClient = useQueryClient();
   const load = useServerFn(getFunding);
   const wire = useServerFn(chooseWire);
   const wireSent = useServerFn(markWireSent);
   const ach = useServerFn(startAchDebit);
+  const acknowledge = useServerFn(acknowledgeFunding);
 
   const { data, isLoading } = useQuery({ queryKey: ["funding"], queryFn: () => load() });
-  const [method, setMethod] = useState<"wire" | "ach">("wire");
+  const [method, setMethodState] = useState<"wire" | "ach">("wire");
+  const [checked, setChecked] = useState<boolean[]>([false, false, false]);
+  const setMethod = (v: "wire" | "ach") => {
+    setMethodState(v);
+    setChecked([false, false, false]);
+  };
   const [expectedDate, setExpectedDate] = useState("");
   const [bankLast4, setBankLast4] = useState("");
   const [accountHolder, setAccountHolder] = useState("");
