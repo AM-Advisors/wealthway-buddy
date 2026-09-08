@@ -39,7 +39,21 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && session) navigate({ to: "/onboarding/kyc" });
+    if (loading || !session) return;
+    let active = true;
+    // Returning applicants land on their dashboard; brand new accounts start onboarding.
+    (async () => {
+      const { data } = await supabase
+        .from("investor_applications")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .limit(1);
+      if (!active) return;
+      navigate({ to: data && data.length > 0 ? "/dashboard" : "/onboarding/kyc" });
+    })();
+    return () => {
+      active = false;
+    };
   }, [loading, session, navigate]);
 
   async function recordAttempt(address: string, success: boolean, reason?: string) {
