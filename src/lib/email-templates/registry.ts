@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import { template as investorMessage } from './investor-message'
 import { template as documentSigned } from './document-signed'
 import { template as investorInvitation } from './investor-invitation'
+import { template as deliveryAlert } from './delivery-alert'
 
 
 export interface TemplateEntry {
