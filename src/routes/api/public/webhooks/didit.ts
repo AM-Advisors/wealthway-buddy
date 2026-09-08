@@ -285,11 +285,12 @@ async function applySessionEvent(
   body: Record<string, any>,
   sessionId: string | null,
   status: string | null,
+  fetchedDecision?: Record<string, any> | null,
 ) {
   const mapping = mapDiditStatus(status ?? undefined);
   if (!mapping) return;
 
-  const decision = body["decision"] ?? {};
+  const decision = body["decision"] ?? fetchedDecision ?? {};
   const now = new Date().toISOString();
 
   const kycRow: Record<string, any> = {
@@ -298,6 +299,7 @@ async function applySessionEvent(
     session_id: sessionId,
     vendor_data: body["vendor_data"] ? String(body["vendor_data"]) : null,
     status: mapping.kyc,
+
     decision,
     result: decision,
     updated_at: now,
