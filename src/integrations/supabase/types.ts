@@ -190,6 +190,69 @@ export type Database = {
           },
         ]
       }
+      application_flags: {
+        Row: {
+          application_id: string
+          category: string
+          created_at: string
+          created_by: string
+          id: string
+          note: string
+          offering_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          category?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          note: string
+          offering_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          category?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          note?: string
+          offering_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_flags_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_flags_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       didit_webhook_events: {
         Row: {
           application_id: string | null
@@ -1201,21 +1264,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      wire_test_tmp: {
-        Row: {
-          result: string | null
-          who: string | null
-        }
-        Insert: {
-          result?: string | null
-          who?: string | null
-        }
-        Update: {
-          result?: string | null
-          who?: string | null
-        }
-        Relationships: []
       }
     }
     Views: {

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FundInvitations } from "@/components/fund-invitations";
+import { FundOperations } from "@/components/fund-operations";
+
 
 
 export const Route = createFileRoute("/_authenticated/manager/")({
@@ -229,8 +231,11 @@ function ManagerPortal() {
               ))
             )}
           </div>
+
+          {offeringId && <FundOperations offeringId={offeringId} />}
         </>
       )}
+
     </main>
   );
 }
