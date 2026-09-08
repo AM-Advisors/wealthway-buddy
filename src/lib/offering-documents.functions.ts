@@ -91,9 +91,7 @@ export const downloadOfferingPacket = createServerFn({ method: "POST" })
 
     const [{ data: wireRow }, { data: docs }] = await Promise.all([
       supabase
-        .from("offering_wire_instructions")
-        .select("details")
-        .eq("offering_id", offering.id)
+        .rpc("get_wire_instructions", { p_offering_id: offering.id })
         .maybeSingle(),
       supabase
         .from("offering_documents")
