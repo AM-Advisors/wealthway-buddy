@@ -92,6 +92,10 @@ async function recordDeliveryEvent(eventType: string, event: DeliveryEvent) {
       .eq('id', emailRow.id)
     if (updateError) throw new Error(updateError.message)
   }
+
+  if (eventType === 'bounced' || eventType === 'complained') {
+    await alertAdmins(eventType, recipient, emailRow?.subject ?? 'Onboarding email')
+  }
 }
 
 export const Route = createFileRoute('/lovable/email/events')({
