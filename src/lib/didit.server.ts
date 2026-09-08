@@ -155,3 +155,44 @@ export function amlStatusFromDecision(decision: any): { status: CheckStatus; mat
   else if (matches.length > 0) status = "review";
   return { status, matches };
 }
+
+/**
+ * Fetches a session's decision from Didit. Used when a webhook arrives for a
+ * session we have not recorded locally (e.g. started outside the portal), so we
+ * can recover the vendor_data / investor email and match the application.
+ */
+export async function fetchDiditSessionDecision(
+  sessionId: string,
+): Promise<Record<string, any> | null> {
+  const apiKey = process.env["DIDIT_API_KEY"];
+  if (!apiKey || !sessionId) return null;
+  try {
+    const res = await fetch(
+      `https://verification.didit.me/v2/session/${encodeURIComponent(sessionId)}/decision/`,
+      { headers: { "x-api-key": apiKey, accept: "application/json" } },
+    );
+    if (!res.ok) {
+      console.error("[didit] decision fetch failed", sessionId, res.status);
+      return null;
+    }
+    return (await res.json()) as Record<string, any>;
+  } catch (e) {
+    console.error("[didit] decision fetch error", e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
+
+/** Pulls any email addresses found in a Didit payload/decision object. */
+export function collectEmails(value: unknown, depth = 0): string[] {
+  if (depth > 6 || value == null) return [];
+  if (typeof value === "string") {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) ? [value.trim().toLowerCase()] : [];
+  }
+  if (Array.isArray(value)) return value.flatMap((v) => collectEmails(v, depth + 1));
+  if (typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).flatMap((v) =>
+      collectEmails(v, depth + 1),
+    );
+  }
+  return [];
+}
