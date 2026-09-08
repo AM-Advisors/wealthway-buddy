@@ -12,6 +12,51 @@ const DETAIL: Record<string, string> = {
   unsubscribed: 'The recipient unsubscribed. Future sends to this address are blocked.',
 }
 
+const EVENT_LABEL: Record<string, string> = {
+  bounced: 'Bounced',
+  complained: 'Marked as spam',
+  unsubscribed: 'Unsubscribed',
+}
+
+const FALLBACK_ADMIN_EMAIL = 'operations@harmonious.co'
+
+/** Email every admin when a message bounces or is reported as spam. */
+async function alertAdmins(eventType: string, recipient: string, subjectLine: string) {
+  try {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+    const { data: roleRows } = await supabaseAdmin.from('user_roles').select('user_id').eq('role', 'admin')
+    const ids = (roleRows ?? []).map((r) => r.user_id)
+
+    const emails = new Set<string>([FALLBACK_ADMIN_EMAIL])
+    if (ids.length > 0) {
+      const { data: profileRows } = await supabaseAdmin.from('profiles').select('email').in('user_id', ids)
+      for (const row of profileRows ?? []) {
+        if (row.email) emails.add(row.email.toLowerCase())
+      }
+    }
+    // Never alert the address that just failed — that send is suppressed anyway.
+    emails.delete(recipient.toLowerCase())
+    if (emails.size === 0) return
+
+    const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
+    for (const to of emails) {
+      await sendTemplateEmail('delivery-alert', to, {
+        templateData: {
+          eventLabel: EVENT_LABEL[eventType] ?? eventType,
+          recipient,
+          subjectLine,
+          occurredAt: new Date().toISOString(),
+          detail: DETAIL[eventType] ?? 'This message did not reach the inbox.',
+          consoleUrl: 'https://onboard.harmonious.co/admin',
+        },
+      })
+    }
+  } catch (err) {
+    // Alerting must never fail the webhook (which would trigger redelivery).
+    console.error('Failed to send delivery alert', err instanceof Error ? err.message : 'unknown error')
+  }
+}
+
 async function recordDeliveryEvent(eventType: string, event: DeliveryEvent) {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
   const recipient = event.data.recipient
@@ -19,7 +64,7 @@ async function recordDeliveryEvent(eventType: string, event: DeliveryEvent) {
   // Attach the event to the most recent onboarding email sent to this address.
   const { data: emailRow } = await supabaseAdmin
     .from('investor_emails')
-    .select('id')
+    .select('id, subject')
     .eq('to_email', recipient)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -48,6 +93,10 @@ async function recordDeliveryEvent(eventType: string, event: DeliveryEvent) {
       })
       .eq('id', emailRow.id)
     if (updateError) throw new Error(updateError.message)
+  }
+
+  if (eventType === 'bounced' || eventType === 'complained') {
+    await alertAdmins(eventType, recipient, emailRow?.subject ?? 'Onboarding email')
   }
 }
 
