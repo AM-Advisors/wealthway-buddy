@@ -41,12 +41,14 @@ async function alertAdmins(eventType: string, recipient: string, subjectLine: st
     const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
     for (const to of emails) {
       await sendTemplateEmail('delivery-alert', to, {
-        eventLabel: EVENT_LABEL[eventType] ?? eventType,
-        recipient,
-        subjectLine,
-        occurredAt: new Date().toISOString(),
-        detail: DETAIL[eventType] ?? 'This message did not reach the inbox.',
-        consoleUrl: 'https://onboard.harmonious.co/admin',
+        templateData: {
+          eventLabel: EVENT_LABEL[eventType] ?? eventType,
+          recipient,
+          subjectLine,
+          occurredAt: new Date().toISOString(),
+          detail: DETAIL[eventType] ?? 'This message did not reach the inbox.',
+          consoleUrl: 'https://onboard.harmonious.co/admin',
+        },
       })
     }
   } catch (err) {
