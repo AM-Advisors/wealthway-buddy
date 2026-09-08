@@ -98,6 +98,15 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
       lastSendAt !== null && Date.now() - lastSendAt < pollingWindowMs ? 15000 : false,
   });
 
+  const [showDetails, setShowDetails] = useState(false);
+  const detailsQuery = useQuery({
+    queryKey: ["email-delivery-details", watchedEmail, applicationId],
+    queryFn: () => deliveryDetails({ data: { recipient: watchedEmail, applicationId } }),
+    enabled: isAdmin === true && showDetails && watchedEmail.length > 0,
+    refetchInterval: () =>
+      lastSendAt !== null && Date.now() - lastSendAt < pollingWindowMs ? 15000 : false,
+  });
+
 
   const [noteBody, setNoteBody] = useState("");
   const [subject, setSubject] = useState("");
