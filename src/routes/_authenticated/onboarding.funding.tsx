@@ -289,7 +289,16 @@ function FundingStep() {
             </CardContent>
           </Card>
 
-          {method === "wire" && (
+          {((method === "wire" && !wireAck) || (method === "ach" && !achAck)) && confirmationPanel}
+
+          {(method === "wire" ? wireAck : achAck) && (
+            <p className="text-xs text-muted-foreground">
+              Details confirmed{" "}
+              {new Date((method === "wire" ? wireAck : achAck).acknowledged_at).toLocaleString()}.
+            </p>
+          )}
+
+          {method === "wire" && wireAck && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Wire instructions</CardTitle>
