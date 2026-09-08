@@ -247,8 +247,10 @@ export type Database = {
           provider: string
           provider_agreement_id: string | null
           provider_completed_at: string | null
+          provider_file_id: string | null
           provider_last_event_at: string | null
           provider_signing_url: string | null
+          provider_source_file_id: string | null
           provider_status: string | null
           signature_type: string
           signature_value: string
@@ -268,8 +270,10 @@ export type Database = {
           provider?: string
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
+          provider_file_id?: string | null
           provider_last_event_at?: string | null
           provider_signing_url?: string | null
+          provider_source_file_id?: string | null
           provider_status?: string | null
           signature_type?: string
           signature_value: string
@@ -289,8 +293,10 @@ export type Database = {
           provider?: string
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
+          provider_file_id?: string | null
           provider_last_event_at?: string | null
           provider_signing_url?: string | null
+          provider_source_file_id?: string | null
           provider_status?: string | null
           signature_type?: string
           signature_value?: string

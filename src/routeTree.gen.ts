@@ -31,6 +31,7 @@ import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authen
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as ApiPublicWebhooksAdobeSignRouteImport } from './routes/api/public/webhooks/adobe-sign'
+import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
@@ -155,6 +156,12 @@ const ApiPublicWebhooksAdobeSignRoute =
     path: '/api/public/webhooks/adobe-sign',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWebhooksBoxSignRoute =
+  ApiPublicWebhooksBoxSignRouteImport.update({
+    id: '/api/public/webhooks/box-sign',
+    path: '/api/public/webhooks/box-sign',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksDiditRoute = ApiPublicWebhooksDiditRouteImport.update({
   id: '/api/public/webhooks/didit',
   path: '/api/public/webhooks/didit',
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/api/public/webhooks/adobe-sign': typeof ApiPublicWebhooksAdobeSignRoute
+  '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -214,6 +222,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/api/public/webhooks/adobe-sign': typeof ApiPublicWebhooksAdobeSignRoute
+  '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -241,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/api/public/webhooks/adobe-sign': typeof ApiPublicWebhooksAdobeSignRoute
+  '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/manager/'
     | '/api/public/webhooks/adobe-sign'
+    | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/manager'
     | '/api/public/webhooks/adobe-sign'
+    | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
   id:
@@ -319,6 +331,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/manager/'
     | '/api/public/webhooks/adobe-sign'
+    | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -331,6 +344,7 @@ export interface RootRouteChildren {
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicWebhooksAdobeSignRoute: typeof ApiPublicWebhooksAdobeSignRoute
+  ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -491,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksAdobeSignRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/box-sign': {
+      id: '/api/public/webhooks/box-sign'
+      path: '/api/public/webhooks/box-sign'
+      fullPath: '/api/public/webhooks/box-sign'
+      preLoaderRoute: typeof ApiPublicWebhooksBoxSignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/didit': {
       id: '/api/public/webhooks/didit'
       path: '/api/public/webhooks/didit'
@@ -557,6 +578,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicWebhooksAdobeSignRoute: ApiPublicWebhooksAdobeSignRoute,
+  ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
