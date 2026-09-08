@@ -3,6 +3,8 @@ import { template as investorMessage } from './investor-message'
 import { template as documentSigned } from './document-signed'
 import { template as investorInvitation } from './investor-invitation'
 import { template as deliveryAlert } from './delivery-alert'
+import { template as fundInvitation } from './fund-invitation'
+
 
 
 export interface TemplateEntry {
