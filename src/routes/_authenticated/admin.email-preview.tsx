@@ -189,8 +189,10 @@ function EmailPreviewPage() {
         <div>
           <h1 className="text-3xl">Email preview</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Exactly what an investor sees in their inbox. Nothing is sent from this page.
+            Exactly what an investor sees in their inbox. Nothing is sent unless you use the send
+            test button.
           </p>
+
         </div>
         <Button asChild size="sm" variant="outline">
           <Link to="/admin">Back to queue</Link>
