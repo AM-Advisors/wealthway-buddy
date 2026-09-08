@@ -19,7 +19,10 @@ async function reviewerContext(supabase: any, userId: string): Promise<Roles> {
     .from("fund_managers")
     .select("offering_id")
     .eq("user_id", userId);
-  const managedOfferingIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+  const managedOfferingIds = [
+    ...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string)),
+  ] as string[];
+
 
   if (!isAdmin && managedOfferingIds.length === 0) {
     throw new Error("Forbidden: you do not manage any funds.");
