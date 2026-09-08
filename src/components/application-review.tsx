@@ -16,6 +16,7 @@ import {
   getApplicationDetail,
   sendInvestorEmail,
   sendTestEmail,
+  sendOnboardingInvitation,
 } from "@/lib/admin.functions";
 import { sendTestDiditEvent } from "@/lib/didit-test.functions";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
   const fileUrl = useServerFn(getAdminFileUrl);
   const email = useServerFn(sendInvestorEmail);
   const testEmail = useServerFn(sendTestEmail);
+  const invite = useServerFn(sendOnboardingInvitation);
   const payment = useServerFn(decidePayment);
   const diditEvents = useServerFn(listDiditEvents);
   const deliveryLog = useServerFn(listDeliveryLog);
@@ -141,6 +143,15 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
 
   const testMutation = useMutation({
     mutationFn: () => testEmail({ data: { applicationId, subject, body: message, to: testTo.trim() } }),
+    onSuccess: (result) => {
+      if (result.ok) toast.success(result.message);
+      else toast.warning(result.message);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: () => invite({ data: { applicationId, to: testTo.trim() } }),
     onSuccess: (result) => {
       if (result.ok) toast.success(result.message);
       else toast.warning(result.message);
@@ -592,6 +603,30 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                   >
                     {testMutation.isPending ? "Sending…" : "Send test"}
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => inviteMutation.mutate()}
+                    disabled={
+                      inviteMutation.isPending ||
+                      !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(testTo.trim())
+                    }
+                  >
+                    {inviteMutation.isPending ? "Sending…" : "Send onboarding email"}
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {["operations@harmonious.co"].map((addr) => (
+                    <Button
+                      key={addr}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setTestTo(addr)}
+                    >
+                      {addr}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </div>
