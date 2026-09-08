@@ -178,9 +178,7 @@ export const getFunding = createServerFn({ method: "GET" })
       .maybeSingle();
 
     const { data: wireRow } = await supabase
-      .from("offering_wire_instructions")
-      .select("details")
-      .eq("offering_id", application.offering_id)
+      .rpc("get_wire_instructions", { p_offering_id: application.offering_id })
       .maybeSingle();
 
     const offering = offeringRow
