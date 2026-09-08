@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { listAccessDirectory, assignFundAccess, revokeFundAccess } from "@/lib/access.functions";
+import { FundInvitations } from "@/components/fund-invitations";
+
 
 export const Route = createFileRoute("/_authenticated/admin/access")({
   head: () => ({
