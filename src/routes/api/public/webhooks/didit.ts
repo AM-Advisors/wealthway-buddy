@@ -307,6 +307,8 @@ async function applySessionEvent(
     expired_at: mapping.expired ? now : null,
   };
   if (sessionId) kycRow["inquiry_id"] = sessionId;
+  if (body["vendor_user_id"]) kycRow["didit_user_id"] = String(body["vendor_user_id"]);
+
 
   const { data: existing } = await admin
     .from("kyc_verifications")
