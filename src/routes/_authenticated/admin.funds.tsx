@@ -428,9 +428,19 @@ function FundsPage() {
                     </Badge>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => setEditing(toForm(o))}>
-                  Edit fund
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={packetBusy === o.id}
+                    onClick={() => downloadPacket(o.id)}
+                  >
+                    {packetBusy === o.id ? "Preparing…" : "Download packet (PDF)"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditing(toForm(o))}>
+                    Edit fund
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2 border-t pt-4">
