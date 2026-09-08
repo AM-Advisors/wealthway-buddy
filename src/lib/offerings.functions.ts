@@ -87,9 +87,7 @@ export const listOfferings = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("offering_id");
 
-    const { data: wireRows } = await context.supabase
-      .from("offering_wire_instructions")
-      .select("offering_id, details");
+    const { data: wireRows } = await context.supabase.rpc("list_wire_instructions");
 
     const wireByOffering = new Map<string, Record<string, string>>(
       (wireRows ?? []).map((w: any) => [w.offering_id as string, (w.details ?? {}) as Record<string, string>]),
@@ -196,9 +194,7 @@ export const saveOffering = createServerFn({ method: "POST" })
       previousOffering = (existing as any) ?? null;
 
       const { data: existingWire } = await context.supabase
-        .from("offering_wire_instructions")
-        .select("details")
-        .eq("offering_id", offeringId)
+        .rpc("get_wire_instructions", { p_offering_id: offeringId })
         .maybeSingle();
       previousWire = ((existingWire as any)?.details ?? null) as Record<string, unknown> | null;
 
@@ -214,12 +210,10 @@ export const saveOffering = createServerFn({ method: "POST" })
       offeringId = (inserted as any).id as string;
     }
 
-    const { error: wireError } = await context.supabase
-      .from("offering_wire_instructions")
-      .upsert(
-        { offering_id: offeringId, details: wireDetails, updated_at: new Date().toISOString() },
-        { onConflict: "offering_id" },
-      );
+    const { error: wireError } = await context.supabase.rpc("save_wire_instructions", {
+      p_offering_id: offeringId!,
+      p_details: wireDetails as any,
+    });
     if (wireError) throw new Error(wireError.message);
 
     const offeringChanges = diffRecords(previousOffering, payload, OFFERING_FIELDS);
