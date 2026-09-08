@@ -47,6 +47,7 @@ export const getPortal = createServerFn({ method: "GET" })
         subscription: null,
         payment: null,
         kyc: null,
+        wireInstructions: {} as Record<string, string>,
       };
     }
 
@@ -57,6 +58,7 @@ export const getPortal = createServerFn({ method: "GET" })
       { data: subscription },
       { data: payment },
       { data: kyc },
+      { data: wire },
     ] = await Promise.all([
         supabase
           .from("offerings")
@@ -89,6 +91,11 @@ export const getPortal = createServerFn({ method: "GET" })
           .select("provider, status, session_url, completed_at, updated_at")
           .eq("application_id", application.id)
           .maybeSingle(),
+        supabase
+          .from("offering_wire_instructions")
+          .select("details")
+          .eq("offering_id", application.offering_id)
+          .maybeSingle(),
       ]);
 
 
@@ -119,5 +126,10 @@ export const getPortal = createServerFn({ method: "GET" })
       subscription,
       payment,
       kyc,
+      wireInstructions: Object.fromEntries(
+        Object.entries(((wire as any)?.details ?? {}) as Record<string, unknown>)
+          .filter(([, v]) => String(v ?? "").trim() !== "")
+          .map(([k, v]) => [k, String(v)]),
+      ) as Record<string, string>,
     };
   });
