@@ -194,9 +194,7 @@ export const saveOffering = createServerFn({ method: "POST" })
       previousOffering = (existing as any) ?? null;
 
       const { data: existingWire } = await context.supabase
-        .from("offering_wire_instructions")
-        .select("details")
-        .eq("offering_id", offeringId)
+        .rpc("get_wire_instructions", { p_offering_id: offeringId })
         .maybeSingle();
       previousWire = ((existingWire as any)?.details ?? null) as Record<string, unknown> | null;
 
