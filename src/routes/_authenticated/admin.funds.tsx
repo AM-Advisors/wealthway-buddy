@@ -8,10 +8,12 @@ import { getAdminAccess } from "@/lib/admin.functions";
 import {
   WIRE_FIELDS,
   deleteOfferingDocument,
+  listOfferingAuditEvents,
   listOfferings,
   saveOffering,
   saveOfferingDocument,
 } from "@/lib/offerings.functions";
+import { FIELD_LABELS, type OfferingAuditEventType } from "@/lib/offering-audit";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
@@ -594,10 +596,116 @@ function FundsPage() {
                   </div>
                 )}
               </div>
+
+              <ChangeHistory offeringId={o.id} documents={o.documents ?? []} />
             </CardContent>
           </Card>
         ))}
       </div>
     </main>
+  );
+}
+
+const HISTORY_GROUPS: Record<string, OfferingAuditEventType[]> = {
+  all: [],
+  fund: ["offering_created", "offering_updated"],
+  wire: ["wire_updated"],
+  documents: ["document_created", "document_updated", "document_deleted"],
+};
+
+const HISTORY_LABELS: Record<string, string> = {
+  all: "All changes",
+  fund: "Fund details",
+  wire: "Wire instructions",
+  documents: "Documents",
+};
+
+function ChangeHistory({ offeringId, documents }: { offeringId: string; documents: any[] }) {
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<keyof typeof HISTORY_GROUPS>("all");
+  const [limit, setLimit] = useState(50);
+  const listAudit = useServerFn(listOfferingAuditEvents);
+
+  const historyQuery = useQuery({
+    queryKey: ["fund-audit", offeringId, limit],
+    queryFn: () => listAudit({ data: { offering_id: offeringId, limit } }),
+    enabled: open,
+    staleTime: 0,
+  });
+
+  const events = historyQuery.data?.events ?? [];
+  const allowed = HISTORY_GROUPS[filter] ?? [];
+  const visible = allowed.length === 0 ? events : events.filter((e) => allowed.includes(e.event_type));
+  const docTitle = (id: string | null) =>
+    id ? (documents.find((d: any) => d.id === id)?.title ?? "Removed document") : null;
+
+  return (
+    <div className="space-y-3 border-t pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium">Change history</p>
+        <Button size="sm" variant="ghost" onClick={() => setOpen((v) => !v)}>
+          {open ? "Hide" : "Show"}
+        </Button>
+      </div>
+
+      {open && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-1.5">
+            {Object.keys(HISTORY_GROUPS).map((key) => (
+              <Button
+                key={key}
+                size="sm"
+                variant={filter === key ? "secondary" : "outline"}
+                onClick={() => setFilter(key as keyof typeof HISTORY_GROUPS)}
+              >
+                {HISTORY_LABELS[key]}
+              </Button>
+            ))}
+          </div>
+
+          {historyQuery.isLoading && <p className="text-sm text-muted-foreground">Loading history…</p>}
+          {historyQuery.isError && (
+            <p className="text-sm text-destructive">Could not load the change history.</p>
+          )}
+          {!historyQuery.isLoading && visible.length === 0 && (
+            <p className="text-sm text-muted-foreground">No recorded changes yet.</p>
+          )}
+
+          {visible.map((e) => (
+            <details key={e.id} className="rounded-md border px-3 py-2">
+              <summary className="cursor-pointer text-sm">
+                <span className="font-medium">{e.actor_name || e.actor_email || "An administrator"}</span>{" "}
+                {e.summary}
+                {docTitle(e.offering_document_id) ? ` (${docTitle(e.offering_document_id)})` : ""}
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {new Date(e.created_at).toLocaleString()}
+                </span>
+              </summary>
+              <div className="mt-2 space-y-1">
+                {e.changes.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No field-level detail recorded.</p>
+                )}
+                {e.changes.map((c, i) => (
+                  <p key={`${e.id}-${i}`} className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">{FIELD_LABELS[c.field] ?? c.field}</span>:{" "}
+                    {c.from ?? "—"} → {c.to ?? "—"}
+                  </p>
+                ))}
+                {e.actor_email && (
+                  <p className="text-xs text-muted-foreground">Changed by {e.actor_email}</p>
+                )}
+              </div>
+            </details>
+          ))}
+
+          {historyQuery.data?.hasMore && (
+            <Button size="sm" variant="outline" onClick={() => setLimit((l) => l + 50)}>
+              Load more
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
