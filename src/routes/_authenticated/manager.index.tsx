@@ -121,6 +121,12 @@ function ManagerPortal() {
         Every investor in your fund, with identity, accreditation, documents and funding in one view.
       </p>
 
+      <div className="mt-8">
+        <FundInvitations title="Invite people to your funds" />
+      </div>
+
+
+
       {fundList.length > 1 && (
         <div className="mt-6 flex flex-wrap gap-2">
           {fundList.map((f: any) => (
