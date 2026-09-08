@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { saveOffering, saveOfferingDocument, WIRE_FIELDS } from "@/lib/offerings.functions";
 import { listAccessDirectory, assignFundAccess } from "@/lib/access.functions";
-import { inviteFundAccess } from "@/lib/admin-setup.functions";
+import { inviteToFund } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/setup")({
   head: () => ({
@@ -75,7 +75,7 @@ function SetupPage() {
   const addDocument = useServerFn(saveOfferingDocument);
   const loadDirectory = useServerFn(listAccessDirectory);
   const assign = useServerFn(assignFundAccess);
-  const invite = useServerFn(inviteFundAccess);
+  const invite = useServerFn(inviteToFund);
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState(0);
@@ -181,9 +181,10 @@ function SetupPage() {
       const result: any = await invite({
         data: {
           email: inviteEmail.trim(),
-          legal_name: inviteName.trim(),
+          name: inviteName.trim(),
           offeringId: fundId!,
-          kind: assignKind,
+          role: assignKind === "manager" ? "fund_manager" : "investor",
+          sendEmail: true,
         },
       });
       return { email: result.email as string, created: Boolean(result.created) };
