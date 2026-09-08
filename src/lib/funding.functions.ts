@@ -170,6 +170,7 @@ export const getFunding = createServerFn({ method: "GET" })
           wire: { acknowledged_at: string; statements: string[]; current: boolean } | null;
           ach: { acknowledged_at: string; statements: string[]; current: boolean } | null;
         },
+        wireConfirmations: [] as any[],
       };
 
     const { data: offeringRow } = await supabase
