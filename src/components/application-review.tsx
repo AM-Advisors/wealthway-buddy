@@ -760,6 +760,82 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             )}
 
             <Separator className="my-2" />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setShowDetails((v) => !v);
+                  if (!showDetails) detailsQuery.refetch();
+                }}
+                disabled={!watchedEmail}
+              >
+                {showDetails ? "Hide delivery details" : "View delivery details"}
+              </Button>
+              {showDetails && detailsQuery.isFetching ? (
+                <span className="text-xs text-muted-foreground">Loading…</span>
+              ) : null}
+            </div>
+            {showDetails ? (
+              <div className="space-y-3 rounded-md border p-3">
+                {detailsQuery.data ? (
+                  <>
+                    <div>
+                      <p className="text-sm font-medium">Last-known response</p>
+                      {detailsQuery.data.lastResponse ? (
+                        <div className="mt-1 space-y-1 text-sm">
+                          <p>
+                            <Badge variant="secondary">
+                              {prettyStatus(detailsQuery.data.lastResponse.event)}
+                            </Badge>
+                            {detailsQuery.data.lastResponse.at ? (
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {new Date(detailsQuery.data.lastResponse.at).toLocaleString()}
+                              </span>
+                            ) : null}
+                          </p>
+                          <p className="font-mono text-xs break-all text-muted-foreground">
+                            {detailsQuery.data.lastResponse.smtpResponse ??
+                              "No SMTP response text reported for this message."}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Nothing recorded for this address yet.
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Message headers</p>
+                      <dl className="mt-1 grid gap-1 text-xs sm:grid-cols-[10rem_1fr]">
+                        {detailsQuery.data.headers.map((h) => (
+                          <Fragment key={h.label}>
+                            <dt className="text-muted-foreground">{h.label}</dt>
+                            <dd className="font-mono break-all">{h.value}</dd>
+                          </Fragment>
+                        ))}
+                      </dl>
+                    </div>
+                    {detailsQuery.data.rawPayload ? (
+                      <details>
+                        <summary className="cursor-pointer text-sm font-medium">
+                          Raw provider report
+                        </summary>
+                        <pre className="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-xs">
+                          {detailsQuery.data.rawPayload}
+                        </pre>
+                      </details>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {detailsQuery.isFetching ? "Loading details…" : "No details available."}
+                  </p>
+                )}
+              </div>
+            ) : null}
+
+            <Separator className="my-2" />
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-sm font-medium">Link clicks</p>
