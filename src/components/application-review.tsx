@@ -55,6 +55,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
   const diditEvents = useServerFn(listDiditEvents);
   const deliveryLog = useServerFn(listDeliveryLog);
   const emailClicks = useServerFn(listEmailClicks);
+  const deliveryDetails = useServerFn(getDeliveryDetails);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isReviewer;
