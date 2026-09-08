@@ -145,9 +145,43 @@ function KycPage() {
 
   const isEntity = ["entity", "trust", "ira"].includes(form.investor_type);
 
+  if (!isLoading && data && data.invited === false) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-16">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h1 className="text-2xl font-semibold leading-none tracking-tight">
+                No fund invitation yet
+              </h1>
+            </CardTitle>
+            <CardDescription>
+              Harmonious funds are private. Your account is active, but you have not been invited to
+              a fund yet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <p>
+              Once a fund manager or the Harmonious team invites this email address to a fund, your
+              onboarding will appear here automatically — just sign in again.
+            </p>
+            <p>
+              Expecting an invitation? Contact us at{" "}
+              <a className="underline" href="mailto:operations@harmonious.co">
+                operations@harmonious.co
+              </a>
+              .
+            </p>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <OnboardingStepper current="kyc" />
+
 
       <div className="mt-8 flex items-start justify-between gap-4">
         <div>
