@@ -298,6 +298,7 @@ export const startAchDebit = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
     assertFundable(application);
+    await assertAcknowledged(supabase, application as any, "ach");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
     const now = new Date().toISOString();
