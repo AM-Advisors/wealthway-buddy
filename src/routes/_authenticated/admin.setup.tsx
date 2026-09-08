@@ -181,9 +181,10 @@ function SetupPage() {
       const result: any = await invite({
         data: {
           email: inviteEmail.trim(),
-          legal_name: inviteName.trim(),
+          name: inviteName.trim(),
           offeringId: fundId!,
-          kind: assignKind,
+          role: assignKind === "manager" ? "fund_manager" : "investor",
+          sendEmail: true,
         },
       });
       return { email: result.email as string, created: Boolean(result.created) };
