@@ -77,7 +77,7 @@ function DocumentSigned({
 
           <Hr style={{ borderColor: '#e6ecf3', margin: '32px 0 16px' }} />
           <Text style={{ color: '#6b7a90', fontSize: '12px', lineHeight: '18px', margin: 0 }}>
-            Harmonious — signature completed and timestamped by Adobe Acrobat Sign.
+            Harmonious — signature completed and timestamped by Box Sign.
           </Text>
         </Container>
       </Body>

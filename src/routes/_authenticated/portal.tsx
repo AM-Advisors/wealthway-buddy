@@ -171,7 +171,7 @@ function Portal() {
   const signatureByDoc = new Map(documents.map((d) => [d.offering_document_id, d]));
   const completedDocIds = new Set(
     documents
-      .filter((d) => d.provider !== "adobe_sign" || d.provider_status === "completed")
+      .filter((d) => d.provider !== "box_sign" || d.provider_status === "completed")
       .map((d) => d.offering_document_id),
   );
   const signableDocs = (data?.offeringDocuments ?? []).filter((d: any) => d.requires_signature);
@@ -182,7 +182,7 @@ function Portal() {
     (d) => d.provider === "box_sign" && d.provider_status === "out_for_signature",
   );
 
-  // While a document sits with Adobe, pull its status so the page settles on its own.
+  // While a document sits with Box, pull its status so the page settles on its own.
   useEffect(() => {
     if (!awaitingBox) return;
     const timer = setInterval(async () => {
