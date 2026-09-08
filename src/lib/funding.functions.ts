@@ -167,7 +167,54 @@ export const getFunding = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    return { application, offering, payment, reference: referenceCode(application.id) };
+    const acknowledgements: Record<string, unknown> = {};
+    for (const method of ["wire", "ach"] as const) {
+      const ack = await latestAcknowledgement(supabase, application.id, method);
+      const expected = await instructionsFingerprint(supabase, application as any, method);
+      acknowledgements[method] = ack
+        ? {
+            acknowledged_at: ack.acknowledged_at,
+            statements: ack.statements,
+            current: ack.instructions_hash === expected,
+          }
+        : null;
+    }
+
+    return {
+      application,
+      offering,
+      payment,
+      acknowledgements,
+      reference: referenceCode(application.id),
+    };
+  });
+
+export const acknowledgeFunding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => acknowledgeSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const application = await loadFundingApplication(supabase, userId);
+    assertFundable(application);
+    if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
+
+    const hash = await instructionsFingerprint(supabase, application as any, data.method);
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const forwarded = getRequestHeader("x-forwarded-for") ?? "";
+    const ip = forwarded.split(",")[0]?.trim() || null;
+    const userAgent = getRequestHeader("user-agent") ?? null;
+
+    const { error } = await supabase.from("funding_acknowledgements").insert({
+      application_id: application.id,
+      method: data.method,
+      instructions_hash: hash,
+      statements: data.statements,
+      ip_address: ip,
+      user_agent: userAgent,
+    });
+    if (error) throw new Error(error.message);
+
+    return { ok: true };
   });
 
 export const chooseWire = createServerFn({ method: "POST" })
@@ -176,6 +223,7 @@ export const chooseWire = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
     assertFundable(application);
+    await assertAcknowledged(supabase, application as any, "wire");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
     const now = new Date().toISOString();
