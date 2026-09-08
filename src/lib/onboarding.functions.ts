@@ -58,14 +58,6 @@ export const getOnboarding = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId, claims } = context;
 
-    const { data: offering } = await supabase
-      .from("offerings")
-      .select("id, slug, name, reg_type, min_investment_cents")
-      .eq("is_open", true)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
     let { data: profile } = await supabase
       .from("profiles")
       .select("*")
@@ -81,25 +73,50 @@ export const getOnboarding = createServerFn({ method: "GET" })
       profile = inserted.data;
     }
 
+    // Access is invitation-only: an existing application, or a fund the person
+    // has been invited to, decides which offering they see. Nothing is created
+    // for people who have not been invited.
     let application = null;
-    if (offering) {
-      const existing = await supabase
-        .from("investor_applications")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("offering_id", offering.id)
-        .maybeSingle();
-      application = existing.data;
+    const existingApp = await supabase
+      .from("investor_applications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    application = existingApp.data;
 
-      if (!application) {
-        const created = await supabase
-          .from("investor_applications")
-          .insert({ user_id: userId, offering_id: offering.id, current_step: "kyc" })
-          .select("*")
-          .single();
-        if (created.error) throw new Error(created.error.message);
-        application = created.data;
-      }
+    let offeringId: string | null = application?.offering_id ?? null;
+
+    if (!offeringId) {
+      const access = await supabase
+        .from("investor_fund_access")
+        .select("offering_id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      offeringId = (access.data?.offering_id as string | undefined) ?? null;
+    }
+
+    if (!offeringId) {
+      return { offering: null, profile, application: null, kyc: null, aml: null, invited: false };
+    }
+
+    const { data: offering } = await supabase
+      .from("offerings")
+      .select("id, slug, name, reg_type, min_investment_cents")
+      .eq("id", offeringId)
+      .maybeSingle();
+
+    if (!application && offering) {
+      const created = await supabase
+        .from("investor_applications")
+        .insert({ user_id: userId, offering_id: offering.id, current_step: "kyc" })
+        .select("*")
+        .single();
+      if (created.error) throw new Error(created.error.message);
+      application = created.data;
     }
 
     const kyc = application
@@ -122,7 +139,8 @@ export const getOnboarding = createServerFn({ method: "GET" })
         ).data
       : null;
 
-    return { offering, profile, application, kyc, aml };
+    return { offering, profile, application, kyc, aml, invited: true };
+
   });
 
 export const submitKyc = createServerFn({ method: "POST" })
