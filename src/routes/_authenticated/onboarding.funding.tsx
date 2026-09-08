@@ -72,6 +72,11 @@ function FundingStep() {
   };
   const [expectedDate, setExpectedDate] = useState("");
   const [bankLast4, setBankLast4] = useState("");
+  const [wireAmount, setWireAmount] = useState("");
+  const [sendingBank, setSendingBank] = useState("");
+  const [bankReference, setBankReference] = useState("");
+  const [wireNote, setWireNote] = useState("");
+  const [wireAccurate, setWireAccurate] = useState(false);
   const [accountHolder, setAccountHolder] = useState("");
   const [routing, setRouting] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
