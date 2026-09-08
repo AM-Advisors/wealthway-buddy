@@ -1,15 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 
 import { getAdminAccess } from "@/lib/admin.functions";
-import { listEmailTemplates, renderEmailPreview } from "@/lib/email-preview.functions";
+import {
+  listEmailTemplates,
+  listPreviewInvestors,
+  renderEmailPreview,
+  sendPreviewTest,
+} from "@/lib/email-preview.functions";
+import {
+  DEFAULT_PORTAL_ORIGIN,
+  ONBOARDING_STEPS,
+  findStep,
+} from "@/lib/email-templates/steps";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 
 export const Route = createFileRoute("/_authenticated/admin/email-preview")({
   head: () => ({
@@ -41,6 +52,8 @@ function EmailPreviewPage() {
   const access = useServerFn(getAdminAccess);
   const listFn = useServerFn(listEmailTemplates);
   const renderFn = useServerFn(renderEmailPreview);
+  const investorsFn = useServerFn(listPreviewInvestors);
+  const sendTestFn = useServerFn(sendPreviewTest);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isAdmin;
@@ -55,6 +68,34 @@ function EmailPreviewPage() {
   const [selected, setSelected] = useState<string>("");
   const [fields, setFields] = useState<Record<string, string>>({});
   const [width, setWidth] = useState<(typeof WIDTHS)[number]["key"]>("desktop");
+  const [mode, setMode] = useState<"investor" | "manual">("investor");
+  const [investorId, setInvestorId] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [testTo, setTestTo] = useState("");
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const supportsSteps = selected === "investor-invitation";
+  const currentStep = fields["currentStep"] ?? "";
+
+  const investorsQuery = useQuery({
+    queryKey: ["email-preview-investors"],
+    queryFn: () => investorsFn(),
+    enabled: isAdmin === true && mode === "investor",
+  });
+
+  const investors = investorsQuery.data?.investors ?? [];
+  const filteredInvestors = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return investors.slice(0, 25);
+    return investors
+      .filter(
+        (i) =>
+          i.investorName.toLowerCase().includes(q) ||
+          i.email.toLowerCase().includes(q) ||
+          i.offeringName.toLowerCase().includes(q),
+      )
+      .slice(0, 25);
+  }, [investors, search]);
 
   useEffect(() => {
     if (!selected && templates.length > 0) {
@@ -64,11 +105,63 @@ function EmailPreviewPage() {
     }
   }, [templates, selected]);
 
+  useEffect(() => {
+    const email = (accessQuery.data as any)?.email;
+    if (!testTo && typeof email === "string" && email.includes("@")) setTestTo(email);
+  }, [accessQuery.data, testTo]);
+
+  function applyStep(stepKey: string) {
+    const step = findStep(stepKey);
+    setFields((f) => ({
+      ...f,
+      currentStep: stepKey,
+      ...(step
+        ? { ctaUrl: `${DEFAULT_PORTAL_ORIGIN}${step.path}`, ctaLabel: step.ctaLabel }
+        : { ctaUrl: "", ctaLabel: "" }),
+    }));
+  }
+
+  function applyInvestor(id: string) {
+    setInvestorId(id);
+    const investor = investors.find((i) => i.applicationId === id);
+    if (!investor) return;
+    const step = findStep(investor.currentStep);
+    setFields((f) => ({
+      ...f,
+      investorName: investor.investorName,
+      offeringName: investor.offeringName,
+      ...(supportsSteps
+        ? {
+            currentStep: investor.currentStep,
+            ...(step
+              ? { ctaUrl: `${DEFAULT_PORTAL_ORIGIN}${step.path}`, ctaLabel: step.ctaLabel }
+              : {}),
+          }
+        : {}),
+    }));
+    if (investor.email) setTestTo(investor.email);
+  }
+
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      sendTestFn({
+        data: {
+          templateName: selected,
+          to: testTo.trim(),
+          data: fields,
+          ...(mode === "investor" && investorId ? { applicationId: investorId } : {}),
+        },
+      }),
+    onSuccess: (res: any) => setTestResult({ ok: Boolean(res?.ok), message: res?.message ?? "" }),
+    onError: () => setTestResult({ ok: false, message: "Could not send the test email." }),
+  });
+
   const previewQuery = useQuery({
     queryKey: ["email-preview", selected, fields],
     queryFn: () => renderFn({ data: { templateName: selected, data: fields } }),
     enabled: isAdmin === true && Boolean(selected),
   });
+
 
   if (accessQuery.isLoading) {
     return <main className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Loading…</main>;
@@ -96,8 +189,10 @@ function EmailPreviewPage() {
         <div>
           <h1 className="text-3xl">Email preview</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Exactly what an investor sees in their inbox. Nothing is sent from this page.
+            Exactly what an investor sees in their inbox. Nothing is sent unless you use the send
+            test button.
           </p>
+
         </div>
         <Button asChild size="sm" variant="outline">
           <Link to="/admin">Back to queue</Link>
@@ -133,6 +228,107 @@ function EmailPreviewPage() {
           </Card>
 
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Simulate an investor</CardTitle>
+              <CardDescription>
+                Fill the email with a real investor's details, or enter them by hand.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={mode === "investor" ? "default" : "outline"}
+                  onClick={() => setMode("investor")}
+                >
+                  Real investor
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mode === "manual" ? "default" : "outline"}
+                  onClick={() => {
+                    setMode("manual");
+                    setInvestorId("");
+                  }}
+                >
+                  Enter manually
+                </Button>
+              </div>
+
+              {mode === "investor" && (
+                <div className="space-y-2">
+                  <Label htmlFor="investor-search">Find an investor</Label>
+                  <Input
+                    id="investor-search"
+                    placeholder="Search by name, email or fund"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                  {investorsQuery.isLoading && (
+                    <p className="text-sm text-muted-foreground">Loading investors…</p>
+                  )}
+                  {!investorsQuery.isLoading && filteredInvestors.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No matching investors.</p>
+                  )}
+                  <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+                    {filteredInvestors.map((i) => (
+                      <button
+                        key={i.applicationId}
+                        type="button"
+                        onClick={() => applyInvestor(i.applicationId)}
+                        className={`w-full rounded-md border px-3 py-2 text-left text-sm transition ${
+                          investorId === i.applicationId
+                            ? "border-primary bg-primary/5"
+                            : "hover:bg-muted/60"
+                        }`}
+                      >
+                        <span className="block font-medium">{i.investorName}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {i.offeringName}
+                          {i.email ? ` · ${i.email}` : ""}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          Step: {findStep(i.currentStep)?.label ?? i.currentStep}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {supportsSteps ? (
+                <div className="space-y-2">
+                  <Label>Onboarding step</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={currentStep ? "outline" : "default"}
+                      onClick={() => applyStep("")}
+                    >
+                      No step (welcome)
+                    </Button>
+                    {ONBOARDING_STEPS.map((s) => (
+                      <Button
+                        key={s.key}
+                        size="sm"
+                        variant={currentStep === s.key ? "default" : "outline"}
+                        onClick={() => applyStep(s.key)}
+                      >
+                        {s.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  This design does not use onboarding steps.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+
             <CardHeader>
               <CardTitle className="text-base">Sample content</CardTitle>
               <CardDescription>Edit the wording to see how it looks.</CardDescription>
@@ -205,6 +401,48 @@ function EmailPreviewPage() {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Send this version as a test</CardTitle>
+              <CardDescription>
+                Sends exactly what you see above. Admin only, once every 15 seconds.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[240px] flex-1 space-y-1.5">
+                  <Label htmlFor="test-to">Send to</Label>
+                  <Input
+                    id="test-to"
+                    type="email"
+                    value={testTo}
+                    placeholder="you@harmonious.co"
+                    onChange={(e) => setTestTo(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    setTestResult(null);
+                    sendMutation.mutate();
+                  }}
+                  disabled={
+                    sendMutation.isPending || !selected || !/^\S+@\S+\.\S+$/.test(testTo.trim())
+                  }
+                >
+                  {sendMutation.isPending ? "Sending…" : "Send test"}
+                </Button>
+              </div>
+              {testResult && (
+                <p
+                  className={`text-sm ${testResult.ok ? "text-muted-foreground" : "text-destructive"}`}
+                >
+                  {testResult.message}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
         </div>
       </div>
     </main>
