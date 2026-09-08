@@ -53,6 +53,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
   const testEmail = useServerFn(sendTestEmail);
   const invite = useServerFn(sendOnboardingInvitation);
   const payment = useServerFn(decidePayment);
+  const wireDecision = useServerFn(decideWireConfirmation);
   const diditEvents = useServerFn(listDiditEvents);
   const deliveryLog = useServerFn(listDeliveryLog);
   const emailClicks = useServerFn(listEmailClicks);
