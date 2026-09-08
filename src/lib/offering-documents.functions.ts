@@ -61,3 +61,66 @@ export const downloadOfferingDocument = createServerFn({ method: "POST" })
       base64: toBase64(bytes),
     };
   });
+
+async function assertAdmin(supabase: any, userId: string) {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: admin access required.");
+}
+
+/** Admin-only: renders the whole fund packet (cover, wire instructions, every document) as one PDF. */
+export const downloadOfferingPacket = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const { data: offering, error } = await supabase
+      .from("offerings")
+      .select("id, name, reg_type, summary, min_investment_cents, target_raise_cents, is_open")
+      .eq("id", data.offering_id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!offering) throw new Error("Fund not found.");
+
+    const [{ data: wireRow }, { data: docs }] = await Promise.all([
+      supabase
+        .from("offering_wire_instructions")
+        .select("details")
+        .eq("offering_id", offering.id)
+        .maybeSingle(),
+      supabase
+        .from("offering_documents")
+        .select("title, doc_type, body, requires_signature, sort_order")
+        .eq("offering_id", offering.id)
+        .order("sort_order", { ascending: true }),
+    ]);
+
+    const { buildOfferingPacketPdf } = await import("./offering-pdf.server");
+    const bytes = await buildOfferingPacketPdf({
+      offeringName: offering.name,
+      regType: offering.reg_type,
+      summary: offering.summary,
+      minInvestmentCents: offering.min_investment_cents,
+      targetRaiseCents: offering.target_raise_cents,
+      isOpen: Boolean(offering.is_open),
+      wireInstructions: ((wireRow as any)?.details ?? {}) as Record<string, string>,
+      documents: (docs ?? []).map((d: any) => ({
+        title: d.title,
+        docType: d.doc_type,
+        body: d.body,
+        requiresSignature: Boolean(d.requires_signature),
+      })),
+    });
+
+    return {
+      filename: `${slugify(offering.name)}-packet.pdf`,
+      base64: toBase64(bytes),
+    };
+  });
