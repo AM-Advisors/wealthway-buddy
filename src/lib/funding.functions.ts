@@ -141,7 +141,17 @@ export const getFunding = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    if (!application) return { application: null, offering: null, payment: null, reference: null };
+    if (!application)
+      return {
+        application: null,
+        offering: null,
+        payment: null,
+        reference: null,
+        acknowledgements: { wire: null, ach: null } as {
+          wire: { acknowledged_at: string; statements: string[]; current: boolean } | null;
+          ach: { acknowledged_at: string; statements: string[]; current: boolean } | null;
+        },
+      };
 
     const { data: offeringRow } = await supabase
       .from("offerings")
