@@ -145,6 +145,21 @@ function FundsPage() {
       setPdfBusy(null);
     }
   };
+
+  const [packetBusy, setPacketBusy] = useState<string | null>(null);
+  const getPacket = useServerFn(downloadOfferingPacket);
+
+  const downloadPacket = async (offeringId: string) => {
+    setPacketBusy(offeringId);
+    try {
+      const res = await getPacket({ data: { offering_id: offeringId } });
+      savePdf(res.filename, res.base64);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not prepare the packet.");
+    } finally {
+      setPacketBusy(null);
+    }
+  };
   const [docForm, setDocForm] = useState<DocForm>(blankDoc());
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-offerings"] });
