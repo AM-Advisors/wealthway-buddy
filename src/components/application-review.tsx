@@ -632,6 +632,101 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             )}
 
             <div className="space-y-2 border-t pt-3">
+              <p className="font-medium">Wire confirmations from the investor</p>
+              {(d as any)?.wireConfirmations?.length ? (
+                (d as any).wireConfirmations.map((w: any) => (
+                  <div key={w.id} className="space-y-3 rounded-md border p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium">
+                        {money(w.amount_cents)} sent {new Date(`${w.sent_on}T12:00:00`).toLocaleDateString()}
+                      </span>
+                      <Badge variant={statusTone(w.status === "approved" ? "settled" : w.status)}>
+                        {prettyStatus(w.status)}
+                      </Badge>
+                    </div>
+                    <dl className="grid gap-x-8 gap-y-1 text-muted-foreground sm:grid-cols-2">
+                      <div className="flex gap-2">
+                        <dt>sending bank:</dt>
+                        <dd className="font-medium text-foreground">{w.sending_bank_name}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt>account ending:</dt>
+                        <dd className="font-medium text-foreground">{w.sending_account_last4}</dd>
+                      </div>
+                      {w.bank_reference && (
+                        <div className="flex gap-2">
+                          <dt>bank reference:</dt>
+                          <dd className="font-mono text-foreground">{w.bank_reference}</dd>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <dt>submitted:</dt>
+                        <dd className="text-foreground">{new Date(w.created_at).toLocaleString()}</dd>
+                      </div>
+                    </dl>
+                    {w.investor_note && <p className="italic">“{w.investor_note}”</p>}
+
+                    {w.status === "submitted" ? (
+                      <div className="space-y-2 border-t pt-3">
+                        <Label htmlFor={`wire-notes-${w.id}`}>
+                          Review note (required to reject)
+                        </Label>
+                        <Textarea
+                          id={`wire-notes-${w.id}`}
+                          rows={2}
+                          value={wireNotes[w.id] ?? ""}
+                          onChange={(e) =>
+                            setWireNotes((prev) => ({ ...prev, [w.id]: e.target.value }))
+                          }
+                          placeholder="e.g. amount received matches the commitment"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            disabled={wireMutation.isPending}
+                            onClick={() =>
+                              wireMutation.mutate({
+                                confirmationId: w.id,
+                                outcome: "approved",
+                                notes: wireNotes[w.id] ?? "",
+                              })
+                            }
+                          >
+                            Approve wire · mark funded
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={wireMutation.isPending || !(wireNotes[w.id] ?? "").trim()}
+                            onClick={() =>
+                              wireMutation.mutate({
+                                confirmationId: w.id,
+                                outcome: "rejected",
+                                notes: wireNotes[w.id] ?? "",
+                              })
+                            }
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="border-t pt-3 text-muted-foreground">
+                        {prettyStatus(w.status)}
+                        {w.reviewed_at ? ` ${new Date(w.reviewed_at).toLocaleString()}` : ""}
+                        {w.review_notes ? ` — ${w.review_notes}` : ""}
+                      </p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">
+                  The investor has not submitted a wire confirmation yet.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 border-t pt-3">
               <p className="font-medium">Instruction confirmations</p>
               {(d as any)?.fundingAcknowledgements?.length ? (
                 (d as any).fundingAcknowledgements.map((a: any) => (
