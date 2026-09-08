@@ -30,6 +30,7 @@ import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_au
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
+import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -149,6 +150,11 @@ const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
+  id: '/api/public/email/click',
+  path: '/api/public/email/click',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksBoxSignRoute =
   ApiPublicWebhooksBoxSignRouteImport.update({
     id: '/api/public/webhooks/box-sign',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
+  '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
+  '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
+  '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/admin/'
     | '/manager/'
+    | '/api/public/email/click'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/admin'
     | '/manager'
+    | '/api/public/email/click'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/_authenticated/admin/'
     | '/_authenticated/manager/'
+    | '/api/public/email/click'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -330,6 +342,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
+  ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -484,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/email/click': {
+      id: '/api/public/email/click'
+      path: '/api/public/email/click'
+      fullPath: '/api/public/email/click'
+      preLoaderRoute: typeof ApiPublicEmailClickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/box-sign': {
       id: '/api/public/webhooks/box-sign'
       path: '/api/public/webhooks/box-sign'
@@ -556,6 +576,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
+  ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
