@@ -399,6 +399,48 @@ function EmailPreviewPage() {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Send this version as a test</CardTitle>
+              <CardDescription>
+                Sends exactly what you see above. Admin only, once every 15 seconds.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[240px] flex-1 space-y-1.5">
+                  <Label htmlFor="test-to">Send to</Label>
+                  <Input
+                    id="test-to"
+                    type="email"
+                    value={testTo}
+                    placeholder="you@harmonious.co"
+                    onChange={(e) => setTestTo(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    setTestResult(null);
+                    sendMutation.mutate();
+                  }}
+                  disabled={
+                    sendMutation.isPending || !selected || !/^\S+@\S+\.\S+$/.test(testTo.trim())
+                  }
+                >
+                  {sendMutation.isPending ? "Sending…" : "Send test"}
+                </Button>
+              </div>
+              {testResult && (
+                <p
+                  className={`text-sm ${testResult.ok ? "text-muted-foreground" : "text-destructive"}`}
+                >
+                  {testResult.message}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
         </div>
       </div>
     </main>
