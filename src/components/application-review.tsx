@@ -113,6 +113,40 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
   const [message, setMessage] = useState("");
   const [testTo, setTestTo] = useState("");
 
+  // Last test send, kept so it can be tweaked and resent without recomposing.
+  type LastTest = { to: string; subject: string; body: string; at: number };
+  const lastTestKey = `harmonious.lastTestEmail.${applicationId}`;
+  const [lastTest, setLastTest] = useState<LastTest | null>(null);
+  const [resendTo, setResendTo] = useState("");
+  const [resendSubject, setResendSubject] = useState("");
+  const [resendBody, setResendBody] = useState("");
+
+  const applyLastTest = (t: LastTest) => {
+    setLastTest(t);
+    setResendTo(t.to);
+    setResendSubject(t.subject);
+    setResendBody(t.body);
+  };
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(lastTestKey);
+      if (raw) applyLastTest(JSON.parse(raw) as LastTest);
+    } catch {
+      /* ignore unreadable storage */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastTestKey]);
+
+  const rememberTest = (t: LastTest) => {
+    applyLastTest(t);
+    try {
+      window.localStorage.setItem(lastTestKey, JSON.stringify(t));
+    } catch {
+      /* ignore unwritable storage */
+    }
+  };
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-application", applicationId] });
     queryClient.invalidateQueries({ queryKey: ["admin-queue"] });
@@ -173,8 +207,8 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     };
   }, []);
 
-  const startWatching = () => {
-    setWatchEmail(testTo.trim() || investorEmail);
+  const startWatching = (address?: string) => {
+    setWatchEmail((address ?? testTo).trim() || investorEmail);
     setLastSendAt(Date.now());
   };
 
@@ -183,7 +217,27 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     onSuccess: (result) => {
       if (result.ok) toast.success(result.message);
       else toast.warning(result.message);
+      rememberTest({ to: testTo.trim(), subject, body: message, at: Date.now() });
       startWatching();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: () =>
+      testEmail({
+        data: {
+          applicationId,
+          subject: resendSubject,
+          body: resendBody,
+          to: resendTo.trim(),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.ok) toast.success(result.message);
+      else toast.warning(result.message);
+      rememberTest({ to: resendTo.trim(), subject: resendSubject, body: resendBody, at: Date.now() });
+      startWatching(resendTo);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -669,6 +723,86 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                 </div>
               </div>
             </div>
+
+            {lastTest ? (
+              <div className="rounded-md border bg-muted/30 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">Resend test email</p>
+                    <p className="text-xs text-muted-foreground">
+                      Last test sent to {lastTest.to} · {new Date(lastTest.at).toLocaleString()}. Tweak the
+                      subject or message below and send it again.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => {
+                      setSubject(lastTest.subject);
+                      setMessage(lastTest.body);
+                      setTestTo(lastTest.to);
+                      toast.success("Loaded into the composer above.");
+                    }}
+                  >
+                    Copy into composer
+                  </Button>
+                </div>
+                <div className="mt-3 grid gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="resend_to">Send to</Label>
+                      <Input
+                        id="resend_to"
+                        type="email"
+                        value={resendTo}
+                        onChange={(e) => setResendTo(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="resend_subject">Subject</Label>
+                      <Input
+                        id="resend_subject"
+                        value={resendSubject}
+                        onChange={(e) => setResendSubject(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="resend_body">Message</Label>
+                    <Textarea
+                      id="resend_body"
+                      rows={6}
+                      value={resendBody}
+                      onChange={(e) => setResendBody(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      onClick={() => resendMutation.mutate()}
+                      disabled={
+                        resendMutation.isPending ||
+                        !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(resendTo.trim()) ||
+                        resendSubject.trim().length < 2 ||
+                        resendBody.trim().length < 2
+                      }
+                    >
+                      {resendMutation.isPending ? "Sending…" : "Resend test"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => applyLastTest(lastTest)}
+                      disabled={resendMutation.isPending}
+                    >
+                      Reset changes
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
 
             {d?.emails.length ? (
               <>
