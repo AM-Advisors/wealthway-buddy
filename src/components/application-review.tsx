@@ -159,11 +159,17 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     };
   }, []);
 
+  const startWatching = () => {
+    setWatchEmail(testTo.trim() || investorEmail);
+    setLastSendAt(Date.now());
+  };
+
   const testMutation = useMutation({
     mutationFn: () => testEmail({ data: { applicationId, subject, body: message, to: testTo.trim() } }),
     onSuccess: (result) => {
       if (result.ok) toast.success(result.message);
       else toast.warning(result.message);
+      startWatching();
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -173,6 +179,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     onSuccess: (result) => {
       if (result.ok) toast.success(result.message);
       else toast.warning(result.message);
+      startWatching();
     },
     onError: (e: Error) => toast.error(e.message),
   });
