@@ -26,4 +26,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'investor-message': investorMessage,
   'document-signed': documentSigned,
   'investor-invitation': investorInvitation,
+  'delivery-alert': deliveryAlert,
 }
