@@ -67,9 +67,7 @@ async function instructionsFingerprint(
 
   if (method === "wire") {
     const { data: wireRow } = await supabase
-      .from("offering_wire_instructions")
-      .select("details")
-      .eq("offering_id", application.offering_id)
+      .rpc("get_wire_instructions", { p_offering_id: application.offering_id })
       .maybeSingle();
     const details = ((wireRow as any)?.details ?? {}) as Record<string, unknown>;
     base.instructions = Object.fromEntries(
