@@ -52,6 +52,8 @@ function EmailPreviewPage() {
   const access = useServerFn(getAdminAccess);
   const listFn = useServerFn(listEmailTemplates);
   const renderFn = useServerFn(renderEmailPreview);
+  const investorsFn = useServerFn(listPreviewInvestors);
+  const sendTestFn = useServerFn(sendPreviewTest);
 
   const accessQuery = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const isAdmin = accessQuery.data?.isAdmin;
@@ -66,6 +68,34 @@ function EmailPreviewPage() {
   const [selected, setSelected] = useState<string>("");
   const [fields, setFields] = useState<Record<string, string>>({});
   const [width, setWidth] = useState<(typeof WIDTHS)[number]["key"]>("desktop");
+  const [mode, setMode] = useState<"investor" | "manual">("investor");
+  const [investorId, setInvestorId] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [testTo, setTestTo] = useState("");
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const supportsSteps = selected === "investor-invitation";
+  const currentStep = fields["currentStep"] ?? "";
+
+  const investorsQuery = useQuery({
+    queryKey: ["email-preview-investors"],
+    queryFn: () => investorsFn(),
+    enabled: isAdmin === true && mode === "investor",
+  });
+
+  const investors = investorsQuery.data?.investors ?? [];
+  const filteredInvestors = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return investors.slice(0, 25);
+    return investors
+      .filter(
+        (i) =>
+          i.investorName.toLowerCase().includes(q) ||
+          i.email.toLowerCase().includes(q) ||
+          i.offeringName.toLowerCase().includes(q),
+      )
+      .slice(0, 25);
+  }, [investors, search]);
 
   useEffect(() => {
     if (!selected && templates.length > 0) {
@@ -75,11 +105,63 @@ function EmailPreviewPage() {
     }
   }, [templates, selected]);
 
+  useEffect(() => {
+    const email = (accessQuery.data as any)?.email;
+    if (!testTo && typeof email === "string" && email.includes("@")) setTestTo(email);
+  }, [accessQuery.data, testTo]);
+
+  function applyStep(stepKey: string) {
+    const step = findStep(stepKey);
+    setFields((f) => ({
+      ...f,
+      currentStep: stepKey,
+      ...(step
+        ? { ctaUrl: `${DEFAULT_PORTAL_ORIGIN}${step.path}`, ctaLabel: step.ctaLabel }
+        : { ctaUrl: "", ctaLabel: "" }),
+    }));
+  }
+
+  function applyInvestor(id: string) {
+    setInvestorId(id);
+    const investor = investors.find((i) => i.applicationId === id);
+    if (!investor) return;
+    const step = findStep(investor.currentStep);
+    setFields((f) => ({
+      ...f,
+      investorName: investor.investorName,
+      offeringName: investor.offeringName,
+      ...(supportsSteps
+        ? {
+            currentStep: investor.currentStep,
+            ...(step
+              ? { ctaUrl: `${DEFAULT_PORTAL_ORIGIN}${step.path}`, ctaLabel: step.ctaLabel }
+              : {}),
+          }
+        : {}),
+    }));
+    if (investor.email) setTestTo(investor.email);
+  }
+
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      sendTestFn({
+        data: {
+          templateName: selected,
+          to: testTo.trim(),
+          data: fields,
+          ...(mode === "investor" && investorId ? { applicationId: investorId } : {}),
+        },
+      }),
+    onSuccess: (res: any) => setTestResult({ ok: Boolean(res?.ok), message: res?.message ?? "" }),
+    onError: () => setTestResult({ ok: false, message: "Could not send the test email." }),
+  });
+
   const previewQuery = useQuery({
     queryKey: ["email-preview", selected, fields],
     queryFn: () => renderFn({ data: { templateName: selected, data: fields } }),
     enabled: isAdmin === true && Boolean(selected),
   });
+
 
   if (accessQuery.isLoading) {
     return <main className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Loading…</main>;
