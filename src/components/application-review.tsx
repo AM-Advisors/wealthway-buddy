@@ -694,20 +694,39 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
           <CardHeader>
             <CardTitle className="text-base">Delivery history</CardTitle>
             <CardDescription>
-              Sends, rejections, bounces, complaints and unsubscribes for this investor's address.
-              Opens and reads aren't tracked.
+              Sends, rejections, bounces, complaints and unsubscribes for {watchedEmail || "this investor's address"}.
+              After you send, this checks itself every 15 seconds for 10 minutes. Opens and reads aren't tracked.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => deliveryQuery.refetch()}
-              disabled={!investorEmail || deliveryQuery.isFetching}
-            >
-              {deliveryQuery.isFetching ? "Loading…" : "Refresh delivery history"}
-            </Button>
-            {!investorEmail ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => deliveryQuery.refetch()}
+                disabled={!watchedEmail || deliveryQuery.isFetching}
+              >
+                {deliveryQuery.isFetching ? "Checking…" : "Check now"}
+              </Button>
+              {pollingActive ? (
+                <Badge variant="secondary">Auto-checking</Badge>
+              ) : null}
+              {deliveryQuery.dataUpdatedAt ? (
+                <span className="text-xs text-muted-foreground">
+                  Last checked {new Date(deliveryQuery.dataUpdatedAt).toLocaleTimeString()}
+                </span>
+              ) : null}
+            </div>
+            {deliveryQuery.data?.events?.[0] ? (
+              <p className="text-sm">
+                Latest outcome:{" "}
+                <span className="font-medium">{prettyStatus(deliveryQuery.data.events[0].event_type)}</span>{" "}
+                <span className="text-xs text-muted-foreground">
+                  ({new Date(deliveryQuery.data.events[0].timestamp).toLocaleString()})
+                </span>
+              </p>
+            ) : null}
+            {!watchedEmail ? (
               <p className="text-sm text-muted-foreground">No email address on file yet.</p>
             ) : deliveryQuery.data?.error ? (
               <p className="text-sm text-muted-foreground">{deliveryQuery.data.error}</p>
