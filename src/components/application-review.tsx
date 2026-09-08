@@ -367,9 +367,9 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                       <div className="min-w-0">
                         <p className="font-medium">
                           {sig.document?.title ?? "Document"}
-                          {sig.provider === "adobe_sign" && (
+                          {sig.provider === "box_sign" && (
                             <Badge variant="secondary" className="ml-2 align-middle">
-                              Adobe Sign
+                              Box Sign
                               {sig.provider_status && sig.provider_status !== "completed"
                                 ? ` · ${String(sig.provider_status).replace(/_/g, " ")}`
                                 : ""}
@@ -380,9 +380,9 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                           Signed by {sig.signer_name} ·{" "}
                           {new Date(sig.provider_completed_at ?? sig.signed_at).toLocaleString()}
                         </p>
-                        {sig.provider === "adobe_sign" && sig.provider_agreement_id && (
+                        {sig.provider === "box_sign" && sig.provider_agreement_id && (
                           <p className="break-all font-mono text-[11px] text-muted-foreground">
-                            Adobe agreement {sig.provider_agreement_id}
+                            Box Sign request {sig.provider_agreement_id}
                           </p>
                         )}
                         <p className="break-all font-mono text-[11px] text-muted-foreground">

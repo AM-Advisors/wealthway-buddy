@@ -4,16 +4,22 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const startSchema = z.object({ offering_document_id: z.string().uuid() });
 
-/** Is real e-signing available (Adobe credentials present)? */
+/** Is real e-signing available (Box credentials present)? */
 export const getSigningProvider = createServerFn({ method: "GET" }).handler(async () => {
-  return { provider: process.env["ADOBE_SIGN_INTEGRATION_KEY"] ? "adobe_sign" : "internal" };
+  const configured = Boolean(
+    process.env["BOX_CLIENT_ID"] &&
+      process.env["BOX_CLIENT_SECRET"] &&
+      process.env["BOX_ENTERPRISE_ID"],
+  );
+  return { provider: configured ? "box_sign" : "internal" };
 });
 
 /**
- * Sends the fund document to Adobe Acrobat Sign for this investor and returns
- * the signing URL. The signed copy comes back via the Adobe webhook.
+ * Uploads the fund document to Box, sends it out through Box Sign for this
+ * investor and returns the signing URL. The signed copy comes back via the
+ * Box webhook (or the refresh below).
  */
-export const startAdobeSigning = createServerFn({ method: "POST" })
+export const startBoxSigning = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => startSchema.parse(data))
   .handler(async ({ data, context }) => {
@@ -59,7 +65,6 @@ export const startAdobeSigning = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Reuse a live agreement instead of sending a duplicate.
     const { data: existing } = await supabaseAdmin
       .from("document_signatures")
       .select("id, provider, provider_agreement_id, provider_status")
@@ -67,24 +72,21 @@ export const startAdobeSigning = createServerFn({ method: "POST" })
       .eq("offering_document_id", doc.id)
       .maybeSingle();
 
-    const {
-      createAgreement,
-      getSigningUrl,
-      uploadTransientDocument,
-    } = await import("@/lib/adobe-sign.server");
+    const { createSignRequest, getSignRequest, uploadFile } = await import("@/lib/box.server");
 
+    // Reuse a live request instead of sending a duplicate.
     if (
-      existing?.provider === "adobe_sign" &&
+      existing?.provider === "box_sign" &&
       existing.provider_agreement_id &&
       existing.provider_status === "out_for_signature"
     ) {
-      const url = await getSigningUrl(existing.provider_agreement_id);
-      if (url) {
+      const live = await getSignRequest(existing.provider_agreement_id).catch(() => null);
+      if (live?.signingUrl) {
         await supabaseAdmin
           .from("document_signatures")
-          .update({ provider_signing_url: url })
+          .update({ provider_signing_url: live.signingUrl })
           .eq("id", existing.id);
-        return { url, agreementId: existing.provider_agreement_id, reused: true };
+        return { url: live.signingUrl, agreementId: existing.provider_agreement_id, reused: true };
       }
     }
 
@@ -98,16 +100,18 @@ export const startAdobeSigning = createServerFn({ method: "POST" })
       requiresSignature: Boolean(doc.requires_signature),
     });
 
-    const fileName = `${doc.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document"}.pdf`;
-    const transientDocumentId = await uploadTransientDocument(fileName, pdfBytes);
+    const safeTitle = doc.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
+    const fileName = `${safeTitle} — ${profile.legal_name ?? profile.email} — ${application.id.slice(0, 8)}.pdf`;
+    const fileId = await uploadFile(fileName, pdfBytes);
 
-    const agreementId = await createAgreement({
-      name: `${offering?.name ?? "Harmonious"} — ${doc.title}`,
-      transientDocumentId,
+    const request = await createSignRequest({
+      fileId,
       signerEmail: profile.email,
       signerName: profile.legal_name ?? profile.email,
+      documentName: `${offering?.name ?? "Harmonious"} — ${doc.title}`,
       message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
       externalId: `${application.id}:${doc.id}`,
+      redirectUrl: "https://onboard.harmonious.co/portal",
     });
 
     const now = new Date().toISOString();
@@ -116,13 +120,15 @@ export const startAdobeSigning = createServerFn({ method: "POST" })
       offering_document_id: doc.id,
       signer_name: profile.legal_name ?? profile.email,
       signer_email: profile.email,
-      signature_type: "adobe_sign",
-      signature_value: agreementId,
+      signature_type: "box_sign",
+      signature_value: request.id,
       consent_electronic: true,
       document_hash: "",
-      provider: "adobe_sign",
-      provider_agreement_id: agreementId,
+      provider: "box_sign",
+      provider_agreement_id: request.id,
       provider_status: "out_for_signature",
+      provider_signing_url: request.signingUrl,
+      provider_source_file_id: fileId,
       provider_last_event_at: now,
       signed_at: now,
     };
@@ -152,16 +158,15 @@ export const startAdobeSigning = createServerFn({ method: "POST" })
     await supabaseAdmin.from("signature_audit_events").insert({
       application_id: application.id,
       signature_id: signatureId,
-      event_type: "adobe_sign_sent",
-      metadata: { agreement_id: agreementId, document_title: doc.title },
+      event_type: "box_sign_sent",
+      metadata: { sign_request_id: request.id, box_file_id: fileId, document_title: doc.title },
     });
 
-    const url = await getSigningUrl(agreementId);
-    return { url, agreementId, reused: false };
+    return { url: request.signingUrl, agreementId: request.id, reused: false };
   });
 
-/** Pulls the latest state from Adobe for the caller's in-flight agreements. */
-export const refreshAdobeSignatures = createServerFn({ method: "POST" })
+/** Pulls the latest state from Box for the caller's in-flight sign requests. */
+export const refreshBoxSignatures = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
@@ -180,20 +185,20 @@ export const refreshAdobeSignatures = createServerFn({ method: "POST" })
       .from("document_signatures")
       .select("provider_agreement_id")
       .eq("application_id", application.id)
-      .eq("provider", "adobe_sign")
+      .eq("provider", "box_sign")
       .eq("provider_status", "out_for_signature");
 
     if (!pending?.length) return { updated: 0 };
 
-    const { syncAdobeAgreement } = await import("@/lib/adobe-sign-complete.server");
+    const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
     let updated = 0;
     for (const row of pending) {
       if (!row.provider_agreement_id) continue;
       try {
-        const res = await syncAdobeAgreement(row.provider_agreement_id);
+        const res = await syncBoxSignRequest(row.provider_agreement_id);
         if (res.completed) updated += 1;
       } catch (e) {
-        console.error("[adobe-sign] refresh failed", e);
+        console.error("[box-sign] refresh failed", e);
       }
     }
     return { updated };

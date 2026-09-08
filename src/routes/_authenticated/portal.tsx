@@ -11,9 +11,9 @@ import { savePdf } from "@/lib/download-pdf";
 import { startIdentityCheck } from "@/lib/didit.functions";
 import {
   getSigningProvider,
-  refreshAdobeSignatures,
-  startAdobeSigning,
-} from "@/lib/adobe-sign.functions";
+  refreshBoxSignatures,
+  startBoxSigning,
+} from "@/lib/box-sign.functions";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,8 +97,8 @@ function Portal() {
   };
   const [starting, setStarting] = useState(false);
   const sign = useServerFn(signDocument);
-  const startAdobe = useServerFn(startAdobeSigning);
-  const refreshAdobe = useServerFn(refreshAdobeSignatures);
+  const startBox = useServerFn(startBoxSigning);
+  const refreshBox = useServerFn(refreshBoxSignatures);
   const providerQuery = useQuery({
     queryKey: ["signing-provider"],
     queryFn: () => getSigningProvider(),
@@ -171,30 +171,30 @@ function Portal() {
   const signatureByDoc = new Map(documents.map((d) => [d.offering_document_id, d]));
   const completedDocIds = new Set(
     documents
-      .filter((d) => d.provider !== "adobe_sign" || d.provider_status === "completed")
+      .filter((d) => d.provider !== "box_sign" || d.provider_status === "completed")
       .map((d) => d.offering_document_id),
   );
   const signableDocs = (data?.offeringDocuments ?? []).filter((d: any) => d.requires_signature);
   const pendingDocs = signableDocs.filter((d: any) => !completedDocIds.has(d.id));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
-  const useAdobe = providerQuery.data?.provider === "adobe_sign";
-  const awaitingAdobe = documents.some(
-    (d) => d.provider === "adobe_sign" && d.provider_status === "out_for_signature",
+  const useBox = providerQuery.data?.provider === "box_sign";
+  const awaitingBox = documents.some(
+    (d) => d.provider === "box_sign" && d.provider_status === "out_for_signature",
   );
 
-  // While a document sits with Adobe, pull its status so the page settles on its own.
+  // While a document sits with Box, pull its status so the page settles on its own.
   useEffect(() => {
-    if (!awaitingAdobe) return;
+    if (!awaitingBox) return;
     const timer = setInterval(async () => {
       try {
-        const res = await refreshAdobe({});
+        const res = await refreshBox({});
         if (res.updated > 0) await refetch();
       } catch {
         /* transient; the webhook is the primary path */
       }
     }, 15000);
     return () => clearInterval(timer);
-  }, [awaitingAdobe, refreshAdobe, refetch]);
+  }, [awaitingBox, refreshBox, refetch]);
 
 
   async function onSign(documentId: string) {
@@ -204,13 +204,13 @@ function Portal() {
     }
     setSigningId(documentId);
     try {
-      if (useAdobe) {
-        const res = await startAdobe({ data: { offering_document_id: documentId } });
+      if (useBox) {
+        const res = await startBox({ data: { offering_document_id: documentId } });
         if (res.url) {
           window.open(res.url, "_blank", "noopener,noreferrer");
-          toast.success("Adobe Sign opened in a new tab. This page updates the moment you finish.");
+          toast.success("Box Sign opened in a new tab. This page updates the moment you finish.");
         } else {
-          toast.success("The document was emailed to you for signature from Adobe Sign.");
+          toast.success("The document was emailed to you for signature from Box Sign.");
         }
         await refetch();
         return;
@@ -402,8 +402,8 @@ function Portal() {
             <CardHeader>
               <CardTitle className="text-base">Sign your fund documents</CardTitle>
               <CardDescription>
-                {useAdobe
-                  ? "Sign the subscription agreement and the private placement memorandum through Adobe Acrobat Sign. Your certified copy returns here automatically, with the exact completion time on record."
+                {useBox
+                  ? "Sign the subscription agreement and the private placement memorandum through Box Sign. Your certified copy returns here automatically, with the exact completion time on record."
                   : "Sign the subscription agreement and the private placement memorandum here before you fund. Each signature is stored with a tamper-evident hash, date and audit trail."}
               </CardDescription>
             </CardHeader>
@@ -424,7 +424,7 @@ function Portal() {
                 </div>
               ) : (
                 <>
-                  {!useAdobe && (
+                  {!useBox && (
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="portal_signer">Full legal name (your signature)</Label>
@@ -453,8 +453,8 @@ function Portal() {
                       onCheckedChange={(v) => setConsent(v === true)}
                     />
                     <Label htmlFor="portal_consent" className="text-sm font-normal leading-relaxed">
-                      {useAdobe
-                        ? "I agree to sign this agreement electronically through Adobe Acrobat Sign, under the U.S. E-SIGN Act."
+                      {useBox
+                        ? "I agree to sign this agreement electronically through Box Sign, under the U.S. E-SIGN Act."
                         : "I agree to sign electronically and that my typed name is my legal signature under the U.S. E-SIGN Act."}
                     </Label>
                   </div>
@@ -464,7 +464,7 @@ function Portal() {
                       const sig = signatureByDoc.get(doc.id);
                       const signed = completedDocIds.has(doc.id);
                       const waiting =
-                        sig?.provider === "adobe_sign" && sig.provider_status === "out_for_signature";
+                        sig?.provider === "box_sign" && sig.provider_status === "out_for_signature";
                       const completedAt = sig?.provider_completed_at ?? (signed ? sig?.signed_at : null);
                       return (
                         <div
@@ -482,7 +482,7 @@ function Portal() {
                               </p>
                             ) : waiting ? (
                               <p className="text-xs text-muted-foreground">
-                                Waiting on your signature in Adobe Acrobat Sign
+                                Waiting on your signature in Box Sign
                               </p>
                             ) : null}
                           </div>
@@ -507,8 +507,8 @@ function Portal() {
                                   ? "Opening…"
                                   : waiting
                                     ? "Resume signing"
-                                    : useAdobe
-                                      ? "Sign with Adobe"
+                                    : useBox
+                                      ? "Sign with Box"
                                       : "Sign"}
                               </Button>
                             )}

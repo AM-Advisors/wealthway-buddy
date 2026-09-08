@@ -1,8 +1,9 @@
-// Server-only: finalises an Adobe Sign agreement into our own records.
-// Downloads the certified PDF, stores it, timestamps the signature row,
-// advances the application, and alerts the assigned fund manager once.
+// Server-only: finalises a Box Sign request into our own records.
+// Downloads the signed PDF from Box, keeps a copy for fast in-app downloads,
+// timestamps the signature row, advances the application, and alerts the
+// assigned fund manager once.
 
-import { getAgreement, getCombinedDocument, mapAgreementStatus } from "@/lib/adobe-sign.server";
+import { downloadFile, getSignRequest, mapSignStatus } from "@/lib/box.server";
 
 async function sha256Hex(bytes: Uint8Array) {
   const digest = await crypto.subtle.digest("SHA-256", bytes as unknown as BufferSource);
@@ -17,8 +18,8 @@ export interface SyncResult {
   signatureId: string | null;
 }
 
-export async function syncAdobeAgreement(
-  agreementId: string,
+export async function syncBoxSignRequest(
+  signRequestId: string,
   opts: { status?: string; completedAt?: string } = {},
 ): Promise<SyncResult> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -26,13 +27,14 @@ export async function syncAdobeAgreement(
   const { data: signature } = await supabaseAdmin
     .from("document_signatures")
     .select("id, application_id, offering_document_id, signer_name, pdf_path, provider_completed_at")
-    .eq("provider_agreement_id", agreementId)
+    .eq("provider_agreement_id", signRequestId)
     .maybeSingle();
 
-  if (!signature) return { status: "unknown_agreement", completed: false, signatureId: null };
+  if (!signature) return { status: "unknown_sign_request", completed: false, signatureId: null };
 
-  const rawStatus = opts.status ?? (await getAgreement(agreementId)).status;
-  const mapped = mapAgreementStatus(rawStatus);
+  const remote = await getSignRequest(signRequestId).catch(() => null);
+  const rawStatus = remote?.status ?? opts.status ?? "unknown";
+  const mapped = mapSignStatus(rawStatus);
   const now = new Date().toISOString();
 
   const patch: Record<string, unknown> = {
@@ -40,9 +42,9 @@ export async function syncAdobeAgreement(
     provider_last_event_at: now,
   };
 
-  if (mapped === "completed") {
+  if (mapped === "completed" && remote?.signedFileId) {
     const completedAt = opts.completedAt ?? now;
-    const pdfBytes = await getCombinedDocument(agreementId);
+    const pdfBytes = await downloadFile(remote.signedFileId);
     const hash = await sha256Hex(pdfBytes);
 
     const { data: app } = await supabaseAdmin
@@ -61,6 +63,7 @@ export async function syncAdobeAgreement(
     patch["document_hash"] = hash;
     patch["signed_at"] = completedAt;
     patch["provider_completed_at"] = completedAt;
+    patch["provider_file_id"] = remote.signedFileId;
   }
 
   const { error: updateError } = await supabaseAdmin
@@ -72,8 +75,8 @@ export async function syncAdobeAgreement(
   await supabaseAdmin.from("signature_audit_events").insert({
     application_id: signature.application_id,
     signature_id: signature.id,
-    event_type: mapped === "completed" ? "adobe_sign_completed" : `adobe_sign_${mapped}`,
-    metadata: { agreement_id: agreementId, adobe_status: rawStatus },
+    event_type: mapped === "completed" ? "box_sign_completed" : `box_sign_${mapped}`,
+    metadata: { sign_request_id: signRequestId, box_status: rawStatus },
   });
 
   if (mapped === "completed") {
@@ -111,7 +114,7 @@ async function advanceApplication(applicationId: string) {
 
   const done = new Set(
     (signed ?? [])
-      .filter((s: any) => s.provider !== "adobe_sign" || s.provider_status === "completed")
+      .filter((s: any) => s.provider !== "box_sign" || s.provider_status === "completed")
       .map((s: any) => s.offering_document_id),
   );
   const allSigned = (required ?? []).every((r: any) => done.has(r.id));
@@ -133,7 +136,7 @@ async function advanceApplication(applicationId: string) {
   }
 }
 
-/** Emails the fund's assigned managers (and admins) that a document is signed. */
+/** Emails the fund's assigned managers that a document is signed. */
 async function notifyManagers(signatureId: string, applicationId: string, offeringDocumentId: string) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -175,15 +178,15 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
       if (!manager.email) continue;
       await sendTemplateEmail("document-signed", manager.email, {
         templateData: {
-        managerName: manager.legal_name ?? "there",
-        investorName: investor?.legal_name ?? "An investor",
-        offeringName: offering?.name ?? "your fund",
-        documentTitle: doc?.title ?? "Fund document",
-        signedAt,
-        commitmentCents: application.commitment_cents ?? 0,
-        portalUrl: `https://onboard.harmonious.co/manager/${applicationId}`,
+          managerName: manager.legal_name ?? "there",
+          investorName: investor?.legal_name ?? "An investor",
+          offeringName: offering?.name ?? "your fund",
+          documentTitle: doc?.title ?? "Fund document",
+          signedAt,
+          commitmentCents: application.commitment_cents ?? 0,
+          portalUrl: `https://onboard.harmonious.co/manager/${applicationId}`,
         },
-      }).catch((e) => console.error("[adobe-sign] manager email failed", e));
+      }).catch((e) => console.error("[box-sign] manager email failed", e));
     }
 
     await supabaseAdmin
@@ -191,6 +194,6 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
       .update({ manager_notified_at: signedAt })
       .eq("id", signatureId);
   } catch (e) {
-    console.error("[adobe-sign] manager notification failed", e);
+    console.error("[box-sign] manager notification failed", e);
   }
 }
