@@ -629,6 +629,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           decision: Json
+          didit_user_id: string | null
           expired_at: string | null
           id: string
           inquiry_id: string | null
@@ -645,6 +646,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           decision?: Json
+          didit_user_id?: string | null
           expired_at?: string | null
           id?: string
           inquiry_id?: string | null
@@ -661,6 +663,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           decision?: Json
+          didit_user_id?: string | null
           expired_at?: string | null
           id?: string
           inquiry_id?: string | null
