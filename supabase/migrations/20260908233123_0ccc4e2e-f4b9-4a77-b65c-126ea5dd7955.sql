@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.sync_roles_and_invitations() FROM PUBLIC, anon, authenticated;
