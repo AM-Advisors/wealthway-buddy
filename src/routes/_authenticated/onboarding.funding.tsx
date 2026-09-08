@@ -363,7 +363,7 @@ function FundingStep() {
             </Card>
           )}
 
-          {method === "ach" && (
+          {method === "ach" && achAck && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">ACH debit authorization</CardTitle>
