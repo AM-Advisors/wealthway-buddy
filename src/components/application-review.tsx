@@ -724,6 +724,86 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
               </div>
             </div>
 
+            {lastTest ? (
+              <div className="rounded-md border bg-muted/30 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">Resend test email</p>
+                    <p className="text-xs text-muted-foreground">
+                      Last test sent to {lastTest.to} · {new Date(lastTest.at).toLocaleString()}. Tweak the
+                      subject or message below and send it again.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => {
+                      setSubject(lastTest.subject);
+                      setMessage(lastTest.body);
+                      setTestTo(lastTest.to);
+                      toast.success("Loaded into the composer above.");
+                    }}
+                  >
+                    Copy into composer
+                  </Button>
+                </div>
+                <div className="mt-3 grid gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="resend_to">Send to</Label>
+                      <Input
+                        id="resend_to"
+                        type="email"
+                        value={resendTo}
+                        onChange={(e) => setResendTo(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="resend_subject">Subject</Label>
+                      <Input
+                        id="resend_subject"
+                        value={resendSubject}
+                        onChange={(e) => setResendSubject(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="resend_body">Message</Label>
+                    <Textarea
+                      id="resend_body"
+                      rows={6}
+                      value={resendBody}
+                      onChange={(e) => setResendBody(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      onClick={() => resendMutation.mutate()}
+                      disabled={
+                        resendMutation.isPending ||
+                        !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(resendTo.trim()) ||
+                        resendSubject.trim().length < 2 ||
+                        resendBody.trim().length < 2
+                      }
+                    >
+                      {resendMutation.isPending ? "Sending…" : "Resend test"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => applyLastTest(lastTest)}
+                      disabled={resendMutation.isPending}
+                    >
+                      Reset changes
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+
             {d?.emails.length ? (
               <>
                 <Separator className="my-2" />
