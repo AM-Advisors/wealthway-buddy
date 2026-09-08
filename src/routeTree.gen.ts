@@ -32,6 +32,7 @@ import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_au
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
+import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
@@ -163,6 +164,12 @@ const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminFundFundIdRoute =
+  AuthenticatedAdminFundFundIdRouteImport.update({
+    id: '/admin/fund/$fundId',
+    path: '/admin/fund/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   id: '/api/public/email/click',
   path: '/api/public/email/click',
@@ -209,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
+  '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -237,6 +245,7 @@ export interface FileRoutesByTo {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
+  '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -267,6 +276,7 @@ export interface FileRoutesById {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
+  '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/admin/'
     | '/manager/'
+    | '/admin/fund/$fundId'
     | '/api/public/email/click'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/admin'
     | '/manager'
+    | '/admin/fund/$fundId'
     | '/api/public/email/click'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -354,6 +366,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/_authenticated/admin/'
     | '/_authenticated/manager/'
+    | '/_authenticated/admin/fund/$fundId'
     | '/api/public/email/click'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -536,6 +549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/fund/$fundId': {
+      id: '/_authenticated/admin/fund/$fundId'
+      path: '/admin/fund/$fundId'
+      fullPath: '/admin/fund/$fundId'
+      preLoaderRoute: typeof AuthenticatedAdminFundFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/email/click': {
       id: '/api/public/email/click'
       path: '/api/public/email/click'
@@ -585,6 +605,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
+  AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -607,6 +628,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
+  AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
