@@ -229,8 +229,11 @@ function ManagerPortal() {
               ))
             )}
           </div>
+
+          {offeringId && <FundOperations offeringId={offeringId} />}
         </>
       )}
+
     </main>
   );
 }
