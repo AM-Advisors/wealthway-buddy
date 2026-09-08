@@ -100,9 +100,13 @@ function AccessPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button asChild size="sm">
+            <Link to="/admin/setup">Set up a fund</Link>
+          </Button>
           <Button asChild size="sm" variant="outline">
             <Link to="/admin/security">Login activity</Link>
           </Button>
+
           <Button asChild size="sm" variant="outline">
             <Link to="/admin">Review queue</Link>
           </Button>
