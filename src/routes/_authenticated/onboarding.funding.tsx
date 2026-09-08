@@ -201,7 +201,7 @@ function FundingStep() {
             <div key={s} className="flex items-start gap-3">
               <Checkbox
                 id={`ack-${method}-${i}`}
-                checked={checked[i]}
+                checked={checked[i] ?? false}
                 onCheckedChange={(v) =>
                   setChecked((prev) => prev.map((c, idx) => (idx === i ? v === true : c)))
                 }
