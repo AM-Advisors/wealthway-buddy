@@ -173,6 +173,12 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
           .order("created_at", { ascending: false }),
       ]);
 
+    const { data: fundingAcknowledgements } = await supabase
+      .from("funding_acknowledgements")
+      .select("id, method, instructions_hash, statements, acknowledged_at, ip_address, user_agent")
+      .eq("application_id", id)
+      .order("acknowledged_at", { ascending: false });
+
     const documentIds = (signatures.data ?? []).map((s: any) => s.offering_document_id);
     const { data: offeringDocuments } = documentIds.length
       ? await supabase.from("offering_documents").select("id, title, doc_type").in("id", documentIds)
