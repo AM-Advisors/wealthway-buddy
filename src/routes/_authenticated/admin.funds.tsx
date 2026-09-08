@@ -8,10 +8,12 @@ import { getAdminAccess } from "@/lib/admin.functions";
 import {
   WIRE_FIELDS,
   deleteOfferingDocument,
+  listOfferingAuditEvents,
   listOfferings,
   saveOffering,
   saveOfferingDocument,
 } from "@/lib/offerings.functions";
+import { FIELD_LABELS, type OfferingAuditEventType } from "@/lib/offering-audit";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
