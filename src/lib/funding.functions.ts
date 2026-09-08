@@ -167,14 +167,15 @@ export const getFunding = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    const acknowledgements: Record<string, unknown> = {};
+    type AckInfo = { acknowledged_at: string; statements: string[]; current: boolean } | null;
+    const acknowledgements: { wire: AckInfo; ach: AckInfo } = { wire: null, ach: null };
     for (const method of ["wire", "ach"] as const) {
       const ack = await latestAcknowledgement(supabase, application.id, method);
       const expected = await instructionsFingerprint(supabase, application as any, method);
       acknowledgements[method] = ack
         ? {
-            acknowledged_at: ack.acknowledged_at,
-            statements: ack.statements,
+            acknowledged_at: String(ack.acknowledged_at),
+            statements: (ack.statements ?? []) as string[],
             current: ack.instructions_hash === expected,
           }
         : null;
