@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { saveOffering, saveOfferingDocument, WIRE_FIELDS } from "@/lib/offerings.functions";
 import { listAccessDirectory, assignFundAccess } from "@/lib/access.functions";
-import { inviteFundAccess } from "@/lib/admin-setup.functions";
+import { inviteToFund } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/setup")({
   head: () => ({
