@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { listAccessDirectory, assignFundAccess, revokeFundAccess } from "@/lib/access.functions";
+import { FundInvitations } from "@/components/fund-invitations";
+
 
 export const Route = createFileRoute("/_authenticated/admin/access")({
   head: () => ({
@@ -140,7 +142,12 @@ function AccessPage() {
         </CardContent>
       </Card>
 
+      <div className="mt-8">
+        <FundInvitations title="Invite investors and fund managers" />
+      </div>
+
       <Tabs defaultValue="manager" className="mt-8">
+
 
         <TabsList>
           <TabsTrigger value="manager">Fund managers</TabsTrigger>

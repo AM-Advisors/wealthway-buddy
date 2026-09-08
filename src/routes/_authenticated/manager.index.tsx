@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FundInvitations } from "@/components/fund-invitations";
+
 
 export const Route = createFileRoute("/_authenticated/manager/")({
   head: () => ({
@@ -118,6 +120,12 @@ function ManagerPortal() {
       <p className="mt-2 text-sm text-muted-foreground">
         Every investor in your fund, with identity, accreditation, documents and funding in one view.
       </p>
+
+      <div className="mt-8">
+        <FundInvitations title="Invite people to your funds" />
+      </div>
+
+
 
       {fundList.length > 1 && (
         <div className="mt-6 flex flex-wrap gap-2">
