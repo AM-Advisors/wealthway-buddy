@@ -1202,6 +1202,21 @@ export type Database = {
           },
         ]
       }
+      wire_test_tmp: {
+        Row: {
+          result: string | null
+          who: string | null
+        }
+        Insert: {
+          result?: string | null
+          who?: string | null
+        }
+        Update: {
+          result?: string | null
+          who?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
