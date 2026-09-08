@@ -5,3 +5,5 @@
 - [x] Investor portal (/portal): status, funding summary, signed document downloads
 
 - [ ] Switch document signing + storage from Adobe Sign to Box (Box Sign + Box folder storage)
+- [ ] Google Search Console: verify onboard.harmonious.co, submit sitemap
+- [ ] Admin-submitted investor application form with status tracking (investors apply for real funds)
