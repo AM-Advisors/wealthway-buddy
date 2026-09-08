@@ -12,7 +12,7 @@ import {
   saveOffering,
   saveOfferingDocument,
 } from "@/lib/offerings.functions";
-import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
