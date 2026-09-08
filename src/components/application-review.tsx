@@ -178,6 +178,19 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const wireMutation = useMutation({
+    mutationFn: (vars: { confirmationId: string; outcome: "approved" | "rejected"; notes: string }) =>
+      wireDecision({ data: { applicationId, ...vars } }),
+    onSuccess: (_r, vars) => {
+      setWireNotes((prev) => ({ ...prev, [vars.confirmationId]: "" }));
+      toast.success(
+        vars.outcome === "approved" ? "Wire approved — subscription funded" : "Wire confirmation rejected",
+      );
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const noteMutation = useMutation({
     mutationFn: () => note({ data: { applicationId, body: noteBody } }),
     onSuccess: () => {
