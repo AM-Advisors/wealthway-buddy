@@ -173,6 +173,12 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
           .order("created_at", { ascending: false }),
       ]);
 
+    const { data: wireConfirmations } = await supabase
+      .from("wire_confirmations")
+      .select("*")
+      .eq("application_id", id)
+      .order("created_at", { ascending: false });
+
     const { data: fundingAcknowledgements } = await supabase
       .from("funding_acknowledgements")
       .select("id, method, instructions_hash, statements, acknowledged_at, ip_address, user_agent")
@@ -200,6 +206,7 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
       })),
       audit: audit.data ?? [],
       payments: payments.data ?? [],
+      wireConfirmations: wireConfirmations ?? [],
       fundingAcknowledgements: fundingAcknowledgements ?? [],
       notes: notes.data ?? [],
       emails: emails.data ?? [],
@@ -556,4 +563,79 @@ export const listDiditEvents = createServerFn({ method: "POST" })
       .limit(15);
     if (error) throw new Error(error.message);
     return { events: rows ?? [] };
+  });
+
+const wireDecisionSchema = z.object({
+  applicationId: z.string().uuid(),
+  confirmationId: z.string().uuid(),
+  outcome: z.enum(["approved", "rejected"]),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+/** Approve or reject an investor-submitted wire confirmation before funds are marked received. */
+export const decideWireConfirmation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => wireDecisionSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const now = new Date().toISOString();
+
+    if (data.outcome === "rejected" && !data.notes) {
+      throw new Error("Add a short reason so the investor knows what to correct.");
+    }
+
+    const { data: confirmation, error: loadError } = await supabase
+      .from("wire_confirmations")
+      .select("*")
+      .eq("id", data.confirmationId)
+      .eq("application_id", data.applicationId)
+      .maybeSingle();
+    if (loadError) throw new Error(loadError.message);
+    if (!confirmation) throw new Error("Wire confirmation not found.");
+    if (confirmation.status !== "submitted") {
+      throw new Error("This wire confirmation has already been decided.");
+    }
+
+    const { error } = await supabase
+      .from("wire_confirmations")
+      .update({
+        status: data.outcome,
+        reviewed_by: userId,
+        reviewed_at: now,
+        review_notes: data.notes || null,
+        updated_at: now,
+      })
+      .eq("id", data.confirmationId);
+    if (error) throw new Error(error.message);
+
+    const paymentUpdate =
+      data.outcome === "approved"
+        ? { status: "settled" as const, confirmed_at: now, failure_reason: null, updated_at: now }
+        : {
+            status: "awaiting_wire" as const,
+            confirmed_at: null,
+            failure_reason: data.notes || "Wire confirmation rejected",
+            updated_at: now,
+          };
+
+    if (confirmation.payment_id) {
+      const { error: payError } = await supabase
+        .from("payments")
+        .update(paymentUpdate)
+        .eq("id", confirmation.payment_id);
+      if (payError) throw new Error(payError.message);
+    }
+
+    const { error: appError } = await supabase
+      .from("investor_applications")
+      .update({
+        funding_status: data.outcome === "approved" ? "settled" : "awaiting_wire",
+        status: data.outcome === "approved" ? "funded" : "submitted",
+        updated_at: now,
+      })
+      .eq("id", data.applicationId);
+    if (appError) throw new Error(appError.message);
+
+    return { ok: true };
   });

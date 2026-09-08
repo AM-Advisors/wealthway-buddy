@@ -7,6 +7,25 @@ export const wireSentSchema = z.object({
   bank_last4: z.string().trim().regex(/^\d{4}$/, "Enter the last 4 digits of the sending account"),
 });
 
+export const wireConfirmationSchema = z.object({
+  sent_on: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Choose the date the wire was sent"),
+  amount: z
+    .string()
+    .trim()
+    .regex(/^\d{1,12}(\.\d{1,2})?$/, "Enter the amount you wired, for example 50000"),
+  sending_bank_name: z.string().trim().min(2, "Enter the bank you wired from").max(160),
+  sending_account_last4: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "Enter the last 4 digits of the sending account"),
+  bank_reference: z.string().trim().max(120).optional().or(z.literal("")),
+  investor_note: z.string().trim().max(1000).optional().or(z.literal("")),
+  confirm_accurate: z.literal(true),
+});
+
 export const achSchema = z.object({
   account_holder: z.string().trim().min(2, "Enter the account holder name").max(120),
   routing_number: z.string().trim().regex(/^\d{9}$/, "Routing numbers are 9 digits"),
@@ -151,6 +170,7 @@ export const getFunding = createServerFn({ method: "GET" })
           wire: { acknowledged_at: string; statements: string[]; current: boolean } | null;
           ach: { acknowledged_at: string; statements: string[]; current: boolean } | null;
         },
+        wireConfirmations: [] as any[],
       };
 
     const { data: offeringRow } = await supabase
@@ -191,11 +211,20 @@ export const getFunding = createServerFn({ method: "GET" })
         : null;
     }
 
+    const { data: wireConfirmations } = await supabase
+      .from("wire_confirmations")
+      .select(
+        "id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, investor_note, status, review_notes, reviewed_at, created_at",
+      )
+      .eq("application_id", application.id)
+      .order("created_at", { ascending: false });
+
     return {
       application,
       offering,
       payment,
       acknowledgements,
+      wireConfirmations: wireConfirmations ?? [],
       reference: referenceCode(application.id),
     };
   });
@@ -292,6 +321,84 @@ export const markWireSent = createServerFn({ method: "POST" })
       })
       .eq("application_id", application.id);
     if (error) throw new Error(error.message);
+
+    const { error: appError } = await supabase
+      .from("investor_applications")
+      .update({ funding_status: "processing", updated_at: now })
+      .eq("id", application.id);
+    if (appError) throw new Error(appError.message);
+
+    return { ok: true };
+  });
+
+/**
+ * Investor submits the details of a wire they have already sent.
+ * The payment moves to "processing" (pending review) — only an admin can settle it.
+ */
+export const submitWireConfirmation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => wireConfirmationSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const application = await loadFundingApplication(supabase, userId);
+    assertFundable(application);
+    await assertAcknowledged(supabase, application as any, "wire");
+
+    const { data: payment } = await supabase
+      .from("payments")
+      .select("id, method, status")
+      .eq("application_id", application.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!payment || payment.method !== "wire") {
+      throw new Error("Choose bank wire and get your wire instructions before confirming a wire.");
+    }
+    if (payment.status === "settled") {
+      throw new Error("This subscription is already funded.");
+    }
+
+    const { data: pendingRows } = await supabase
+      .from("wire_confirmations")
+      .select("id")
+      .eq("application_id", application.id)
+      .eq("status", "submitted")
+      .limit(1);
+    if (pendingRows && pendingRows.length > 0) {
+      throw new Error("You already have a wire confirmation awaiting review.");
+    }
+
+    const amountCents = Math.round(Number(data.amount) * 100);
+    if (!Number.isFinite(amountCents) || amountCents <= 0) {
+      throw new Error("Enter the amount you wired.");
+    }
+
+    const now = new Date().toISOString();
+    const { error } = await supabase.from("wire_confirmations").insert({
+      application_id: application.id,
+      payment_id: payment.id,
+      amount_cents: amountCents,
+      sent_on: data.sent_on,
+      sending_bank_name: data.sending_bank_name,
+      sending_account_last4: data.sending_account_last4,
+      bank_reference: data.bank_reference ? data.bank_reference : null,
+      investor_note: data.investor_note ? data.investor_note : null,
+      status: "submitted",
+    });
+    if (error) throw new Error(error.message);
+
+    const { error: payError } = await supabase
+      .from("payments")
+      .update({
+        status: "processing",
+        expected_date: data.sent_on,
+        bank_last4: data.sending_account_last4,
+        failure_reason: null,
+        updated_at: now,
+      })
+      .eq("id", payment.id);
+    if (payError) throw new Error(payError.message);
 
     const { error: appError } = await supabase
       .from("investor_applications")
