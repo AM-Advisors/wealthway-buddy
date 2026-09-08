@@ -207,8 +207,8 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     };
   }, []);
 
-  const startWatching = () => {
-    setWatchEmail(testTo.trim() || investorEmail);
+  const startWatching = (address?: string) => {
+    setWatchEmail((address ?? testTo).trim() || investorEmail);
     setLastSendAt(Date.now());
   };
 
@@ -217,7 +217,27 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     onSuccess: (result) => {
       if (result.ok) toast.success(result.message);
       else toast.warning(result.message);
+      rememberTest({ to: testTo.trim(), subject, body: message, at: Date.now() });
       startWatching();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: () =>
+      testEmail({
+        data: {
+          applicationId,
+          subject: resendSubject,
+          body: resendBody,
+          to: resendTo.trim(),
+        },
+      }),
+    onSuccess: (result) => {
+      if (result.ok) toast.success(result.message);
+      else toast.warning(result.message);
+      rememberTest({ to: resendTo.trim(), subject: resendSubject, body: resendBody, at: Date.now() });
+      startWatching(resendTo);
     },
     onError: (e: Error) => toast.error(e.message),
   });
