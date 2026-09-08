@@ -115,6 +115,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
 
 
   const [noteBody, setNoteBody] = useState("");
+  const [wireNotes, setWireNotes] = useState<Record<string, string>>({});
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [testTo, setTestTo] = useState("");
