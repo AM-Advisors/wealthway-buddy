@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  diffRecords,
+  summarizeChanges,
+  type AuditChange,
+  type OfferingAuditEventType,
+} from "@/lib/offering-audit";
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
