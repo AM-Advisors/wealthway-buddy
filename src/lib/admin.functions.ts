@@ -173,6 +173,12 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
           .order("created_at", { ascending: false }),
       ]);
 
+    const { data: wireConfirmations } = await supabase
+      .from("wire_confirmations")
+      .select("*")
+      .eq("application_id", id)
+      .order("created_at", { ascending: false });
+
     const { data: fundingAcknowledgements } = await supabase
       .from("funding_acknowledgements")
       .select("id, method, instructions_hash, statements, acknowledged_at, ip_address, user_agent")
