@@ -7,6 +7,25 @@ export const wireSentSchema = z.object({
   bank_last4: z.string().trim().regex(/^\d{4}$/, "Enter the last 4 digits of the sending account"),
 });
 
+export const wireConfirmationSchema = z.object({
+  sent_on: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Choose the date the wire was sent"),
+  amount: z
+    .string()
+    .trim()
+    .regex(/^\d{1,12}(\.\d{1,2})?$/, "Enter the amount you wired, for example 50000"),
+  sending_bank_name: z.string().trim().min(2, "Enter the bank you wired from").max(160),
+  sending_account_last4: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "Enter the last 4 digits of the sending account"),
+  bank_reference: z.string().trim().max(120).optional().or(z.literal("")),
+  investor_note: z.string().trim().max(1000).optional().or(z.literal("")),
+  confirm_accurate: z.literal(true),
+});
+
 export const achSchema = z.object({
   account_holder: z.string().trim().min(2, "Enter the account holder name").max(120),
   routing_number: z.string().trim().regex(/^\d{9}$/, "Routing numbers are 9 digits"),
