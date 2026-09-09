@@ -116,8 +116,9 @@ export const getFundTimelines = createServerFn({ method: "GET" })
     const userIds = [...new Set(applications.map((a) => a.user_id as string))];
 
     const none = { data: [] as any[] };
+    const db = supabase as any;
     const byApp = (table: string, columns: string) =>
-      appIds.length ? supabase.from(table).select(columns).in("application_id", appIds) : none;
+      appIds.length ? db.from(table).select(columns).in("application_id", appIds) : none;
 
     const [
       { data: profiles },
