@@ -85,7 +85,7 @@ export const listOfferings = createServerFn({ method: "GET" })
 
     const { data: applications } = await context.supabase
       .from("investor_applications")
-      .select("offering_id");
+      .select("offering_id, source");
 
     const { data: wireRows } = await context.supabase.rpc("list_wire_instructions");
 
@@ -94,9 +94,13 @@ export const listOfferings = createServerFn({ method: "GET" })
     );
 
     const counts: Record<string, number> = {};
+    const sourceCounts: Record<string, Record<string, number>> = {};
     for (const row of applications ?? []) {
       const key = (row as any).offering_id as string;
       counts[key] = (counts[key] ?? 0) + 1;
+      const source = ((row as any).source as string | undefined) ?? "portal";
+      sourceCounts[key] = sourceCounts[key] ?? {};
+      sourceCounts[key][source] = (sourceCounts[key][source] ?? 0) + 1;
     }
 
     return {
@@ -105,6 +109,7 @@ export const listOfferings = createServerFn({ method: "GET" })
         wire_instructions: wireByOffering.get(o.id) ?? {},
         documents: (documents ?? []).filter((d: any) => d.offering_id === o.id),
         applicationCount: counts[o.id] ?? 0,
+        sourceCounts: sourceCounts[o.id] ?? {},
       })),
     };
   });

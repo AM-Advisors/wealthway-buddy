@@ -112,7 +112,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
     if (!application && offering) {
       const created = await supabase
         .from("investor_applications")
-        .insert({ user_id: userId, offering_id: offering.id, current_step: "kyc" })
+        .insert({ user_id: userId, offering_id: offering.id, current_step: "kyc", source: "portal" })
         .select("*")
         .single();
       if (created.error) throw new Error(created.error.message);

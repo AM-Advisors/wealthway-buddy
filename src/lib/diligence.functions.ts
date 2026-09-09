@@ -1639,7 +1639,7 @@ export const startOnboardingFromRoom = createServerFn({ method: "POST" })
 
     const created = await supabase
       .from("investor_applications")
-      .insert({ user_id: userId, offering_id: data.offering_id, current_step: "kyc" })
+      .insert({ user_id: userId, offering_id: data.offering_id, current_step: "kyc", source: "fund_page" })
       .select("id")
       .single();
     if (created.error) throw new Error(created.error.message);
