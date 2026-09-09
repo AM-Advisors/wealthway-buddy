@@ -5,7 +5,7 @@ import { Img } from '@react-email/components'
  * previews and tests stay clean. Opens are only recorded when the recipient's
  * email client loads remote images.
  */
-export function OpenPixel({ url }: { url?: string }) {
+export function OpenPixel({ url }: { url?: string | undefined }) {
   if (!url) return null
   return (
     <Img
