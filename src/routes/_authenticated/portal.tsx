@@ -902,6 +902,41 @@ function Portal() {
   );
 }
 
+function PortalHomeLink({
+  title,
+  description,
+  to,
+  params,
+  href,
+}: {
+  title: string;
+  description: string;
+  to?: string;
+  params?: Record<string, string>;
+  href?: string;
+}) {
+  const body = (
+    <>
+      <p className="font-medium">{title}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+    </>
+  );
+  const className =
+    "block rounded-lg border p-4 transition hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  if (to) {
+    return (
+      <Link to={to} params={params as never} className={className}>
+        {body}
+      </Link>
+    );
+  }
+  return (
+    <a href={href} className={className}>
+      {body}
+    </a>
+  );
+}
+
 function Detail({ term, value }: { term: string; value: string }) {
   return (
     <div>
