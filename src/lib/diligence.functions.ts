@@ -436,9 +436,9 @@ export const getDiligenceFileForViewing = createServerFn({ method: "POST" })
       context.userId,
       doc.offering_id,
       doc.room_id,
-      "document_downloaded",
-      `Opened “${doc.title}”`,
-      { document_id: doc.id },
+      "document_viewed",
+      `Read “${doc.title}” in the room`,
+      { document_id: doc.id, document_title: doc.title },
     );
 
     if (!contentType || tooBig) {
