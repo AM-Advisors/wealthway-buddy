@@ -169,9 +169,9 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (existing) {
-      const patch: Record<string, unknown> = {};
-      if (data.intro !== undefined) patch['intro'] = data.intro;
-      if (data.entity_type !== undefined) patch['entity_type'] = data.entity_type;
+      const patch: { intro?: string | null; entity_type?: string } = {};
+      if (data.intro !== undefined) patch.intro = data.intro;
+      if (data.entity_type !== undefined) patch.entity_type = data.entity_type;
       if (Object.keys(patch).length) {
         const { error } = await supabase.from("diligence_rooms").update(patch).eq("id", existing.id);
         if (error) throw new Error(error.message);

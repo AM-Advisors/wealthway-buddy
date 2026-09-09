@@ -339,7 +339,7 @@ function DocumentsTab({
   const sync = useServerFn(syncDiligenceFolder);
 
   const roomCategories = categoriesFor(data?.entityType);
-  const [category, setCategory] = useState<string>(roomCategories[0].value);
+  const [category, setCategory] = useState<string>(roomCategories[0]!.value);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
@@ -759,7 +759,7 @@ function ChecklistTab({
   const seed = useServerFn(seedDiligenceChecklist);
 
   const [label, setLabel] = useState("");
-  const [category, setCategory] = useState<string>(roomCategories[0].value);
+  const [category, setCategory] = useState<string>(roomCategories[0]!.value);
   const [required, setRequired] = useState(true);
 
   const { data, isLoading } = useQuery({
