@@ -257,6 +257,13 @@ const OFFERING_FIELDS = [
   "wire_fee_cents",
   "closing_cost_cents",
   "share_price_cents",
+  "legal_entity_name",
+  "fund_type",
+  "fund_type_other",
+  "entity_type",
+  "state_formed",
+  "date_formed",
+
 
   "is_open",
 ];
@@ -279,6 +286,13 @@ export const saveOffering = createServerFn({ method: "POST" })
       wire_fee_cents: data.wire_fee_cents,
       closing_cost_cents: data.closing_cost_cents,
       share_price_cents: data.share_price_cents,
+      legal_entity_name: data.legal_entity_name || null,
+      fund_type: data.fund_type,
+      fund_type_other: data.fund_type === "Other" ? data.fund_type_other || null : null,
+      entity_type: data.entity_type,
+      state_formed: data.state_formed || null,
+      date_formed: data.date_formed,
+
 
       is_open: data.is_open,
     };
