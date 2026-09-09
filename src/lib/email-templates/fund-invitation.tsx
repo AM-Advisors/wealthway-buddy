@@ -79,7 +79,7 @@ function FundInvitation({
         >
           <Section style={{ marginBottom: '24px' }}>
             <Img
-              src="https://onboard.harmonious.co/__l5e/assets-v1/9bbcb59b-4986-4f16-a7c1-ad0f03953a15/logo-navy.png"
+              src="https://onboard.harmonious.co/__l5e/assets-v1/255a43e1-756d-4422-9ef7-a1a05d388140/logo-navy.png"
               alt="Harmonious"
               height={28}
               style={{ display: 'block', height: '28px', width: 'auto' }}
