@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { TemplatePackPicker } from "@/components/template-pack-picker";
+import { DocumentVersionHistory } from "@/components/document-version-history";
 import {
   Select,
   SelectContent,
@@ -173,7 +174,11 @@ function ManagerDocumentsPage() {
         </div>
       )}
 
-
+      {activeFund && (
+        <div className="mt-8">
+          <DocumentVersionHistory offeringId={activeFund.id} />
+        </div>
+      )}
 
       <Card className="mt-8">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
