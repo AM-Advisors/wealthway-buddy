@@ -1,5 +1,33 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** One line per fund the investor has a subscription in. */
+export interface PortalCommitment {
+  application_id: string;
+  offering_id: string;
+  offering_name: string;
+  reg_type: string | null;
+  status: string;
+  current_step: string | null;
+  commitment_cents: number | null;
+  funding_status: string | null;
+  funded_cents: number;
+  created_at: string;
+}
+
+/** A file the investor sent in, and where it stands with the team. */
+export interface PortalUpload {
+  id: string;
+  file_name: string;
+  doc_kind: string;
+  note: string | null;
+  uploaded_at: string;
+  review_status: string;
+  review_note: string | null;
+  reviewed_at: string | null;
+  filed_at: string | null;
+}
 
 export interface PortalDocument {
   signature_id: string;
