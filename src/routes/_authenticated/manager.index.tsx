@@ -79,6 +79,13 @@ const TOOLS = [
     title: "Diligence rooms",
     blurb: "Upload fund materials and sort them into the sections investors expect.",
   },
+  {
+    to: "/manager/permissions",
+    title: "Document permissions",
+    blurb: "Choose which documents each investor can open in the room.",
+  },
+  { to: "/manager/cap-table", title: "Cap table", blurb: "Shares, ownership and committed capital." },
+
   { to: "/diligence", title: "Investor view of diligence", blurb: "Materials, checklist and investor Q&A." },
 ] as const;
 

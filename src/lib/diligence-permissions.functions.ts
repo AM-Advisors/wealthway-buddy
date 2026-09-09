@@ -209,3 +209,44 @@ export const setDocumentAccess = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+/** Share (or unshare) one document with every investor in the fund at once. */
+export const setDocumentAccessForAll = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        offeringId: z.string().uuid(),
+        documentId: z.string().uuid(),
+        investorUserIds: z.array(z.string().uuid()).max(200),
+        allowed: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertManager(supabase, data.offeringId);
+
+    if (!data.allowed) {
+      const { error } = await supabase
+        .from("diligence_document_access")
+        .delete()
+        .eq("document_id", data.documentId)
+        .eq("offering_id", data.offeringId);
+      if (error) throw new Error(error.message);
+      return { ok: true, count: 0 };
+    }
+
+    if (data.investorUserIds.length === 0) return { ok: true, count: 0 };
+    const rows = data.investorUserIds.map((investorUserId) => ({
+      document_id: data.documentId,
+      offering_id: data.offeringId,
+      investor_user_id: investorUserId,
+      granted_by: userId,
+    }));
+    const { error } = await supabase
+      .from("diligence_document_access")
+      .upsert(rows, { onConflict: "document_id,investor_user_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true, count: rows.length };
+  });
