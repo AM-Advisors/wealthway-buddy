@@ -209,6 +209,18 @@ ${corpus || "(no readable text could be extracted from the documents)"}`;
       .eq("user_id", userId)
       .maybeSingle();
 
+    // Who interpreted the documents matters as much as the answer: record
+    // whether the person asking runs this fund (admin or assigned manager) or
+    // is an investor reading the room.
+    const [{ data: manages }, { data: adminRow }] = await Promise.all([
+      supabase.rpc("can_manage_diligence", { _offering_id: data.offering_id }),
+      supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+    ]);
+    const isAdmin = Boolean(adminRow);
+    const actorRole = isAdmin ? "admin" : manages ? "fund_manager" : "investor";
+    const roleLabel = isAdmin ? "Admin" : manages ? "Fund manager" : "Investor";
+    const person = who?.legal_name ?? who?.email ?? "Someone";
+
     await supabase.from("diligence_activity").insert({
       room_id: room?.id ?? null,
       offering_id: data.offering_id,
@@ -216,10 +228,14 @@ ${corpus || "(no readable text could be extracted from the documents)"}`;
       actor_name: who?.legal_name ?? null,
       actor_email: who?.email ?? null,
       event_type: "assistant_question",
-      summary: `Asked the assistant: “${data.question.slice(0, 140)}”`,
+      summary: `${roleLabel} ${person} asked the assistant: “${data.question.slice(0, 140)}”`,
       metadata: {
         question: data.question,
         cited: citations.map((c) => c.document_id),
+        actor_role: actorRole,
+        actor_role_label: roleLabel,
+        answer_preview: answer.slice(0, 300),
+        citation_count: citations.length,
       },
     });
 
