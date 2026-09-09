@@ -714,7 +714,7 @@ function DocumentsTab({
           <DialogHeader>
             <DialogTitle>{viewer?.title}</DialogTitle>
             <DialogDescription>
-              This link expires after a few minutes. Please keep these materials confidential.
+              Confidential — for your evaluation only. Please do not redistribute.
             </DialogDescription>
           </DialogHeader>
           {viewer?.src ? (
