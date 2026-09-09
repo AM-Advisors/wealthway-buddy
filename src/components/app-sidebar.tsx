@@ -11,6 +11,7 @@ import {
   FileText,
   FolderLock,
   Gauge,
+  Home,
   Landmark,
   LayoutDashboard,
   LogOut,
@@ -40,6 +41,8 @@ import { getNavState } from "@/lib/nav.functions";
 import { cn } from "@/lib/utils";
 
 type NavItem = { title: string; url: string; icon: typeof LayoutDashboard };
+
+const homeItems: NavItem[] = [{ title: "Home", url: "/home", icon: Home }];
 
 const investorItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -147,6 +150,8 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       </SidebarHeader>
 
       <SidebarContent>
+        {renderGroup("Overview", homeItems)}
+
         {renderGroup("Your application", investorItems)}
 
         {showOnboarding && (
