@@ -13,6 +13,11 @@ import {
   removeDiligenceDocument,
   syncDiligenceFolder,
 } from "@/lib/diligence.functions";
+import {
+  listNdaSignatures,
+  setNdaSigningEnabled,
+  uploadNdaDocument,
+} from "@/lib/nda-sign.functions";
 import { categoriesFor } from "@/lib/diligence-templates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -119,6 +124,8 @@ function ManagerDiligencePage() {
           <RoomTraffic />
 
           <NdaDropOff />
+
+          {selected ? <NdaSigning key={`nda-${selected.offeringId}`} fund={selected} /> : null}
 
           {selected ? <FundPanel key={selected.offeringId} fund={selected} /> : null}
         </>
@@ -568,6 +575,124 @@ function NdaDropOff() {
             </div>
           ))
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Manager controls for the agreement investors must sign before the room opens. */
+function NdaSigning({ fund }: { fund: any }) {
+  const queryClient = useQueryClient();
+  const upload = useServerFn(uploadNdaDocument);
+  const toggle = useServerFn(setNdaSigningEnabled);
+  const loadSignatures = useServerFn(listNdaSignatures);
+  const [file, setFile] = useState<File | null>(null);
+
+  const signatures = useQuery({
+    queryKey: ["nda-signatures", fund.offeringId],
+    queryFn: () => loadSignatures({ data: { offering_id: fund.offeringId } }),
+    retry: false,
+    refetchInterval: 120_000,
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      if (!file) throw new Error("Choose the agreement first.");
+      return upload({
+        data: {
+          offering_id: fund.offeringId,
+          file_name: file.name,
+          content_base64: await toBase64(file),
+        },
+      });
+    },
+    onSuccess: () => {
+      setFile(null);
+      toast.success("Agreement uploaded. Investors will be asked to sign it.");
+      queryClient.invalidateQueries({ queryKey: ["managed-diligence-rooms"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not upload that agreement."),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: (enabled: boolean) => toggle({ data: { offering_id: fund.offeringId, enabled } }),
+    onSuccess: () => {
+      toast.success("Saved.");
+      queryClient.invalidateQueries({ queryKey: ["managed-diligence-rooms"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not save that."),
+  });
+
+  const rows = ((signatures.data as any)?.signatures ?? []) as any[];
+  const signed = rows.filter((r) => r.completedAt).length;
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>Agreement to sign</CardTitle>
+        <CardDescription>
+          Upload the confidentiality agreement as a PDF. Investors sign it before the materials open,
+          the signed copy is filed with the fund and you get an email the moment it lands.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="space-y-2">
+            <Label htmlFor={`nda-file-${fund.offeringId}`}>Agreement (PDF)</Label>
+            <Input
+              id={`nda-file-${fund.offeringId}`}
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button disabled={!file || uploadMutation.isPending} onClick={() => uploadMutation.mutate()}>
+              {uploadMutation.isPending ? "Uploading…" : "Upload"}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={toggleMutation.isPending}
+              onClick={() => toggleMutation.mutate(false)}
+            >
+              Use tick-box instead
+            </Button>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Signatures {rows.length ? `(${signed} of ${rows.length} signed)` : ""}
+          </p>
+          {signatures.isLoading ? (
+            <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
+          ) : rows.length === 0 ? (
+            <p className="mt-2 text-sm text-muted-foreground">Nobody has been sent the agreement yet.</p>
+          ) : (
+            <ul className="mt-2 divide-y rounded-md border">
+              {rows.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+                  <div>
+                    <p className="font-medium">{r.signerName}</p>
+                    <p className="text-xs text-muted-foreground">{r.signerEmail}</p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground">
+                    <Badge variant={r.completedAt ? "default" : "secondary"}>
+                      {r.completedAt ? "Signed" : r.viewedAt ? "Opened" : "Sent"}
+                    </Badge>
+                    <p className="mt-1">
+                      {r.completedAt
+                        ? `Signed ${when(r.completedAt)}`
+                        : r.viewedAt
+                          ? `Opened ${when(r.viewedAt)}`
+                          : `Sent ${when(r.sentAt)}`}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

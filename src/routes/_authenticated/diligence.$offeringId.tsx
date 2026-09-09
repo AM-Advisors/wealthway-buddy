@@ -6,6 +6,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
+  getMyNdaSigning,
+  startNdaSigning,
+  refreshMyNdaSignature,
+} from "@/lib/nda-sign.functions";
+import {
   ENTITY_TYPES,
   categoriesFor,
   entityTypeLabel,
@@ -143,6 +148,42 @@ function DiligenceRoomPage() {
   // so we can see who reads it and never agrees.
   const ndaView = useServerFn(recordNdaView);
   const ndaViewLogged = useRef(false);
+
+  // Signed NDA (Box) — when the fund team uploaded an agreement to sign.
+  const loadNdaSigning = useServerFn(getMyNdaSigning);
+  const startSigning = useServerFn(startNdaSigning);
+  const refreshSigning = useServerFn(refreshMyNdaSignature);
+  const ndaSigning = useQuery({
+    queryKey: ["nda-signing", offeringId],
+    queryFn: () => loadNdaSigning({ data: { offering_id: offeringId } }),
+    refetchInterval: 20_000,
+  });
+  const signNdaMutation = useMutation({
+    mutationFn: () => startSigning({ data: { offering_id: offeringId } }),
+    onSuccess: (r: any) => {
+      if (r?.url) {
+        window.open(r.url, "_blank", "noopener");
+        toast.success("The agreement opened in a new tab. Come back here when you're done.");
+      } else if (r?.completed) {
+        toast.success("You have already signed this agreement.");
+      }
+      queryClient.invalidateQueries({ queryKey: ["nda-signing", offeringId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not open the agreement for signing."),
+  });
+  const checkSignedMutation = useMutation({
+    mutationFn: () => refreshSigning({ data: { offering_id: offeringId } }),
+    onSuccess: (r: any) => {
+      queryClient.invalidateQueries({ queryKey: ["nda-signing", offeringId] });
+      if (r?.completed) {
+        toast.success("Signature received — the diligence materials are open.");
+        queryClient.invalidateQueries({ queryKey: ["diligence-access", offeringId] });
+      } else {
+        toast.message("We haven't received your signature yet.");
+      }
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not check the signature."),
+  });
   useEffect(() => {
     if (ndaViewLogged.current || !gated || !access.isSuccess) return;
     ndaViewLogged.current = true;
@@ -237,37 +278,84 @@ function DiligenceRoomPage() {
 
   // NDA gate.
   if (gated) {
+    const signing = ndaSigning.data as any;
+    const mustSign = Boolean(signing?.available);
+    const sig = signing?.signature;
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
         <h1 className="text-3xl">Confidentiality agreement</h1>
         <p className="mt-2 text-muted-foreground">
-          Please read and accept before the fund's diligence materials are shown.
+          {mustSign
+            ? "Please sign the agreement before the fund's diligence materials are shown."
+            : "Please read and accept before the fund's diligence materials are shown."}
         </p>
         <Card className="mt-6">
           <CardContent className="pt-6">
-            <pre className="max-h-96 overflow-auto whitespace-pre-wrap text-sm leading-relaxed">
-              {a.ndaText}
-            </pre>
-            <div className="mt-6 space-y-2">
-              <Label htmlFor="nda-name">Type your full legal name to accept</Label>
-              <Input
-                id="nda-name"
-                value={signer}
-                maxLength={160}
-                placeholder="Jane Q. Investor"
-                onChange={(e) => setSigner(e.target.value)}
-              />
-            </div>
-            <Button
-              className="mt-4"
-              disabled={signer.trim().length < 2 || acceptMutation.isPending}
-              onClick={() => acceptMutation.mutate()}
-            >
-              {acceptMutation.isPending ? "Recording…" : "I agree — open the room"}
-            </Button>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Your name, the date and time and your network address are recorded with this acceptance.
-            </p>
+            {mustSign ? (
+              <div className="space-y-4">
+                <div className="rounded-md border bg-muted/30 p-4">
+                  <p className="text-sm font-medium">{signing.fileName ?? "Confidentiality agreement"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {sig?.completedAt
+                      ? `Signed ${when(sig.completedAt)}.`
+                      : sig?.viewedAt
+                        ? `You opened it ${when(sig.viewedAt)} — it still needs your signature.`
+                        : sig?.sentAt
+                          ? `Sent to you ${when(sig.sentAt)}.`
+                          : "Sign it securely; a countersigned copy is filed for both of us."}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    disabled={signNdaMutation.isPending}
+                    onClick={() => signNdaMutation.mutate()}
+                  >
+                    {signNdaMutation.isPending
+                      ? "Preparing…"
+                      : sig
+                        ? "Open the agreement to sign"
+                        : "Review and sign the agreement"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={checkSignedMutation.isPending || !sig}
+                    onClick={() => checkSignedMutation.mutate()}
+                  >
+                    {checkSignedMutation.isPending ? "Checking…" : "I've signed — check now"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your name, email and the time you sign are recorded, and your fund team is told as soon
+                  as the signed copy arrives.
+                </p>
+              </div>
+            ) : (
+              <>
+                <pre className="max-h-96 overflow-auto whitespace-pre-wrap text-sm leading-relaxed">
+                  {a.ndaText}
+                </pre>
+                <div className="mt-6 space-y-2">
+                  <Label htmlFor="nda-name">Type your full legal name to accept</Label>
+                  <Input
+                    id="nda-name"
+                    value={signer}
+                    maxLength={160}
+                    placeholder="Jane Q. Investor"
+                    onChange={(e) => setSigner(e.target.value)}
+                  />
+                </div>
+                <Button
+                  className="mt-4"
+                  disabled={signer.trim().length < 2 || acceptMutation.isPending}
+                  onClick={() => acceptMutation.mutate()}
+                >
+                  {acceptMutation.isPending ? "Recording…" : "I agree — open the room"}
+                </Button>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Your name, the date and time and your network address are recorded with this acceptance.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
