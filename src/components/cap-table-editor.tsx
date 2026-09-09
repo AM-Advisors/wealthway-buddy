@@ -267,6 +267,9 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
         </Card>
       ) : null}
 
+      {fundId ? <CapTableLog offeringId={fundId} /> : null}
+
+
       <Dialog open={Boolean(editing)} onOpenChange={(open) => (open ? null : setEditing(null))}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
