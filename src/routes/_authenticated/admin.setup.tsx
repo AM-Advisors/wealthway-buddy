@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { saveOffering, saveOfferingDocument, WIRE_FIELDS } from "@/lib/offerings.functions";
 import { listAccessDirectory, assignFundAccess } from "@/lib/access.functions";
+import { FundEntityCard } from "@/components/fund-entity-card";
 import { inviteToFund } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/setup")({
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/admin/setup")({
       { property: "og:title", content: "Set Up a Fund | Harmonious Admin" },
       {
         property: "og:description",
-        content: "Create a fund, add documents and grant access in three guided steps.",
+        content: "Create a fund, add documents and grant access in a few guided steps.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
