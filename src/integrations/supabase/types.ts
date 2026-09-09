@@ -705,6 +705,7 @@ export type Database = {
           box_folder_id: string
           created_at: string
           created_by: string
+          entity_type: string
           id: string
           intro: string | null
           nda_required: boolean
@@ -717,6 +718,7 @@ export type Database = {
           box_folder_id: string
           created_at?: string
           created_by: string
+          entity_type?: string
           id?: string
           intro?: string | null
           nda_required?: boolean
@@ -729,6 +731,7 @@ export type Database = {
           box_folder_id?: string
           created_at?: string
           created_by?: string
+          entity_type?: string
           id?: string
           intro?: string | null
           nda_required?: boolean
