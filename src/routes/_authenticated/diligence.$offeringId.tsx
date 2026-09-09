@@ -395,7 +395,9 @@ function DiligenceRoomPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           {canManage ? null : <TabsTrigger value="application">Your application</TabsTrigger>}
+          <TabsTrigger value="terms">Offering terms</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+
           <TabsTrigger value="deck">Pitch deck</TabsTrigger>
           <TabsTrigger value="assistant">Ask AI</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
