@@ -11,5 +11,5 @@
 
 - [x] Cap table: live cap table data in the Due Diligence Capitalization section (no file upload needed)
 - [x] Diligence room: show fund wire instructions + investor commitment in the overview
-- [ ] AI diligence assistant with document citations
-- [ ] Live walkthrough: create fund, upload docs, invite test investor
+- [x] AI diligence assistant with document citations
+- [x] Live walkthrough: fund created, docs uploaded, test investor walked room
