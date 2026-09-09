@@ -424,6 +424,10 @@ function DiligenceRoomPage() {
         <TabsContent value="terms" className="mt-6">
           <OfferingStatementView offeringId={offeringId} canManage={canManage} />
         </TabsContent>
+        <TabsContent value="timeline" className="mt-6">
+          <FundTimeline offeringId={offeringId} canManage={canManage} />
+        </TabsContent>
+
         <TabsContent value="documents" className="mt-6">
 
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
