@@ -1,88 +1,228 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+
+import heroImage from "@/assets/hero-harmonious.jpg";
 import { Button } from "@/components/ui/button";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/hooks/useAuth";
-import { Logo } from "@/components/Logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Harmonious — Investor Onboarding" },
+      { title: "Harmonious — Your Funds On Easy Mode" },
       {
         name: "description",
         content:
-          "Complete KYC identity verification, AML screening, accreditation, document signing and funding for your Harmonious fund subscription.",
+          "Harmonious Capital Administration forms your SPV, administers your fund and onboards your investors — identity, accreditation, documents and funding in one secure platform.",
       },
-      { property: "og:title", content: "Harmonious — Investor Onboarding" },
+      { property: "og:title", content: "Harmonious — Your Funds On Easy Mode" },
       {
         property: "og:description",
-        content: "A guided, compliant subscription process for qualified investors.",
+        content:
+          "Same-day SPV formation, fund administration and compliant investor onboarding in one platform.",
       },
       { property: "og:type", content: "website" },
-      {
-        property: "og:image",
-        content: "https://onboard.harmonious.co/og-harmonious.jpg",
-      },
+      { property: "og:image", content: "https://onboard.harmonious.co/og-harmonious.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
-      {
-        name: "twitter:image",
-        content: "https://onboard.harmonious.co/og-harmonious.jpg",
-      },
+      { name: "twitter:image", content: "https://onboard.harmonious.co/og-harmonious.jpg" },
     ],
   }),
   component: Index,
 });
 
+const PILLARS = [
+  {
+    title: "Form The Entity",
+    body: "Same-day SPV and fund entity formation, with the operating agreement, subscription documents and offering memorandum prepared alongside it.",
+    to: "/spv",
+    cta: "Same-Day SPV",
+  },
+  {
+    title: "Onboard The Investors",
+    body: "Identity verification, AML screening, accreditation under Rule 506(b) or 506(c), document e-signature and wire or ACH funding — in one guided flow.",
+    to: "/platform",
+    cta: "See the platform",
+  },
+  {
+    title: "Administer The Fund",
+    body: "Cap table, capital calls, closings, distributions and investor reporting, kept current as commitments and wires land.",
+    to: "/fund-administration",
+    cta: "Fund administration",
+  },
+] as const;
+
+const STEPS = [
+  ["01", "Identity", "Legal name, address, tax ID and government identification, verified."],
+  ["02", "Screening", "Source of funds and wealth, PEP and sanctions declarations."],
+  ["03", "Accreditation", "506(b) self-certification or 506(c) third-party evidence."],
+  ["04", "Documents", "Review the offering materials and sign them in the browser."],
+  ["05", "Funding", "Wire or ACH against the fund's own instructions, tracked to receipt."],
+  ["06", "Ownership", "Shares, ownership percentage and portfolio value, live in the portal."],
+] as const;
+
 function Index() {
   const { session } = useAuth();
 
   return (
-    <main className="paper-grid min-h-screen">
-      <section className="mx-auto max-w-3xl px-4 py-24">
-        <Logo variant="navy" className="h-9 w-auto" />
-        <p className="mt-10 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Private placement · Qualified investors
-        </p>
-        <h1 className="mt-6 text-5xl leading-tight">Investor Onboarding</h1>
-        <p className="mt-6 max-w-xl text-muted-foreground">
-          Subscribe in one guided flow: identity verification, anti-money-laundering screening,
-          accreditation under Rule 506(b) or 506(c), fund document review and e-signature, then wire
-          or ACH funding.
-        </p>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Button asChild size="lg">
-            <Link to={session ? "/onboarding/kyc" : "/auth"}>Begin your application</Link>
-          </Button>
-          {!session && (
-            <Button asChild size="lg" variant="outline">
-              <Link to="/auth">Sign in to your application</Link>
-            </Button>
-          )}
-          {session && (
-            <>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/dashboard">View application status</Link>
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+
+      <main>
+        {/* Hero */}
+        <section className="bg-brand-gradient text-primary-foreground">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2 lg:py-28">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-accent">
+                Harmonious Capital Administration
+              </p>
+              <h1 className="mt-6 text-4xl leading-[1.1] sm:text-5xl lg:text-6xl">
+                Your Funds On Easy Mode
+              </h1>
+              <p className="mt-6 max-w-lg text-lg text-primary-foreground/75">
+                Move at the speed of the deal. We form the entity, run compliant investor
+                onboarding and administer the fund — so the difference between closing an
+                opportunity and missing it is never paperwork.
+              </p>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <Button asChild size="lg" variant="secondary">
+                  <Link to={session ? "/portal" : "/auth/register"}>
+                    {session ? "Go to your portal" : "Start your fund"}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                >
+                  <Link to="/platform">See how it works</Link>
+                </Button>
+              </div>
+              <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-2 text-sm text-primary-foreground/70">
+                <li>Rapid entity formation</li>
+                <li>Streamlined onboarding &amp; compliance</li>
+                <li>Investor-ready from day one</li>
+              </ul>
+            </div>
+
+            <img
+              src={heroImage}
+              alt="A lighthouse beam illuminating fund documents and reporting cards"
+              width={1600}
+              height={1008}
+              className="w-full rounded-2xl border border-primary-foreground/15 shadow-2xl"
+            />
+          </div>
+        </section>
+
+        {/* Pillars */}
+        <section className="mx-auto max-w-6xl px-4 py-20">
+          <h2 className="max-w-2xl text-3xl leading-tight sm:text-4xl">
+            One Platform From Formation To Final Close
+          </h2>
+          <p className="mt-4 max-w-2xl text-muted-foreground">
+            Sponsors, fund managers and their investors work in the same place, on the same
+            record, with every action timestamped.
+          </p>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {PILLARS.map((p) => (
+              <article
+                key={p.title}
+                className="flex flex-col rounded-xl border bg-card p-7 transition-shadow hover:shadow-lg"
+              >
+                <h3 className="text-xl">{p.title}</h3>
+                <p className="mt-3 flex-1 text-sm text-muted-foreground">{p.body}</p>
+                <Link
+                  to={p.to}
+                  className="mt-6 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                >
+                  {p.cta} →
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Investor journey */}
+        <section className="border-y bg-secondary/50">
+          <div className="mx-auto max-w-6xl px-4 py-20">
+            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+              The investor journey
+            </p>
+            <h2 className="mt-4 max-w-2xl text-3xl leading-tight sm:text-4xl">
+              Six Steps, One Guided Flow
+            </h2>
+            <ol className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {STEPS.map(([num, title, body]) => (
+                <li key={num} className="border-t border-foreground/15 pt-4">
+                  <span className="font-mono text-xs text-accent-foreground/70">{num}</span>
+                  <h3 className="mt-1 text-lg">{title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* Trust */}
+        <section className="mx-auto max-w-6xl px-4 py-20">
+          <div className="grid gap-10 lg:grid-cols-2">
+            <div>
+              <h2 className="text-3xl leading-tight sm:text-4xl">
+                Built On Trust, Integrity And A Complete Record
+              </h2>
+              <p className="mt-4 text-muted-foreground">
+                Our mission is to foster financial prosperity and harmony for our clients:
+                optimising their resources, protecting their assets and helping them reach
+                long-term goals through a seamless, secure experience.
+              </p>
+              <Button asChild className="mt-8" variant="outline">
+                <Link to="/about">More about Harmonious</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/portal">Investor portal</Link>
+            </div>
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {[
+                ["Encrypted document vault", "Offering materials and signed copies stored privately and filed automatically."],
+                ["Access by invitation", "Investors see only the funds and documents they were granted."],
+                ["Every action recorded", "Views, signatures, wires and approvals carry a timestamp and an owner."],
+                ["Live capital picture", "Committed, in-transit and received capital update as money moves."],
+              ].map(([title, body]) => (
+                <li key={title} className="rounded-xl border bg-card p-5">
+                  <h3 className="text-base">{title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="bg-primary text-primary-foreground">
+          <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-3xl">Ready To Move At The Speed Of The Deal?</h2>
+              <p className="mt-2 text-primary-foreground/70">
+                Create your account, or sign in to pick up where you left off.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button asChild size="lg" variant="secondary">
+                <Link to="/auth/register">Get started</Link>
               </Button>
-            </>
-          )}
-        </div>
-        <ol className="mt-16 grid gap-6 sm:grid-cols-2">
-          {[
-            ["01", "Identity (KYC)", "Legal name, address, tax ID and government identification."],
-            ["02", "AML questionnaire", "Source of funds and wealth, PEP and sanctions declarations."],
-            ["03", "Accreditation", "506(b) self-certification or 506(c) verified evidence."],
-            ["04", "Documents & funding", "Review, sign, then fund by wire or ACH."],
-          ].map(([num, title, body]) => (
-            <li key={num} className="border-t pt-4">
-              <span className="font-mono text-xs text-muted-foreground">{num}</span>
-              <h2 className="mt-1 text-lg">{title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-    </main>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              >
+                <Link to="/auth">Sign in</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter />
+    </div>
   );
 }

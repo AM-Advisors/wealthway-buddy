@@ -11,10 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
+import { Route as PlatformRouteImport } from './routes/platform'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SpvRouteImport } from './routes/spv'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
@@ -103,14 +107,29 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FundAdministrationRoute = FundAdministrationRouteImport.update({
+  id: '/fund-administration',
+  path: '/fund-administration',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManagerLoginRoute = ManagerLoginRouteImport.update({
   id: '/manager-login',
   path: '/manager-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlatformRoute = PlatformRouteImport.update({
+  id: '/platform',
+  path: '/platform',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -121,6 +140,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpvRoute = SpvRouteImport.update({
+  id: '/spv',
+  path: '/spv',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedApplyRoute = AuthenticatedApplyRouteImport.update({
@@ -572,10 +596,14 @@ const LovableEmailTransactionalPreviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
+  '/platform': typeof PlatformRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/spv': typeof SpvRoute
   '/apply': typeof AuthenticatedApplyRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -657,9 +685,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
+  '/platform': typeof PlatformRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/spv': typeof SpvRoute
   '/apply': typeof AuthenticatedApplyRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -743,10 +775,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
+  '/platform': typeof PlatformRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/spv': typeof SpvRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
@@ -830,10 +866,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/auth'
+    | '/fund-administration'
     | '/manager-login'
+    | '/platform'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/spv'
     | '/apply'
     | '/dashboard'
     | '/documents'
@@ -915,9 +955,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
+    | '/fund-administration'
     | '/manager-login'
+    | '/platform'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/spv'
     | '/apply'
     | '/dashboard'
     | '/documents'
@@ -1000,10 +1044,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/auth'
+    | '/fund-administration'
     | '/manager-login'
+    | '/platform'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/spv'
     | '/_authenticated/apply'
     | '/_authenticated/dashboard'
     | '/_authenticated/documents'
@@ -1087,10 +1135,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
+  FundAdministrationRoute: typeof FundAdministrationRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
+  PlatformRoute: typeof PlatformRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SpvRoute: typeof SpvRoute
   FundSlugRoute: typeof FundSlugRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
@@ -1119,6 +1171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -1126,11 +1185,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fund-administration': {
+      id: '/fund-administration'
+      path: '/fund-administration'
+      fullPath: '/fund-administration'
+      preLoaderRoute: typeof FundAdministrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manager-login': {
       id: '/manager-login'
       path: '/manager-login'
       fullPath: '/manager-login'
       preLoaderRoute: typeof ManagerLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/platform': {
+      id: '/platform'
+      path: '/platform'
+      fullPath: '/platform'
+      preLoaderRoute: typeof PlatformRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1145,6 +1218,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spv': {
+      id: '/spv'
+      path: '/spv'
+      fullPath: '/spv'
+      preLoaderRoute: typeof SpvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/apply': {
@@ -1858,10 +1938,14 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
+  FundAdministrationRoute: FundAdministrationRoute,
   ManagerLoginRoute: ManagerLoginRoute,
+  PlatformRoute: PlatformRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SpvRoute: SpvRoute,
   FundSlugRoute: FundSlugRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
