@@ -306,3 +306,192 @@ export const resolveApplicationFlag = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const reviewSchema = z.object({ offeringId: z.string().uuid() });
+
+/** Per-investor review board: onboarding status, signed documents and wire requests. */
+export const getFundInvestorReview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => reviewSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertReviewer(supabase, userId);
+
+    const { data: apps, error: appsError } = await supabase
+      .from("investor_applications")
+      .select(
+        "id, user_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, updated_at",
+      )
+      .eq("offering_id", data.offeringId)
+      .order("updated_at", { ascending: false })
+      .limit(500);
+    if (appsError) throw new Error(appsError.message);
+    const applications = (apps ?? []) as any[];
+    const appIds = applications.map((a) => a.id as string);
+
+    const { data: docs, error: docsError } = await supabase
+      .from("offering_documents")
+      .select("id, title, requires_signature, sort_order")
+      .eq("offering_id", data.offeringId)
+      .order("sort_order");
+    if (docsError) throw new Error(docsError.message);
+    const documents = (docs ?? []) as any[];
+    const requiredDocs = documents.filter((d) => d.requires_signature);
+
+    const empty = { data: [] as any[] };
+    const [{ data: sigs }, { data: wires }, { data: profiles }] = await Promise.all([
+      appIds.length
+        ? supabase
+            .from("document_signatures")
+            .select("id, application_id, offering_document_id, signed_at, pdf_path, provider_status")
+            .in("application_id", appIds)
+        : empty,
+      appIds.length
+        ? supabase
+            .from("wire_confirmations")
+            .select(
+              "id, application_id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, investor_note, status, reviewed_at, review_notes, created_at",
+            )
+            .in("application_id", appIds)
+            .order("created_at", { ascending: false })
+        : empty,
+      applications.length
+        ? supabase
+            .from("profiles")
+            .select("user_id, legal_name, email")
+            .in("user_id", [...new Set(applications.map((a) => a.user_id as string))])
+        : empty,
+    ]);
+
+    const profileMap = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id, p]));
+    const docTitle = new Map(documents.map((d) => [d.id as string, d.title as string]));
+    const signatures = (sigs ?? []) as any[];
+    const wireRows = (wires ?? []) as any[];
+
+    const investors = applications.map((app) => {
+      const signed = signatures.filter((s) => s.application_id === app.id);
+      const signedIds = new Set(signed.map((s) => s.offering_document_id));
+      const profile = profileMap.get(app.user_id);
+      const appWires = wireRows.filter((w) => w.application_id === app.id);
+      return {
+        applicationId: app.id as string,
+        name: (profile?.legal_name as string) ?? "Investor",
+        email: (profile?.email as string) ?? null,
+        commitmentCents: (app.commitment_cents as number) ?? null,
+        statuses: {
+          kyc: app.kyc_status,
+          aml: app.aml_status,
+          accreditation: app.accreditation_status,
+          documents: app.documents_status,
+          funding: app.funding_status,
+        },
+        updatedAt: app.updated_at as string,
+        signedDocuments: signed.map((s) => ({
+          signatureId: s.id as string,
+          title: docTitle.get(s.offering_document_id) ?? "Fund document",
+          signedAt: s.signed_at as string | null,
+          hasPdf: Boolean(s.pdf_path),
+        })),
+        outstandingDocuments: requiredDocs
+          .filter((d) => !signedIds.has(d.id))
+          .map((d) => d.title as string),
+        pendingWire: appWires.find((w) => w.status === "submitted") ?? null,
+        wireHistory: appWires.filter((w) => w.status !== "submitted"),
+      };
+    });
+
+    return { requiredDocCount: requiredDocs.length, investors };
+  });
+
+const wireDecisionSchema = z.object({
+  applicationId: z.string().uuid(),
+  confirmationId: z.string().uuid(),
+  outcome: z.enum(["approved", "rejected"]),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+/** One-click approve or reject of an investor's wire request, for admins and assigned fund managers. */
+export const decideWireAsReviewer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => wireDecisionSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const roles = await assertReviewer(supabase, userId);
+    const now = new Date().toISOString();
+
+    if (data.outcome === "rejected" && !data.notes) {
+      throw new Error("Add a short reason so the investor knows what to correct.");
+    }
+
+    const { data: application, error: appError } = await supabase
+      .from("investor_applications")
+      .select("id, offering_id")
+      .eq("id", data.applicationId)
+      .maybeSingle();
+    if (appError) throw new Error(appError.message);
+    if (!application) throw new Error("Application not found.");
+
+    if (!roles.includes("admin")) {
+      const { data: assignment, error: assignError } = await supabase
+        .from("fund_managers")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("offering_id", application.offering_id)
+        .maybeSingle();
+      if (assignError) throw new Error(assignError.message);
+      if (!assignment) throw new Error("Forbidden: you do not manage this fund.");
+    }
+
+    const { data: confirmation, error: loadError } = await supabase
+      .from("wire_confirmations")
+      .select("*")
+      .eq("id", data.confirmationId)
+      .eq("application_id", data.applicationId)
+      .maybeSingle();
+    if (loadError) throw new Error(loadError.message);
+    if (!confirmation) throw new Error("Wire confirmation not found.");
+    if (confirmation.status !== "submitted") {
+      throw new Error("This wire confirmation has already been decided.");
+    }
+
+    const { error } = await supabase
+      .from("wire_confirmations")
+      .update({
+        status: data.outcome,
+        reviewed_by: userId,
+        reviewed_at: now,
+        review_notes: data.notes || null,
+        updated_at: now,
+      })
+      .eq("id", data.confirmationId);
+    if (error) throw new Error(error.message);
+
+    if (confirmation.payment_id) {
+      const paymentUpdate =
+        data.outcome === "approved"
+          ? { status: "settled" as const, confirmed_at: now, failure_reason: null, updated_at: now }
+          : {
+              status: "awaiting_wire" as const,
+              confirmed_at: null,
+              failure_reason: data.notes || "Wire confirmation rejected",
+              updated_at: now,
+            };
+      const { error: payError } = await supabase
+        .from("payments")
+        .update(paymentUpdate)
+        .eq("id", confirmation.payment_id);
+      if (payError) throw new Error(payError.message);
+    }
+
+    const { error: updateError } = await supabase
+      .from("investor_applications")
+      .update({
+        funding_status: data.outcome === "approved" ? "settled" : "awaiting_wire",
+        status: data.outcome === "approved" ? "funded" : "submitted",
+        updated_at: now,
+      })
+      .eq("id", data.applicationId);
+    if (updateError) throw new Error(updateError.message);
+
+    return { ok: true };
+  });
