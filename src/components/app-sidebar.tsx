@@ -11,6 +11,7 @@ import {
   FileText,
   FolderLock,
   Gauge,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -42,6 +43,7 @@ type NavItem = { title: string; url: string; icon: typeof LayoutDashboard };
 const investorItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Documents", url: "/documents", icon: FileText },
+  { title: "Wire instructions", url: "/wire", icon: Landmark },
   { title: "Due diligence", url: "/diligence", icon: FolderLock },
   { title: "Portal", url: "/portal", icon: Building2 },
 ];
