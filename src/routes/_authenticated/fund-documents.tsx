@@ -159,6 +159,15 @@ function FundDocumentsPage() {
                         {doc.file_name ? ` · ${doc.file_name}` : ""}
                         {fileSize(doc.file_size_bytes) ? ` · ${fileSize(doc.file_size_bytes)}` : ""}
                       </p>
+                      {(doc as any).version > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Version {(doc as any).version}
+                          {(doc as any).file_updated_at
+                            ? ` · updated ${new Date((doc as any).file_updated_at).toLocaleDateString()}`
+                            : ""}
+                          {(doc as any).template_pack === "ilpa" ? " · ILPA model document" : ""}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       {doc.signed_at ? (
