@@ -295,6 +295,7 @@ export const chooseWire = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, reference };
   });
 
@@ -463,5 +464,6 @@ export const startAchDebit = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, last4: data.account_number.slice(-4) };
   });
