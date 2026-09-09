@@ -1978,6 +1978,8 @@ export type Database = {
           updated_at: string
           user_id: string
           welcome_email_sent_at: string | null
+          wire_fee_cents: number | null
+          wire_fee_note: string | null
         }
         Insert: {
           accreditation_status?: Database["public"]["Enums"]["check_status"]
@@ -2000,6 +2002,8 @@ export type Database = {
           updated_at?: string
           user_id: string
           welcome_email_sent_at?: string | null
+          wire_fee_cents?: number | null
+          wire_fee_note?: string | null
         }
         Update: {
           accreditation_status?: Database["public"]["Enums"]["check_status"]
@@ -2022,6 +2026,8 @@ export type Database = {
           updated_at?: string
           user_id?: string
           welcome_email_sent_at?: string | null
+          wire_fee_cents?: number | null
+          wire_fee_note?: string | null
         }
         Relationships: [
           {

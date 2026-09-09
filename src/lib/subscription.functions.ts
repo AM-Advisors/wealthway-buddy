@@ -212,7 +212,7 @@ export const getFundCommitmentBalance = createServerFn({ method: "GET" })
 
     const { data: apps } = await supabase
       .from("investor_applications")
-      .select("id, user_id, funding_status, commitment_cents")
+      .select("id, user_id, funding_status, commitment_cents, wire_fee_cents, wire_fee_note")
       .eq("offering_id", data.fundId);
     const rows = (apps ?? []) as any[];
     const ids = rows.map((r) => r.id);
@@ -257,8 +257,14 @@ export const getFundCommitmentBalance = createServerFn({ method: "GET" })
     // closing cost is a single charge for the fund.
     const wireFeeCents = Number((offering as any)?.wire_fee_cents ?? 0);
     const closingCostCents = Number((offering as any)?.closing_cost_cents ?? 0);
-    const settledPayments = payments.filter((p) => p.status === "settled").length;
-    const wireFeesTotalCents = wireFeeCents * settledPayments;
+    // Each investor may have their own rate; otherwise the fund's standard fee applies.
+    const feeForApp = (appId: string) => {
+      const row = rows.find((r) => r.id === appId);
+      return row?.wire_fee_cents != null ? Number(row.wire_fee_cents) : wireFeeCents;
+    };
+    const wireFeesTotalCents = payments
+      .filter((p) => p.status === "settled")
+      .reduce((sum, p) => sum + feeForApp(p.application_id as string), 0);
     const totalCostsCents = wireFeesTotalCents + closingCostCents;
     const netReceivedCents = Math.max(0, receivedCents - totalCostsCents);
 
@@ -279,6 +285,13 @@ export const getFundCommitmentBalance = createServerFn({ method: "GET" })
           ownershipTitle: (sub?.ownership_title as string) ?? null,
           fundingStatus: (r.funding_status as string) ?? "not_started",
           receivedCents: paid,
+          wireFeeCents: r.wire_fee_cents != null ? Number(r.wire_fee_cents) : wireFeeCents,
+          wireFeeIsOwnRate: r.wire_fee_cents != null,
+          wireFeeNote: (r.wire_fee_note as string) ?? null,
+          netReceivedCents: Math.max(
+            0,
+            paid - (paid > 0 ? (r.wire_fee_cents != null ? Number(r.wire_fee_cents) : wireFeeCents) : 0),
+          ),
         };
       })
       .sort((a, b) => b.commitmentCents - a.commitmentCents);
