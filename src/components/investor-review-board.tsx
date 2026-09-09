@@ -219,7 +219,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {!doc.inBox && (
+                          {!doc.inBox && !doc.pending && (
                             <Button
                               size="sm"
                               variant="ghost"
