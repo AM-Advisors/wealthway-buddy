@@ -18,6 +18,7 @@ import {
   ensureDiligenceRoom,
   getDiligenceAccess,
   getDiligenceDownloadUrl,
+  getDiligenceFileForViewing,
   getDiligenceOnboarding,
   getDiligenceRoom,
   startOnboardingFromRoom,
@@ -431,7 +432,7 @@ function DocumentsTab({
   const queryClient = useQueryClient();
   const add = useServerFn(addDiligenceDocument);
   const remove = useServerFn(removeDiligenceDocument);
-  const download = useServerFn(getDiligenceDownloadUrl);
+  const view = useServerFn(getDiligenceFileForViewing);
   const sync = useServerFn(syncDiligenceFolder);
 
   const roomCategories = categoriesFor(data?.entityType);
