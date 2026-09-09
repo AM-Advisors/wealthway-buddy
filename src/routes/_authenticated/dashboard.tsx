@@ -123,6 +123,29 @@ function Dashboard() {
     refetchOnWindowFocus: true,
   });
 
+  const { data: funding } = useQuery({
+    queryKey: ["funding"],
+    queryFn: () => loadFunding(),
+    refetchInterval: (query) => {
+      const rows = query.state.data?.wireConfirmations ?? [];
+      return rows.some((r: { status: string }) => r.status === "pending") ? 10000 : false;
+    },
+    refetchOnWindowFocus: true,
+  });
+  const wireConfirmations = (funding?.wireConfirmations ?? []) as Array<{
+    id: string;
+    amount_cents: number;
+    sent_on: string;
+    sending_bank_name: string;
+    sending_account_last4: string;
+    bank_reference: string | null;
+    investor_note: string | null;
+    status: string;
+    review_notes: string | null;
+    reviewed_at: string | null;
+    created_at: string;
+  }>;
+
   const app = data?.application;
   const documents = data?.documents ?? [];
   const offeringDocs = (data?.offeringDocuments ?? []) as Array<{
