@@ -1736,6 +1736,68 @@ export type Database = {
           },
         ]
       }
+      fund_compliance_items: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          filed_on: string | null
+          id: string
+          key: string | null
+          label: string
+          note: string | null
+          offering_id: string
+          owner_name: string | null
+          reference: string | null
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          filed_on?: string | null
+          id?: string
+          key?: string | null
+          label: string
+          note?: string | null
+          offering_id: string
+          owner_name?: string | null
+          reference?: string | null
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          filed_on?: string | null
+          id?: string
+          key?: string | null
+          label?: string
+          note?: string | null
+          offering_id?: string
+          owner_name?: string | null
+          reference?: string | null
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_compliance_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_distributions: {
         Row: {
           amount_cents: number
@@ -4009,7 +4071,7 @@ export type Database = {
         | "failed"
         | "returned"
         | "cancelled"
-      reg_type: "506b" | "506c"
+      reg_type: "506b" | "506c" | "regcf" | "rega" | "regaplus"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4156,7 +4218,7 @@ export const Constants = {
         "returned",
         "cancelled",
       ],
-      reg_type: ["506b", "506c"],
+      reg_type: ["506b", "506c", "regcf", "rega", "regaplus"],
     },
   },
 } as const
