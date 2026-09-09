@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OfferingDocumentFile } from "@/components/offering-document-file";
+import { TemplatePackPicker } from "@/components/template-pack-picker";
 import {
   Select,
   SelectContent,
@@ -161,6 +162,18 @@ function ManagerDocumentsPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {activeFund && (
+        <div className="mt-8">
+          <TemplatePackPicker
+            offeringId={activeFund.id}
+            offeringName={activeFund.name}
+            onApplied={invalidate}
+          />
+        </div>
+      )}
+
+
 
       <Card className="mt-8">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
