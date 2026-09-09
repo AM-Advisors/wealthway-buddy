@@ -52,7 +52,7 @@ const WIRE_LABELS: Record<string, string> = {
   memo: "Reference / memo instructions",
 };
 
-const STEPS = ["Fund details", "Documents", "Access"] as const;
+const STEPS = ["Fund details", "Entity and banking", "Documents", "Access"] as const;
 
 type WireForm = Record<string, string>;
 
