@@ -127,6 +127,9 @@ function AdminQueue() {
                 <Link to="/admin/document-log">Document activity</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
+                <Link to="/admin/activity">Activity log</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
                 <Link to="/diligence">Diligence rooms</Link>
               </Button>
 
