@@ -18,3 +18,6 @@
 
 - [x] Manager-only diligence portal (/manager/diligence) with room traffic tracking
 - [x] Diligence room: "Sync from Box" button that pulls new files dropped in the Box folder into the portal with timestamps and alerts managers
+
+- [ ] Bank feed: connect the fund's real bank account so incoming wires are detected automatically and matched to investors
+- [ ] Fund page button: email the offering packet link (with wire details) to a selected investor
