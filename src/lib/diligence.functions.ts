@@ -1127,20 +1127,47 @@ export const getDiligenceEngagement = createServerFn({ method: "POST" })
 
     const { data: docs } = await supabase
       .from("diligence_documents")
-      .select("id, title")
-      .eq("offering_id", data.offering_id);
+      .select("id, title, category, uploaded_at, uploaded_by")
+      .eq("offering_id", data.offering_id)
+      .order("uploaded_at", { ascending: true });
     const titles = new Map<string, string>((docs ?? []).map((d: any) => [d.id, d.title]));
+
+    // Anyone on the Harmonious side (admins and this fund's managers) is marked
+    // as team so their own opens never look like investor interest.
+    const { data: managerRows } = await supabase
+      .from("fund_managers")
+      .select("user_id")
+      .eq("offering_id", data.offering_id);
+    const { data: adminRows } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .in("role", ["admin", "fund_manager"]);
+    const teamIds = new Set<string>([
+      ...((managerRows ?? []) as any[]).map((r) => r.user_id),
+      ...((adminRows ?? []) as any[])
+        .filter((r) => r.role === "admin")
+        .map((r) => r.user_id),
+      ...((docs ?? []) as any[]).map((d) => d.uploaded_by).filter(Boolean),
+    ]);
 
     type Row = {
       actor_id: string;
       name: string | null;
       email: string | null;
+      isTeam: boolean;
       visits: number;
       firstSeen: string | null;
       lastSeen: string | null;
       ndaAcceptedAt: string | null;
       questionsAsked: number;
-      documents: { id: string; title: string; opens: number; lastOpened: string }[];
+      documents: {
+        id: string;
+        title: string;
+        opens: number;
+        downloads: number;
+        firstOpened: string;
+        lastOpened: string;
+      }[];
     };
     const byActor = new Map<string, Row>();
 
@@ -1151,6 +1178,7 @@ export const getDiligenceEngagement = createServerFn({ method: "POST" })
           actor_id: e.actor_id,
           name: e.actor_name ?? null,
           email: e.actor_email ?? null,
+          isTeam: teamIds.has(e.actor_id),
           visits: 0,
           firstSeen: null,
           lastSeen: null,
@@ -1168,27 +1196,68 @@ export const getDiligenceEngagement = createServerFn({ method: "POST" })
       if (e.event_type === "room_viewed") row.visits += 1;
       if (e.event_type === "nda_accepted") row.ndaAcceptedAt = e.created_at;
       if (e.event_type === "question_asked") row.questionsAsked += 1;
-      if (e.event_type === "document_downloaded") {
-        const docId = (e.metadata as any)?.document_id as string | undefined;
+      if (e.event_type === "document_viewed" || e.event_type === "document_downloaded") {
+        const meta = (e.metadata ?? {}) as any;
+        const docId = meta.document_id as string | undefined;
         if (docId) {
-          const existing = row.documents.find((d) => d.id === docId);
-          if (existing) {
-            existing.opens += 1;
-            existing.lastOpened = e.created_at;
-          } else {
-            row.documents.push({
+          const title = titles.get(docId) ?? meta.document_title ?? "A document";
+          let existing = row.documents.find((d) => d.id === docId);
+          if (!existing) {
+            existing = {
               id: docId,
-              title: titles.get(docId) ?? "A document",
-              opens: 1,
+              title,
+              opens: 0,
+              downloads: 0,
+              firstOpened: e.created_at,
               lastOpened: e.created_at,
-            });
+            };
+            row.documents.push(existing);
           }
+          existing.title = title;
+          existing.lastOpened = e.created_at;
+          if (e.event_type === "document_downloaded") existing.downloads += 1;
+          else existing.opens += 1;
         }
       }
     }
 
     const viewers = [...byActor.values()].sort((a, b) =>
       (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""),
+    );
+
+    // Same activity, turned around: for each document, who read it and when.
+    const documentViews = ((docs ?? []) as any[]).map((doc) => {
+      const readers = viewers
+        .map((v) => {
+          const hit = v.documents.find((d) => d.id === doc.id);
+          if (!hit) return null;
+          return {
+            actor_id: v.actor_id,
+            name: v.name,
+            email: v.email,
+            isTeam: v.isTeam,
+            opens: hit.opens,
+            downloads: hit.downloads,
+            firstOpened: hit.firstOpened,
+            lastOpened: hit.lastOpened,
+          };
+        })
+        .filter(Boolean) as any[];
+      readers.sort((a, b) => (b.lastOpened ?? "").localeCompare(a.lastOpened ?? ""));
+      const investors = readers.filter((r) => !r.isTeam);
+      return {
+        id: doc.id,
+        title: doc.title,
+        category: doc.category,
+        uploaded_at: doc.uploaded_at,
+        readers,
+        investorCount: investors.length,
+        investorOpens: investors.reduce((n, r) => n + r.opens + r.downloads, 0),
+        lastInvestorAt: investors[0]?.lastOpened ?? null,
+      };
+    });
+    documentViews.sort(
+      (a, b) => b.investorCount - a.investorCount || a.title.localeCompare(b.title),
     );
 
     // People with access who have never opened anything.
