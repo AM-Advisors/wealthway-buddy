@@ -113,7 +113,7 @@ function SetupPage() {
   const directoryQuery = useQuery({
     queryKey: ["access-directory"],
     queryFn: () => loadDirectory(),
-    enabled: step === 2,
+    enabled: step === 3,
     retry: false,
   });
 
