@@ -393,6 +393,7 @@ export const getFundInvestorReview = createServerFn({ method: "GET" })
           title: docTitle.get(s.offering_document_id) ?? "Fund document",
           signedAt: s.signed_at as string | null,
           hasPdf: Boolean(s.pdf_path),
+          pending: s.provider_status === "out_for_signature",
           inBox: Boolean(s.box_file_id),
           boxUploadedAt: (s.box_uploaded_at as string | null) ?? null,
           boxError: (s.box_error as string | null) ?? null,
