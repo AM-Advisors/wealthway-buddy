@@ -731,7 +731,7 @@ export const seedDiligenceChecklist = createServerFn({ method: "POST" })
     }
     const { data: room } = await supabase
       .from("diligence_rooms")
-      .select("id")
+      .select("id, entity_type")
       .eq("offering_id", data.offering_id)
       .maybeSingle();
     if (!room) throw new Error("Create the diligence room first.");
@@ -742,12 +742,14 @@ export const seedDiligenceChecklist = createServerFn({ method: "POST" })
       .eq("room_id", room.id);
     const seen = new Set((existing ?? []).map((e: any) => e.label));
 
-    const rows = DILIGENCE_CATEGORIES.filter((c) => c.value !== "other")
+    const rows = categoriesFor(room.entity_type)
+      .filter((c) => c.value !== "other")
       .map((c, i) => ({
         room_id: room.id,
         offering_id: data.offering_id,
         category: c.value,
         label: c.label,
+        description: c.hint ?? null,
         is_required: c.required,
         sort_order: i,
         created_by: userId,
