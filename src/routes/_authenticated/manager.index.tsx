@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { getManagerPanelSummary } from "@/lib/manager.functions";
+import { getManagerFundProgress } from "@/lib/manager-fund.functions";
 import { money } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,12 +128,24 @@ const TOOLS = [
 
 function ManagerPanel() {
   const load = useServerFn(getManagerPanelSummary);
+  const loadProgress = useServerFn(getManagerFundProgress);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["manager-panel-summary"],
     queryFn: () => load(),
     retry: false,
     refetchInterval: 60_000,
   });
+  const progressQuery = useQuery({
+    queryKey: ["manager-fund-progress"],
+    queryFn: () => loadProgress(),
+    retry: false,
+  });
+
+  const progressOf = (fundId: string) => {
+    const row = (progressQuery.data?.funds ?? []).find((f: any) => f.id === fundId);
+    return row ? (row.percent as number) : null;
+  };
+
 
   if (isLoading) {
     return (
