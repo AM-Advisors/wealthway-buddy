@@ -174,6 +174,8 @@ export function FundOperations({ offeringId }: { offeringId: string }) {
         </CardContent>
       </Card>
 
+      <SignedDocumentsCard offeringId={offeringId} />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Wire confirmations</CardTitle>
