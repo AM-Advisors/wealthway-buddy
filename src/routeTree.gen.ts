@@ -41,6 +41,7 @@ import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminInvestorsRouteImport } from './routes/_authenticated/admin.investors'
 import { Route as AuthenticatedAdminMemoRouteImport } from './routes/_authenticated/admin.memo'
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
+import { Route as AuthenticatedAdminOfferingStatementRouteImport } from './routes/_authenticated/admin.offering-statement'
 import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_authenticated/admin.permissions'
 import { Route as AuthenticatedAdminPortfolioValueRouteImport } from './routes/_authenticated/admin.portfolio-value'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
@@ -61,6 +62,7 @@ import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authent
 import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_authenticated/manager.investors'
 import { Route as AuthenticatedManagerMemoRouteImport } from './routes/_authenticated/manager.memo'
 import { Route as AuthenticatedManagerMessagesRouteImport } from './routes/_authenticated/manager.messages'
+import { Route as AuthenticatedManagerOfferingStatementRouteImport } from './routes/_authenticated/manager.offering-statement'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_authenticated/manager.permissions'
 import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes/_authenticated/manager.portfolio-value'
@@ -257,6 +259,12 @@ const AuthenticatedAdminNewApplicationRoute =
     path: '/admin/new-application',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminOfferingStatementRoute =
+  AuthenticatedAdminOfferingStatementRouteImport.update({
+    id: '/admin/offering-statement',
+    path: '/admin/offering-statement',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPermissionsRoute =
   AuthenticatedAdminPermissionsRouteImport.update({
     id: '/admin/permissions',
@@ -373,6 +381,12 @@ const AuthenticatedManagerMessagesRoute =
   AuthenticatedManagerMessagesRouteImport.update({
     id: '/manager/messages',
     path: '/manager/messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerOfferingStatementRoute =
+  AuthenticatedManagerOfferingStatementRouteImport.update({
+    id: '/manager/offering-statement',
+    path: '/manager/offering-statement',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerOnboardingRoute =
@@ -532,6 +546,7 @@ export interface FileRoutesByFullPath {
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/memo': typeof AuthenticatedAdminMemoRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
+  '/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
@@ -550,6 +565,7 @@ export interface FileRoutesByFullPath {
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
+  '/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
@@ -606,6 +622,7 @@ export interface FileRoutesByTo {
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/memo': typeof AuthenticatedAdminMemoRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
+  '/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
@@ -624,6 +641,7 @@ export interface FileRoutesByTo {
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
+  '/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
@@ -683,6 +701,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/_authenticated/admin/memo': typeof AuthenticatedAdminMemoRoute
   '/_authenticated/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
+  '/_authenticated/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/_authenticated/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/_authenticated/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
@@ -701,6 +720,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/_authenticated/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/_authenticated/manager/messages': typeof AuthenticatedManagerMessagesRoute
+  '/_authenticated/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/_authenticated/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
@@ -760,6 +780,7 @@ export interface FileRouteTypes {
     | '/admin/investors'
     | '/admin/memo'
     | '/admin/new-application'
+    | '/admin/offering-statement'
     | '/admin/permissions'
     | '/admin/portfolio-value'
     | '/admin/security'
@@ -778,6 +799,7 @@ export interface FileRouteTypes {
     | '/manager/investors'
     | '/manager/memo'
     | '/manager/messages'
+    | '/manager/offering-statement'
     | '/manager/onboarding'
     | '/manager/permissions'
     | '/manager/portfolio-value'
@@ -834,6 +856,7 @@ export interface FileRouteTypes {
     | '/admin/investors'
     | '/admin/memo'
     | '/admin/new-application'
+    | '/admin/offering-statement'
     | '/admin/permissions'
     | '/admin/portfolio-value'
     | '/admin/security'
@@ -852,6 +875,7 @@ export interface FileRouteTypes {
     | '/manager/investors'
     | '/manager/memo'
     | '/manager/messages'
+    | '/manager/offering-statement'
     | '/manager/onboarding'
     | '/manager/permissions'
     | '/manager/portfolio-value'
@@ -910,6 +934,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/investors'
     | '/_authenticated/admin/memo'
     | '/_authenticated/admin/new-application'
+    | '/_authenticated/admin/offering-statement'
     | '/_authenticated/admin/permissions'
     | '/_authenticated/admin/portfolio-value'
     | '/_authenticated/admin/security'
@@ -928,6 +953,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/investors'
     | '/_authenticated/manager/memo'
     | '/_authenticated/manager/messages'
+    | '/_authenticated/manager/offering-statement'
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/permissions'
     | '/_authenticated/manager/portfolio-value'
@@ -1199,6 +1225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNewApplicationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/offering-statement': {
+      id: '/_authenticated/admin/offering-statement'
+      path: '/admin/offering-statement'
+      fullPath: '/admin/offering-statement'
+      preLoaderRoute: typeof AuthenticatedAdminOfferingStatementRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/permissions': {
       id: '/_authenticated/admin/permissions'
       path: '/admin/permissions'
@@ -1337,6 +1370,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/messages'
       fullPath: '/manager/messages'
       preLoaderRoute: typeof AuthenticatedManagerMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/offering-statement': {
+      id: '/_authenticated/manager/offering-statement'
+      path: '/manager/offering-statement'
+      fullPath: '/manager/offering-statement'
+      preLoaderRoute: typeof AuthenticatedManagerOfferingStatementRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/onboarding': {
@@ -1519,6 +1559,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminInvestorsRoute: typeof AuthenticatedAdminInvestorsRoute
   AuthenticatedAdminMemoRoute: typeof AuthenticatedAdminMemoRoute
   AuthenticatedAdminNewApplicationRoute: typeof AuthenticatedAdminNewApplicationRoute
+  AuthenticatedAdminOfferingStatementRoute: typeof AuthenticatedAdminOfferingStatementRoute
   AuthenticatedAdminPermissionsRoute: typeof AuthenticatedAdminPermissionsRoute
   AuthenticatedAdminPortfolioValueRoute: typeof AuthenticatedAdminPortfolioValueRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
@@ -1537,6 +1578,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerInvestorsRoute: typeof AuthenticatedManagerInvestorsRoute
   AuthenticatedManagerMemoRoute: typeof AuthenticatedManagerMemoRoute
   AuthenticatedManagerMessagesRoute: typeof AuthenticatedManagerMessagesRoute
+  AuthenticatedManagerOfferingStatementRoute: typeof AuthenticatedManagerOfferingStatementRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerPermissionsRoute: typeof AuthenticatedManagerPermissionsRoute
   AuthenticatedManagerPortfolioValueRoute: typeof AuthenticatedManagerPortfolioValueRoute
@@ -1578,6 +1620,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminInvestorsRoute: AuthenticatedAdminInvestorsRoute,
   AuthenticatedAdminMemoRoute: AuthenticatedAdminMemoRoute,
   AuthenticatedAdminNewApplicationRoute: AuthenticatedAdminNewApplicationRoute,
+  AuthenticatedAdminOfferingStatementRoute:
+    AuthenticatedAdminOfferingStatementRoute,
   AuthenticatedAdminPermissionsRoute: AuthenticatedAdminPermissionsRoute,
   AuthenticatedAdminPortfolioValueRoute: AuthenticatedAdminPortfolioValueRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
@@ -1598,6 +1642,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerInvestorsRoute: AuthenticatedManagerInvestorsRoute,
   AuthenticatedManagerMemoRoute: AuthenticatedManagerMemoRoute,
   AuthenticatedManagerMessagesRoute: AuthenticatedManagerMessagesRoute,
+  AuthenticatedManagerOfferingStatementRoute:
+    AuthenticatedManagerOfferingStatementRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
   AuthenticatedManagerPermissionsRoute: AuthenticatedManagerPermissionsRoute,
   AuthenticatedManagerPortfolioValueRoute:
