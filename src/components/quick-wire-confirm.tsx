@@ -26,9 +26,9 @@ export function QuickWireConfirm({
   lastBankName,
   lastAccountLast4,
 }: {
-  commitmentCents?: number | null;
-  lastBankName?: string | null;
-  lastAccountLast4?: string | null;
+  commitmentCents?: number | null | undefined;
+  lastBankName?: string | null | undefined;
+  lastAccountLast4?: string | null | undefined;
 }) {
   const submit = useServerFn(submitWireConfirmation);
   const queryClient = useQueryClient();
