@@ -164,7 +164,9 @@ export const listManagedFundDocuments = createServerFn({ method: "GET" })
     const { data: documents } = ids.length
       ? await supabase
           .from("offering_documents")
-          .select("id, offering_id, title, doc_type, body, requires_signature, sort_order")
+          .select(
+            "id, offering_id, title, doc_type, body, requires_signature, sort_order, file_name, file_path, file_size_bytes",
+          )
           .in("offering_id", ids)
           .order("sort_order", { ascending: true })
       : { data: [] as any[] };
