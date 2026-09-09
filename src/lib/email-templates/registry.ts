@@ -8,6 +8,8 @@ import { template as managerAlert } from './manager-alert'
 import { template as investorWelcome } from './investor-welcome'
 import { template as ownershipUpdate } from './ownership-update'
 import { template as bankSetupRequest } from './bank-setup-request'
+import { template as opsReviewRequest } from './ops-review-request'
+import { template as opsReviewDecision } from './ops-review-decision'
 
 
 
@@ -38,5 +40,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'manager-alert': managerAlert,
   'investor-welcome': investorWelcome,
   'bank-setup-request': bankSetupRequest,
+  'ops-review-request': opsReviewRequest,
+  'ops-review-decision': opsReviewDecision,
 
 }
