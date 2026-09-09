@@ -40,6 +40,7 @@ import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
 import { Route as AuthenticatedManagerActivityRouteImport } from './routes/_authenticated/manager.activity'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
+import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authenticated/manager.inbox'
 import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_authenticated/manager.investors'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
@@ -227,6 +228,12 @@ const AuthenticatedManagerDocumentsRoute =
     path: '/manager/documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerInboxRoute =
+  AuthenticatedManagerInboxRouteImport.update({
+    id: '/manager/inbox',
+    path: '/manager/inbox',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerInvestorsRoute =
   AuthenticatedManagerInvestorsRouteImport.update({
     id: '/manager/investors',
@@ -358,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -407,6 +415,7 @@ export interface FileRoutesByTo {
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -459,6 +468,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/_authenticated/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/_authenticated/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -511,6 +521,7 @@ export interface FileRouteTypes {
     | '/manager/$applicationId'
     | '/manager/activity'
     | '/manager/documents'
+    | '/manager/inbox'
     | '/manager/investors'
     | '/manager/onboarding'
     | '/manager/timeline'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/manager/$applicationId'
     | '/manager/activity'
     | '/manager/documents'
+    | '/manager/inbox'
     | '/manager/investors'
     | '/manager/onboarding'
     | '/manager/timeline'
@@ -611,6 +623,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
     | '/_authenticated/manager/documents'
+    | '/_authenticated/manager/inbox'
     | '/_authenticated/manager/investors'
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/timeline'
@@ -870,6 +883,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/inbox': {
+      id: '/_authenticated/manager/inbox'
+      path: '/manager/inbox'
+      fullPath: '/manager/inbox'
+      preLoaderRoute: typeof AuthenticatedManagerInboxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/investors': {
       id: '/_authenticated/manager/investors'
       path: '/manager/investors'
@@ -1019,6 +1039,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
+  AuthenticatedManagerInboxRoute: typeof AuthenticatedManagerInboxRoute
   AuthenticatedManagerInvestorsRoute: typeof AuthenticatedManagerInvestorsRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
@@ -1055,6 +1076,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerApplicationIdRoute,
   AuthenticatedManagerActivityRoute: AuthenticatedManagerActivityRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
+  AuthenticatedManagerInboxRoute: AuthenticatedManagerInboxRoute,
   AuthenticatedManagerInvestorsRoute: AuthenticatedManagerInvestorsRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
