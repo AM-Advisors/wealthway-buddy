@@ -502,10 +502,22 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                             </Badge>
                           )}
                         </p>
-                        <p className="text-muted-foreground">
-                          Signed by {sig.signer_name} ·{" "}
-                          {new Date(sig.provider_completed_at ?? sig.signed_at).toLocaleString()}
-                        </p>
+                        {sig.provider_status && sig.provider_status !== "completed" ? (
+                          <p className="text-muted-foreground">
+                            Sent to {sig.signer_name}
+                            {sig.provider_sent_at
+                              ? ` · ${new Date(sig.provider_sent_at).toLocaleString()}`
+                              : ""}
+                            {sig.provider_viewed_at
+                              ? ` · opened ${new Date(sig.provider_viewed_at).toLocaleString()}`
+                              : " · not opened yet"}
+                          </p>
+                        ) : (
+                          <p className="text-muted-foreground">
+                            Signed by {sig.signer_name} ·{" "}
+                            {new Date(sig.provider_completed_at ?? sig.signed_at).toLocaleString()}
+                          </p>
+                        )}
                         {sig.provider === "box_sign" && sig.provider_agreement_id && (
                           <p className="break-all font-mono text-[11px] text-muted-foreground">
                             Box Sign request {sig.provider_agreement_id}
