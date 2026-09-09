@@ -129,7 +129,7 @@ function FundPage() {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl">{offering.name}</h1>
-            <Badge variant="secondary">Reg D {offering.reg_type === "506c" ? "506(c)" : "506(b)"}</Badge>
+            <Badge variant="secondary">{regTypeLabel(offering.reg_type)}</Badge>
             <Badge variant={offering.is_open ? "default" : "outline"}>
               {offering.is_open ? "Open" : "Closed"}
             </Badge>
