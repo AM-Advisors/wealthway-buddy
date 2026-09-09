@@ -355,7 +355,19 @@ function SetupPage() {
         </Card>
       )}
 
-      {step === 1 && (
+      {step === 1 && fundId && (
+        <div className="mt-8 grid gap-4">
+          <FundEntityCard fundId={fundId} />
+          <div className="flex justify-between">
+            <Button variant="ghost" onClick={() => setStep(0)}>
+              Back
+            </Button>
+            <Button onClick={() => setStep(2)}>Continue to documents</Button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Offering documents</CardTitle>
