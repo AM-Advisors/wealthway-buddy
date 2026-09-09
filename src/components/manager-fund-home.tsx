@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { regTypeLabel } from "@/lib/reg-types";
+import { FundComplianceCard } from "@/components/fund-compliance-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -422,6 +423,8 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
           )}
         </CardContent>
       </Card>
+
+      <FundComplianceCard offeringId={offeringId} />
     </main>
   );
 }
