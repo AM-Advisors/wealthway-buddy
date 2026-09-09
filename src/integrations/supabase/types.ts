@@ -2211,6 +2211,60 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_step_views: {
+        Row: {
+          application_id: string
+          created_at: string
+          first_viewed_at: string
+          id: string
+          last_viewed_at: string
+          offering_id: string
+          step: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          offering_id: string
+          step: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          offering_id?: string
+          step?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_step_views_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_step_views_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_cents: number
