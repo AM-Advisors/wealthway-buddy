@@ -162,6 +162,13 @@ function SignInPage() {
           Create your account
         </Link>
       </p>
+
+      <p className="mt-2 text-sm text-muted-foreground">
+        Fund manager?{" "}
+        <Link to="/manager-login" className="font-medium text-foreground hover:underline">
+          Sign in here
+        </Link>
+      </p>
     </div>
   );
 }

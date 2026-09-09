@@ -269,7 +269,7 @@ async function sendInvitationEmail(opts: {
       role: opts.role,
       invitedByName: opts.invitedByName,
       portalUrl,
-      signInUrl: `${PORTAL_ORIGIN}/auth`,
+      signInUrl: `${PORTAL_ORIGIN}${opts.role === "fund_manager" ? "/manager-login" : "/auth"}`,
     },
   });
   return result.sent;

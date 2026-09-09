@@ -495,3 +495,120 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/**
+ * Per-fund counts for the manager panel home: applications by stage, documents
+ * awaiting signature, wire confirmations awaiting review and open issue flags.
+ */
+export const getManagerPanelSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const roles = await assertReviewer(supabase, userId);
+    const isAdmin = roles.includes("admin");
+
+    let offeringIds: string[] | null = null;
+    if (!isAdmin) {
+      const { data: assignments, error } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      if (error) throw new Error(error.message);
+      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      if (offeringIds.length === 0) {
+        return { isAdmin, roles, email: (context.claims as any)?.email ?? null, funds: [] as any[] };
+      }
+    }
+
+    let fundQuery = supabase.from("offerings").select("id, name, reg_type, is_open").order("name");
+    if (offeringIds) fundQuery = fundQuery.in("id", offeringIds);
+    const { data: funds, error: fundsError } = await fundQuery;
+    if (fundsError) throw new Error(fundsError.message);
+
+    const ids = (funds ?? []).map((f: any) => f.id as string);
+    if (ids.length === 0) {
+      return { isAdmin, roles, email: (context.claims as any)?.email ?? null, funds: [] as any[] };
+    }
+
+    const [appsRes, flagsRes, docsRes] = await Promise.all([
+      supabase
+        .from("investor_applications")
+        .select(
+          "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
+        )
+        .in("offering_id", ids)
+        .limit(2000),
+      supabase
+        .from("application_flags")
+        .select("id, offering_id, status")
+        .in("offering_id", ids)
+        .eq("status", "open")
+        .limit(2000),
+      supabase
+        .from("offering_documents")
+        .select("id, offering_id, requires_signature")
+        .in("offering_id", ids)
+        .eq("requires_signature", true)
+        .limit(500),
+    ]);
+    if (appsRes.error) throw new Error(appsRes.error.message);
+
+    const applications = (appsRes.data ?? []) as any[];
+    const appIds = applications.map((a) => a.id as string);
+
+    const { data: wires } = appIds.length
+      ? await supabase
+          .from("wire_confirmations")
+          .select("id, application_id, status")
+          .in("application_id", appIds)
+          .eq("status", "pending")
+          .limit(2000)
+      : { data: [] as any[] };
+
+    const appOffering = new Map(applications.map((a) => [a.id as string, a.offering_id as string]));
+
+    const summary = (funds ?? []).map((fund: any) => {
+      const own = applications.filter((a) => a.offering_id === fund.id);
+      let identity = 0;
+      let accreditation = 0;
+      let documents = 0;
+      let funding = 0;
+      let complete = 0;
+      let committedCents = 0;
+      for (const app of own) {
+        committedCents += app.commitment_cents ?? 0;
+        if (app.funding_status === "settled") complete += 1;
+        else if (app.kyc_status !== "approved" || app.aml_status !== "approved") identity += 1;
+        else if (app.accreditation_status !== "approved") accreditation += 1;
+        else if (app.documents_status !== "approved") documents += 1;
+        else funding += 1;
+      }
+      return {
+        id: fund.id as string,
+        name: fund.name as string,
+        regType: fund.reg_type as string,
+        isOpen: Boolean(fund.is_open),
+        total: own.length,
+        identity,
+        accreditation,
+        documents,
+        funding,
+        complete,
+        committedCents,
+        signableDocuments: ((docsRes.data ?? []) as any[]).filter(
+          (d) => d.offering_id === fund.id,
+        ).length,
+        pendingWires: ((wires ?? []) as any[]).filter(
+          (w) => appOffering.get(w.application_id as string) === fund.id,
+        ).length,
+        openFlags: ((flagsRes.data ?? []) as any[]).filter((f) => f.offering_id === fund.id).length,
+      };
+    });
+
+    return {
+      isAdmin,
+      roles,
+      email: (context.claims as any)?.email ?? null,
+      funds: summary,
+    };
+  });
