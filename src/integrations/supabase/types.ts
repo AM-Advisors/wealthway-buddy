@@ -1832,6 +1832,60 @@ export type Database = {
           },
         ]
       }
+      investor_cap_positions: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          offering_id: string
+          ownership_pct_override: number | null
+          share_class: string
+          shares: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          offering_id: string
+          ownership_pct_override?: number | null
+          share_class?: string
+          shares?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          offering_id?: string
+          ownership_pct_override?: number | null
+          share_class?: string
+          shares?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_cap_positions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_cap_positions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_documents: {
         Row: {
           application_id: string
