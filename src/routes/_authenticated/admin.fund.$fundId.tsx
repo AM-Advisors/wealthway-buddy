@@ -228,6 +228,11 @@ function FundPage() {
         </CardContent>
       </Card>
 
+      <div className="mt-8">
+        <SignedDocumentsCard offeringId={offering.id} />
+      </div>
+
+
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Funding details</CardTitle>
