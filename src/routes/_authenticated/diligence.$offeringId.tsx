@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
-  DILIGENCE_CATEGORIES,
   ENTITY_TYPES,
   categoriesFor,
   entityTypeLabel,
@@ -500,14 +499,24 @@ function DocumentsTab({
         </Card>
       ) : null}
 
-      {roomCategories.map((cat) => {
+      {roomCategories.map((cat, index) => {
         const items = documents.filter((d) => d.category === cat.value);
         if (items.length === 0 && !cat.required) return null;
+        const newSection = index === 0 || roomCategories[index - 1]?.section !== cat.section;
         return (
-          <Card key={cat.value}>
+          <div key={cat.value} className="space-y-3">
+          {newSection ? (
+            <h2 className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {cat.section}
+            </h2>
+          ) : null}
+          <Card>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-lg">{cat.label}</CardTitle>
+                <div>
+                  <CardTitle className="text-lg">{cat.label}</CardTitle>
+                  {cat.hint ? <CardDescription>{cat.hint}</CardDescription> : null}
+                </div>
                 {items.length === 0 ? <Badge variant="outline">Pending</Badge> : null}
               </div>
             </CardHeader>
