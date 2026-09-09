@@ -299,3 +299,39 @@ export async function listFolderFiles(
       modified_at: String(e.modified_at ?? ""),
     }));
 }
+
+/**
+ * Lists every file inside a Box folder and its subfolders, keeping the
+ * subfolder path so the caller can guess which section a file belongs in.
+ */
+export async function listFolderTree(
+  folderId: string,
+  depth = 2,
+  path: string[] = [],
+): Promise<{ id: string; name: string; size: number; modified_at: string; created_at: string; path: string[] }[]> {
+  const res = await boxFetch(
+    `${API}/folders/${encodeURIComponent(folderId)}/items?fields=id,name,size,type,modified_at,created_at&limit=1000`,
+  );
+  const json = (await res.json()) as { entries: any[] };
+  const entries = json.entries ?? [];
+
+  const files = entries
+    .filter((e) => e.type === "file")
+    .map((e) => ({
+      id: String(e.id),
+      name: String(e.name),
+      size: Number(e.size ?? 0),
+      modified_at: String(e.modified_at ?? ""),
+      created_at: String(e.created_at ?? e.modified_at ?? ""),
+      path,
+    }));
+
+  if (depth <= 0) return files;
+
+  const nested = await Promise.all(
+    entries
+      .filter((e) => e.type === "folder")
+      .map((e) => listFolderTree(String(e.id), depth - 1, [...path, String(e.name)])),
+  );
+  return [...files, ...nested.flat()];
+}

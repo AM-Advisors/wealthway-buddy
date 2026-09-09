@@ -15,3 +15,6 @@
 - [x] Live walkthrough: fund created, docs uploaded, test investor walked room
 
 - [x] Manager onboarding document submission form with status tracking (/manager/onboarding)
+
+- [x] Manager-only diligence portal (/manager/diligence) with room traffic tracking
+- [x] Diligence room: "Sync from Box" button that pulls new files dropped in the Box folder into the portal with timestamps and alerts managers

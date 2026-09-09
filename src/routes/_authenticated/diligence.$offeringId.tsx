@@ -530,10 +530,18 @@ function DocumentsTab({
     queryClient.invalidateQueries({ queryKey: ["diligence-activity", offeringId] });
   }
 
+  const [lastSync, setLastSync] = useState<{ at: string; added: number; checked: number } | null>(
+    null,
+  );
   const syncMutation = useMutation({
     mutationFn: () => sync({ data: { offering_id: offeringId } }),
     onSuccess: (res: any) => {
-      toast.success(res.added > 0 ? `${res.added} file(s) pulled in` : "Everything is already listed");
+      setLastSync({ at: res.syncedAt, added: res.added, checked: res.checked });
+      toast.success(
+        res.added > 0
+          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in — your managers have been notified`
+          : "Everything in the folder is already listed",
+      );
       refresh();
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not check the folder."),
@@ -643,14 +651,23 @@ function DocumentsTab({
                 <CardTitle>Add a document</CardTitle>
                 <CardDescription>Stored securely and visible to investors right away.</CardDescription>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={syncMutation.isPending}
-                onClick={() => syncMutation.mutate()}
-              >
-                {syncMutation.isPending ? "Checking…" : "Pull in files from the folder"}
-              </Button>
+              <div className="text-right">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={syncMutation.isPending}
+                  onClick={() => syncMutation.mutate()}
+                >
+                  {syncMutation.isPending ? "Checking…" : "Sync from Box"}
+                </Button>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {lastSync
+                    ? `Checked ${lastSync.checked} file${lastSync.checked === 1 ? "" : "s"} at ${new Date(
+                        lastSync.at,
+                      ).toLocaleTimeString()} · ${lastSync.added} added`
+                    : "Brings in anything you dropped straight into the Box folder."}
+                </p>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
