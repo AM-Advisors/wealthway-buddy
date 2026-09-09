@@ -205,6 +205,16 @@ function FundPage() {
                   </Button>
                 </div>
               </div>
+              <div className="mt-3">
+                <OfferingDocumentFile
+                  documentId={doc.id}
+                  offeringId={offering.id}
+                  fileName={doc.file_name}
+                  fileSizeBytes={doc.file_size_bytes}
+                  canEdit
+                  onChanged={() => void queryClient.invalidateQueries({ queryKey: ["fund-page"] })}
+                />
+              </div>
               {openDoc === doc.id && (
                 <div className="mt-3 max-h-96 overflow-y-auto whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">
                   {bodyQuery.isLoading && "Loading document…"}
