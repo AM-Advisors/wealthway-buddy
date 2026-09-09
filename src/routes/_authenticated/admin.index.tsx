@@ -169,6 +169,15 @@ function AdminQueue() {
                   {app.commitment_cents
                     ? ` · $${(app.commitment_cents / 100).toLocaleString("en-US")} commitment`
                     : ""}
+                  {` · ${
+                    app.source === "fund_page"
+                      ? "via fund page"
+                      : app.source === "referral"
+                        ? "referral"
+                        : app.source === "admin"
+                          ? "opened by admin"
+                          : "portal"
+                  }`}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   <Badge variant={statusTone(app.kyc_status)}>KYC {prettyStatus(app.kyc_status)}</Badge>
