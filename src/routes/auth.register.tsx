@@ -54,6 +54,13 @@ function RegisterPage() {
     e.preventDefault();
     setBusy(true);
     try {
+      const check = await checkEligibility({ data: { email: email.trim() } });
+      if (!check.eligible) {
+        toast.error(
+          "We could not find a fund invitation for that email address. Ask your fund contact to invite you, or use the address your invitation was sent to.",
+        );
+        return;
+      }
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
