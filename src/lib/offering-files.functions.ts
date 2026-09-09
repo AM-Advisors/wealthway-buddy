@@ -128,5 +128,9 @@ export const getOfferingDocumentFileUrl = createServerFn({ method: "POST" })
     if (error || !signed?.signedUrl) {
       throw new Error(error?.message ?? "Could not prepare that download.");
     }
+
+    const { logLegalDocumentView } = await import("./legal-doc-views.server");
+    await logLegalDocumentView(context.supabase, context.userId, doc, "viewed");
+
     return { url: signed.signedUrl, fileName: doc.file_name as string | null };
   });
