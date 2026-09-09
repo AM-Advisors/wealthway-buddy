@@ -508,7 +508,10 @@ export function DiligenceQuestionBoard({
   canManage: boolean;
 }) {
   return canManage ? (
-    <ManagerBoard offeringId={offeringId} />
+    <div className="space-y-6">
+      <DiligenceQuestionScoreboard offeringId={offeringId} />
+      <ManagerBoard offeringId={offeringId} />
+    </div>
   ) : (
     <InvestorQuestions offeringId={offeringId} />
   );
