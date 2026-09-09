@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { decideWireAsReviewer, getFundInvestorReview } from "@/lib/manager.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
-import { syncFundSignatures } from "@/lib/box-sign.functions";
+import { archiveSignedDocument, syncFundSignatures } from "@/lib/box-sign.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
