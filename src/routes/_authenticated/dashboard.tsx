@@ -136,6 +136,14 @@ function Dashboard() {
     },
     refetchOnWindowFocus: true,
   });
+
+  const { data: uploadsData } = useQuery({
+    queryKey: ["my-uploads"],
+    queryFn: () => loadUploads(),
+    retry: false,
+  });
+  const myUploads = uploadsData?.uploads ?? [];
+
   const wireConfirmations = (funding?.wireConfirmations ?? []) as Array<{
     id: string;
     amount_cents: number;
