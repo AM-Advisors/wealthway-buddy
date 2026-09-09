@@ -111,49 +111,54 @@ export const getPitchDeck = createServerFn({ method: "POST" })
       .eq("offering_id", data.offering_id)
       .maybeSingle();
 
-    if (!deck) {
-      return {
-        canManage: manage,
-        deck: null as null | Record<string, unknown>,
-        slides: [] as PitchSlide[],
-        hasDownload: false,
-      };
-    }
-
-    const { data: rows } = await supabase
-      .from("pitch_deck_slides")
-      .select("id, position, heading, caption, image_path, image_name")
-      .eq("deck_id", deck.id)
-      .order("position", { ascending: true });
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    type DeckInfo = {
+      id: string;
+      title: string;
+      summary: string | null;
+      file_name: string | null;
+      file_size_bytes: number | null;
+      updated_at: string;
+    };
     const slides: PitchSlide[] = [];
-    for (const row of rows ?? []) {
-      const { data: signed } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .createSignedUrl(row.image_path, SIGNED_URL_SECONDS);
-      slides.push({
-        id: row.id,
-        position: row.position,
-        heading: row.heading,
-        caption: row.caption,
-        image_name: row.image_name,
-        image_url: signed?.signedUrl ?? null,
-      });
-    }
+    let info: DeckInfo | null = null;
 
-    return {
-      canManage: manage,
-      deck: {
+    if (deck) {
+      info = {
         id: deck.id,
         title: deck.title,
         summary: deck.summary,
         file_name: deck.deck_file_name,
         file_size_bytes: deck.deck_file_size_bytes,
         updated_at: deck.updated_at,
-      },
+      };
+
+      const { data: rows } = await supabase
+        .from("pitch_deck_slides")
+        .select("id, position, heading, caption, image_path, image_name")
+        .eq("deck_id", deck.id)
+        .order("position", { ascending: true });
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      for (const row of rows ?? []) {
+        const { data: signed } = await supabaseAdmin.storage
+          .from(BUCKET)
+          .createSignedUrl(row.image_path, SIGNED_URL_SECONDS);
+        slides.push({
+          id: row.id,
+          position: row.position,
+          heading: row.heading,
+          caption: row.caption,
+          image_name: row.image_name,
+          image_url: signed?.signedUrl ?? null,
+        });
+      }
+    }
+
+    return {
+      canManage: manage,
+      deck: info,
       slides,
-      hasDownload: Boolean(deck.deck_file_path),
+      hasDownload: Boolean(deck?.deck_file_path),
     };
   });
 
