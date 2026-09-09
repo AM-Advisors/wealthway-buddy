@@ -263,6 +263,18 @@ export const decideApplication = createServerFn({ method: "POST" })
       });
     }
 
+    const activity = await import("@/lib/reviewer-activity.server");
+    await activity.logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: await activity.offeringIdForApplication(supabase, data.applicationId),
+      action: "application_decision",
+      area: data.area,
+      outcome: data.decision === "review" ? "delayed" : data.decision,
+      summary: `${data.area} marked ${data.decision === "review" ? "needs more review" : data.decision}`,
+      note: data.notes || null,
+    });
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
@@ -547,6 +559,17 @@ export const decidePayment = createServerFn({ method: "POST" })
       .eq("id", data.applicationId);
     if (appError) throw new Error(appError.message);
 
+    const paymentActivity = await import("@/lib/reviewer-activity.server");
+    await paymentActivity.logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: await paymentActivity.offeringIdForApplication(supabase, data.applicationId),
+      action: "payment_decision",
+      area: "funding",
+      outcome: data.outcome === "settled" ? "approved" : "declined",
+      summary: `Payment marked ${data.outcome}`,
+    });
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
@@ -638,6 +661,21 @@ export const decideWireConfirmation = createServerFn({ method: "POST" })
       })
       .eq("id", data.applicationId);
     if (appError) throw new Error(appError.message);
+
+    const wireActivity = await import("@/lib/reviewer-activity.server");
+    await wireActivity.logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: await wireActivity.offeringIdForApplication(supabase, data.applicationId),
+      action: "wire_decision",
+      area: "wire",
+      outcome: data.outcome === "approved" ? "approved" : "declined",
+      summary:
+        data.outcome === "approved"
+          ? "Wire confirmation approved and funding marked received"
+          : "Wire confirmation sent back to the investor",
+      note: data.notes || null,
+    });
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };

@@ -279,6 +279,17 @@ export const raiseApplicationFlag = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    await (await import("@/lib/reviewer-activity.server")).logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: data.offeringId,
+      action: "flag_raised",
+      area: data.category,
+      outcome: "delayed",
+      summary: `Issue flagged (${data.severity}) on ${data.category}`,
+      note: data.note,
+    });
     return { id: row.id as string };
   });
 
@@ -294,6 +305,12 @@ export const resolveApplicationFlag = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
+    const { data: flag } = await supabase
+      .from("application_flags")
+      .select("application_id, offering_id, category")
+      .eq("id", data.flagId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("application_flags")
       .update({
@@ -304,6 +321,17 @@ export const resolveApplicationFlag = createServerFn({ method: "POST" })
       })
       .eq("id", data.flagId);
     if (error) throw new Error(error.message);
+
+    await (await import("@/lib/reviewer-activity.server")).logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: (flag?.application_id as string) ?? null,
+      offeringId: (flag?.offering_id as string) ?? null,
+      action: "flag_resolved",
+      area: (flag?.category as string) ?? null,
+      outcome: "resolved",
+      summary: "Issue flag resolved",
+      note: data.resolutionNote ?? null,
+    });
     return { ok: true };
   });
 
@@ -498,6 +526,20 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
       })
       .eq("id", data.applicationId);
     if (updateError) throw new Error(updateError.message);
+
+    await (await import("@/lib/reviewer-activity.server")).logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: application.offering_id as string,
+      action: "wire_decision",
+      area: "wire",
+      outcome: data.outcome === "approved" ? "approved" : "declined",
+      summary:
+        data.outcome === "approved"
+          ? "Wire confirmation approved and funding marked received"
+          : "Wire confirmation sent back to the investor",
+      note: data.notes || null,
+    });
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
