@@ -27,7 +27,7 @@ function InvestorMessage({
         <Container style={{ backgroundColor: '#ffffff', border: '1px solid #e6ecf3', borderTop: '4px solid #5DC6D1', margin: '0 auto', maxWidth: '560px', padding: '40px' }}>
           <Section style={{ marginBottom: '24px' }}>
             <Img
-              src="https://onboard.harmonious.co/__l5e/assets-v1/255a43e1-756d-4422-9ef7-a1a05d388140/logo-navy.png"
+              src="https://onboard.harmonious.co/__l5e/assets-v1/29f55aff-64f7-4942-b5e8-228bc90b9e96/logo-navy.png"
               alt="Harmonious"
               height={28}
               style={{ display: 'block', height: '28px', width: 'auto' }}
