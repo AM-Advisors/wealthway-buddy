@@ -145,18 +145,31 @@ export const getFundEntity = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false });
 
     const detail = (detailRow ?? {}) as any;
+    const einStatus = (detail.ein_review_status ?? "pending") as string;
+    const ss4Status = (detail.ss4_review_status ?? "pending") as string;
+    // Operations checks tax records before the fund team relies on them.
+    const einVisible = isAdmin || einStatus === "approved";
+    const ss4Visible = isAdmin || ss4Status === "approved";
 
     return {
       isAdmin,
       offering: offering as any,
       details: {
         has_ein: Boolean(detail.has_ein),
-        ein: (detail.ein ?? "") as string,
+        ein: einVisible ? ((detail.ein ?? "") as string) : "",
         ss4: (detail.ss4 ?? {}) as Record<string, string | boolean>,
         ss4_generated_at: (detail.ss4_generated_at ?? null) as string | null,
-        has_ss4_file: Boolean(detail.ss4_storage_path),
+        has_ss4_file: ss4Visible && Boolean(detail.ss4_storage_path),
+        ein_review_status: einStatus,
+        ss4_review_status: ss4Status,
+        review_note: (detail.review_note ?? null) as string | null,
+        reviewed_at: (detail.reviewed_at ?? null) as string | null,
+        withOperations: !einVisible || !ss4Visible,
       },
-      bankRequests: (bankRows ?? []) as any[],
+      bankRequests: ((bankRows ?? []) as any[]).map((r) => ({
+        ...r,
+        review_status: (r.review_status ?? "pending") as string,
+      })),
     };
   });
 
@@ -221,6 +234,27 @@ export const generateSs4 = createServerFn({ method: "POST" })
     });
     if (saveError) throw new Error(saveError.message);
 
+    try {
+      const { data: offering } = await context.supabase
+        .from("offerings")
+        .select("name")
+        .eq("id", data.offering_id)
+        .maybeSingle();
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      await sendTemplateEmail("ops-review-request", TEAM_EMAIL, {
+        templateData: {
+          itemLabel: "Form SS-4 and EIN",
+          fundName: ((offering as any)?.name as string) ?? "A fund",
+          detail: "A new Form SS-4 was generated and needs review.",
+          raisedBy: "A fund manager",
+          portalUrl: `${SITE}/ops/ss4`,
+        },
+        idempotencyKey: `ops-ss4-${path}`,
+      });
+    } catch (err) {
+      console.error("operations SS-4 email failed", err);
+    }
+
     const { data: signed } = await supabaseAdmin.storage
       .from("fund-formation")
       .createSignedUrl(path, 300);
@@ -232,13 +266,16 @@ export const getSs4Url = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
-    await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const isAdmin = await assertCanManageFund(context.supabase, context.userId, data.offering_id);
 
     const { data: detailRow } = await context.supabase
       .rpc("get_offering_entity_details", { p_offering_id: data.offering_id })
       .maybeSingle();
     const path = (detailRow as any)?.ss4_storage_path as string | undefined;
     if (!path) throw new Error("No form has been generated for this fund yet.");
+    if (!isAdmin && ((detailRow as any)?.ss4_review_status ?? "pending") !== "approved") {
+      throw new Error("This form is with the operations team for review.");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: signed, error } = await supabaseAdmin.storage

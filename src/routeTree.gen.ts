@@ -87,10 +87,16 @@ import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authen
 import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
 import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_authenticated/onboarding.funding'
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
+import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
+import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
+import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
+import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
+import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
+import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
@@ -540,6 +546,32 @@ const AuthenticatedOnboardingKycRoute =
     path: '/onboarding/kyc',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsIndexRoute = AuthenticatedOpsIndexRouteImport.update({
+  id: '/ops/',
+  path: '/ops/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
+  id: '/ops/banking',
+  path: '/ops/banking',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
+  id: '/ops/ss4',
+  path: '/ops/ss4',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOpsTaxDocumentsRoute =
+  AuthenticatedOpsTaxDocumentsRouteImport.update({
+    id: '/ops/tax-documents',
+    path: '/ops/tax-documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsTeamRoute = AuthenticatedOpsTeamRouteImport.update({
+  id: '/ops/team',
+  path: '/ops/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicLoginAttemptRoute = ApiPublicLoginAttemptRouteImport.update({
   id: '/api/public/login-attempt',
   path: '/api/public/login-attempt',
@@ -560,6 +592,12 @@ const AuthenticatedAdminPacketFundIdRoute =
   AuthenticatedAdminPacketFundIdRouteImport.update({
     id: '/admin/packet/$fundId',
     path: '/admin/packet/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsFundsFundIdRoute =
+  AuthenticatedOpsFundsFundIdRouteImport.update({
+    id: '/ops/funds/$fundId',
+    path: '/ops/funds/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
@@ -675,13 +713,19 @@ export interface FileRoutesByFullPath {
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
+  '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
+  '/ops/': typeof AuthenticatedOpsIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
@@ -764,13 +808,19 @@ export interface FileRoutesByTo {
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
+  '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
+  '/ops': typeof AuthenticatedOpsIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
@@ -856,13 +906,19 @@ export interface FileRoutesById {
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/_authenticated/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
+  '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
+  '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
@@ -948,13 +1004,19 @@ export interface FileRouteTypes {
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/ops/banking'
+    | '/ops/ss4'
+    | '/ops/tax-documents'
+    | '/ops/team'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin/'
     | '/diligence/'
     | '/manager/'
+    | '/ops/'
     | '/admin/fund/$fundId'
     | '/admin/packet/$fundId'
+    | '/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/notify/drain'
@@ -1037,13 +1099,19 @@ export interface FileRouteTypes {
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/ops/banking'
+    | '/ops/ss4'
+    | '/ops/tax-documents'
+    | '/ops/team'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin'
     | '/diligence'
     | '/manager'
+    | '/ops'
     | '/admin/fund/$fundId'
     | '/admin/packet/$fundId'
+    | '/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/notify/drain'
@@ -1128,13 +1196,19 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding/documents'
     | '/_authenticated/onboarding/funding'
     | '/_authenticated/onboarding/kyc'
+    | '/_authenticated/ops/banking'
+    | '/_authenticated/ops/ss4'
+    | '/_authenticated/ops/tax-documents'
+    | '/_authenticated/ops/team'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
     | '/_authenticated/diligence/'
     | '/_authenticated/manager/'
+    | '/_authenticated/ops/'
     | '/_authenticated/admin/fund/$fundId'
     | '/_authenticated/admin/packet/$fundId'
+    | '/_authenticated/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/notify/drain'
@@ -1715,6 +1789,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingKycRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/': {
+      id: '/_authenticated/ops/'
+      path: '/ops'
+      fullPath: '/ops/'
+      preLoaderRoute: typeof AuthenticatedOpsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/banking': {
+      id: '/_authenticated/ops/banking'
+      path: '/ops/banking'
+      fullPath: '/ops/banking'
+      preLoaderRoute: typeof AuthenticatedOpsBankingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/ss4': {
+      id: '/_authenticated/ops/ss4'
+      path: '/ops/ss4'
+      fullPath: '/ops/ss4'
+      preLoaderRoute: typeof AuthenticatedOpsSs4RouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/tax-documents': {
+      id: '/_authenticated/ops/tax-documents'
+      path: '/ops/tax-documents'
+      fullPath: '/ops/tax-documents'
+      preLoaderRoute: typeof AuthenticatedOpsTaxDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/team': {
+      id: '/_authenticated/ops/team'
+      path: '/ops/team'
+      fullPath: '/ops/team'
+      preLoaderRoute: typeof AuthenticatedOpsTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/login-attempt': {
       id: '/api/public/login-attempt'
       path: '/api/public/login-attempt'
@@ -1741,6 +1850,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/packet/$fundId'
       fullPath: '/admin/packet/$fundId'
       preLoaderRoute: typeof AuthenticatedAdminPacketFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/funds/$fundId': {
+      id: '/_authenticated/ops/funds/$fundId'
+      path: '/ops/funds/$fundId'
+      fullPath: '/ops/funds/$fundId'
+      preLoaderRoute: typeof AuthenticatedOpsFundsFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/email/click': {
@@ -1857,11 +1973,17 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
   AuthenticatedOnboardingFundingRoute: typeof AuthenticatedOnboardingFundingRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
+  AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
+  AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
+  AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
+  AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
+  AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
   AuthenticatedAdminPacketFundIdRoute: typeof AuthenticatedAdminPacketFundIdRoute
+  AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1932,11 +2054,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingDocumentsRoute: AuthenticatedOnboardingDocumentsRoute,
   AuthenticatedOnboardingFundingRoute: AuthenticatedOnboardingFundingRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
+  AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
+  AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
+  AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
+  AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
+  AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
   AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
   AuthenticatedAdminPacketFundIdRoute: AuthenticatedAdminPacketFundIdRoute,
+  AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

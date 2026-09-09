@@ -35,6 +35,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { getAdminAccess } from "@/lib/admin.functions";
+import { getOperationsAccess } from "@/lib/operations.functions";
 import { getNavState } from "@/lib/nav.functions";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,14 @@ const managerItems: NavItem[] = [
 
   { title: "Fund pages", url: "/admin/funds", icon: Building2 },
   { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
+];
+
+const operationsItems: NavItem[] = [
+  { title: "Operations", url: "/ops", icon: ShieldCheck },
+  { title: "Banking requests", url: "/ops/banking", icon: Landmark },
+  { title: "EIN and SS-4", url: "/ops/ss4", icon: FileText },
+  { title: "Tax documents", url: "/ops/tax-documents", icon: FileText },
+  { title: "Operations team", url: "/ops/team", icon: Users },
 ];
 
 const adminItems: NavItem[] = [
@@ -92,9 +101,14 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
   const navState = useServerFn(getNavState);
   const { data: adminAccess } = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const { data: nav } = useQuery({ queryKey: ["nav-state"], queryFn: () => navState() });
+  const opsAccess = useServerFn(getOperationsAccess);
+  const { data: operations } = useQuery({
+    queryKey: ["operations-access"],
+    queryFn: () => opsAccess(),
+  });
 
   const isActive = (url: string) =>
-    url === "/admin" || url === "/manager" || url === "/diligence"
+    url === "/admin" || url === "/manager" || url === "/diligence" || url === "/ops"
       ? pathname === url
       : pathname === url || pathname.startsWith(`${url}/`);
 
@@ -178,6 +192,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         )}
 
         {adminAccess?.isReviewer && renderGroup("Fund management", managerItems)}
+        {operations?.allowed && renderGroup("Operations", operationsItems)}
         {adminAccess?.isAdmin && renderGroup("Administration", adminItems)}
       </SidebarContent>
 
