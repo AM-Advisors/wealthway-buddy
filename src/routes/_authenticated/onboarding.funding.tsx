@@ -1,3 +1,4 @@
+import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -56,6 +57,7 @@ const ACH_STATEMENTS = [
 ];
 
 function FundingStep() {
+  useStepView("funding");
   const queryClient = useQueryClient();
   const load = useServerFn(getFunding);
   const wire = useServerFn(chooseWire);

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { getBoxSigningFunnel, getOnboardingFunnel } from "@/lib/funnel.functions";
+import { getStepEngagement } from "@/lib/step-tracking.functions";
 import { getManagerFunds } from "@/lib/manager.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ function FunnelPage() {
   const loadFunnel = useServerFn(getOnboardingFunnel);
   const loadFunds = useServerFn(getManagerFunds);
   const loadBox = useServerFn(getBoxSigningFunnel);
+  const loadSteps = useServerFn(getStepEngagement);
 
   const [days, setDays] = useState(90);
   const [offeringId, setOfferingId] = useState<string | null>(null);
@@ -55,6 +57,12 @@ function FunnelPage() {
     queryFn: () => loadBox({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
   });
 
+  const stepsQuery = useQuery({
+    queryKey: ["onboarding-step-engagement", offeringId, days],
+    queryFn: () => loadSteps({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
+  });
+
+  const stepData = stepsQuery.data;
   const funds = fundsQuery.data?.funds ?? [];
   const data = funnelQuery.data;
   const top = data?.steps?.[0]?.count ?? 0;
@@ -105,6 +113,72 @@ function FunnelPage() {
           </Button>
         ))}
       </div>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="text-base">Step by step</CardTitle>
+          <CardDescription>
+            How many investors opened each onboarding step and how many finished it. Opens are counted
+            from the moment this tracking was switched on.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {stepsQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : stepsQuery.isError || !stepData ? (
+            <p className="text-sm text-muted-foreground">This report is unavailable right now.</p>
+          ) : stepData.total === 0 ? (
+            <p className="text-sm text-muted-foreground">No investors in this period yet.</p>
+          ) : (
+            stepData.steps.map((step: any) => (
+              <div key={step.key} className="rounded-lg border p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-medium">{step.label}</span>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <Badge variant="outline">
+                      {step.opened} of {stepData.total} opened · {step.openRate}%
+                    </Badge>
+                    <Badge variant="outline">
+                      {step.completed} finished · {step.completionRate}% of those who opened
+                    </Badge>
+                    {step.neverOpened > 0 ? (
+                      <Badge variant="secondary">{step.neverOpened} never opened</Badge>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="mt-3 h-2 w-full overflow-hidden rounded bg-muted">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${Math.min(100, step.openRate)}%` }}
+                  />
+                </div>
+                {step.stuckCount > 0 ? (
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm text-muted-foreground">
+                      {step.stuckCount} opened but have not finished
+                    </summary>
+                    <ul className="mt-2 space-y-1 text-sm">
+                      {step.stuck.map((p: any) => (
+                        <li key={p.applicationId} className="flex flex-wrap justify-between gap-2">
+                          <span>{p.name || p.email || "Investor"}</span>
+                          <span className="text-muted-foreground">
+                            {p.opens} visit{p.opens === 1 ? "" : "s"}
+                            {p.lastViewedAt
+                              ? ` · last ${new Date(p.lastViewedAt).toLocaleString()}`
+                              : ""}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+
 
       {funnelQuery.isLoading ? (
         <p className="mt-8 text-sm text-muted-foreground">Loading funnel…</p>

@@ -1,3 +1,4 @@
+import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -76,6 +77,7 @@ const INITIAL: State = {
 };
 
 function AmlPage() {
+  useStepView("aml");
   const navigate = useNavigate();
   const load = useServerFn(getOnboarding);
   const save = useServerFn(submitAml);
