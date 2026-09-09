@@ -43,7 +43,7 @@ function DocumentSigned({
         <Container style={{ backgroundColor: '#ffffff', border: '1px solid #e6ecf3', borderTop: '4px solid #5DC6D1', margin: '0 auto', maxWidth: '560px', padding: '40px' }}>
           <Section style={{ marginBottom: '24px' }}>
             <Img
-              src="https://onboard.harmonious.co/__l5e/assets-v1/29f55aff-64f7-4942-b5e8-228bc90b9e96/logo-navy.png"
+              src="https://onboard.harmonious.co/__l5e/assets-v1/7e6bcfbb-6598-4382-8118-886eb02957e5/logo-navy.png"
               alt="Harmonious"
               height={28}
               style={{ display: 'block', height: '28px', width: 'auto' }}
