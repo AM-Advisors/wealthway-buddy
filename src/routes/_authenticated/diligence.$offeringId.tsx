@@ -111,6 +111,16 @@ function DiligenceRoomPage() {
 
   const [signer, setSigner] = useState("");
 
+  // Record that this person actually opened the room (once per page visit; the
+  // server keeps at most one entry per 30 minutes).
+  const visit = useServerFn(recordRoomVisit);
+  const visitLogged = useRef(false);
+  useEffect(() => {
+    if (visitLogged.current || gated || !access.isSuccess) return;
+    visitLogged.current = true;
+    void visit({ data: { offering_id: offeringId } }).catch(() => {});
+  }, [access.isSuccess, gated, offeringId, visit]);
+
   const acceptMutation = useMutation({
     mutationFn: () => acceptNda({ data: { offering_id: offeringId, signer_name: signer.trim() } }),
     onSuccess: () => {
