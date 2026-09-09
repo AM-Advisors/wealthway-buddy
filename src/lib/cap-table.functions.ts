@@ -335,13 +335,10 @@ async function assertCanManage(supabase: any, offeringId: string) {
   if (!data) throw new Error("Forbidden: you do not manage this fund.");
 }
 
-/** Every investor position in one fund, with the numbers a manager can edit. */
-export const getCapTableEditor = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
-  .handler(async ({ data, context }) => {
-    await assertCanManage(context.supabase, data.offering_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+/** Builds one fund's editable cap table. Callers must authorise first. */
+async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string }) {
+  {
+
 
     const { data: offering } = await supabaseAdmin
       .from("offerings")
