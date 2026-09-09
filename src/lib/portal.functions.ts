@@ -30,7 +30,7 @@ export const getPortal = createServerFn({ method: "GET" })
     const { data: application } = await supabase
       .from("investor_applications")
       .select(
-        "id, offering_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, created_at, updated_at",
+        "id, offering_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, manager_review_status, manager_reviewed_at, manager_review_notes, created_at, updated_at",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: true })
@@ -47,6 +47,8 @@ export const getPortal = createServerFn({ method: "GET" })
         subscription: null,
         payment: null,
         kyc: null,
+        questions: [] as PortalQuestion[],
+        wireConfirmations: [] as PortalWireConfirmation[],
         wireInstructions: {} as Record<string, string>,
       };
     }
