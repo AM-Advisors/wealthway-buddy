@@ -120,15 +120,31 @@ export interface BoxSignRequest {
   status: string;
   signingUrl: string | null;
   signedFileId: string | null;
+  /** True once the signer has opened the document in Box. */
+  viewed: boolean;
+  /** When Box first recorded the signer opening or acting on the request. */
+  viewedAt: string | null;
 }
 
 function parseSignRequest(json: any): BoxSignRequest {
   const signer = (json?.signers ?? []).find((s: any) => s.role === "signer") ?? json?.signers?.[0];
+  const signerStatus = String(signer?.signer_decision?.type ?? "").toLowerCase();
+  const requestStatus = String(json?.status ?? "unknown").toLowerCase();
+  const viewed =
+    Boolean(signer?.has_viewed_document) ||
+    signerStatus === "viewed" ||
+    signerStatus === "signed" ||
+    requestStatus === "viewed" ||
+    requestStatus === "signed" ||
+    requestStatus === "completed";
+  const finalizedAt = signer?.signer_decision?.finalized_at ?? null;
   return {
     id: String(json?.id ?? ""),
     status: String(json?.status ?? "unknown"),
     signingUrl: signer?.embed_url ?? signer?.iframeable_embed_url ?? null,
     signedFileId: json?.sign_files?.files?.[0]?.id ?? null,
+    viewed,
+    viewedAt: finalizedAt ? new Date(finalizedAt).toISOString() : null,
   };
 }
 
