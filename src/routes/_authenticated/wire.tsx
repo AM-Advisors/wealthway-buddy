@@ -123,7 +123,7 @@ function WirePage() {
                     size="icon"
                     variant="ghost"
                     aria-label={`Copy ${WIRE_LABEL[key]}`}
-                    onClick={() => copy(value, WIRE_LABEL[key])}
+                    onClick={() => copy(value, WIRE_LABEL[key] ?? key)}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
