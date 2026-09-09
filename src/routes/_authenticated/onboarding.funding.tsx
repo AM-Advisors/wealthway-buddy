@@ -2,8 +2,10 @@ import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import { supabase } from "@/integrations/supabase/client";
 
 import {
   acknowledgeFunding,
@@ -65,7 +67,33 @@ function FundingStep() {
   const ach = useServerFn(startAchDebit);
   const acknowledge = useServerFn(acknowledgeFunding);
 
-  const { data, isLoading } = useQuery({ queryKey: ["funding"], queryFn: () => load() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["funding"],
+    queryFn: () => load(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+
+  // Live updates: the committed capital picture and this investor's own funding
+  // state change when payments settle or a wire confirmation is reviewed.
+  useEffect(() => {
+    const refresh = () => {
+      void queryClient.invalidateQueries({ queryKey: ["funding"] });
+    };
+    const channel = supabase
+      .channel("funding-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "wire_confirmations" }, refresh)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "investor_applications" },
+        refresh,
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
   const [method, setMethodState] = useState<"wire" | "ach">("wire");
   const [checked, setChecked] = useState<boolean[]>([false, false, false]);
   const setMethod = (v: "wire" | "ach") => {
@@ -168,6 +196,8 @@ function FundingStep() {
       ? (wireConfirmations.find((w) => w.status === "rejected") ?? null)
       : null;
 
+  const bankDetailsMissing = method === "wire" && Object.keys(instructions).length === 0;
+
   const copyInstructions = async () => {
     const lines = Object.entries(instructions).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`);
     lines.push(`reference: ${reference}`, `amount: ${money(app?.commitment_cents)}`);
@@ -187,6 +217,13 @@ function FundingStep() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
+        {bankDetailsMissing && (
+          <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
+            This fund has not published its bank details yet. Please contact the fund team before sending
+            money — you will be able to continue as soon as the details appear here.
+          </p>
+        )}
+
         {staleAck && (
           <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
             The funding details for this fund have changed since you last confirmed them. Please review and
@@ -244,7 +281,12 @@ function FundingStep() {
         <div className="flex flex-wrap gap-3">
           <Button
             onClick={() => acknowledgeMutation.mutate(method)}
-            disabled={!allChecked || acknowledgeMutation.isPending || chooseWireMutation.isPending}
+            disabled={
+              !allChecked ||
+              bankDetailsMissing ||
+              acknowledgeMutation.isPending ||
+              chooseWireMutation.isPending
+            }
           >
             {acknowledgeMutation.isPending ? "Confirming…" : "Confirm and continue"}
           </Button>
