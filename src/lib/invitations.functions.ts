@@ -482,7 +482,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
       .update({ last_sent_at: new Date().toISOString() })
       .eq("id", data.id);
 
-    return { sent: result.sent };
+    return { sent };
   });
 
 /** Cancel an invitation and remove the access it granted. */
