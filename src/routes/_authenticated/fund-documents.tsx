@@ -98,12 +98,17 @@ function FundDocumentsPage() {
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-4 py-10">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Fund legal documents</h1>
-        <p className="text-sm text-muted-foreground">
-          Read everything here before you confirm how much you are committing. You can also send
-          back your own paperwork from this page.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight">Fund legal documents</h1>
+          <p className="text-sm text-muted-foreground">
+            Read everything here before you confirm how much you are committing. You can also send
+            back your own paperwork from this page.
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/fund-memo">Offering memo</Link>
+        </Button>
       </header>
 
       {funds.length === 0 ? (

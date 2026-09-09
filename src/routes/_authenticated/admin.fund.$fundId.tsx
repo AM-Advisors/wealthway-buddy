@@ -143,6 +143,9 @@ function FundPage() {
             </Link>
           </Button>
           <Button asChild size="sm" variant="outline">
+            <Link to="/admin/memo">Offering memo</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
             <Link to="/admin/access">Fund access</Link>
           </Button>
           <Button asChild size="sm" variant="outline">
