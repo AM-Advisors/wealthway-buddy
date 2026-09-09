@@ -336,7 +336,18 @@ export const deleteOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { data: target } = await context.supabase
+      .from("offering_documents")
+      .select("offering_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!target) throw new Error("Document not found.");
+    await assertCanEditOffering(
+      context.supabase,
+      context.userId,
+      (target as any).offering_id as string,
+    );
+
 
     const { count } = await context.supabase
       .from("document_signatures")
