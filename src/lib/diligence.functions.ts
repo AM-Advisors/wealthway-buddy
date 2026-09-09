@@ -131,13 +131,15 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
     return {
       rooms: (rooms ?? []).map((r: any) => {
         const mine = (docs ?? []).filter((d: any) => d.room_id === r.id) as DiligenceDocument[];
+        const entityType = normalizeEntityType(r.entity_type);
         return {
           id: r.id,
           offering_id: r.offering_id,
           name: r.offerings?.name ?? "Fund",
           reg_type: r.offerings?.reg_type ?? null,
+          entity_type: entityType,
           document_count: mine.length,
-          readiness: readiness(mine),
+          readiness: readiness(mine, entityType),
         };
       }),
     };
