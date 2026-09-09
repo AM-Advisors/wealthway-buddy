@@ -1,11 +1,14 @@
 import { Body, Container, Head, Heading, Hr, Html, Img, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { OpenPixel } from './pixel'
 
 interface InvestorMessageProps {
   investorName?: string
   subject?: string
   body?: string
   offeringName?: string
+  /** Signed open-tracking pixel URL. */
+  pixelUrl?: string
 }
 
 function InvestorMessage({
@@ -13,6 +16,7 @@ function InvestorMessage({
   subject = 'Update on your investment application',
   body = '',
   offeringName = 'Harmonious',
+  pixelUrl,
 }: InvestorMessageProps) {
   const paragraphs = body.split(/\n{2,}/).filter(Boolean)
   return (
@@ -44,6 +48,7 @@ function InvestorMessage({
           <Text style={{ color: '#606060', fontSize: '12px', lineHeight: '18px' }}>
             You are receiving this message regarding your investment application with {offeringName}.
           </Text>
+          <OpenPixel url={pixelUrl} />
         </Container>
       </Body>
     </Html>
