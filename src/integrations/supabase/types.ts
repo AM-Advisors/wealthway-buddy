@@ -310,6 +310,116 @@ export type Database = {
           },
         ]
       }
+      bank_accounts: {
+        Row: {
+          account_mask: string | null
+          account_name: string | null
+          created_at: string
+          created_by: string
+          id: string
+          institution_name: string | null
+          item_id: string
+          last_synced_at: string | null
+          offering_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_mask?: string | null
+          account_name?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          institution_name?: string | null
+          item_id: string
+          last_synced_at?: string | null
+          offering_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_mask?: string | null
+          account_name?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          institution_name?: string | null
+          item_id?: string
+          last_synced_at?: string | null
+          offering_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transactions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          description: string | null
+          id: string
+          matched_application_id: string | null
+          matched_at: string | null
+          matched_by: string | null
+          name: string
+          offering_id: string
+          plaid_transaction_id: string
+          posted_on: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          matched_application_id?: string | null
+          matched_at?: string | null
+          matched_by?: string | null
+          name: string
+          offering_id: string
+          plaid_transaction_id: string
+          posted_on: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          matched_application_id?: string | null
+          matched_at?: string | null
+          matched_by?: string | null
+          name?: string
+          offering_id?: string
+          plaid_transaction_id?: string
+          posted_on?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_matched_application_id_fkey"
+            columns: ["matched_application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       closing_documents: {
         Row: {
           application_id: string
@@ -2795,6 +2905,10 @@ export type Database = {
         Args: { _document_id: string }
         Returns: boolean
       }
+      get_bank_access_token: {
+        Args: { p_offering_id: string }
+        Returns: string
+      }
       get_wire_instructions: {
         Args: { p_offering_id: string }
         Returns: {
@@ -2814,6 +2928,16 @@ export type Database = {
           offering_id: string
           updated_at: string
         }[]
+      }
+      remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
+      save_bank_link: {
+        Args: {
+          p_access_token: string
+          p_institution: string
+          p_item_id: string
+          p_offering_id: string
+        }
+        Returns: undefined
       }
       save_wire_instructions: {
         Args: { p_details: Json; p_offering_id: string }
