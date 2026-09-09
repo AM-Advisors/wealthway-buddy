@@ -283,6 +283,32 @@ function Portal() {
         </Card>
       ) : (
         <div className="mt-8 space-y-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <PortalHomeLink
+              title="Wire confirmation"
+              description="Tell the fund your wire is on its way."
+              to="/wire-confirmation"
+            />
+            <PortalHomeLink
+              title="Messages"
+              description="A private line to the fund team."
+              href="#portal-messages"
+            />
+            {app.offering_id ? (
+              <PortalHomeLink
+                title="Cap table"
+                description="Your ownership in the fund's room."
+                to="/diligence/$offeringId"
+                params={{ offeringId: app.offering_id as string }}
+              />
+            ) : null}
+            <PortalHomeLink
+              title="Portfolio value"
+              description="What your shares are worth today."
+              to="/my-portfolio"
+            />
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Your fund commitments</CardTitle>
@@ -855,7 +881,7 @@ function Portal() {
           </Card>
 
           {app?.id ? (
-            <Card>
+            <Card id="portal-messages" className="scroll-mt-24">
               <CardHeader>
                 <CardTitle>Messages</CardTitle>
                 <CardDescription>
@@ -873,6 +899,41 @@ function Portal() {
         </div>
       )}
     </main>
+  );
+}
+
+function PortalHomeLink({
+  title,
+  description,
+  to,
+  params,
+  href,
+}: {
+  title: string;
+  description: string;
+  to?: string;
+  params?: Record<string, string>;
+  href?: string;
+}) {
+  const body = (
+    <>
+      <p className="font-medium">{title}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+    </>
+  );
+  const className =
+    "block rounded-lg border p-4 transition hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  if (to) {
+    return (
+      <Link to={to} params={params as never} className={className}>
+        {body}
+      </Link>
+    );
+  }
+  return (
+    <a href={href} className={className}>
+      {body}
+    </a>
   );
 }
 
