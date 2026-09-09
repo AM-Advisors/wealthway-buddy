@@ -223,6 +223,7 @@ function DiligenceRoomPage() {
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
+          {canManage ? <TabsTrigger value="engagement">Who's viewing</TabsTrigger> : null}
           {canManage ? <TabsTrigger value="settings">Agreement</TabsTrigger> : null}
         </TabsList>
 
@@ -238,6 +239,11 @@ function DiligenceRoomPage() {
         <TabsContent value="activity" className="mt-6">
           <ActivityTab offeringId={offeringId} />
         </TabsContent>
+        {canManage ? (
+          <TabsContent value="engagement" className="mt-6">
+            <EngagementTab offeringId={offeringId} />
+          </TabsContent>
+        ) : null}
         {canManage ? (
           <TabsContent value="settings" className="mt-6">
             <NdaSettings offeringId={offeringId} access={a} />
