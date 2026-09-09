@@ -175,10 +175,8 @@ function ManagerDocumentsPage() {
             </p>
           )}
           {documents.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
-            >
+            <div key={doc.id} className="space-y-3 rounded-md border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium">{doc.title}</p>
                 <p className="text-xs text-muted-foreground">
