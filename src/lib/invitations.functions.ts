@@ -274,7 +274,7 @@ async function sendInvitationEmail(opts: {
       role: opts.role,
       invitedByName: opts.invitedByName,
       portalUrl,
-      signInUrl: `${PORTAL_ORIGIN}${opts.role === "fund_manager" ? "/manager-login" : "/auth"}`,
+      signInUrl: `${PORTAL_ORIGIN}/auth`,
       pixelUrl,
     },
   });
