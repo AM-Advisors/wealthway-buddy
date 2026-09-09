@@ -77,6 +77,8 @@ function toForm(o: any): OfferingForm {
     target_raise: o.target_raise_cents ? String(o.target_raise_cents / 100) : "",
     wire_fee: o.wire_fee_cents ? String(o.wire_fee_cents / 100) : "",
     closing_cost: o.closing_cost_cents ? String(o.closing_cost_cents / 100) : "",
+    share_price: o.share_price_cents ? String(o.share_price_cents / 100) : "",
+
     is_open: Boolean(o.is_open),
     wire: {
       ...emptyWire(),
@@ -96,6 +98,8 @@ const blankForm = (): OfferingForm => ({
   target_raise: "",
   wire_fee: "",
   closing_cost: "",
+  share_price: "",
+
   is_open: true,
   wire: emptyWire(),
 });
