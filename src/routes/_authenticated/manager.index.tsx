@@ -52,7 +52,12 @@ const TOOLS = [
   { to: "/manager/documents", title: "Fund documents", blurb: "Add and edit what investors sign." },
   { to: "/admin/wire", title: "Wire instructions", blurb: "Keep bank details current." },
   { to: "/admin/funds", title: "Fund pages", blurb: "Fund detail, packets and change history." },
-  { to: "/diligence", title: "Due diligence rooms", blurb: "Materials, checklist and investor Q&A." },
+  {
+    to: "/manager/diligence",
+    title: "Diligence rooms",
+    blurb: "Upload fund materials and sort them into the sections investors expect.",
+  },
+  { to: "/diligence", title: "Investor view of diligence", blurb: "Materials, checklist and investor Q&A." },
 ] as const;
 
 function ManagerPanel() {

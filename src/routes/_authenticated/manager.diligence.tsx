@@ -10,7 +10,7 @@ import {
   listManagedDiligenceRooms,
   removeDiligenceDocument,
 } from "@/lib/diligence.functions";
-import { categoriesFor, categoryLabel } from "@/lib/diligence-templates";
+import { categoriesFor } from "@/lib/diligence-templates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -316,7 +316,7 @@ function FundPanel({ fund }: { fund: any }) {
             <div key={group.value}>
               <div className="flex items-center justify-between">
                 <p className="text-sm">
-                  {categoryLabel(group.value)}
+                  {group.label}
                   {group.required ? <span className="text-muted-foreground"> · core</span> : null}
                 </p>
                 <span className="text-xs text-muted-foreground">

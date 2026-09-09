@@ -145,6 +145,9 @@ function FundPage() {
               Diligence room
             </Link>
           </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/manager/diligence">Manage diligence materials</Link>
+          </Button>
           {isAdmin && (
             <Button asChild size="sm" variant="outline">
               <Link to="/admin/funds">Edit in fund setup</Link>
