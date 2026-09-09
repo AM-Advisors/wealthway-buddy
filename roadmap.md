@@ -8,3 +8,5 @@
 - [x] Google Search Console: verify onboard.harmonious.co, submit sitemap
 - [x] Admin-submitted investor application form with status tracking (investors apply for real funds)
 
+
+- [ ] Cap table: live cap table data in the Due Diligence Capitalization section (no file upload needed)
