@@ -746,7 +746,64 @@ function Portal() {
           </Card>
 
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Documents you sent us</CardTitle>
+              <CardDescription>
+                Files you uploaded for this fund and where they stand with the team.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(data?.uploads?.length ?? 0) === 0 ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    You have not sent us any files for this fund yet.
+                  </p>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/documents">Upload a document</Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {(data?.uploads ?? []).map((u) => (
+                    <div
+                      key={u.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium">{u.file_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {u.doc_kind.replace(/_/g, " ")} · sent{" "}
+                          {new Date(u.uploaded_at).toLocaleDateString()}
+                          {u.filed_at ? " · filed in the shared folder" : ""}
+                          {u.review_note ? ` · ${u.review_note}` : ""}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          u.review_status === "accepted"
+                            ? "default"
+                            : u.review_status === "needs_followup"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
+                        {u.review_status === "accepted"
+                          ? "Accepted"
+                          : u.review_status === "needs_followup"
+                            ? "Needs follow-up"
+                            : "With the team"}
+                      </Badge>
+                    </div>
+                  ))}
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/documents">Upload another</Link>
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Your signed documents</CardTitle>
               <CardDescription>
