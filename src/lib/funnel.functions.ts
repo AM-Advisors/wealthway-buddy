@@ -132,6 +132,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       const profile = profileMap.get(app.user_id);
       const email = String(profile?.email ?? "").toLowerCase();
       const invited = emailedApps.has(app.id);
+      const opened = openedRecipients.has(email) || clickedRecipients.has(email);
       const clicked = clickedRecipients.has(email);
       const identity = app.kyc_status === "approved" && app.aml_status === "approved";
       const accredited = app.accreditation_status === "approved";
