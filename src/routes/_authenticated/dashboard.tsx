@@ -403,9 +403,14 @@ function Dashboard() {
         </CardContent>
       </Card>
 
+      <div className="mt-8">
+        <OwnershipCard />
+      </div>
+
       <div className="mt-10">
         <OnboardingStepper current={(app.current_step as "kyc") ?? "kyc"} />
       </div>
+
 
       <section className="mt-8">
         <h2 className="text-xl">Onboarding status</h2>
