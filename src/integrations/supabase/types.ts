@@ -1190,6 +1190,10 @@ export type Database = {
       investor_documents: {
         Row: {
           application_id: string
+          box_error: string | null
+          box_file_id: string | null
+          box_folder_id: string | null
+          box_uploaded_at: string | null
           doc_kind: string
           file_name: string
           id: string
@@ -1201,6 +1205,10 @@ export type Database = {
         }
         Insert: {
           application_id: string
+          box_error?: string | null
+          box_file_id?: string | null
+          box_folder_id?: string | null
+          box_uploaded_at?: string | null
           doc_kind: string
           file_name: string
           id?: string
@@ -1212,6 +1220,10 @@ export type Database = {
         }
         Update: {
           application_id?: string
+          box_error?: string | null
+          box_file_id?: string | null
+          box_folder_id?: string | null
+          box_uploaded_at?: string | null
           doc_kind?: string
           file_name?: string
           id?: string
