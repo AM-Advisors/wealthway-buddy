@@ -1403,6 +1403,93 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_events: {
+        Row: {
+          amount_cents: number | null
+          application_id: string | null
+          claimed_at: string | null
+          created_at: string
+          error: string | null
+          event_kind: string
+          field: string | null
+          id: string
+          investor_user_id: string | null
+          metadata: Json
+          new_value: string | null
+          offering_id: string
+          old_value: string | null
+          sent_at: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          application_id?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          event_kind: string
+          field?: string | null
+          id?: string
+          investor_user_id?: string | null
+          metadata?: Json
+          new_value?: string | null
+          offering_id: string
+          old_value?: string | null
+          sent_at?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          application_id?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          event_kind?: string
+          field?: string | null
+          id?: string
+          investor_user_id?: string | null
+          metadata?: Json
+          new_value?: string | null
+          offering_id?: string
+          old_value?: string | null
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          alerts_enabled: boolean
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alerts_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alerts_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       offering_audit_events: {
         Row: {
           actor_email: string | null
