@@ -512,6 +512,13 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
                 <p className="text-xs text-muted-foreground">
                   Save your answers first — the form is built from the saved details.
                 </p>
+                {data?.details?.withOperations && (
+                  <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+                    The tax ID and Form SS-4 are with the operations team for review. They become
+                    available here once approved.
+                    {data.details.review_note ? ` Note: ${data.details.review_note}` : ""}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -581,8 +588,28 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
                         {r.requested_by_email ? ` by ${r.requested_by_email}` : ""}
                       </p>
                       {r.note && <p className="mt-1 text-xs text-muted-foreground">{r.note}</p>}
+                      {r.review_note && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Operations: {r.review_note}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          r.review_status === "approved"
+                            ? "default"
+                            : r.review_status === "rejected"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
+                        {r.review_status === "approved"
+                          ? "Approved by operations"
+                          : r.review_status === "rejected"
+                            ? "Sent back"
+                            : "With operations"}
+                      </Badge>
                       <Badge variant={r.status === "opened" ? "default" : "secondary"}>
                         {BANK_STATUS_LABELS[r.status] ?? r.status}
                       </Badge>
