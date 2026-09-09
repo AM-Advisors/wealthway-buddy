@@ -300,6 +300,9 @@ function DiligenceRoomPage() {
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
         </TabsContent>
+        <TabsContent value="assistant" className="mt-6">
+          <DiligenceAssistant offeringId={offeringId} />
+        </TabsContent>
         <TabsContent value="checklist" className="mt-6">
           <ChecklistTab
             offeringId={offeringId}
