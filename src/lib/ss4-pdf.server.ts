@@ -1,4 +1,4 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { SS4_FORM_BASE64 } from "./ss4-form-base64.server";
 
 /**
