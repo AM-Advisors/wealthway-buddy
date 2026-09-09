@@ -123,6 +123,9 @@ function AdminQueue() {
                 <Link to="/admin/funnel">Onboarding funnel</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
+                <Link to="/admin/document-log">Document activity</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
                 <Link to="/diligence">Diligence rooms</Link>
               </Button>
 
