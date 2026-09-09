@@ -278,6 +278,57 @@ function Portal() {
       ) : (
         <div className="mt-8 space-y-6">
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Your fund commitments</CardTitle>
+              <CardDescription>
+                {(data?.commitments?.length ?? 0) > 1
+                  ? "Choose a fund to see its steps, documents and funding below."
+                  : "What you have committed and how much has arrived."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {(data?.commitments ?? []).map((c) => {
+                const active = c.application_id === app.id;
+                return (
+                  <button
+                    key={c.application_id}
+                    type="button"
+                    onClick={() => setSelectedApp(c.application_id)}
+                    className={`flex w-full flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-left transition ${
+                      active ? "border-primary bg-muted/50" : "hover:bg-muted/30"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">
+                        {c.offering_name}
+                        {c.reg_type ? ` (Reg D ${c.reg_type})` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Committed {money(c.commitment_cents)} · Received{" "}
+                        {money(c.funded_cents)}
+                      </p>
+                    </div>
+                    <Badge variant={tone(c.status)}>{label(c.status)}</Badge>
+                  </button>
+                );
+              })}
+              {(data?.commitments?.length ?? 0) > 1 && (
+                <p className="pt-1 text-xs text-muted-foreground">
+                  Total committed{" "}
+                  {money(
+                    (data?.commitments ?? []).reduce(
+                      (sum, c) => sum + (c.commitment_cents ?? 0),
+                      0,
+                    ),
+                  )}{" "}
+                  · Total received{" "}
+                  {money((data?.commitments ?? []).reduce((sum, c) => sum + c.funded_cents, 0))}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle className="text-base">Subscription</CardTitle>
