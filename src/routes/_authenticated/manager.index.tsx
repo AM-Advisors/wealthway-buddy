@@ -50,6 +50,11 @@ const TOOLS = [
     blurb: "Who approved, delayed or declined what, and when.",
   },
   { to: "/manager/documents", title: "Fund documents", blurb: "Add and edit what investors sign." },
+  {
+    to: "/manager/closing",
+    title: "Closing desk",
+    blurb: "Confirm funds landed in full, set the closing date and share final documents.",
+  },
   { to: "/admin/wire", title: "Wire instructions", blurb: "Keep bank details current." },
   { to: "/admin/funds", title: "Fund pages", blurb: "Fund detail, packets and change history." },
   {
