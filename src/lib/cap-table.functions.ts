@@ -89,26 +89,31 @@ async function buildCapTable(
   const apps = ((appsRaw ?? []) as AppRow[]).filter((a) => !EXCLUDED_STATUSES.has(a.status));
   const appIds = apps.map((a) => a.id);
 
-  const [{ data: subs }, { data: pays }, { data: profiles }] = await Promise.all([
-    appIds.length
-      ? supabaseAdmin
-          .from("subscriptions")
-          .select("application_id, commitment_cents, status")
-          .in("application_id", appIds)
-      : Promise.resolve({ data: [] as any[] }),
-    appIds.length
-      ? supabaseAdmin
-          .from("payments")
-          .select("application_id, amount_cents, status")
-          .in("application_id", appIds)
-      : Promise.resolve({ data: [] as any[] }),
-    apps.length
-      ? supabaseAdmin
-          .from("profiles")
-          .select("user_id, legal_name, entity_name, investor_type")
-          .in("user_id", Array.from(new Set(apps.map((a) => a.user_id))))
-      : Promise.resolve({ data: [] as any[] }),
-  ]);
+  const [{ data: subs }, { data: pays }, { data: profiles }, { data: positions }] =
+    await Promise.all([
+      appIds.length
+        ? supabaseAdmin
+            .from("subscriptions")
+            .select("application_id, commitment_cents, status")
+            .in("application_id", appIds)
+        : Promise.resolve({ data: [] as any[] }),
+      appIds.length
+        ? supabaseAdmin
+            .from("payments")
+            .select("application_id, amount_cents, status")
+            .in("application_id", appIds)
+        : Promise.resolve({ data: [] as any[] }),
+      apps.length
+        ? supabaseAdmin
+            .from("profiles")
+            .select("user_id, legal_name, entity_name, investor_type")
+            .in("user_id", Array.from(new Set(apps.map((a) => a.user_id))))
+        : Promise.resolve({ data: [] as any[] }),
+      supabaseAdmin
+        .from("investor_cap_positions")
+        .select("application_id, shares, share_class, ownership_pct_override")
+        .eq("offering_id", offeringId),
+    ]);
 
   const subByApp = new Map<string, number>();
   for (const s of (subs ?? []) as any[]) {
@@ -124,23 +129,36 @@ async function buildCapTable(
   }
   const profileByUser = new Map<string, any>();
   for (const p of (profiles ?? []) as any[]) profileByUser.set(p.user_id, p);
+  const posByApp = new Map<string, any>();
+  for (const p of (positions ?? []) as any[]) posByApp.set(p.application_id, p);
 
   const base = apps
     .map((a) => {
       const commitment = subByApp.get(a.id) ?? Number(a.commitment_cents ?? 0);
-      return { app: a, commitment, funded: fundedByApp.get(a.id) ?? 0 };
+      const pos = posByApp.get(a.id);
+      return {
+        app: a,
+        commitment,
+        funded: fundedByApp.get(a.id) ?? 0,
+        shares: pos?.shares != null ? Number(pos.shares) : null,
+        share_class: (pos?.share_class as string) ?? "LP interest",
+        override: pos?.ownership_pct_override != null ? Number(pos.ownership_pct_override) : null,
+      };
     })
-    .filter((r) => r.commitment > 0 || r.funded > 0)
+    .filter((r) => r.commitment > 0 || r.funded > 0 || (r.shares ?? 0) > 0)
     .sort((a, b) => b.commitment - a.commitment || a.app.created_at.localeCompare(b.app.created_at));
 
   const totalCommitted = base.reduce((s, r) => s + r.commitment, 0);
   const totalFunded = base.reduce((s, r) => s + r.funded, 0);
+  const totalShares = base.reduce((s, r) => s + (r.shares ?? 0), 0);
   const target = offering.target_raise_cents ?? null;
 
   const holders: CapTableHolder[] = base.map((r, i) => {
     const isYou = r.app.user_id === viewerId;
     const profile = profileByUser.get(r.app.user_id);
     const realName = profile?.entity_name || profile?.legal_name || "Investor";
+    const byMoney = pct(r.commitment, totalCommitted);
+    const byShares = totalShares > 0 && r.shares != null ? pct(r.shares, totalShares) : 0;
     return {
       application_id: r.app.id,
       name: isYou ? `${realName} (you)` : canManage || namesVisible ? realName : `Investor ${i + 1}`,
@@ -149,7 +167,9 @@ async function buildCapTable(
       entity_name: profile?.entity_name ?? null,
       commitment_cents: r.commitment,
       funded_cents: r.funded,
-      pct_of_committed: pct(r.commitment, totalCommitted),
+      shares: r.shares,
+      share_class: r.share_class,
+      pct_of_committed: r.override ?? (byShares || byMoney),
       pct_of_funded: pct(r.funded, totalFunded),
       pct_of_target: target ? pct(r.commitment, target) : 0,
       status: r.app.status,
@@ -157,6 +177,7 @@ async function buildCapTable(
       committed_at: r.app.created_at,
     };
   });
+
 
   const you = holders.find((h) => h.is_you) ?? null;
 
