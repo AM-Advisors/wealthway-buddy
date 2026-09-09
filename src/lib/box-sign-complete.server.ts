@@ -26,7 +26,9 @@ export async function syncBoxSignRequest(
 
   const { data: signature } = await supabaseAdmin
     .from("document_signatures")
-    .select("id, application_id, offering_document_id, signer_name, pdf_path, provider_completed_at")
+    .select(
+      "id, application_id, offering_document_id, signer_name, pdf_path, provider_completed_at, provider_viewed_at",
+    )
     .eq("provider_agreement_id", signRequestId)
     .maybeSingle();
 
@@ -41,6 +43,14 @@ export async function syncBoxSignRequest(
     provider_status: mapped,
     provider_last_event_at: now,
   };
+
+  // First time Box tells us the signer opened the document, stamp it once.
+  const alreadyViewed = (signature as any).provider_viewed_at as string | null;
+  const openedNow =
+    remote?.viewed || String(opts.status ?? "").toLowerCase().includes("view") || mapped === "completed";
+  if (!alreadyViewed && openedNow) {
+    patch["provider_viewed_at"] = remote?.viewedAt ?? opts.completedAt ?? now;
+  }
 
   if (mapped === "completed" && remote?.signedFileId) {
     const completedAt = opts.completedAt ?? now;

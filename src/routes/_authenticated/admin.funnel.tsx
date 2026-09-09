@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { getOnboardingFunnel } from "@/lib/funnel.functions";
+import { getBoxSigningFunnel, getOnboardingFunnel } from "@/lib/funnel.functions";
 import { getManagerFunds } from "@/lib/manager.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ const WINDOWS = [
 function FunnelPage() {
   const loadFunnel = useServerFn(getOnboardingFunnel);
   const loadFunds = useServerFn(getManagerFunds);
+  const loadBox = useServerFn(getBoxSigningFunnel);
 
   const [days, setDays] = useState(90);
   const [offeringId, setOfferingId] = useState<string | null>(null);
@@ -49,9 +50,16 @@ function FunnelPage() {
     queryFn: () => loadFunnel({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
   });
 
+  const boxQuery = useQuery({
+    queryKey: ["box-signing-funnel", offeringId, days],
+    queryFn: () => loadBox({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
+  });
+
   const funds = fundsQuery.data?.funds ?? [];
   const data = funnelQuery.data;
   const top = data?.steps?.[0]?.count ?? 0;
+  const box = boxQuery.data;
+  const boxTop = box?.steps?.[0]?.count ?? 0;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
@@ -156,6 +164,80 @@ function FunnelPage() {
                     </span>
                   </div>
                 ))
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-base">Signing and wire</CardTitle>
+              <CardDescription>
+                Investors sent a signing invitation, how many opened it, signed everything, confirmed
+                their wire and had funds received.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {boxQuery.isLoading ? (
+                <p className="text-sm text-muted-foreground">Loading…</p>
+              ) : !box || box.counts.invited === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No signing invitations have been sent in this window.
+                </p>
+              ) : (
+                <>
+                  {box.steps.map((step: any) => (
+                    <div key={step.key}>
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span>{step.label}</span>
+                        <span className="text-muted-foreground">
+                          {step.count}
+                          {step.ofPrevious !== null ? ` · ${step.ofPrevious}% of previous step` : ""}
+                          {step.dropped > 0 ? ` · ${step.dropped} dropped off here` : ""}
+                        </span>
+                      </div>
+                      <div className="mt-1 h-2 w-full rounded-full bg-muted">
+                        <div
+                          className="h-2 rounded-full bg-primary"
+                          style={{
+                            width: `${boxTop > 0 ? Math.round((step.count / boxTop) * 100) : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {box.stuck.length > 0 ? (
+                    <div className="space-y-2 pt-3">
+                      <p className="text-sm">Not finished yet</p>
+                      {box.stuck.map((row: any) => (
+                        <div
+                          key={row.applicationId}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm">{row.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {row.completed} of {row.requested} signed ·{" "}
+                              {row.firstOpenedAt
+                                ? `first opened ${new Date(row.firstOpenedAt).toLocaleDateString()}`
+                                : "never opened"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{row.stage}</Badge>
+                            <Button asChild size="sm" variant="outline">
+                              <Link
+                                to="/admin/$applicationId"
+                                params={{ applicationId: row.applicationId }}
+                              >
+                                Open
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </>
               )}
             </CardContent>
           </Card>
