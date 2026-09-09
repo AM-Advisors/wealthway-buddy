@@ -235,6 +235,10 @@ function DocumentsPage() {
         </Card>
       ) : null}
 
+      <InvestorUploads />
+
+
+
       <p className="mt-8 text-xs text-muted-foreground">
         Download links expire after a few minutes for your security.{" "}
         <Link to="/dashboard" className="underline">
