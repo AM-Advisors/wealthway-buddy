@@ -70,6 +70,8 @@ import { DiligenceAccessPanel } from "@/components/diligence-access-panel";
 import { RoomKycApplication } from "@/components/room-kyc-application";
 import { PitchDeckPanel } from "@/components/pitch-deck-panel";
 import { OfferingStatementView } from "@/components/offering-statement-view";
+import { FundTimeline } from "@/components/fund-timeline";
+
 
 import { getStepRail } from "@/lib/step-rail.functions";
 
