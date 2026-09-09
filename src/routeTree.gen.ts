@@ -42,6 +42,7 @@ import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authen
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
+import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
@@ -228,6 +229,12 @@ const AuthenticatedAdminFundFundIdRoute =
     path: '/admin/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPacketFundIdRoute =
+  AuthenticatedAdminPacketFundIdRouteImport.update({
+    id: '/admin/packet/$fundId',
+    path: '/admin/packet/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   id: '/api/public/email/click',
   path: '/api/public/email/click',
@@ -289,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -327,6 +335,7 @@ export interface FileRoutesByTo {
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -368,6 +377,7 @@ export interface FileRoutesById {
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/diligence/'
     | '/manager/'
     | '/admin/fund/$fundId'
+    | '/admin/packet/$fundId'
     | '/api/public/email/click'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -447,6 +458,7 @@ export interface FileRouteTypes {
     | '/diligence'
     | '/manager'
     | '/admin/fund/$fundId'
+    | '/admin/packet/$fundId'
     | '/api/public/email/click'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -487,6 +499,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diligence/'
     | '/_authenticated/manager/'
     | '/_authenticated/admin/fund/$fundId'
+    | '/_authenticated/admin/packet/$fundId'
     | '/api/public/email/click'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -742,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/packet/$fundId': {
+      id: '/_authenticated/admin/packet/$fundId'
+      path: '/admin/packet/$fundId'
+      fullPath: '/admin/packet/$fundId'
+      preLoaderRoute: typeof AuthenticatedAdminPacketFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/email/click': {
       id: '/api/public/email/click'
       path: '/api/public/email/click'
@@ -804,6 +824,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
   AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
+  AuthenticatedAdminPacketFundIdRoute: typeof AuthenticatedAdminPacketFundIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -832,6 +853,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
   AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
+  AuthenticatedAdminPacketFundIdRoute: AuthenticatedAdminPacketFundIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
