@@ -1671,6 +1671,50 @@ export type Database = {
           },
         ]
       }
+      fund_distributions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          note: string
+          offering_id: string
+          paid_on: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          note?: string
+          offering_id: string
+          paid_on: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          note?: string
+          offering_id?: string
+          paid_on?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_distributions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_invitations: {
         Row: {
           accepted_at: string | null
@@ -1755,6 +1799,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fund_managers_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_valuations: {
+        Row: {
+          as_of_date: string
+          created_at: string
+          created_by: string | null
+          id: string
+          nav_cents: number
+          note: string
+          offering_id: string
+          updated_at: string
+        }
+        Insert: {
+          as_of_date: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nav_cents?: number
+          note?: string
+          offering_id: string
+          updated_at?: string
+        }
+        Update: {
+          as_of_date?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nav_cents?: number
+          note?: string
+          offering_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_valuations_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
