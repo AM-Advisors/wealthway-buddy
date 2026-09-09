@@ -2409,44 +2409,113 @@ export type Database = {
           },
         ]
       }
-      offering_documents: {
+      offering_document_versions: {
         Row: {
-          body: string
           created_at: string
-          doc_type: string
+          created_by: string | null
           file_name: string | null
           file_path: string | null
           file_size_bytes: number | null
           id: string
+          note: string | null
+          offering_document_id: string
+          offering_id: string
+          source: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          note?: string | null
+          offering_document_id: string
+          offering_id: string
+          source?: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          note?: string | null
+          offering_document_id?: string
+          offering_id?: string
+          source?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_document_versions_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_versions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offering_documents: {
+        Row: {
+          body: string
+          created_at: string
+          current_version: number
+          doc_type: string
+          file_name: string | null
+          file_path: string | null
+          file_size_bytes: number | null
+          file_updated_at: string | null
+          id: string
           offering_id: string
           requires_signature: boolean
           sort_order: number
+          template_key: string | null
+          template_pack: string | null
           title: string
         }
         Insert: {
           body: string
           created_at?: string
+          current_version?: number
           doc_type: string
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
+          file_updated_at?: string | null
           id?: string
           offering_id: string
           requires_signature?: boolean
           sort_order?: number
+          template_key?: string | null
+          template_pack?: string | null
           title: string
         }
         Update: {
           body?: string
           created_at?: string
+          current_version?: number
           doc_type?: string
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
+          file_updated_at?: string | null
           id?: string
           offering_id?: string
           requires_signature?: boolean
           sort_order?: number
+          template_key?: string | null
+          template_pack?: string | null
           title?: string
         }
         Relationships: [

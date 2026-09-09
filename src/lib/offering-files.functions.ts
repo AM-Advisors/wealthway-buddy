@@ -57,8 +57,6 @@ export const attachOfferingDocumentFile = createServerFn({ method: "POST" })
       throw new Error("That file does not belong to this fund.");
     }
 
-    const previousPath = doc.file_path as string | null;
-
     const { error } = await context.supabase
       .from("offering_documents")
       .update({
@@ -69,9 +67,18 @@ export const attachOfferingDocumentFile = createServerFn({ method: "POST" })
       .eq("id", data.documentId);
     if (error) throw new Error(error.message);
 
-    if (previousPath && previousPath !== data.filePath) {
-      await context.supabase.storage.from(OFFERING_FILES_BUCKET).remove([previousPath]);
-    }
+    // The previous file stays in storage so earlier versions remain downloadable.
+    const { recordDocumentVersion } = await import("./document-versions.server");
+    await recordDocumentVersion({
+      offeringId: doc.offering_id,
+      documentId: data.documentId,
+      filePath: data.filePath,
+      fileName: data.fileName,
+      fileSizeBytes: data.fileSizeBytes,
+      source: "upload",
+      userId: context.userId,
+    });
+
 
     const { data: profile } = await context.supabase
       .from("profiles")
