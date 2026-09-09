@@ -648,9 +648,9 @@ function DocumentsTab({
                             size="sm"
                             variant="outline"
                             disabled={downloadMutation.isPending}
-                            onClick={() => downloadMutation.mutate(doc.id)}
+                            onClick={() => downloadMutation.mutate({ id: doc.id, title: doc.title })}
                           >
-                            Open
+                            View
                           </Button>
                           <Button
                             size="sm"
