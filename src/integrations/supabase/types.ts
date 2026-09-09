@@ -2502,6 +2502,7 @@ export type Database = {
       }
       offerings: {
         Row: {
+          closing_cost_cents: number
           created_at: string
           id: string
           is_open: boolean
@@ -2512,8 +2513,10 @@ export type Database = {
           summary: string | null
           target_raise_cents: number | null
           updated_at: string
+          wire_fee_cents: number
         }
         Insert: {
+          closing_cost_cents?: number
           created_at?: string
           id?: string
           is_open?: boolean
@@ -2524,8 +2527,10 @@ export type Database = {
           summary?: string | null
           target_raise_cents?: number | null
           updated_at?: string
+          wire_fee_cents?: number
         }
         Update: {
+          closing_cost_cents?: number
           created_at?: string
           id?: string
           is_open?: boolean
@@ -2536,6 +2541,7 @@ export type Database = {
           summary?: string | null
           target_raise_cents?: number | null
           updated_at?: string
+          wire_fee_cents?: number
         }
         Relationships: []
       }
