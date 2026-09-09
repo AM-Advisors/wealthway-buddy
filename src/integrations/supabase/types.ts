@@ -2658,6 +2658,104 @@ export type Database = {
           },
         ]
       }
+      pitch_deck_slides: {
+        Row: {
+          caption: string | null
+          created_at: string
+          deck_id: string
+          heading: string | null
+          id: string
+          image_name: string | null
+          image_path: string
+          offering_id: string
+          position: number
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          deck_id: string
+          heading?: string | null
+          id?: string
+          image_name?: string | null
+          image_path: string
+          offering_id: string
+          position?: number
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          deck_id?: string
+          heading?: string | null
+          id?: string
+          image_name?: string | null
+          image_path?: string
+          offering_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitch_deck_slides_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "pitch_decks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitch_deck_slides_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pitch_decks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deck_file_name: string | null
+          deck_file_path: string | null
+          deck_file_size_bytes: number | null
+          id: string
+          offering_id: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deck_file_name?: string | null
+          deck_file_path?: string | null
+          deck_file_size_bytes?: number | null
+          id?: string
+          offering_id: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deck_file_name?: string | null
+          deck_file_path?: string | null
+          deck_file_size_bytes?: number | null
+          id?: string
+          offering_id?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitch_decks_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_messages: {
         Row: {
           application_id: string
