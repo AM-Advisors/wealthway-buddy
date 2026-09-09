@@ -231,6 +231,10 @@ function DiligenceRoomPage() {
         </p>
       ) : null}
 
+      {canManage ? null : <InvestingPath offeringId={offeringId} />}
+
+
+
       <Tabs defaultValue="documents" className="mt-8">
         <TabsList>
           <TabsTrigger value="documents">Documents</TabsTrigger>
