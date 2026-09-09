@@ -601,6 +601,48 @@ export type Database = {
           },
         ]
       }
+      diligence_document_access: {
+        Row: {
+          created_at: string
+          document_id: string
+          granted_by: string
+          id: string
+          investor_user_id: string
+          offering_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          granted_by: string
+          id?: string
+          investor_user_id: string
+          offering_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          granted_by?: string
+          id?: string
+          investor_user_id?: string
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_document_access_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_document_access_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diligence_document_versions: {
         Row: {
           box_file_id: string
@@ -669,6 +711,7 @@ export type Database = {
           uploaded_at: string
           uploaded_by: string
           version: number
+          visibility: string
         }
         Insert: {
           box_file_id: string
@@ -683,6 +726,7 @@ export type Database = {
           uploaded_at?: string
           uploaded_by: string
           version?: number
+          visibility?: string
         }
         Update: {
           box_file_id?: string
@@ -697,6 +741,7 @@ export type Database = {
           uploaded_at?: string
           uploaded_by?: string
           version?: number
+          visibility?: string
         }
         Relationships: [
           {
@@ -711,6 +756,47 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_investor_permissions: {
+        Row: {
+          cap_table_visible: boolean
+          created_at: string
+          id: string
+          investor_user_id: string
+          note: string | null
+          offering_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          cap_table_visible?: boolean
+          created_at?: string
+          id?: string
+          investor_user_id: string
+          note?: string | null
+          offering_id: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          cap_table_visible?: boolean
+          created_at?: string
+          id?: string
+          investor_user_id?: string
+          note?: string | null
+          offering_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_investor_permissions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -2699,6 +2785,14 @@ export type Database = {
       can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
       diligence_access_open: {
         Args: { _offering_id: string }
+        Returns: boolean
+      }
+      diligence_cap_table_visible: {
+        Args: { _offering_id: string }
+        Returns: boolean
+      }
+      diligence_doc_allowed: {
+        Args: { _document_id: string }
         Returns: boolean
       }
       get_wire_instructions: {
