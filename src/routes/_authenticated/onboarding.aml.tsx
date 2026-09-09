@@ -283,7 +283,7 @@ function AmlPage() {
               Back
             </Button>
             <Button type="submit" disabled={busy}>
-              {busy ? "Submitting…" : "Submit application for review"}
+              {busy ? "Submitting…" : "Submit and continue to accreditation"}
             </Button>
           </div>
         </form>
