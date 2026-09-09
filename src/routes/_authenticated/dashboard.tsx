@@ -266,6 +266,58 @@ function Dashboard() {
         />
       </div>
 
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="text-base">Your path to the wire</CardTitle>
+          <CardDescription>
+            {doneSteps === pathSteps.length
+              ? "Every step is complete — your funds are recorded."
+              : `${doneSteps} of ${pathSteps.length} steps complete. Next: ${nextStep?.title ?? "—"}.`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${Math.round((doneSteps / pathSteps.length) * 100)}%` }}
+            />
+          </div>
+          <ol className="mt-5 space-y-3">
+            {pathSteps.map((step, index) => {
+              const isNext = step === nextStep;
+              return (
+                <li key={step.title} className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span
+                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                        step.done
+                          ? "bg-primary text-primary-foreground"
+                          : isNext
+                            ? "border border-primary text-primary"
+                            : "border text-muted-foreground"
+                      }`}
+                    >
+                      {step.done ? "✓" : index + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className={`text-sm ${step.done ? "" : isNext ? "font-medium" : "text-muted-foreground"}`}>
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{step.detail}</p>
+                    </div>
+                  </div>
+                  {!step.done && isNext && step.to ? (
+                    <Button asChild size="sm">
+                      <Link to={step.to}>{step.cta}</Link>
+                    </Button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
+        </CardContent>
+      </Card>
+
       <div className="mt-10">
         <OnboardingStepper current={(app.current_step as "kyc") ?? "kyc"} />
       </div>
