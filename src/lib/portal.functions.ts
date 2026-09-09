@@ -227,6 +227,28 @@ export const getPortal = createServerFn({ method: "GET" })
           .order("created_at", { ascending: true }),
       ]);
 
+    // Files the investor sent in for this fund, and where they stand.
+    const { data: uploadRows } = await supabase
+      .from("investor_documents")
+      .select(
+        "id, file_name, doc_kind, note, uploaded_at, review_status, review_note, reviewed_at, box_uploaded_at",
+      )
+      .eq("user_id", userId)
+      .eq("application_id", application.id)
+      .order("uploaded_at", { ascending: false });
+
+    const uploads: PortalUpload[] = ((uploadRows ?? []) as any[]).map((u) => ({
+      id: u.id,
+      file_name: u.file_name,
+      doc_kind: u.doc_kind,
+      note: u.note ?? null,
+      uploaded_at: u.uploaded_at,
+      review_status: u.review_status ?? "new",
+      review_note: u.review_note ?? null,
+      reviewed_at: u.reviewed_at ?? null,
+      filed_at: u.box_uploaded_at ?? null,
+    }));
+
     // Assigned due diligence questions, with the prompt text and whether the
     // investor still owes an answer.
     const assignmentRows = (assignments ?? []) as any[];
