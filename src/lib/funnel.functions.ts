@@ -188,6 +188,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
     const order: Array<{ key: keyof typeof counts; label: string }> = [
       { key: "applications", label: "Investors added" },
       { key: "invited", label: "Onboarding email sent" },
+      { key: "opened", label: "Opened the email" },
       { key: "clicked", label: "Clicked a link in the email" },
       { key: "identity", label: "Identity and screening passed" },
       { key: "accredited", label: "Accreditation approved" },
