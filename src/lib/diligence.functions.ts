@@ -149,7 +149,11 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
-      .object({ offering_id: z.string().uuid(), intro: z.string().max(2000).optional().nullable() })
+      .object({
+        offering_id: z.string().uuid(),
+        intro: z.string().max(2000).optional().nullable(),
+        entity_type: z.enum(["fund", "startup"]).optional(),
+      })
       .parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -165,11 +169,11 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (existing) {
-      if (data.intro !== undefined) {
-        const { error } = await supabase
-          .from("diligence_rooms")
-          .update({ intro: data.intro })
-          .eq("id", existing.id);
+      const patch: Record<string, unknown> = {};
+      if (data.intro !== undefined) patch['intro'] = data.intro;
+      if (data.entity_type !== undefined) patch['entity_type'] = data.entity_type;
+      if (Object.keys(patch).length) {
+        const { error } = await supabase.from("diligence_rooms").update(patch).eq("id", existing.id);
         if (error) throw new Error(error.message);
       }
       return { id: existing.id, created: false };
@@ -187,18 +191,68 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
       `Diligence — ${offering?.name ?? data.offering_id}`.slice(0, 240),
     );
 
+    const entityType = normalizeEntityType(data.entity_type);
     const { data: created, error } = await supabase
       .from("diligence_rooms")
       .insert({
         offering_id: data.offering_id,
         box_folder_id: folderId,
         intro: data.intro ?? null,
+        entity_type: entityType,
         created_by: userId,
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      created.id,
+      "room_created",
+      `Opened a ${entityType === "startup" ? "company" : "fund"} diligence room`,
+      { entity_type: entityType },
+    );
     return { id: created.id, created: true };
+  });
+
+/** Switches a room between the fund and startup diligence structures. */
+export const setDiligenceEntityType = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({ offering_id: z.string().uuid(), entity_type: z.enum(["fund", "startup"]) })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to manage this diligence room.");
+    }
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id, entity_type")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) throw new Error("Create the diligence room first.");
+    if (room.entity_type === data.entity_type) return { ok: true, changed: false };
+
+    const { error } = await supabase
+      .from("diligence_rooms")
+      .update({ entity_type: data.entity_type })
+      .eq("id", room.id);
+    if (error) throw new Error(error.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room.id,
+      "room_updated",
+      `Set the diligence structure to ${data.entity_type === "startup" ? "startup / operating company" : "fund / investment manager"}`,
+      { entity_type: data.entity_type },
+    );
+    return { ok: true, changed: true };
   });
 
 export const addDiligenceDocument = createServerFn({ method: "POST" })
