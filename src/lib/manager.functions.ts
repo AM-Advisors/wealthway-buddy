@@ -279,6 +279,17 @@ export const raiseApplicationFlag = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    await (await import("@/lib/reviewer-activity.server")).logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: data.offeringId,
+      action: "flag_raised",
+      area: data.category,
+      outcome: "delayed",
+      summary: `Issue flagged (${data.severity}) on ${data.category}`,
+      note: data.note,
+    });
     return { id: row.id as string };
   });
 
