@@ -2641,6 +2641,53 @@ export type Database = {
           },
         ]
       }
+      offering_bank_setup_requests: {
+        Row: {
+          bank: string
+          created_at: string
+          id: string
+          note: string | null
+          notified_at: string | null
+          offering_id: string
+          requested_by: string | null
+          requested_by_email: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bank: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          notified_at?: string | null
+          offering_id: string
+          requested_by?: string | null
+          requested_by_email?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bank?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          notified_at?: string | null
+          offering_id?: string
+          requested_by?: string | null
+          requested_by_email?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_bank_setup_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_document_versions: {
         Row: {
           created_at: string
@@ -3030,8 +3077,13 @@ export type Database = {
         Row: {
           closing_cost_cents: number
           created_at: string
+          date_formed: string | null
+          entity_type: string | null
+          fund_type: string | null
+          fund_type_other: string | null
           id: string
           is_open: boolean
+          legal_entity_name: string | null
           min_investment_cents: number
           name: string
           public_headline: string | null
@@ -3040,6 +3092,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           share_price_cents: number
           slug: string
+          state_formed: string | null
           summary: string | null
           target_raise_cents: number | null
           updated_at: string
@@ -3048,8 +3101,13 @@ export type Database = {
         Insert: {
           closing_cost_cents?: number
           created_at?: string
+          date_formed?: string | null
+          entity_type?: string | null
+          fund_type?: string | null
+          fund_type_other?: string | null
           id?: string
           is_open?: boolean
+          legal_entity_name?: string | null
           min_investment_cents?: number
           name: string
           public_headline?: string | null
@@ -3058,6 +3116,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           share_price_cents?: number
           slug: string
+          state_formed?: string | null
           summary?: string | null
           target_raise_cents?: number | null
           updated_at?: string
@@ -3066,8 +3125,13 @@ export type Database = {
         Update: {
           closing_cost_cents?: number
           created_at?: string
+          date_formed?: string | null
+          entity_type?: string | null
+          fund_type?: string | null
+          fund_type_other?: string | null
           id?: string
           is_open?: boolean
+          legal_entity_name?: string | null
           min_investment_cents?: number
           name?: string
           public_headline?: string | null
@@ -3076,6 +3140,7 @@ export type Database = {
           reg_type?: Database["public"]["Enums"]["reg_type"]
           share_price_cents?: number
           slug?: string
+          state_formed?: string | null
           summary?: string | null
           target_raise_cents?: number | null
           updated_at?: string
@@ -3763,6 +3828,18 @@ export type Database = {
         Args: { p_offering_id: string }
         Returns: string
       }
+      get_offering_entity_details: {
+        Args: { p_offering_id: string }
+        Returns: {
+          ein: string
+          has_ein: boolean
+          offering_id: string
+          ss4: Json
+          ss4_generated_at: string
+          ss4_storage_path: string
+          updated_at: string
+        }[]
+      }
       get_wire_instructions: {
         Args: { p_offering_id: string }
         Returns: {
@@ -3791,6 +3868,19 @@ export type Database = {
           p_item_id: string
           p_offering_id: string
         }
+        Returns: undefined
+      }
+      save_offering_entity_details: {
+        Args: {
+          p_ein: string
+          p_has_ein: boolean
+          p_offering_id: string
+          p_ss4: Json
+        }
+        Returns: undefined
+      }
+      save_offering_ss4_file: {
+        Args: { p_offering_id: string; p_path: string }
         Returns: undefined
       }
       save_wire_instructions: {
