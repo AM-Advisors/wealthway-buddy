@@ -215,6 +215,7 @@ export const submitKyc = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (statusError) throw new Error(statusError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, applicationId: application.id };
   });
 
@@ -282,5 +283,6 @@ export const submitAml = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (statusError) throw new Error(statusError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, flagged };
   });

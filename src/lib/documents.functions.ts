@@ -284,6 +284,7 @@ export const signDocument = createServerFn({ method: "POST" })
         .eq("id", application.id);
     }
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, allSigned, documentHash };
   });
 

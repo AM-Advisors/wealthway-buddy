@@ -152,6 +152,7 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, status: "approved" as const };
   });
 
@@ -210,6 +211,7 @@ export const submitVerificationRequest = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, status: "review" as const, expiresAt: expires };
   });
 
