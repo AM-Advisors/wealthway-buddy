@@ -7,6 +7,7 @@ import { template as fundInvitation } from './fund-invitation'
 import { template as managerAlert } from './manager-alert'
 import { template as investorWelcome } from './investor-welcome'
 import { template as ownershipUpdate } from './ownership-update'
+import { template as bankSetupRequest } from './bank-setup-request'
 
 
 
@@ -36,5 +37,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'fund-invitation': fundInvitation,
   'manager-alert': managerAlert,
   'investor-welcome': investorWelcome,
+  'bank-setup-request': bankSetupRequest,
 
 }
