@@ -34,6 +34,9 @@ export type ManagerDocRow = {
   offering_id: string | null;
   offeringName: string | null;
   submittedBy: string | null;
+  box_file_id: string | null;
+  box_uploaded_at: string | null;
+  box_error: string | null;
 };
 
 async function roles(supabase: any, userId: string) {
