@@ -1,11 +1,9 @@
-import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
-import { getAdminAccess } from "@/lib/admin.functions";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/Logo";
+import { Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { supabase } from "@/integrations/supabase/client";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -20,8 +18,6 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const access = useServerFn(getAdminAccess);
-  const { data: adminAccess } = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -31,39 +27,18 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <Link to="/" aria-label="Harmonious home">
-            <Logo variant="navy" className="h-7 w-auto" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard">Status</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/portal">Portal</Link>
-            </Button>
-            {adminAccess?.isReviewer && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/manager">Manager</Link>
-              </Button>
-            )}
-            {adminAccess?.isAdmin && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/admin">Admin</Link>
-              </Button>
-            )}
-
-
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              Sign out
-            </Button>
-          </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        <AppSidebar onSignOut={signOut} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="flex h-12 items-center gap-2 border-b px-2">
+            <SidebarTrigger />
+          </header>
+          <main className="min-w-0 flex-1">
+            <Outlet />
+          </main>
         </div>
-      </header>
-
-      <Outlet />
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
