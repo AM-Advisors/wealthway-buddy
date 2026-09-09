@@ -297,6 +297,101 @@ export type Database = {
           },
         ]
       }
+      diligence_documents: {
+        Row: {
+          box_file_id: string
+          category: string
+          description: string | null
+          file_name: string
+          id: string
+          offering_id: string
+          room_id: string
+          size_bytes: number | null
+          title: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          box_file_id: string
+          category: string
+          description?: string | null
+          file_name: string
+          id?: string
+          offering_id: string
+          room_id: string
+          size_bytes?: number | null
+          title: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          box_file_id?: string
+          category?: string
+          description?: string | null
+          file_name?: string
+          id?: string
+          offering_id?: string
+          room_id?: string
+          size_bytes?: number | null
+          title?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_documents_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_documents_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_rooms: {
+        Row: {
+          box_folder_id: string
+          created_at: string
+          created_by: string
+          id: string
+          intro: string | null
+          offering_id: string
+          updated_at: string
+        }
+        Insert: {
+          box_folder_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          intro?: string | null
+          offering_id: string
+          updated_at?: string
+        }
+        Update: {
+          box_folder_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          intro?: string | null
+          offering_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_rooms_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_signatures: {
         Row: {
           application_id: string
@@ -1321,10 +1416,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_diligence: { Args: { _offering_id: string }; Returns: boolean }
       can_read_wire_instructions: {
         Args: { _offering_id: string }
         Returns: boolean
       }
+      can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
       get_wire_instructions: {
         Args: { p_offering_id: string }
         Returns: {
