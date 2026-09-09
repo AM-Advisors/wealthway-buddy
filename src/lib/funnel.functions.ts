@@ -214,3 +214,160 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       opensAvailable: false,
     };
   });
+
+/**
+ * Box signing funnel: of the investors sent a Box signing invitation, how many
+ * opened it, signed everything, confirmed their wire, and had funds received.
+ */
+export const getBoxSigningFunnel = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => schema.parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertReviewer(supabase, userId);
+
+    const days = data.days ?? 90;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    let appQuery = supabase
+      .from("investor_applications")
+      .select("id, user_id, offering_id, funding_status, updated_at")
+      .limit(1000);
+    if (data.offeringId) appQuery = appQuery.eq("offering_id", data.offeringId);
+    const { data: appRows, error: appError } = await appQuery;
+    if (appError) throw new Error(appError.message);
+    const applications = (appRows ?? []) as any[];
+    const appIds = applications.map((a) => a.id as string);
+
+    const empty = { data: [] as any[] };
+    const [{ data: sigRows }, { data: wireRows }, { data: paymentRows }, { data: profileRows }] =
+      await Promise.all([
+        appIds.length
+          ? supabase
+              .from("document_signatures")
+              .select(
+                "application_id, offering_document_id, provider, provider_status, provider_sent_at, provider_viewed_at, provider_completed_at",
+              )
+              .eq("provider", "box_sign")
+              .in("application_id", appIds)
+          : empty,
+        appIds.length
+          ? supabase
+              .from("wire_confirmations")
+              .select("application_id, status, created_at")
+              .in("application_id", appIds)
+          : empty,
+        appIds.length
+          ? supabase.from("payments").select("application_id, status").in("application_id", appIds)
+          : empty,
+        applications.length
+          ? supabase
+              .from("profiles")
+              .select("user_id, legal_name, email")
+              .in("user_id", [...new Set(applications.map((a) => a.user_id as string))])
+          : empty,
+      ]);
+
+    const signatures = ((sigRows ?? []) as any[]).filter(
+      (s) => !s.provider_sent_at || s.provider_sent_at >= since,
+    );
+    const profileMap = new Map(((profileRows ?? []) as any[]).map((p) => [p.user_id, p]));
+    const wires = (wireRows ?? []) as any[];
+    const payments = (paymentRows ?? []) as any[];
+
+    const byApp = new Map<string, any[]>();
+    for (const sig of signatures) {
+      const list = byApp.get(sig.application_id) ?? [];
+      list.push(sig);
+      byApp.set(sig.application_id, list);
+    }
+
+    const rows = applications
+      .filter((app) => byApp.has(app.id))
+      .map((app) => {
+        const sigs = byApp.get(app.id)!;
+        const profile = profileMap.get(app.user_id);
+        const requested = sigs.length;
+        const completed = sigs.filter((s) => s.provider_status === "completed").length;
+        const opened = sigs.some((s) => s.provider_viewed_at);
+        const appWires = wires.filter((w) => w.application_id === app.id);
+        const wireSubmitted = appWires.length > 0;
+        const wireApproved = appWires.some((w) => w.status === "approved");
+        const settled =
+          payments.some((p) => p.application_id === app.id && p.status === "settled") ||
+          app.funding_status === "settled";
+        const signedAll = requested > 0 && completed === requested;
+        const lastSentAt =
+          sigs
+            .map((s) => s.provider_sent_at as string | null)
+            .filter(Boolean)
+            .sort()
+            .pop() ?? null;
+        const firstOpenedAt =
+          sigs
+            .map((s) => s.provider_viewed_at as string | null)
+            .filter(Boolean)
+            .sort()
+            .shift() ?? null;
+        const stage = settled || wireApproved
+          ? "Funds received"
+          : wireSubmitted
+            ? "Wire confirmed, awaiting funds"
+            : signedAll
+              ? "Signed, no wire yet"
+              : opened
+                ? "Opened, not signed"
+                : "Invitation not opened";
+        return {
+          applicationId: app.id as string,
+          offeringId: app.offering_id as string,
+          name: (profile?.legal_name as string) ?? "Investor",
+          email: (profile?.email as string) ?? null,
+          requested,
+          completed,
+          opened,
+          signedAll,
+          wireSubmitted,
+          fundsReceived: settled || wireApproved,
+          lastSentAt,
+          firstOpenedAt,
+          stage,
+          updatedAt: app.updated_at as string,
+        };
+      });
+
+    const counts = {
+      invited: rows.length,
+      opened: rows.filter((r) => r.opened).length,
+      signed: rows.filter((r) => r.signedAll).length,
+      wireSubmitted: rows.filter((r) => r.wireSubmitted).length,
+      fundsReceived: rows.filter((r) => r.fundsReceived).length,
+    };
+
+    const order: Array<{ key: keyof typeof counts; label: string }> = [
+      { key: "invited", label: "Sent a signing invitation" },
+      { key: "opened", label: "Opened the signing link" },
+      { key: "signed", label: "Signed every document" },
+      { key: "wireSubmitted", label: "Confirmed their wire" },
+      { key: "fundsReceived", label: "Funds received" },
+    ];
+
+    const steps: FunnelStep[] = order.map((step, index) => {
+      const count = counts[step.key];
+      const prev = index === 0 ? null : counts[order[index - 1]!.key];
+      return {
+        key: step.key,
+        label: step.label,
+        count,
+        ofPrevious: prev && prev > 0 ? Math.round((count / prev) * 100) : null,
+        dropped: prev === null ? 0 : Math.max(prev - count, 0),
+      };
+    });
+
+    const stuck = rows
+      .filter((r) => !r.fundsReceived)
+      .sort((a, b) => (a.updatedAt < b.updatedAt ? -1 : 1))
+      .slice(0, 25);
+
+    return { days, steps, counts, rows, stuck };
+  });
