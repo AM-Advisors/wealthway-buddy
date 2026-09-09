@@ -12,6 +12,9 @@ export interface CapTableHolder {
   entity_name: string | null;
   commitment_cents: number;
   funded_cents: number;
+  /** Units/interests recorded by the fund team, when they track shares. */
+  shares: number | null;
+  share_class: string;
   /** Share of everything committed so far. */
   pct_of_committed: number;
   /** Share of money actually received so far. */
@@ -30,6 +33,7 @@ export interface FundCapTable {
   target_raise_cents: number | null;
   total_committed_cents: number;
   total_funded_cents: number;
+  total_shares: number;
   holder_count: number;
   /** Empty for investors who are not allowed to see other holders. */
   holders: CapTableHolder[];
@@ -188,6 +192,7 @@ async function buildCapTable(
     target_raise_cents: target,
     total_committed_cents: totalCommitted,
     total_funded_cents: totalFunded,
+    total_shares: totalShares,
     holder_count: holders.length,
     holders: canManage || namesVisible ? holders : you ? [you] : [],
     you,
