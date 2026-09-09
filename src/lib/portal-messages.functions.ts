@@ -100,11 +100,13 @@ export const sendPortalMessage = createServerFn({ method: "POST" })
 
     let role: "investor" | "manager" | "admin" = "investor";
     if (!isInvestor) {
-      const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: userId,
-        _role: "admin",
-      });
-      role = isAdmin === true ? "admin" : "manager";
+      const { data: adminRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+      role = adminRole ? "admin" : "manager";
     }
 
     const { data: inserted, error } = await supabase
