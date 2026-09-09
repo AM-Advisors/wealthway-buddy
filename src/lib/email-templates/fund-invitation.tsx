@@ -12,6 +12,7 @@ import {
   Text,
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { OpenPixel } from './pixel'
 import { DEFAULT_PORTAL_ORIGIN } from './steps'
 
 interface FundInvitationProps {
@@ -23,6 +24,8 @@ interface FundInvitationProps {
   portalUrl?: string
   signInUrl?: string
   contactEmail?: string
+  /** Signed open-tracking pixel URL. */
+  pixelUrl?: string
 }
 
 export function fundInvitationSubject(data: Record<string, any>) {
@@ -40,6 +43,7 @@ function FundInvitation({
   portalUrl = `${DEFAULT_PORTAL_ORIGIN}/auth`,
   signInUrl = `${DEFAULT_PORTAL_ORIGIN}/auth`,
   contactEmail = 'operations@harmonious.co',
+  pixelUrl,
 }: FundInvitationProps) {
   const isManager = role === 'fund_manager'
   const heading = isManager
@@ -131,6 +135,7 @@ function FundInvitation({
             ask you to send funds to bank details received by email — always confirm wire
             instructions by phone.
           </Text>
+          <OpenPixel url={pixelUrl} />
         </Container>
       </Body>
     </Html>

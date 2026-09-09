@@ -990,6 +990,51 @@ export type Database = {
           },
         ]
       }
+      email_opens: {
+        Row: {
+          application_id: string | null
+          id: string
+          investor_email_id: string | null
+          opened_at: string
+          recipient: string
+          template: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          id?: string
+          investor_email_id?: string | null
+          opened_at?: string
+          recipient: string
+          template?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          id?: string
+          investor_email_id?: string | null
+          opened_at?: string
+          recipient?: string
+          template?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_opens_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_opens_investor_email_id_fkey"
+            columns: ["investor_email_id"]
+            isOneToOne: false
+            referencedRelation: "investor_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_invitations: {
         Row: {
           accepted_at: string | null

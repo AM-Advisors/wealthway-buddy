@@ -12,6 +12,7 @@ import {
   Text,
 } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { OpenPixel } from './pixel'
 import { DEFAULT_PORTAL_ORIGIN, ONBOARDING_STEPS, findStep } from './steps'
 
 interface InvestorInvitationProps {
@@ -23,6 +24,8 @@ interface InvestorInvitationProps {
   currentStep?: string
   ctaUrl?: string
   ctaLabel?: string
+  /** Signed open-tracking pixel URL. */
+  pixelUrl?: string
 }
 
 export function invitationHeadline(offeringName: string, currentStep?: string) {
@@ -48,6 +51,7 @@ function InvestorInvitation({
   currentStep,
   ctaUrl,
   ctaLabel,
+  pixelUrl,
 }: InvestorInvitationProps) {
   const step = findStep(currentStep)
   const activeIndex = step ? ONBOARDING_STEPS.findIndex((s) => s.key === step.key) : -1
@@ -195,6 +199,7 @@ function InvestorInvitation({
             ask you to send funds to bank details received by email — always confirm wire
             instructions by phone.
           </Text>
+          <OpenPixel url={pixelUrl} />
         </Container>
       </Body>
     </Html>

@@ -92,16 +92,34 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
     ];
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: clickRows } = recipients.length
-      ? await supabaseAdmin
-          .from("email_link_clicks")
-          .select("recipient, template, link_label, clicked_at")
-          .gte("clicked_at", since)
-          .in("recipient", recipients)
-      : { data: [] as any[] };
+    const [{ data: clickRows }, { data: openRows }] = await Promise.all([
+      recipients.length
+        ? supabaseAdmin
+            .from("email_link_clicks")
+            .select("recipient, template, link_label, clicked_at")
+            .gte("clicked_at", since)
+            .in("recipient", recipients)
+        : Promise.resolve({ data: [] as any[] }),
+      recipients.length
+        ? supabaseAdmin
+            .from("email_opens")
+            .select("recipient, template, opened_at")
+            .gte("opened_at", since)
+            .in("recipient", recipients)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
     const clicks = (clickRows ?? []) as any[];
+    const opens = (openRows ?? []) as any[];
 
     const clickedRecipients = new Set(clicks.map((c) => String(c.recipient).toLowerCase()));
+    const openedRecipients = new Set(opens.map((o) => String(o.recipient).toLowerCase()));
+    const firstOpenByRecipient = new Map<string, string>();
+    for (const o of opens) {
+      const key = String(o.recipient).toLowerCase();
+      const at = String(o.opened_at);
+      const current = firstOpenByRecipient.get(key);
+      if (!current || at < current) firstOpenByRecipient.set(key, at);
+    }
     const emailedApps = new Set(
       emailRows.filter((e) => e.status === "sent").map((e) => e.application_id as string),
     );
@@ -114,6 +132,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       const profile = profileMap.get(app.user_id);
       const email = String(profile?.email ?? "").toLowerCase();
       const invited = emailedApps.has(app.id);
+      const opened = openedRecipients.has(email) || clickedRecipients.has(email);
       const clicked = clickedRecipients.has(email);
       const identity = app.kyc_status === "approved" && app.aml_status === "approved";
       const accredited = app.accreditation_status === "approved";
@@ -139,6 +158,8 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
         email: (profile?.email as string) ?? null,
         offeringId: app.offering_id as string,
         invited,
+        opened,
+        firstOpenedAt: firstOpenByRecipient.get(email) ?? null,
         clicked,
         identity,
         accredited,
@@ -155,6 +176,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
     const counts = {
       applications: rows.length,
       invited: rows.filter((r) => r.invited).length,
+      opened: rows.filter((r) => r.opened).length,
       clicked: rows.filter((r) => r.clicked).length,
       identity: rows.filter((r) => r.identity).length,
       accredited: rows.filter((r) => r.accredited).length,
@@ -166,6 +188,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
     const order: Array<{ key: keyof typeof counts; label: string }> = [
       { key: "applications", label: "Investors added" },
       { key: "invited", label: "Onboarding email sent" },
+      { key: "opened", label: "Opened the email" },
       { key: "clicked", label: "Clicked a link in the email" },
       { key: "identity", label: "Identity and screening passed" },
       { key: "accredited", label: "Accreditation approved" },
@@ -199,6 +222,43 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       .map(([label, v]) => ({ label, clicks: v.clicks, people: v.people.size }))
       .sort((a, b) => b.clicks - a.clicks);
 
+    // Per-email engagement: which onboarding emails get opened and clicked.
+    const emailLabels: Record<string, string> = {
+      "investor-invitation": "Onboarding invitation",
+      "investor-message": "Message from your team",
+      "fund-invitation": "Fund invitation",
+      "document-signed": "Document signed confirmation",
+    };
+    const byTemplate = new Map<
+      string,
+      { opens: number; openPeople: Set<string>; clicks: number; clickPeople: Set<string> }
+    >();
+    const bucket = (name: string) => {
+      if (!byTemplate.has(name))
+        byTemplate.set(name, { opens: 0, openPeople: new Set(), clicks: 0, clickPeople: new Set() });
+      return byTemplate.get(name)!;
+    };
+    for (const o of opens) {
+      const b = bucket((o.template as string) ?? "other");
+      b.opens += 1;
+      b.openPeople.add(String(o.recipient).toLowerCase());
+    }
+    for (const c of clicks) {
+      const b = bucket((c.template as string) ?? "other");
+      b.clicks += 1;
+      b.clickPeople.add(String(c.recipient).toLowerCase());
+    }
+    const emailBreakdown = [...byTemplate.entries()]
+      .map(([name, v]) => ({
+        template: name,
+        label: emailLabels[name] ?? "Other email",
+        opens: v.opens,
+        openedBy: v.openPeople.size,
+        clicks: v.clicks,
+        clickedBy: v.clickPeople.size,
+      }))
+      .sort((a, b) => b.openedBy + b.clickedBy - (a.openedBy + a.clickedBy));
+
     const stalled = rows
       .filter((r) => !r.funded)
       .sort((a, b) => (a.updatedAt < b.updatedAt ? -1 : 1))
@@ -209,9 +269,11 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       steps,
       counts,
       linkBreakdown,
+      emailBreakdown,
       totalClicks: clicks.length,
+      totalOpens: opens.length,
       stalled,
-      opensAvailable: false,
+      opensAvailable: true,
     };
   });
 

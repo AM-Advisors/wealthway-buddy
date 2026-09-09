@@ -180,12 +180,17 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
     let invitation: string | null = null;
     if (data.send_invitation) {
       try {
-        const { buildTrackedUrl } = await import("@/lib/email-tracking.server");
+        const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
         const portalUrl = await buildTrackedUrl({
           url: "https://onboard.harmonious.co/dashboard",
           recipient: email,
           template: "investor-invitation",
           label: "Begin onboarding",
+        });
+        const pixelUrl = await buildOpenPixelUrl({
+          recipient: email,
+          template: "investor-invitation",
+          applicationId: application.id as string,
         });
         const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
         const result = await sendTemplateEmail("investor-invitation", email, {
@@ -194,6 +199,7 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
             offeringName: offering.name,
             portalUrl,
             contactEmail: "operations@harmonious.co",
+            pixelUrl,
           },
           idempotencyKey: `invitation-${email}-${application.id}`,
         });
