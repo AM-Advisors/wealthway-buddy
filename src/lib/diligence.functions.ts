@@ -44,8 +44,9 @@ export type DiligenceReadiness = {
 function readiness(
   documents: DiligenceDocument[],
   entityType: DiligenceEntityType = "fund",
+  extraCovered: string[] = [],
 ): DiligenceReadiness {
-  const present = new Set(documents.map((d) => d.category));
+  const present = new Set([...documents.map((d) => d.category), ...extraCovered]);
   const required = categoriesFor(entityType).filter((c) => c.required);
   const covered = required.filter((c) => present.has(c.value));
   const missing = required
