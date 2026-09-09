@@ -17,6 +17,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
+import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
@@ -83,6 +84,11 @@ const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWireRoute = AuthenticatedWireRouteImport.update({
+  id: '/wire',
+  path: '/wire',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/wire': typeof AuthenticatedWireRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/': typeof AuthIndexRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/wire': typeof AuthenticatedWireRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth': typeof AuthIndexRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/_authenticated/wire': typeof AuthenticatedWireRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/': typeof AuthIndexRoute
@@ -366,6 +375,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/documents'
     | '/portal'
+    | '/wire'
     | '/auth/forgot'
     | '/auth/register'
     | '/auth/'
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/documents'
     | '/portal'
+    | '/wire'
     | '/auth/forgot'
     | '/auth/register'
     | '/auth'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/documents'
     | '/_authenticated/portal'
+    | '/_authenticated/wire'
     | '/auth/forgot'
     | '/auth/register'
     | '/auth/'
@@ -540,6 +552,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof AuthenticatedPortalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wire': {
+      id: '/_authenticated/wire'
+      path: '/wire'
+      fullPath: '/wire'
+      preLoaderRoute: typeof AuthenticatedWireRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/auth/': {
@@ -745,6 +764,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+  AuthenticatedWireRoute: typeof AuthenticatedWireRoute
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
@@ -770,6 +790,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+  AuthenticatedWireRoute: AuthenticatedWireRoute,
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
