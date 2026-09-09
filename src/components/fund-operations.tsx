@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { supabase } from "@/integrations/supabase/client";
+
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -46,6 +49,32 @@ export function FundOperations({ offeringId }: { offeringId: string }) {
     queryFn: () => load({ data: { offeringId } }),
     refetchInterval: 30_000,
   });
+
+  // Live updates: the moment an investor signs, wires or moves stage, refresh this fund.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`fund-ops-${offeringId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "document_signatures" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["fund-operations", offeringId] });
+        queryClient.invalidateQueries({ queryKey: ["fund-overview", offeringId] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "wire_confirmations" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["fund-operations", offeringId] });
+      })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "investor_applications", filter: `offering_id=eq.${offeringId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["fund-operations", offeringId] });
+          queryClient.invalidateQueries({ queryKey: ["fund-overview", offeringId] });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [offeringId, queryClient]);
+
 
   const [applicationId, setApplicationId] = useState("");
   const [category, setCategory] = useState<string>("funding");
