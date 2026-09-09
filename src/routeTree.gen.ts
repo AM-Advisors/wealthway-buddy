@@ -38,6 +38,7 @@ import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
+import { Route as AuthenticatedManagerActivityRouteImport } from './routes/_authenticated/manager.activity'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
 import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_authenticated/manager.investors'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
@@ -214,6 +215,12 @@ const AuthenticatedManagerApplicationIdRoute =
     path: '/manager/$applicationId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerActivityRoute =
+  AuthenticatedManagerActivityRouteImport.update({
+    id: '/manager/activity',
+    path: '/manager/activity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerDocumentsRoute =
   AuthenticatedManagerDocumentsRouteImport.update({
     id: '/manager/documents',
@@ -349,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
+  '/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
@@ -397,6 +405,7 @@ export interface FileRoutesByTo {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
+  '/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
@@ -448,6 +457,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
+  '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/_authenticated/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
+    | '/manager/activity'
     | '/manager/documents'
     | '/manager/investors'
     | '/manager/onboarding'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
+    | '/manager/activity'
     | '/manager/documents'
     | '/manager/investors'
     | '/manager/onboarding'
@@ -597,6 +609,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/wire'
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
+    | '/_authenticated/manager/activity'
     | '/_authenticated/manager/documents'
     | '/_authenticated/manager/investors'
     | '/_authenticated/manager/onboarding'
@@ -843,6 +856,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerApplicationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/activity': {
+      id: '/_authenticated/manager/activity'
+      path: '/manager/activity'
+      fullPath: '/manager/activity'
+      preLoaderRoute: typeof AuthenticatedManagerActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/documents': {
       id: '/_authenticated/manager/documents'
       path: '/manager/documents'
@@ -997,6 +1017,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
+  AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
   AuthenticatedManagerInvestorsRoute: typeof AuthenticatedManagerInvestorsRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
@@ -1032,6 +1053,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiligenceOfferingIdRoute: AuthenticatedDiligenceOfferingIdRoute,
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,
+  AuthenticatedManagerActivityRoute: AuthenticatedManagerActivityRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
   AuthenticatedManagerInvestorsRoute: AuthenticatedManagerInvestorsRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
