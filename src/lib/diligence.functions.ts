@@ -163,22 +163,39 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: rooms, error } = await supabase
       .from("diligence_rooms")
-      .select("id, offering_id, intro, created_at, entity_type, offerings(name, reg_type)")
+      .select(
+        "id, offering_id, intro, created_at, entity_type, nda_required, nda_version, offerings(name, reg_type)",
+      )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
     const ids = (rooms ?? []).map((r: any) => r.id);
-    const { data: docs } = ids.length
-      ? await supabase
-          .from("diligence_documents")
-          .select("id, room_id, category, title, description, file_name, size_bytes, uploaded_at")
-          .in("room_id", ids)
-      : { data: [] as any[] };
+    const empty = { data: [] as any[] };
+    const [{ data: docs }, { data: acceptances }, { data: checklist }, { data: questions }] =
+      ids.length
+        ? await Promise.all([
+            supabase
+              .from("diligence_documents")
+              .select(
+                "id, room_id, category, title, description, file_name, size_bytes, uploaded_at",
+              )
+              .in("room_id", ids),
+            supabase
+              .from("diligence_nda_acceptances")
+              .select("room_id, nda_version, accepted_at")
+              .eq("user_id", context.userId)
+              .in("room_id", ids),
+            supabase.from("diligence_checklist_items").select("room_id, status").in("room_id", ids),
+            supabase.from("diligence_questions").select("room_id, status").in("room_id", ids),
+          ])
+        : [empty, empty, empty, empty];
 
     return {
       rooms: (rooms ?? []).map((r: any) => {
         const mine = (docs ?? []).filter((d: any) => d.room_id === r.id) as DiligenceDocument[];
         const entityType = normalizeEntityType(r.entity_type);
+        const items = (checklist ?? []).filter((c: any) => c.room_id === r.id);
+        const done = items.filter((c: any) => c.status === "complete").length;
         return {
           id: r.id,
           offering_id: r.offering_id,
@@ -186,6 +203,15 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
           reg_type: r.offerings?.reg_type ?? null,
           entity_type: entityType,
           document_count: mine.length,
+          nda_required: Boolean(r.nda_required),
+          nda_accepted: (acceptances ?? []).some(
+            (a: any) => a.room_id === r.id && a.nda_version === r.nda_version,
+          ),
+          checklist_total: items.length,
+          checklist_complete: done,
+          open_questions: (questions ?? []).filter(
+            (q: any) => q.room_id === r.id && q.status !== "answered" && q.status !== "closed",
+          ).length,
           readiness: readiness(mine, entityType),
         };
       }),

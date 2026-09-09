@@ -61,16 +61,51 @@ function DiligenceIndex() {
                   <div>
                     <CardTitle>{room.name}</CardTitle>
                     <CardDescription>
-                      {room.document_count} document{room.document_count === 1 ? "" : "s"} available
+                      {room.entity_type === "startup" ? "Company" : "Fund"}
+                      {room.reg_type ? ` · Reg D ${room.reg_type}` : ""} · {room.document_count}{" "}
+                      document{room.document_count === 1 ? "" : "s"} available
                     </CardDescription>
                   </div>
-                  <Badge variant={room.readiness.score === 100 ? "default" : "secondary"}>
-                    {room.readiness.score}% complete
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {room.nda_required ? (
+                      <Badge variant={room.nda_accepted ? "secondary" : "destructive"}>
+                        {room.nda_accepted ? "Confidentiality signed" : "Signature needed"}
+                      </Badge>
+                    ) : null}
+                    <Badge variant={room.readiness.score === 100 ? "default" : "secondary"}>
+                      {room.readiness.score}% complete
+                    </Badge>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Progress value={room.readiness.score} />
+                <div className="grid gap-3 text-sm sm:grid-cols-3">
+                  <div>
+                    <p className="text-muted-foreground">Materials</p>
+                    <p>
+                      {room.readiness.covered.length} of{" "}
+                      {room.readiness.covered.length + room.readiness.missing.length} sections
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Checklist</p>
+                    <p>
+                      {room.checklist_total > 0
+                        ? `${room.checklist_complete} of ${room.checklist_total} done`
+                        : "Not started"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Open questions</p>
+                    <p>{room.open_questions}</p>
+                  </div>
+                </div>
+                {room.readiness.missing.length > 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Still to come: {room.readiness.missing.map((m: any) => m.label).join(", ")}
+                  </p>
+                ) : null}
                 <Button asChild size="sm">
                   <Link to="/diligence/$offeringId" params={{ offeringId: room.offering_id }}>
                     Open room
