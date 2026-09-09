@@ -46,7 +46,7 @@ function day(value?: string | null) {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function WireTrackingPanel() {
+export function WireTrackingPanel({ offeringId }: { offeringId?: string } = {}) {
   const fetchTracking = useServerFn(getWireTracking);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["wire-tracking"],
@@ -61,8 +61,10 @@ export function WireTrackingPanel() {
     return <p className="text-sm text-muted-foreground">Wire tracking is unavailable right now.</p>;
   }
 
-  const rows = (data.rows ?? []) as any[];
-  const totals = data.totals as any;
+  const allRows = (data.rows ?? []) as any[];
+  // On a single fund's page, show only that fund's wires and re-tally for it.
+  const rows = offeringId ? allRows.filter((r) => r.fundId === offeringId) : allRows;
+  const totals = offeringId ? tally(rows) : (data.totals as any);
 
   return (
     <Card>
@@ -137,6 +139,23 @@ export function WireTrackingPanel() {
       </CardContent>
     </Card>
   );
+}
+
+function tally(rows: any[]) {
+  const count = (stage: string) => rows.filter((r) => r.stage === stage).length;
+  const sum = (stages: string[]) =>
+    rows
+      .filter((r) => stages.includes(r.stage))
+      .reduce((total, r) => total + (r.amountCents ?? r.commitmentCents ?? 0), 0);
+  return {
+    awaiting: count("awaiting_wire"),
+    submitted: count("submitted"),
+    processing: count("processing"),
+    received: count("received"),
+    problem: count("problem"),
+    receivedCents: sum(["received"]),
+    inFlightCents: sum(["submitted", "processing", "awaiting_wire"]),
+  };
 }
 
 function Tally({ label, value }: { label: string; value: number }) {
