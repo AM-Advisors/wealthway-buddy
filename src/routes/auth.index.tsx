@@ -14,14 +14,14 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth/")({
   head: () => ({
     meta: [
-      { title: "Investor Sign In — Harmonious" },
+      { title: "Sign In — Harmonious" },
       {
         name: "description",
         content:
-          "Sign in to your Harmonious investor account to track your application, review fund documents and complete your subscription.",
+          "Sign in to Harmonious to track your application, review fund documents, manage your funds and complete your subscription.",
       },
-      { property: "og:title", content: "Investor Sign In — Harmonious" },
-      { property: "og:description", content: "Access the Harmonious investor portal." },
+      { property: "og:title", content: "Sign In — Harmonious" },
+      { property: "og:description", content: "Access the Harmonious portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -101,7 +101,7 @@ function SignInPage() {
     <div>
       <h1 className="text-3xl">Welcome back</h1>
       <p className="mt-2 text-muted-foreground">
-        Sign in to pick up your application exactly where you left it.
+        Sign in and we'll take you straight to your part of the portal.
       </p>
 
       <Button
@@ -160,13 +160,6 @@ function SignInPage() {
         Have an invitation?{" "}
         <Link to="/auth/register" className="font-medium text-foreground hover:underline">
           Create your account
-        </Link>
-      </p>
-
-      <p className="mt-2 text-sm text-muted-foreground">
-        Fund manager?{" "}
-        <Link to="/manager-login" className="font-medium text-foreground hover:underline">
-          Sign in here
         </Link>
       </p>
     </div>
