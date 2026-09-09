@@ -278,12 +278,12 @@ export const getFundLegalDocuments = createServerFn({ method: "GET" })
     const { data: signatures } = application
       ? await supabase
           .from("document_signatures")
-          .select("document_id, signed_at")
+          .select("offering_document_id, signed_at")
           .eq("application_id", application.id)
       : ({ data: [] } as any);
 
     const signedAtByDoc = new Map(
-      ((signatures ?? []) as any[]).map((s) => [s.document_id, s.signed_at as string | null]),
+      ((signatures ?? []) as any[]).map((s) => [s.offering_document_id, s.signed_at as string | null]),
     );
 
     return {
