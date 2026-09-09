@@ -620,6 +620,8 @@ export const getPortfolioValue = createServerFn({ method: "GET" })
           committed_cents: t.totals.committed_cents,
           received_cents: t.totals.funded_cents,
           equity_value_cents: equity,
+          share_price_cents: sharePrice,
+
           shares,
           value_per_share_cents: perShare == null ? null : Math.round(perShare * 100) / 100,
           committed_per_share_cents:
