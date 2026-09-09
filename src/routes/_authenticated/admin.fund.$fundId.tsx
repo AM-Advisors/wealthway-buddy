@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getFundPage, getFundDocumentBody } from "@/lib/fund-page.functions";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
+import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
