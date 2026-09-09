@@ -98,6 +98,13 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
 
     const entityType = normalizeEntityType((room as any)?.entity_type);
 
+    // A cap table kept in the platform counts as covering the capitalization
+    // section, so nobody has to upload a spreadsheet to satisfy readiness.
+    const { count: capTableRows } = await supabase
+      .from("diligence_cap_table")
+      .select("id", { count: "exact", head: true })
+      .eq("offering_id", data.offering_id);
+
     return {
       offering: { id: offering.id, name: offering.name, reg_type: offering.reg_type, summary: offering.summary },
       room: room
@@ -106,7 +113,8 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       entityType,
       categories: categoriesFor(entityType),
       documents,
-      readiness: readiness(documents, entityType),
+      capTableRows: capTableRows ?? 0,
+      readiness: readiness(documents, entityType, (capTableRows ?? 0) > 0 ? ["cap_table"] : []),
       canManage: await canManage(supabase, data.offering_id),
     };
   });
