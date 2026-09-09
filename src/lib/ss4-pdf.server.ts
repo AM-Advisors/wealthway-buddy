@@ -179,10 +179,27 @@ export async function fillSs4Pdf(data: Ss4Data): Promise<Uint8Array> {
     }
   };
 
+  // The government form ships without usable "on" appearances (it is an XFA form), so a
+  // checked box renders blank after flattening. Draw the mark onto the page instead.
+  const markFont = await doc.embedFont(StandardFonts.HelveticaBold);
+  const firstPage = doc.getPages()[0];
+
   const check = (group: string, index: number) => {
     const field = checkByGroup.get(`${group}:${index}`);
+    if (!field || !firstPage) return;
     try {
-      field?.check();
+      field.check();
+      const widget = field.acroField.getWidgets()[0];
+      if (!widget) return;
+      const rect = widget.getRectangle();
+      const size = Math.min(rect.width, rect.height) * 0.9;
+      firstPage.drawText("X", {
+        x: rect.x + (rect.width - size * 0.66) / 2,
+        y: rect.y + (rect.height - size * 0.72) / 2,
+        size,
+        font: markFont,
+        color: rgb(0.08, 0.15, 0.28),
+      });
     } catch {
       /* ignore */
     }
