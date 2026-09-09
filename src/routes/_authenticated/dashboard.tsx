@@ -325,6 +325,8 @@ function Dashboard() {
         </Button>
       </div>
 
+      <ClosingCard />
+
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <Summary title="Commitment" value={money(data?.subscription?.commitment_cents)} />
         <Summary title="Overall status" value={label(app.status)} />
