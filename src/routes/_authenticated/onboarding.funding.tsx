@@ -157,6 +157,7 @@ function FundingStep() {
   const allChecked = checked.every(Boolean);
   const statements = method === "wire" ? WIRE_STATEMENTS : ACH_STATEMENTS;
   const reference = payment?.reference_code ?? (data as any)?.reference;
+  const progress = ((data as any)?.fundProgress ?? null) as any;
   const wireConfirmations = ((data as any)?.wireConfirmations ?? []) as any[];
   const pendingConfirmation = wireConfirmations.find((w) => w.status === "submitted") ?? null;
   const approvedConfirmation = wireConfirmations.find((w) => w.status === "approved") ?? null;
