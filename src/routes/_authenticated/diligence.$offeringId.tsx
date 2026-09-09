@@ -405,6 +405,11 @@ function DiligenceRoomPage() {
         <TabsContent value="overview" className="mt-6">
           <OverviewTab data={data} access={a} />
         </TabsContent>
+        {canManage ? null : (
+          <TabsContent value="application" className="mt-6">
+            <RoomKycApplication offeringId={offeringId} />
+          </TabsContent>
+        )}
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
         </TabsContent>
