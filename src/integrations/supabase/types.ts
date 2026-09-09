@@ -769,6 +769,93 @@ export type Database = {
           },
         ]
       }
+      diligence_nda_signatures: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          document_hash: string | null
+          id: string
+          manager_notified_at: string | null
+          nda_version: number
+          offering_id: string
+          room_id: string
+          sent_at: string | null
+          sign_request_id: string | null
+          signed_box_file_id: string | null
+          signed_file_name: string | null
+          signed_pdf_path: string | null
+          signer_email: string
+          signer_name: string
+          signing_url: string | null
+          source_box_file_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          document_hash?: string | null
+          id?: string
+          manager_notified_at?: string | null
+          nda_version?: number
+          offering_id: string
+          room_id: string
+          sent_at?: string | null
+          sign_request_id?: string | null
+          signed_box_file_id?: string | null
+          signed_file_name?: string | null
+          signed_pdf_path?: string | null
+          signer_email: string
+          signer_name: string
+          signing_url?: string | null
+          source_box_file_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          document_hash?: string | null
+          id?: string
+          manager_notified_at?: string | null
+          nda_version?: number
+          offering_id?: string
+          room_id?: string
+          sent_at?: string | null
+          sign_request_id?: string | null
+          signed_box_file_id?: string | null
+          signed_file_name?: string | null
+          signed_pdf_path?: string | null
+          signer_email?: string
+          signer_name?: string
+          signing_url?: string | null
+          source_box_file_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_nda_signatures_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_nda_signatures_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diligence_question_messages: {
         Row: {
           author_id: string
@@ -882,7 +969,10 @@ export type Database = {
           entity_type: string
           id: string
           intro: string | null
+          nda_box_file_id: string | null
+          nda_file_name: string | null
           nda_required: boolean
+          nda_signing_enabled: boolean
           nda_text: string | null
           nda_version: number
           offering_id: string
@@ -895,7 +985,10 @@ export type Database = {
           entity_type?: string
           id?: string
           intro?: string | null
+          nda_box_file_id?: string | null
+          nda_file_name?: string | null
           nda_required?: boolean
+          nda_signing_enabled?: boolean
           nda_text?: string | null
           nda_version?: number
           offering_id: string
@@ -908,7 +1001,10 @@ export type Database = {
           entity_type?: string
           id?: string
           intro?: string | null
+          nda_box_file_id?: string | null
+          nda_file_name?: string | null
           nda_required?: boolean
+          nda_signing_enabled?: boolean
           nda_text?: string | null
           nda_version?: number
           offering_id?: string
