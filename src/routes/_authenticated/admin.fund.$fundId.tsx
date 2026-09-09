@@ -10,6 +10,7 @@ import { savePdf } from "@/lib/download-pdf";
 import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { SignedDocumentsCard } from "@/components/signed-documents-card";
 import { PacketEmailCard } from "@/components/packet-email-card";
+import { FundEntityCard } from "@/components/fund-entity-card";
 import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
@@ -259,6 +260,7 @@ function FundPage() {
       </div>
 
       <div className="mt-6">
+        <FundEntityCard fundId={offering.id} />
         <PacketEmailCard fundId={offering.id} />
       </div>
 
