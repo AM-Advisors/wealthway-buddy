@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { decideWireAsReviewer, getFundInvestorReview } from "@/lib/manager.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { syncFundSignatures } from "@/lib/box-sign.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
   const load = useServerFn(getFundInvestorReview);
   const decide = useServerFn(decideWireAsReviewer);
   const signedUrl = useServerFn(getSignedDocumentUrl);
+  const syncFund = useServerFn(syncFundSignatures);
   const queryClient = useQueryClient();
 
   const [rejecting, setRejecting] = useState<string | null>(null);
