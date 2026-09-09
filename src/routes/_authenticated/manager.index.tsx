@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FundInvitations } from "@/components/fund-invitations";
 import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
+import { WireTrackingPanel } from "@/components/wire-tracking-panel";
 
 export const Route = createFileRoute("/_authenticated/manager/")({
   head: () => ({
@@ -146,6 +147,11 @@ function ManagerPanel() {
           ))}
         </div>
       )}
+
+      <section className="mt-10">
+        <h2 className="mb-3 text-xl">Wire tracking</h2>
+        <WireTrackingPanel />
+      </section>
 
       <section className="mt-10">
         <h2 className="text-xl">Your tools</h2>
