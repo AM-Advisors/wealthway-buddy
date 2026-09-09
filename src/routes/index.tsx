@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import heroImage from "@/assets/hero-harmonious.jpg";
+import heroImage from "@/assets/platform-funding.png";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -107,7 +107,7 @@ function Index() {
 
             <img
               src={heroImage}
-              alt="A lighthouse beam illuminating fund documents and reporting cards"
+              alt="The Harmonious funding dashboard showing capital raised and progress across funds"
               width={1600}
               height={1008}
               className="w-full rounded-2xl border border-primary-foreground/15 shadow-2xl"
