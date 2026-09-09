@@ -752,9 +752,9 @@ export const saveCapPosition = createServerFn({ method: "POST" })
 
     // This investor's own wire fee: null puts them back on the fund's standard rate.
     if (data.wire_fee_cents !== undefined || data.wire_fee_note !== undefined) {
-      const patch: Record<string, unknown> = {};
-      if (data.wire_fee_cents !== undefined) patch["wire_fee_cents"] = data.wire_fee_cents;
-      if (data.wire_fee_note !== undefined) patch["wire_fee_note"] = data.wire_fee_note || null;
+      const patch: { wire_fee_cents?: number | null; wire_fee_note?: string | null } = {};
+      if (data.wire_fee_cents !== undefined) patch.wire_fee_cents = data.wire_fee_cents;
+      if (data.wire_fee_note !== undefined) patch.wire_fee_note = data.wire_fee_note || null;
       const { error: feeErr } = await supabaseAdmin
         .from("investor_applications")
         .update(patch)
