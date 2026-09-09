@@ -72,6 +72,7 @@ import { Route as AuthenticatedManagerPerformanceRouteImport } from './routes/_a
 import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_authenticated/manager.permissions'
 import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes/_authenticated/manager.portfolio-value'
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
+import { Route as AuthenticatedManagerPublicPageRouteImport } from './routes/_authenticated/manager.public-page'
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
@@ -448,6 +449,12 @@ const AuthenticatedManagerProfileRoute =
     path: '/manager/profile',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerPublicPageRoute =
+  AuthenticatedManagerPublicPageRouteImport.update({
+    id: '/manager/public-page',
+    path: '/manager/public-page',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerRequestsRoute =
   AuthenticatedManagerRequestsRouteImport.update({
     id: '/manager/requests',
@@ -616,6 +623,7 @@ export interface FileRoutesByFullPath {
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
+  '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
@@ -698,6 +706,7 @@ export interface FileRoutesByTo {
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
+  '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
@@ -783,6 +792,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/_authenticated/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
+  '/_authenticated/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
@@ -868,6 +878,7 @@ export interface FileRouteTypes {
     | '/manager/permissions'
     | '/manager/portfolio-value'
     | '/manager/profile'
+    | '/manager/public-page'
     | '/manager/requests'
     | '/manager/timeline'
     | '/manager/wires'
@@ -950,6 +961,7 @@ export interface FileRouteTypes {
     | '/manager/permissions'
     | '/manager/portfolio-value'
     | '/manager/profile'
+    | '/manager/public-page'
     | '/manager/requests'
     | '/manager/timeline'
     | '/manager/wires'
@@ -1034,6 +1046,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/permissions'
     | '/_authenticated/manager/portfolio-value'
     | '/_authenticated/manager/profile'
+    | '/_authenticated/manager/public-page'
     | '/_authenticated/manager/requests'
     | '/_authenticated/manager/timeline'
     | '/_authenticated/manager/wires'
@@ -1520,6 +1533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/public-page': {
+      id: '/_authenticated/manager/public-page'
+      path: '/manager/public-page'
+      fullPath: '/manager/public-page'
+      preLoaderRoute: typeof AuthenticatedManagerPublicPageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/requests': {
       id: '/_authenticated/manager/requests'
       path: '/manager/requests'
@@ -1707,6 +1727,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerPermissionsRoute: typeof AuthenticatedManagerPermissionsRoute
   AuthenticatedManagerPortfolioValueRoute: typeof AuthenticatedManagerPortfolioValueRoute
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
+  AuthenticatedManagerPublicPageRoute: typeof AuthenticatedManagerPublicPageRoute
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
@@ -1778,6 +1799,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerPortfolioValueRoute:
     AuthenticatedManagerPortfolioValueRoute,
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
+  AuthenticatedManagerPublicPageRoute: AuthenticatedManagerPublicPageRoute,
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
