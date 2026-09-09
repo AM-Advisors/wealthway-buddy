@@ -134,6 +134,51 @@ export const listOfferings = createServerFn({ method: "GET" })
     };
   });
 
+/** Funds the caller can edit (all for admins, assigned funds for managers) with their documents. */
+export const listManagedFundDocuments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const isAdmin = await isAdminUser(supabase, userId);
+
+    let managedIds: string[] = [];
+    if (!isAdmin) {
+      const { data: assignments, error } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      if (error) throw new Error(error.message);
+      managedIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      if (managedIds.length === 0) return { isAdmin, offerings: [] };
+    }
+
+    let query = supabase
+      .from("offerings")
+      .select("id, name, reg_type, min_investment_cents, is_open")
+      .order("name");
+    if (!isAdmin) query = query.in("id", managedIds);
+    const { data: offerings, error: offeringError } = await query;
+    if (offeringError) throw new Error(offeringError.message);
+
+    const ids = ((offerings ?? []) as any[]).map((o) => o.id as string);
+    const { data: documents } = ids.length
+      ? await supabase
+          .from("offering_documents")
+          .select("id, offering_id, title, doc_type, body, requires_signature, sort_order")
+          .in("offering_id", ids)
+          .order("sort_order", { ascending: true })
+      : { data: [] as any[] };
+
+    return {
+      isAdmin,
+      offerings: ((offerings ?? []) as any[]).map((o) => ({
+        ...o,
+        documents: ((documents ?? []) as any[]).filter((d) => d.offering_id === o.id),
+      })),
+    };
+  });
+
+
 async function actorIdentity(supabase: any, userId: string, claims: any) {
   const { data } = await supabase
     .from("profiles")
