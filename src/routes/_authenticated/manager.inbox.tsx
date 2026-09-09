@@ -264,11 +264,12 @@ function ManagerInboxPage() {
                       disabled={reviewMutation.isPending}
                       onClick={() => {
                         const note = window.prompt("What does the investor need to fix?") ?? "";
-                        reviewMutation.mutate({
-                          id: item.id,
-                          status: "needs_followup",
-                          note: note.trim() || undefined,
-                        });
+                        const trimmed = note.trim();
+                        reviewMutation.mutate(
+                          trimmed
+                            ? { id: item.id, status: "needs_followup", note: trimmed }
+                            : { id: item.id, status: "needs_followup" },
+                        );
                       }}
                     >
                       Needs follow-up
