@@ -151,8 +151,14 @@ export const confirmSubscription = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
+    await (await import("@/lib/ownership-email.server")).notifyOwnershipChange(
+      application.offering_id as string,
+      "A commitment for this fund was confirmed, so the ownership split has been recalculated.",
+    );
+
     return { ok: true, commitment_cents: cents };
   });
+
 
 /** Reviewers are admins (all funds) and fund managers (their assigned funds). */
 async function assertReviewer(supabase: any, userId: string, offeringId: string) {

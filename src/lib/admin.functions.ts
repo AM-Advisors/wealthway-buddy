@@ -574,10 +574,14 @@ export const decidePayment = createServerFn({ method: "POST" })
     if (appError) throw new Error(appError.message);
 
     const paymentActivity = await import("@/lib/reviewer-activity.server");
+    const paymentOfferingId = await paymentActivity.offeringIdForApplication(
+      supabase,
+      data.applicationId,
+    );
     await paymentActivity.logReviewerActivity(supabase, {
       actorId: userId,
       applicationId: data.applicationId,
-      offeringId: await paymentActivity.offeringIdForApplication(supabase, data.applicationId),
+      offeringId: paymentOfferingId,
       action: "payment_decision",
       area: "funding",
       outcome: data.outcome === "settled" ? "approved" : "declined",
@@ -585,8 +589,15 @@ export const decidePayment = createServerFn({ method: "POST" })
     });
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
+    if (paymentOfferingId) {
+      await (await import("@/lib/ownership-email.server")).notifyOwnershipChange(
+        paymentOfferingId,
+        "A payment for this fund was updated, so the ownership split has been recalculated.",
+      );
+    }
     return { ok: true };
   });
+
 
 export const listDiditEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

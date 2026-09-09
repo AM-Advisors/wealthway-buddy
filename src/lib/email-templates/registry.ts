@@ -6,6 +6,8 @@ import { template as deliveryAlert } from './delivery-alert'
 import { template as fundInvitation } from './fund-invitation'
 import { template as managerAlert } from './manager-alert'
 import { template as investorWelcome } from './investor-welcome'
+import { template as ownershipUpdate } from './ownership-update'
+
 
 
 
