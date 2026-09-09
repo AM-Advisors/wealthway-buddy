@@ -332,9 +332,14 @@ function Dashboard() {
             {data?.offering?.reg_type ? ` — Reg D ${data.offering.reg_type}` : ""}
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/portal">Sign documents</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/apply">Apply to a fund</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/portal">Sign documents</Link>
+          </Button>
+        </div>
       </div>
 
       <ClosingCard />
