@@ -20,6 +20,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
+import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
@@ -148,6 +149,12 @@ const AuthenticatedFundMemoRoute = AuthenticatedFundMemoRouteImport.update({
   path: '/fund-memo',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMyPortfolioRoute =
+  AuthenticatedMyPortfolioRouteImport.update({
+    id: '/my-portfolio',
+    path: '/my-portfolio',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -574,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
+  '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -657,6 +665,7 @@ export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
+  '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -743,6 +752,7 @@ export interface FileRoutesById {
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
+  '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
@@ -829,6 +839,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/fund-documents'
     | '/fund-memo'
+    | '/my-portfolio'
     | '/portal'
     | '/subscription'
     | '/wire'
@@ -912,6 +923,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/fund-documents'
     | '/fund-memo'
+    | '/my-portfolio'
     | '/portal'
     | '/subscription'
     | '/wire'
@@ -997,6 +1009,7 @@ export interface FileRouteTypes {
     | '/_authenticated/documents'
     | '/_authenticated/fund-documents'
     | '/_authenticated/fund-memo'
+    | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
     | '/_authenticated/subscription'
     | '/_authenticated/wire'
@@ -1167,6 +1180,13 @@ declare module '@tanstack/react-router' {
       path: '/fund-memo'
       fullPath: '/fund-memo'
       preLoaderRoute: typeof AuthenticatedFundMemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-portfolio': {
+      id: '/_authenticated/my-portfolio'
+      path: '/my-portfolio'
+      fullPath: '/my-portfolio'
+      preLoaderRoute: typeof AuthenticatedMyPortfolioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/portal': {
@@ -1682,6 +1702,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
+  AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
@@ -1749,6 +1770,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
+  AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
