@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FundInvitations } from "@/components/fund-invitations";
+import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
 
 export const Route = createFileRoute("/_authenticated/manager/")({
   head: () => ({
@@ -154,6 +155,11 @@ function ManagerPanel() {
 
       <div className="mt-10">
         <FundInvitations title="Invite people to your funds" />
+      </section>
+
+      <section className="mt-10">
+        <h2 className="mb-3 text-xl">Email alerts</h2>
+        <AlertPreferenceToggle />
       </div>
     </main>
   );
