@@ -188,12 +188,12 @@
   }
 }
 
-/* Brand gradient: navy #142647 → ink #221F20 */
+/* Brand gradient: deep navy #142647 → black #000000 */
 @utility bg-brand-gradient {
   background-image: linear-gradient(
     135deg,
-    oklch(0.273 0.066 261.5),
-    oklch(0.243 0.005 355.2)
+    var(--brand-deep-navy),
+    var(--brand-black)
   );
 }
 
