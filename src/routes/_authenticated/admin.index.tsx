@@ -115,6 +115,10 @@ function AdminQueue() {
                 <Link to="/admin/investors">Investor database</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
+                <Link to="/admin/cap-table">Cap table</Link>
+              </Button>
+
+              <Button asChild size="sm" variant="outline">
                 <Link to="/admin/security">Login activity</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
