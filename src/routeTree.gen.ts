@@ -81,6 +81,7 @@ import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
 import { Route as AuthenticatedManagerPublicPageRouteImport } from './routes/_authenticated/manager.public-page'
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
+import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authenticated/manager.tax'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
@@ -511,6 +512,11 @@ const AuthenticatedManagerRequestsRoute =
     path: '/manager/requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerTaxRoute = AuthenticatedManagerTaxRouteImport.update({
+  id: '/manager/tax',
+  path: '/manager/tax',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedManagerTimelineRoute =
   AuthenticatedManagerTimelineRouteImport.update({
     id: '/manager/timeline',
@@ -720,6 +726,7 @@ export interface FileRoutesByFullPath {
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
+  '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -817,6 +824,7 @@ export interface FileRoutesByTo {
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
+  '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -917,6 +925,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/_authenticated/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
+  '/_authenticated/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -1017,6 +1026,7 @@ export interface FileRouteTypes {
     | '/manager/profile'
     | '/manager/public-page'
     | '/manager/requests'
+    | '/manager/tax'
     | '/manager/timeline'
     | '/manager/wires'
     | '/onboarding/accreditation'
@@ -1114,6 +1124,7 @@ export interface FileRouteTypes {
     | '/manager/profile'
     | '/manager/public-page'
     | '/manager/requests'
+    | '/manager/tax'
     | '/manager/timeline'
     | '/manager/wires'
     | '/onboarding/accreditation'
@@ -1213,6 +1224,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/profile'
     | '/_authenticated/manager/public-page'
     | '/_authenticated/manager/requests'
+    | '/_authenticated/manager/tax'
     | '/_authenticated/manager/timeline'
     | '/_authenticated/manager/wires'
     | '/_authenticated/onboarding/accreditation'
@@ -1772,6 +1784,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/tax': {
+      id: '/_authenticated/manager/tax'
+      path: '/manager/tax'
+      fullPath: '/manager/tax'
+      preLoaderRoute: typeof AuthenticatedManagerTaxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/timeline': {
       id: '/_authenticated/manager/timeline'
       path: '/manager/timeline'
@@ -2006,6 +2025,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
   AuthenticatedManagerPublicPageRoute: typeof AuthenticatedManagerPublicPageRoute
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
+  AuthenticatedManagerTaxRoute: typeof AuthenticatedManagerTaxRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
@@ -2088,6 +2108,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
   AuthenticatedManagerPublicPageRoute: AuthenticatedManagerPublicPageRoute,
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
+  AuthenticatedManagerTaxRoute: AuthenticatedManagerTaxRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
   AuthenticatedOnboardingAccreditationRoute:
