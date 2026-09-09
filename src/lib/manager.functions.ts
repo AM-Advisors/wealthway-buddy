@@ -527,6 +527,20 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
       .eq("id", data.applicationId);
     if (updateError) throw new Error(updateError.message);
 
+    await (await import("@/lib/reviewer-activity.server")).logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: application.offering_id as string,
+      action: "wire_decision",
+      area: "wire",
+      outcome: data.outcome === "approved" ? "approved" : "declined",
+      summary:
+        data.outcome === "approved"
+          ? "Wire confirmation approved and funding marked received"
+          : "Wire confirmation sent back to the investor",
+      note: data.notes || null,
+    });
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
