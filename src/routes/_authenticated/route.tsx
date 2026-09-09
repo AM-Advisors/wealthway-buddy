@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/app-sidebar";
+import { PortalGate } from "@/components/portal-gate";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -35,7 +36,9 @@ function AuthenticatedLayout() {
             <SidebarTrigger />
           </header>
           <main className="min-w-0 flex-1">
-            <Outlet />
+            <PortalGate onSignOut={signOut}>
+              <Outlet />
+            </PortalGate>
           </main>
         </div>
       </div>
