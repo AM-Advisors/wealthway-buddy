@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FundInvitations } from "@/components/fund-invitations";
 import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
+import { DiligenceRoomsPanel } from "@/components/diligence-rooms-panel";
 import { WireRequestForm, WireRequestQueue } from "@/components/wire-requests";
 
 export const Route = createFileRoute("/_authenticated/manager/")({
@@ -168,6 +169,14 @@ function ManagerPanel() {
           ))}
         </div>
       )}
+
+      <section className="mt-10">
+        <h2 className="mb-1 text-xl">Diligence rooms</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Your funds, their rooms, and the investors who have looked inside.
+        </p>
+        <DiligenceRoomsPanel />
+      </section>
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl">Wire tracking</h2>
