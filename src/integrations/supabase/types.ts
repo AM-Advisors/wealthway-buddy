@@ -856,6 +856,66 @@ export type Database = {
           },
         ]
       }
+      diligence_question_assignments: {
+        Row: {
+          answered_at: string | null
+          assigned_by: string
+          created_at: string
+          due_date: string | null
+          id: string
+          investor_user_id: string
+          offering_id: string
+          question_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          answered_at?: string | null
+          assigned_by: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          investor_user_id: string
+          offering_id: string
+          question_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          answered_at?: string | null
+          assigned_by?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          investor_user_id?: string
+          offering_id?: string
+          question_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_question_assignments_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_question_assignments_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_request_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diligence_question_messages: {
         Row: {
           author_id: string
@@ -900,6 +960,64 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "diligence_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_question_responses: {
+        Row: {
+          assignment_id: string
+          author_id: string
+          author_name: string | null
+          body: string
+          created_at: string
+          from_reviewer: boolean
+          id: string
+          offering_id: string
+          question_id: string
+        }
+        Insert: {
+          assignment_id: string
+          author_id: string
+          author_name?: string | null
+          body: string
+          created_at?: string
+          from_reviewer?: boolean
+          id?: string
+          offering_id: string
+          question_id: string
+        }
+        Update: {
+          assignment_id?: string
+          author_id?: string
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          from_reviewer?: boolean
+          id?: string
+          offering_id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_question_responses_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_question_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_question_responses_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_question_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_request_questions"
             referencedColumns: ["id"]
           },
         ]
@@ -954,6 +1072,63 @@ export type Database = {
           },
           {
             foreignKeyName: "diligence_questions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_request_questions: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          guidance: string | null
+          id: string
+          is_required: boolean
+          offering_id: string
+          prompt: string
+          room_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by: string
+          guidance?: string | null
+          id?: string
+          is_required?: boolean
+          offering_id: string
+          prompt: string
+          room_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          guidance?: string | null
+          id?: string
+          is_required?: boolean
+          offering_id?: string
+          prompt?: string
+          room_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_request_questions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_request_questions_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "diligence_rooms"
