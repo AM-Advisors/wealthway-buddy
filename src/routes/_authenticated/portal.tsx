@@ -15,6 +15,7 @@ import {
   startBoxSigning,
 } from "@/lib/box-sign.functions";
 
+import { PortalMessageThread } from "@/components/portal-message-thread";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
