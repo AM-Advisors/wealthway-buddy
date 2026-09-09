@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -16,8 +16,10 @@ import {
   getDiligenceDownloadUrl,
   getDiligenceRoom,
   getVersionDownloadUrl,
+  getDiligenceEngagement,
   listDiligenceActivity,
   listDiligenceChecklist,
+  recordRoomVisit,
   listDiligenceQuestions,
   listDocumentVersions,
   removeChecklistItem,
@@ -108,6 +110,16 @@ function DiligenceRoomPage() {
   });
 
   const [signer, setSigner] = useState("");
+
+  // Record that this person actually opened the room (once per page visit; the
+  // server keeps at most one entry per 30 minutes).
+  const visit = useServerFn(recordRoomVisit);
+  const visitLogged = useRef(false);
+  useEffect(() => {
+    if (visitLogged.current || gated || !access.isSuccess) return;
+    visitLogged.current = true;
+    void visit({ data: { offering_id: offeringId } }).catch(() => {});
+  }, [access.isSuccess, gated, offeringId, visit]);
 
   const acceptMutation = useMutation({
     mutationFn: () => acceptNda({ data: { offering_id: offeringId, signer_name: signer.trim() } }),
@@ -223,6 +235,7 @@ function DiligenceRoomPage() {
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
+          {canManage ? <TabsTrigger value="engagement">Who's viewing</TabsTrigger> : null}
           {canManage ? <TabsTrigger value="settings">Agreement</TabsTrigger> : null}
         </TabsList>
 
@@ -238,6 +251,11 @@ function DiligenceRoomPage() {
         <TabsContent value="activity" className="mt-6">
           <ActivityTab offeringId={offeringId} />
         </TabsContent>
+        {canManage ? (
+          <TabsContent value="engagement" className="mt-6">
+            <EngagementTab offeringId={offeringId} />
+          </TabsContent>
+        ) : null}
         {canManage ? (
           <TabsContent value="settings" className="mt-6">
             <NdaSettings offeringId={offeringId} access={a} />
@@ -1003,6 +1021,114 @@ function ActivityTab({ offeringId }: { offeringId: string }) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/* ------------------------- Who's viewing (engagement) ------------------ */
+
+function EngagementTab({ offeringId }: { offeringId: string }) {
+  const load = useServerFn(getDiligenceEngagement);
+  const { data, isLoading } = useQuery({
+    queryKey: ["diligence-engagement", offeringId],
+    queryFn: () => load({ data: { offering_id: offeringId } }),
+    refetchInterval: 60_000,
+  });
+
+  const viewers = ((data as any)?.viewers ?? []) as any[];
+  const neverOpened = ((data as any)?.neverOpened ?? []) as any[];
+  const totalDocuments = Number((data as any)?.totalDocuments ?? 0);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Who's opening this room</CardTitle>
+          <CardDescription>
+            Real activity inside the room — when each person came in and which documents they
+            actually opened. Repeat visits within 30 minutes count once.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : viewers.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nobody has opened the room yet.</p>
+          ) : (
+            <ul className="divide-y rounded-md border">
+              {viewers.map((v) => (
+                <li key={v.actor_id} className="space-y-2 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{v.name || v.email || "Someone"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {v.email && v.name ? `${v.email} · ` : ""}
+                        {v.visits} visit{v.visits === 1 ? "" : "s"} · last active {when(v.lastSeen)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary">
+                        {v.documents.length} of {totalDocuments} documents opened
+                      </Badge>
+                      {v.ndaAcceptedAt ? (
+                        <Badge variant="outline">Agreement signed</Badge>
+                      ) : null}
+                      {v.questionsAsked > 0 ? (
+                        <Badge variant="outline">
+                          {v.questionsAsked} question{v.questionsAsked === 1 ? "" : "s"}
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                  {v.documents.length > 0 ? (
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {v.documents.map((d: any) => (
+                        <li key={d.id}>
+                          {d.title} — opened {d.opens} time{d.opens === 1 ? "" : "s"}, last{" "}
+                          {when(d.lastOpened)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Came into the room but has not opened a document yet.
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Has access, never opened it</CardTitle>
+          <CardDescription>
+            People who can reach this room but have not been in yet — worth a nudge.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : neverOpened.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Everyone with access has been in at least once.
+            </p>
+          ) : (
+            <ul className="divide-y rounded-md border text-sm">
+              {neverOpened.map((p) => (
+                <li key={p.user_id} className="p-3">
+                  {p.name || p.email || "Investor"}
+                  {p.name && p.email ? (
+                    <span className="text-xs text-muted-foreground"> · {p.email}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
