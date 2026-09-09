@@ -473,6 +473,8 @@ const positionSchema = z.object({
   commitment_cents: z.number().int().min(0).nullable(),
 });
 
+export type CapPositionInput = z.infer<typeof positionSchema>;
+
 /** Manager edits one investor's shares, class, ownership and committed capital. */
 export const saveCapPosition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

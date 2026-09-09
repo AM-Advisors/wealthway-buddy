@@ -8,6 +8,7 @@ import {
   getCapTableEditor,
   listCapTableFunds,
   saveCapPosition,
+  type CapPositionInput,
   type CapTableEditorRow,
 } from "@/lib/cap-table.functions";
 
@@ -26,6 +27,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+
+
+function money(cents?: number | null) {
+  if (!cents) return "$0";
+  return `$${Math.round(cents / 100).toLocaleString("en-US")}`;
+}
+
+function share(value: number) {
+  if (!value) return "0%";
+  return `${value < 0.01 ? value.toFixed(4) : value.toFixed(2)}%`;
+}
 
 export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
   const loadFunds = useServerFn(listCapTableFunds);
@@ -58,7 +70,7 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (input: Parameters<typeof save>[0]["data"]) => save({ data: input }),
+    mutationFn: (input: CapPositionInput) => save({ data: input }),
     onSuccess: () => {
       toast.success("Cap table updated.");
       setEditing(null);
