@@ -1565,6 +1565,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
 
   return (
     <div className="space-y-6">
+      <LegalDocumentReadership offeringId={offeringId} />
       <Card>
         <CardHeader>
           <CardTitle>Who read each document</CardTitle>
