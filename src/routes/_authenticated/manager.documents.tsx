@@ -162,6 +162,18 @@ function ManagerDocumentsPage() {
         </Select>
       </div>
 
+      {activeFund && (
+        <div className="mt-8">
+          <TemplatePackPicker
+            offeringId={activeFund.id}
+            offeringName={activeFund.name}
+            onApplied={invalidate}
+          />
+        </div>
+      )}
+
+
+
       <Card className="mt-8">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle>Documents</CardTitle>
