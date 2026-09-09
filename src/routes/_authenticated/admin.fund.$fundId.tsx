@@ -132,14 +132,17 @@ function FundPage() {
           <Button asChild size="sm" variant="outline">
             <Link to="/admin/access">Fund access</Link>
           </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/diligence/$offeringId" params={{ offeringId: fundId }}>
+              Diligence room
+            </Link>
+          </Button>
           {isAdmin && (
             <Button asChild size="sm" variant="outline">
               <Link to="/admin/funds">Edit in fund setup</Link>
             </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/diligence/$offeringId" params={{ offeringId: fundId }}>Diligence room</Link>
-            </Button>
           )}
+
         </div>
       </div>
 
