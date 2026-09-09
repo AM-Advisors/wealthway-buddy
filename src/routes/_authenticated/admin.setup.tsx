@@ -21,6 +21,7 @@ import { saveOffering, saveOfferingDocument, WIRE_FIELDS } from "@/lib/offerings
 import { listAccessDirectory, assignFundAccess } from "@/lib/access.functions";
 import { FundEntityCard } from "@/components/fund-entity-card";
 import { inviteToFund } from "@/lib/invitations.functions";
+import { REG_TYPES, regTypeDescription, type RegTypeValue } from "@/lib/reg-types";
 
 export const Route = createFileRoute("/_authenticated/admin/setup")({
   head: () => ({

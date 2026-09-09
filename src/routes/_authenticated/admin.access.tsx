@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { regTypeLabel } from "@/lib/reg-types";
 import { listAccessDirectory, assignFundAccess, revokeFundAccess } from "@/lib/access.functions";
 import { FundInvitations } from "@/components/fund-invitations";
 
@@ -132,7 +133,7 @@ function AccessPage() {
             >
               <p className="font-medium">{o.name}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Reg D {o.reg_type === "506c" ? "506(c)" : "506(b)"} · view fund page
+                {regTypeLabel(o.reg_type)} · view fund page
               </p>
             </Link>
           ))}
@@ -255,7 +256,7 @@ function AssignmentPanel({
               <SelectContent>
                 {offerings.map((o) => (
                   <SelectItem key={o.id} value={o.id}>
-                    {o.name} ({o.reg_type === "506c" ? "506(c)" : "506(b)"})
+                    {o.name} ({regTypeLabel(o.reg_type)})
                   </SelectItem>
                 ))}
               </SelectContent>

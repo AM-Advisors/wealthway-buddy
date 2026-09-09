@@ -11,6 +11,7 @@ import {
 import { WIRE_FIELDS } from "@/lib/offerings.functions";
 import { FIELD_LABELS } from "@/lib/offering-audit";
 import { Badge } from "@/components/ui/badge";
+import { regTypeLabel } from "@/lib/reg-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -147,7 +148,7 @@ function WireAdminPage() {
                   </Badge>
                 </CardTitle>
                 <CardDescription>
-                  {fund.reg_type === "506c" ? "Reg D 506(c)" : "Reg D 506(b)"} ·{" "}
+                  {regTypeLabel(fund.reg_type)} ·{" "}
                   {fund.wire_updated_at
                     ? `Last updated ${new Date(fund.wire_updated_at).toLocaleString()}`
                     : "Never updated"}

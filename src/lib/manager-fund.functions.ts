@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { regTypeLabel } from "@/lib/reg-types";
 
 /**
  * One fund, seen by the manager who runs it: how far setup has got,
@@ -249,7 +250,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
         label: "Fund basics",
         done: fundOf(offering).basics,
         detail: fundOf(offering).basics
-          ? `${(offering as any).reg_type === "506c" ? "506(c)" : "506(b)"} · minimum $${(
+          ? `${regTypeLabel((offering as any).reg_type)} · minimum $${(
               Number((offering as any).min_investment_cents ?? 0) / 100
             ).toLocaleString("en-US")} · target $${(
               Number((offering as any).target_raise_cents ?? 0) / 100
