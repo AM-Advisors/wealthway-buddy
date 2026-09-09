@@ -103,9 +103,42 @@ export const getOnboarding = createServerFn({ method: "GET" })
       offeringId = (access.data?.offering_id as string | undefined) ?? null;
     }
 
+    const { data: persona } = personaId
+      ? await supabase.from("investor_personas").select("*").eq("id", personaId).maybeSingle()
+      : { data: null as any };
+
+    // The identity form always reflects the investing account in use.
+    const profileView = persona
+      ? {
+          ...profile,
+          legal_name: persona.legal_name ?? profile?.legal_name ?? null,
+          investor_type: persona.kind ?? profile?.investor_type ?? null,
+          email: persona.email ?? profile?.email ?? null,
+          phone: persona.phone ?? profile?.phone ?? null,
+          date_of_birth: persona.date_of_birth ?? profile?.date_of_birth ?? null,
+          tax_id: persona.tax_id ?? profile?.tax_id ?? null,
+          entity_name: persona.entity_name ?? null,
+          address_line1: persona.address_line1 ?? profile?.address_line1 ?? null,
+          address_line2: persona.address_line2 ?? profile?.address_line2 ?? null,
+          city: persona.city ?? profile?.city ?? null,
+          region: persona.region ?? profile?.region ?? null,
+          postal_code: persona.postal_code ?? profile?.postal_code ?? null,
+          country: persona.country ?? profile?.country ?? null,
+        }
+      : profile;
+
     if (!offeringId) {
-      return { offering: null, profile, application: null, kyc: null, aml: null, invited: false };
+      return {
+        offering: null,
+        profile: profileView,
+        persona,
+        application: null,
+        kyc: null,
+        aml: null,
+        invited: false,
+      };
     }
+
 
     const { data: offering } = await supabase
       .from("offerings")
