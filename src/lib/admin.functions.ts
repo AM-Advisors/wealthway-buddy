@@ -559,6 +559,17 @@ export const decidePayment = createServerFn({ method: "POST" })
       .eq("id", data.applicationId);
     if (appError) throw new Error(appError.message);
 
+    const paymentActivity = await import("@/lib/reviewer-activity.server");
+    await paymentActivity.logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: await paymentActivity.offeringIdForApplication(supabase, data.applicationId),
+      action: "payment_decision",
+      area: "funding",
+      outcome: data.outcome === "settled" ? "approved" : "declined",
+      summary: `Payment marked ${data.outcome}`,
+    });
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
