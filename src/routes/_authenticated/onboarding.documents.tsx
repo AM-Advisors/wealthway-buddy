@@ -1,3 +1,4 @@
+import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,6 +64,7 @@ function formatUsd(cents: number) {
 }
 
 function DocumentsPage() {
+  useStepView("documents");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const load = useServerFn(getDocumentsStep);

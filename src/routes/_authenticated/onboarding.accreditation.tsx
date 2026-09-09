@@ -1,3 +1,4 @@
+import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -59,6 +60,7 @@ const DOC_KINDS = [
 ] as const;
 
 function AccreditationPage() {
+  useStepView("accreditation");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const load = useServerFn(getAccreditation);
