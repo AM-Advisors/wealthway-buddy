@@ -190,6 +190,63 @@ export type Database = {
           },
         ]
       }
+      application_closings: {
+        Row: {
+          application_id: string
+          closed_at: string
+          closed_by: string
+          closing_date: string
+          created_at: string
+          funded_amount_cents: number
+          id: string
+          note: string | null
+          offering_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          closed_at?: string
+          closed_by: string
+          closing_date: string
+          created_at?: string
+          funded_amount_cents: number
+          id?: string
+          note?: string | null
+          offering_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          closed_at?: string
+          closed_by?: string
+          closing_date?: string
+          created_at?: string
+          funded_amount_cents?: number
+          id?: string
+          note?: string | null
+          offering_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_closings_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_closings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_flags: {
         Row: {
           application_id: string
@@ -246,6 +303,67 @@ export type Database = {
           },
           {
             foreignKeyName: "application_flags_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      closing_documents: {
+        Row: {
+          application_id: string
+          closing_id: string
+          file_name: string
+          id: string
+          offering_id: string
+          size_bytes: number | null
+          storage_path: string
+          title: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          application_id: string
+          closing_id: string
+          file_name: string
+          id?: string
+          offering_id: string
+          size_bytes?: number | null
+          storage_path: string
+          title: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          application_id?: string
+          closing_id?: string
+          file_name?: string
+          id?: string
+          offering_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          title?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closing_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "closing_documents_closing_id_fkey"
+            columns: ["closing_id"]
+            isOneToOne: false
+            referencedRelation: "application_closings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "closing_documents_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
