@@ -402,8 +402,8 @@ export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
       doc.offering_id,
       doc.room_id,
       "document_downloaded",
-      `Opened “${doc.title}”`,
-      { document_id: doc.id },
+      `Downloaded “${doc.title}”`,
+      { document_id: doc.id, document_title: doc.title },
     );
     return { url, file_name: doc.file_name };
   });
