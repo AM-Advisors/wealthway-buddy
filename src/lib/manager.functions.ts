@@ -155,7 +155,7 @@ export const getFundSignedDocuments = createServerFn({ method: "GET" })
       supabase
         .from("document_signatures")
         .select(
-          "id, application_id, offering_document_id, signed_at, pdf_path, provider, provider_status, provider_completed_at, box_file_id, box_uploaded_at, box_error",
+          "id, application_id, offering_document_id, signed_at, pdf_path, provider, provider_status, provider_sent_at, provider_viewed_at, provider_completed_at, box_file_id, box_uploaded_at, box_error",
         )
         .in("application_id", appIds)
         .order("signed_at", { ascending: false })
