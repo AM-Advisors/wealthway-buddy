@@ -18,6 +18,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
+import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_authenticated/wire-confirmation'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
@@ -93,6 +94,12 @@ const AuthenticatedWireRoute = AuthenticatedWireRouteImport.update({
   path: '/wire',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWireConfirmationRoute =
+  AuthenticatedWireConfirmationRouteImport.update({
+    id: '/wire-confirmation',
+    path: '/wire-confirmation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -272,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/wire': typeof AuthenticatedWireRoute
+  '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/': typeof AuthIndexRoute
@@ -311,6 +319,7 @@ export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/wire': typeof AuthenticatedWireRoute
+  '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth': typeof AuthIndexRoute
@@ -353,6 +362,7 @@ export interface FileRoutesById {
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
+  '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/': typeof AuthIndexRoute
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/portal'
     | '/wire'
+    | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
     | '/auth/'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/portal'
     | '/wire'
+    | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
     | '/auth'
@@ -475,6 +487,7 @@ export interface FileRouteTypes {
     | '/_authenticated/documents'
     | '/_authenticated/portal'
     | '/_authenticated/wire'
+    | '/_authenticated/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
     | '/auth/'
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       path: '/wire'
       fullPath: '/wire'
       preLoaderRoute: typeof AuthenticatedWireRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wire-confirmation': {
+      id: '/_authenticated/wire-confirmation'
+      path: '/wire-confirmation'
+      fullPath: '/wire-confirmation'
+      preLoaderRoute: typeof AuthenticatedWireConfirmationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/auth/': {
@@ -805,6 +825,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
+  AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
@@ -832,6 +853,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
+  AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
