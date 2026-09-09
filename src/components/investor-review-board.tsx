@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { decideWireAsReviewer, getFundInvestorReview } from "@/lib/manager.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { syncFundSignatures } from "@/lib/box-sign.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
   const load = useServerFn(getFundInvestorReview);
   const decide = useServerFn(decideWireAsReviewer);
   const signedUrl = useServerFn(getSignedDocumentUrl);
+  const syncFund = useServerFn(syncFundSignatures);
   const queryClient = useQueryClient();
 
   const [rejecting, setRejecting] = useState<string | null>(null);
@@ -89,6 +91,20 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
     onError: (e: any) => toast.error(e?.message ?? "That signed copy is not available yet."),
   });
 
+  const syncMutation = useMutation({
+    mutationFn: () => syncFund({ data: { offering_id: offeringId } }),
+    onSuccess: (res: any) => {
+      toast.success(
+        res.completed > 0
+          ? `${res.completed} newly signed document${res.completed === 1 ? "" : "s"} came through`
+          : "Everything is up to date",
+      );
+      refresh();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not check signing status."),
+  });
+
+
   if (reviewQuery.isLoading) {
     return <p className="mt-6 text-sm text-muted-foreground">Loading investor reviews…</p>;
   }
@@ -100,12 +116,23 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
 
   return (
     <div className="mt-10 space-y-4">
-      <div>
-        <h2 className="text-xl">Investor reviews</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Onboarding status, signed copies and wire requests for each investor, with an action on every line.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl">Investor reviews</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Onboarding status, signed copies and wire requests for each investor, with an action on every line.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={syncMutation.isPending}
+          onClick={() => syncMutation.mutate()}
+        >
+          {syncMutation.isPending ? "Checking…" : "Check for new signatures"}
+        </Button>
       </div>
+
 
       {investors.length === 0 ? (
         <p className="text-sm text-muted-foreground">No investors in this fund yet.</p>
