@@ -89,6 +89,20 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
     onError: (e: any) => toast.error(e?.message ?? "That signed copy is not available yet."),
   });
 
+  const syncMutation = useMutation({
+    mutationFn: () => syncFund({ data: { offering_id: offeringId } }),
+    onSuccess: (res: any) => {
+      toast.success(
+        res.completed > 0
+          ? `${res.completed} newly signed document${res.completed === 1 ? "" : "s"} came through`
+          : "Everything is up to date",
+      );
+      refresh();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not check signing status."),
+  });
+
+
   if (reviewQuery.isLoading) {
     return <p className="mt-6 text-sm text-muted-foreground">Loading investor reviews…</p>;
   }
