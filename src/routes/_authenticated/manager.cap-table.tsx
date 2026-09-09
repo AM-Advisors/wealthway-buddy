@@ -22,14 +22,3 @@ export const Route = createFileRoute("/_authenticated/manager/cap-table")({
   }),
   component: () => <CapTableEditor backTo="/manager" />,
 });
-
-function money(cents?: number | null) {
-  if (!cents) return "$0";
-  return `$${Math.round(cents / 100).toLocaleString("en-US")}`;
-}
-
-function share(value: number) {
-  if (!value) return "0%";
-  return `${value < 0.01 ? value.toFixed(4) : value.toFixed(2)}%`;
-}
-
