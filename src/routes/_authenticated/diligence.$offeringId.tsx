@@ -285,6 +285,9 @@ function DiligenceRoomPage() {
           {canManage ? <TabsTrigger value="settings">Agreement</TabsTrigger> : null}
         </TabsList>
 
+        <TabsContent value="overview" className="mt-6">
+          <OverviewTab data={data} access={a} />
+        </TabsContent>
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
         </TabsContent>
