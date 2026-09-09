@@ -187,7 +187,7 @@ function WirePage() {
 
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <Link to="/onboarding/funding">Confirm your transfer</Link>
+              <Link to="/wire-confirmation">Confirm your transfer</Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/dashboard">Back to dashboard</Link>
