@@ -52,6 +52,7 @@ import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_aut
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
 import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authenticated/manager.inbox'
 import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_authenticated/manager.investors'
+import { Route as AuthenticatedManagerMessagesRouteImport } from './routes/_authenticated/manager.messages'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_authenticated/manager.permissions'
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
@@ -314,6 +315,12 @@ const AuthenticatedManagerInvestorsRoute =
     path: '/manager/investors',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerMessagesRoute =
+  AuthenticatedManagerMessagesRouteImport.update({
+    id: '/manager/messages',
+    path: '/manager/messages',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerOnboardingRoute =
   AuthenticatedManagerOnboardingRouteImport.update({
     id: '/manager/onboarding',
@@ -474,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
+  '/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
@@ -538,6 +546,7 @@ export interface FileRoutesByTo {
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
+  '/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
@@ -605,6 +614,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/_authenticated/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/_authenticated/manager/investors': typeof AuthenticatedManagerInvestorsRoute
+  '/_authenticated/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
@@ -672,6 +682,7 @@ export interface FileRouteTypes {
     | '/manager/documents'
     | '/manager/inbox'
     | '/manager/investors'
+    | '/manager/messages'
     | '/manager/onboarding'
     | '/manager/permissions'
     | '/manager/profile'
@@ -736,6 +747,7 @@ export interface FileRouteTypes {
     | '/manager/documents'
     | '/manager/inbox'
     | '/manager/investors'
+    | '/manager/messages'
     | '/manager/onboarding'
     | '/manager/permissions'
     | '/manager/profile'
@@ -802,6 +814,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/documents'
     | '/_authenticated/manager/inbox'
     | '/_authenticated/manager/investors'
+    | '/_authenticated/manager/messages'
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/permissions'
     | '/_authenticated/manager/profile'
@@ -1149,6 +1162,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerInvestorsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/messages': {
+      id: '/_authenticated/manager/messages'
+      path: '/manager/messages'
+      fullPath: '/manager/messages'
+      preLoaderRoute: typeof AuthenticatedManagerMessagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/onboarding': {
       id: '/_authenticated/manager/onboarding'
       path: '/manager/onboarding'
@@ -1331,6 +1351,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
   AuthenticatedManagerInboxRoute: typeof AuthenticatedManagerInboxRoute
   AuthenticatedManagerInvestorsRoute: typeof AuthenticatedManagerInvestorsRoute
+  AuthenticatedManagerMessagesRoute: typeof AuthenticatedManagerMessagesRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerPermissionsRoute: typeof AuthenticatedManagerPermissionsRoute
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
@@ -1381,6 +1402,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
   AuthenticatedManagerInboxRoute: AuthenticatedManagerInboxRoute,
   AuthenticatedManagerInvestorsRoute: AuthenticatedManagerInvestorsRoute,
+  AuthenticatedManagerMessagesRoute: AuthenticatedManagerMessagesRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
   AuthenticatedManagerPermissionsRoute: AuthenticatedManagerPermissionsRoute,
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
