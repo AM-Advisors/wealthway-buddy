@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { getPortal } from "@/lib/portal.functions";
+import { getFunding } from "@/lib/funding.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
@@ -76,6 +77,18 @@ function when(value: string | null | undefined) {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+const WIRE_CONFIRM_LABEL: Record<string, string> = {
+  pending: "Awaiting review",
+  approved: "Approved",
+  rejected: "Sent back",
+};
+
+function wireConfirmTone(status: string) {
+  if (status === "approved") return "default" as const;
+  if (status === "rejected") return "destructive" as const;
+  return "secondary" as const;
 }
 
 const WIRE_LABEL: Record<string, string> = {
