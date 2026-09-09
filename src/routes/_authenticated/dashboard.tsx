@@ -104,6 +104,7 @@ const WIRE_LABEL: Record<string, string> = {
 
 function Dashboard() {
   const load = useServerFn(getPortal);
+  const loadFunding = useServerFn(getFunding);
   const download = useServerFn(getSignedDocumentUrl);
   const getPdf = useServerFn(downloadOfferingDocument);
   const [busy, setBusy] = useState<string | null>(null);
