@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { getBoxSigningFunnel, getOnboardingFunnel } from "@/lib/funnel.functions";
+import { getStepEngagement } from "@/lib/step-tracking.functions";
 import { getManagerFunds } from "@/lib/manager.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ function FunnelPage() {
   const loadFunnel = useServerFn(getOnboardingFunnel);
   const loadFunds = useServerFn(getManagerFunds);
   const loadBox = useServerFn(getBoxSigningFunnel);
+  const loadSteps = useServerFn(getStepEngagement);
 
   const [days, setDays] = useState(90);
   const [offeringId, setOfferingId] = useState<string | null>(null);
@@ -55,6 +57,12 @@ function FunnelPage() {
     queryFn: () => loadBox({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
   });
 
+  const stepsQuery = useQuery({
+    queryKey: ["onboarding-step-engagement", offeringId, days],
+    queryFn: () => loadSteps({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
+  });
+
+  const stepData = stepsQuery.data;
   const funds = fundsQuery.data?.funds ?? [];
   const data = funnelQuery.data;
   const top = data?.steps?.[0]?.count ?? 0;
