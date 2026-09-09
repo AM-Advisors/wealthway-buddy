@@ -90,6 +90,11 @@ const TOOLS = [
     blurb: "Choose which documents each investor can open in the room.",
   },
   { to: "/manager/cap-table", title: "Cap table", blurb: "Shares, ownership and committed capital." },
+  {
+    to: "/manager/cap-table-board",
+    title: "Cap table board",
+    blurb: "Every fund side by side, with one-click edits.",
+  },
 
   { to: "/diligence", title: "Investor view of diligence", blurb: "Materials, checklist and investor Q&A." },
 ] as const;
