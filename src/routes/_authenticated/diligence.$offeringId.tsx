@@ -67,6 +67,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DiligenceAssistant } from "@/components/diligence-assistant";
 import { DiligenceAccessPanel } from "@/components/diligence-access-panel";
 import { RoomKycApplication } from "@/components/room-kyc-application";
+import { PitchDeckPanel } from "@/components/pitch-deck-panel";
 import { getStepRail } from "@/lib/step-rail.functions";
 
 export const Route = createFileRoute("/_authenticated/diligence/$offeringId")({
@@ -394,6 +395,7 @@ function DiligenceRoomPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           {canManage ? null : <TabsTrigger value="application">Your application</TabsTrigger>}
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="deck">Pitch deck</TabsTrigger>
           <TabsTrigger value="assistant">Ask AI</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
@@ -414,6 +416,9 @@ function DiligenceRoomPage() {
         )}
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
+        </TabsContent>
+        <TabsContent value="deck" className="mt-6">
+          <PitchDeckPanel offeringId={offeringId} />
         </TabsContent>
         <TabsContent value="assistant" className="mt-6">
           <DiligenceAssistant offeringId={offeringId} />
