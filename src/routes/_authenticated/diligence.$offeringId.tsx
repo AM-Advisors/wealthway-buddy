@@ -414,7 +414,81 @@ function OverviewTab({ data, access }: { data: any; access: any }) {
           ) : null}
         </CardContent>
       </Card>
+
+      <FundingFacts funding={data?.funding} offering={offering} />
     </div>
+  );
+}
+
+function FundingFacts({ funding, offering }: { funding: any; offering: any }) {
+  const wire = funding?.wire as Record<string, string> | null;
+  const commitment = money(funding?.commitment_cents);
+  if (!wire && !commitment) return null;
+
+  const labels: Record<string, string> = {
+    bank_name: "Bank",
+    bank_address: "Bank address",
+    account_name: "Account name",
+    account_number: "Account number",
+    routing_number: "Routing number (ABA)",
+    swift: "SWIFT / BIC",
+    reference: "Reference / memo",
+    memo: "Reference / memo",
+  };
+  const prettify = (k: string) =>
+    labels[k] ?? k.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Commitment &amp; funding</CardTitle>
+        <CardDescription>
+          {commitment
+            ? `Your commitment to ${offering?.name ?? "this fund"} and where funds are sent.`
+            : `Where funds are sent for ${offering?.name ?? "this fund"}.`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Your commitment</p>
+            <p className="text-2xl font-semibold">{commitment ?? "Not set yet"}</p>
+          </div>
+          {money(offering?.min_investment_cents) ? (
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Fund minimum
+              </p>
+              <p className="text-2xl font-semibold">{money(offering.min_investment_cents)}</p>
+            </div>
+          ) : null}
+        </div>
+
+        {wire ? (
+          <div className="rounded-md border p-4">
+            <p className="text-sm font-medium">Wire instructions</p>
+            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+              {Object.entries(wire).map(([k, v]) => (
+                <div key={k}>
+                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {prettify(k)}
+                  </dt>
+                  <dd className="break-words font-mono text-sm">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Harmonious will never email you changed banking details. Always confirm these details
+              by phone with a number you already have before sending funds.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Funding details are shared once your application is under way.
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

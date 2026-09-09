@@ -105,7 +105,36 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       .select("id", { count: "exact", head: true })
       .eq("offering_id", data.offering_id);
 
+    // Funding facts the investor needs while reading: their own commitment and
+    // the fund's wire details (the RPC only returns them to permitted callers).
+    const { data: application } = await supabase
+      .from("investor_applications")
+      .select("id, commitment_cents, funding_status, status")
+      .eq("offering_id", data.offering_id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+
+    let wireDetails: Record<string, string> | null = null;
+    try {
+      const { data: wireRow } = await supabase
+        .rpc("get_wire_instructions", { p_offering_id: data.offering_id })
+        .maybeSingle();
+      const details = ((wireRow as any)?.details ?? {}) as Record<string, unknown>;
+      const entries = Object.entries(details).filter(([, v]) => String(v ?? "").trim() !== "");
+      if (entries.length > 0) {
+        wireDetails = Object.fromEntries(entries.map(([k, v]) => [k, String(v)]));
+      }
+    } catch {
+      wireDetails = null;
+    }
+
     return {
+      funding: {
+        commitment_cents: (application as any)?.commitment_cents ?? null,
+        funding_status: (application as any)?.funding_status ?? null,
+        application_id: (application as any)?.id ?? null,
+        wire: wireDetails,
+      },
       offering: {
         id: offering.id,
         name: offering.name,
