@@ -179,7 +179,10 @@ function FundingStep() {
   const app = data?.application as any;
   const payment = data?.payment as any;
   const instructions = (data?.offering?.wire_instructions ?? {}) as Record<string, string>;
-  const ready = app?.documents_status === "approved" && app?.accreditation_status === "approved";
+  const ready =
+    app?.kyc_status === "approved" &&
+    app?.documents_status === "approved" &&
+    app?.accreditation_status === "approved";
   const acks = (data?.acknowledgements ?? {}) as Record<string, any>;
   const wireAck = acks["wire"] && acks["wire"].current ? acks["wire"] : null;
   const achAck = acks["ach"] && acks["ach"].current ? acks["ach"] : null;
@@ -315,8 +318,8 @@ function FundingStep() {
           <CardHeader>
             <CardTitle className="text-base">Funding is not open yet</CardTitle>
             <CardDescription>
-              Capital can only be accepted once compliance has approved your accreditation and your signed
-              subscription documents.
+              Capital can only be accepted once the fund team has approved your identity application and
+              accreditation, and your subscription documents are signed.
             </CardDescription>
           </CardHeader>
           <CardContent>

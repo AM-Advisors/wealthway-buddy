@@ -130,9 +130,17 @@ async function loadFundingApplication(supabase: any, userId: string) {
 }
 
 function assertFundable(app: {
+  kyc_status?: string;
   accreditation_status: string;
   documents_status: string;
 }) {
+  // The fund team has to approve the identity application first — nobody
+  // reaches wire instructions on an unapproved file.
+  if (app.kyc_status && app.kyc_status !== "approved") {
+    throw new Error(
+      "The fund team is still reviewing your identity application. Funding opens once it is approved.",
+    );
+  }
   if (app.documents_status !== "approved") {
     throw new Error("Sign all fund documents before funding your subscription.");
   }
