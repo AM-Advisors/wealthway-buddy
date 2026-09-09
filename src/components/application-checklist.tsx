@@ -40,7 +40,7 @@ function StatusRow({
   done: boolean;
   pending?: boolean;
   title: string;
-  detail?: string;
+  detail?: string | undefined;
 }) {
   const Icon = done ? CheckCircle2 : pending ? Clock : Circle;
   return (
@@ -100,20 +100,20 @@ export function ApplicationChecklist({ taxClassification }: { taxClassification:
           <h3 className="text-sm font-semibold">Steps</h3>
           <ul className="divide-y">
             <StatusRow
-              done={isDone(checks.kyc)}
-              pending={isPending(checks.kyc)}
+              done={isDone(checks["kyc"])}
+              pending={isPending(checks["kyc"])}
               title="Verify your identity"
               detail="Photo ID check through our verification partner."
             />
             <StatusRow
-              done={isDone(checks.aml)}
-              pending={isPending(checks.aml)}
+              done={isDone(checks["aml"])}
+              pending={isPending(checks["aml"])}
               title="Background screening"
               detail="Source of funds and sanctions questions."
             />
             <StatusRow
-              done={isDone(checks.accreditation)}
-              pending={isPending(checks.accreditation)}
+              done={isDone(checks["accreditation"])}
+              pending={isPending(checks["accreditation"])}
               title={
                 offering?.reg_type === "506c"
                   ? "Accreditation with third-party evidence (506(c))"
