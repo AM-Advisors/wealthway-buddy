@@ -21,7 +21,7 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
 
     const { data: offerings, error: oErr } = await supabase
       .from("offerings")
-      .select("id, name, slug, reg_type, is_open, min_investment_cents, target_raise_cents, created_at")
+      .select("id, name, slug, reg_type, is_open, min_investment_cents, target_raise_cents, wire_fee_cents, closing_cost_cents, created_at")
       .order("created_at", { ascending: true });
     if (oErr) throw new Error(oErr.message);
 
@@ -111,6 +111,11 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       ).length;
 
       const targetCents = Number(o.target_raise_cents ?? 0) || null;
+      const wireFeeCents = Number((o as any).wire_fee_cents ?? 0);
+      const closingCostCents = Number((o as any).closing_cost_cents ?? 0);
+      const wireFeesTotalCents = wireFeeCents * settled;
+      const totalCostsCents = wireFeesTotalCents + closingCostCents;
+      const netReceivedCents = Math.max(0, receivedCents - totalCostsCents);
       const percentOfTarget =
         targetCents && targetCents > 0
           ? Math.min(100, Math.round((receivedCents / targetCents) * 100))
@@ -134,6 +139,11 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
         outstandingCents: Math.max(0, committedCents - receivedCents),
         percentOfTarget,
         remainingToTargetCents,
+        wireFeeCents,
+        closingCostCents,
+        wireFeesTotalCents,
+        totalCostsCents,
+        netReceivedCents,
       };
     });
 
@@ -145,6 +155,10 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       targetCents: funds.reduce((s, f) => s + (f.targetCents ?? 0), 0),
       inProgress: funds.reduce((s, f) => s + f.inProgress, 0),
       settled: funds.reduce((s, f) => s + f.settled, 0),
+      wireFeesTotalCents: funds.reduce((s, f) => s + f.wireFeesTotalCents, 0),
+      closingCostCents: funds.reduce((s, f) => s + f.closingCostCents, 0),
+      totalCostsCents: funds.reduce((s, f) => s + f.totalCostsCents, 0),
+      netReceivedCents: funds.reduce((s, f) => s + f.netReceivedCents, 0),
     };
 
     return { funds, totals };

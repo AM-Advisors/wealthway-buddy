@@ -182,7 +182,7 @@ export const getFundCommitmentBalance = createServerFn({ method: "GET" })
 
     const { data: offering } = await supabase
       .from("offerings")
-      .select("id, name, target_raise_cents, min_investment_cents")
+      .select("id, name, target_raise_cents, min_investment_cents, wire_fee_cents, closing_cost_cents")
       .eq("id", data.fundId)
       .maybeSingle();
 
@@ -229,6 +229,15 @@ export const getFundCommitmentBalance = createServerFn({ method: "GET" })
 
     const targetCents = Number(offering?.target_raise_cents ?? 0) || null;
 
+    // Costs: the wire fee applies to every wire that actually arrived, the
+    // closing cost is a single charge for the fund.
+    const wireFeeCents = Number((offering as any)?.wire_fee_cents ?? 0);
+    const closingCostCents = Number((offering as any)?.closing_cost_cents ?? 0);
+    const settledPayments = payments.filter((p) => p.status === "settled").length;
+    const wireFeesTotalCents = wireFeeCents * settledPayments;
+    const totalCostsCents = wireFeesTotalCents + closingCostCents;
+    const netReceivedCents = Math.max(0, receivedCents - totalCostsCents);
+
     const investors = rows
       .map((r) => {
         const sub = subByApp.get(r.id);
@@ -264,6 +273,11 @@ export const getFundCommitmentBalance = createServerFn({ method: "GET" })
         remainingToTargetCents: targetCents ? Math.max(0, targetCents - receivedCents) : null,
         percentOfTarget:
           targetCents && targetCents > 0 ? Math.min(100, Math.round((receivedCents / targetCents) * 100)) : null,
+        wireFeeCents,
+        closingCostCents,
+        wireFeesTotalCents,
+        totalCostsCents,
+        netReceivedCents,
         percentCommittedOfTarget:
           targetCents && targetCents > 0
             ? Math.min(100, Math.round((committedCents / targetCents) * 100))
