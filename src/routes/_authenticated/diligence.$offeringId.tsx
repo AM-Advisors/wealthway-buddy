@@ -1193,3 +1193,113 @@ function NdaSettings({ offeringId, access }: { offeringId: string; access: any }
     </Card>
   );
 }
+
+/* --------------------- Path from the room to funding --------------------- */
+
+const STEP_LINKS = {
+  kyc: "/onboarding/kyc",
+  aml: "/onboarding/aml",
+  accreditation: "/onboarding/accreditation",
+  documents: "/onboarding/documents",
+  funding: "/onboarding/funding",
+} as const;
+
+function stateDot(state: string) {
+  if (state === "done") return "bg-primary text-primary-foreground border-primary";
+  if (state === "current") return "bg-background text-foreground border-primary";
+  if (state === "review") return "bg-background text-foreground border-amber-500";
+  return "bg-muted text-muted-foreground border-transparent";
+}
+
+function InvestingPath({ offeringId }: { offeringId: string }) {
+  const queryClient = useQueryClient();
+  const load = useServerFn(getDiligenceOnboarding);
+  const start = useServerFn(startOnboardingFromRoom);
+
+  const q = useQuery({
+    queryKey: ["diligence-onboarding", offeringId],
+    queryFn: () => load({ data: { offering_id: offeringId } }),
+    refetchInterval: 60_000,
+  });
+
+  const startMutation = useMutation({
+    mutationFn: () => start({ data: { offering_id: offeringId } }),
+    onSuccess: () => {
+      toast.success("Your application is open — let's start with your identity check.");
+      queryClient.invalidateQueries({ queryKey: ["diligence-onboarding", offeringId] });
+      queryClient.invalidateQueries({ queryKey: ["nav-state"] });
+      window.location.href = STEP_LINKS.kyc;
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not start your application."),
+  });
+
+  const d = q.data as any;
+  if (!d) return null;
+
+  const nextKey = (d.nextStep ?? "kyc") as keyof typeof STEP_LINKS;
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle className="text-lg">Your path to investing</CardTitle>
+        <CardDescription>
+          Review the materials here, then move through each step. You can come back to the room at any
+          time.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {(d.steps ?? []).map((s: any, index: number) => (
+            <li key={s.key} className="flex items-start gap-3">
+              <span
+                className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-xs ${stateDot(s.state)}`}
+              >
+                {s.state === "done" ? "✓" : index + 1}
+              </span>
+              <div>
+                <p className="text-sm">{s.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  {s.state === "done"
+                    ? "Complete"
+                    : s.state === "review"
+                      ? "With our team for review"
+                      : s.state === "current"
+                        ? "Up next"
+                        : "Not started"}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {d.complete ? (
+            <Badge>Onboarding complete</Badge>
+          ) : d.hasApplication ? (
+            <Button asChild>
+              <Link to={STEP_LINKS[nextKey] ?? STEP_LINKS.kyc}>Continue onboarding</Link>
+            </Button>
+          ) : d.otherOfferingId ? (
+            <Button asChild variant="outline">
+              <Link to="/dashboard">Go to your application</Link>
+            </Button>
+          ) : d.invited ? (
+            <Button
+              disabled={startMutation.isPending || (d.ndaRequired && !d.ndaAccepted)}
+              onClick={() => startMutation.mutate()}
+            >
+              {startMutation.isPending ? "Starting…" : "Start onboarding for this fund"}
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Ask your fund contact to invite you to invest in this fund.
+            </p>
+          )}
+          <Button asChild variant="ghost">
+            <Link to="/dashboard">Your dashboard</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
