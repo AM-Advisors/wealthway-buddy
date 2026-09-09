@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { getOnboardingFunnel } from "@/lib/funnel.functions";
+import { getBoxSigningFunnel, getOnboardingFunnel } from "@/lib/funnel.functions";
 import { getManagerFunds } from "@/lib/manager.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ const WINDOWS = [
 function FunnelPage() {
   const loadFunnel = useServerFn(getOnboardingFunnel);
   const loadFunds = useServerFn(getManagerFunds);
+  const loadBox = useServerFn(getBoxSigningFunnel);
 
   const [days, setDays] = useState(90);
   const [offeringId, setOfferingId] = useState<string | null>(null);
