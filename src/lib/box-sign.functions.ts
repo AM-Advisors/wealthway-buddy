@@ -259,5 +259,65 @@ export const syncFundSignatures = createServerFn({ method: "POST" })
         console.error("[box-sign] fund sync failed", e);
       }
     }
-    return { checked: (pending ?? []).length, completed };
+
+    // Safety net: file any signed copy that has not reached Box yet.
+    const { archiveOfferingSignatures } = await import("@/lib/signed-box.server");
+    const archive = await archiveOfferingSignatures(data.offering_id).catch(() => ({
+      archived: 0,
+      failed: 0,
+      pending: 0,
+    }));
+
+    return { checked: (pending ?? []).length, completed, archived: archive.archived, archiveFailed: archive.failed };
+  });
+
+/** Files a single signed document into Box on demand, for reviewers. */
+export const archiveSignedDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ signature_id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "fund_manager"]);
+    if (!roles?.length) throw new Error("Forbidden: reviewer access required.");
+
+    const { data: signature } = await supabase
+      .from("document_signatures")
+      .select("id, application_id")
+      .eq("id", data.signature_id)
+      .maybeSingle();
+    if (!signature) throw new Error("Signed document not found.");
+
+    const { data: application } = await supabase
+      .from("investor_applications")
+      .select("offering_id")
+      .eq("id", signature.application_id)
+      .maybeSingle();
+    if (!application) throw new Error("Application not found.");
+
+    const isAdmin = roles.some((r: any) => r.role === "admin");
+    if (!isAdmin) {
+      const { data: assignment } = await supabase
+        .from("fund_managers")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("offering_id", application.offering_id)
+        .maybeSingle();
+      if (!assignment) throw new Error("Forbidden: not assigned to this fund.");
+    }
+
+    const { archiveSignatureToBox } = await import("@/lib/signed-box.server");
+    const result = await archiveSignatureToBox(data.signature_id);
+    if (!result.ok) {
+      throw new Error(
+        result.skipped === "box_not_configured"
+          ? "Box is not connected yet."
+          : (result.error ?? "That signed copy could not be filed in Box yet."),
+      );
+    }
+    return { ok: true };
   });
