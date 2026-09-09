@@ -37,6 +37,11 @@ export const Route = createFileRoute("/_authenticated/manager/")({
 const TOOLS = [
   { to: "/manager/investors", title: "Investors", blurb: "Review every applicant, stage by stage." },
   {
+    to: "/manager/approvals",
+    title: "Investor approvals",
+    blurb: "Approve each completed file before the investor can send money.",
+  },
+  {
     to: "/manager/inbox",
     title: "Document inbox",
     blurb: "Every investor upload lands here, ready to review.",
