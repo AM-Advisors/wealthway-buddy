@@ -399,7 +399,16 @@ export const getDiligenceAccess = createServerFn({ method: "POST" })
       .select("id, nda_required, nda_text, nda_version")
       .eq("offering_id", data.offering_id)
       .maybeSingle();
-    if (!room) return { room: null, ndaRequired: false, accepted: false, ndaText: null, ndaVersion: 1 };
+    if (!room) {
+      return {
+        room: null,
+        ndaRequired: false,
+        accepted: false,
+        ndaText: null,
+        ndaVersion: 1,
+        canManage: await canManage(supabase, data.offering_id),
+      };
+    }
 
     const { data: acceptance } = await supabase
       .from("diligence_nda_acceptances")
