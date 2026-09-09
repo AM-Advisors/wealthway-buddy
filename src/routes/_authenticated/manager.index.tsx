@@ -52,6 +52,11 @@ const TOOLS = [
     blurb: "Approve or send back each wire confirmation, with funding status.",
   },
   {
+    to: "/manager/messages",
+    title: "Investor messages",
+    blurb: "Answer investor questions privately, without leaving the portal.",
+  },
+  {
     to: "/manager/timeline",
     title: "Application timeline",
     blurb: "Follow each investor from invitation to funding, with full history.",

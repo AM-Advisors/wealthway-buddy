@@ -168,6 +168,20 @@ function buildEmail(
     };
   }
 
+  if (row.event_kind === "portal_message_received") {
+    const meta = row.metadata ?? {};
+    const from = String(meta["sender_name"] ?? investorName);
+    return {
+      headline: `New investor message — ${offeringName}`,
+      intro: `${from} sent a message in the ${offeringName} investor portal. You can reply from the portal.`,
+      details: [
+        { label: "Investor", value: from },
+        { label: "Fund", value: offeringName },
+        ...(meta["preview"] ? [{ label: "Message", value: String(meta["preview"]) }] : []),
+      ],
+    };
+  }
+
   if (row.event_kind === "wire_request_submitted") {
     const meta = row.metadata ?? {};
     const purpose = String(meta["purpose"] ?? "wire").replace(/_/g, " ");
