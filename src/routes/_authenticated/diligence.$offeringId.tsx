@@ -37,6 +37,7 @@ import {
   updateDiligenceNda,
   updateDiligenceQuestion,
 } from "@/lib/diligence.functions";
+import { CapTableSection } from "@/components/cap-table-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
