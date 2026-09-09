@@ -60,6 +60,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PacketDownloadCard } from "@/components/packet-download-card";
 import { DiligenceQuestionBoard } from "@/components/diligence-question-board";
 import { Textarea } from "@/components/ui/textarea";
 import { DiligenceAssistant } from "@/components/diligence-assistant";
@@ -510,6 +511,8 @@ function OverviewTab({ data, access }: { data: any; access: any }) {
           </dl>
         </CardContent>
       </Card>
+
+      <PacketDownloadCard offeringId={offering.id} />
 
       <Card>
         <CardHeader>
