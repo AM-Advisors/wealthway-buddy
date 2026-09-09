@@ -1866,6 +1866,63 @@ export type Database = {
         }
         Relationships: []
       }
+      reviewer_activity: {
+        Row: {
+          action: string
+          actor_id: string
+          application_id: string | null
+          area: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          note: string | null
+          offering_id: string | null
+          outcome: string | null
+          summary: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          application_id?: string | null
+          area?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          note?: string | null
+          offering_id?: string | null
+          outcome?: string | null
+          summary: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          application_id?: string | null
+          area?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          note?: string | null
+          offering_id?: string | null
+          outcome?: string | null
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_activity_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_activity_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signature_audit_events: {
         Row: {
           application_id: string
