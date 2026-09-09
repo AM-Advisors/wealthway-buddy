@@ -76,13 +76,21 @@
   --radius: 0.625rem;
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Rubik", "Poppins", ui-sans-serif, system-ui, sans-serif;
-  /* Harmonious brand guide (July 2026): navy #142647, ink #221F20, teal #5DC6D1 */
-  --brand-ink: oklch(0.243 0.005 355.2);
-  --brand-blue: oklch(0.531 0.195 264.9);
-  --brand-sky: oklch(0.646 0.138 244.2);
-  --brand-mint: oklch(0.799 0.144 172.6);
-  --brand-violet: oklch(0.461 0.242 273.7);
-  --brand-lightblue: oklch(0.743 0.082 240.8);
+  /* Harmonious brand guide (July 2026)
+     Primary: teal #5DC6D1, navy #002856, black #000000, white #FFFFFF
+     Secondary: #3260DB #3295DB #32DBB4 #3B32DB #7CB3DB
+     Gradient/type: deep navy #142647, ink #221F20 */
+  --brand-teal: #5dc6d1;
+  --brand-navy: #002856;
+  --brand-deep-navy: #142647;
+  --brand-black: #000000;
+  --brand-white: #ffffff;
+  --brand-ink: #221f20;
+  --brand-blue: #3260db;
+  --brand-sky: #3295db;
+  --brand-mint: #32dbb4;
+  --brand-violet: #3b32db;
+  --brand-lightblue: #7cb3db;
   --background: oklch(1 0 0);
   --foreground: oklch(0.243 0.005 355.2);
   --card: oklch(1 0 0);
