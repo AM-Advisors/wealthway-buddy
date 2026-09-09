@@ -881,7 +881,7 @@ function Portal() {
           </Card>
 
           {app?.id ? (
-            <Card>
+            <Card id="portal-messages" className="scroll-mt-24">
               <CardHeader>
                 <CardTitle>Messages</CardTitle>
                 <CardDescription>
