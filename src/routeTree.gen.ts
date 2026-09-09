@@ -42,7 +42,9 @@ import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authen
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
+import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
+import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -227,9 +229,20 @@ const AuthenticatedAdminFundFundIdRoute =
     path: '/admin/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPacketFundIdRoute =
+  AuthenticatedAdminPacketFundIdRouteImport.update({
+    id: '/admin/packet/$fundId',
+    path: '/admin/packet/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   id: '/api/public/email/click',
   path: '/api/public/email/click',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPacketTokenRoute = ApiPublicPacketTokenRouteImport.update({
+  id: '/api/public/packet/$token',
+  path: '/api/public/packet/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicWebhooksBoxSignRoute =
@@ -283,7 +296,9 @@ export interface FileRoutesByFullPath {
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -320,7 +335,9 @@ export interface FileRoutesByTo {
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -360,7 +377,9 @@ export interface FileRoutesById {
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -400,7 +419,9 @@ export interface FileRouteTypes {
     | '/diligence/'
     | '/manager/'
     | '/admin/fund/$fundId'
+    | '/admin/packet/$fundId'
     | '/api/public/email/click'
+    | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -437,7 +458,9 @@ export interface FileRouteTypes {
     | '/diligence'
     | '/manager'
     | '/admin/fund/$fundId'
+    | '/admin/packet/$fundId'
     | '/api/public/email/click'
+    | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -476,7 +499,9 @@ export interface FileRouteTypes {
     | '/_authenticated/diligence/'
     | '/_authenticated/manager/'
     | '/_authenticated/admin/fund/$fundId'
+    | '/_authenticated/admin/packet/$fundId'
     | '/api/public/email/click'
+    | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -491,6 +516,7 @@ export interface RootRouteChildren {
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
+  ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -729,11 +755,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/packet/$fundId': {
+      id: '/_authenticated/admin/packet/$fundId'
+      path: '/admin/packet/$fundId'
+      fullPath: '/admin/packet/$fundId'
+      preLoaderRoute: typeof AuthenticatedAdminPacketFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/email/click': {
       id: '/api/public/email/click'
       path: '/api/public/email/click'
       fullPath: '/api/public/email/click'
       preLoaderRoute: typeof ApiPublicEmailClickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/packet/$token': {
+      id: '/api/public/packet/$token'
+      path: '/api/public/packet/$token'
+      fullPath: '/api/public/packet/$token'
+      preLoaderRoute: typeof ApiPublicPacketTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/webhooks/box-sign': {
@@ -784,6 +824,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
   AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
+  AuthenticatedAdminPacketFundIdRoute: typeof AuthenticatedAdminPacketFundIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -812,6 +853,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
   AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
+  AuthenticatedAdminPacketFundIdRoute: AuthenticatedAdminPacketFundIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -840,6 +882,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
+  ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

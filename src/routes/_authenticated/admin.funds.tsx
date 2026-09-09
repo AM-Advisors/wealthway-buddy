@@ -439,6 +439,11 @@ function FundsPage() {
                   >
                     {packetBusy === o.id ? "Preparing…" : "Download packet (PDF)"}
                   </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/admin/packet/$fundId" params={{ fundId: o.id }}>
+                      Packet page
+                    </Link>
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => setEditing(toForm(o))}>
                     Edit fund
                   </Button>

@@ -1,0 +1,1 @@
+DELETE FROM public.offering_packet_links WHERE label = 'TEMP smoke test';

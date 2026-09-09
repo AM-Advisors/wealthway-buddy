@@ -130,6 +130,11 @@ function FundPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm" variant="outline">
+            <Link to="/admin/packet/$fundId" params={{ fundId }}>
+              Offering packet
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
             <Link to="/admin/access">Fund access</Link>
           </Button>
           <Button asChild size="sm" variant="outline">

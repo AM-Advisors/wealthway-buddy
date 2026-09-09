@@ -1488,6 +1488,59 @@ export type Database = {
           },
         ]
       }
+      offering_packet_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          download_count: number
+          expires_at: string | null
+          id: string
+          include_wire: boolean
+          label: string
+          last_downloaded_at: string | null
+          offering_id: string
+          revoked_at: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          download_count?: number
+          expires_at?: string | null
+          id?: string
+          include_wire?: boolean
+          label?: string
+          last_downloaded_at?: string | null
+          offering_id: string
+          revoked_at?: string | null
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          download_count?: number
+          expires_at?: string | null
+          id?: string
+          include_wire?: boolean
+          label?: string
+          last_downloaded_at?: string | null
+          offering_id?: string
+          revoked_at?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_packet_links_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offerings: {
         Row: {
           created_at: string
@@ -1847,6 +1900,10 @@ export type Database = {
           offering_id: string
           updated_at: string
         }[]
+      }
+      get_wire_instructions_for_packet: {
+        Args: { p_offering_id: string }
+        Returns: Json
       }
       list_wire_instructions: {
         Args: never
