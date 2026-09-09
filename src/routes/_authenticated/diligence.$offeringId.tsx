@@ -27,6 +27,7 @@ import {
   listDiligenceActivity,
   listDiligenceChecklist,
   recordRoomVisit,
+  recordNdaView,
   listDiligenceQuestions,
   listDocumentVersions,
   removeChecklistItem,
