@@ -92,16 +92,34 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
     ];
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: clickRows } = recipients.length
-      ? await supabaseAdmin
-          .from("email_link_clicks")
-          .select("recipient, template, link_label, clicked_at")
-          .gte("clicked_at", since)
-          .in("recipient", recipients)
-      : { data: [] as any[] };
+    const [{ data: clickRows }, { data: openRows }] = await Promise.all([
+      recipients.length
+        ? supabaseAdmin
+            .from("email_link_clicks")
+            .select("recipient, template, link_label, clicked_at")
+            .gte("clicked_at", since)
+            .in("recipient", recipients)
+        : Promise.resolve({ data: [] as any[] }),
+      recipients.length
+        ? supabaseAdmin
+            .from("email_opens")
+            .select("recipient, template, opened_at")
+            .gte("opened_at", since)
+            .in("recipient", recipients)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
     const clicks = (clickRows ?? []) as any[];
+    const opens = (openRows ?? []) as any[];
 
     const clickedRecipients = new Set(clicks.map((c) => String(c.recipient).toLowerCase()));
+    const openedRecipients = new Set(opens.map((o) => String(o.recipient).toLowerCase()));
+    const firstOpenByRecipient = new Map<string, string>();
+    for (const o of opens) {
+      const key = String(o.recipient).toLowerCase();
+      const at = String(o.opened_at);
+      const current = firstOpenByRecipient.get(key);
+      if (!current || at < current) firstOpenByRecipient.set(key, at);
+    }
     const emailedApps = new Set(
       emailRows.filter((e) => e.status === "sent").map((e) => e.application_id as string),
     );
