@@ -556,7 +556,7 @@ function SetupPage() {
             </div>
 
             <div className="flex flex-wrap justify-between gap-2">
-              <Button variant="ghost" onClick={() => setStep(1)}>
+              <Button variant="ghost" onClick={() => setStep(2)}>
                 Back
               </Button>
               <div className="flex gap-2">
