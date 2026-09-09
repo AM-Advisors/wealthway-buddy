@@ -2643,6 +2643,101 @@ export type Database = {
           },
         ]
       }
+      offering_statements: {
+        Row: {
+          capital_call_terms: string
+          carried_interest_bps: number | null
+          created_at: string
+          distribution_policy: string
+          fees_and_expenses: string
+          final_closing_date: string | null
+          first_closing_date: string | null
+          fund_term_years: number | null
+          headline: string
+          id: string
+          investment_period_years: number | null
+          is_published: boolean
+          management_fee_bps: number | null
+          max_investment_cents: number | null
+          min_investment_cents: number | null
+          offering_id: string
+          other_terms: string
+          preferred_return_bps: number | null
+          published_at: string | null
+          reporting: string
+          security_type: string
+          summary: string
+          target_raise_cents: number | null
+          transfer_restrictions: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          capital_call_terms?: string
+          carried_interest_bps?: number | null
+          created_at?: string
+          distribution_policy?: string
+          fees_and_expenses?: string
+          final_closing_date?: string | null
+          first_closing_date?: string | null
+          fund_term_years?: number | null
+          headline?: string
+          id?: string
+          investment_period_years?: number | null
+          is_published?: boolean
+          management_fee_bps?: number | null
+          max_investment_cents?: number | null
+          min_investment_cents?: number | null
+          offering_id: string
+          other_terms?: string
+          preferred_return_bps?: number | null
+          published_at?: string | null
+          reporting?: string
+          security_type?: string
+          summary?: string
+          target_raise_cents?: number | null
+          transfer_restrictions?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          capital_call_terms?: string
+          carried_interest_bps?: number | null
+          created_at?: string
+          distribution_policy?: string
+          fees_and_expenses?: string
+          final_closing_date?: string | null
+          first_closing_date?: string | null
+          fund_term_years?: number | null
+          headline?: string
+          id?: string
+          investment_period_years?: number | null
+          is_published?: boolean
+          management_fee_bps?: number | null
+          max_investment_cents?: number | null
+          min_investment_cents?: number | null
+          offering_id?: string
+          other_terms?: string
+          preferred_return_bps?: number | null
+          published_at?: string | null
+          reporting?: string
+          security_type?: string
+          summary?: string
+          target_raise_cents?: number | null
+          transfer_restrictions?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_statements_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offerings: {
         Row: {
           closing_cost_cents: number
