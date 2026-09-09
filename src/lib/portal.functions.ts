@@ -314,6 +314,8 @@ export const getPortal = createServerFn({ method: "GET" })
           .filter(([, v]) => String(v ?? "").trim() !== "")
           .map(([k, v]) => [k, String(v)]),
       ) as Record<string, string>,
+      commitments,
+      uploads,
     };
   });
 
