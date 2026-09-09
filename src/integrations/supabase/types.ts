@@ -1671,6 +1671,71 @@ export type Database = {
           },
         ]
       }
+      fund_access_requests: {
+        Row: {
+          created_at: string
+          email: string
+          firm: string
+          full_name: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          internal_note: string
+          ip_address: string | null
+          message: string
+          offering_id: string
+          phone: string
+          source: string
+          status: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          firm?: string
+          full_name: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          internal_note?: string
+          ip_address?: string | null
+          message?: string
+          offering_id: string
+          phone?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          firm?: string
+          full_name?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          internal_note?: string
+          ip_address?: string | null
+          message?: string
+          offering_id?: string
+          phone?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_access_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_distributions: {
         Row: {
           amount_cents: number
@@ -2887,6 +2952,9 @@ export type Database = {
           is_open: boolean
           min_investment_cents: number
           name: string
+          public_headline: string | null
+          public_page_enabled: boolean
+          public_summary: string | null
           reg_type: Database["public"]["Enums"]["reg_type"]
           share_price_cents: number
           slug: string
@@ -2902,6 +2970,9 @@ export type Database = {
           is_open?: boolean
           min_investment_cents?: number
           name: string
+          public_headline?: string | null
+          public_page_enabled?: boolean
+          public_summary?: string | null
           reg_type: Database["public"]["Enums"]["reg_type"]
           share_price_cents?: number
           slug: string
@@ -2917,6 +2988,9 @@ export type Database = {
           is_open?: boolean
           min_investment_cents?: number
           name?: string
+          public_headline?: string | null
+          public_page_enabled?: boolean
+          public_summary?: string | null
           reg_type?: Database["public"]["Enums"]["reg_type"]
           share_price_cents?: number
           slug?: string

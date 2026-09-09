@@ -168,6 +168,23 @@ function buildEmail(
     };
   }
 
+  if (row.event_kind === "fund_access_request") {
+    const meta = row.metadata ?? {};
+    const who = String(meta["full_name"] ?? "A visitor");
+    return {
+      headline: `New access request — ${offeringName}`,
+      intro: `${who} asked for access to the ${offeringName} materials from the public fund page.`,
+      details: [
+        { label: "Name", value: who },
+        ...(meta["email"] ? [{ label: "Email", value: String(meta["email"]) }] : []),
+        ...(meta["firm"] ? [{ label: "Firm", value: String(meta["firm"]) }] : []),
+        ...(meta["phone"] ? [{ label: "Phone", value: String(meta["phone"]) }] : []),
+        { label: "Fund", value: offeringName },
+        ...(meta["message"] ? [{ label: "Message", value: String(meta["message"]) }] : []),
+      ],
+    };
+  }
+
   if (row.event_kind === "portal_message_received") {
     const meta = row.metadata ?? {};
     const from = String(meta["sender_name"] ?? investorName);
