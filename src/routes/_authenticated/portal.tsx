@@ -847,6 +847,23 @@ function Portal() {
               )}
             </CardContent>
           </Card>
+
+          {app?.id ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Messages</CardTitle>
+                <CardDescription>
+                  A private line to the fund team. Ask a question here and they reply in the portal.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PortalMessageThread
+                  applicationId={app.id}
+                  placeholder="Ask the fund team a question…"
+                />
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       )}
     </main>
