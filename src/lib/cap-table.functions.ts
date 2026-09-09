@@ -485,12 +485,18 @@ export const saveCapPosition = createServerFn({ method: "POST" })
 
     const { data: app } = await supabaseAdmin
       .from("investor_applications")
-      .select("id, offering_id")
+      .select("id, offering_id, commitment_cents")
       .eq("id", data.application_id)
       .maybeSingle();
     if (!app || app.offering_id !== data.offering_id) {
       throw new Error("That investor is not in this fund.");
     }
+
+    const { data: before } = await supabaseAdmin
+      .from("investor_cap_positions")
+      .select("shares, share_class, ownership_pct_override, notes")
+      .eq("application_id", data.application_id)
+      .maybeSingle();
 
     const { error } = await supabaseAdmin.from("investor_cap_positions").upsert(
       {
@@ -520,5 +526,127 @@ export const saveCapPosition = createServerFn({ method: "POST" })
         .eq("application_id", data.application_id);
     }
 
-    return { ok: true };
+    // Append-only trail of what actually changed.
+    const text = (v: unknown) => (v == null || v === "" ? null : String(v));
+    const candidates: Array<{ field: string; old: string | null; next: string | null }> = [
+      { field: "shares", old: text(before?.shares ?? null), next: text(data.shares) },
+      {
+        field: "share_class",
+        old: text(before?.share_class ?? null),
+        next: text(data.share_class),
+      },
+      {
+        field: "ownership_pct_override",
+        old: text(before?.ownership_pct_override ?? null),
+        next: text(data.ownership_pct_override),
+      },
+      { field: "notes", old: text(before?.notes ?? null), next: text(data.notes) },
+    ];
+    if (data.commitment_cents != null) {
+      candidates.push({
+        field: "commitment_cents",
+        old: text(app.commitment_cents ?? null),
+        next: text(data.commitment_cents),
+      });
+    }
+    const changes = candidates
+      .filter((c) => (c.old ?? "") !== (c.next ?? ""))
+      .map((c) => ({
+        offering_id: data.offering_id,
+        application_id: data.application_id,
+        changed_by: context.userId,
+        field: c.field,
+        old_value: c.old,
+        new_value: c.next,
+        note: data.notes,
+      }));
+    if (changes.length > 0) {
+      await supabaseAdmin.from("cap_table_changes").insert(changes);
+    }
+
+    return { ok: true, logged: changes.length };
   });
+
+export type CapTableChange = {
+  id: string;
+  created_at: string;
+  field: string;
+  field_label: string;
+  old_value: string | null;
+  new_value: string | null;
+  note: string | null;
+  investor_name: string;
+  application_id: string;
+  changed_by_name: string;
+};
+
+const FIELD_LABELS: Record<string, string> = {
+  shares: "Shares",
+  share_class: "Share class",
+  ownership_pct_override: "Ownership percentage",
+  notes: "Note",
+  commitment_cents: "Committed capital",
+};
+
+/** Trail of every ownership or commitment edit for a fund. */
+export const getCapTableLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ offering_id: z.string().uuid(), limit: z.number().int().min(1).max(500).optional() }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCanManage(context.supabase, data.offering_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("cap_table_changes")
+      .select("id, created_at, field, old_value, new_value, note, application_id, changed_by")
+      .eq("offering_id", data.offering_id)
+      .order("created_at", { ascending: false })
+      .limit(data.limit ?? 100);
+    if (error) throw new Error(error.message);
+    const list = rows ?? [];
+    if (list.length === 0) return { entries: [] as CapTableChange[] };
+
+    const appIds = [...new Set(list.map((r) => r.application_id))];
+    const { data: apps } = await supabaseAdmin
+      .from("investor_applications")
+      .select("id, user_id")
+      .in("id", appIds);
+
+    const userIds = [
+      ...new Set([
+        ...(apps ?? []).map((a) => a.user_id as string),
+        ...list.map((r) => r.changed_by).filter((v): v is string => Boolean(v)),
+      ]),
+    ];
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id, legal_name, entity_name, email")
+      .in("user_id", userIds);
+    const nameByUser = new Map<string, string>();
+    for (const p of profiles ?? []) {
+      nameByUser.set(
+        p.user_id as string,
+        (p.entity_name as string) || (p.legal_name as string) || (p.email as string) || "Someone",
+      );
+    }
+    const userByApp = new Map<string, string>();
+    for (const a of apps ?? []) userByApp.set(a.id as string, a.user_id as string);
+
+    const entries: CapTableChange[] = list.map((r) => ({
+      id: r.id as string,
+      created_at: r.created_at as string,
+      field: r.field as string,
+      field_label: FIELD_LABELS[r.field as string] ?? (r.field as string),
+      old_value: (r.old_value as string) ?? null,
+      new_value: (r.new_value as string) ?? null,
+      note: (r.note as string) ?? null,
+      application_id: r.application_id as string,
+      investor_name: nameByUser.get(userByApp.get(r.application_id as string) ?? "") ?? "Investor",
+      changed_by_name: r.changed_by ? (nameByUser.get(r.changed_by as string) ?? "Team member") : "Team member",
+    }));
+
+    return { entries };
+  });
+
