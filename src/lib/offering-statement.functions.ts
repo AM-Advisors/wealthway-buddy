@@ -3,14 +3,14 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const optionalMoney = z.number().int().min(0).max(1_000_000_000_000).nullable().optional();
-const optionalBps = z.number().int().min(0).max(10000).nullable().optional();
-const optionalYears = z.number().min(0).max(99).nullable().optional();
+const optionalMoney = z.number().int().min(0).max(1_000_000_000_000).nullable().default(null);
+const optionalBps = z.number().int().min(0).max(10000).nullable().default(null);
+const optionalYears = z.number().min(0).max(99).nullable().default(null);
 const optionalDate = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .nullable()
-  .optional();
+  .default(null);
 
 const statementSchema = z.object({
   offering_id: z.string().uuid(),
