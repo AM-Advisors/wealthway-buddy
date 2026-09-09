@@ -135,7 +135,9 @@ function AdminQueue() {
         </div>
       </div>
 
-
+      <div className="mt-6">
+        <WireRequestQueue compact />
+      </div>
 
       <div className="mt-6">
         <AlertPreferenceToggle />
