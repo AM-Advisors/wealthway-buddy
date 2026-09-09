@@ -25,6 +25,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
   const decide = useServerFn(decideWireAsReviewer);
   const signedUrl = useServerFn(getSignedDocumentUrl);
   const syncFund = useServerFn(syncFundSignatures);
+  const archiveToBox = useServerFn(archiveSignedDocument);
   const queryClient = useQueryClient();
 
   const [rejecting, setRejecting] = useState<string | null>(null);
