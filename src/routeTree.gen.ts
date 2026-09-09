@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminFundsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
 import { Route as AuthenticatedAdminInvestorsRouteImport } from './routes/_authenticated/admin.investors'
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
+import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_authenticated/admin.permissions'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
@@ -217,6 +218,12 @@ const AuthenticatedAdminNewApplicationRoute =
   AuthenticatedAdminNewApplicationRouteImport.update({
     id: '/admin/new-application',
     path: '/admin/new-application',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminPermissionsRoute =
+  AuthenticatedAdminPermissionsRouteImport.update({
+    id: '/admin/permissions',
+    path: '/admin/permissions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminSecurityRoute =
@@ -453,6 +460,7 @@ export interface FileRoutesByFullPath {
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
+  '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
@@ -516,6 +524,7 @@ export interface FileRoutesByTo {
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
+  '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
@@ -582,6 +591,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/_authenticated/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
+  '/_authenticated/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
@@ -648,6 +658,7 @@ export interface FileRouteTypes {
     | '/admin/funnel'
     | '/admin/investors'
     | '/admin/new-application'
+    | '/admin/permissions'
     | '/admin/security'
     | '/admin/setup'
     | '/admin/wire'
@@ -711,6 +722,7 @@ export interface FileRouteTypes {
     | '/admin/funnel'
     | '/admin/investors'
     | '/admin/new-application'
+    | '/admin/permissions'
     | '/admin/security'
     | '/admin/setup'
     | '/admin/wire'
@@ -776,6 +788,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/investors'
     | '/_authenticated/admin/new-application'
+    | '/_authenticated/admin/permissions'
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/setup'
     | '/_authenticated/admin/wire'
@@ -1022,6 +1035,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/new-application'
       fullPath: '/admin/new-application'
       preLoaderRoute: typeof AuthenticatedAdminNewApplicationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/permissions': {
+      id: '/_authenticated/admin/permissions'
+      path: '/admin/permissions'
+      fullPath: '/admin/permissions'
+      preLoaderRoute: typeof AuthenticatedAdminPermissionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/security': {
@@ -1297,6 +1317,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminInvestorsRoute: typeof AuthenticatedAdminInvestorsRoute
   AuthenticatedAdminNewApplicationRoute: typeof AuthenticatedAdminNewApplicationRoute
+  AuthenticatedAdminPermissionsRoute: typeof AuthenticatedAdminPermissionsRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
@@ -1345,6 +1366,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminInvestorsRoute: AuthenticatedAdminInvestorsRoute,
   AuthenticatedAdminNewApplicationRoute: AuthenticatedAdminNewApplicationRoute,
+  AuthenticatedAdminPermissionsRoute: AuthenticatedAdminPermissionsRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
