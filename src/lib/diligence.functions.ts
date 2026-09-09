@@ -328,6 +328,32 @@ export const setDiligenceEntityType = createServerFn({ method: "POST" })
     return { ok: true, changed: true };
   });
 
+
+/**
+ * Drops an alert for the fund's managers into the shared outbox and nudges it
+ * to send. Never throws: an alert must not fail the action that caused it.
+ */
+async function notifyManagersOfDiligenceEvent(
+  offeringId: string,
+  eventKind: string,
+  metadata: Record<string, unknown>,
+  investorUserId?: string,
+) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("notification_events").insert({
+      event_kind: eventKind,
+      offering_id: offeringId,
+      ...(investorUserId ? { investor_user_id: investorUserId } : {}),
+      metadata,
+    });
+    const { kickManagerAlerts } = await import("@/lib/manager-alerts.server");
+    kickManagerAlerts();
+  } catch (e) {
+    console.error("[diligence] manager alert failed", eventKind, e);
+  }
+}
+
 export const addDiligenceDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
@@ -381,6 +407,15 @@ export const addDiligenceDocument = createServerFn({ method: "POST" })
       uploaded_by: userId,
     });
     if (error) throw new Error(error.message);
+
+    await notifyManagersOfDiligenceEvent(data.offering_id, "diligence_document_uploaded", {
+      file_names: [safeName],
+      title: data.title,
+      category: data.category,
+      count: 1,
+      portal_path: `/diligence/${data.offering_id}`,
+    });
+
     return { ok: true };
   });
 
@@ -738,6 +773,14 @@ export const acceptDiligenceNda = createServerFn({ method: "POST" })
       `${data.signer_name.trim()} accepted the confidentiality agreement`,
       { nda_version: room.nda_version },
     );
+
+    await notifyManagersOfDiligenceEvent(
+      data.offering_id,
+      "diligence_nda_accepted",
+      { signer_name: data.signer_name.trim(), nda_version: room.nda_version, portal_path: `/diligence/${data.offering_id}` },
+      userId,
+    );
+
     return { ok: true };
   });
 
