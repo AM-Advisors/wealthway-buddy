@@ -52,6 +52,7 @@ const investorItems: NavItem[] = [
 const managerItems: NavItem[] = [
   { title: "My funds", url: "/manager", icon: Users },
   { title: "Investors", url: "/manager/investors", icon: Users },
+  { title: "Application timeline", url: "/manager/timeline", icon: Users },
   { title: "Fund documents", url: "/manager/documents", icon: FileText },
   { title: "My onboarding documents", url: "/manager/onboarding", icon: FileText },
 
