@@ -43,6 +43,7 @@ import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/l
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
+import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -232,6 +233,11 @@ const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   path: '/api/public/email/click',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPacketTokenRoute = ApiPublicPacketTokenRouteImport.update({
+  id: '/api/public/packet/$token',
+  path: '/api/public/packet/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksBoxSignRoute =
   ApiPublicWebhooksBoxSignRouteImport.update({
     id: '/api/public/webhooks/box-sign',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/manager/'
     | '/admin/fund/$fundId'
     | '/api/public/email/click'
+    | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/admin/fund/$fundId'
     | '/api/public/email/click'
+    | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -477,6 +488,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/'
     | '/_authenticated/admin/fund/$fundId'
     | '/api/public/email/click'
+    | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -491,6 +503,7 @@ export interface RootRouteChildren {
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
+  ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -736,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmailClickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/packet/$token': {
+      id: '/api/public/packet/$token'
+      path: '/api/public/packet/$token'
+      fullPath: '/api/public/packet/$token'
+      preLoaderRoute: typeof ApiPublicPacketTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/box-sign': {
       id: '/api/public/webhooks/box-sign'
       path: '/api/public/webhooks/box-sign'
@@ -840,6 +860,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
+  ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
