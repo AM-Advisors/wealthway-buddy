@@ -323,3 +323,70 @@ export const getFundCommitmentBalance = createServerFn({ method: "GET" })
       investors,
     };
   });
+
+/**
+ * Everything this investor still needs to submit for this particular fund:
+ * the onboarding checks, the fund's own documents, and the uploads that the
+ * fund asks for based on who is investing and which Reg D rule applies.
+ */
+export const getApplicationChecklist = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const application = await loadApplication(supabase, userId);
+    if (!application) {
+      return { application: null, offering: null, checks: [], fundDocuments: [], uploads: [] };
+    }
+
+    const [{ data: offering }, { data: fundDocs }, { data: uploads }, { data: signatures }] =
+      await Promise.all([
+        supabase
+          .from("offerings")
+          .select("id, name, reg_type, min_investment_cents")
+          .eq("id", application.offering_id)
+          .maybeSingle(),
+        supabase
+          .from("offering_documents")
+          .select("id, title, doc_type, requires_signature, sort_order")
+          .eq("offering_id", application.offering_id)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("investor_documents")
+          .select("id, doc_kind, file_name, review_status, uploaded_at")
+          .eq("user_id", userId)
+          .eq("offering_id", application.offering_id)
+          .order("uploaded_at", { ascending: false }),
+        supabase
+          .from("document_signatures")
+          .select("offering_document_id, signed_at")
+          .eq("application_id", application.id),
+      ]);
+
+    return {
+      application,
+      offering: offering ?? null,
+      checks: {
+        kyc: application.kyc_status as string,
+        aml: (application as any).aml_status as string,
+        accreditation: application.accreditation_status as string,
+        documents: (application as any).documents_status as string,
+      },
+      fundDocuments: ((fundDocs ?? []) as any[]).map((d) => {
+        const sig = ((signatures ?? []) as any[]).find((s) => s.offering_document_id === d.id);
+        return {
+          id: d.id as string,
+          title: d.title as string,
+          requiresSignature: Boolean(d.requires_signature),
+          signed: Boolean(sig?.signed_at),
+          signedAt: (sig?.signed_at as string) ?? null,
+        };
+      }),
+      uploads: ((uploads ?? []) as any[]).map((u) => ({
+        id: u.id as string,
+        docKind: u.doc_kind as string,
+        fileName: u.file_name as string,
+        reviewStatus: (u.review_status as string) ?? "pending",
+        uploadedAt: u.uploaded_at as string,
+      })),
+    };
+  });
