@@ -57,6 +57,8 @@ interface OfferingForm {
   target_raise: string;
   wire_fee: string;
   closing_cost: string;
+  share_price: string;
+
   is_open: boolean;
   wire: Record<WireKey, string>;
 }
@@ -388,7 +390,22 @@ function FundsPage() {
                 />
                 <p className="text-xs text-muted-foreground">One-off cost for closing this fund.</p>
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fund_share_price">Share price ($)</Label>
+                <Input
+                  id="fund_share_price"
+                  inputMode="numeric"
+                  value={editing.share_price}
+                  onChange={(e) =>
+                    setEditing({ ...editing, share_price: e.target.value.replace(/[^0-9.]/g, "") })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Price of one share. Confirmed commitments turn into shares automatically.
+                </p>
+              </div>
             </div>
+
 
             <div className="flex items-center gap-2">
               <Checkbox
