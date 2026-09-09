@@ -38,6 +38,11 @@ const TOOLS = [
     title: "Application timeline",
     blurb: "Follow each investor from invitation to funding, with full history.",
   },
+  {
+    to: "/manager/activity",
+    title: "Reviewer activity",
+    blurb: "Who approved, delayed or declined what, and when.",
+  },
   { to: "/manager/documents", title: "Fund documents", blurb: "Add and edit what investors sign." },
   { to: "/admin/wire", title: "Wire instructions", blurb: "Keep bank details current." },
   { to: "/admin/funds", title: "Fund pages", blurb: "Fund detail, packets and change history." },
