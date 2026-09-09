@@ -468,14 +468,31 @@ function DocumentsTab({
     onError: (e: any) => toast.error(e?.message ?? "Could not remove that document."),
   });
 
-  const [viewer, setViewer] = useState<{ url: string; title: string } | null>(null);
+  const [viewer, setViewer] = useState<
+    { title: string; src: string | null; url: string } | null
+  >(null);
+
+  useEffect(() => {
+    return () => {
+      if (viewer?.src?.startsWith("blob:")) URL.revokeObjectURL(viewer.src);
+    };
+  }, [viewer?.src]);
 
   const downloadMutation = useMutation({
     mutationFn: async (doc: { id: string; title: string }) => ({
-      res: (await download({ data: { id: doc.id } })) as any,
+      res: (await view({ data: { id: doc.id } })) as any,
       title: doc.title,
     }),
-    onSuccess: ({ res, title }: any) => setViewer({ url: res.url, title }),
+    onSuccess: ({ res, title }: any) => {
+      let src: string | null = null;
+      if (res.inline && res.base64) {
+        const raw = atob(res.base64);
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
+        src = URL.createObjectURL(new Blob([bytes], { type: res.content_type }));
+      }
+      setViewer({ title, src, url: res.url });
+    },
     onError: (e: any) => toast.error(e?.message ?? "Could not open that document."),
   });
 
