@@ -219,12 +219,22 @@ function Dashboard() {
       cta: "Sign",
     },
     {
+      title: "Confirm your commitment",
+      detail: data?.subscription?.commitment_cents
+        ? `${money(data.subscription.commitment_cents)} subscribed.`
+        : "Tell us the amount you are subscribing for.",
+      done: data?.subscription?.status === "confirmed",
+      to: "/subscription" as const,
+      cta: "Confirm",
+    },
+    {
       title: "Choose how you will send funds",
       detail: "Wire transfer or ACH debit.",
       done: Boolean(funding?.payment?.method),
       to: "/onboarding/funding" as const,
       cta: "Choose",
     },
+
     {
       title: "Send your wire and confirm it",
       detail: "Tell us the date, amount and sending bank.",

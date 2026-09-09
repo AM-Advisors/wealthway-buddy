@@ -2689,9 +2689,14 @@ export type Database = {
         Row: {
           application_id: string
           commitment_cents: number
+          confirmed_at: string | null
+          confirmed_ip: string | null
+          confirmed_user_agent: string | null
           created_at: string
           id: string
           ownership_title: string | null
+          payment_method: string | null
+          signed_name: string | null
           status: string
           tax_classification: string | null
           updated_at: string
@@ -2699,9 +2704,14 @@ export type Database = {
         Insert: {
           application_id: string
           commitment_cents: number
+          confirmed_at?: string | null
+          confirmed_ip?: string | null
+          confirmed_user_agent?: string | null
           created_at?: string
           id?: string
           ownership_title?: string | null
+          payment_method?: string | null
+          signed_name?: string | null
           status?: string
           tax_classification?: string | null
           updated_at?: string
@@ -2709,9 +2719,14 @@ export type Database = {
         Update: {
           application_id?: string
           commitment_cents?: number
+          confirmed_at?: string | null
+          confirmed_ip?: string | null
+          confirmed_user_agent?: string | null
           created_at?: string
           id?: string
           ownership_title?: string | null
+          payment_method?: string | null
+          signed_name?: string | null
           status?: string
           tax_classification?: string | null
           updated_at?: string
