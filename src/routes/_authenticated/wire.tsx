@@ -53,7 +53,7 @@ function WirePage() {
   const { data, isLoading } = useQuery({ queryKey: ["portal"], queryFn: () => load() });
 
   const wire = data?.wireInstructions ?? {};
-  const entries = FIELD_ORDER.filter((k) => wire[k]).map((k) => [k, wire[k]] as const);
+  const entries = FIELD_ORDER.filter((k) => wire[k]).map((k) => [k, String(wire[k])] as const);
   const reference = data?.payment?.reference_code ?? null;
   const commitment = money(data?.subscription?.commitment_cents ?? null);
 
