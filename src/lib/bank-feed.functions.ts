@@ -169,7 +169,7 @@ export const finishBankConnection = createServerFn({ method: "POST" })
       p_offering_id: data.fundId,
       p_item_id: exchanged.item_id,
       p_access_token: exchanged.access_token,
-      p_institution: institutionName,
+      p_institution: institutionName ?? "",
     });
     if (saveError) throw new Error(saveError.message);
 
