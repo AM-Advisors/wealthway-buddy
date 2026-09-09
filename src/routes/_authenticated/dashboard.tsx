@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getPortal } from "@/lib/portal.functions";
 import { getFunding } from "@/lib/funding.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { listMyUploads } from "@/lib/investor-uploads.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
@@ -109,6 +110,7 @@ function Dashboard() {
   const loadFunding = useServerFn(getFunding);
   const download = useServerFn(getSignedDocumentUrl);
   const getPdf = useServerFn(downloadOfferingDocument);
+  const loadUploads = useServerFn(listMyUploads);
   const [busy, setBusy] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -136,6 +138,14 @@ function Dashboard() {
     },
     refetchOnWindowFocus: true,
   });
+
+  const { data: uploadsData } = useQuery({
+    queryKey: ["my-uploads"],
+    queryFn: () => loadUploads(),
+    retry: false,
+  });
+  const myUploads = uploadsData?.uploads ?? [];
+
   const wireConfirmations = (funding?.wireConfirmations ?? []) as Array<{
     id: string;
     amount_cents: number;
@@ -497,6 +507,44 @@ function Dashboard() {
                     </li>
                   );
                 })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mt-10">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl">Documents you sent us</h2>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/documents">Upload another</Link>
+          </Button>
+        </div>
+        <Card className="mt-4">
+          <CardContent className="pt-6">
+            {myUploads.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Anything you upload for your fund team appears here.
+              </p>
+            ) : (
+              <ul className="divide-y">
+                {myUploads.slice(0, 5).map((upload) => (
+                  <li
+                    key={upload.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  >
+                    <div>
+                      <p className="font-medium">{upload.file_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Sent {when(upload.uploaded_at)}
+                        {upload.box_uploaded_at ? " · with your fund team" : ""}
+                      </p>
+                    </div>
+                    <Badge variant={upload.box_uploaded_at ? "default" : "secondary"}>
+                      {upload.box_uploaded_at ? "Delivered" : "Uploaded"}
+                    </Badge>
+                  </li>
+                ))}
               </ul>
             )}
           </CardContent>
