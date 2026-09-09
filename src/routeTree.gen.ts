@@ -46,6 +46,7 @@ import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminPortfolioValueRouteImport } from './routes/_authenticated/admin.portfolio-value'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
+import { Route as AuthenticatedAdminTimelineRouteImport } from './routes/_authenticated/admin.timeline'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
 import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
@@ -288,6 +289,12 @@ const AuthenticatedAdminSetupRoute = AuthenticatedAdminSetupRouteImport.update({
   path: '/admin/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminTimelineRoute =
+  AuthenticatedAdminTimelineRouteImport.update({
+    id: '/admin/timeline',
+    path: '/admin/timeline',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminWireRoute = AuthenticatedAdminWireRouteImport.update({
   id: '/admin/wire',
   path: '/admin/wire',
@@ -551,6 +558,7 @@ export interface FileRoutesByFullPath {
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
@@ -627,6 +635,7 @@ export interface FileRoutesByTo {
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
@@ -706,6 +715,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/_authenticated/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
@@ -785,6 +795,7 @@ export interface FileRouteTypes {
     | '/admin/portfolio-value'
     | '/admin/security'
     | '/admin/setup'
+    | '/admin/timeline'
     | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
@@ -861,6 +872,7 @@ export interface FileRouteTypes {
     | '/admin/portfolio-value'
     | '/admin/security'
     | '/admin/setup'
+    | '/admin/timeline'
     | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
@@ -939,6 +951,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/portfolio-value'
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/setup'
+    | '/_authenticated/admin/timeline'
     | '/_authenticated/admin/wire'
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
@@ -1260,6 +1273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/timeline': {
+      id: '/_authenticated/admin/timeline'
+      path: '/admin/timeline'
+      fullPath: '/admin/timeline'
+      preLoaderRoute: typeof AuthenticatedAdminTimelineRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/wire': {
       id: '/_authenticated/admin/wire'
       path: '/admin/wire'
@@ -1564,6 +1584,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPortfolioValueRoute: typeof AuthenticatedAdminPortfolioValueRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
+  AuthenticatedAdminTimelineRoute: typeof AuthenticatedAdminTimelineRoute
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
@@ -1626,6 +1647,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPortfolioValueRoute: AuthenticatedAdminPortfolioValueRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
+  AuthenticatedAdminTimelineRoute: AuthenticatedAdminTimelineRoute,
   AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
   AuthenticatedDiligenceOfferingIdRoute: AuthenticatedDiligenceOfferingIdRoute,
   AuthenticatedManagerApplicationIdRoute:
