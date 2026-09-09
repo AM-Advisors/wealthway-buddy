@@ -2083,3 +2083,233 @@ export const getDiligenceRoomTraffic = createServerFn({ method: "GET" })
     rooms.sort((a, b) => b.opens + b.downloads - (a.opens + a.downloads));
     return { rooms };
   });
+
+/* ------------------------- NDA drop-off tracking ----------------------- */
+
+/** Records that the signed-in person was shown the NDA. Throttled to one entry per 30 minutes. */
+export const recordNdaView = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) return { recorded: false };
+
+    const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { data: recent } = await supabase
+      .from("diligence_activity")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .eq("actor_id", userId)
+      .eq("event_type", "nda_viewed")
+      .gte("created_at", since)
+      .limit(1);
+    if (recent && recent.length > 0) return { recorded: false };
+
+    await logActivity(supabase, userId, data.offering_id, room.id, "nda_viewed", "Opened the confidentiality agreement");
+    return { recorded: true };
+  });
+
+type NdaStage = "not_opened" | "opened" | "agreed" | "read_documents" | "uploaded";
+
+/**
+ * Where invited investors stop: opened the NDA, agreed to it, read materials,
+ * then sent their own documents. Team members are excluded.
+ */
+export const getNdaDropOff = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: roleRows } = await supabase.from("user_roles").select("user_id, role").in("role", ["admin", "fund_manager"]);
+    const roles = ((roleRows ?? []) as any[]).filter((r) => r.user_id === userId).map((r) => String(r.role));
+    const isAdmin = roles.includes("admin");
+    if (!isAdmin && !roles.includes("fund_manager")) throw new Error("This area is for fund managers.");
+    const adminIds = new Set<string>(((roleRows ?? []) as any[]).filter((r) => r.role === "admin").map((r) => r.user_id as string));
+
+    let offeringIds: string[] | null = null;
+    if (!isAdmin) {
+      const { data: assignments } = await supabase.from("fund_managers").select("offering_id").eq("user_id", userId);
+      offeringIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      if (offeringIds.length === 0) return { funds: [] as any[] };
+    }
+
+    let fundQuery = supabase.from("offerings").select("id, name").order("name");
+    if (offeringIds) fundQuery = fundQuery.in("id", offeringIds);
+    const { data: funds } = await fundQuery;
+    const ids = ((funds ?? []) as any[]).map((f) => f.id as string);
+    if (ids.length === 0) return { funds: [] as any[] };
+
+    const [
+      { data: managerRows },
+      { data: access },
+      { data: apps },
+      { data: invites },
+      { data: events },
+      { data: acceptances },
+      { data: uploads },
+    ] = await Promise.all([
+      supabase.from("fund_managers").select("user_id, offering_id").in("offering_id", ids),
+      supabase.from("investor_fund_access").select("user_id, offering_id, created_at").in("offering_id", ids),
+      supabase.from("investor_applications").select("id, user_id, offering_id, created_at").in("offering_id", ids),
+      supabase.from("fund_invitations").select("email, offering_id, role, status, created_at, accepted_by").in("offering_id", ids),
+      supabase
+        .from("diligence_activity")
+        .select("offering_id, actor_id, actor_name, actor_email, event_type, created_at")
+        .in("offering_id", ids)
+        .in("event_type", ["nda_viewed", "room_viewed", "nda_accepted", "document_viewed", "document_downloaded"])
+        .order("created_at", { ascending: true })
+        .limit(10000),
+      supabase.from("diligence_nda_acceptances").select("offering_id, user_id, signer_name, accepted_at").in("offering_id", ids),
+      supabase.from("investor_documents").select("offering_id, user_id, uploaded_at").in("offering_id", ids),
+    ]);
+
+    const userIds = [
+      ...new Set([
+        ...((access ?? []) as any[]).map((a) => a.user_id as string),
+        ...((apps ?? []) as any[]).map((a) => a.user_id as string),
+      ]),
+    ];
+    const { data: profiles } = userIds.length
+      ? await supabase.from("profiles").select("user_id, legal_name, email").in("user_id", userIds)
+      : { data: [] as any[] };
+    const profileOf = new Map<string, { name: string | null; email: string | null }>();
+    for (const p of (profiles ?? []) as any[]) {
+      profileOf.set(p.user_id as string, { name: (p.legal_name as string | null) ?? null, email: (p.email as string | null) ?? null });
+    }
+
+    const result = ((funds ?? []) as any[]).map((f) => {
+      const offeringId = f.id as string;
+      const team = new Set<string>(adminIds);
+      for (const m of (managerRows ?? []) as any[]) if (m.offering_id === offeringId) team.add(m.user_id as string);
+
+      type Row = {
+        key: string;
+        userId: string | null;
+        name: string | null;
+        email: string | null;
+        invitedAt: string | null;
+        openedAt: string | null;
+        agreedAt: string | null;
+        readAt: string | null;
+        uploadedAt: string | null;
+        stage: NdaStage;
+      };
+      const rows = new Map<string, Row>();
+      const blank = (key: string, userId: string | null, name: string | null, email: string | null, invitedAt: string | null): Row => ({
+        key,
+        userId,
+        name,
+        email,
+        invitedAt,
+        openedAt: null,
+        agreedAt: null,
+        readAt: null,
+        uploadedAt: null,
+        stage: "not_opened",
+      });
+      const forUser = (uid: string, invitedAt: string | null) => {
+        const existing = rows.get(uid);
+        if (existing) {
+          if (invitedAt && (!existing.invitedAt || invitedAt < existing.invitedAt)) existing.invitedAt = invitedAt;
+          return existing;
+        }
+        const p = profileOf.get(uid);
+        const row = blank(uid, uid, p?.name ?? null, p?.email ?? null, invitedAt);
+        rows.set(uid, row);
+        return row;
+      };
+
+      for (const a of (access ?? []) as any[]) {
+        if (a.offering_id !== offeringId || team.has(a.user_id)) continue;
+        forUser(a.user_id as string, (a.created_at as string) ?? null);
+      }
+      for (const a of (apps ?? []) as any[]) {
+        if (a.offering_id !== offeringId || team.has(a.user_id)) continue;
+        forUser(a.user_id as string, (a.created_at as string) ?? null);
+      }
+      // Invitations that were never accepted have no account yet.
+      for (const i of (invites ?? []) as any[]) {
+        if (i.offering_id !== offeringId || i.role !== "investor") continue;
+        if (i.accepted_by && !team.has(i.accepted_by)) {
+          forUser(i.accepted_by as string, (i.created_at as string) ?? null);
+          continue;
+        }
+        const email = String(i.email ?? "").toLowerCase();
+        if (!email) continue;
+        const matched = [...rows.values()].some((r) => (r.email ?? "").toLowerCase() === email);
+        if (matched) continue;
+        const key = `invite:${email}`;
+        if (!rows.has(key)) rows.set(key, blank(key, null, null, email, (i.created_at as string) ?? null));
+      }
+
+      for (const e of (events ?? []) as any[]) {
+        if (e.offering_id !== offeringId || team.has(e.actor_id)) continue;
+        const row = rows.get(e.actor_id as string) ?? forUser(e.actor_id as string, null);
+        row.name = row.name ?? ((e.actor_name as string | null) ?? null);
+        row.email = row.email ?? ((e.actor_email as string | null) ?? null);
+        const at = e.created_at as string;
+        if (e.event_type === "nda_viewed" || e.event_type === "room_viewed") row.openedAt = row.openedAt ?? at;
+        if (e.event_type === "nda_accepted") {
+          row.openedAt = row.openedAt ?? at;
+          row.agreedAt = row.agreedAt ?? at;
+        }
+        if (e.event_type === "document_viewed" || e.event_type === "document_downloaded") row.readAt = row.readAt ?? at;
+      }
+
+      for (const a of (acceptances ?? []) as any[]) {
+        if (a.offering_id !== offeringId || team.has(a.user_id)) continue;
+        const row = rows.get(a.user_id as string) ?? forUser(a.user_id as string, null);
+        const at = a.accepted_at as string;
+        if (!row.agreedAt || at < row.agreedAt) row.agreedAt = at;
+        row.openedAt = row.openedAt ?? at;
+        row.name = row.name ?? ((a.signer_name as string | null) ?? null);
+      }
+
+      for (const u of (uploads ?? []) as any[]) {
+        if (u.offering_id !== offeringId || team.has(u.user_id)) continue;
+        const row = rows.get(u.user_id as string) ?? forUser(u.user_id as string, null);
+        const at = u.uploaded_at as string;
+        if (!row.uploadedAt || at < row.uploadedAt) row.uploadedAt = at;
+      }
+
+      const list = [...rows.values()].map((r) => {
+        r.stage = r.uploadedAt ? "uploaded" : r.readAt ? "read_documents" : r.agreedAt ? "agreed" : r.openedAt ? "opened" : "not_opened";
+        return r;
+      });
+
+      const invited = list.length;
+      const opened = list.filter((r) => r.openedAt).length;
+      const agreed = list.filter((r) => r.agreedAt).length;
+      const read = list.filter((r) => r.readAt).length;
+      const uploaded = list.filter((r) => r.uploadedAt).length;
+
+      const order: NdaStage[] = ["not_opened", "opened", "agreed", "read_documents", "uploaded"];
+      list.sort((a, b) => {
+        const d = order.indexOf(a.stage) - order.indexOf(b.stage);
+        if (d !== 0) return d;
+        return (a.name ?? a.email ?? "").localeCompare(b.name ?? b.email ?? "");
+      });
+
+      return {
+        offeringId,
+        name: f.name as string,
+        invited,
+        opened,
+        agreed,
+        read,
+        uploaded,
+        neverOpened: invited - opened,
+        openedNotAgreed: opened - agreed,
+        agreedNotUploaded: agreed - uploaded,
+        people: list.slice(0, 50),
+      };
+    });
+
+    result.sort((a, b) => b.invited - a.invited);
+    return { funds: result };
+  });
