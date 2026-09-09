@@ -345,7 +345,7 @@ async function notifyManagersOfDiligenceEvent(
       event_kind: eventKind,
       offering_id: offeringId,
       ...(investorUserId ? { investor_user_id: investorUserId } : {}),
-      metadata,
+      metadata: metadata as never,
     });
     const { kickManagerAlerts } = await import("@/lib/manager-alerts.server");
     kickManagerAlerts();
