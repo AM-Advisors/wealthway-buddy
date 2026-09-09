@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AccountSwitcher } from "@/components/account-switcher";
 
 export const Route = createFileRoute("/_authenticated/apply")({
   head: () => ({
@@ -164,6 +165,8 @@ function ApplyPage() {
           portal.
         </p>
       </div>
+
+      <AccountSwitcher className="rounded-lg border p-3" />
 
       <Card>
         <CardHeader>

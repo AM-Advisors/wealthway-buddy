@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { QuickWireConfirm } from "@/components/quick-wire-confirm";
+import { AccountSwitcher } from "@/components/account-switcher";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -332,6 +333,7 @@ function Dashboard() {
             {data?.offering?.reg_type ? ` — Reg D ${data.offering.reg_type}` : ""}
           </p>
         </div>
+        <AccountSwitcher className="mt-3" />
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
             <Link to="/apply">Apply to a fund</Link>

@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AccountSwitcher } from "@/components/account-switcher";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({
@@ -257,6 +258,7 @@ function Portal() {
             {data?.offering?.reg_type ? ` (Reg D ${data.offering.reg_type})` : ""}
           </p>
         </div>
+        <AccountSwitcher className="mt-3" />
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
             <Link to="/apply">Apply to a fund</Link>
