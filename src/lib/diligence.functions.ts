@@ -106,7 +106,16 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       .eq("offering_id", data.offering_id);
 
     return {
-      offering: { id: offering.id, name: offering.name, reg_type: offering.reg_type, summary: offering.summary },
+      offering: {
+        id: offering.id,
+        name: offering.name,
+        slug: (offering as any).slug ?? null,
+        reg_type: offering.reg_type,
+        summary: offering.summary,
+        min_investment_cents: (offering as any).min_investment_cents ?? null,
+        target_raise_cents: (offering as any).target_raise_cents ?? null,
+        is_open: (offering as any).is_open ?? true,
+      },
       room: room
         ? { id: room.id, intro: room.intro, created_at: room.created_at, entity_type: entityType }
         : null,
