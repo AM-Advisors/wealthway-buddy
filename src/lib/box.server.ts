@@ -181,3 +181,105 @@ export function mapSignStatus(
   if (s === "expired") return "expired";
   return "out_for_signature";
 }
+
+/** Finds or creates a subfolder under a parent folder and returns its Box id. */
+export async function ensureSubfolder(name: string, parentId = boxFolderId()): Promise<string> {
+  const res = await fetch(`${API}/folders`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${await accessToken()}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ name, parent: { id: parentId } }),
+  });
+  const text = await res.text();
+  if (res.ok) return String((JSON.parse(text) as any).id);
+  if (res.status === 409) {
+    const existing = (JSON.parse(text) as any)?.context_info?.conflicts?.[0]?.id;
+    if (existing) return String(existing);
+  }
+  throw new Error(`Box folder create failed [${res.status}]: ${text}`);
+}
+
+/** Uploads arbitrary bytes into a specific Box folder. */
+export async function uploadFileTo(
+  parentId: string,
+  fileName: string,
+  bytes: Uint8Array,
+  contentType = "application/octet-stream",
+): Promise<{ id: string; size: number }> {
+  const form = new FormData();
+  form.append("attributes", JSON.stringify({ name: fileName, parent: { id: parentId } }));
+  form.append("file", new Blob([bytes as unknown as BlobPart], { type: contentType }), fileName);
+
+  const res = await fetch(`${UPLOAD}/files/content`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await accessToken()}` },
+    body: form,
+  });
+  const text = await res.text();
+  if (res.status === 409) {
+    const conflictId = (JSON.parse(text) as any)?.context_info?.conflicts?.id as string | undefined;
+    if (conflictId) {
+      const versionForm = new FormData();
+      versionForm.append("attributes", JSON.stringify({ name: fileName }));
+      versionForm.append(
+        "file",
+        new Blob([bytes as unknown as BlobPart], { type: contentType }),
+        fileName,
+      );
+      const versionRes = await boxFetch(`${UPLOAD}/files/${conflictId}/content`, {
+        method: "POST",
+        body: versionForm,
+      });
+      const versionJson = (await versionRes.json()) as { entries: { id: string; size?: number }[] };
+      const entry = versionJson.entries[0]!;
+      return { id: entry.id, size: entry.size ?? bytes.length };
+    }
+  }
+  if (!res.ok) throw new Error(`Box upload failed [${res.status}]: ${text}`);
+  const json = JSON.parse(text) as { entries: { id: string; size?: number }[] };
+  const entry = json.entries[0]!;
+  return { id: entry.id, size: entry.size ?? bytes.length };
+}
+
+/** Returns a short-lived direct download URL for a Box file. */
+export async function temporaryDownloadUrl(fileId: string): Promise<string> {
+  const res = await fetch(`${API}/files/${encodeURIComponent(fileId)}/content`, {
+    headers: { Authorization: `Bearer ${await accessToken()}` },
+    redirect: "manual",
+  });
+  const location = res.headers.get("location");
+  if (location) return location;
+  const body = await res.text();
+  throw new Error(`Box download link failed [${res.status}]: ${body}`);
+}
+
+/** Moves a Box file to trash. */
+export async function deleteBoxFile(fileId: string): Promise<void> {
+  const res = await fetch(`${API}/files/${encodeURIComponent(fileId)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${await accessToken()}` },
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`Box delete failed [${res.status}]: ${await res.text()}`);
+  }
+}
+
+/** Lists the files directly inside a Box folder. */
+export async function listFolderFiles(
+  folderId: string,
+): Promise<{ id: string; name: string; size: number; modified_at: string }[]> {
+  const res = await boxFetch(
+    `${API}/folders/${encodeURIComponent(folderId)}/items?fields=id,name,size,modified_at&limit=1000`,
+  );
+  const json = (await res.json()) as { entries: any[] };
+  return (json.entries ?? [])
+    .filter((e) => e.type === "file")
+    .map((e) => ({
+      id: String(e.id),
+      name: String(e.name),
+      size: Number(e.size ?? 0),
+      modified_at: String(e.modified_at ?? ""),
+    }));
+}
