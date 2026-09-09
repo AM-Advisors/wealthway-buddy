@@ -9,10 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InvestorUploads } from "@/components/investor-uploads";
 import { getFundLegalDocuments } from "@/lib/document-templates.functions";
-import {
-  downloadOfferingDocument,
-  getOfferingDocumentFileUrl,
-} from "@/lib/offering-files.functions";
+import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { getOfferingDocumentFileUrl } from "@/lib/offering-files.functions";
 
 export const Route = createFileRoute("/_authenticated/fund-documents")({
   head: () => ({
