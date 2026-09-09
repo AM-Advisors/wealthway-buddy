@@ -26,3 +26,15 @@ export async function destinationAfterSignIn(userId: string): Promise<string> {
   }
   return "/onboarding/kyc";
 }
+
+/**
+ * Where a reviewer belongs after using the fund manager sign-in.
+ * Returns null when the account is neither a fund manager nor an admin.
+ */
+export async function managerDestination(userId: string): Promise<string | null> {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const list = (data ?? []).map((r: any) => r.role as string);
+  if (list.includes("fund_manager")) return "/manager";
+  if (list.includes("admin")) return "/admin";
+  return null;
+}
