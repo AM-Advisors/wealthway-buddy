@@ -170,6 +170,68 @@ function Dashboard() {
   const unlocked = app?.kyc_status === "approved" && app?.aml_status === "approved";
   const signatureByDoc = new Map(documents.map((d) => [d.offering_document_id, d]));
 
+  // Plain-language tracker: everything between signing in and the money landing.
+  const docsToSign = offeringDocs.filter((d) => d.requires_signature);
+  const signedCount = docsToSign.filter((d) => signatureByDoc.has(d.id)).length;
+  const wireApproved =
+    wireConfirmations.some((w) => w.status === "approved") || funding?.payment?.status === "settled";
+  const pathSteps = [
+    {
+      title: "Verify your identity",
+      detail: "Photo ID and a quick liveness check.",
+      done: app?.kyc_status === "approved",
+      to: "/onboarding/kyc" as const,
+      cta: "Verify",
+    },
+    {
+      title: "Background screening",
+      detail: "We run this for you — no action needed.",
+      done: app?.aml_status === "approved",
+      to: "/onboarding/aml" as const,
+      cta: "View",
+    },
+    {
+      title: "Confirm your accreditation",
+      detail: "Answer the questionnaire and attach evidence.",
+      done: app?.accreditation_status === "approved",
+      to: "/onboarding/accreditation" as const,
+      cta: "Continue",
+    },
+    {
+      title: "Sign your fund documents",
+      detail:
+        docsToSign.length === 0
+          ? "Your documents will appear here."
+          : `${signedCount} of ${docsToSign.length} signed.`,
+      done: docsToSign.length > 0 && signedCount === docsToSign.length,
+      to: "/portal" as const,
+      cta: "Sign",
+    },
+    {
+      title: "Choose how you will send funds",
+      detail: "Wire transfer or ACH debit.",
+      done: Boolean(funding?.payment?.method),
+      to: "/onboarding/funding" as const,
+      cta: "Choose",
+    },
+    {
+      title: "Send your wire and confirm it",
+      detail: "Tell us the date, amount and sending bank.",
+      done: wireConfirmations.length > 0 || funding?.payment?.status === "settled",
+      to: "/wire-confirmation" as const,
+      cta: "Confirm wire",
+    },
+    {
+      title: "Funds received",
+      detail: "We confirm the money has landed in the fund account.",
+      done: wireApproved,
+      to: "/wire" as const,
+      cta: "View instructions",
+    },
+  ];
+  const doneSteps = pathSteps.filter((s) => s.done).length;
+  const nextStep = pathSteps.find((s) => !s.done) ?? null;
+
   async function openSigned(signatureId: string) {
     setBusy(signatureId);
     try {
@@ -265,6 +327,58 @@ function Dashboard() {
           }
         />
       </div>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="text-base">Your path to the wire</CardTitle>
+          <CardDescription>
+            {doneSteps === pathSteps.length
+              ? "Every step is complete — your funds are recorded."
+              : `${doneSteps} of ${pathSteps.length} steps complete. Next: ${nextStep?.title ?? "—"}.`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${Math.round((doneSteps / pathSteps.length) * 100)}%` }}
+            />
+          </div>
+          <ol className="mt-5 space-y-3">
+            {pathSteps.map((step, index) => {
+              const isNext = step === nextStep;
+              return (
+                <li key={step.title} className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span
+                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                        step.done
+                          ? "bg-primary text-primary-foreground"
+                          : isNext
+                            ? "border border-primary text-primary"
+                            : "border text-muted-foreground"
+                      }`}
+                    >
+                      {step.done ? "✓" : index + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className={`text-sm ${step.done ? "" : isNext ? "font-medium" : "text-muted-foreground"}`}>
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{step.detail}</p>
+                    </div>
+                  </div>
+                  {!step.done && isNext && step.to ? (
+                    <Button asChild size="sm">
+                      <Link to={step.to}>{step.cta}</Link>
+                    </Button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
+        </CardContent>
+      </Card>
 
       <div className="mt-10">
         <OnboardingStepper current={(app.current_step as "kyc") ?? "kyc"} />
