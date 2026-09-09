@@ -743,3 +743,162 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       funds: summary,
     };
   });
+
+/**
+ * Wire tracking across every fund the reviewer can see: each investor's
+ * funding stage, the confirmation they submitted, and when the bank
+ * confirmed the money landed.
+ */
+export const getWireTracking = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const roles = await assertReviewer(supabase, userId);
+    const isAdmin = roles.includes("admin");
+
+    let offeringIds: string[] | null = null;
+    if (!isAdmin) {
+      const { data: assignments, error } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      if (error) throw new Error(error.message);
+      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      if (offeringIds.length === 0) return { rows: [] as any[], totals: emptyWireTotals() };
+    }
+
+    let fundQuery = supabase.from("offerings").select("id, name").order("name");
+    if (offeringIds) fundQuery = fundQuery.in("id", offeringIds);
+    const { data: funds, error: fundsError } = await fundQuery;
+    if (fundsError) throw new Error(fundsError.message);
+    const fundIds = ((funds ?? []) as any[]).map((f) => f.id as string);
+    if (fundIds.length === 0) return { rows: [] as any[], totals: emptyWireTotals() };
+    const fundName = new Map(((funds ?? []) as any[]).map((f) => [f.id as string, f.name as string]));
+
+    const { data: apps, error: appsError } = await supabase
+      .from("investor_applications")
+      .select("id, user_id, offering_id, funding_status, commitment_cents, updated_at")
+      .in("offering_id", fundIds)
+      .limit(2000);
+    if (appsError) throw new Error(appsError.message);
+    const applications = (apps ?? []) as any[];
+    const appIds = applications.map((a) => a.id as string);
+    if (appIds.length === 0) return { rows: [] as any[], totals: emptyWireTotals() };
+
+    const empty = { data: [] as any[] };
+    const [{ data: wires }, { data: payments }, { data: profiles }] = await Promise.all([
+      supabase
+        .from("wire_confirmations")
+        .select(
+          "id, application_id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, status, reviewed_at, created_at",
+        )
+        .in("application_id", appIds)
+        .order("created_at", { ascending: false })
+        .limit(2000),
+      supabase
+        .from("payments")
+        .select("id, application_id, method, amount_cents, status, reference_code, expected_date, confirmed_at, updated_at")
+        .in("application_id", appIds)
+        .limit(2000),
+      applications.length
+        ? supabase
+            .from("profiles")
+            .select("user_id, legal_name, email")
+            .in("user_id", [...new Set(applications.map((a) => a.user_id as string))])
+        : empty,
+    ]);
+
+    const profileOf = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    const latestWire = new Map<string, any>();
+    for (const w of ((wires ?? []) as any[])) {
+      if (!latestWire.has(w.application_id as string)) latestWire.set(w.application_id as string, w);
+    }
+    const paymentOf = new Map<string, any>();
+    for (const p of ((payments ?? []) as any[])) {
+      const current = paymentOf.get(p.application_id as string);
+      if (!current || (p.updated_at ?? "") > (current.updated_at ?? "")) {
+        paymentOf.set(p.application_id as string, p);
+      }
+    }
+
+    const rows = applications
+      .map((app) => {
+        const profile = profileOf.get(app.user_id as string);
+        const wire = latestWire.get(app.id as string) ?? null;
+        const payment = paymentOf.get(app.id as string) ?? null;
+        const fundingStatus = (payment?.status as string) ?? (app.funding_status as string);
+        const confirmedAt = (payment?.confirmed_at as string) ?? null;
+
+        let stage: "not_started" | "awaiting_wire" | "submitted" | "processing" | "received" | "problem";
+        if (fundingStatus === "settled" || confirmedAt) stage = "received";
+        else if (fundingStatus === "failed" || fundingStatus === "returned" || fundingStatus === "cancelled")
+          stage = "problem";
+        else if (fundingStatus === "processing") stage = "processing";
+        else if (wire && wire.status === "pending") stage = "submitted";
+        else if (fundingStatus === "awaiting_wire" || wire) stage = "awaiting_wire";
+        else stage = "not_started";
+
+        return {
+          applicationId: app.id as string,
+          fundId: app.offering_id as string,
+          fundName: fundName.get(app.offering_id as string) ?? "Fund",
+          investorName:
+            (profile?.legal_name as string) || (profile?.email as string) || "Investor",
+          investorEmail: (profile?.email as string) ?? null,
+          commitmentCents: (app.commitment_cents as number) ?? null,
+          method: (payment?.method as string) ?? null,
+          amountCents: (payment?.amount_cents as number) ?? (wire?.amount_cents as number) ?? null,
+          referenceCode: (payment?.reference_code as string) ?? null,
+          expectedDate: (payment?.expected_date as string) ?? null,
+          fundingStatus,
+          stage,
+          wire: wire
+            ? {
+                submittedAt: wire.created_at as string,
+                sentOn: wire.sent_on as string,
+                bankName: wire.sending_bank_name as string,
+                last4: wire.sending_account_last4 as string,
+                reference: (wire.bank_reference as string) ?? null,
+                status: wire.status as string,
+                reviewedAt: (wire.reviewed_at as string) ?? null,
+              }
+            : null,
+          bankConfirmedAt: confirmedAt,
+          updatedAt: (payment?.updated_at as string) ?? (app.updated_at as string) ?? null,
+        };
+      })
+      .filter((r) => r.stage !== "not_started" || r.commitmentCents)
+      .sort((a, b) => {
+        const order = { submitted: 0, processing: 1, problem: 2, awaiting_wire: 3, received: 4, not_started: 5 } as any;
+        if (order[a.stage] !== order[b.stage]) return order[a.stage] - order[b.stage];
+        return (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "");
+      });
+
+    const totals = {
+      awaiting: rows.filter((r) => r.stage === "awaiting_wire").length,
+      submitted: rows.filter((r) => r.stage === "submitted").length,
+      processing: rows.filter((r) => r.stage === "processing").length,
+      received: rows.filter((r) => r.stage === "received").length,
+      problem: rows.filter((r) => r.stage === "problem").length,
+      receivedCents: rows
+        .filter((r) => r.stage === "received")
+        .reduce((sum, r) => sum + (r.amountCents ?? r.commitmentCents ?? 0), 0),
+      inFlightCents: rows
+        .filter((r) => r.stage === "submitted" || r.stage === "processing" || r.stage === "awaiting_wire")
+        .reduce((sum, r) => sum + (r.amountCents ?? r.commitmentCents ?? 0), 0),
+    };
+
+    return { rows, totals };
+  });
+
+function emptyWireTotals() {
+  return {
+    awaiting: 0,
+    submitted: 0,
+    processing: 0,
+    received: 0,
+    problem: 0,
+    receivedCents: 0,
+    inFlightCents: 0,
+  };
+}
