@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   addDiligenceDocument,
   ensureDiligenceRoom,
+  getDiligenceRoomTraffic,
   listManagedDiligenceRooms,
   removeDiligenceDocument,
 } from "@/lib/diligence.functions";
@@ -113,12 +114,96 @@ function ManagerDiligencePage() {
             ))}
           </div>
 
+          <RoomTraffic />
+
           {selected ? <FundPanel key={selected.offeringId} fund={selected} /> : null}
         </>
       )}
     </main>
   );
 }
+
+function when(value: string | null) {
+  return value ? new Date(value).toLocaleString() : "—";
+}
+
+function RoomTraffic() {
+  const load = useServerFn(getDiligenceRoomTraffic);
+  const { data, isLoading } = useQuery({
+    queryKey: ["diligence-room-traffic"],
+    queryFn: () => load(),
+    retry: false,
+    refetchInterval: 120_000,
+  });
+  const [openId, setOpenId] = useState<string | null>(null);
+  const rooms = (data?.rooms ?? []) as any[];
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>Who is looking</CardTitle>
+        <CardDescription>
+          Investor visits and downloads for each room. Your own team's activity is left out.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading activity…</p>
+        ) : rooms.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No rooms to report on yet.</p>
+        ) : (
+          rooms.map((r) => (
+            <div key={r.offeringId} className="rounded-lg border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm">{r.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.visitorCount} investor{r.visitorCount === 1 ? "" : "s"} · {r.opens} room
+                    open{r.opens === 1 ? "" : "s"} · {r.downloads} download
+                    {r.downloads === 1 ? "" : "s"} · {r.views} read in the room · last activity{" "}
+                    {when(r.lastActivityAt)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={r.opens > 0 ? "default" : "secondary"}>
+                    {r.opens > 0 ? "Active" : "Quiet"}
+                  </Badge>
+                  {r.visitors.length > 0 ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setOpenId(openId === r.offeringId ? null : r.offeringId)}
+                    >
+                      {openId === r.offeringId ? "Hide people" : "See people"}
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              {openId === r.offeringId ? (
+                <div className="mt-3 space-y-2 border-t pt-3">
+                  {r.visitors.map((v: any) => (
+                    <div
+                      key={v.actorId}
+                      className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                    >
+                      <span className="truncate">{v.name ?? v.email ?? "Investor"}</span>
+                      <span className="text-muted-foreground">
+                        {v.opens} open{v.opens === 1 ? "" : "s"} · {v.downloads} download
+                        {v.downloads === 1 ? "" : "s"} · last seen {when(v.lastSeen)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function FundPanel({ fund }: { fund: any }) {
   const queryClient = useQueryClient();
