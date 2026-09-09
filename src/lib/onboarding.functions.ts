@@ -176,7 +176,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
         ).data
       : null;
 
-    return { offering, profile, application, kyc, aml, invited: true };
+    return { offering, profile: profileView, persona, application, kyc, aml, invited: true };
 
   });
 
