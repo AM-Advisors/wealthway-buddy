@@ -2521,6 +2521,7 @@ export type Database = {
           min_investment_cents: number
           name: string
           reg_type: Database["public"]["Enums"]["reg_type"]
+          share_price_cents: number
           slug: string
           summary: string | null
           target_raise_cents: number | null
@@ -2535,6 +2536,7 @@ export type Database = {
           min_investment_cents?: number
           name: string
           reg_type: Database["public"]["Enums"]["reg_type"]
+          share_price_cents?: number
           slug: string
           summary?: string | null
           target_raise_cents?: number | null
@@ -2549,6 +2551,7 @@ export type Database = {
           min_investment_cents?: number
           name?: string
           reg_type?: Database["public"]["Enums"]["reg_type"]
+          share_price_cents?: number
           slug?: string
           summary?: string | null
           target_raise_cents?: number | null

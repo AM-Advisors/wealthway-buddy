@@ -74,6 +74,8 @@ const offeringSchema = z.object({
   target_raise_cents: z.number().int().min(0).nullable().default(null),
   wire_fee_cents: z.number().int().min(0).default(0),
   closing_cost_cents: z.number().int().min(0).default(0),
+  share_price_cents: z.number().int().min(0).default(0),
+
   is_open: z.boolean().default(true),
   wire_instructions: wireSchema,
 });
@@ -230,6 +232,8 @@ const OFFERING_FIELDS = [
   "target_raise_cents",
   "wire_fee_cents",
   "closing_cost_cents",
+  "share_price_cents",
+
   "is_open",
 ];
 
@@ -250,6 +254,8 @@ export const saveOffering = createServerFn({ method: "POST" })
       target_raise_cents: data.target_raise_cents,
       wire_fee_cents: data.wire_fee_cents,
       closing_cost_cents: data.closing_cost_cents,
+      share_price_cents: data.share_price_cents,
+
       is_open: data.is_open,
     };
 

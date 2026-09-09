@@ -57,6 +57,8 @@ interface OfferingForm {
   target_raise: string;
   wire_fee: string;
   closing_cost: string;
+  share_price: string;
+
   is_open: boolean;
   wire: Record<WireKey, string>;
 }
@@ -75,6 +77,8 @@ function toForm(o: any): OfferingForm {
     target_raise: o.target_raise_cents ? String(o.target_raise_cents / 100) : "",
     wire_fee: o.wire_fee_cents ? String(o.wire_fee_cents / 100) : "",
     closing_cost: o.closing_cost_cents ? String(o.closing_cost_cents / 100) : "",
+    share_price: o.share_price_cents ? String(o.share_price_cents / 100) : "",
+
     is_open: Boolean(o.is_open),
     wire: {
       ...emptyWire(),
@@ -94,6 +98,8 @@ const blankForm = (): OfferingForm => ({
   target_raise: "",
   wire_fee: "",
   closing_cost: "",
+  share_price: "",
+
   is_open: true,
   wire: emptyWire(),
 });
@@ -189,6 +195,8 @@ function FundsPage() {
             : null,
           wire_fee_cents: Math.round(Number(form.wire_fee || 0) * 100),
           closing_cost_cents: Math.round(Number(form.closing_cost || 0) * 100),
+          share_price_cents: Math.round(Number(form.share_price || 0) * 100),
+
           is_open: form.is_open,
           wire_instructions: form.wire,
         },
@@ -388,7 +396,22 @@ function FundsPage() {
                 />
                 <p className="text-xs text-muted-foreground">One-off cost for closing this fund.</p>
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fund_share_price">Share price ($)</Label>
+                <Input
+                  id="fund_share_price"
+                  inputMode="numeric"
+                  value={editing.share_price}
+                  onChange={(e) =>
+                    setEditing({ ...editing, share_price: e.target.value.replace(/[^0-9.]/g, "") })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Price of one share. Confirmed commitments turn into shares automatically.
+                </p>
+              </div>
             </div>
+
 
             <div className="flex items-center gap-2">
               <Checkbox
