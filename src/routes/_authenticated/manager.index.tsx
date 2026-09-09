@@ -155,12 +155,12 @@ function ManagerPanel() {
 
       <div className="mt-10">
         <FundInvitations title="Invite people to your funds" />
-      </section>
+      </div>
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl">Email alerts</h2>
         <AlertPreferenceToggle />
-      </div>
+      </section>
     </main>
   );
 }
