@@ -146,25 +146,46 @@ function FunnelPage() {
             <CardHeader>
               <CardTitle className="text-base">Email engagement</CardTitle>
               <CardDescription>
-                {data.totalClicks} link click{data.totalClicks === 1 ? "" : "s"} recorded in this period.
-                Open tracking is not available from our email platform, so clicks are the first signal an
-                investor engaged.
+                {data.totalOpens} open{data.totalOpens === 1 ? "" : "s"} and {data.totalClicks} link
+                click{data.totalClicks === 1 ? "" : "s"} recorded in this period. Opens are counted when
+                the recipient's email app loads images, so treat them as a floor — clicks are always
+                exact.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {data.linkBreakdown.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No clicks recorded yet in this window.</p>
-              ) : (
-                data.linkBreakdown.map((row: any) => (
-                  <div key={row.label} className="flex items-center justify-between text-sm">
-                    <span>{row.label}</span>
-                    <span className="text-muted-foreground">
-                      {row.clicks} click{row.clicks === 1 ? "" : "s"} · {row.people} investor
-                      {row.people === 1 ? "" : "s"}
-                    </span>
-                  </div>
-                ))
-              )}
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm">By email</p>
+                {data.emailBreakdown.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No opens or clicks recorded yet in this window.
+                  </p>
+                ) : (
+                  data.emailBreakdown.map((row: any) => (
+                    <div key={row.template} className="flex items-center justify-between text-sm">
+                      <span>{row.label}</span>
+                      <span className="text-muted-foreground">
+                        opened by {row.openedBy} · clicked by {row.clickedBy}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm">By link</p>
+                {data.linkBreakdown.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No clicks recorded yet in this window.</p>
+                ) : (
+                  data.linkBreakdown.map((row: any) => (
+                    <div key={row.label} className="flex items-center justify-between text-sm">
+                      <span>{row.label}</span>
+                      <span className="text-muted-foreground">
+                        {row.clicks} click{row.clicks === 1 ? "" : "s"} · {row.people} investor
+                        {row.people === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
 
