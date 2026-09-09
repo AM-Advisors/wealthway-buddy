@@ -1288,6 +1288,7 @@ export const getDiligenceEngagement = createServerFn({ method: "POST" })
 
     return {
       viewers,
+      documentViews,
       neverOpened,
       totalDocuments: (docs ?? []).length,
     };
