@@ -60,6 +60,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DiligenceQuestionBoard } from "@/components/diligence-question-board";
 import { Textarea } from "@/components/ui/textarea";
 import { DiligenceAssistant } from "@/components/diligence-assistant";
 
@@ -390,6 +391,7 @@ function DiligenceRoomPage() {
           <TabsTrigger value="assistant">Ask AI</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
+          <TabsTrigger value="requests">{canManage ? "Ask investors" : "Your questions"}</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           {canManage ? <TabsTrigger value="engagement">Who's viewing</TabsTrigger> : null}
           {canManage ? <TabsTrigger value="settings">Agreement</TabsTrigger> : null}
@@ -413,6 +415,9 @@ function DiligenceRoomPage() {
         </TabsContent>
         <TabsContent value="questions" className="mt-6">
           <QuestionsTab offeringId={offeringId} />
+        </TabsContent>
+        <TabsContent value="requests" className="mt-6">
+          <DiligenceQuestionBoard offeringId={offeringId} canManage={canManage} />
         </TabsContent>
         <TabsContent value="activity" className="mt-6">
           <ActivityTab offeringId={offeringId} />
