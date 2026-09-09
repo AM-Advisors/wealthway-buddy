@@ -52,6 +52,7 @@ const investorItems: NavItem[] = [
 const managerItems: NavItem[] = [
   { title: "My funds", url: "/manager", icon: Users },
   { title: "Fund pages", url: "/admin/funds", icon: Building2 },
+  { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
 ];
 
 const adminItems: NavItem[] = [
