@@ -197,7 +197,7 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
     const signedAt = new Date().toISOString();
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
 
-    for (const manager of managers ?? []) {
+    for (const manager of recipients) {
       if (!manager.email) continue;
       await sendTemplateEmail("document-signed", manager.email, {
         templateData: {
@@ -209,8 +209,10 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
           commitmentCents: application.commitment_cents ?? 0,
           portalUrl: `https://onboard.harmonious.co/manager/${applicationId}`,
         },
+        idempotencyKey: `doc-signed-${signatureId}-${manager.email}`,
       }).catch((e) => console.error("[box-sign] manager email failed", e));
     }
+
 
     await supabaseAdmin
       .from("document_signatures")
