@@ -109,7 +109,7 @@ function InvestorDatabase() {
           region: form['region'] ?? null,
           postal_code: form['postal_code'] ?? null,
           country: form['country'] ?? null,
-          commitment_cents: form['commitment'］ ? Math.round(Number(form['commitment']) * 100) : null,
+          commitment_cents: form['commitment'] ? Math.round(Number(form['commitment']) * 100) : null,
         },
       }),
     onSuccess: () => {
