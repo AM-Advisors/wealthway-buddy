@@ -61,6 +61,8 @@ export const getPortal = createServerFn({ method: "GET" })
       { data: payment },
       { data: kyc },
       { data: wire },
+      { data: wireConfirmations },
+      { data: assignments },
     ] = await Promise.all([
         supabase
           .from("offerings")
@@ -96,7 +98,50 @@ export const getPortal = createServerFn({ method: "GET" })
         supabase
           .rpc("get_wire_instructions", { p_offering_id: application.offering_id })
           .maybeSingle(),
+        supabase
+          .from("wire_confirmations")
+          .select(
+            "id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, status, review_notes, reviewed_at, created_at",
+          )
+          .eq("application_id", application.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("diligence_question_assignments")
+          .select("id, question_id, status, due_date, answered_at, created_at")
+          .eq("offering_id", application.offering_id)
+          .eq("investor_user_id", userId)
+          .order("created_at", { ascending: true }),
       ]);
+
+    // Assigned due diligence questions, with the prompt text and whether the
+    // investor still owes an answer.
+    const assignmentRows = (assignments ?? []) as any[];
+    let questions: PortalQuestion[] = [];
+    if (assignmentRows.length > 0) {
+      const { data: prompts } = await supabase
+        .from("diligence_request_questions")
+        .select("id, prompt, category, is_required, sort_order")
+        .in(
+          "id",
+          assignmentRows.map((a) => a.question_id),
+        );
+      const byId = new Map(((prompts ?? []) as any[]).map((p) => [p.id, p]));
+      questions = assignmentRows
+        .map((a) => {
+          const prompt = byId.get(a.question_id);
+          return {
+            assignment_id: a.id as string,
+            prompt: (prompt?.prompt as string) ?? "Question",
+            category: (prompt?.category as string) ?? null,
+            is_required: Boolean(prompt?.is_required),
+            sort_order: (prompt?.sort_order as number) ?? 0,
+            status: a.status as string,
+            due_date: a.due_date as string | null,
+            answered_at: a.answered_at as string | null,
+          };
+        })
+        .sort((a, b) => a.sort_order - b.sort_order);
+    }
 
 
     const titleById = new Map((offeringDocs ?? []).map((d) => [d.id, d.title]));
