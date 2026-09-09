@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { FundInvitations } from "@/components/fund-invitations";
 import { FundOperations } from "@/components/fund-operations";
+import { InvestorReviewBoard } from "@/components/investor-review-board";
 
 
 
