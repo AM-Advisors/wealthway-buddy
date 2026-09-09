@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 /** One line per fund the investor has a subscription in. */
 export interface PortalCommitment {
@@ -354,8 +355,7 @@ export const getInvestorDocuments = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("id, offering_id, status, documents_status, funding_status")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
 
     if (!application) {

@@ -31,6 +31,8 @@ export const STEP_LABELS: Record<string, string> = {
 export interface InvestorRow {
   user_id: string;
   application_id: string | null;
+  account_label: string | null;
+  account_kind: string | null;
   offering_id: string | null;
   offeringName: string | null;
   legal_name: string | null;
@@ -87,7 +89,14 @@ export const listInvestors = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
 
-    const [{ data: profiles }, { data: apps }, { data: offerings }, { data: roles }] =
+    const [
+      { data: profiles },
+      { data: apps },
+      { data: offerings },
+      { data: personas },
+      { data: roles },
+    ] =
+
       await Promise.all([
         supabase
           .from("profiles")
@@ -99,11 +108,12 @@ export const listInvestors = createServerFn({ method: "GET" })
         supabase
           .from("investor_applications")
           .select(
-            "id, user_id, offering_id, status, kyc_status, aml_status, accreditation_status, documents_status, funding_status, manager_review_status, commitment_cents, created_at, updated_at",
+            "id, user_id, offering_id, persona_id, status, kyc_status, aml_status, accreditation_status, documents_status, funding_status, manager_review_status, commitment_cents, created_at, updated_at",
           )
           .order("created_at", { ascending: false })
           .limit(1000),
         supabase.from("offerings").select("id, name"),
+        supabase.from("investor_personas").select("id, label, kind"),
         supabase.from("user_roles").select("user_id, role"),
       ]);
 
@@ -115,18 +125,30 @@ export const listInvestors = createServerFn({ method: "GET" })
     );
 
     const fundName = new Map(((offerings ?? []) as any[]).map((o) => [o.id, o.name as string]));
-    const appByUser = new Map<string, any>();
+    const personaById = new Map(((personas ?? []) as any[]).map((x) => [x.id as string, x]));
+
+    // One row per application, so an investor running several accounts or
+    // several funds at once shows up once for each of them.
+    const profileByUser = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    const usersWithApps = new Set(((apps ?? []) as any[]).map((a) => a.user_id as string));
+
+    const pairs: Array<{ p: any; app: any }> = [];
     for (const a of (apps ?? []) as any[]) {
-      if (!appByUser.has(a.user_id)) appByUser.set(a.user_id, a);
+      const p = profileByUser.get(a.user_id as string);
+      if (p) pairs.push({ p, app: a });
+    }
+    for (const p of (profiles ?? []) as any[]) {
+      if (!usersWithApps.has(p.user_id) && !staff.has(p.user_id)) pairs.push({ p, app: null });
     }
 
-    const investors: InvestorRow[] = ((profiles ?? []) as any[])
-      .filter((p) => appByUser.has(p.user_id) || !staff.has(p.user_id))
-      .map((p) => {
-        const app = appByUser.get(p.user_id) ?? null;
+    const investors: InvestorRow[] = pairs
+      .map(({ p, app }) => {
+        const persona = app?.persona_id ? personaById.get(app.persona_id as string) : null;
         return {
           user_id: p.user_id,
           application_id: app?.id ?? null,
+          account_label: (persona?.label as string) ?? null,
+          account_kind: (persona?.kind as string) ?? null,
           offering_id: app?.offering_id ?? null,
           offeringName: app?.offering_id ? (fundName.get(app.offering_id) ?? null) : null,
           legal_name: p.legal_name ?? null,

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { ensureActivePersona } from "@/lib/active-application";
 
 const INVESTOR_TYPES = ["individual", "joint", "entity", "trust", "ira"] as const;
 
@@ -14,11 +15,15 @@ export const listFundsToJoin = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
+    const personaId = await ensureActivePersona(supabase, userId);
+
     const [{ data: access }, { data: applications }, { data: profile }] = await Promise.all([
       supabase.from("investor_fund_access").select("offering_id").eq("user_id", userId),
       supabase
         .from("investor_applications")
-        .select("id, offering_id, status, current_step, commitment_cents, created_at, manager_review_status")
+        .select(
+          "id, offering_id, persona_id, status, current_step, commitment_cents, created_at, manager_review_status",
+        )
         .eq("user_id", userId),
       supabase
         .from("profiles")
@@ -27,9 +32,14 @@ export const listFundsToJoin = createServerFn({ method: "GET" })
         .maybeSingle(),
     ]);
 
+    // Each investing account applies separately, so only this account's
+    // applications count as "already applied".
     const applicationByOffering = new Map<string, any>(
-      ((applications ?? []) as any[]).map((a) => [a.offering_id as string, a]),
+      ((applications ?? []) as any[])
+        .filter((a) => !personaId || a.persona_id === personaId)
+        .map((a) => [a.offering_id as string, a]),
     );
+
     const offeringIds = Array.from(
       new Set([
         ...((access ?? []) as any[]).map((a) => a.offering_id as string),
@@ -38,7 +48,7 @@ export const listFundsToJoin = createServerFn({ method: "GET" })
     );
 
     if (offeringIds.length === 0) {
-      return { funds: [], profile: profile ?? null };
+      return { funds: [], profile: profile ?? null, personaId };
     }
 
     const [{ data: offerings }, { data: rooms }, { data: acceptances }] = await Promise.all([
@@ -87,7 +97,7 @@ export const listFundsToJoin = createServerFn({ method: "GET" })
       })
       .sort((a, b) => Number(Boolean(a.application)) - Number(Boolean(b.application)));
 
-    return { funds, profile: profile ?? null };
+    return { funds, profile: profile ?? null, personaId };
   });
 
 /** Create this investor's application to join a fund and start the onboarding steps. */
@@ -97,6 +107,7 @@ export const applyToFund = createServerFn({ method: "POST" })
     z
       .object({
         offering_id: z.string().uuid(),
+        persona_id: z.string().uuid().optional(),
         legal_name: z.string().trim().min(2).max(120),
         entity_name: z.string().trim().max(160).optional(),
         investor_type: z.enum(INVESTOR_TYPES),
@@ -171,31 +182,73 @@ export const applyToFund = createServerFn({ method: "POST" })
       }
     }
 
-    const { data: existing } = await supabase
+    // Which investing account is applying: the one passed in, otherwise the
+    // one currently selected.
+    let personaId = data.persona_id ?? null;
+    if (personaId) {
+      const { data: owned } = await supabase
+        .from("investor_personas")
+        .select("id")
+        .eq("id", personaId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!owned) throw new Error("That investing account is not available.");
+      await supabase.from("profiles").update({ active_persona_id: personaId }).eq("user_id", userId);
+    } else {
+      personaId = await ensureActivePersona(supabase, userId);
+    }
+
+    const existingQuery = supabase
       .from("investor_applications")
       .select("id")
       .eq("user_id", userId)
-      .eq("offering_id", data.offering_id)
-      .maybeSingle();
+      .eq("offering_id", data.offering_id);
+    const { data: existing } = await (personaId
+      ? existingQuery.eq("persona_id", personaId)
+      : existingQuery
+    ).maybeSingle();
     if (existing) {
       return { application_id: existing.id as string, created: false };
     }
 
-    await supabase.from("profiles").upsert(
-      {
-        user_id: userId,
-        legal_name: data.legal_name,
-        entity_name: data.entity_name?.trim() ? data.entity_name.trim() : null,
-        investor_type: data.investor_type,
-      },
-      { onConflict: "user_id" },
-    );
+    const entityName = data.entity_name?.trim() ? data.entity_name.trim() : null;
+
+    if (personaId) {
+      const { data: persona } = await supabase
+        .from("investor_personas")
+        .select("is_default, label")
+        .eq("id", personaId)
+        .maybeSingle();
+
+      await supabase
+        .from("investor_personas")
+        .update({
+          kind: data.investor_type,
+          label: persona?.label || entityName || data.legal_name,
+          legal_name: data.legal_name,
+          entity_name: entityName,
+        })
+        .eq("id", personaId);
+
+      if (persona?.is_default) {
+        await supabase.from("profiles").upsert(
+          {
+            user_id: userId,
+            legal_name: data.legal_name,
+            entity_name: entityName,
+            investor_type: data.investor_type,
+          },
+          { onConflict: "user_id" },
+        );
+      }
+    }
 
     const { data: application, error } = await supabase
       .from("investor_applications")
       .insert({
         user_id: userId,
         offering_id: data.offering_id,
+        persona_id: personaId,
         status: "in_progress",
         current_step: "kyc",
         source: "portal",

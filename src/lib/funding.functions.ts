@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 export const wireSentSchema = z.object({
   expected_date: z.string().trim().min(1, "Choose the date the wire was sent"),
@@ -121,8 +122,7 @@ async function loadFundingApplication(supabase: any, userId: string) {
       "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, manager_review_status, manager_review_notes",
     )
     .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", await activeApplicationId(supabase, userId))
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found.");
@@ -171,8 +171,7 @@ export const getFunding = createServerFn({ method: "GET" })
         "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, manager_review_status, manager_review_notes",
       )
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
 
     if (!application)

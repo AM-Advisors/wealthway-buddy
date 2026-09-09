@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 export const STEP_KEYS = ["kyc", "aml", "accreditation", "documents", "funding"] as const;
 export type StepKey = (typeof STEP_KEYS)[number];
@@ -27,8 +28,7 @@ export const recordStepView = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, offering_id")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
 
     if (!app) return { recorded: false };

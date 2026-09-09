@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 export type NavStep = {
   key: "kyc" | "aml" | "accreditation" | "documents" | "funding";
@@ -22,8 +23,7 @@ export const getNavState = createServerFn({ method: "GET" })
           "id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status",
         )
         .eq("user_id", userId)
-        .order("created_at", { ascending: true })
-        .limit(1)
+        .eq("id", await activeApplicationId(supabase, userId))
         .maybeSingle(),
     ]);
 

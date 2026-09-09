@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId, ensureActivePersona } from "@/lib/active-application";
 
 const investorType = z.enum(["individual", "joint", "entity", "trust", "ira"]);
 
@@ -73,6 +74,10 @@ export const getOnboarding = createServerFn({ method: "GET" })
       profile = inserted.data;
     }
 
+    // Everything below is scoped to the investing account the person is acting
+    // as, so an LLC application never picks up the individual's answers.
+    const personaId = await ensureActivePersona(supabase, userId, profile as any);
+
     // Access is invitation-only: an existing application, or a fund the person
     // has been invited to, decides which offering they see. Nothing is created
     // for people who have not been invited.
@@ -81,8 +86,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     application = existingApp.data;
 
@@ -99,9 +103,42 @@ export const getOnboarding = createServerFn({ method: "GET" })
       offeringId = (access.data?.offering_id as string | undefined) ?? null;
     }
 
+    const { data: persona } = personaId
+      ? await supabase.from("investor_personas").select("*").eq("id", personaId).maybeSingle()
+      : { data: null as any };
+
+    // The identity form always reflects the investing account in use.
+    const profileView = persona
+      ? {
+          ...profile,
+          legal_name: persona.legal_name ?? profile?.legal_name ?? null,
+          investor_type: persona.kind ?? profile?.investor_type ?? null,
+          email: persona.email ?? profile?.email ?? null,
+          phone: persona.phone ?? profile?.phone ?? null,
+          date_of_birth: persona.date_of_birth ?? profile?.date_of_birth ?? null,
+          tax_id: persona.tax_id ?? profile?.tax_id ?? null,
+          entity_name: persona.entity_name ?? null,
+          address_line1: persona.address_line1 ?? profile?.address_line1 ?? null,
+          address_line2: persona.address_line2 ?? profile?.address_line2 ?? null,
+          city: persona.city ?? profile?.city ?? null,
+          region: persona.region ?? profile?.region ?? null,
+          postal_code: persona.postal_code ?? profile?.postal_code ?? null,
+          country: persona.country ?? profile?.country ?? null,
+        }
+      : profile;
+
     if (!offeringId) {
-      return { offering: null, profile, application: null, kyc: null, aml: null, invited: false };
+      return {
+        offering: null,
+        profile: profileView,
+        persona,
+        application: null,
+        kyc: null,
+        aml: null,
+        invited: false,
+      };
     }
+
 
     const { data: offering } = await supabase
       .from("offerings")
@@ -112,7 +149,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
     if (!application && offering) {
       const created = await supabase
         .from("investor_applications")
-        .insert({ user_id: userId, offering_id: offering.id, current_step: "kyc", source: "portal" })
+        .insert({ user_id: userId, offering_id: offering.id, persona_id: personaId, current_step: "kyc", source: "portal" })
         .select("*")
         .single();
       if (created.error) throw new Error(created.error.message);
@@ -139,7 +176,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
         ).data
       : null;
 
-    return { offering, profile, application, kyc, aml, invited: true };
+    return { offering, profile: profileView, persona, application, kyc, aml, invited: true };
 
   });
 
@@ -151,34 +188,62 @@ export const submitKyc = createServerFn({ method: "POST" })
 
     const { data: application, error: appError } = await supabase
       .from("investor_applications")
-      .select("id")
+      .select("id, persona_id")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (appError) throw new Error(appError.message);
     if (!application) throw new Error("No application found. Reload and try again.");
 
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({
-        legal_name: data.legal_name,
-        investor_type: data.investor_type,
-        email: data.email,
-        phone: data.phone,
-        date_of_birth: data.date_of_birth,
-        tax_id: data.tax_id,
-        entity_name: data.entity_name || null,
-        address_line1: data.address_line1,
-        address_line2: data.address_line2 || null,
-        city: data.city,
-        region: data.region,
-        postal_code: data.postal_code,
-        country: data.country,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-    if (profileError) throw new Error(profileError.message);
+    const details = {
+      legal_name: data.legal_name,
+      email: data.email,
+      phone: data.phone,
+      date_of_birth: data.date_of_birth,
+      tax_id: data.tax_id,
+      entity_name: data.entity_name || null,
+      address_line1: data.address_line1,
+      address_line2: data.address_line2 || null,
+      city: data.city,
+      region: data.region,
+      postal_code: data.postal_code,
+      country: data.country,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Details belong to the investing account being used, so a trust or LLC
+    // application never overwrites the individual's own record.
+    const personaId =
+      (application.persona_id as string | null) ?? (await ensureActivePersona(supabase, userId));
+
+    if (personaId) {
+      const { error: personaError } = await supabase
+        .from("investor_personas")
+        .update({
+          ...details,
+          kind: data.investor_type,
+          label: data.entity_name || data.legal_name,
+        })
+        .eq("id", personaId)
+        .eq("user_id", userId);
+      if (personaError) throw new Error(personaError.message);
+    }
+
+    const { data: isDefault } = personaId
+      ? await supabase
+          .from("investor_personas")
+          .select("is_default")
+          .eq("id", personaId)
+          .maybeSingle()
+      : { data: null };
+
+    if (!personaId || isDefault?.is_default) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ ...details, investor_type: data.investor_type })
+        .eq("user_id", userId);
+      if (profileError) throw new Error(profileError.message);
+    }
 
     const identity = {
       id_document_type: data.id_document_type,
@@ -229,8 +294,7 @@ export const submitAml = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, kyc_status")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (appError) throw new Error(appError.message);
     if (!application) throw new Error("No application found. Reload and try again.");

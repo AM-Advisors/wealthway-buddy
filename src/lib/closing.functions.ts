@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 async function canManage(supabase: any, offeringId: string) {
   const { data } = await supabase.rpc("can_manage_diligence", { _offering_id: offeringId });
@@ -369,8 +370,7 @@ export const getMyClosing = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("id, offering_id, commitment_cents")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (!app) return { closing: null, documents: [] as any[] };
 

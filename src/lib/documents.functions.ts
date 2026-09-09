@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 export const subscriptionSchema = z.object({
   commitment_cents: z.number().int().min(100000, "Enter your commitment amount"),
@@ -47,8 +48,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
         "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
       )
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
 
     if (!application) {
@@ -99,8 +99,7 @@ export const saveSubscription = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, offering_id")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (!application) throw new Error("No application found.");
 
@@ -159,8 +158,7 @@ export const signDocument = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, offering_id, accreditation_status")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (!application) throw new Error("No application found.");
 

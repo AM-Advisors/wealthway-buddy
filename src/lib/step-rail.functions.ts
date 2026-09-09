@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 export type RailStatus = "not_started" | "in_progress" | "in_review" | "complete" | "attention";
 
@@ -36,8 +37,7 @@ export const getStepRail = createServerFn({ method: "GET" })
         .from("investor_applications")
         .select("*")
         .eq("user_id", userId)
-        .order("created_at", { ascending: true })
-        .limit(1)
+        .eq("id", await activeApplicationId(supabase, userId))
         .maybeSingle(),
     ]);
 
