@@ -809,6 +809,10 @@ export type Database = {
       document_signatures: {
         Row: {
           application_id: string
+          box_error: string | null
+          box_file_id: string | null
+          box_folder_id: string | null
+          box_uploaded_at: string | null
           consent_electronic: boolean
           document_hash: string
           id: string
@@ -832,6 +836,10 @@ export type Database = {
         }
         Insert: {
           application_id: string
+          box_error?: string | null
+          box_file_id?: string | null
+          box_folder_id?: string | null
+          box_uploaded_at?: string | null
           consent_electronic?: boolean
           document_hash: string
           id?: string
@@ -855,6 +863,10 @@ export type Database = {
         }
         Update: {
           application_id?: string
+          box_error?: string | null
+          box_file_id?: string | null
+          box_folder_id?: string | null
+          box_uploaded_at?: string | null
           consent_electronic?: boolean
           document_hash?: string
           id?: string

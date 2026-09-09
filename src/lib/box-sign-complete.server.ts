@@ -64,6 +64,10 @@ export async function syncBoxSignRequest(
     patch["signed_at"] = completedAt;
     patch["provider_completed_at"] = completedAt;
     patch["provider_file_id"] = remote.signedFileId;
+    // The certified copy already lives in Box — record it as archived, stamped.
+    patch["box_file_id"] = remote.signedFileId;
+    patch["box_uploaded_at"] = completedAt;
+    patch["box_error"] = null;
   }
 
   const { error: updateError } = await supabaseAdmin

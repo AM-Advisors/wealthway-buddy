@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { decideWireAsReviewer, getFundInvestorReview } from "@/lib/manager.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
-import { syncFundSignatures } from "@/lib/box-sign.functions";
+import { archiveSignedDocument, syncFundSignatures } from "@/lib/box-sign.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
   const decide = useServerFn(decideWireAsReviewer);
   const signedUrl = useServerFn(getSignedDocumentUrl);
   const syncFund = useServerFn(syncFundSignatures);
+  const archiveToBox = useServerFn(archiveSignedDocument);
   const queryClient = useQueryClient();
 
   const [rejecting, setRejecting] = useState<string | null>(null);
@@ -91,14 +92,22 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
     onError: (e: any) => toast.error(e?.message ?? "That signed copy is not available yet."),
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: (signatureId: string) => archiveToBox({ data: { signature_id: signatureId } }),
+    onSuccess: () => {
+      toast.success("Signed copy filed in Box");
+      refresh();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not file that copy in Box."),
+  });
+
   const syncMutation = useMutation({
     mutationFn: () => syncFund({ data: { offering_id: offeringId } }),
     onSuccess: (res: any) => {
-      toast.success(
-        res.completed > 0
-          ? `${res.completed} newly signed document${res.completed === 1 ? "" : "s"} came through`
-          : "Everything is up to date",
-      );
+      const parts: string[] = [];
+      if (res.completed > 0) parts.push(`${res.completed} newly signed`);
+      if (res.archived > 0) parts.push(`${res.archived} filed in Box`);
+      toast.success(parts.length ? parts.join(" · ") : "Everything is up to date");
       refresh();
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not check signing status."),
@@ -183,17 +192,44 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
                         key={doc.signatureId}
                         className="flex flex-wrap items-center justify-between gap-2"
                       >
-                        <p className="text-xs text-muted-foreground">
-                          {doc.title} · signed {when(doc.signedAt)}
-                        </p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={!doc.hasPdf || downloadMutation.isPending}
-                          onClick={() => downloadMutation.mutate(doc.signatureId)}
-                        >
-                          {doc.hasPdf ? "Download" : "Preparing"}
-                        </Button>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">
+                            {doc.title} · signed {when(doc.signedAt)}
+                          </p>
+                          <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                            {doc.inBox ? (
+                              <>
+                                <Badge variant="secondary">In Box</Badge>
+                                <span>filed {when(doc.boxUploadedAt)}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Badge variant="outline">Not in Box yet</Badge>
+                                <span>{doc.boxError ? doc.boxError : "filing…"}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {!doc.inBox && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={!doc.hasPdf || archiveMutation.isPending}
+                              onClick={() => archiveMutation.mutate(doc.signatureId)}
+                            >
+                              File in Box
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={!doc.hasPdf || downloadMutation.isPending}
+                            onClick={() => downloadMutation.mutate(doc.signatureId)}
+                          >
+                            {doc.hasPdf ? "Download" : "Preparing"}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

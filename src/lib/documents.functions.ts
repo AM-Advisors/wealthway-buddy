@@ -284,6 +284,16 @@ export const signDocument = createServerFn({ method: "POST" })
         .eq("id", application.id);
     }
 
+    // File the signed copy in Box straight away, stamped with the signing time.
+    if (signatureId) {
+      try {
+        const { archiveSignatureToBox } = await import("@/lib/signed-box.server");
+        await archiveSignatureToBox(signatureId);
+      } catch (e) {
+        console.error("[box-archive] sign-time archive failed", e);
+      }
+    }
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, allSigned, documentHash };
   });

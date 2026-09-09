@@ -343,7 +343,9 @@ export const getFundInvestorReview = createServerFn({ method: "GET" })
       appIds.length
         ? supabase
             .from("document_signatures")
-            .select("id, application_id, offering_document_id, signed_at, pdf_path, provider_status")
+            .select(
+              "id, application_id, offering_document_id, signed_at, pdf_path, provider_status, box_file_id, box_uploaded_at, box_error",
+            )
             .in("application_id", appIds)
         : empty,
       appIds.length
@@ -391,6 +393,9 @@ export const getFundInvestorReview = createServerFn({ method: "GET" })
           title: docTitle.get(s.offering_document_id) ?? "Fund document",
           signedAt: s.signed_at as string | null,
           hasPdf: Boolean(s.pdf_path),
+          inBox: Boolean(s.box_file_id),
+          boxUploadedAt: (s.box_uploaded_at as string | null) ?? null,
+          boxError: (s.box_error as string | null) ?? null,
         })),
         outstandingDocuments: requiredDocs
           .filter((d) => !signedIds.has(d.id))
