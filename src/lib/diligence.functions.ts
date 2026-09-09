@@ -74,7 +74,7 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
 
     const { data: offering } = await supabase
       .from("offerings")
-      .select("id, name, reg_type, summary")
+      .select("id, name, slug, reg_type, summary, min_investment_cents, target_raise_cents, is_open")
       .eq("id", data.offering_id)
       .maybeSingle();
     if (!offering) throw new Error("That fund is not available.");
@@ -106,7 +106,16 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       .eq("offering_id", data.offering_id);
 
     return {
-      offering: { id: offering.id, name: offering.name, reg_type: offering.reg_type, summary: offering.summary },
+      offering: {
+        id: offering.id,
+        name: offering.name,
+        slug: (offering as any).slug ?? null,
+        reg_type: offering.reg_type,
+        summary: offering.summary,
+        min_investment_cents: (offering as any).min_investment_cents ?? null,
+        target_raise_cents: (offering as any).target_raise_cents ?? null,
+        is_open: (offering as any).is_open ?? true,
+      },
       room: room
         ? { id: room.id, intro: room.intro, created_at: room.created_at, entity_type: entityType }
         : null,
@@ -368,6 +377,63 @@ export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
       { document_id: doc.id },
     );
     return { url, file_name: doc.file_name };
+  });
+
+/** Returns the file itself so it can be read inside the room without downloading. */
+export const getDiligenceFileForViewing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: doc } = await supabase
+      .from("diligence_documents")
+      .select("id, box_file_id, file_name, title, size_bytes, offering_id, room_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!doc) throw new Error("That document is not available.");
+
+    const ext = (doc.file_name ?? "").toLowerCase().split(".").pop() ?? "";
+    const contentType =
+      ext === "pdf"
+        ? "application/pdf"
+        : ["png", "jpg", "jpeg", "gif", "webp"].includes(ext)
+          ? `image/${ext === "jpg" ? "jpeg" : ext}`
+          : null;
+    const tooBig = Number(doc.size_bytes ?? 0) > 12 * 1024 * 1024;
+
+    const { downloadFile, temporaryDownloadUrl } = await import("@/lib/box.server");
+    await logActivity(
+      supabase,
+      context.userId,
+      doc.offering_id,
+      doc.room_id,
+      "document_downloaded",
+      `Opened “${doc.title}”`,
+      { document_id: doc.id },
+    );
+
+    if (!contentType || tooBig) {
+      return {
+        inline: false as const,
+        file_name: doc.file_name,
+        content_type: contentType,
+        url: await temporaryDownloadUrl(doc.box_file_id),
+      };
+    }
+
+    const bytes = await downloadFile(doc.box_file_id);
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return {
+      inline: true as const,
+      file_name: doc.file_name,
+      content_type: contentType,
+      base64: btoa(binary),
+      url: await temporaryDownloadUrl(doc.box_file_id),
+    };
   });
 
 /** Pulls in any files added straight into the fund's Box folder outside the app. */

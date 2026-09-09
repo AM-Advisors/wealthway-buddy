@@ -18,6 +18,7 @@ import {
   ensureDiligenceRoom,
   getDiligenceAccess,
   getDiligenceDownloadUrl,
+  getDiligenceFileForViewing,
   getDiligenceOnboarding,
   getDiligenceRoom,
   startOnboardingFromRoom,
@@ -42,6 +43,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -274,8 +282,9 @@ function DiligenceRoomPage() {
 
 
 
-      <Tabs defaultValue="documents" className="mt-8">
+      <Tabs defaultValue="overview" className="mt-8">
         <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
@@ -284,6 +293,9 @@ function DiligenceRoomPage() {
           {canManage ? <TabsTrigger value="settings">Agreement</TabsTrigger> : null}
         </TabsList>
 
+        <TabsContent value="overview" className="mt-6">
+          <OverviewTab data={data} access={a} />
+        </TabsContent>
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
         </TabsContent>
@@ -322,6 +334,90 @@ function DiligenceRoomPage() {
   );
 }
 
+/* ------------------------------ Overview ------------------------------ */
+
+function money(cents?: number | null) {
+  if (cents == null) return null;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(cents) / 100);
+}
+
+function OverviewTab({ data, access }: { data: any; access: any }) {
+  const offering = data?.offering ?? {};
+  const readiness = data?.readiness ?? { score: 0, covered: [], missing: [] };
+  const categories: any[] = data?.categories ?? [];
+  const documents: any[] = data?.documents ?? [];
+  const required = categories.filter((c) => c.required);
+  const covered: string[] = readiness.covered ?? [];
+
+  const facts = [
+    { label: "Structure", value: entityTypeLabel(data?.entityType ?? "fund") },
+    { label: "Exemption", value: offering.reg_type ? `Reg D ${offering.reg_type}` : null },
+    { label: "Minimum investment", value: money(offering.min_investment_cents) },
+    { label: "Target raise", value: money(offering.target_raise_cents) },
+    { label: "Status", value: offering.is_open === false ? "Closed to new investors" : "Open to new investors" },
+    { label: "Room opened", value: data?.room?.created_at ? when(data.room.created_at) : null },
+  ].filter((f) => f.value);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{offering.name}</CardTitle>
+          <CardDescription>
+            {offering.summary ?? "Confidential materials for prospective and existing investors."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {data?.room?.intro ? (
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">{data.room.intro}</p>
+          ) : null}
+          <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {facts.map((f) => (
+              <div key={f.label}>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</dt>
+                <dd className="text-sm font-medium">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">What has been filed</CardTitle>
+          <CardDescription>
+            {covered.length} of {required.length} core sections complete · {documents.length}{" "}
+            {documents.length === 1 ? "document" : "documents"} in the room
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Progress value={readiness.score ?? 0} />
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {required.map((c) => {
+              const done = covered.includes(c.value);
+              return (
+                <li key={c.value} className="flex items-center justify-between rounded-md border px-3 py-2">
+                  <span className="text-sm">{c.label}</span>
+                  <Badge variant={done ? "secondary" : "outline"}>{done ? "Filed" : "Pending"}</Badge>
+                </li>
+              );
+            })}
+          </ul>
+          {access?.accepted ? (
+            <p className="text-xs text-muted-foreground">
+              Confidentiality agreement accepted{access.acceptedAt ? ` ${when(access.acceptedAt)}` : ""}.
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 /* ------------------------------ Documents ------------------------------ */
 
 function DocumentsTab({
@@ -336,7 +432,7 @@ function DocumentsTab({
   const queryClient = useQueryClient();
   const add = useServerFn(addDiligenceDocument);
   const remove = useServerFn(removeDiligenceDocument);
-  const download = useServerFn(getDiligenceDownloadUrl);
+  const view = useServerFn(getDiligenceFileForViewing);
   const sync = useServerFn(syncDiligenceFolder);
 
   const roomCategories = categoriesFor(data?.entityType);
@@ -373,9 +469,31 @@ function DocumentsTab({
     onError: (e: any) => toast.error(e?.message ?? "Could not remove that document."),
   });
 
+  const [viewer, setViewer] = useState<
+    { title: string; src: string | null; url: string } | null
+  >(null);
+
+  useEffect(() => {
+    return () => {
+      if (viewer?.src?.startsWith("blob:")) URL.revokeObjectURL(viewer.src);
+    };
+  }, [viewer?.src]);
+
   const downloadMutation = useMutation({
-    mutationFn: (id: string) => download({ data: { id } }),
-    onSuccess: (res: any) => window.open(res.url, "_blank", "noopener,noreferrer"),
+    mutationFn: async (doc: { id: string; title: string }) => ({
+      res: (await view({ data: { id: doc.id } })) as any,
+      title: doc.title,
+    }),
+    onSuccess: ({ res, title }: any) => {
+      let src: string | null = null;
+      if (res.inline && res.base64) {
+        const raw = atob(res.base64);
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
+        src = URL.createObjectURL(new Blob([bytes], { type: res.content_type }));
+      }
+      setViewer({ title, src, url: res.url });
+    },
     onError: (e: any) => toast.error(e?.message ?? "Could not open that document."),
   });
 
@@ -555,9 +673,9 @@ function DocumentsTab({
                             size="sm"
                             variant="outline"
                             disabled={downloadMutation.isPending}
-                            onClick={() => downloadMutation.mutate(doc.id)}
+                            onClick={() => downloadMutation.mutate({ id: doc.id, title: doc.title })}
                           >
-                            Open
+                            View
                           </Button>
                           <Button
                             size="sm"
@@ -590,6 +708,37 @@ function DocumentsTab({
           </div>
         );
       })}
+
+      <Dialog open={!!viewer} onOpenChange={(o) => !o && setViewer(null)}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>{viewer?.title}</DialogTitle>
+            <DialogDescription>
+              Confidential — for your evaluation only. Please do not redistribute.
+            </DialogDescription>
+          </DialogHeader>
+          {viewer?.src ? (
+            <iframe
+              title={viewer.title}
+              src={viewer.src}
+              className="h-[70vh] w-full rounded-md border bg-muted"
+            />
+          ) : (
+            <p className="py-8 text-sm text-muted-foreground">
+              This file type can't be read in the browser. Use the button below to download it.
+            </p>
+          )}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => viewer && window.open(viewer.url, "_blank", "noopener,noreferrer")}
+            >
+              Open in a new tab
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
