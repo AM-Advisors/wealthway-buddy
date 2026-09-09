@@ -27,7 +27,7 @@ export function SignedDocumentsCard({ offeringId }: { offeringId: string }) {
   });
 
   const openMutation = useMutation({
-    mutationFn: (signatureId: string) => signedUrl({ data: { signatureId } }),
+    mutationFn: (signatureId: string) => signedUrl({ data: { signature_id: signatureId } }),
     onSuccess: (res: any) => {
       if (res?.url) window.open(res.url, "_blank", "noopener");
       else toast.error("That signed copy is not available yet.");
