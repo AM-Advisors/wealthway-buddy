@@ -902,3 +902,146 @@ function emptyWireTotals() {
     inFlightCents: 0,
   };
 }
+
+/**
+ * Every wire confirmation an investor has submitted in the funds this reviewer
+ * covers, newest first, with the payment picture beside it so the board can be
+ * decided in one click.
+ */
+export const getWireConfirmationBoard = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const roles = await assertReviewer(supabase, userId);
+    const isAdmin = roles.includes("admin");
+
+    const emptyResult = {
+      isAdmin,
+      funds: [] as { id: string; name: string }[],
+      rows: [] as any[],
+      totals: { waiting: 0, approved: 0, sentBack: 0, waitingCents: 0, approvedCents: 0 },
+    };
+
+    let offeringIds: string[] | null = null;
+    if (!isAdmin) {
+      const { data: assignments, error } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      if (error) throw new Error(error.message);
+      offeringIds = [...new Set((assignments ?? []).map((a: any) => a.offering_id as string))];
+      if (offeringIds.length === 0) return emptyResult;
+    }
+
+    let fundQuery = supabase.from("offerings").select("id, name").order("name");
+    if (offeringIds) fundQuery = fundQuery.in("id", offeringIds);
+    const { data: fundRows, error: fundsError } = await fundQuery;
+    if (fundsError) throw new Error(fundsError.message);
+    const funds = ((fundRows ?? []) as any[]).map((f) => ({ id: f.id as string, name: f.name as string }));
+    if (funds.length === 0) return emptyResult;
+    const fundName = new Map(funds.map((f) => [f.id, f.name]));
+
+    const { data: apps, error: appsError } = await supabase
+      .from("investor_applications")
+      .select("id, user_id, offering_id, funding_status, status, commitment_cents")
+      .in("offering_id", funds.map((f) => f.id))
+      .limit(2000);
+    if (appsError) throw new Error(appsError.message);
+    const applications = (apps ?? []) as any[];
+    const appIds = applications.map((a) => a.id as string);
+    if (appIds.length === 0) return { ...emptyResult, funds };
+
+    const empty = { data: [] as any[] };
+    const [{ data: wires }, { data: payments }, { data: profiles }] = await Promise.all([
+      supabase
+        .from("wire_confirmations")
+        .select(
+          "id, application_id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, investor_note, status, review_notes, reviewed_at, reviewed_by, created_at",
+        )
+        .in("application_id", appIds)
+        .order("created_at", { ascending: false })
+        .limit(2000),
+      supabase
+        .from("payments")
+        .select("application_id, method, amount_cents, status, reference_code, confirmed_at, updated_at")
+        .in("application_id", appIds)
+        .limit(2000),
+      supabase
+        .from("profiles")
+        .select("user_id, legal_name, email")
+        .in("user_id", [...new Set(applications.map((a) => a.user_id as string))]),
+    ]);
+
+    const appOf = new Map(applications.map((a) => [a.id as string, a]));
+    const profileOf = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    const paymentOf = new Map<string, any>();
+    for (const p of ((payments ?? []) as any[])) {
+      const current = paymentOf.get(p.application_id as string);
+      if (!current || (p.updated_at ?? "") > (current.updated_at ?? "")) {
+        paymentOf.set(p.application_id as string, p);
+      }
+    }
+
+    const reviewerIds = [
+      ...new Set(((wires ?? []) as any[]).map((w) => w.reviewed_by as string).filter(Boolean)),
+    ];
+    let reviewerName = new Map<string, string>();
+    if (reviewerIds.length) {
+      const { data: reviewers } = await supabase
+        .from("profiles")
+        .select("user_id, legal_name, email")
+        .in("user_id", reviewerIds);
+      reviewerName = new Map(
+        ((reviewers ?? []) as any[]).map((r) => [
+          r.user_id as string,
+          (r.legal_name as string) || (r.email as string) || "Reviewer",
+        ]),
+      );
+    }
+
+    const rows = ((wires ?? []) as any[]).map((w) => {
+      const app = appOf.get(w.application_id as string);
+      const profile = app ? profileOf.get(app.user_id as string) : null;
+      const payment = paymentOf.get(w.application_id as string) ?? null;
+      const status = w.status === "pending" ? "submitted" : (w.status as string);
+      return {
+        confirmationId: w.id as string,
+        applicationId: w.application_id as string,
+        fundId: (app?.offering_id as string) ?? null,
+        fundName: fundName.get(app?.offering_id as string) ?? "Fund",
+        investorName: (profile?.legal_name as string) || (profile?.email as string) || "Investor",
+        investorEmail: (profile?.email as string) ?? null,
+        amountCents: (w.amount_cents as number) ?? null,
+        commitmentCents: (app?.commitment_cents as number) ?? null,
+        sentOn: w.sent_on as string,
+        bankName: w.sending_bank_name as string,
+        last4: w.sending_account_last4 as string,
+        bankReference: (w.bank_reference as string) ?? null,
+        investorNote: (w.investor_note as string) ?? null,
+        status,
+        reviewNotes: (w.review_notes as string) ?? null,
+        reviewedAt: (w.reviewed_at as string) ?? null,
+        reviewedBy: w.reviewed_by ? reviewerName.get(w.reviewed_by as string) ?? "Reviewer" : null,
+        submittedAt: w.created_at as string,
+        method: (payment?.method as string) ?? null,
+        referenceCode: (payment?.reference_code as string) ?? null,
+        fundingStatus: (payment?.status as string) ?? (app?.funding_status as string) ?? "not_started",
+        bankConfirmedAt: (payment?.confirmed_at as string) ?? null,
+      };
+    });
+
+    const waiting = rows.filter((r) => r.status === "submitted");
+    const approved = rows.filter((r) => r.status === "approved");
+    return {
+      isAdmin,
+      funds,
+      rows,
+      totals: {
+        waiting: waiting.length,
+        approved: approved.length,
+        sentBack: rows.filter((r) => r.status === "rejected").length,
+        waitingCents: waiting.reduce((s, r) => s + Number(r.amountCents ?? 0), 0),
+        approvedCents: approved.reduce((s, r) => s + Number(r.amountCents ?? 0), 0),
+      },
+    };
+  });
