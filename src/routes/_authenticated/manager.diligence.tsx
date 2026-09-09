@@ -117,6 +117,8 @@ function ManagerDiligencePage() {
 
           <RoomTraffic />
 
+          <NdaDropOff />
+
           {selected ? <FundPanel key={selected.offeringId} fund={selected} /> : null}
         </>
       )}
