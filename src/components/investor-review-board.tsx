@@ -194,10 +194,18 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
                       >
                         <div className="min-w-0">
                           <p className="text-xs text-muted-foreground">
-                            {doc.title} · signed {when(doc.signedAt)}
+                            {doc.title} ·{" "}
+                            {doc.pending
+                              ? `sent for signature ${when(doc.signedAt)}`
+                              : `signed ${when(doc.signedAt)}`}
                           </p>
                           <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                            {doc.inBox ? (
+                            {doc.pending ? (
+                              <>
+                                <Badge variant="outline">Awaiting signature</Badge>
+                                <span>in Box Sign</span>
+                              </>
+                            ) : doc.inBox ? (
                               <>
                                 <Badge variant="secondary">In Box</Badge>
                                 <span>filed {when(doc.boxUploadedAt)}</span>
@@ -211,7 +219,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {!doc.inBox && (
+                          {!doc.inBox && !doc.pending && (
                             <Button
                               size="sm"
                               variant="ghost"
