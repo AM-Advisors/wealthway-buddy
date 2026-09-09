@@ -80,7 +80,7 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
 
     const { data: room } = await supabase
       .from("diligence_rooms")
-      .select("id, intro, box_folder_id, created_at")
+      .select("id, intro, box_folder_id, created_at, entity_type")
       .eq("offering_id", data.offering_id)
       .maybeSingle();
 
@@ -95,11 +95,17 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       documents = (docs ?? []) as DiligenceDocument[];
     }
 
+    const entityType = normalizeEntityType((room as any)?.entity_type);
+
     return {
       offering: { id: offering.id, name: offering.name, reg_type: offering.reg_type, summary: offering.summary },
-      room: room ? { id: room.id, intro: room.intro, created_at: room.created_at } : null,
+      room: room
+        ? { id: room.id, intro: room.intro, created_at: room.created_at, entity_type: entityType }
+        : null,
+      entityType,
+      categories: categoriesFor(entityType),
       documents,
-      readiness: readiness(documents),
+      readiness: readiness(documents, entityType),
       canManage: await canManage(supabase, data.offering_id),
     };
   });
