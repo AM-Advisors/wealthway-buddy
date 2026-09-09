@@ -163,7 +163,9 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: rooms, error } = await supabase
       .from("diligence_rooms")
-      .select("id, offering_id, intro, created_at, entity_type, offerings(name, reg_type)")
+      .select(
+        "id, offering_id, intro, created_at, entity_type, nda_required, nda_version, offerings(name, reg_type)",
+      )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
