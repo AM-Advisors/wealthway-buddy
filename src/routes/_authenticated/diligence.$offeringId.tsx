@@ -6,7 +6,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
-  DILIGENCE_CATEGORIES,
+  ENTITY_TYPES,
+  categoriesFor,
+  entityTypeLabel,
+  sectionsFor,
+  setDiligenceEntityType,
   acceptDiligenceNda,
   addDiligenceDocument,
   addDocumentVersion,
@@ -112,6 +116,7 @@ function DiligenceRoomPage() {
   });
 
   const [signer, setSigner] = useState("");
+  const [entityType, setEntityType] = useState<"fund" | "startup">("fund");
 
   // Record that this person actually opened the room (once per page visit; the
   // server keeps at most one entry per 30 minutes).
@@ -133,7 +138,7 @@ function DiligenceRoomPage() {
   });
 
   const openRoomMutation = useMutation({
-    mutationFn: () => ensure({ data: { offering_id: offeringId } }),
+    mutationFn: () => ensure({ data: { offering_id: offeringId, entity_type: entityType } }),
     onSuccess: () => {
       toast.success("Diligence room is open.");
       queryClient.invalidateQueries({ queryKey: ["diligence-room", offeringId] });
@@ -159,12 +164,45 @@ function DiligenceRoomPage() {
             <CardTitle>No diligence room yet</CardTitle>
             <CardDescription>
               {canManage
-                ? "Open a room to create this fund's secure folder and start adding materials."
+                ? "Choose what is being raised. The room's sections, checklist and readiness score follow from your choice."
                 : "Your fund team hasn't opened this room yet. Check back shortly."}
             </CardDescription>
           </CardHeader>
           {canManage ? (
-            <CardContent>
+            <CardContent className="space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {ENTITY_TYPES.map((t) => {
+                  const active = entityType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setEntityType(t.value)}
+                      className={`rounded-lg border p-4 text-left transition ${
+                        active ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"
+                      }`}
+                    >
+                      <span className="block text-sm font-medium">{t.label}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">{t.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="rounded-md border bg-muted/30 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Sections you'll get
+                </p>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {sectionsFor(entityType).map((s) => (
+                    <li key={s.section}>
+                      <span className="font-medium">{s.section}:</span>{" "}
+                      <span className="text-muted-foreground">
+                        {s.categories.map((c) => c.label).join(", ")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <Button disabled={openRoomMutation.isPending} onClick={() => openRoomMutation.mutate()}>
                 {openRoomMutation.isPending ? "Opening…" : "Open diligence room"}
               </Button>
@@ -249,7 +287,11 @@ function DiligenceRoomPage() {
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
         </TabsContent>
         <TabsContent value="checklist" className="mt-6">
-          <ChecklistTab offeringId={offeringId} canManage={canManage} />
+          <ChecklistTab
+            offeringId={offeringId}
+            canManage={canManage}
+            entityType={data?.entityType ?? "fund"}
+          />
         </TabsContent>
         <TabsContent value="questions" className="mt-6">
           <QuestionsTab offeringId={offeringId} />
@@ -296,7 +338,8 @@ function DocumentsTab({
   const download = useServerFn(getDiligenceDownloadUrl);
   const sync = useServerFn(syncDiligenceFolder);
 
-  const [category, setCategory] = useState<string>(DILIGENCE_CATEGORIES[0].value);
+  const roomCategories = categoriesFor(data?.entityType);
+  const [category, setCategory] = useState<string>(roomCategories[0]!.value);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
@@ -392,6 +435,8 @@ function DocumentsTab({
         </CardContent>
       </Card>
 
+      {canManage ? <StructureCard offeringId={offeringId} entityType={data?.entityType ?? "fund"} /> : null}
+
       {canManage ? (
         <Card>
           <CardHeader>
@@ -419,7 +464,7 @@ function DocumentsTab({
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                {DILIGENCE_CATEGORIES.map((c) => (
+                {roomCategories.map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
                     {c.required ? " (core)" : ""}
@@ -456,14 +501,24 @@ function DocumentsTab({
         </Card>
       ) : null}
 
-      {DILIGENCE_CATEGORIES.map((cat) => {
+      {roomCategories.map((cat, index) => {
         const items = documents.filter((d) => d.category === cat.value);
         if (items.length === 0 && !cat.required) return null;
+        const newSection = index === 0 || roomCategories[index - 1]?.section !== cat.section;
         return (
-          <Card key={cat.value}>
+          <div key={cat.value} className="space-y-3">
+          {newSection ? (
+            <h2 className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {cat.section}
+            </h2>
+          ) : null}
+          <Card>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-lg">{cat.label}</CardTitle>
+                <div>
+                  <CardTitle className="text-lg">{cat.label}</CardTitle>
+                  {cat.hint ? <CardDescription>{cat.hint}</CardDescription> : null}
+                </div>
                 {items.length === 0 ? <Badge variant="outline">Pending</Badge> : null}
               </div>
             </CardHeader>
@@ -527,9 +582,62 @@ function DocumentsTab({
               )}
             </CardContent>
           </Card>
+          </div>
         );
       })}
     </div>
+  );
+}
+
+function StructureCard({ offeringId, entityType }: { offeringId: string; entityType: string }) {
+  const queryClient = useQueryClient();
+  const setType = useServerFn(setDiligenceEntityType);
+  const mutation = useMutation({
+    mutationFn: (value: "fund" | "startup") =>
+      setType({ data: { offering_id: offeringId, entity_type: value } }),
+    onSuccess: () => {
+      toast.success("Diligence structure updated.");
+      queryClient.invalidateQueries({ queryKey: ["diligence-room", offeringId] });
+      queryClient.invalidateQueries({ queryKey: ["diligence-checklist", offeringId] });
+      queryClient.invalidateQueries({ queryKey: ["diligence-activity", offeringId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not change the structure."),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle>Diligence structure</CardTitle>
+            <CardDescription>
+              Currently set up as {entityTypeLabel(entityType).toLowerCase()}. Sections, the starter
+              checklist and the readiness score follow this choice.
+            </CardDescription>
+          </div>
+          <Badge variant="secondary">{entityTypeLabel(entityType)}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-3 sm:grid-cols-2">
+        {ENTITY_TYPES.map((t) => {
+          const active = entityType === t.value;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              disabled={active || mutation.isPending}
+              onClick={() => mutation.mutate(t.value)}
+              className={`rounded-lg border p-4 text-left transition ${
+                active ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"
+              }`}
+            >
+              <span className="block text-sm font-medium">{t.label}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">{t.description}</span>
+            </button>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -634,7 +742,16 @@ function VersionHistory({
 
 /* ------------------------------ Checklist ------------------------------ */
 
-function ChecklistTab({ offeringId, canManage }: { offeringId: string; canManage: boolean }) {
+function ChecklistTab({
+  offeringId,
+  canManage,
+  entityType,
+}: {
+  offeringId: string;
+  canManage: boolean;
+  entityType: string;
+}) {
+  const roomCategories = categoriesFor(entityType);
   const queryClient = useQueryClient();
   const list = useServerFn(listDiligenceChecklist);
   const save = useServerFn(saveChecklistItem);
@@ -642,7 +759,7 @@ function ChecklistTab({ offeringId, canManage }: { offeringId: string; canManage
   const seed = useServerFn(seedDiligenceChecklist);
 
   const [label, setLabel] = useState("");
-  const [category, setCategory] = useState<string>(DILIGENCE_CATEGORIES[0].value);
+  const [category, setCategory] = useState<string>(roomCategories[0]!.value);
   const [required, setRequired] = useState(true);
 
   const { data, isLoading } = useQuery({
@@ -777,7 +894,7 @@ function ChecklistTab({ offeringId, canManage }: { offeringId: string; canManage
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                {DILIGENCE_CATEGORIES.map((c) => (
+                {roomCategories.map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
                   </option>

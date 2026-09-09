@@ -3,19 +3,27 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const DILIGENCE_CATEGORIES = [
-  { value: "formation", label: "Formation & legal", required: true },
-  { value: "offering_terms", label: "Offering terms", required: true },
-  { value: "financials", label: "Financial statements", required: true },
-  { value: "track_record", label: "Track record & performance", required: true },
-  { value: "team", label: "Team & bios", required: true },
-  { value: "strategy", label: "Strategy & market", required: false },
-  { value: "compliance", label: "Compliance & policies", required: false },
-  { value: "tax", label: "Tax & K-1 samples", required: false },
-  { value: "other", label: "Other materials", required: false },
-] as const;
+import {
+  ALL_CATEGORY_VALUES,
+  categoriesFor,
+  normalizeEntityType,
+  type DiligenceEntityType,
+} from "@/lib/diligence-templates";
 
-const categoryValues = DILIGENCE_CATEGORIES.map((c) => c.value) as [string, ...string[]];
+export {
+  ALL_CATEGORY_VALUES,
+  CATEGORY_SETS,
+  DILIGENCE_CATEGORIES,
+  ENTITY_TYPES,
+  categoriesFor,
+  categoryLabel,
+  entityTypeLabel,
+  normalizeEntityType,
+  sectionsFor,
+} from "@/lib/diligence-templates";
+export type { DiligenceEntityType, DiligenceCategory } from "@/lib/diligence-templates";
+
+const categoryValues = ALL_CATEGORY_VALUES;
 
 export type DiligenceDocument = {
   id: string;
@@ -33,9 +41,12 @@ export type DiligenceReadiness = {
   missing: { value: string; label: string }[];
 };
 
-function readiness(documents: DiligenceDocument[]): DiligenceReadiness {
+function readiness(
+  documents: DiligenceDocument[],
+  entityType: DiligenceEntityType = "fund",
+): DiligenceReadiness {
   const present = new Set(documents.map((d) => d.category));
-  const required = DILIGENCE_CATEGORIES.filter((c) => c.required);
+  const required = categoriesFor(entityType).filter((c) => c.required);
   const covered = required.filter((c) => present.has(c.value));
   const missing = required
     .filter((c) => !present.has(c.value))
@@ -69,7 +80,7 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
 
     const { data: room } = await supabase
       .from("diligence_rooms")
-      .select("id, intro, box_folder_id, created_at")
+      .select("id, intro, box_folder_id, created_at, entity_type")
       .eq("offering_id", data.offering_id)
       .maybeSingle();
 
@@ -84,11 +95,17 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       documents = (docs ?? []) as DiligenceDocument[];
     }
 
+    const entityType = normalizeEntityType((room as any)?.entity_type);
+
     return {
       offering: { id: offering.id, name: offering.name, reg_type: offering.reg_type, summary: offering.summary },
-      room: room ? { id: room.id, intro: room.intro, created_at: room.created_at } : null,
+      room: room
+        ? { id: room.id, intro: room.intro, created_at: room.created_at, entity_type: entityType }
+        : null,
+      entityType,
+      categories: categoriesFor(entityType),
       documents,
-      readiness: readiness(documents),
+      readiness: readiness(documents, entityType),
       canManage: await canManage(supabase, data.offering_id),
     };
   });
@@ -99,7 +116,7 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: rooms, error } = await supabase
       .from("diligence_rooms")
-      .select("id, offering_id, intro, created_at, offerings(name, reg_type)")
+      .select("id, offering_id, intro, created_at, entity_type, offerings(name, reg_type)")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -114,13 +131,15 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
     return {
       rooms: (rooms ?? []).map((r: any) => {
         const mine = (docs ?? []).filter((d: any) => d.room_id === r.id) as DiligenceDocument[];
+        const entityType = normalizeEntityType(r.entity_type);
         return {
           id: r.id,
           offering_id: r.offering_id,
           name: r.offerings?.name ?? "Fund",
           reg_type: r.offerings?.reg_type ?? null,
+          entity_type: entityType,
           document_count: mine.length,
-          readiness: readiness(mine),
+          readiness: readiness(mine, entityType),
         };
       }),
     };
@@ -130,7 +149,11 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
-      .object({ offering_id: z.string().uuid(), intro: z.string().max(2000).optional().nullable() })
+      .object({
+        offering_id: z.string().uuid(),
+        intro: z.string().max(2000).optional().nullable(),
+        entity_type: z.enum(["fund", "startup"]).optional(),
+      })
       .parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -146,11 +169,11 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (existing) {
-      if (data.intro !== undefined) {
-        const { error } = await supabase
-          .from("diligence_rooms")
-          .update({ intro: data.intro })
-          .eq("id", existing.id);
+      const patch: { intro?: string | null; entity_type?: string } = {};
+      if (data.intro !== undefined) patch.intro = data.intro;
+      if (data.entity_type !== undefined) patch.entity_type = data.entity_type;
+      if (Object.keys(patch).length) {
+        const { error } = await supabase.from("diligence_rooms").update(patch).eq("id", existing.id);
         if (error) throw new Error(error.message);
       }
       return { id: existing.id, created: false };
@@ -168,18 +191,68 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
       `Diligence — ${offering?.name ?? data.offering_id}`.slice(0, 240),
     );
 
+    const entityType = normalizeEntityType(data.entity_type);
     const { data: created, error } = await supabase
       .from("diligence_rooms")
       .insert({
         offering_id: data.offering_id,
         box_folder_id: folderId,
         intro: data.intro ?? null,
+        entity_type: entityType,
         created_by: userId,
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      created.id,
+      "room_created",
+      `Opened a ${entityType === "startup" ? "company" : "fund"} diligence room`,
+      { entity_type: entityType },
+    );
     return { id: created.id, created: true };
+  });
+
+/** Switches a room between the fund and startup diligence structures. */
+export const setDiligenceEntityType = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({ offering_id: z.string().uuid(), entity_type: z.enum(["fund", "startup"]) })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to manage this diligence room.");
+    }
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id, entity_type")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) throw new Error("Create the diligence room first.");
+    if (room.entity_type === data.entity_type) return { ok: true, changed: false };
+
+    const { error } = await supabase
+      .from("diligence_rooms")
+      .update({ entity_type: data.entity_type })
+      .eq("id", room.id);
+    if (error) throw new Error(error.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room.id,
+      "room_updated",
+      `Set the diligence structure to ${data.entity_type === "startup" ? "startup / operating company" : "fund / investment manager"}`,
+      { entity_type: data.entity_type },
+    );
+    return { ok: true, changed: true };
   });
 
 export const addDiligenceDocument = createServerFn({ method: "POST" })
@@ -658,7 +731,7 @@ export const seedDiligenceChecklist = createServerFn({ method: "POST" })
     }
     const { data: room } = await supabase
       .from("diligence_rooms")
-      .select("id")
+      .select("id, entity_type")
       .eq("offering_id", data.offering_id)
       .maybeSingle();
     if (!room) throw new Error("Create the diligence room first.");
@@ -669,12 +742,14 @@ export const seedDiligenceChecklist = createServerFn({ method: "POST" })
       .eq("room_id", room.id);
     const seen = new Set((existing ?? []).map((e: any) => e.label));
 
-    const rows = DILIGENCE_CATEGORIES.filter((c) => c.value !== "other")
+    const rows = categoriesFor(room.entity_type)
+      .filter((c) => c.value !== "other")
       .map((c, i) => ({
         room_id: room.id,
         offering_id: data.offering_id,
         category: c.value,
         label: c.label,
+        description: c.hint ?? null,
         is_required: c.required,
         sort_order: i,
         created_by: userId,
