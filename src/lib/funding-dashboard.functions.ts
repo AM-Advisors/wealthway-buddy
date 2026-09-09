@@ -43,30 +43,29 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       };
     }
 
-    const [{ data: apps }, { data: subs }, { data: payments }] = await Promise.all([
-      supabase
-        .from("investor_applications")
-        .select("id, offering_id, status, funding_status, commitment_cents")
-        .in("offering_id", offeringIds),
-      supabase
-        .from("subscriptions")
-        .select("application_id, commitment_cents, status")
-        .in(
-          "application_id",
-          (apps ?? []).map((a: any) => a.id),
-        ),
-      supabase
-        .from("payments")
-        .select("application_id, amount_cents, status")
-        .in(
-          "application_id",
-          (apps ?? []).map((a: any) => a.id),
-        ),
-    ]);
+    const { data: appsRaw } = await supabase
+      .from("investor_applications")
+      .select("id, offering_id, status, funding_status, commitment_cents")
+      .in("offering_id", offeringIds);
+    const appRows = (appsRaw ?? []) as any[];
+    const appIds = appRows.map((a) => a.id as string);
 
-    const appRows = (apps ?? []) as any[];
-    const subRows = (subs ?? []) as any[];
-    const payRows = (payments ?? []) as any[];
+    let subRows: any[] = [];
+    let payRows: any[] = [];
+    if (appIds.length) {
+      const [{ data: subs }, { data: payments }] = await Promise.all([
+        supabase
+          .from("subscriptions")
+          .select("application_id, commitment_cents, status")
+          .in("application_id", appIds),
+        supabase
+          .from("payments")
+          .select("application_id, amount_cents, status")
+          .in("application_id", appIds),
+      ]);
+      subRows = (subs ?? []) as any[];
+      payRows = (payments ?? []) as any[];
+    }
 
     const subByApp = new Map(subRows.map((s) => [s.application_id as string, s]));
     const paysByApp = new Map<string, any[]>();
