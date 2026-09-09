@@ -379,6 +379,63 @@ export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
     return { url, file_name: doc.file_name };
   });
 
+/** Returns the file itself so it can be read inside the room without downloading. */
+export const getDiligenceFileForViewing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: doc } = await supabase
+      .from("diligence_documents")
+      .select("id, box_file_id, file_name, title, size_bytes, offering_id, room_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!doc) throw new Error("That document is not available.");
+
+    const ext = (doc.file_name ?? "").toLowerCase().split(".").pop() ?? "";
+    const contentType =
+      ext === "pdf"
+        ? "application/pdf"
+        : ["png", "jpg", "jpeg", "gif", "webp"].includes(ext)
+          ? `image/${ext === "jpg" ? "jpeg" : ext}`
+          : null;
+    const tooBig = Number(doc.size_bytes ?? 0) > 12 * 1024 * 1024;
+
+    const { downloadFile, temporaryDownloadUrl } = await import("@/lib/box.server");
+    await logActivity(
+      supabase,
+      context.userId,
+      doc.offering_id,
+      doc.room_id,
+      "document_downloaded",
+      `Opened “${doc.title}”`,
+      { document_id: doc.id },
+    );
+
+    if (!contentType || tooBig) {
+      return {
+        inline: false as const,
+        file_name: doc.file_name,
+        content_type: contentType,
+        url: await temporaryDownloadUrl(doc.box_file_id),
+      };
+    }
+
+    const bytes = await downloadFile(doc.box_file_id);
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    return {
+      inline: true as const,
+      file_name: doc.file_name,
+      content_type: contentType,
+      base64: btoa(binary),
+      url: await temporaryDownloadUrl(doc.box_file_id),
+    };
+  });
+
 /** Pulls in any files added straight into the fund's Box folder outside the app. */
 export const syncDiligenceFolder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
