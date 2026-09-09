@@ -457,7 +457,7 @@ function SetupPage() {
         </Card>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Fund managers and investors</CardTitle>
