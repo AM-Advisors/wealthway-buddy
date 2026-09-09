@@ -510,6 +510,139 @@ export const getCapTableBoard = createServerFn({ method: "GET" })
     return { isAdmin, funds };
   });
 
+export interface PortfolioHolderValue {
+  application_id: string;
+  name: string;
+  email: string | null;
+  shares: number | null;
+  share_class: string;
+  ownership_pct: number;
+  committed_cents: number;
+  received_cents: number;
+  /** What this holder's stake is worth at the fund's current value per share. */
+  value_cents: number;
+  /** Value less money actually received from them. */
+  gain_cents: number;
+}
+
+export interface PortfolioFundValue {
+  offering_id: string;
+  offering_name: string;
+  reg_type: string | null;
+  target_raise_cents: number | null;
+  committed_cents: number;
+  received_cents: number;
+  /** Equity value of the fund: money actually received so far. */
+  equity_value_cents: number;
+  shares: number;
+  /** Equity value divided by shares, in cents. Null when no shares are recorded. */
+  value_per_share_cents: number | null;
+  /** Committed capital divided by shares, in cents. Null when no shares are recorded. */
+  committed_per_share_cents: number | null;
+  investors: number;
+  funded_pct: number;
+  holders: PortfolioHolderValue[];
+}
+
+/** Live equity value per share for every fund the viewer can see. */
+export const getPortfolioValue = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin");
+    const isAdmin = (roles ?? []).length > 0;
+
+    let ids: string[] = [];
+    if (isAdmin) {
+      const { data } = await supabase.from("offerings").select("id");
+      ids = ((data ?? []) as any[]).map((o) => o.id as string);
+    } else {
+      const { data } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      ids = ((data ?? []) as any[]).map((m) => m.offering_id as string);
+    }
+    if (ids.length === 0) {
+      return {
+        isAdmin,
+        funds: [] as PortfolioFundValue[],
+        totals: { committed_cents: 0, received_cents: 0, equity_value_cents: 0, investors: 0 },
+      };
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const tables = await Promise.all(
+      ids.map((id) => buildFundCapTable(supabaseAdmin, { offering_id: id })),
+    );
+
+    const funds: PortfolioFundValue[] = tables
+      .map((t) => {
+        const equity = t.totals.funded_cents;
+        const shares = t.totals.shares;
+        const perShare = shares > 0 ? equity / shares : null;
+        const holders: PortfolioHolderValue[] = t.rows.map((r) => {
+          const value =
+            perShare != null && r.shares != null
+              ? Math.round(perShare * r.shares)
+              : Math.round((equity * r.ownership_pct) / 100);
+          return {
+            application_id: r.application_id,
+            name: r.name,
+            email: r.email,
+            shares: r.shares,
+            share_class: r.share_class,
+            ownership_pct: r.ownership_pct,
+            committed_cents: r.commitment_cents,
+            received_cents: r.funded_cents,
+            value_cents: value,
+            gain_cents: value - r.funded_cents,
+          };
+        });
+        return {
+          offering_id: t.offering.id,
+          offering_name: t.offering.name,
+          reg_type: t.offering.reg_type,
+          target_raise_cents: t.offering.target_raise_cents,
+          committed_cents: t.totals.committed_cents,
+          received_cents: t.totals.funded_cents,
+          equity_value_cents: equity,
+          shares,
+          value_per_share_cents: perShare == null ? null : Math.round(perShare * 100) / 100,
+          committed_per_share_cents:
+            shares > 0 ? Math.round((t.totals.committed_cents / shares) * 100) / 100 : null,
+          investors: t.totals.investors,
+          funded_pct:
+            t.totals.committed_cents > 0
+              ? Math.round((equity / t.totals.committed_cents) * 10000) / 100
+              : 0,
+          holders,
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.equity_value_cents - a.equity_value_cents ||
+          a.offering_name.localeCompare(b.offering_name),
+      );
+
+    return {
+      isAdmin,
+      funds,
+      totals: {
+        committed_cents: funds.reduce((s, f) => s + f.committed_cents, 0),
+        received_cents: funds.reduce((s, f) => s + f.received_cents, 0),
+        equity_value_cents: funds.reduce((s, f) => s + f.equity_value_cents, 0),
+        investors: funds.reduce((s, f) => s + f.investors, 0),
+      },
+    };
+  });
+
+
+
 
 const positionSchema = z.object({
   application_id: z.string().uuid(),
