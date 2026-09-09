@@ -11,6 +11,7 @@ import {
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
+import { InvestorUploads } from "@/components/investor-uploads";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -234,6 +235,10 @@ function DocumentsPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <InvestorUploads />
+
+
 
       <p className="mt-8 text-xs text-muted-foreground">
         Download links expire after a few minutes for your security.{" "}
