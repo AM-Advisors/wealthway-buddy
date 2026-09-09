@@ -49,9 +49,16 @@ function FunnelPage() {
     queryFn: () => loadFunnel({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
   });
 
+  const boxQuery = useQuery({
+    queryKey: ["box-signing-funnel", offeringId, days],
+    queryFn: () => loadBox({ data: { days, ...(offeringId ? { offeringId } : {}) } }),
+  });
+
   const funds = fundsQuery.data?.funds ?? [];
   const data = funnelQuery.data;
   const top = data?.steps?.[0]?.count ?? 0;
+  const box = boxQuery.data;
+  const boxTop = box?.steps?.[0]?.count ?? 0;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
