@@ -435,6 +435,8 @@ function DocumentsTab({
         </CardContent>
       </Card>
 
+      {canManage ? <StructureCard offeringId={offeringId} entityType={data?.entityType ?? "fund"} /> : null}
+
       {canManage ? (
         <Card>
           <CardHeader>
@@ -580,9 +582,62 @@ function DocumentsTab({
               )}
             </CardContent>
           </Card>
+          </div>
         );
       })}
     </div>
+  );
+}
+
+function StructureCard({ offeringId, entityType }: { offeringId: string; entityType: string }) {
+  const queryClient = useQueryClient();
+  const setType = useServerFn(setDiligenceEntityType);
+  const mutation = useMutation({
+    mutationFn: (value: "fund" | "startup") =>
+      setType({ data: { offering_id: offeringId, entity_type: value } }),
+    onSuccess: () => {
+      toast.success("Diligence structure updated.");
+      queryClient.invalidateQueries({ queryKey: ["diligence-room", offeringId] });
+      queryClient.invalidateQueries({ queryKey: ["diligence-checklist", offeringId] });
+      queryClient.invalidateQueries({ queryKey: ["diligence-activity", offeringId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not change the structure."),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle>Diligence structure</CardTitle>
+            <CardDescription>
+              Currently set up as {entityTypeLabel(entityType).toLowerCase()}. Sections, the starter
+              checklist and the readiness score follow this choice.
+            </CardDescription>
+          </div>
+          <Badge variant="secondary">{entityTypeLabel(entityType)}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-3 sm:grid-cols-2">
+        {ENTITY_TYPES.map((t) => {
+          const active = entityType === t.value;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              disabled={active || mutation.isPending}
+              onClick={() => mutation.mutate(t.value)}
+              className={`rounded-lg border p-4 text-left transition ${
+                active ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"
+              }`}
+            >
+              <span className="block text-sm font-medium">{t.label}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">{t.description}</span>
+            </button>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 }
 
