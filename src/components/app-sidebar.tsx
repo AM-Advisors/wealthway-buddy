@@ -60,6 +60,7 @@ const adminItems: NavItem[] = [
   { title: "New application", url: "/admin/new-application", icon: UserPlus },
   { title: "Fund access", url: "/admin/access", icon: BadgeCheck },
   { title: "Fund setup", url: "/admin/setup", icon: Building2 },
+  { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
   { title: "Onboarding funnel", url: "/admin/funnel", icon: Gauge },
   { title: "Email preview", url: "/admin/email-preview", icon: Mail },
   { title: "Security", url: "/admin/security", icon: ShieldCheck },
