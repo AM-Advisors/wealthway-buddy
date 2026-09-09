@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getPortal } from "@/lib/portal.functions";
 import { getFunding } from "@/lib/funding.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
+import { listMyUploads } from "@/lib/investor-uploads.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
@@ -109,6 +110,7 @@ function Dashboard() {
   const loadFunding = useServerFn(getFunding);
   const download = useServerFn(getSignedDocumentUrl);
   const getPdf = useServerFn(downloadOfferingDocument);
+  const loadUploads = useServerFn(listMyUploads);
   const [busy, setBusy] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
