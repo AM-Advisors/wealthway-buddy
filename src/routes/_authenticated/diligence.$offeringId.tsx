@@ -63,6 +63,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DiligenceQuestionBoard } from "@/components/diligence-question-board";
 import { Textarea } from "@/components/ui/textarea";
 import { DiligenceAssistant } from "@/components/diligence-assistant";
+import { DiligenceAccessPanel } from "@/components/diligence-access-panel";
+import { getStepRail } from "@/lib/step-rail.functions";
 
 export const Route = createFileRoute("/_authenticated/diligence/$offeringId")({
   head: () => ({
@@ -394,6 +396,7 @@ function DiligenceRoomPage() {
           <TabsTrigger value="requests">{canManage ? "Ask investors" : "Your questions"}</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           {canManage ? <TabsTrigger value="engagement">Who's viewing</TabsTrigger> : null}
+          {canManage ? <TabsTrigger value="access">Investor access</TabsTrigger> : null}
           {canManage ? <TabsTrigger value="settings">Agreement</TabsTrigger> : null}
         </TabsList>
 
@@ -425,6 +428,11 @@ function DiligenceRoomPage() {
         {canManage ? (
           <TabsContent value="engagement" className="mt-6">
             <EngagementTab offeringId={offeringId} />
+          </TabsContent>
+        ) : null}
+        {canManage ? (
+          <TabsContent value="access" className="mt-6">
+            <DiligenceAccessPanel offeringId={offeringId} />
           </TabsContent>
         ) : null}
         {canManage ? (
@@ -1762,6 +1770,17 @@ function InvestingPath({ offeringId }: { offeringId: string }) {
   });
 
   const d = q.data as any;
+
+  const railLoad = useServerFn(getStepRail);
+  const rail = useQuery({
+    queryKey: ["step-rail"],
+    queryFn: () => railLoad(),
+    enabled: Boolean(d?.hasApplication),
+  });
+  const railByKey = new Map<string, any>(
+    ((rail.data?.steps ?? []) as any[]).map((s) => [s.key, s]),
+  );
+
   if (!d) return null;
 
   const nextKey = (d.nextStep ?? "kyc") as keyof typeof STEP_LINKS;
@@ -1777,27 +1796,48 @@ function InvestingPath({ offeringId }: { offeringId: string }) {
       </CardHeader>
       <CardContent className="space-y-5">
         <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {(d.steps ?? []).map((s: any, index: number) => (
-            <li key={s.key} className="flex items-start gap-3">
-              <span
-                className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-xs ${stateDot(s.state)}`}
-              >
-                {s.state === "done" ? "✓" : index + 1}
-              </span>
-              <div>
-                <p className="text-sm">{s.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  {s.state === "done"
-                    ? "Complete"
-                    : s.state === "review"
-                      ? "With our team for review"
-                      : s.state === "current"
-                        ? "Up next"
-                        : "Not started"}
-                </p>
-              </div>
-            </li>
-          ))}
+          {(d.steps ?? []).map((s: any, index: number) => {
+            const live = railByKey.get(s.key);
+            const href = STEP_LINKS[s.key as keyof typeof STEP_LINKS];
+            return (
+              <li key={s.key} className="flex items-start gap-3 rounded-lg border p-3">
+                <span
+                  className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-xs ${stateDot(s.state)}`}
+                >
+                  {s.state === "done" ? "✓" : index + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm">{s.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.state === "done"
+                      ? "Complete"
+                      : s.state === "review"
+                        ? "With our team for review"
+                        : s.state === "current"
+                          ? "Up next"
+                          : "Not started"}
+                  </p>
+                  {live && live.facts.length > 0 ? (
+                    <dl className="mt-2 space-y-1">
+                      {live.facts.slice(0, 3).map((f: any) => (
+                        <div key={f.label} className="text-[11px] leading-tight">
+                          <dt className="inline text-muted-foreground">{f.label}: </dt>
+                          <dd className="inline break-words">{f.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : d.hasApplication ? (
+                    <p className="mt-2 text-[11px] text-muted-foreground">Nothing saved yet</p>
+                  ) : null}
+                  {d.hasApplication && href ? (
+                    <Link to={href} className="mt-2 inline-block text-xs underline">
+                      {live && live.facts.length > 0 ? "Review or update" : "Fill this in"}
+                    </Link>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
         </ol>
 
         <div className="flex flex-wrap items-center gap-3">
