@@ -274,8 +274,9 @@ function DiligenceRoomPage() {
 
 
 
-      <Tabs defaultValue="documents" className="mt-8">
+      <Tabs defaultValue="overview" className="mt-8">
         <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
