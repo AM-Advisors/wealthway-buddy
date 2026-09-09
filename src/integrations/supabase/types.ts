@@ -1972,6 +1972,7 @@ export type Database = {
           manager_reviewed_at: string | null
           manager_reviewed_by: string | null
           offering_id: string
+          persona_id: string | null
           source: string
           status: string
           submitted_at: string | null
@@ -1996,6 +1997,7 @@ export type Database = {
           manager_reviewed_at?: string | null
           manager_reviewed_by?: string | null
           offering_id: string
+          persona_id?: string | null
           source?: string
           status?: string
           submitted_at?: string | null
@@ -2020,6 +2022,7 @@ export type Database = {
           manager_reviewed_at?: string | null
           manager_reviewed_by?: string | null
           offering_id?: string
+          persona_id?: string | null
           source?: string
           status?: string
           submitted_at?: string | null
@@ -2035,6 +2038,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_applications_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "investor_personas"
             referencedColumns: ["id"]
           },
         ]
@@ -2267,6 +2277,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      investor_personas: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          entity_name: string | null
+          id: string
+          is_default: boolean
+          kind: Database["public"]["Enums"]["investor_type"]
+          label: string
+          legal_name: string | null
+          phone: string | null
+          postal_code: string | null
+          region: string | null
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          entity_name?: string | null
+          id?: string
+          is_default?: boolean
+          kind?: Database["public"]["Enums"]["investor_type"]
+          label: string
+          legal_name?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          entity_name?: string | null
+          id?: string
+          is_default?: boolean
+          kind?: Database["public"]["Enums"]["investor_type"]
+          label?: string
+          legal_name?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       kyc_verifications: {
         Row: {
@@ -3274,6 +3350,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_persona_id: string | null
           address_line1: string | null
           address_line2: string | null
           city: string | null
@@ -3293,6 +3370,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active_persona_id?: string | null
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
@@ -3312,6 +3390,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active_persona_id?: string | null
           address_line1?: string | null
           address_line2?: string | null
           city?: string | null
@@ -3330,7 +3409,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_active_persona_id_fkey"
+            columns: ["active_persona_id"]
+            isOneToOne: false
+            referencedRelation: "investor_personas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviewer_activity: {
         Row: {
