@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { saveOffering, saveOfferingDocument, WIRE_FIELDS } from "@/lib/offerings.functions";
 import { listAccessDirectory, assignFundAccess } from "@/lib/access.functions";
+import { FundEntityCard } from "@/components/fund-entity-card";
 import { inviteToFund } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/setup")({
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/admin/setup")({
       { property: "og:title", content: "Set Up a Fund | Harmonious Admin" },
       {
         property: "og:description",
-        content: "Create a fund, add documents and grant access in three guided steps.",
+        content: "Create a fund, add documents and grant access in a few guided steps.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -52,7 +53,7 @@ const WIRE_LABELS: Record<string, string> = {
   memo: "Reference / memo instructions",
 };
 
-const STEPS = ["Fund details", "Documents", "Access"] as const;
+const STEPS = ["Fund details", "Entity and banking", "Documents", "Access"] as const;
 
 type WireForm = Record<string, string>;
 
@@ -113,7 +114,7 @@ function SetupPage() {
   const directoryQuery = useQuery({
     queryKey: ["access-directory"],
     queryFn: () => loadDirectory(),
-    enabled: step === 2,
+    enabled: step === 3,
     retry: false,
   });
 
@@ -355,7 +356,19 @@ function SetupPage() {
         </Card>
       )}
 
-      {step === 1 && (
+      {step === 1 && fundId && (
+        <div className="mt-8 grid gap-4">
+          <FundEntityCard fundId={fundId} />
+          <div className="flex justify-between">
+            <Button variant="ghost" onClick={() => setStep(0)}>
+              Back
+            </Button>
+            <Button onClick={() => setStep(2)}>Continue to documents</Button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Offering documents</CardTitle>
@@ -434,10 +447,10 @@ function SetupPage() {
             </div>
 
             <div className="flex justify-between">
-              <Button variant="ghost" onClick={() => setStep(0)}>
+              <Button variant="ghost" onClick={() => setStep(1)}>
                 Back
               </Button>
-              <Button onClick={() => setStep(2)} disabled={documents.length === 0}>
+              <Button onClick={() => setStep(3)} disabled={documents.length === 0}>
                 Continue to access
               </Button>
             </div>
@@ -445,7 +458,7 @@ function SetupPage() {
         </Card>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Fund managers and investors</CardTitle>
@@ -544,7 +557,7 @@ function SetupPage() {
             </div>
 
             <div className="flex flex-wrap justify-between gap-2">
-              <Button variant="ghost" onClick={() => setStep(1)}>
+              <Button variant="ghost" onClick={() => setStep(2)}>
                 Back
               </Button>
               <div className="flex gap-2">

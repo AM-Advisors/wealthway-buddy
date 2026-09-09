@@ -59,6 +59,17 @@ const wireSchema = z.object({
   memo: z.string().trim().max(240).default(""),
 });
 
+export const FUND_TYPES = [
+  "SPV",
+  "Private Equity",
+  "Venture Capital",
+  "Family Office",
+  "Hedge Fund",
+  "Other",
+] as const;
+
+export const ENTITY_TYPES = ["LLC", "LP", "GP", "Series LLC", "Master LLC"] as const;
+
 const offeringSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(2, "Enter the fund name").max(160),
@@ -76,9 +87,22 @@ const offeringSchema = z.object({
   closing_cost_cents: z.number().int().min(0).default(0),
   share_price_cents: z.number().int().min(0).default(0),
 
+  legal_entity_name: z.string().trim().max(200).default(""),
+  fund_type: z.enum(FUND_TYPES).nullable().default(null),
+  fund_type_other: z.string().trim().max(120).default(""),
+  entity_type: z.enum(ENTITY_TYPES).nullable().default(null),
+  state_formed: z.string().trim().max(60).default(""),
+  date_formed: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-01-31")
+    .nullable()
+    .default(null),
+
   is_open: z.boolean().default(true),
   wire_instructions: wireSchema,
 });
+
 
 const documentSchema = z.object({
   id: z.string().uuid().optional(),
@@ -233,6 +257,13 @@ const OFFERING_FIELDS = [
   "wire_fee_cents",
   "closing_cost_cents",
   "share_price_cents",
+  "legal_entity_name",
+  "fund_type",
+  "fund_type_other",
+  "entity_type",
+  "state_formed",
+  "date_formed",
+
 
   "is_open",
 ];
@@ -255,6 +286,13 @@ export const saveOffering = createServerFn({ method: "POST" })
       wire_fee_cents: data.wire_fee_cents,
       closing_cost_cents: data.closing_cost_cents,
       share_price_cents: data.share_price_cents,
+      legal_entity_name: data.legal_entity_name || null,
+      fund_type: data.fund_type,
+      fund_type_other: data.fund_type === "Other" ? data.fund_type_other || null : null,
+      entity_type: data.entity_type,
+      state_formed: data.state_formed || null,
+      date_formed: data.date_formed,
+
 
       is_open: data.is_open,
     };
