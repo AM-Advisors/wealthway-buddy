@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { activeApplicationId } from "@/lib/active-application";
+import { activeApplicationId, ensureActivePersona } from "@/lib/active-application";
 
 const investorType = z.enum(["individual", "joint", "entity", "trust", "ira"]);
 
@@ -116,7 +116,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
     if (!application && offering) {
       const created = await supabase
         .from("investor_applications")
-        .insert({ user_id: userId, offering_id: offering.id, current_step: "kyc", source: "portal" })
+        .insert({ user_id: userId, offering_id: offering.id, persona_id: personaId, current_step: "kyc", source: "portal" })
         .select("*")
         .single();
       if (created.error) throw new Error(created.error.message);
