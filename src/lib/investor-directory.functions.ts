@@ -89,7 +89,14 @@ export const listInvestors = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
 
-    const [{ data: profiles }, { data: apps }, { data: offerings }, { data: roles }] =
+    const [
+      { data: profiles },
+      { data: apps },
+      { data: offerings },
+      { data: personas },
+      { data: roles },
+    ] =
+
       await Promise.all([
         supabase
           .from("profiles")
