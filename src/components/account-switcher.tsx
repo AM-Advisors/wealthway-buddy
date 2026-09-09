@@ -42,7 +42,7 @@ export function AccountSwitcher({ className }: { className?: string }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">Investing as</span>
         <Select
-          value={data?.activeId ?? undefined}
+          {...(data?.activeId ? { value: data.activeId } : {})}
           onValueChange={(value) => switchTo.mutate(value)}
           disabled={switchTo.isPending}
         >
