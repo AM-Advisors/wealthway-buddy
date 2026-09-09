@@ -1228,7 +1228,34 @@ export const recordRoomVisit = createServerFn({ method: "POST" })
       .limit(1);
     if (recent && recent.length > 0) return { recorded: false };
 
+    // First-ever open by this person? (checked before logging below)
+    const { count: priorViews } = await supabase
+      .from("diligence_activity")
+      .select("id", { count: "exact", head: true })
+      .eq("offering_id", data.offering_id)
+      .eq("actor_id", userId)
+      .eq("event_type", "room_viewed");
+
     await logActivity(supabase, userId, data.offering_id, room.id, "room_viewed", "Opened the diligence room");
+
+    // Alert the fund's managers the first time an investor (not a manager/admin) opens the room.
+    if ((priorViews ?? 0) === 0 && !(await canManage(supabase, data.offering_id))) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("legal_name, email")
+        .eq("user_id", userId)
+        .maybeSingle();
+      await notifyManagersOfDiligenceEvent(
+        data.offering_id,
+        "diligence_room_first_opened",
+        {
+          visitor_name: profile?.legal_name ?? profile?.email ?? "An investor",
+          visitor_email: profile?.email ?? null,
+          portal_path: `/diligence/${data.offering_id}`,
+        },
+        userId,
+      );
+    }
     return { recorded: true };
   });
 

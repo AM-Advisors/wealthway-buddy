@@ -138,6 +138,20 @@ function buildEmail(
     };
   }
 
+  if (row.event_kind === "diligence_room_first_opened") {
+    const meta = row.metadata ?? {};
+    const visitor = String(meta["visitor_name"] ?? investorName);
+    return {
+      headline: `Diligence room opened — ${offeringName}`,
+      intro: `${visitor} opened the ${offeringName} diligence room for the first time. This is a good moment to reach out if they have questions.`,
+      details: [
+        { label: "Investor", value: visitor },
+        ...(meta["visitor_email"] ? [{ label: "Email", value: String(meta["visitor_email"]) }] : []),
+        { label: "Fund", value: offeringName },
+      ],
+    };
+  }
+
   if (row.event_kind === "diligence_document_uploaded") {
     const meta = row.metadata ?? {};
     const names = Array.isArray(meta["file_names"]) ? (meta["file_names"] as string[]) : [];
