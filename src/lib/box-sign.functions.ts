@@ -130,6 +130,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       provider_signing_url: request.signingUrl,
       provider_source_file_id: fileId,
       provider_last_event_at: now,
+      provider_sent_at: now,
+      provider_viewed_at: null,
       signed_at: now,
     };
 
