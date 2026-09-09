@@ -92,14 +92,22 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
     onError: (e: any) => toast.error(e?.message ?? "That signed copy is not available yet."),
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: (signatureId: string) => archiveToBox({ data: { signature_id: signatureId } }),
+    onSuccess: () => {
+      toast.success("Signed copy filed in Box");
+      refresh();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not file that copy in Box."),
+  });
+
   const syncMutation = useMutation({
     mutationFn: () => syncFund({ data: { offering_id: offeringId } }),
     onSuccess: (res: any) => {
-      toast.success(
-        res.completed > 0
-          ? `${res.completed} newly signed document${res.completed === 1 ? "" : "s"} came through`
-          : "Everything is up to date",
-      );
+      const parts: string[] = [];
+      if (res.completed > 0) parts.push(`${res.completed} newly signed`);
+      if (res.archived > 0) parts.push(`${res.archived} filed in Box`);
+      toast.success(parts.length ? parts.join(" · ") : "Everything is up to date");
       refresh();
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not check signing status."),
