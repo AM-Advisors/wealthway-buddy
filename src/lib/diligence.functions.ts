@@ -1114,7 +1114,13 @@ export const getDiligenceEngagement = createServerFn({ method: "POST" })
       .from("diligence_activity")
       .select("actor_id, actor_name, actor_email, event_type, metadata, created_at")
       .eq("offering_id", data.offering_id)
-      .in("event_type", ["room_viewed", "document_downloaded", "nda_accepted", "question_asked"])
+      .in("event_type", [
+        "room_viewed",
+        "document_viewed",
+        "document_downloaded",
+        "nda_accepted",
+        "question_asked",
+      ])
       .order("created_at", { ascending: true })
       .limit(5000);
     if (error) throw new Error(error.message);
