@@ -14,11 +14,15 @@ export const listFundsToJoin = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
+    const personaId = await ensureActivePersona(supabase, userId);
+
     const [{ data: access }, { data: applications }, { data: profile }] = await Promise.all([
       supabase.from("investor_fund_access").select("offering_id").eq("user_id", userId),
       supabase
         .from("investor_applications")
-        .select("id, offering_id, status, current_step, commitment_cents, created_at, manager_review_status")
+        .select(
+          "id, offering_id, persona_id, status, current_step, commitment_cents, created_at, manager_review_status",
+        )
         .eq("user_id", userId),
       supabase
         .from("profiles")
@@ -27,9 +31,14 @@ export const listFundsToJoin = createServerFn({ method: "GET" })
         .maybeSingle(),
     ]);
 
+    // Each investing account applies separately, so only this account's
+    // applications count as "already applied".
     const applicationByOffering = new Map<string, any>(
-      ((applications ?? []) as any[]).map((a) => [a.offering_id as string, a]),
+      ((applications ?? []) as any[])
+        .filter((a) => !personaId || a.persona_id === personaId)
+        .map((a) => [a.offering_id as string, a]),
     );
+
     const offeringIds = Array.from(
       new Set([
         ...((access ?? []) as any[]).map((a) => a.offering_id as string),
