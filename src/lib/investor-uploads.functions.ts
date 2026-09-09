@@ -21,6 +21,9 @@ export type InvestorUploadRow = {
   doc_kind: string;
   note: string | null;
   uploaded_at: string;
+  box_file_id: string | null;
+  box_uploaded_at: string | null;
+  box_error: string | null;
 };
 
 async function currentApplication(supabase: any, userId: string) {
@@ -40,7 +43,7 @@ export const listMyUploads = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("investor_documents")
-      .select("id, file_name, doc_kind, note, uploaded_at")
+      .select("id, file_name, doc_kind, note, uploaded_at, box_file_id, box_uploaded_at, box_error")
       .eq("user_id", userId)
       .order("uploaded_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -66,17 +69,32 @@ export const recordMyUpload = createServerFn({ method: "POST" })
     const application = await currentApplication(supabase, userId);
     if (!application) throw new Error("No application found for your account.");
 
-    const { error } = await supabase.from("investor_documents").insert({
-      application_id: application.id,
-      offering_id: application.offering_id,
-      user_id: userId,
-      storage_path: data.storage_path,
-      file_name: data.file_name,
-      doc_kind: data.doc_kind,
-      note: data.note?.trim() ? data.note.trim() : null,
-    });
+    const { data: inserted, error } = await supabase
+      .from("investor_documents")
+      .insert({
+        application_id: application.id,
+        offering_id: application.offering_id,
+        user_id: userId,
+        storage_path: data.storage_path,
+        file_name: data.file_name,
+        doc_kind: data.doc_kind,
+        note: data.note?.trim() ? data.note.trim() : null,
+      })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
-    return { ok: true };
+
+    // File the copy in the shared Box folder, exactly like signed documents.
+    let filedToBox = false;
+    try {
+      const { archiveInvestorUploadToBox } = await import("@/lib/investor-box.server");
+      const result = await archiveInvestorUploadToBox(inserted.id as string);
+      filedToBox = Boolean(result.ok && result.boxFileId);
+    } catch (boxError) {
+      console.error("[investor-upload] box filing failed", boxError);
+    }
+
+    return { ok: true, id: inserted.id as string, filedToBox };
   });
 
 export const getMyUploadUrl = createServerFn({ method: "POST" })
@@ -115,5 +133,31 @@ export const deleteMyUpload = createServerFn({ method: "POST" })
     await supabase.storage.from("investor-uploads").remove([row.storage_path]);
     const { error } = await supabase.from("investor_documents").delete().eq("id", row.id);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Reviewer or owner retry when the shared-folder copy did not go through. */
+export const fileUploadToBox = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // RLS decides whether this caller may see the row at all.
+    const { data: row } = await supabase
+      .from("investor_documents")
+      .select("id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("That file is not available.");
+
+    const { archiveInvestorUploadToBox } = await import("@/lib/investor-box.server");
+    const result = await archiveInvestorUploadToBox(data.id);
+    if (!result.ok) {
+      throw new Error(
+        result.skipped === "box_not_configured"
+          ? "The shared document folder is not connected yet."
+          : (result.error ?? "Could not file that document."),
+      );
+    }
     return { ok: true };
   });

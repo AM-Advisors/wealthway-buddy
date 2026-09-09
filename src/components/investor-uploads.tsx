@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   UPLOAD_KINDS,
   deleteMyUpload,
+  fileUploadToBox,
   getMyUploadUrl,
   listMyUploads,
   recordMyUpload,
@@ -29,6 +30,7 @@ export function InvestorUploads() {
   const record = useServerFn(recordMyUpload);
   const openUrl = useServerFn(getMyUploadUrl);
   const remove = useServerFn(deleteMyUpload);
+  const fileToBox = useServerFn(fileUploadToBox);
 
   const [kind, setKind] = useState<string>(UPLOAD_KINDS[0].value);
   const [note, setNote] = useState("");
@@ -54,6 +56,15 @@ export function InvestorUploads() {
       queryClient.invalidateQueries({ queryKey: ["investor-uploads"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not remove that file."),
+  });
+
+  const boxMutation = useMutation({
+    mutationFn: (id: string) => fileToBox({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Filed in the shared folder.");
+      queryClient.invalidateQueries({ queryKey: ["investor-uploads"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not file that document."),
   });
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -141,9 +152,28 @@ export function InvestorUploads() {
                     {new Date(u.uploaded_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
                     {u.note ? ` · ${u.note}` : ""}
                   </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {u.box_uploaded_at
+                      ? `Filed in the shared folder ${new Date(u.box_uploaded_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`
+                      : u.box_error
+                        ? "Not filed in the shared folder yet"
+                        : "Filing in the shared folder…"}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{kindLabel(u.doc_kind)}</Badge>
+                  {u.box_uploaded_at ? (
+                    <Badge variant="outline">In shared folder</Badge>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={boxMutation.isPending}
+                      onClick={() => boxMutation.mutate(u.id)}
+                    >
+                      File it
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"

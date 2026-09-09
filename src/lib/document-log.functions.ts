@@ -166,7 +166,7 @@ export const listDocumentEvents = createServerFn({ method: "POST" })
     // 3. Investor uploads.
     const { data: investorDocs } = await supabase
       .from("investor_documents")
-      .select("id, application_id, user_id, offering_id, file_name, doc_kind, uploaded_at")
+      .select("id, application_id, user_id, offering_id, file_name, doc_kind, uploaded_at, box_uploaded_at")
       .order("uploaded_at", { ascending: false })
       .limit(cap);
     for (const row of investorDocs ?? []) {
@@ -180,7 +180,14 @@ export const listDocumentEvents = createServerFn({ method: "POST" })
         offeringId: row.offering_id,
         offeringName: offeringName.get(row.offering_id) ?? null,
         applicationId: row.application_id,
-        detail: row.doc_kind || null,
+        detail: [
+          row.doc_kind || null,
+          (row as any).box_uploaded_at
+            ? `in shared folder ${new Date((row as any).box_uploaded_at).toISOString().slice(0, 16).replace("T", " ")}Z`
+            : "not in shared folder yet",
+        ]
+          .filter(Boolean)
+          .join(" · "),
       });
     }
 
