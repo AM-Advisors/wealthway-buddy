@@ -107,9 +107,10 @@ export const confirmSubscription = createServerFn({ method: "POST" })
 
     const { data: offering } = await supabase
       .from("offerings")
-      .select("id, name, is_open, min_investment_cents")
+      .select("id, name, is_open, min_investment_cents, share_price_cents")
       .eq("id", application.offering_id)
       .maybeSingle();
+
     if (!offering) throw new Error("That fund is no longer available.");
     if (offering.is_open === false) throw new Error("This fund is closed to new commitments.");
 
@@ -151,10 +152,27 @@ export const confirmSubscription = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
+    // Turn the confirmed commitment into shares when the fund has a share price.
+    const sharePriceCents = Number((offering as any)?.share_price_cents ?? 0);
+    let sharesIssued: number | null = null;
+    if (sharePriceCents > 0) {
+      sharesIssued = Math.floor(cents / sharePriceCents);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("investor_cap_positions").upsert(
+        {
+          application_id: application.id,
+          offering_id: application.offering_id,
+          shares: sharesIssued,
+        },
+        { onConflict: "application_id" },
+      );
+    }
+
     await (await import("@/lib/ownership-email.server")).notifyOwnershipChange(
       application.offering_id as string,
       "A commitment for this fund was confirmed, so the ownership split has been recalculated.",
     );
+
 
     return { ok: true, commitment_cents: cents };
   });

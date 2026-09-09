@@ -195,6 +195,8 @@ function FundsPage() {
             : null,
           wire_fee_cents: Math.round(Number(form.wire_fee || 0) * 100),
           closing_cost_cents: Math.round(Number(form.closing_cost || 0) * 100),
+          share_price_cents: Math.round(Number(form.share_price || 0) * 100),
+
           is_open: form.is_open,
           wire_instructions: form.wire,
         },
