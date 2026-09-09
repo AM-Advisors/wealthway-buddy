@@ -164,12 +164,35 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
       .eq("offering_id", application.offering_id);
 
     const managerIds = (assignments ?? []).map((a: any) => a.user_id as string);
-    if (managerIds.length === 0) return;
 
-    const { data: managers } = await supabaseAdmin
-      .from("profiles")
-      .select("user_id, legal_name, email")
-      .in("user_id", managerIds);
+    const { data: managers } = managerIds.length
+      ? await supabaseAdmin
+          .from("profiles")
+          .select("user_id, legal_name, email")
+          .in("user_id", managerIds)
+      : { data: [] as any[] };
+
+    // If no manager is assigned to this fund yet, the alert still has to land
+    // somewhere, so fall back to the admins and finally to operations.
+    let recipients = (managers ?? []).filter((m: any) => m.email);
+    if (recipients.length === 0) {
+      const { data: adminRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+      const adminIds = (adminRoles ?? []).map((a: any) => a.user_id as string);
+      const { data: admins } = adminIds.length
+        ? await supabaseAdmin
+            .from("profiles")
+            .select("user_id, legal_name, email")
+            .in("user_id", adminIds)
+        : { data: [] as any[] };
+      recipients = (admins ?? []).filter((a: any) => a.email);
+    }
+    if (recipients.length === 0) {
+      recipients = [{ legal_name: "Harmonious operations", email: "operations@harmonious.co" }];
+    }
+
 
     const signedAt = new Date().toISOString();
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
