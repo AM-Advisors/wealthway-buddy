@@ -109,9 +109,12 @@ function Portal() {
   const [consent, setConsent] = useState(false);
   const [signingId, setSigningId] = useState<string | null>(null);
 
+  // Which fund the investor is looking at, when they are in more than one.
+  const [selectedApp, setSelectedApp] = useState<string | null>(null);
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["portal"],
-    queryFn: () => load(),
+    queryKey: ["portal", selectedApp],
+    queryFn: () => load({ data: { applicationId: selectedApp } }),
     // Keep polling while any check is still moving so webhook results appear live.
     refetchInterval: (query) => {
       const app = query.state.data?.application;
@@ -274,6 +277,57 @@ function Portal() {
         </Card>
       ) : (
         <div className="mt-8 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Your fund commitments</CardTitle>
+              <CardDescription>
+                {(data?.commitments?.length ?? 0) > 1
+                  ? "Choose a fund to see its steps, documents and funding below."
+                  : "What you have committed and how much has arrived."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {(data?.commitments ?? []).map((c) => {
+                const active = c.application_id === app.id;
+                return (
+                  <button
+                    key={c.application_id}
+                    type="button"
+                    onClick={() => setSelectedApp(c.application_id)}
+                    className={`flex w-full flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-left transition ${
+                      active ? "border-primary bg-muted/50" : "hover:bg-muted/30"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">
+                        {c.offering_name}
+                        {c.reg_type ? ` (Reg D ${c.reg_type})` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Committed {money(c.commitment_cents)} · Received{" "}
+                        {money(c.funded_cents)}
+                      </p>
+                    </div>
+                    <Badge variant={tone(c.status)}>{label(c.status)}</Badge>
+                  </button>
+                );
+              })}
+              {(data?.commitments?.length ?? 0) > 1 && (
+                <p className="pt-1 text-xs text-muted-foreground">
+                  Total committed{" "}
+                  {money(
+                    (data?.commitments ?? []).reduce(
+                      (sum, c) => sum + (c.commitment_cents ?? 0),
+                      0,
+                    ),
+                  )}{" "}
+                  · Total received{" "}
+                  {money((data?.commitments ?? []).reduce((sum, c) => sum + c.funded_cents, 0))}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
@@ -692,7 +746,64 @@ function Portal() {
           </Card>
 
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Documents you sent us</CardTitle>
+              <CardDescription>
+                Files you uploaded for this fund and where they stand with the team.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(data?.uploads?.length ?? 0) === 0 ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    You have not sent us any files for this fund yet.
+                  </p>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/documents">Upload a document</Link>
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {(data?.uploads ?? []).map((u) => (
+                    <div
+                      key={u.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium">{u.file_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {u.doc_kind.replace(/_/g, " ")} · sent{" "}
+                          {new Date(u.uploaded_at).toLocaleDateString()}
+                          {u.filed_at ? " · filed in the shared folder" : ""}
+                          {u.review_note ? ` · ${u.review_note}` : ""}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          u.review_status === "accepted"
+                            ? "default"
+                            : u.review_status === "needs_followup"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
+                        {u.review_status === "accepted"
+                          ? "Accepted"
+                          : u.review_status === "needs_followup"
+                            ? "Needs follow-up"
+                            : "With the team"}
+                      </Badge>
+                    </div>
+                  ))}
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/documents">Upload another</Link>
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Your signed documents</CardTitle>
               <CardDescription>
