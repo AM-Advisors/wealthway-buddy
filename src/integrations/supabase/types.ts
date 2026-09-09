@@ -825,9 +825,11 @@ export type Database = {
           provider_completed_at: string | null
           provider_file_id: string | null
           provider_last_event_at: string | null
+          provider_sent_at: string | null
           provider_signing_url: string | null
           provider_source_file_id: string | null
           provider_status: string | null
+          provider_viewed_at: string | null
           signature_type: string
           signature_value: string
           signed_at: string
@@ -852,9 +854,11 @@ export type Database = {
           provider_completed_at?: string | null
           provider_file_id?: string | null
           provider_last_event_at?: string | null
+          provider_sent_at?: string | null
           provider_signing_url?: string | null
           provider_source_file_id?: string | null
           provider_status?: string | null
+          provider_viewed_at?: string | null
           signature_type?: string
           signature_value: string
           signed_at?: string
@@ -879,9 +883,11 @@ export type Database = {
           provider_completed_at?: string | null
           provider_file_id?: string | null
           provider_last_event_at?: string | null
+          provider_sent_at?: string | null
           provider_signing_url?: string | null
           provider_source_file_id?: string | null
           provider_status?: string | null
+          provider_viewed_at?: string | null
           signature_type?: string
           signature_value?: string
           signed_at?: string
