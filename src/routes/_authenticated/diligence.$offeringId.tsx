@@ -461,9 +461,14 @@ function DocumentsTab({
     onError: (e: any) => toast.error(e?.message ?? "Could not remove that document."),
   });
 
+  const [viewer, setViewer] = useState<{ url: string; title: string } | null>(null);
+
   const downloadMutation = useMutation({
-    mutationFn: (id: string) => download({ data: { id } }),
-    onSuccess: (res: any) => window.open(res.url, "_blank", "noopener,noreferrer"),
+    mutationFn: async (doc: { id: string; title: string }) => ({
+      res: (await download({ data: { id: doc.id } })) as any,
+      title: doc.title,
+    }),
+    onSuccess: ({ res, title }: any) => setViewer({ url: res.url, title }),
     onError: (e: any) => toast.error(e?.message ?? "Could not open that document."),
   });
 
