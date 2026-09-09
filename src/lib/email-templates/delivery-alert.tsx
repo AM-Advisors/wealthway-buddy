@@ -57,7 +57,7 @@ function DeliveryAlert({
         >
           <Section style={{ marginBottom: '24px' }}>
             <Img
-              src="https://onboard.harmonious.co/__l5e/assets-v1/9bbcb59b-4986-4f16-a7c1-ad0f03953a15/logo-navy.png"
+              src="https://onboard.harmonious.co/__l5e/assets-v1/29f55aff-64f7-4942-b5e8-228bc90b9e96/logo-navy.png"
               alt="Harmonious"
               height={28}
               style={{ display: 'block', height: '28px', width: 'auto' }}
