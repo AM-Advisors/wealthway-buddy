@@ -51,6 +51,7 @@ function FundPage() {
   const getDocPdf = useServerFn(downloadOfferingDocument);
   const getPacket = useServerFn(downloadOfferingPacket);
 
+  const queryClient = useQueryClient();
   const [openDoc, setOpenDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
