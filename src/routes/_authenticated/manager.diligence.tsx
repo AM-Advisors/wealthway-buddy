@@ -478,3 +478,97 @@ function FundPanel({ fund }: { fund: any }) {
     </div>
   );
 }
+
+const NDA_STAGE_LABEL: Record<string, string> = {
+  not_opened: "Never opened it",
+  opened: "Opened, did not agree",
+  agreed: "Agreed, read nothing yet",
+  read_documents: "Read materials, no documents sent",
+  uploaded: "Sent their documents",
+};
+
+function NdaDropOff() {
+  const load = useServerFn(getNdaDropOff);
+  const { data, isLoading } = useQuery({
+    queryKey: ["nda-drop-off"],
+    queryFn: () => load(),
+    retry: false,
+    refetchInterval: 120_000,
+  });
+  const [openId, setOpenId] = useState<string | null>(null);
+  const funds = (data?.funds ?? []) as any[];
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>Where invited investors stop</CardTitle>
+        <CardDescription>
+          For each fund: how many invited people opened the confidentiality agreement, agreed to it,
+          read the materials and finally sent their own documents.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : funds.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No invited investors yet.</p>
+        ) : (
+          funds.map((f) => (
+            <div key={f.offeringId} className="rounded-lg border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm">{f.name}</p>
+                {f.people.length > 0 ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setOpenId(openId === f.offeringId ? null : f.offeringId)}
+                  >
+                    {openId === f.offeringId ? "Hide people" : "See people"}
+                  </Button>
+                ) : null}
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  { label: "Invited", value: f.invited },
+                  { label: "Opened the agreement", value: f.opened },
+                  { label: "Agreed", value: f.agreed },
+                  { label: "Sent documents", value: f.uploaded },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-md border bg-muted/30 p-2">
+                    <p className="text-lg font-medium">{s.value}</p>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-2 text-xs text-muted-foreground">
+                {f.neverOpened} never opened it · {f.openedNotAgreed} opened but did not agree ·{" "}
+                {f.agreedNotUploaded} agreed but never sent documents
+              </p>
+
+              {openId === f.offeringId ? (
+                <div className="mt-3 space-y-2 border-t pt-3">
+                  {f.people.map((p: any) => (
+                    <div
+                      key={p.key}
+                      className="flex flex-wrap items-center justify-between gap-2 text-xs"
+                    >
+                      <span className="truncate">{p.name ?? p.email ?? "Invited investor"}</span>
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <Badge variant={p.stage === "uploaded" ? "default" : "secondary"}>
+                          {NDA_STAGE_LABEL[p.stage] ?? p.stage}
+                        </Badge>
+                        agreed {when(p.agreedAt)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
