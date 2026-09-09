@@ -174,6 +174,10 @@ function FundPage() {
         <WireTrackingPanel offeringId={fundId} />
       </div>
 
+      <div className="mt-6">
+        <BankFeedPanel fundId={fundId} />
+      </div>
+
       <Card className="mt-8">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
           <div>

@@ -108,7 +108,9 @@ export function BankFeedPanel({ fundId }: { fundId: string }) {
       toast.error(error instanceof Error ? error.message : "Could not disconnect."),
   });
 
-  if (linkToken && ready) open();
+  useEffect(() => {
+    if (linkToken && ready) open();
+  }, [linkToken, ready, open]);
 
   const account = data?.account ?? null;
   const investors = data?.investors ?? [];
