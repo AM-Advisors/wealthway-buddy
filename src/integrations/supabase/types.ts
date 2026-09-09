@@ -1119,6 +1119,7 @@ export type Database = {
           id: string
           kyc_status: Database["public"]["Enums"]["check_status"]
           offering_id: string
+          source: string
           status: string
           submitted_at: string | null
           updated_at: string
@@ -1135,6 +1136,7 @@ export type Database = {
           id?: string
           kyc_status?: Database["public"]["Enums"]["check_status"]
           offering_id: string
+          source?: string
           status?: string
           submitted_at?: string | null
           updated_at?: string
@@ -1151,6 +1153,7 @@ export type Database = {
           id?: string
           kyc_status?: Database["public"]["Enums"]["check_status"]
           offering_id?: string
+          source?: string
           status?: string
           submitted_at?: string | null
           updated_at?: string
