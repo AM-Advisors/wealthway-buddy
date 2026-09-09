@@ -39,6 +39,10 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
           targetCents: 0,
           inProgress: 0,
           settled: 0,
+          wireFeesTotalCents: 0,
+          closingCostCents: 0,
+          totalCostsCents: 0,
+          netReceivedCents: 0,
         },
       };
     }
