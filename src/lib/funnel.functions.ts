@@ -176,6 +176,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
     const counts = {
       applications: rows.length,
       invited: rows.filter((r) => r.invited).length,
+      opened: rows.filter((r) => r.opened).length,
       clicked: rows.filter((r) => r.clicked).length,
       identity: rows.filter((r) => r.identity).length,
       accredited: rows.filter((r) => r.accredited).length,
