@@ -54,6 +54,7 @@ import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/e
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
+import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
@@ -309,6 +310,11 @@ const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   path: '/api/public/email/click',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEmailOpenRoute = ApiPublicEmailOpenRouteImport.update({
+  id: '/api/public/email/open',
+  path: '/api/public/email/open',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicNotifyDrainRoute = ApiPublicNotifyDrainRouteImport.update({
   id: '/api/public/notify/drain',
   path: '/api/public/notify/drain',
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -432,6 +439,7 @@ export interface FileRoutesByTo {
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -485,6 +493,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
+  '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -538,6 +547,7 @@ export interface FileRouteTypes {
     | '/admin/fund/$fundId'
     | '/admin/packet/$fundId'
     | '/api/public/email/click'
+    | '/api/public/email/open'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -588,6 +598,7 @@ export interface FileRouteTypes {
     | '/admin/fund/$fundId'
     | '/admin/packet/$fundId'
     | '/api/public/email/click'
+    | '/api/public/email/open'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/fund/$fundId'
     | '/_authenticated/admin/packet/$fundId'
     | '/api/public/email/click'
+    | '/api/public/email/open'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -657,6 +669,7 @@ export interface RootRouteChildren {
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
+  ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
@@ -981,6 +994,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmailClickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/email/open': {
+      id: '/api/public/email/open'
+      path: '/api/public/email/open'
+      fullPath: '/api/public/email/open'
+      preLoaderRoute: typeof ApiPublicEmailOpenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/notify/drain': {
       id: '/api/public/notify/drain'
       path: '/api/public/notify/drain'
@@ -1120,6 +1140,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
+  ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
