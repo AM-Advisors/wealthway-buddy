@@ -45,6 +45,7 @@ import {
   updateDiligenceQuestion,
 } from "@/lib/diligence.functions";
 import { CapTableSection } from "@/components/cap-table-section";
+import { LiveCapTable } from "@/components/live-cap-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -862,7 +863,12 @@ function DocumentsTab({
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isCapTable ? <CapTableSection offeringId={offeringId} /> : null}
+              {isCapTable ? (
+                <div className="space-y-4">
+                  <LiveCapTable offeringId={offeringId} />
+                  <CapTableSection offeringId={offeringId} />
+                </div>
+              ) : null}
               {items.length === 0 ? (
                 isCapTable ? null : (
                   <p className="text-sm text-muted-foreground">Nothing filed here yet.</p>
