@@ -120,6 +120,86 @@ export const getFundOverview = createServerFn({ method: "GET" })
 
 const opsSchema = z.object({ offeringId: z.string().uuid() });
 
+/**
+ * Every signed copy for one fund — newest first — with its Box filing status,
+ * so the fund page and the manager dashboard show the same signed documents
+ * as the review board.
+ */
+export const getFundSignedDocuments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => opsSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const roles = await assertReviewer(supabase, userId);
+    if (!roles.includes("admin")) {
+      const { data: assignment } = await supabase
+        .from("fund_managers")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("offering_id", data.offeringId)
+        .maybeSingle();
+      if (!assignment) throw new Error("Forbidden: you do not manage this fund.");
+    }
+
+    const { data: apps, error: appsError } = await supabase
+      .from("investor_applications")
+      .select("id, user_id")
+      .eq("offering_id", data.offeringId)
+      .limit(500);
+    if (appsError) throw new Error(appsError.message);
+    const applications = (apps ?? []) as any[];
+    const appIds = applications.map((a) => a.id as string);
+    if (appIds.length === 0) return { documents: [] as any[], inBox: 0, awaiting: 0 };
+
+    const [{ data: sigs, error: sigError }, { data: docs }, { data: profiles }] = await Promise.all([
+      supabase
+        .from("document_signatures")
+        .select(
+          "id, application_id, offering_document_id, signed_at, pdf_path, provider, provider_status, provider_completed_at, box_file_id, box_uploaded_at, box_error",
+        )
+        .in("application_id", appIds)
+        .order("signed_at", { ascending: false })
+        .limit(300),
+      supabase.from("offering_documents").select("id, title").eq("offering_id", data.offeringId),
+      supabase
+        .from("profiles")
+        .select("user_id, legal_name, email")
+        .in("user_id", [...new Set(applications.map((a) => a.user_id as string))]),
+    ]);
+    if (sigError) throw new Error(sigError.message);
+
+    const titleOf = new Map(((docs ?? []) as any[]).map((d) => [d.id as string, d.title as string]));
+    const profileOf = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    const investorOf = new Map(
+      applications.map((a) => [
+        a.id as string,
+        (profileOf.get(a.user_id as string)?.legal_name as string) ||
+          (profileOf.get(a.user_id as string)?.email as string) ||
+          "Investor",
+      ]),
+    );
+
+    const documents = ((sigs ?? []) as any[]).map((s) => ({
+      signatureId: s.id as string,
+      applicationId: s.application_id as string,
+      investorName: investorOf.get(s.application_id as string) ?? "Investor",
+      title: titleOf.get(s.offering_document_id as string) ?? "Fund document",
+      pending: s.provider_status === "out_for_signature",
+      signedAt: (s.provider_completed_at as string) ?? (s.signed_at as string) ?? null,
+      viaBoxSign: s.provider === "box_sign",
+      hasPdf: Boolean(s.pdf_path),
+      inBox: Boolean(s.box_file_id),
+      boxUploadedAt: (s.box_uploaded_at as string) ?? null,
+      boxError: (s.box_error as string) ?? null,
+    }));
+
+    return {
+      documents,
+      inBox: documents.filter((d) => d.inBox).length,
+      awaiting: documents.filter((d) => d.pending).length,
+    };
+  });
+
 /** Documents, wire confirmations, funding and open issue flags for one fund. */
 export const getFundOperations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
