@@ -15,6 +15,30 @@ export interface PortalDocument {
   downloadable: boolean;
 }
 
+export interface PortalQuestion {
+  assignment_id: string;
+  prompt: string;
+  category: string | null;
+  is_required: boolean;
+  sort_order: number;
+  status: string;
+  due_date: string | null;
+  answered_at: string | null;
+}
+
+export interface PortalWireConfirmation {
+  id: string;
+  amount_cents: number | null;
+  sent_on: string | null;
+  sending_bank_name: string | null;
+  sending_account_last4: string | null;
+  bank_reference: string | null;
+  status: string;
+  review_notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
 /** Everything an investor needs to see about their own application in one read. */
 export const getPortal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -30,7 +54,7 @@ export const getPortal = createServerFn({ method: "GET" })
     const { data: application } = await supabase
       .from("investor_applications")
       .select(
-        "id, offering_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, created_at, updated_at",
+        "id, offering_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, manager_review_status, manager_reviewed_at, manager_review_notes, created_at, updated_at",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: true })
@@ -47,6 +71,8 @@ export const getPortal = createServerFn({ method: "GET" })
         subscription: null,
         payment: null,
         kyc: null,
+        questions: [] as PortalQuestion[],
+        wireConfirmations: [] as PortalWireConfirmation[],
         wireInstructions: {} as Record<string, string>,
       };
     }
@@ -59,6 +85,8 @@ export const getPortal = createServerFn({ method: "GET" })
       { data: payment },
       { data: kyc },
       { data: wire },
+      { data: wireConfirmations },
+      { data: assignments },
     ] = await Promise.all([
         supabase
           .from("offerings")
@@ -94,7 +122,50 @@ export const getPortal = createServerFn({ method: "GET" })
         supabase
           .rpc("get_wire_instructions", { p_offering_id: application.offering_id })
           .maybeSingle(),
+        supabase
+          .from("wire_confirmations")
+          .select(
+            "id, amount_cents, sent_on, sending_bank_name, sending_account_last4, bank_reference, status, review_notes, reviewed_at, created_at",
+          )
+          .eq("application_id", application.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("diligence_question_assignments")
+          .select("id, question_id, status, due_date, answered_at, created_at")
+          .eq("offering_id", application.offering_id)
+          .eq("investor_user_id", userId)
+          .order("created_at", { ascending: true }),
       ]);
+
+    // Assigned due diligence questions, with the prompt text and whether the
+    // investor still owes an answer.
+    const assignmentRows = (assignments ?? []) as any[];
+    let questions: PortalQuestion[] = [];
+    if (assignmentRows.length > 0) {
+      const { data: prompts } = await supabase
+        .from("diligence_request_questions")
+        .select("id, prompt, category, is_required, sort_order")
+        .in(
+          "id",
+          assignmentRows.map((a) => a.question_id),
+        );
+      const byId = new Map(((prompts ?? []) as any[]).map((p) => [p.id, p]));
+      questions = assignmentRows
+        .map((a) => {
+          const prompt = byId.get(a.question_id);
+          return {
+            assignment_id: a.id as string,
+            prompt: (prompt?.prompt as string) ?? "Question",
+            category: (prompt?.category as string) ?? null,
+            is_required: Boolean(prompt?.is_required),
+            sort_order: (prompt?.sort_order as number) ?? 0,
+            status: a.status as string,
+            due_date: a.due_date as string | null,
+            answered_at: a.answered_at as string | null,
+          };
+        })
+        .sort((a, b) => a.sort_order - b.sort_order);
+    }
 
 
     const titleById = new Map((offeringDocs ?? []).map((d) => [d.id, d.title]));
@@ -124,6 +195,8 @@ export const getPortal = createServerFn({ method: "GET" })
       subscription,
       payment,
       kyc,
+      questions,
+      wireConfirmations: (wireConfirmations ?? []) as PortalWireConfirmation[],
       wireInstructions: Object.fromEntries(
         Object.entries(((wire as any)?.details ?? {}) as Record<string, unknown>)
           .filter(([, v]) => String(v ?? "").trim() !== "")

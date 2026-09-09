@@ -1766,12 +1766,17 @@ export type Database = {
           funding_status: Database["public"]["Enums"]["payment_status"]
           id: string
           kyc_status: Database["public"]["Enums"]["check_status"]
+          manager_review_notes: string | null
+          manager_review_status: string
+          manager_reviewed_at: string | null
+          manager_reviewed_by: string | null
           offering_id: string
           source: string
           status: string
           submitted_at: string | null
           updated_at: string
           user_id: string
+          welcome_email_sent_at: string | null
         }
         Insert: {
           accreditation_status?: Database["public"]["Enums"]["check_status"]
@@ -1783,12 +1788,17 @@ export type Database = {
           funding_status?: Database["public"]["Enums"]["payment_status"]
           id?: string
           kyc_status?: Database["public"]["Enums"]["check_status"]
+          manager_review_notes?: string | null
+          manager_review_status?: string
+          manager_reviewed_at?: string | null
+          manager_reviewed_by?: string | null
           offering_id: string
           source?: string
           status?: string
           submitted_at?: string | null
           updated_at?: string
           user_id: string
+          welcome_email_sent_at?: string | null
         }
         Update: {
           accreditation_status?: Database["public"]["Enums"]["check_status"]
@@ -1800,12 +1810,17 @@ export type Database = {
           funding_status?: Database["public"]["Enums"]["payment_status"]
           id?: string
           kyc_status?: Database["public"]["Enums"]["check_status"]
+          manager_review_notes?: string | null
+          manager_review_status?: string
+          manager_reviewed_at?: string | null
+          manager_reviewed_by?: string | null
           offering_id?: string
           source?: string
           status?: string
           submitted_at?: string | null
           updated_at?: string
           user_id?: string
+          welcome_email_sent_at?: string | null
         }
         Relationships: [
           {

@@ -342,6 +342,159 @@ function Portal() {
           </Card>
 
           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-base">Fund manager approval</CardTitle>
+                <CardDescription>
+                  Your fund manager gives your file a final look before funding opens.
+                </CardDescription>
+              </div>
+              <Badge variant={tone((app as any).manager_review_status)}>
+                {(app as any).manager_review_status === "approved"
+                  ? "Approved"
+                  : (app as any).manager_review_status === "declined"
+                    ? "Sent back"
+                    : "In review"}
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-muted-foreground">
+                {(app as any).manager_review_status === "approved"
+                  ? "Your application is approved. You can send your funds when you're ready."
+                  : (app as any).manager_review_status === "declined"
+                    ? "Your fund manager needs something changed before approving your application."
+                    : "Nothing to do right now — we'll email you the moment it's approved."}
+              </p>
+              {(app as any).manager_review_notes && (
+                <p>Message from your fund manager: {(app as any).manager_review_notes}</p>
+              )}
+              {(app as any).manager_reviewed_at && (
+                <p className="text-xs text-muted-foreground">
+                  Reviewed {new Date((app as any).manager_reviewed_at).toLocaleString()}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Questions for you</CardTitle>
+              <CardDescription>
+                Questions your fund manager has assigned to you as part of due diligence.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {(data?.questions ?? []).length === 0 ? (
+                <p className="text-muted-foreground">No questions have been assigned to you.</p>
+              ) : (
+                <>
+                  {(data?.questions ?? []).map((q: any) => (
+                    <div
+                      key={q.assignment_id}
+                      className="flex flex-wrap items-start justify-between gap-3 rounded-md border p-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium">{q.prompt}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {q.category ? `${String(q.category).replace(/_/g, " ")} · ` : ""}
+                          {q.is_required ? "required" : "optional"}
+                          {q.due_date ? ` · due ${new Date(q.due_date).toLocaleDateString()}` : ""}
+                          {q.answered_at
+                            ? ` · answered ${new Date(q.answered_at).toLocaleDateString()}`
+                            : ""}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          q.status === "accepted"
+                            ? "default"
+                            : q.status === "needs_followup"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
+                        {q.status === "accepted"
+                          ? "Accepted"
+                          : q.status === "answered"
+                            ? "Answered"
+                            : q.status === "needs_followup"
+                              ? "Needs more"
+                              : "Waiting on you"}
+                      </Badge>
+                    </div>
+                  ))}
+                  {app.offering_id && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link
+                        to="/diligence/$offeringId"
+                        params={{ offeringId: app.offering_id as string }}
+                      >
+                        Answer in the due diligence room
+                      </Link>
+                    </Button>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Your wire confirmations</CardTitle>
+              <CardDescription>
+                What you told us you sent, and where each one stands with the fund team.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {(data?.wireConfirmations ?? []).length === 0 ? (
+                <div className="space-y-3">
+                  <p className="text-muted-foreground">
+                    No wire confirmation submitted yet. Send one once your funds are on their way.
+                  </p>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/wire-confirmation">Submit a wire confirmation</Link>
+                  </Button>
+                </div>
+              ) : (
+                (data?.wireConfirmations ?? []).map((w: any) => (
+                  <div key={w.id} className="rounded-md border p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="font-medium">
+                        {money(w.amount_cents)}
+                        {w.sent_on ? ` sent ${new Date(w.sent_on).toLocaleDateString()}` : ""}
+                      </p>
+                      <Badge
+                        variant={
+                          w.status === "approved" || w.status === "matched"
+                            ? "default"
+                            : w.status === "rejected"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
+                        {w.status === "approved" || w.status === "matched"
+                          ? "Funds received"
+                          : w.status === "rejected"
+                            ? "Sent back"
+                            : "In review"}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {w.sending_bank_name ?? "Your bank"}
+                      {w.sending_account_last4 ? ` ••${w.sending_account_last4}` : ""}
+                      {w.bank_reference ? ` · reference ${w.bank_reference}` : ""}
+                      {w.reviewed_at
+                        ? ` · reviewed ${new Date(w.reviewed_at).toLocaleDateString()}`
+                        : ""}
+                    </p>
+                    {w.review_notes && <p className="mt-1">Note: {w.review_notes}</p>}
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Compliance checks</CardTitle>
               <CardDescription>Updated automatically as each review completes.</CardDescription>
