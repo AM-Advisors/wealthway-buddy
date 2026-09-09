@@ -305,6 +305,12 @@ export const resolveApplicationFlag = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
+    const { data: flag } = await supabase
+      .from("application_flags")
+      .select("application_id, offering_id, category")
+      .eq("id", data.flagId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("application_flags")
       .update({
@@ -315,6 +321,17 @@ export const resolveApplicationFlag = createServerFn({ method: "POST" })
       })
       .eq("id", data.flagId);
     if (error) throw new Error(error.message);
+
+    await (await import("@/lib/reviewer-activity.server")).logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: (flag?.application_id as string) ?? null,
+      offeringId: (flag?.offering_id as string) ?? null,
+      action: "flag_resolved",
+      area: (flag?.category as string) ?? null,
+      outcome: "resolved",
+      summary: "Issue flag resolved",
+      note: data.resolutionNote ?? null,
+    });
     return { ok: true };
   });
 
