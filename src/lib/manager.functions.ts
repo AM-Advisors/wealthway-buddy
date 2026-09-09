@@ -834,7 +834,7 @@ export const getWireTracking = createServerFn({ method: "GET" })
         else if (fundingStatus === "failed" || fundingStatus === "returned" || fundingStatus === "cancelled")
           stage = "problem";
         else if (fundingStatus === "processing") stage = "processing";
-        else if (wire && wire.status === "pending") stage = "submitted";
+        else if (wire && (wire.status === "submitted" || wire.status === "pending")) stage = "submitted";
         else if (fundingStatus === "awaiting_wire" || wire) stage = "awaiting_wire";
         else stage = "not_started";
 

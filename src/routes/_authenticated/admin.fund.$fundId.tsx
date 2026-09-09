@@ -10,6 +10,7 @@ import { savePdf } from "@/lib/download-pdf";
 import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { SignedDocumentsCard } from "@/components/signed-documents-card";
 import { Badge } from "@/components/ui/badge";
+import { WireTrackingPanel } from "@/components/wire-tracking-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -165,6 +166,10 @@ function FundPage() {
         />
         <Stat label="Applications" value={`${stats.applications}`} note={`${stats.funded} funded`} />
         <Stat label="Committed" value={money(stats.committedCents)} note={`${money(stats.settledCents)} settled`} />
+      </div>
+
+      <div className="mt-8">
+        <WireTrackingPanel offeringId={fundId} />
       </div>
 
       <Card className="mt-8">
