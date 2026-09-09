@@ -74,7 +74,7 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
 
     const { data: offering } = await supabase
       .from("offerings")
-      .select("id, name, reg_type, summary")
+      .select("id, name, slug, reg_type, summary, min_investment_cents, target_raise_cents, is_open")
       .eq("id", data.offering_id)
       .maybeSingle();
     if (!offering) throw new Error("That fund is not available.");
