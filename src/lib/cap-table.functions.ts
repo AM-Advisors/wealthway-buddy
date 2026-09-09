@@ -271,6 +271,95 @@ export const getMyOwnership = createServerFn({ method: "GET" })
     return tables.filter((t) => t.you !== null);
   });
 
+/** One fund's value from the signed-in investor's point of view. */
+export interface MyPortfolioValue {
+  offering_id: string;
+  offering_name: string;
+  reg_type: string | null;
+  /** The fund's stated price per share, when one is set. */
+  share_price_cents: number | null;
+  /** Units/interests recorded for this investor. */
+  shares: number | null;
+  share_class: string;
+  commitment_cents: number;
+  funded_cents: number;
+  pct_of_committed: number;
+  /**
+   * What the holding is worth: shares × the fund's share price when both
+   * exist, otherwise the capital the fund has actually received.
+   */
+  equity_value_cents: number;
+  valued_by: "share_price" | "capital";
+}
+
+/** Every fund the signed-in investor holds, valued at share price or received capital. */
+export const getMyPortfolioValue = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: apps } = await supabase
+      .from("investor_applications")
+      .select("id, offering_id, status")
+      .eq("user_id", userId);
+
+    const active = ((apps ?? []) as { id: string; offering_id: string; status: string }[]).filter(
+      (a) => !EXCLUDED_STATUSES.has(a.status),
+    );
+    if (active.length === 0) return [] as MyPortfolioValue[];
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const offeringIds = Array.from(new Set(active.map((a) => a.offering_id)));
+
+    const [{ data: offerings }, { data: positions }] = await Promise.all([
+      supabaseAdmin
+        .from("offerings")
+        .select("id, name, reg_type, share_price_cents")
+        .in("id", offeringIds),
+      supabaseAdmin
+        .from("investor_cap_positions")
+        .select("application_id, shares, share_class")
+        .in(
+          "application_id",
+          active.map((a) => a.id),
+        ),
+    ]);
+
+    const offeringById = new Map<string, any>();
+    for (const o of (offerings ?? []) as any[]) offeringById.set(o.id, o);
+    const posByApp = new Map<string, any>();
+    for (const p of (positions ?? []) as any[]) posByApp.set(p.application_id, p);
+
+    const tables = await Promise.all(
+      offeringIds.map((id) => buildCapTable(id, userId, false, false)),
+    );
+    const tableByOffering = new Map(tables.map((t) => [t.offering_id, t]));
+
+    const rows: MyPortfolioValue[] = [];
+    for (const app of active) {
+      const offering = offeringById.get(app.offering_id);
+      const you = tableByOffering.get(app.offering_id)?.you;
+      if (!offering || !you) continue;
+      const price = offering.share_price_cents != null ? Number(offering.share_price_cents) : null;
+      const pos = posByApp.get(app.id);
+      const shares = pos?.shares != null ? Number(pos.shares) : null;
+      const valuedByPrice = shares != null && price != null && price > 0;
+      rows.push({
+        offering_id: offering.id,
+        offering_name: offering.name,
+        reg_type: offering.reg_type ?? null,
+        share_price_cents: price,
+        shares,
+        share_class: (pos?.share_class as string) ?? "LP interest",
+        commitment_cents: you.commitment_cents,
+        funded_cents: you.funded_cents,
+        pct_of_committed: you.pct_of_committed,
+        equity_value_cents: valuedByPrice ? Math.round(shares * price) : you.funded_cents,
+        valued_by: valuedByPrice ? "share_price" : "capital",
+      });
+    }
+    return rows;
+  });
+
 /* ------------------------------------------------------------------ *
  * Manager / admin cap table editing
  * ------------------------------------------------------------------ */
