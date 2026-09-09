@@ -14,4 +14,4 @@
 - [x] AI diligence assistant with document citations
 - [x] Live walkthrough: fund created, docs uploaded, test investor walked room
 
-- [ ] Manager onboarding document submission form with status tracking (/manager/onboarding)
+- [x] Manager onboarding document submission form with status tracking (/manager/onboarding)
