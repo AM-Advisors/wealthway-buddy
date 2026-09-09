@@ -284,3 +284,119 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
 
     return { ok: true, message: `Packet sent to ${data.email}.`, link };
   });
+
+/**
+ * Investor-facing: hands the signed-in investor a private, short-lived link to
+ * the current offering packet for a fund whose diligence room they can see.
+ * Wire details are only bundled when the fund already shares them with them.
+ */
+export const getMyPacketLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // RLS: the room row only comes back for people allowed in this fund.
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id, nda_required, nda_version")
+      .eq("offering_id", data.fundId)
+      .maybeSingle();
+
+    const { data: manages } = await supabase.rpc("can_manage_diligence", {
+      _offering_id: data.fundId,
+    });
+    const isReviewer = Boolean(manages);
+
+    if (!isReviewer) {
+      if (!room) throw new Error("That fund packet is not available to you.");
+      if (room.nda_required) {
+        const { data: accepted } = await supabase
+          .from("diligence_nda_acceptances")
+          .select("id")
+          .eq("room_id", room.id)
+          .eq("user_id", userId)
+          .eq("nda_version", room.nda_version)
+          .maybeSingle();
+        if (!accepted) throw new Error("Agree to the confidentiality terms first.");
+      }
+      const [{ data: application }, { data: access }] = await Promise.all([
+        supabase
+          .from("investor_applications")
+          .select("id")
+          .eq("offering_id", data.fundId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("investor_fund_access")
+          .select("id")
+          .eq("offering_id", data.fundId)
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
+      if (!application && !access) throw new Error("That fund packet is not available to you.");
+    }
+
+    // Only include bank details when this caller may already see them.
+    let includeWire = false;
+    try {
+      const { data: wireRow } = await supabase
+        .rpc("get_wire_instructions", { p_offering_id: data.fundId })
+        .maybeSingle();
+      const details = ((wireRow as any)?.details ?? {}) as Record<string, unknown>;
+      includeWire = Object.values(details).some((v) => String(v ?? "").trim() !== "");
+    } catch {
+      includeWire = false;
+    }
+
+    const label = `Portal download · ${userId}`;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: existing } = await supabaseAdmin
+      .from("offering_packet_links")
+      .select("id, token, expires_at, include_wire, revoked_at")
+      .eq("offering_id", data.fundId)
+      .eq("label", label)
+      .is("revoked_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const stillGood =
+      existing &&
+      existing.include_wire === includeWire &&
+      (!existing.expires_at || new Date(existing.expires_at as string).getTime() > Date.now() + 3600_000);
+
+    let token = (existing as any)?.token as string | undefined;
+    let expiresAt = (existing as any)?.expires_at as string | null | undefined;
+
+    if (!stillGood) {
+      if (existing) {
+        await supabaseAdmin
+          .from("offering_packet_links")
+          .update({ revoked_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      }
+      const fresh = await supabaseAdmin
+        .from("offering_packet_links")
+        .insert({
+          offering_id: data.fundId,
+          token: newToken(),
+          label,
+          include_wire: includeWire,
+          expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+          created_by: userId,
+        })
+        .select("token, expires_at")
+        .single();
+      if (fresh.error) throw new Error(fresh.error.message);
+      token = fresh.data.token as string;
+      expiresAt = fresh.data.expires_at as string;
+    }
+
+    return {
+      url: `/api/public/packet/${token}`,
+      includeWire,
+      expiresAt: expiresAt ?? null,
+    };
+  });
