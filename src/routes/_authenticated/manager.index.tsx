@@ -42,6 +42,11 @@ const TOOLS = [
     blurb: "Every investor upload lands here, ready to review.",
   },
   {
+    to: "/manager/wires",
+    title: "Wire review board",
+    blurb: "Approve or send back each wire confirmation, with funding status.",
+  },
+  {
     to: "/manager/timeline",
     title: "Application timeline",
     blurb: "Follow each investor from invitation to funding, with full history.",
