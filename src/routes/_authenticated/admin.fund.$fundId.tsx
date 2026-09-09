@@ -9,6 +9,7 @@ import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering
 import { savePdf } from "@/lib/download-pdf";
 import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { SignedDocumentsCard } from "@/components/signed-documents-card";
+import { PacketEmailCard } from "@/components/packet-email-card";
 import { Badge } from "@/components/ui/badge";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
 import { Button } from "@/components/ui/button";
@@ -239,6 +240,10 @@ function FundPage() {
 
       <div className="mt-8">
         <SignedDocumentsCard offeringId={offering.id} />
+      </div>
+
+      <div className="mt-6">
+        <PacketEmailCard fundId={offering.id} />
       </div>
 
 
