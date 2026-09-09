@@ -124,7 +124,7 @@ export const getOfferingDocumentFileUrl = createServerFn({ method: "POST" })
 
     const { data: signed, error } = await context.supabase.storage
       .from(OFFERING_FILES_BUCKET)
-      .createSignedUrl(doc.file_path, 300, { download: doc.file_name ?? "document.pdf" });
+      .createSignedUrl(doc.file_path, 300);
     if (error || !signed?.signedUrl) {
       throw new Error(error?.message ?? "Could not prepare that download.");
     }
