@@ -263,6 +263,18 @@ export const decideApplication = createServerFn({ method: "POST" })
       });
     }
 
+    const activity = await import("@/lib/reviewer-activity.server");
+    await activity.logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: await activity.offeringIdForApplication(supabase, data.applicationId),
+      action: "application_decision",
+      area: data.area,
+      outcome: data.decision === "review" ? "delayed" : data.decision,
+      summary: `${data.area} marked ${data.decision === "review" ? "needs more review" : data.decision}`,
+      note: data.notes || null,
+    });
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
