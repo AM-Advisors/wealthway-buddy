@@ -197,7 +197,12 @@ export async function drainManagerAlerts(limit = 25): Promise<{ processed: numbe
       const offeringName = (offering as any)?.name ?? "your fund";
       const investorName = (investor as any)?.legal_name ?? (investor as any)?.email ?? "An investor";
       const content = buildEmail(row, offeringName, investorName);
-      const portalUrl = row.application_id ? `${SITE}/manager/${row.application_id}` : `${SITE}/manager`;
+      const portalPath = (row.metadata ?? {})["portal_path"];
+      const portalUrl = portalPath
+        ? `${SITE}${portalPath}`
+        : row.application_id
+          ? `${SITE}/manager/${row.application_id}`
+          : `${SITE}/manager`;
 
       const recipients = await recipientsForOffering(supabaseAdmin, row.offering_id);
 
