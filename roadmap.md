@@ -10,4 +10,4 @@
 
 
 - [x] Cap table: live cap table data in the Due Diligence Capitalization section (no file upload needed)
-- [ ] Diligence room: show fund wire instructions + investor commitment in the overview
+- [x] Diligence room: show fund wire instructions + investor commitment in the overview
