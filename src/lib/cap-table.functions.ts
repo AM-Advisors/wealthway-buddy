@@ -328,6 +328,14 @@ export interface CapTableEditorRow {
   pct_of_committed: number;
   pct_of_shares: number;
   updated_at: string | null;
+  /** This investor's own wire fee in cents, or null when the fund's standard fee applies. */
+  wire_fee_override_cents: number | null;
+  /** The fee actually charged to this investor: their own rate, otherwise the fund's. */
+  wire_fee_cents: number;
+  /** Why this investor's rate differs. */
+  wire_fee_note: string | null;
+  /** Money received from this investor less their wire fee. */
+  net_received_cents: number;
 }
 
 async function assertCanManage(supabase: any, offeringId: string) {
@@ -342,7 +350,9 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
 
     const { data: offering } = await supabaseAdmin
       .from("offerings")
-      .select("id, name, reg_type, target_raise_cents, share_price_cents")
+      .select(
+        "id, name, reg_type, target_raise_cents, share_price_cents, wire_fee_cents, closing_cost_cents",
+      )
 
       .eq("id", data.offering_id)
       .maybeSingle();
@@ -350,7 +360,9 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
 
     const { data: appsRaw } = await supabaseAdmin
       .from("investor_applications")
-      .select("id, user_id, status, funding_status, commitment_cents, created_at")
+      .select(
+        "id, user_id, status, funding_status, commitment_cents, created_at, wire_fee_cents, wire_fee_note",
+      )
       .eq("offering_id", data.offering_id);
     const apps = ((appsRaw ?? []) as any[]).filter((a) => !EXCLUDED_STATUSES.has(a.status));
     const appIds = apps.map((a) => a.id as string);
@@ -398,8 +410,12 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
     const posByApp = new Map<string, any>();
     for (const p of (positions ?? []) as any[]) posByApp.set(p.application_id, p);
 
+    // The fund's standard wire fee; each investor may carry their own rate.
+    const fundWireFeeCents = Number((offering as any).wire_fee_cents ?? 0);
+
     const base = apps.map((a) => {
       const pos = posByApp.get(a.id);
+      const feeOverride = a.wire_fee_cents != null ? Number(a.wire_fee_cents) : null;
       return {
         app: a,
         commitment: subByApp.get(a.id) ?? Number(a.commitment_cents ?? 0),
@@ -409,18 +425,24 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
         override: pos?.ownership_pct_override != null ? Number(pos.ownership_pct_override) : null,
         notes: (pos?.notes as string) ?? null,
         updated_at: (pos?.updated_at as string) ?? null,
+        fee_override: feeOverride,
+        fee: feeOverride ?? fundWireFeeCents,
+        fee_note: (a.wire_fee_note as string) ?? null,
       };
     });
 
     const totalCommitted = base.reduce((s, r) => s + r.commitment, 0);
     const totalFunded = base.reduce((s, r) => s + r.funded, 0);
     const totalShares = base.reduce((s, r) => s + (r.shares ?? 0), 0);
+    // A wire fee is only charged once money has actually arrived.
+    const totalWireFees = base.reduce((s, r) => s + (r.funded > 0 ? r.fee : 0), 0);
 
     const rows: CapTableEditorRow[] = base
       .map((r) => {
         const profile = profileByUser.get(r.app.user_id);
         const byShares = totalShares > 0 && r.shares != null ? pct(r.shares, totalShares) : 0;
         const byMoney = pct(r.commitment, totalCommitted);
+        const charged = r.funded > 0 ? r.fee : 0;
         return {
           application_id: r.app.id as string,
           user_id: r.app.user_id as string,
@@ -439,6 +461,10 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
           pct_of_committed: byMoney,
           pct_of_shares: byShares,
           updated_at: r.updated_at,
+          wire_fee_override_cents: r.fee_override,
+          wire_fee_cents: r.fee,
+          wire_fee_note: r.fee_note,
+          net_received_cents: Math.max(0, r.funded - charged),
         };
       })
       .sort((a, b) => b.ownership_pct - a.ownership_pct || a.name.localeCompare(b.name));
@@ -450,7 +476,8 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
         reg_type: (offering.reg_type as string) ?? null,
         target_raise_cents: (offering.target_raise_cents as number) ?? null,
         share_price_cents: ((offering as any).share_price_cents as number) ?? 0,
-
+        wire_fee_cents: fundWireFeeCents,
+        closing_cost_cents: Number((offering as any).closing_cost_cents ?? 0),
       },
       rows,
       totals: {
@@ -459,6 +486,8 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
         shares: totalShares,
         investors: rows.length,
         ownership_pct: Math.round(rows.reduce((s, r) => s + r.ownership_pct, 0) * 10000) / 10000,
+        wire_fees_cents: totalWireFees,
+        net_received_cents: Math.max(0, totalFunded - totalWireFees),
       },
     };
   }
@@ -663,6 +692,9 @@ const positionSchema = z.object({
   ownership_pct_override: z.number().min(0).max(100).nullable(),
   notes: z.string().trim().max(500).nullable(),
   commitment_cents: z.number().int().min(0).nullable(),
+  /** This investor's own wire fee in cents; null clears it back to the fund's standard fee. */
+  wire_fee_cents: z.number().int().min(0).max(100_000_00).nullable().optional(),
+  wire_fee_note: z.string().trim().max(200).nullable().optional(),
 });
 
 export type CapPositionInput = z.infer<typeof positionSchema>;
@@ -677,7 +709,7 @@ export const saveCapPosition = createServerFn({ method: "POST" })
 
     const { data: app } = await supabaseAdmin
       .from("investor_applications")
-      .select("id, offering_id, commitment_cents")
+      .select("id, offering_id, commitment_cents, wire_fee_cents, wire_fee_note")
       .eq("id", data.application_id)
       .maybeSingle();
     if (!app || app.offering_id !== data.offering_id) {
@@ -718,6 +750,18 @@ export const saveCapPosition = createServerFn({ method: "POST" })
         .eq("application_id", data.application_id);
     }
 
+    // This investor's own wire fee: null puts them back on the fund's standard rate.
+    if (data.wire_fee_cents !== undefined || data.wire_fee_note !== undefined) {
+      const patch: Record<string, unknown> = {};
+      if (data.wire_fee_cents !== undefined) patch["wire_fee_cents"] = data.wire_fee_cents;
+      if (data.wire_fee_note !== undefined) patch["wire_fee_note"] = data.wire_fee_note || null;
+      const { error: feeErr } = await supabaseAdmin
+        .from("investor_applications")
+        .update(patch)
+        .eq("id", data.application_id);
+      if (feeErr) throw new Error(feeErr.message);
+    }
+
     // Append-only trail of what actually changed.
     const text = (v: unknown) => (v == null || v === "" ? null : String(v));
     const candidates: Array<{ field: string; old: string | null; next: string | null }> = [
@@ -739,6 +783,20 @@ export const saveCapPosition = createServerFn({ method: "POST" })
         field: "commitment_cents",
         old: text(app.commitment_cents ?? null),
         next: text(data.commitment_cents),
+      });
+    }
+    if (data.wire_fee_cents !== undefined) {
+      candidates.push({
+        field: "wire_fee_cents",
+        old: text(app.wire_fee_cents ?? null),
+        next: text(data.wire_fee_cents),
+      });
+    }
+    if (data.wire_fee_note !== undefined) {
+      candidates.push({
+        field: "wire_fee_note",
+        old: text(app.wire_fee_note ?? null),
+        next: text(data.wire_fee_note),
       });
     }
     const changes = candidates
@@ -783,6 +841,8 @@ const FIELD_LABELS: Record<string, string> = {
   ownership_pct_override: "Ownership percentage",
   notes: "Note",
   commitment_cents: "Committed capital",
+  wire_fee_cents: "Wire fee",
+  wire_fee_note: "Wire fee note",
 };
 
 /** Trail of every ownership or commitment edit for a fund. */

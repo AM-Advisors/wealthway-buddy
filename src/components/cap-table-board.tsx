@@ -27,13 +27,15 @@ function share(value: number) {
   return `${value < 0.01 ? value.toFixed(4) : value.toFixed(2)}%`;
 }
 
-type Draft = { commitment: string; shares: string; ownership: string };
+type Draft = { commitment: string; shares: string; ownership: string; fee: string };
 
 function draftFrom(row: CapTableEditorRow): Draft {
   return {
     commitment: row.commitment_cents ? String(Math.round(row.commitment_cents / 100)) : "",
     shares: row.shares == null ? "" : String(row.shares),
     ownership: row.ownership_pct_override == null ? "" : String(row.ownership_pct_override),
+    fee:
+      row.wire_fee_override_cents == null ? "" : String(row.wire_fee_override_cents / 100),
   };
 }
 
@@ -95,6 +97,11 @@ export function CapTableBoard({ backTo }: { backTo: "/admin" | "/manager" }) {
       toast.error("Committed amount must be a positive number.");
       return;
     }
+    const fee = draft.fee.trim() === "" ? null : Math.round(Number(draft.fee) * 100);
+    if (fee != null && (!Number.isFinite(fee) || fee < 0)) {
+      toast.error("The wire fee must be a positive number.");
+      return;
+    }
 
     setSavingId(row.application_id);
     saveMutation.mutate({
@@ -105,6 +112,7 @@ export function CapTableBoard({ backTo }: { backTo: "/admin" | "/manager" }) {
       ownership_pct_override: ownership,
       notes: row.notes,
       commitment_cents: commitment ?? 0,
+      wire_fee_cents: fee,
     });
   }
 
@@ -223,12 +231,14 @@ export function CapTableBoard({ backTo }: { backTo: "/admin" | "/manager" }) {
                 {rows.length === 0 ? (
                   <p className="text-muted-foreground text-sm">No investors in this fund yet.</p>
                 ) : (
-                  <table className="w-full min-w-[860px] text-sm">
+                  <table className="w-full min-w-[1040px] text-sm">
                     <thead>
                       <tr className="text-muted-foreground border-b text-left">
                         <th className="py-2 pr-3 font-medium">Investor</th>
                         <th className="py-2 pr-3 font-medium">Committed ($)</th>
                         <th className="py-2 pr-3 font-medium">Received</th>
+                        <th className="py-2 pr-3 font-medium">Wire fee ($)</th>
+                        <th className="py-2 pr-3 font-medium">Net received</th>
                         <th className="py-2 pr-3 font-medium">Shares</th>
                         <th className="py-2 pr-3 font-medium">Share %</th>
                         <th className="py-2 pr-3 font-medium text-right">Save</th>
@@ -257,6 +267,25 @@ export function CapTableBoard({ backTo }: { backTo: "/admin" | "/manager" }) {
                             </td>
                             <td className="py-2 pr-3 whitespace-nowrap">
                               {money(row.funded_cents)}
+                            </td>
+                            <td className="py-2 pr-3">
+                              <Input
+                                value={current.fee}
+                                inputMode="decimal"
+                                placeholder={String(
+                                  Math.round((fund.offering.wire_fee_cents ?? 0) / 100),
+                                )}
+                                onChange={(e) => setField(row, "fee", e.target.value)}
+                                className="h-8 w-24"
+                              />
+                              <div className="text-muted-foreground mt-1 text-xs">
+                                {row.wire_fee_override_cents == null
+                                  ? "Fund rate"
+                                  : `Own rate ${money(row.wire_fee_cents)}`}
+                              </div>
+                            </td>
+                            <td className="py-2 pr-3 whitespace-nowrap">
+                              {money(row.net_received_cents)}
                             </td>
                             <td className="py-2 pr-3">
                               <Input
@@ -300,6 +329,8 @@ export function CapTableBoard({ backTo }: { backTo: "/admin" | "/manager" }) {
                         <td className="py-2 pr-3">Totals</td>
                         <td className="py-2 pr-3">{money(fund.totals.committed_cents)}</td>
                         <td className="py-2 pr-3">{money(fund.totals.funded_cents)}</td>
+                        <td className="py-2 pr-3">{money(fund.totals.wire_fees_cents)}</td>
+                        <td className="py-2 pr-3">{money(fund.totals.net_received_cents)}</td>
                         <td className="py-2 pr-3">{fund.totals.shares || "—"}</td>
                         <td className="py-2 pr-3">{share(fund.totals.ownership_pct)}</td>
                         <td />

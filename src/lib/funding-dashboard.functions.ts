@@ -49,7 +49,7 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
 
     const { data: appsRaw } = await supabase
       .from("investor_applications")
-      .select("id, offering_id, status, funding_status, commitment_cents")
+      .select("id, offering_id, status, funding_status, commitment_cents, wire_fee_cents")
       .in("offering_id", offeringIds);
     const appRows = (appsRaw ?? []) as any[];
     const appIds = appRows.map((a) => a.id as string);
@@ -117,7 +117,13 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       const targetCents = Number(o.target_raise_cents ?? 0) || null;
       const wireFeeCents = Number((o as any).wire_fee_cents ?? 0);
       const closingCostCents = Number((o as any).closing_cost_cents ?? 0);
-      const wireFeesTotalCents = wireFeeCents * settled;
+      // Each investor is charged their own rate when one is set, otherwise the fund's.
+      const wireFeesTotalCents = fundApps
+        .filter((a) => ["settled", "funded"].includes(String(a.funding_status ?? "")))
+        .reduce(
+          (s, a) => s + (a.wire_fee_cents != null ? Number(a.wire_fee_cents) : wireFeeCents),
+          0,
+        );
       const totalCostsCents = wireFeesTotalCents + closingCostCents;
       const netReceivedCents = Math.max(0, receivedCents - totalCostsCents);
       const percentOfTarget =

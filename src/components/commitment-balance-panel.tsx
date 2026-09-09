@@ -69,8 +69,8 @@ export function CommitmentBalancePanel({ fundId }: { fundId: string }) {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Costs</p>
             <p className="mt-1 text-sm">
               Wire fees {money(totals.wireFeesTotalCents)}
-              {totals.wireFeeCents > 0 ? ` (${money(totals.wireFeeCents)} per wire)` : ""} · Closing
-              cost {money(totals.closingCostCents)}
+              {totals.wireFeeCents > 0 ? ` (${money(totals.wireFeeCents)} standard per wire)` : ""} ·
+              Closing cost {money(totals.closingCostCents)}
             </p>
             <p className="mt-1 text-sm font-medium">
               {money(totals.netReceivedCents)} net after {money(totals.totalCostsCents)} of costs
@@ -108,6 +108,10 @@ export function CommitmentBalancePanel({ fundId }: { fundId: string }) {
                     {inv.confirmedAt
                       ? ` · confirmed ${new Date(inv.confirmedAt).toLocaleDateString("en-US")}`
                       : ""}
+                    {inv.wireFeeCents > 0
+                      ? ` · wire fee ${money(inv.wireFeeCents)}${inv.wireFeeIsOwnRate ? " (own rate)" : ""}`
+                      : ""}
+                    {inv.receivedCents > 0 ? ` · ${money(inv.netReceivedCents)} net` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
