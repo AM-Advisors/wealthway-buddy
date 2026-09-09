@@ -417,7 +417,11 @@ function DiligenceRoomPage() {
             <RoomKycApplication offeringId={offeringId} />
           </TabsContent>
         )}
+        <TabsContent value="terms" className="mt-6">
+          <OfferingStatementView offeringId={offeringId} canManage={canManage} />
+        </TabsContent>
         <TabsContent value="documents" className="mt-6">
+
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
         </TabsContent>
         <TabsContent value="deck" className="mt-6">
