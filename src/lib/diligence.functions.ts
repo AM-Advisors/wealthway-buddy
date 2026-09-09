@@ -891,6 +891,154 @@ export const listDiligenceActivity = createServerFn({ method: "POST" })
     return { events: events ?? [], canManage: await canManage(supabase, data.offering_id) };
   });
 
+/* ---------------------- Room open / view tracking --------------------- */
+
+/** Records that the signed-in person opened the room. Throttled to one entry per 30 minutes. */
+export const recordRoomVisit = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) return { recorded: false };
+
+    const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { data: recent } = await supabase
+      .from("diligence_activity")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .eq("actor_id", userId)
+      .eq("event_type", "room_viewed")
+      .gte("created_at", since)
+      .limit(1);
+    if (recent && recent.length > 0) return { recorded: false };
+
+    await logActivity(supabase, userId, data.offering_id, room.id, "room_viewed", "Opened the diligence room");
+    return { recorded: true };
+  });
+
+/** Manager/admin view: who has actually opened the room and which documents they read. */
+export const getDiligenceEngagement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to view engagement for this fund.");
+    }
+
+    const { data: events, error } = await supabase
+      .from("diligence_activity")
+      .select("actor_id, actor_name, actor_email, event_type, metadata, created_at")
+      .eq("offering_id", data.offering_id)
+      .in("event_type", ["room_viewed", "document_downloaded", "nda_accepted", "question_asked"])
+      .order("created_at", { ascending: true })
+      .limit(5000);
+    if (error) throw new Error(error.message);
+
+    const { data: docs } = await supabase
+      .from("diligence_documents")
+      .select("id, title")
+      .eq("offering_id", data.offering_id);
+    const titles = new Map<string, string>((docs ?? []).map((d: any) => [d.id, d.title]));
+
+    type Row = {
+      actor_id: string;
+      name: string | null;
+      email: string | null;
+      visits: number;
+      firstSeen: string | null;
+      lastSeen: string | null;
+      ndaAcceptedAt: string | null;
+      questionsAsked: number;
+      documents: { id: string; title: string; opens: number; lastOpened: string }[];
+    };
+    const byActor = new Map<string, Row>();
+
+    for (const e of (events ?? []) as any[]) {
+      let row = byActor.get(e.actor_id);
+      if (!row) {
+        row = {
+          actor_id: e.actor_id,
+          name: e.actor_name ?? null,
+          email: e.actor_email ?? null,
+          visits: 0,
+          firstSeen: null,
+          lastSeen: null,
+          ndaAcceptedAt: null,
+          questionsAsked: 0,
+          documents: [],
+        };
+        byActor.set(e.actor_id, row);
+      }
+      row.name = row.name ?? e.actor_name ?? null;
+      row.email = row.email ?? e.actor_email ?? null;
+      row.firstSeen = row.firstSeen ?? e.created_at;
+      row.lastSeen = e.created_at;
+
+      if (e.event_type === "room_viewed") row.visits += 1;
+      if (e.event_type === "nda_accepted") row.ndaAcceptedAt = e.created_at;
+      if (e.event_type === "question_asked") row.questionsAsked += 1;
+      if (e.event_type === "document_downloaded") {
+        const docId = (e.metadata as any)?.document_id as string | undefined;
+        if (docId) {
+          const existing = row.documents.find((d) => d.id === docId);
+          if (existing) {
+            existing.opens += 1;
+            existing.lastOpened = e.created_at;
+          } else {
+            row.documents.push({
+              id: docId,
+              title: titles.get(docId) ?? "A document",
+              opens: 1,
+              lastOpened: e.created_at,
+            });
+          }
+        }
+      }
+    }
+
+    const viewers = [...byActor.values()].sort((a, b) =>
+      (b.lastSeen ?? "").localeCompare(a.lastSeen ?? ""),
+    );
+
+    // People with access who have never opened anything.
+    const { data: invited } = await supabase
+      .from("investor_fund_access")
+      .select("user_id")
+      .eq("offering_id", data.offering_id);
+    const { data: applicants } = await supabase
+      .from("investor_applications")
+      .select("user_id")
+      .eq("offering_id", data.offering_id);
+    const withAccess = new Set<string>([
+      ...((invited ?? []) as any[]).map((r) => r.user_id),
+      ...((applicants ?? []) as any[]).map((r) => r.user_id),
+    ]);
+    const silentIds = [...withAccess].filter((id) => !byActor.has(id));
+    let neverOpened: { user_id: string; name: string | null; email: string | null }[] = [];
+    if (silentIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, legal_name, email")
+        .in("user_id", silentIds);
+      neverOpened = silentIds.map((id) => {
+        const p = ((profs ?? []) as any[]).find((x) => x.user_id === id);
+        return { user_id: id, name: p?.legal_name ?? null, email: p?.email ?? null };
+      });
+    }
+
+    return {
+      viewers,
+      neverOpened,
+      totalDocuments: (docs ?? []).length,
+    };
+  });
+
 /* ------------------------- Document versions ------------------------- */
 
 export const listDocumentVersions = createServerFn({ method: "POST" })
