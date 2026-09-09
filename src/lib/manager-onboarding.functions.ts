@@ -56,7 +56,7 @@ export const listManagerOnboardingDocs = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("manager_onboarding_documents")
       .select(
-        "id, user_id, offering_id, doc_type, file_name, note, status, review_notes, reviewed_at, created_at",
+        "id, user_id, offering_id, doc_type, file_name, note, status, review_notes, reviewed_at, created_at, box_file_id, box_uploaded_at, box_error",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
