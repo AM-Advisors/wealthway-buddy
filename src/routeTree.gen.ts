@@ -39,6 +39,7 @@ import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
 import { Route as AuthenticatedManagerActivityRouteImport } from './routes/_authenticated/manager.activity'
+import { Route as AuthenticatedManagerClosingRouteImport } from './routes/_authenticated/manager.closing'
 import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_authenticated/manager.diligence'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
 import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authenticated/manager.inbox'
@@ -224,6 +225,12 @@ const AuthenticatedManagerActivityRoute =
     path: '/manager/activity',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerClosingRoute =
+  AuthenticatedManagerClosingRouteImport.update({
+    id: '/manager/closing',
+    path: '/manager/closing',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerDiligenceRoute =
   AuthenticatedManagerDiligenceRouteImport.update({
     id: '/manager/diligence',
@@ -377,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -429,6 +437,7 @@ export interface FileRoutesByTo {
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -484,6 +493,7 @@ export interface FileRoutesById {
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/_authenticated/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/_authenticated/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/_authenticated/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
+    | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
     | '/manager/inbox'
@@ -591,6 +602,7 @@ export interface FileRouteTypes {
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
+    | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
     | '/manager/inbox'
@@ -645,6 +657,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
+    | '/_authenticated/manager/closing'
     | '/_authenticated/manager/diligence'
     | '/_authenticated/manager/documents'
     | '/_authenticated/manager/inbox'
@@ -902,6 +915,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/closing': {
+      id: '/_authenticated/manager/closing'
+      path: '/manager/closing'
+      fullPath: '/manager/closing'
+      preLoaderRoute: typeof AuthenticatedManagerClosingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/diligence': {
       id: '/_authenticated/manager/diligence'
       path: '/manager/diligence'
@@ -1078,6 +1098,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
+  AuthenticatedManagerClosingRoute: typeof AuthenticatedManagerClosingRoute
   AuthenticatedManagerDiligenceRoute: typeof AuthenticatedManagerDiligenceRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
   AuthenticatedManagerInboxRoute: typeof AuthenticatedManagerInboxRoute
@@ -1116,6 +1137,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,
   AuthenticatedManagerActivityRoute: AuthenticatedManagerActivityRoute,
+  AuthenticatedManagerClosingRoute: AuthenticatedManagerClosingRoute,
   AuthenticatedManagerDiligenceRoute: AuthenticatedManagerDiligenceRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
   AuthenticatedManagerInboxRoute: AuthenticatedManagerInboxRoute,
