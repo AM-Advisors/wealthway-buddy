@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   addDiligenceDocument,
   ensureDiligenceRoom,
+  getDiligenceRoomTraffic,
   listManagedDiligenceRooms,
   removeDiligenceDocument,
 } from "@/lib/diligence.functions";
