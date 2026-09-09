@@ -25,6 +25,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
@@ -184,6 +185,11 @@ const AuthenticatedFundDocumentsRoute =
 const AuthenticatedFundMemoRoute = AuthenticatedFundMemoRouteImport.update({
   id: '/fund-memo',
   path: '/fund-memo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMyPortfolioRoute =
@@ -661,6 +667,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
+  '/home': typeof AuthenticatedHomeRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -757,6 +764,7 @@ export interface FileRoutesByTo {
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
+  '/home': typeof AuthenticatedHomeRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -856,6 +864,7 @@ export interface FileRoutesById {
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
@@ -955,6 +964,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/fund-documents'
     | '/fund-memo'
+    | '/home'
     | '/my-portfolio'
     | '/portal'
     | '/subscription'
@@ -1051,6 +1061,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/fund-documents'
     | '/fund-memo'
+    | '/home'
     | '/my-portfolio'
     | '/portal'
     | '/subscription'
@@ -1149,6 +1160,7 @@ export interface FileRouteTypes {
     | '/_authenticated/documents'
     | '/_authenticated/fund-documents'
     | '/_authenticated/fund-memo'
+    | '/_authenticated/home'
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
     | '/_authenticated/subscription'
@@ -1366,6 +1378,13 @@ declare module '@tanstack/react-router' {
       path: '/fund-memo'
       fullPath: '/fund-memo'
       preLoaderRoute: typeof AuthenticatedFundMemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-portfolio': {
@@ -1938,6 +1957,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
@@ -2014,6 +2034,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
