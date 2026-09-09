@@ -171,8 +171,13 @@ function FundPage() {
       </div>
 
       <div className="mt-8">
+        <CommitmentBalancePanel fundId={fundId} />
+      </div>
+
+      <div className="mt-6">
         <WireTrackingPanel offeringId={fundId} />
       </div>
+
 
       <div className="mt-6">
         <BankFeedPanel fundId={fundId} />
