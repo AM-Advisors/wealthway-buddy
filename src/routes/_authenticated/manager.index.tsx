@@ -68,6 +68,11 @@ const TOOLS = [
   },
   { to: "/manager/documents", title: "Fund documents", blurb: "Add and edit what investors sign." },
   {
+    to: "/manager/memo",
+    title: "Offering memo",
+    blurb: "Write the fund's story that investors read.",
+  },
+  {
     to: "/manager/profile",
     title: "Your profile",
     blurb: "Update your contact details and see the funds you're assigned to.",

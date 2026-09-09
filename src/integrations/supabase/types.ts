@@ -2459,6 +2459,68 @@ export type Database = {
           },
         ]
       }
+      offering_memos: {
+        Row: {
+          created_at: string
+          headline: string
+          id: string
+          is_published: boolean
+          offering_id: string
+          opportunity: string
+          overview: string
+          published_at: string | null
+          risks: string
+          strategy: string
+          team: string
+          terms: string
+          updated_at: string
+          updated_by: string | null
+          use_of_proceeds: string
+        }
+        Insert: {
+          created_at?: string
+          headline?: string
+          id?: string
+          is_published?: boolean
+          offering_id: string
+          opportunity?: string
+          overview?: string
+          published_at?: string | null
+          risks?: string
+          strategy?: string
+          team?: string
+          terms?: string
+          updated_at?: string
+          updated_by?: string | null
+          use_of_proceeds?: string
+        }
+        Update: {
+          created_at?: string
+          headline?: string
+          id?: string
+          is_published?: boolean
+          offering_id?: string
+          opportunity?: string
+          overview?: string
+          published_at?: string | null
+          risks?: string
+          strategy?: string
+          team?: string
+          terms?: string
+          updated_at?: string
+          updated_by?: string | null
+          use_of_proceeds?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_memos_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_packet_links: {
         Row: {
           created_at: string
