@@ -1871,6 +1871,68 @@ export type Database = {
           },
         ]
       }
+      fund_tax_documents: {
+        Row: {
+          created_at: string
+          doc_type: string
+          file_name: string
+          id: string
+          investor_user_id: string | null
+          note: string | null
+          offering_id: string
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          storage_path: string
+          tax_year: number | null
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_type: string
+          file_name: string
+          id?: string
+          investor_user_id?: string | null
+          note?: string | null
+          offering_id: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path: string
+          tax_year?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          file_name?: string
+          id?: string
+          investor_user_id?: string | null
+          note?: string | null
+          offering_id?: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path?: string
+          tax_year?: number | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_tax_documents_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_valuations: {
         Row: {
           as_of_date: string
@@ -2651,6 +2713,10 @@ export type Database = {
           offering_id: string
           requested_by: string | null
           requested_by_email: string | null
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           updated_at: string
         }
@@ -2663,6 +2729,10 @@ export type Database = {
           offering_id: string
           requested_by?: string | null
           requested_by_email?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
         }
@@ -2675,6 +2745,10 @@ export type Database = {
           offering_id?: string
           requested_by?: string | null
           requested_by_email?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
         }
@@ -3811,6 +3885,7 @@ export type Database = {
         Args: { _offering_id: string }
         Returns: boolean
       }
+      can_review_operations: { Args: never; Returns: boolean }
       can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
       diligence_access_open: {
         Args: { _offering_id: string }
@@ -3832,10 +3907,14 @@ export type Database = {
         Args: { p_offering_id: string }
         Returns: {
           ein: string
+          ein_review_status: string
           has_ein: boolean
           offering_id: string
+          review_note: string
+          reviewed_at: string
           ss4: Json
           ss4_generated_at: string
+          ss4_review_status: string
           ss4_storage_path: string
           updated_at: string
         }[]
@@ -3852,6 +3931,21 @@ export type Database = {
         Args: { p_offering_id: string }
         Returns: Json
       }
+      list_entity_reviews: {
+        Args: never
+        Returns: {
+          ein_masked: string
+          ein_review_status: string
+          has_ein: boolean
+          has_ss4_file: boolean
+          offering_id: string
+          review_note: string
+          reviewed_at: string
+          ss4_generated_at: string
+          ss4_review_status: string
+          updated_at: string
+        }[]
+      }
       list_wire_instructions: {
         Args: never
         Returns: {
@@ -3861,6 +3955,15 @@ export type Database = {
         }[]
       }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
+      review_offering_entity: {
+        Args: {
+          p_ein_status: string
+          p_note: string
+          p_offering_id: string
+          p_ss4_status: string
+        }
+        Returns: undefined
+      }
       save_bank_link: {
         Args: {
           p_access_token: string
@@ -3889,7 +3992,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "investor" | "fund_manager"
+      app_role: "admin" | "investor" | "fund_manager" | "operations"
       check_status:
         | "not_started"
         | "pending"
@@ -4034,7 +4137,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "investor", "fund_manager"],
+      app_role: ["admin", "investor", "fund_manager", "operations"],
       check_status: [
         "not_started",
         "pending",
