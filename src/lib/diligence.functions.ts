@@ -3,19 +3,27 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export const DILIGENCE_CATEGORIES = [
-  { value: "formation", label: "Formation & legal", required: true },
-  { value: "offering_terms", label: "Offering terms", required: true },
-  { value: "financials", label: "Financial statements", required: true },
-  { value: "track_record", label: "Track record & performance", required: true },
-  { value: "team", label: "Team & bios", required: true },
-  { value: "strategy", label: "Strategy & market", required: false },
-  { value: "compliance", label: "Compliance & policies", required: false },
-  { value: "tax", label: "Tax & K-1 samples", required: false },
-  { value: "other", label: "Other materials", required: false },
-] as const;
+import {
+  ALL_CATEGORY_VALUES,
+  categoriesFor,
+  normalizeEntityType,
+  type DiligenceEntityType,
+} from "@/lib/diligence-templates";
 
-const categoryValues = DILIGENCE_CATEGORIES.map((c) => c.value) as [string, ...string[]];
+export {
+  ALL_CATEGORY_VALUES,
+  CATEGORY_SETS,
+  DILIGENCE_CATEGORIES,
+  ENTITY_TYPES,
+  categoriesFor,
+  categoryLabel,
+  entityTypeLabel,
+  normalizeEntityType,
+  sectionsFor,
+} from "@/lib/diligence-templates";
+export type { DiligenceEntityType, DiligenceCategory } from "@/lib/diligence-templates";
+
+const categoryValues = ALL_CATEGORY_VALUES;
 
 export type DiligenceDocument = {
   id: string;
@@ -33,9 +41,12 @@ export type DiligenceReadiness = {
   missing: { value: string; label: string }[];
 };
 
-function readiness(documents: DiligenceDocument[]): DiligenceReadiness {
+function readiness(
+  documents: DiligenceDocument[],
+  entityType: DiligenceEntityType = "fund",
+): DiligenceReadiness {
   const present = new Set(documents.map((d) => d.category));
-  const required = DILIGENCE_CATEGORIES.filter((c) => c.required);
+  const required = categoriesFor(entityType).filter((c) => c.required);
   const covered = required.filter((c) => present.has(c.value));
   const missing = required
     .filter((c) => !present.has(c.value))
