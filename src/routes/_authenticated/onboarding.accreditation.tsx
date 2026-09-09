@@ -1,3 +1,4 @@
+import { regTypeLabel, requiresVerifiedAccreditation } from "@/lib/reg-types";
 import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -74,9 +75,8 @@ function AccreditationPage() {
       <OnboardingStepper current="accreditation" />
       <h1 className="mt-8 text-3xl">Accredited investor status</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {data?.offering?.name ?? "This offering"} is offered under Regulation D Rule{" "}
-        {regType === "506c" ? "506(c)" : "506(b)"}
-        {regType === "506c"
+        {data?.offering?.name ?? "This offering"} is offered under {regTypeLabel(regType)}
+        {requiresVerifiedAccreditation(regType)
           ? " — the fund must take reasonable steps to verify your accredited status before accepting capital."
           : " — you may self-certify your accredited status."}
       </p>
@@ -122,7 +122,7 @@ function AccreditationPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : regType === "506c" ? (
+      ) : requiresVerifiedAccreditation(regType) ? (
         <VerificationForm
           documents={data?.documents ?? []}
           onUploaded={() => queryClient.invalidateQueries({ queryKey: ["accreditation"] })}
