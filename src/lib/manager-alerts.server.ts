@@ -109,7 +109,24 @@ function buildEmail(
     };
   }
 
+  if (row.event_kind === "diligence_documents_synced") {
+    const meta = row.metadata ?? {};
+    const names = Array.isArray(meta["file_names"]) ? (meta["file_names"] as string[]) : [];
+    const count = Number(meta["count"] ?? names.length);
+    return {
+      headline: `${count} new diligence file${count === 1 ? "" : "s"} — ${offeringName}`,
+      intro: `${count} file${count === 1 ? " was" : "s were"} added to the ${offeringName} Box folder and ${
+        count === 1 ? "is" : "are"
+      } now listed in the diligence room.`,
+      details: [
+        { label: "Fund", value: offeringName },
+        { label: "Files", value: names.length ? names.join(", ") : `${count} file(s)` },
+      ],
+    };
+  }
+
   if (row.event_kind === "wire_confirmation_submitted") {
+
     const meta = row.metadata ?? {};
     const bank = [meta["sending_bank_name"], meta["sending_account_last4"] ? `****${meta["sending_account_last4"]}` : null]
       .filter(Boolean)
