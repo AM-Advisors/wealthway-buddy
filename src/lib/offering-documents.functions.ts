@@ -56,6 +56,9 @@ export const downloadOfferingDocument = createServerFn({ method: "POST" })
       requiresSignature: doc.requires_signature,
     });
 
+    const { logLegalDocumentView } = await import("./legal-doc-views.server");
+    await logLegalDocumentView(supabase, context.userId, doc as any, "downloaded");
+
     return {
       filename: `${slugify(offering?.name ?? "harmonious")}-${slugify(doc.title)}.pdf`,
       base64: toBase64(bytes),
