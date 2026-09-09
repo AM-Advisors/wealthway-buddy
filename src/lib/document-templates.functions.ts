@@ -281,7 +281,7 @@ export const getFundLegalDocuments = createServerFn({ method: "GET" })
       supabase
         .from("offering_documents")
         .select(
-          "id, title, doc_type, body, requires_signature, sort_order, file_name, file_size_bytes, file_path",
+          "id, title, doc_type, body, requires_signature, sort_order, file_name, file_size_bytes, file_path, current_version, file_updated_at, template_pack",
         )
         .eq("offering_id", selectedId)
         .order("sort_order", { ascending: true }),
@@ -318,6 +318,9 @@ export const getFundLegalDocuments = createServerFn({ method: "GET" })
         file_name: (d.file_name as string) ?? null,
         file_size_bytes: (d.file_size_bytes as number) ?? null,
         has_file: Boolean(d.file_path),
+        version: (d.current_version as number) ?? 0,
+        file_updated_at: (d.file_updated_at as string) ?? null,
+        template_pack: (d.template_pack as string) ?? null,
         signed_at: signedAtByDoc.get(d.id) ?? null,
       })),
       subscriptionConfirmed: Boolean((subscription as any)?.data?.confirmed_at),
