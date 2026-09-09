@@ -631,8 +631,15 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
     });
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
+    if (data.outcome === "approved") {
+      await (await import("@/lib/ownership-email.server")).notifyOwnershipChange(
+        application.offering_id as string,
+        "A wire was confirmed for this fund, so the ownership split has been recalculated.",
+      );
+    }
     return { ok: true };
   });
+
 
 /**
  * Per-fund counts for the manager panel home: applications by stage, documents
