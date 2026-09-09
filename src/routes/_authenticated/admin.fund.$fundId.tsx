@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { getFundPage, getFundDocumentBody } from "@/lib/fund-page.functions";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
+import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +52,7 @@ function FundPage() {
   const getDocPdf = useServerFn(downloadOfferingDocument);
   const getPacket = useServerFn(downloadOfferingPacket);
 
+  const queryClient = useQueryClient();
   const [openDoc, setOpenDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -204,6 +206,16 @@ function FundPage() {
                     {busy === doc.id ? "Preparing…" : "PDF"}
                   </Button>
                 </div>
+              </div>
+              <div className="mt-3">
+                <OfferingDocumentFile
+                  documentId={doc.id}
+                  offeringId={offering.id}
+                  fileName={doc.file_name}
+                  fileSizeBytes={doc.file_size_bytes}
+                  canEdit
+                  onChanged={() => void queryClient.invalidateQueries({ queryKey: ["fund-page"] })}
+                />
               </div>
               {openDoc === doc.id && (
                 <div className="mt-3 max-h-96 overflow-y-auto whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">

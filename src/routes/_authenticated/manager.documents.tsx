@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { OfferingDocumentFile } from "@/components/offering-document-file";
 import {
   Select,
   SelectContent,
@@ -175,10 +176,8 @@ function ManagerDocumentsPage() {
             </p>
           )}
           {documents.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
-            >
+            <div key={doc.id} className="space-y-3 rounded-md border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium">{doc.title}</p>
                 <p className="text-xs text-muted-foreground">
@@ -212,6 +211,15 @@ function ManagerDocumentsPage() {
                   Remove
                 </Button>
               </div>
+              </div>
+              <OfferingDocumentFile
+                documentId={doc.id}
+                offeringId={activeFund.id}
+                fileName={doc.file_name}
+                fileSizeBytes={doc.file_size_bytes}
+                canEdit
+                onChanged={() => void invalidate()}
+              />
             </div>
           ))}
         </CardContent>

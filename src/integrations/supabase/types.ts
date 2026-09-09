@@ -1598,6 +1598,9 @@ export type Database = {
           body: string
           created_at: string
           doc_type: string
+          file_name: string | null
+          file_path: string | null
+          file_size_bytes: number | null
           id: string
           offering_id: string
           requires_signature: boolean
@@ -1608,6 +1611,9 @@ export type Database = {
           body: string
           created_at?: string
           doc_type: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
           id?: string
           offering_id: string
           requires_signature?: boolean
@@ -1618,6 +1624,9 @@ export type Database = {
           body?: string
           created_at?: string
           doc_type?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
           id?: string
           offering_id?: string
           requires_signature?: boolean

@@ -65,7 +65,9 @@ export const getFundPage = createServerFn({ method: "GET" })
       await Promise.all([
         supabase
           .from("offering_documents")
-          .select("id, title, doc_type, requires_signature, sort_order, body, created_at")
+          .select(
+            "id, title, doc_type, requires_signature, sort_order, body, created_at, file_name, file_path, file_size_bytes",
+          )
           .eq("offering_id", data.fundId)
           .order("sort_order", { ascending: true }),
         supabase
