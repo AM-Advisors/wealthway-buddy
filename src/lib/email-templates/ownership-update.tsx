@@ -36,7 +36,7 @@ const teal = '#5DC6D1'
 const ink = '#221F20'
 const muted = '#5b6472'
 
-function Line({ label, value }: { label: string; value?: string }) {
+function Line({ label, value }: { label: string; value?: string | undefined }) {
   if (!value) return null
   return (
     <Row style={{ marginBottom: '6px' }}>
