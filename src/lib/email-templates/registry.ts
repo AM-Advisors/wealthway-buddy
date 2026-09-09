@@ -4,6 +4,7 @@ import { template as documentSigned } from './document-signed'
 import { template as investorInvitation } from './investor-invitation'
 import { template as deliveryAlert } from './delivery-alert'
 import { template as fundInvitation } from './fund-invitation'
+import { template as managerAlert } from './manager-alert'
 
 
 
@@ -30,5 +31,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'investor-invitation': investorInvitation,
   'delivery-alert': deliveryAlert,
   'fund-invitation': fundInvitation,
+  'manager-alert': managerAlert,
 
 }
