@@ -72,10 +72,10 @@ function WireConfirmationPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const confirmations = (data?.wireConfirmations ?? []) as Array<Record<string, any>>;
-  const pending = confirmations.some((c) => c.status === "submitted");
+  const pending = confirmations.some((c) => c["status"] === "submitted");
   const payment = data?.payment as Record<string, any> | null | undefined;
-  const isWire = payment?.method === "wire";
-  const settled = payment?.status === "settled";
+  const isWire = payment?.["method"] === "wire";
+  const settled = payment?.["status"] === "settled";
   const acknowledged = Boolean(data?.acknowledgements?.wire?.current);
   const commitment = money(data?.application?.commitment_cents ?? null);
 
@@ -158,13 +158,13 @@ function WireConfirmationPage() {
               </CardHeader>
               <CardContent className="divide-y">
                 {confirmations.map((c) => {
-                  const meta = STATUS[String(c.status)] ?? STATUS["submitted"]!;
+                  const meta = STATUS[String(c["status"])] ?? STATUS["submitted"]!;
                   const Icon = meta.icon;
                   return (
-                    <div key={String(c.id)} className="space-y-1 py-3 first:pt-0 last:pb-0">
+                    <div key={String(c["id"])} className="space-y-1 py-3 first:pt-0 last:pb-0">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="font-medium text-foreground">
-                          {money(Number(c.amount_cents))} sent {dateLabel(c.sent_on)}
+                          {money(Number(c["amount_cents"]))} sent {dateLabel(c["sent_on"])}
                         </p>
                         <span className={`flex items-center gap-1.5 text-sm ${meta.tone}`}>
                           <Icon className="h-4 w-4" />
@@ -172,13 +172,13 @@ function WireConfirmationPage() {
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {String(c.sending_bank_name)} · account ending {String(c.sending_account_last4)}
-                        {c.bank_reference ? ` · reference ${String(c.bank_reference)}` : ""}
+                        {String(c["sending_bank_name"])} · account ending {String(c["sending_account_last4"])}
+                        {c["bank_reference"] ? ` · reference ${String(c["bank_reference"])}` : ""}
                       </p>
-                      {c.review_notes ? (
+                      {c["review_notes"] ? (
                         <p className="text-sm text-foreground">
                           <span className="font-medium">Note from Harmonious:</span>{" "}
-                          {String(c.review_notes)}
+                          {String(c["review_notes"])}
                         </p>
                       ) : null}
                     </div>
