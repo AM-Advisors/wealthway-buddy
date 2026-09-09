@@ -326,6 +326,90 @@ function DiligenceRoomPage() {
   );
 }
 
+/* ------------------------------ Overview ------------------------------ */
+
+function money(cents?: number | null) {
+  if (cents == null) return null;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(cents) / 100);
+}
+
+function OverviewTab({ data, access }: { data: any; access: any }) {
+  const offering = data?.offering ?? {};
+  const readiness = data?.readiness ?? { score: 0, covered: [], missing: [] };
+  const categories: any[] = data?.categories ?? [];
+  const documents: any[] = data?.documents ?? [];
+  const required = categories.filter((c) => c.required);
+  const covered: string[] = readiness.covered ?? [];
+
+  const facts = [
+    { label: "Structure", value: entityTypeLabel(data?.entityType ?? "fund") },
+    { label: "Exemption", value: offering.reg_type ? `Reg D ${offering.reg_type}` : null },
+    { label: "Minimum investment", value: money(offering.min_investment_cents) },
+    { label: "Target raise", value: money(offering.target_raise_cents) },
+    { label: "Status", value: offering.is_open === false ? "Closed to new investors" : "Open to new investors" },
+    { label: "Room opened", value: data?.room?.created_at ? when(data.room.created_at) : null },
+  ].filter((f) => f.value);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{offering.name}</CardTitle>
+          <CardDescription>
+            {offering.summary ?? "Confidential materials for prospective and existing investors."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {data?.room?.intro ? (
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">{data.room.intro}</p>
+          ) : null}
+          <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {facts.map((f) => (
+              <div key={f.label}>
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">{f.label}</dt>
+                <dd className="text-sm font-medium">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">What has been filed</CardTitle>
+          <CardDescription>
+            {covered.length} of {required.length} core sections complete · {documents.length}{" "}
+            {documents.length === 1 ? "document" : "documents"} in the room
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Progress value={readiness.score ?? 0} />
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {required.map((c) => {
+              const done = covered.includes(c.value);
+              return (
+                <li key={c.value} className="flex items-center justify-between rounded-md border px-3 py-2">
+                  <span className="text-sm">{c.label}</span>
+                  <Badge variant={done ? "secondary" : "outline"}>{done ? "Filed" : "Pending"}</Badge>
+                </li>
+              );
+            })}
+          </ul>
+          {access?.accepted ? (
+            <p className="text-xs text-muted-foreground">
+              Confidentiality agreement accepted{access.acceptedAt ? ` ${when(access.acceptedAt)}` : ""}.
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 /* ------------------------------ Documents ------------------------------ */
 
 function DocumentsTab({
