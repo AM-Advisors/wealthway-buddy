@@ -65,6 +65,13 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
           console.error("[box-sign] webhook processing failed", e);
         }
 
+        try {
+          const { drainManagerAlerts } = await import("@/lib/manager-alerts.server");
+          await drainManagerAlerts();
+        } catch (e) {
+          console.error("[box-sign] alert drain failed", e);
+        }
+
         return new Response("ok");
       },
     },
