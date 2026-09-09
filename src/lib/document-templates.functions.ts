@@ -189,18 +189,37 @@ export const applyTemplatePack = createServerFn({ method: "POST" })
         });
       if (uploadError) throw new Error(uploadError.message);
 
-      const { error: insertError } = await supabaseAdmin.from("offering_documents").insert({
-        offering_id: data.offering_id,
-        title: item.title,
-        doc_type: item.doc_type,
-        body: item.body,
-        requires_signature: item.requires_signature,
-        sort_order: nextOrder,
-        file_name: item.file_name,
-        file_path: filePath,
-        file_size_bytes: bytes.byteLength,
-      });
+      const { data: inserted, error: insertError } = await supabaseAdmin
+        .from("offering_documents")
+        .insert({
+          offering_id: data.offering_id,
+          title: item.title,
+          doc_type: item.doc_type,
+          body: item.body,
+          requires_signature: item.requires_signature,
+          sort_order: nextOrder,
+          file_name: item.file_name,
+          file_path: filePath,
+          file_size_bytes: bytes.byteLength,
+          template_pack: pack.id,
+          template_key: item.title,
+        })
+        .select("id")
+        .single();
       if (insertError) throw new Error(insertError.message);
+
+      const { recordDocumentVersion } = await import("./document-versions.server");
+      await recordDocumentVersion({
+        offeringId: data.offering_id,
+        documentId: (inserted as any).id,
+        filePath,
+        fileName: item.file_name,
+        fileSizeBytes: bytes.byteLength,
+        source: "template",
+        note: `Added from ${pack.name} (${pack.source})`,
+        userId: context.userId,
+      });
+
 
       nextOrder += 1;
       added.push(item.title);
