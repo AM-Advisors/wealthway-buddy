@@ -164,6 +164,148 @@ export const getQuestionBoard = createServerFn({ method: "POST" })
     };
   });
 
+/* ------------------------------------------------------------------ */
+/* Scoreboard: who answered what, with a score and the outstanding list */
+/* ------------------------------------------------------------------ */
+
+export const getQuestionScoreboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have access to this fund's questions.");
+    }
+
+    const [{ data: questions }, { data: assignments }, { data: responses }] = await Promise.all([
+      supabase
+        .from("diligence_request_questions")
+        .select("id, prompt, category, is_required, sort_order, created_at")
+        .eq("offering_id", data.offering_id)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("diligence_question_assignments")
+        .select("*")
+        .eq("offering_id", data.offering_id),
+      supabase
+        .from("diligence_question_responses")
+        .select("assignment_id, from_reviewer, created_at")
+        .eq("offering_id", data.offering_id)
+        .order("created_at", { ascending: true }),
+    ]);
+
+    const qRows = (questions ?? []) as any[];
+    const aRows = (assignments ?? []) as any[];
+    const rRows = (responses ?? []) as any[];
+
+    const ids = [...new Set(aRows.map((a) => a.investor_user_id))];
+    let profiles: any[] = [];
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, legal_name, email")
+        .in("user_id", ids);
+      profiles = (profs ?? []) as any[];
+    }
+    const who = (id: string) => {
+      const p = profiles.find((x) => x.user_id === id);
+      return { name: p?.legal_name ?? null, email: p?.email ?? null };
+    };
+
+    const answersFor = (assignmentId: string) =>
+      rRows.filter((r) => r.assignment_id === assignmentId && !r.from_reviewer);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const promptOf = new Map(qRows.map((q) => [q.id, q]));
+
+    const people = ids
+      .map((id) => {
+        const mine = aRows.filter((a) => a.investor_user_id === id);
+        const accepted = mine.filter((a) => a.status === "accepted");
+        const answered = mine.filter((a) => a.status === "answered");
+        const followUp = mine.filter((a) => a.status === "needs_followup");
+        const waiting = mine.filter((a) => a.status === "assigned");
+        const points = accepted.length + answered.length * 0.5;
+        const score = mine.length ? Math.round((points / mine.length) * 100) : 0;
+
+        const outstanding = [...waiting, ...followUp].map((a) => ({
+          assignment_id: a.id,
+          question_id: a.question_id,
+          prompt: promptOf.get(a.question_id)?.prompt ?? "Question",
+          category: promptOf.get(a.question_id)?.category ?? "general",
+          status: a.status as string,
+          due_date: a.due_date as string | null,
+          overdue: Boolean(a.due_date && a.due_date < today && a.status !== "accepted"),
+        }));
+
+        const trail = mine
+          .flatMap((a) =>
+            answersFor(a.id).map((r) => ({
+              at: r.created_at as string,
+              prompt: promptOf.get(a.question_id)?.prompt ?? "Question",
+              status: a.status as string,
+            })),
+          )
+          .sort((x, y) => (x.at < y.at ? 1 : -1))
+          .slice(0, 25);
+
+        const lastAnswerAt = trail[0]?.at ?? null;
+
+        return {
+          user_id: id,
+          ...who(id),
+          assigned: mine.length,
+          accepted: accepted.length,
+          answered: answered.length,
+          followUp: followUp.length,
+          waiting: waiting.length,
+          outstandingCount: outstanding.length,
+          overdueCount: outstanding.filter((o) => o.overdue).length,
+          score,
+          lastAnswerAt,
+          outstanding,
+          trail,
+        };
+      })
+      .sort((a, b) => a.score - b.score || (a.name ?? a.email ?? "").localeCompare(b.name ?? b.email ?? ""));
+
+    const questionRows = qRows.map((q) => {
+      const mine = aRows.filter((a) => a.question_id === q.id);
+      const done = mine.filter((a) => a.status === "accepted" || a.status === "answered").length;
+      return {
+        id: q.id,
+        prompt: q.prompt,
+        category: q.category,
+        is_required: q.is_required,
+        assigned: mine.length,
+        answered: done,
+        unanswered: mine.length - done,
+        completion: mine.length ? Math.round((done / mine.length) * 100) : 0,
+      };
+    });
+
+    const totalAssigned = aRows.length;
+    const totalPoints =
+      aRows.filter((a) => a.status === "accepted").length +
+      aRows.filter((a) => a.status === "answered").length * 0.5;
+
+    return {
+      people,
+      questions: questionRows,
+      totals: {
+        people: people.length,
+        assigned: totalAssigned,
+        outstanding: aRows.filter((a) => a.status === "assigned" || a.status === "needs_followup")
+          .length,
+        overdue: aRows.filter(
+          (a) => a.due_date && a.due_date < today && a.status !== "accepted",
+        ).length,
+        score: totalAssigned ? Math.round((totalPoints / totalAssigned) * 100) : 0,
+      },
+    };
+  });
+
 export const saveQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>

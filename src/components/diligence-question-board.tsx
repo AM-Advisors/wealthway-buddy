@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DiligenceQuestionScoreboard } from "@/components/diligence-question-scoreboard";
 import {
   answerQuestion,
   assignQuestion,
@@ -508,7 +509,10 @@ export function DiligenceQuestionBoard({
   canManage: boolean;
 }) {
   return canManage ? (
-    <ManagerBoard offeringId={offeringId} />
+    <div className="space-y-6">
+      <DiligenceQuestionScoreboard offeringId={offeringId} />
+      <ManagerBoard offeringId={offeringId} />
+    </div>
   ) : (
     <InvestorQuestions offeringId={offeringId} />
   );
