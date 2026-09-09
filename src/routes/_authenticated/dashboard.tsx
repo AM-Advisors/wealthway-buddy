@@ -275,6 +275,9 @@ function Dashboard() {
           <Button asChild variant="outline" size="sm">
             <Link to="/documents">View all documents</Link>
           </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/diligence">Due diligence</Link>
+          </Button>
         </div>
         <Card className="mt-4">
           <CardContent className="pt-6">
