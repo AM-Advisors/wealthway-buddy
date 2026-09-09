@@ -1495,14 +1495,31 @@ function ActivityTab({ offeringId }: { offeringId: string }) {
           <p className="text-sm text-muted-foreground">Nothing recorded yet.</p>
         ) : (
           <ul className="divide-y rounded-md border">
-            {events.map((e) => (
-              <li key={e.id} className="p-3">
-                <p className="text-sm">{e.summary}</p>
-                <p className="text-xs text-muted-foreground">
-                  {e.actor_name || e.actor_email || "Someone"} · {when(e.created_at)}
-                </p>
-              </li>
-            ))}
+            {events.map((e) => {
+              const meta = (e.metadata ?? {}) as any;
+              const roleLabel = meta.actor_role_label as string | undefined;
+              return (
+                <li key={e.id} className="p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm">{e.summary}</p>
+                    {e.event_type === "assistant_question" && roleLabel ? (
+                      <Badge variant={meta.actor_role === "investor" ? "outline" : "secondary"}>
+                        {roleLabel}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  {e.event_type === "assistant_question" && meta.answer_preview ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Assistant answered: {String(meta.answer_preview)}
+                      {meta.citation_count ? ` · ${meta.citation_count} citation(s)` : ""}
+                    </p>
+                  ) : null}
+                  <p className="text-xs text-muted-foreground">
+                    {e.actor_name || e.actor_email || "Someone"} · {when(e.created_at)}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>
