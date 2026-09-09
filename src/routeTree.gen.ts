@@ -26,6 +26,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
+import { Route as AuthenticatedAdminDocumentLogRouteImport } from './routes/_authenticated/admin.document-log'
 import { Route as AuthenticatedAdminEmailPreviewRouteImport } from './routes/_authenticated/admin.email-preview'
 import { Route as AuthenticatedAdminFundsRouteImport } from './routes/_authenticated/admin.funds'
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
@@ -140,6 +141,12 @@ const AuthenticatedAdminAccessRoute =
   AuthenticatedAdminAccessRouteImport.update({
     id: '/admin/access',
     path: '/admin/access',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDocumentLogRoute =
+  AuthenticatedAdminDocumentLogRouteImport.update({
+    id: '/admin/document-log',
+    path: '/admin/document-log',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminEmailPreviewRoute =
@@ -318,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/auth/': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
+  '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -363,6 +371,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
+  '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -411,6 +420,7 @@ export interface FileRoutesById {
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
+  '/_authenticated/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/_authenticated/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/_authenticated/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
@@ -459,6 +469,7 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/admin/$applicationId'
     | '/admin/access'
+    | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funds'
     | '/admin/funnel'
@@ -504,6 +515,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin/$applicationId'
     | '/admin/access'
+    | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funds'
     | '/admin/funnel'
@@ -551,6 +563,7 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
+    | '/_authenticated/admin/document-log'
     | '/_authenticated/admin/email-preview'
     | '/_authenticated/admin/funds'
     | '/_authenticated/admin/funnel'
@@ -718,6 +731,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/access'
       fullPath: '/admin/access'
       preLoaderRoute: typeof AuthenticatedAdminAccessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/document-log': {
+      id: '/_authenticated/admin/document-log'
+      path: '/admin/document-log'
+      fullPath: '/admin/document-log'
+      preLoaderRoute: typeof AuthenticatedAdminDocumentLogRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/email-preview': {
@@ -927,6 +947,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
+  AuthenticatedAdminDocumentLogRoute: typeof AuthenticatedAdminDocumentLogRoute
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
   AuthenticatedAdminFundsRoute: typeof AuthenticatedAdminFundsRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
@@ -958,6 +979,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
+  AuthenticatedAdminDocumentLogRoute: AuthenticatedAdminDocumentLogRoute,
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
   AuthenticatedAdminFundsRoute: AuthenticatedAdminFundsRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
