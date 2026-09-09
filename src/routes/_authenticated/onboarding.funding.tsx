@@ -318,8 +318,8 @@ function FundingStep() {
           <CardHeader>
             <CardTitle className="text-base">Funding is not open yet</CardTitle>
             <CardDescription>
-              Capital can only be accepted once compliance has approved your accreditation and your signed
-              subscription documents.
+              Capital can only be accepted once the fund team has approved your identity application and
+              accreditation, and your subscription documents are signed.
             </CardDescription>
           </CardHeader>
           <CardContent>
