@@ -8,6 +8,7 @@ import { getPortal } from "@/lib/portal.functions";
 import { getFunding } from "@/lib/funding.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
 import { listMyUploads } from "@/lib/investor-uploads.functions";
+import { getClosingDocumentUrl, getMyClosing } from "@/lib/closing.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
@@ -730,6 +731,79 @@ function StatusRow({
             <Button asChild variant="outline" size="sm">
               <Link to={to}>{cta}</Link>
             </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ClosingCard() {
+  const loadClosing = useServerFn(getMyClosing);
+  const openDocUrl = useServerFn(getClosingDocumentUrl);
+  const { data } = useQuery({
+    queryKey: ["my-closing"],
+    queryFn: () => loadClosing(),
+    retry: false,
+  });
+
+  const closing = data?.closing;
+  if (!closing) return null;
+  const documents = (data?.documents ?? []) as Array<{
+    id: string;
+    title: string;
+    file_name: string;
+    uploaded_at: string;
+  }>;
+
+  async function openDoc(id: string) {
+    try {
+      const res = await openDocUrl({ data: { id } });
+      window.open((res as { url: string }).url, "_blank", "noopener");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not open that file.");
+    }
+  }
+
+  return (
+    <Card className="mt-6 border-primary/40">
+      <CardHeader>
+        <CardTitle>Your investment has closed</CardTitle>
+        <CardDescription>
+          {closing.offeringName} — closed on{" "}
+          {new Date(closing.closingDate + "T00:00:00").toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          , with {money(closing.fundedAmountCents)} received in full.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {closing.note ? <p className="text-sm">{closing.note}</p> : null}
+        <div>
+          <p className="text-sm font-medium">Final documents</p>
+          {documents.length === 0 ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your final documents will appear here shortly.
+            </p>
+          ) : (
+            <ul className="mt-2 space-y-2">
+              {documents.map((d) => (
+                <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="truncate">
+                    {d.title}
+                    <span className="text-muted-foreground">
+                      {" "}
+                      · {new Date(d.uploaded_at).toLocaleDateString()}
+                    </span>
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => openDoc(d.id)}>
+                    Open
+                  </Button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </CardContent>
