@@ -46,6 +46,7 @@ import {
 } from "@/lib/diligence.functions";
 import { CapTableSection } from "@/components/cap-table-section";
 import { LiveCapTable } from "@/components/live-cap-table";
+import { LegalDocumentReadership } from "@/components/legal-document-readership";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
