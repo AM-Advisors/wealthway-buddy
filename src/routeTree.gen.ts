@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
+import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
@@ -114,6 +115,12 @@ const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFundDocumentsRoute =
+  AuthenticatedFundDocumentsRouteImport.update({
+    id: '/fund-documents',
+    path: '/fund-documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -449,6 +456,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -514,6 +522,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -582,6 +591,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
@@ -650,6 +660,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/dashboard'
     | '/documents'
+    | '/fund-documents'
     | '/portal'
     | '/subscription'
     | '/wire'
@@ -715,6 +726,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/dashboard'
     | '/documents'
+    | '/fund-documents'
     | '/portal'
     | '/subscription'
     | '/wire'
@@ -782,6 +794,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/dashboard'
     | '/_authenticated/documents'
+    | '/_authenticated/fund-documents'
     | '/_authenticated/portal'
     | '/_authenticated/subscription'
     | '/_authenticated/wire'
@@ -915,6 +928,13 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/documents'
       preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fund-documents': {
+      id: '/_authenticated/fund-documents'
+      path: '/fund-documents'
+      fullPath: '/fund-documents'
+      preLoaderRoute: typeof AuthenticatedFundDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/portal': {
@@ -1322,6 +1342,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
@@ -1372,6 +1393,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
