@@ -196,23 +196,19 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
                           <p className="text-xs text-muted-foreground">
                             {doc.title} · signed {when(doc.signedAt)}
                           </p>
-                          <p className="text-xs">
+                          <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                             {doc.inBox ? (
-                              <span className="text-muted-foreground">
-                                <Badge variant="secondary" className="mr-1.5">
-                                  In Box
-                                </Badge>
-                                filed {when(doc.boxUploadedAt)}
-                              </span>
+                              <>
+                                <Badge variant="secondary">In Box</Badge>
+                                <span>filed {when(doc.boxUploadedAt)}</span>
+                              </>
                             ) : (
-                              <span className="text-muted-foreground">
-                                <Badge variant="outline" className="mr-1.5">
-                                  Not in Box yet
-                                </Badge>
-                                {doc.boxError ? doc.boxError : "filing…"}
-                              </span>
+                              <>
+                                <Badge variant="outline">Not in Box yet</Badge>
+                                <span>{doc.boxError ? doc.boxError : "filing…"}</span>
+                              </>
                             )}
-                          </p>
+                          </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {!doc.inBox && (
