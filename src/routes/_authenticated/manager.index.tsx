@@ -51,6 +51,11 @@ const TOOLS = [
   },
   { to: "/manager/documents", title: "Fund documents", blurb: "Add and edit what investors sign." },
   {
+    to: "/manager/profile",
+    title: "Your profile",
+    blurb: "Update your contact details and see the funds you're assigned to.",
+  },
+  {
     to: "/manager/closing",
     title: "Closing desk",
     blurb: "Confirm funds landed in full, set the closing date and share final documents.",
