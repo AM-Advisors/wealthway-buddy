@@ -2738,6 +2738,62 @@ export type Database = {
           },
         ]
       }
+      offering_timeline_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          event_date: string
+          event_time: string
+          id: string
+          is_published: boolean
+          kind: string
+          offering_id: string
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          event_date: string
+          event_time?: string
+          id?: string
+          is_published?: boolean
+          kind?: string
+          offering_id: string
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          event_date?: string
+          event_time?: string
+          id?: string
+          is_published?: boolean
+          kind?: string
+          offering_id?: string
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_timeline_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offerings: {
         Row: {
           closing_cost_cents: number

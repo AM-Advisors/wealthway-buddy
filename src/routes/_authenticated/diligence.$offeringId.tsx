@@ -70,6 +70,8 @@ import { DiligenceAccessPanel } from "@/components/diligence-access-panel";
 import { RoomKycApplication } from "@/components/room-kyc-application";
 import { PitchDeckPanel } from "@/components/pitch-deck-panel";
 import { OfferingStatementView } from "@/components/offering-statement-view";
+import { FundTimeline } from "@/components/fund-timeline";
+
 
 import { getStepRail } from "@/lib/step-rail.functions";
 
@@ -398,6 +400,8 @@ function DiligenceRoomPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           {canManage ? null : <TabsTrigger value="application">Your application</TabsTrigger>}
           <TabsTrigger value="terms">Offering terms</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
+
           <TabsTrigger value="documents">Documents</TabsTrigger>
 
           <TabsTrigger value="deck">Pitch deck</TabsTrigger>
@@ -422,6 +426,10 @@ function DiligenceRoomPage() {
         <TabsContent value="terms" className="mt-6">
           <OfferingStatementView offeringId={offeringId} canManage={canManage} />
         </TabsContent>
+        <TabsContent value="timeline" className="mt-6">
+          <FundTimeline offeringId={offeringId} canManage={canManage} />
+        </TabsContent>
+
         <TabsContent value="documents" className="mt-6">
 
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
