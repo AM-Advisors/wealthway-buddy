@@ -149,7 +149,7 @@ export const getApplicationDetail = createServerFn({ method: "GET" })
         supabase.from("subscriptions").select("*").eq("application_id", id).maybeSingle(),
         supabase
           .from("document_signatures")
-          .select("id, signer_name, signer_email, signature_type, signature_value, initials, document_hash, pdf_path, signed_at, offering_document_id, provider, provider_status, provider_completed_at, provider_agreement_id")
+          .select("id, signer_name, signer_email, signature_type, signature_value, initials, document_hash, pdf_path, signed_at, offering_document_id, provider, provider_status, provider_sent_at, provider_viewed_at, provider_completed_at, provider_agreement_id")
           .eq("application_id", id)
           .order("signed_at", { ascending: true }),
         supabase

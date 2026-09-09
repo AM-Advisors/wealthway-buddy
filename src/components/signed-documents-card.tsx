@@ -72,14 +72,18 @@ export function SignedDocumentsCard({ offeringId }: { offeringId: string }) {
                 {doc.title} · {doc.investorName}
               </p>
               <p className="text-xs text-muted-foreground">
-                {doc.pending ? `sent for signature ${when(doc.signedAt)}` : `signed ${when(doc.signedAt)}`}
+                {doc.pending
+                  ? `sent for signature ${when(doc.sentAt ?? doc.signedAt)}${
+                      doc.openedAt ? ` · opened ${when(doc.openedAt)}` : " · not opened yet"
+                    }`
+                  : `signed ${when(doc.signedAt)}`}
                 {doc.inBox ? ` · filed in Box ${when(doc.boxUploadedAt)}` : ""}
                 {doc.boxError ? ` · Box error: ${doc.boxError}` : ""}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {doc.pending ? (
-                <Badge variant="outline">Awaiting signature</Badge>
+                <Badge variant="outline">{doc.openedAt ? "Opened, not signed" : "Awaiting signature"}</Badge>
               ) : doc.inBox ? (
                 <Badge variant="default">In Box</Badge>
               ) : (
