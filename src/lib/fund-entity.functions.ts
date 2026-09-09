@@ -152,7 +152,7 @@ export const getFundEntity = createServerFn({ method: "POST" })
       details: {
         has_ein: Boolean(detail.has_ein),
         ein: (detail.ein ?? "") as string,
-        ss4: (detail.ss4 ?? {}) as Record<string, unknown>,
+        ss4: (detail.ss4 ?? {}) as Record<string, string | boolean>,
         ss4_generated_at: (detail.ss4_generated_at ?? null) as string | null,
         has_ss4_file: Boolean(detail.ss4_storage_path),
       },
