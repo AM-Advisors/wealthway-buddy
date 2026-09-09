@@ -36,7 +36,7 @@ export function SignedDocumentsCard({ offeringId }: { offeringId: string }) {
   });
 
   const archiveMutation = useMutation({
-    mutationFn: (signatureId: string) => archiveToBox({ data: { signatureId } }),
+    mutationFn: (signatureId: string) => archiveToBox({ data: { signature_id: signatureId } }),
     onSuccess: () => {
       toast.success("Filed in Box.");
       void queryClient.invalidateQueries({ queryKey: ["fund-signed-documents", offeringId] });
