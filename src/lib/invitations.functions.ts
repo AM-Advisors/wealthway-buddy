@@ -261,7 +261,12 @@ async function sendInvitationEmail(opts: {
   invitedByName: string;
 }) {
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  const { buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
   const portalUrl = await setPasswordLink(opts.supabaseAdmin, opts.email);
+  const pixelUrl = await buildOpenPixelUrl({
+    recipient: opts.email,
+    template: "fund-invitation",
+  });
   const result = await sendTemplateEmail("fund-invitation", opts.email, {
     templateData: {
       inviteeName: opts.name || opts.email,
@@ -270,6 +275,7 @@ async function sendInvitationEmail(opts: {
       invitedByName: opts.invitedByName,
       portalUrl,
       signInUrl: `${PORTAL_ORIGIN}${opts.role === "fund_manager" ? "/manager-login" : "/auth"}`,
+      pixelUrl,
     },
   });
   return result.sent;

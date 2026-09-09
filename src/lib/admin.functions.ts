@@ -367,6 +367,13 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
     const offeringName = (offering as any)?.offerings?.name ?? "Harmonious";
 
     try {
+      const { buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
+      const pixelUrl = await buildOpenPixelUrl({
+        recipient: to,
+        template: "investor-message",
+        emailId: row.id as string,
+        applicationId: data.applicationId,
+      });
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       const result = await sendTemplateEmail("investor-message", to, {
         templateData: {
@@ -374,6 +381,7 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
           subject: data.subject,
           body: data.body,
           offeringName,
+          pixelUrl,
         },
         idempotencyKey: `investor-email-${row.id}`,
       });
@@ -446,12 +454,17 @@ export const sendOnboardingInvitation = createServerFn({ method: "POST" })
       }
     }
 
-    const { buildTrackedUrl } = await import("@/lib/email-tracking.server");
+    const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
     const portalUrl = await buildTrackedUrl({
       url: "https://onboard.harmonious.co/dashboard",
       recipient: data.to,
       template: "investor-invitation",
       label: "Begin onboarding",
+    });
+    const pixelUrl = await buildOpenPixelUrl({
+      recipient: data.to,
+      template: "investor-invitation",
+      ...(data.applicationId ? { applicationId: data.applicationId } : {}),
     });
 
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
@@ -461,6 +474,7 @@ export const sendOnboardingInvitation = createServerFn({ method: "POST" })
         offeringName,
         portalUrl,
         contactEmail: "operations@harmonious.co",
+        pixelUrl,
       },
       idempotencyKey: `invitation-${data.to}-${Date.now()}`,
     });
