@@ -173,7 +173,7 @@ export const getFunding = createServerFn({ method: "GET" })
 
     const { data: offeringRow } = await supabase
       .from("offerings")
-      .select("id, name, min_investment_cents")
+      .select("id, name, min_investment_cents, target_raise_cents")
       .eq("id", application.offering_id)
       .maybeSingle();
 
