@@ -222,6 +222,43 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       .map(([label, v]) => ({ label, clicks: v.clicks, people: v.people.size }))
       .sort((a, b) => b.clicks - a.clicks);
 
+    // Per-email engagement: which onboarding emails get opened and clicked.
+    const emailLabels: Record<string, string> = {
+      "investor-invitation": "Onboarding invitation",
+      "investor-message": "Message from your team",
+      "fund-invitation": "Fund invitation",
+      "document-signed": "Document signed confirmation",
+    };
+    const byTemplate = new Map<
+      string,
+      { opens: number; openPeople: Set<string>; clicks: number; clickPeople: Set<string> }
+    >();
+    const bucket = (name: string) => {
+      if (!byTemplate.has(name))
+        byTemplate.set(name, { opens: 0, openPeople: new Set(), clicks: 0, clickPeople: new Set() });
+      return byTemplate.get(name)!;
+    };
+    for (const o of opens) {
+      const b = bucket((o.template as string) ?? "other");
+      b.opens += 1;
+      b.openPeople.add(String(o.recipient).toLowerCase());
+    }
+    for (const c of clicks) {
+      const b = bucket((c.template as string) ?? "other");
+      b.clicks += 1;
+      b.clickPeople.add(String(c.recipient).toLowerCase());
+    }
+    const emailBreakdown = [...byTemplate.entries()]
+      .map(([name, v]) => ({
+        template: name,
+        label: emailLabels[name] ?? "Other email",
+        opens: v.opens,
+        openedBy: v.openPeople.size,
+        clicks: v.clicks,
+        clickedBy: v.clickPeople.size,
+      }))
+      .sort((a, b) => b.openedBy + b.clickedBy - (a.openedBy + a.clickedBy));
+
     const stalled = rows
       .filter((r) => !r.funded)
       .sort((a, b) => (a.updatedAt < b.updatedAt ? -1 : 1))
@@ -232,9 +269,11 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       steps,
       counts,
       linkBreakdown,
+      emailBreakdown,
       totalClicks: clicks.length,
+      totalOpens: opens.length,
       stalled,
-      opensAvailable: false,
+      opensAvailable: true,
     };
   });
 
