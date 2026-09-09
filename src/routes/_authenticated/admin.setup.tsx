@@ -86,7 +86,7 @@ function SetupPage() {
     name: "",
     slug: "",
     summary: "",
-    reg_type: "506b" as "506b" | "506c",
+    reg_type: "506b" as RegTypeValue,
     min_investment: "50000",
     target_raise: "",
     is_open: true,
@@ -289,16 +289,20 @@ function SetupPage() {
                 <Label>Exemption</Label>
                 <Select
                   value={fund.reg_type}
-                  onValueChange={(v) => setFund({ ...fund, reg_type: v as "506b" | "506c" })}
+                  onValueChange={(v) => setFund({ ...fund, reg_type: v as RegTypeValue })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="506b">Reg D 506(b) — private</SelectItem>
-                    <SelectItem value="506c">Reg D 506(c) — publicly marketed</SelectItem>
+                    {REG_TYPES.map((rt) => (
+                      <SelectItem key={rt.value} value={rt.value}>
+                        {rt.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">{regTypeDescription(fund.reg_type)}</p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="min">Minimum investment ($)</Label>

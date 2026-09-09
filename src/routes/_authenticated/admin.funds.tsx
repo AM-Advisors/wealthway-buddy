@@ -14,6 +14,12 @@ import {
   saveOfferingDocument,
 } from "@/lib/offerings.functions";
 import { FIELD_LABELS, type OfferingAuditEventType } from "@/lib/offering-audit";
+import {
+  REG_TYPES,
+  regTypeDescription,
+  regTypeLabel,
+  type RegTypeValue,
+} from "@/lib/reg-types";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
