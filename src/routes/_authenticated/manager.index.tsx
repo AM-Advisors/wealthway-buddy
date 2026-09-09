@@ -106,6 +106,16 @@ const TOOLS = [
     blurb: "Equity value and value per share, live as wires land.",
   },
   {
+    to: "/manager/public-page",
+    title: "Public fund page",
+    blurb: "Show the deck, documents and cap table to visitors.",
+  },
+  {
+    to: "/manager/requests",
+    title: "Access requests",
+    blurb: "People who asked for the full materials.",
+  },
+  {
     to: "/manager/performance",
     title: "Fund performance",
     blurb: "Return, IRR and cash flow over time.",

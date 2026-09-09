@@ -12,6 +12,7 @@ import { SignedDocumentsCard } from "@/components/signed-documents-card";
 import { PacketEmailCard } from "@/components/packet-email-card";
 import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
+import { PublicPageSettings } from "@/components/public-page-settings";
 
 import { Badge } from "@/components/ui/badge";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
@@ -260,6 +261,12 @@ function FundPage() {
       <div className="mt-6">
         <PacketEmailCard fundId={offering.id} />
       </div>
+
+      <div className="mt-6">
+        <PublicPageSettings offeringId={offering.id} />
+      </div>
+
+
 
 
       <Card className="mt-6">

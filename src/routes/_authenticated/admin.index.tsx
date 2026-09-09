@@ -126,6 +126,9 @@ function AdminQueue() {
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/performance">Fund performance</Link>
               </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/admin/requests">Access requests</Link>
+              </Button>
 
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/permissions">Document permissions</Link>

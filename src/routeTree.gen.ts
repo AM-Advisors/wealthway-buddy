@@ -27,6 +27,7 @@ import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_aut
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
+import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
@@ -45,6 +46,7 @@ import { Route as AuthenticatedAdminOfferingStatementRouteImport } from './route
 import { Route as AuthenticatedAdminPerformanceRouteImport } from './routes/_authenticated/admin.performance'
 import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_authenticated/admin.permissions'
 import { Route as AuthenticatedAdminPortfolioValueRouteImport } from './routes/_authenticated/admin.portfolio-value'
+import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
 import { Route as AuthenticatedAdminTimelineRouteImport } from './routes/_authenticated/admin.timeline'
@@ -70,6 +72,8 @@ import { Route as AuthenticatedManagerPerformanceRouteImport } from './routes/_a
 import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_authenticated/manager.permissions'
 import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes/_authenticated/manager.portfolio-value'
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
+import { Route as AuthenticatedManagerPublicPageRouteImport } from './routes/_authenticated/manager.public-page'
+import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
@@ -181,6 +185,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => AuthRoute,
 } as any)
+const FundSlugRoute = FundSlugRouteImport.update({
+  id: '/fund/$slug',
+  path: '/fund/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -284,6 +293,12 @@ const AuthenticatedAdminPortfolioValueRoute =
   AuthenticatedAdminPortfolioValueRouteImport.update({
     id: '/admin/portfolio-value',
     path: '/admin/portfolio-value',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRequestsRoute =
+  AuthenticatedAdminRequestsRouteImport.update({
+    id: '/admin/requests',
+    path: '/admin/requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminSecurityRoute =
@@ -434,6 +449,18 @@ const AuthenticatedManagerProfileRoute =
     path: '/manager/profile',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerPublicPageRoute =
+  AuthenticatedManagerPublicPageRouteImport.update({
+    id: '/manager/public-page',
+    path: '/manager/public-page',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerRequestsRoute =
+  AuthenticatedManagerRequestsRouteImport.update({
+    id: '/manager/requests',
+    path: '/manager/requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerTimelineRoute =
   AuthenticatedManagerTimelineRouteImport.update({
     id: '/manager/timeline',
@@ -553,6 +580,7 @@ export interface FileRoutesByFullPath {
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/fund/$slug': typeof FundSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -571,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
+  '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
@@ -594,6 +623,8 @@ export interface FileRoutesByFullPath {
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
+  '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
+  '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -632,6 +663,7 @@ export interface FileRoutesByTo {
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/fund/$slug': typeof FundSlugRoute
   '/auth': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -650,6 +682,7 @@ export interface FileRoutesByTo {
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
+  '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
@@ -673,6 +706,8 @@ export interface FileRoutesByTo {
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
+  '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
+  '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -714,6 +749,7 @@ export interface FileRoutesById {
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/fund/$slug': typeof FundSlugRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -732,6 +768,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/_authenticated/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/_authenticated/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
+  '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/admin/timeline': typeof AuthenticatedAdminTimelineRoute
@@ -755,6 +792,8 @@ export interface FileRoutesById {
   '/_authenticated/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/_authenticated/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
+  '/_authenticated/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
+  '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -796,6 +835,7 @@ export interface FileRouteTypes {
     | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/fund/$slug'
     | '/auth/'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -814,6 +854,7 @@ export interface FileRouteTypes {
     | '/admin/performance'
     | '/admin/permissions'
     | '/admin/portfolio-value'
+    | '/admin/requests'
     | '/admin/security'
     | '/admin/setup'
     | '/admin/timeline'
@@ -837,6 +878,8 @@ export interface FileRouteTypes {
     | '/manager/permissions'
     | '/manager/portfolio-value'
     | '/manager/profile'
+    | '/manager/public-page'
+    | '/manager/requests'
     | '/manager/timeline'
     | '/manager/wires'
     | '/onboarding/accreditation'
@@ -875,6 +918,7 @@ export interface FileRouteTypes {
     | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/fund/$slug'
     | '/auth'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -893,6 +937,7 @@ export interface FileRouteTypes {
     | '/admin/performance'
     | '/admin/permissions'
     | '/admin/portfolio-value'
+    | '/admin/requests'
     | '/admin/security'
     | '/admin/setup'
     | '/admin/timeline'
@@ -916,6 +961,8 @@ export interface FileRouteTypes {
     | '/manager/permissions'
     | '/manager/portfolio-value'
     | '/manager/profile'
+    | '/manager/public-page'
+    | '/manager/requests'
     | '/manager/timeline'
     | '/manager/wires'
     | '/onboarding/accreditation'
@@ -956,6 +1003,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/fund/$slug'
     | '/auth/'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
@@ -974,6 +1022,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/performance'
     | '/_authenticated/admin/permissions'
     | '/_authenticated/admin/portfolio-value'
+    | '/_authenticated/admin/requests'
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/setup'
     | '/_authenticated/admin/timeline'
@@ -997,6 +1046,8 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/permissions'
     | '/_authenticated/manager/portfolio-value'
     | '/_authenticated/manager/profile'
+    | '/_authenticated/manager/public-page'
+    | '/_authenticated/manager/requests'
     | '/_authenticated/manager/timeline'
     | '/_authenticated/manager/wires'
     | '/_authenticated/onboarding/accreditation'
@@ -1027,6 +1078,7 @@ export interface RootRouteChildren {
   ManagerLoginRoute: typeof ManagerLoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  FundSlugRoute: typeof FundSlugRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -1166,6 +1218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/fund/$slug': {
+      id: '/fund/$slug'
+      path: '/fund/$slug'
+      fullPath: '/fund/$slug'
+      preLoaderRoute: typeof FundSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/admin'
@@ -1290,6 +1349,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/portfolio-value'
       fullPath: '/admin/portfolio-value'
       preLoaderRoute: typeof AuthenticatedAdminPortfolioValueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/requests': {
+      id: '/_authenticated/admin/requests'
+      path: '/admin/requests'
+      fullPath: '/admin/requests'
+      preLoaderRoute: typeof AuthenticatedAdminRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/security': {
@@ -1467,6 +1533,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/public-page': {
+      id: '/_authenticated/manager/public-page'
+      path: '/manager/public-page'
+      fullPath: '/manager/public-page'
+      preLoaderRoute: typeof AuthenticatedManagerPublicPageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/requests': {
+      id: '/_authenticated/manager/requests'
+      path: '/manager/requests'
+      fullPath: '/manager/requests'
+      preLoaderRoute: typeof AuthenticatedManagerRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/timeline': {
       id: '/_authenticated/manager/timeline'
       path: '/manager/timeline'
@@ -1623,6 +1703,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPerformanceRoute: typeof AuthenticatedAdminPerformanceRoute
   AuthenticatedAdminPermissionsRoute: typeof AuthenticatedAdminPermissionsRoute
   AuthenticatedAdminPortfolioValueRoute: typeof AuthenticatedAdminPortfolioValueRoute
+  AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedAdminTimelineRoute: typeof AuthenticatedAdminTimelineRoute
@@ -1646,6 +1727,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerPermissionsRoute: typeof AuthenticatedManagerPermissionsRoute
   AuthenticatedManagerPortfolioValueRoute: typeof AuthenticatedManagerPortfolioValueRoute
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
+  AuthenticatedManagerPublicPageRoute: typeof AuthenticatedManagerPublicPageRoute
+  AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
@@ -1688,6 +1771,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPerformanceRoute: AuthenticatedAdminPerformanceRoute,
   AuthenticatedAdminPermissionsRoute: AuthenticatedAdminPermissionsRoute,
   AuthenticatedAdminPortfolioValueRoute: AuthenticatedAdminPortfolioValueRoute,
+  AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedAdminTimelineRoute: AuthenticatedAdminTimelineRoute,
@@ -1715,6 +1799,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerPortfolioValueRoute:
     AuthenticatedManagerPortfolioValueRoute,
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
+  AuthenticatedManagerPublicPageRoute: AuthenticatedManagerPublicPageRoute,
+  AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
   AuthenticatedOnboardingAccreditationRoute:
@@ -1754,6 +1840,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManagerLoginRoute: ManagerLoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  FundSlugRoute: FundSlugRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
