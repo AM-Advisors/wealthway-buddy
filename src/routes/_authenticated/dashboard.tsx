@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { getPortal } from "@/lib/portal.functions";
+import { getFunding } from "@/lib/funding.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
@@ -78,6 +79,18 @@ function when(value: string | null | undefined) {
   });
 }
 
+const WIRE_CONFIRM_LABEL: Record<string, string> = {
+  pending: "Awaiting review",
+  approved: "Approved",
+  rejected: "Sent back",
+};
+
+function wireConfirmTone(status: string) {
+  if (status === "approved") return "default" as const;
+  if (status === "rejected") return "destructive" as const;
+  return "secondary" as const;
+}
+
 const WIRE_LABEL: Record<string, string> = {
   bank_name: "Bank name",
   bank_address: "Bank address",
@@ -91,6 +104,7 @@ const WIRE_LABEL: Record<string, string> = {
 
 function Dashboard() {
   const load = useServerFn(getPortal);
+  const loadFunding = useServerFn(getFunding);
   const download = useServerFn(getSignedDocumentUrl);
   const getPdf = useServerFn(downloadOfferingDocument);
   const [busy, setBusy] = useState<string | null>(null);
@@ -108,6 +122,29 @@ function Dashboard() {
     },
     refetchOnWindowFocus: true,
   });
+
+  const { data: funding } = useQuery({
+    queryKey: ["funding"],
+    queryFn: () => loadFunding(),
+    refetchInterval: (query) => {
+      const rows = query.state.data?.wireConfirmations ?? [];
+      return rows.some((r: { status: string }) => r.status === "pending") ? 10000 : false;
+    },
+    refetchOnWindowFocus: true,
+  });
+  const wireConfirmations = (funding?.wireConfirmations ?? []) as Array<{
+    id: string;
+    amount_cents: number;
+    sent_on: string;
+    sending_bank_name: string;
+    sending_account_last4: string;
+    bank_reference: string | null;
+    investor_note: string | null;
+    status: string;
+    review_notes: string | null;
+    reviewed_at: string | null;
+    created_at: string;
+  }>;
 
   const app = data?.application;
   const documents = data?.documents ?? [];
@@ -394,6 +431,60 @@ function Dashboard() {
                 Bank details will appear here once your fund documents are signed.
               </p>
             )}
+
+            {wireConfirmations.length > 0 ? (
+              <>
+                <Separator className="my-5" />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium">Wire confirmations</p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/wire-confirmation">Submit or update</Link>
+                  </Button>
+                </div>
+                <ul className="mt-3 space-y-3">
+                  {wireConfirmations.map((w) => (
+                    <li key={w.id} className="rounded-md border p-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium">
+                          {money(w.amount_cents)} from {w.sending_bank_name} ····
+                          {w.sending_account_last4}
+                        </p>
+                        <Badge variant={wireConfirmTone(w.status)}>
+                          {WIRE_CONFIRM_LABEL[w.status] ?? w.status.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-muted-foreground">
+                        Sent {w.sent_on} · Submitted {when(w.created_at) ?? "—"}
+                        {w.reviewed_at ? ` · Reviewed ${when(w.reviewed_at) ?? "—"}` : ""}
+                      </p>
+                      {w.status === "rejected" && w.review_notes ? (
+                        <p className="mt-2 rounded-md bg-destructive/10 p-2 text-destructive">
+                          Sent back: {w.review_notes}
+                        </p>
+                      ) : null}
+                      {w.status === "pending" ? (
+                        <p className="mt-2 text-muted-foreground">
+                          We&apos;re matching this wire to your account — this page updates
+                          automatically once it&apos;s approved.
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : data?.payment?.method === "wire" && data?.payment?.status !== "settled" ? (
+              <>
+                <Separator className="my-5" />
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed p-3">
+                  <p className="text-sm text-muted-foreground">
+                    Sent your wire? Let us know so we can match it to your account faster.
+                  </p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/wire-confirmation">Confirm your wire</Link>
+                  </Button>
+                </div>
+              </>
+            ) : null}
 
             <div className="mt-5">
               <Button asChild variant="outline" size="sm">
