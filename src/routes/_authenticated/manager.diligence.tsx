@@ -10,6 +10,7 @@ import {
   getDiligenceRoomTraffic,
   listManagedDiligenceRooms,
   removeDiligenceDocument,
+  syncDiligenceFolder,
 } from "@/lib/diligence.functions";
 import { categoriesFor } from "@/lib/diligence-templates";
 import { Badge } from "@/components/ui/badge";
@@ -210,6 +211,23 @@ function FundPanel({ fund }: { fund: any }) {
   const ensure = useServerFn(ensureDiligenceRoom);
   const add = useServerFn(addDiligenceDocument);
   const remove = useServerFn(removeDiligenceDocument);
+  const sync = useServerFn(syncDiligenceFolder);
+  const [lastSync, setLastSync] = useState<{ at: string; added: number; checked: number } | null>(
+    null,
+  );
+  const syncMutation = useMutation({
+    mutationFn: () => sync({ data: { offering_id: fund.offeringId } }),
+    onSuccess: (res: any) => {
+      setLastSync({ at: res.syncedAt, added: res.added, checked: res.checked });
+      toast.success(
+        res.added > 0
+          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in — your managers have been notified`
+          : "Everything in the folder is already listed",
+      );
+      queryClient.invalidateQueries({ queryKey: ["managed-diligence-rooms"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not check the folder."),
+  });
 
   const categories = categoriesFor(fund.entityType);
   const [category, setCategory] = useState<string>(categories[0]!.value);
@@ -326,6 +344,14 @@ function FundPanel({ fund }: { fund: any }) {
               <Badge variant={fund.readiness.score === 100 ? "default" : "secondary"}>
                 {fund.readiness.score}% complete
               </Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={syncMutation.isPending}
+                onClick={() => syncMutation.mutate()}
+              >
+                {syncMutation.isPending ? "Checking…" : "Sync from Box"}
+              </Button>
               <Button asChild size="sm" variant="outline">
                 <Link to="/diligence/$offeringId" params={{ offeringId: fund.offeringId }}>
                   Open full room
@@ -334,8 +360,15 @@ function FundPanel({ fund }: { fund: any }) {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2">
           <Progress value={fund.readiness.score} />
+          <p className="text-xs text-muted-foreground">
+            {lastSync
+              ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} — ${lastSync.checked} file${
+                  lastSync.checked === 1 ? "" : "s"
+                } there, ${lastSync.added} newly added.`
+              : "Drop files straight into the Box folder, then hit Sync from Box to list them here."}
+          </p>
         </CardContent>
       </Card>
 
