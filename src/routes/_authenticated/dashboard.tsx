@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { QuickWireConfirm } from "@/components/quick-wire-confirm";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -80,6 +81,7 @@ function when(value: string | null | undefined) {
 }
 
 const WIRE_CONFIRM_LABEL: Record<string, string> = {
+  submitted: "Awaiting review",
   pending: "Awaiting review",
   approved: "Approved",
   rejected: "Sent back",
@@ -128,7 +130,9 @@ function Dashboard() {
     queryFn: () => loadFunding(),
     refetchInterval: (query) => {
       const rows = query.state.data?.wireConfirmations ?? [];
-      return rows.some((r: { status: string }) => r.status === "pending") ? 10000 : false;
+      return rows.some((r: { status: string }) => r.status === "submitted" || r.status === "pending")
+        ? 10000
+        : false;
     },
     refetchOnWindowFocus: true,
   });
@@ -145,6 +149,14 @@ function Dashboard() {
     reviewed_at: string | null;
     created_at: string;
   }>;
+
+  const hasPendingWireConfirmation = wireConfirmations.some(
+    (w) => w.status === "submitted" || w.status === "pending",
+  );
+  const canQuickConfirm =
+    funding?.payment?.method === "wire" &&
+    funding?.payment?.status !== "settled" &&
+    !hasPendingWireConfirmation;
 
   const app = data?.application;
   const documents = data?.documents ?? [];
@@ -462,7 +474,7 @@ function Dashboard() {
                           Sent back: {w.review_notes}
                         </p>
                       ) : null}
-                      {w.status === "pending" ? (
+                      {w.status === "submitted" || w.status === "pending" ? (
                         <p className="mt-2 text-muted-foreground">
                           We&apos;re matching this wire to your account — this page updates
                           automatically once it&apos;s approved.
@@ -472,17 +484,18 @@ function Dashboard() {
                   ))}
                 </ul>
               </>
-            ) : data?.payment?.method === "wire" && data?.payment?.status !== "settled" ? (
+            ) : null}
+
+            {canQuickConfirm ? (
               <>
                 <Separator className="my-5" />
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed p-3">
-                  <p className="text-sm text-muted-foreground">
-                    Sent your wire? Let us know so we can match it to your account faster.
-                  </p>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/wire-confirmation">Confirm your wire</Link>
-                  </Button>
-                </div>
+                <QuickWireConfirm
+                  commitmentCents={
+                    data?.subscription?.commitment_cents ?? funding?.application?.commitment_cents
+                  }
+                  lastBankName={wireConfirmations[0]?.sending_bank_name ?? null}
+                  lastAccountLast4={wireConfirmations[0]?.sending_account_last4 ?? null}
+                />
               </>
             ) : null}
 
