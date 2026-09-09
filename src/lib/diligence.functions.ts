@@ -1181,3 +1181,197 @@ export const getVersionDownloadUrl = createServerFn({ method: "POST" })
     );
     return { url, file_name: version.file_name };
   });
+
+/* --------------------- Diligence → onboarding handoff --------------------- */
+
+export type OnboardingRailStep = {
+  key: "nda" | "kyc" | "aml" | "accreditation" | "documents" | "funding";
+  label: string;
+  state: "done" | "current" | "todo" | "review";
+};
+
+const STEP_ORDER = ["kyc", "aml", "accreditation", "documents", "funding"] as const;
+
+/**
+ * Where this person stands on the path from reading the room to being funded:
+ * confidentiality agreement first, then the five onboarding steps for this fund.
+ */
+export const getDiligenceOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const [{ data: room }, { data: application }, { data: access }] = await Promise.all([
+      supabase
+        .from("diligence_rooms")
+        .select("id, nda_required, nda_version")
+        .eq("offering_id", data.offering_id)
+        .maybeSingle(),
+      supabase
+        .from("investor_applications")
+        .select(
+          "id, offering_id, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status",
+        )
+        .eq("user_id", userId)
+        .eq("offering_id", data.offering_id)
+        .maybeSingle(),
+      supabase
+        .from("investor_fund_access")
+        .select("offering_id")
+        .eq("user_id", userId)
+        .eq("offering_id", data.offering_id)
+        .maybeSingle(),
+    ]);
+
+    let ndaAccepted = true;
+    if (room?.nda_required) {
+      const { data: acceptance } = await supabase
+        .from("diligence_nda_acceptances")
+        .select("accepted_at")
+        .eq("room_id", room.id)
+        .eq("user_id", userId)
+        .eq("nda_version", room.nda_version)
+        .maybeSingle();
+      ndaAccepted = Boolean(acceptance);
+    }
+
+    // An application for a different fund means this person is already onboarding
+    // elsewhere; we point them at their dashboard rather than starting a second one.
+    const { data: otherApplication } = application
+      ? { data: null }
+      : await supabase
+          .from("investor_applications")
+          .select("id, offering_id")
+          .eq("user_id", userId)
+          .limit(1)
+          .maybeSingle();
+
+    const statusOf = (value: string | null | undefined) =>
+      value === "approved" || value === "settled"
+        ? "done"
+        : value === "review" || value === "submitted" || value === "pending_review"
+          ? "review"
+          : null;
+
+    const labels: Record<(typeof STEP_ORDER)[number], string> = {
+      kyc: "Identity (KYC)",
+      aml: "Screening (AML)",
+      accreditation: "Accreditation",
+      documents: "Fund documents",
+      funding: "Wire or ACH funding",
+    };
+
+    const columns: Record<(typeof STEP_ORDER)[number], string | null> = {
+      kyc: application?.kyc_status ?? null,
+      aml: application?.aml_status ?? null,
+      accreditation: application?.accreditation_status ?? null,
+      documents: application?.documents_status ?? null,
+      funding: application?.funding_status ?? null,
+    };
+
+    const steps: OnboardingRailStep[] = [
+      {
+        key: "nda",
+        label: "Confidentiality agreement",
+        state: ndaAccepted ? "done" : "current",
+      },
+      ...STEP_ORDER.map((key) => {
+        const settled = statusOf(columns[key]);
+        const state: OnboardingRailStep["state"] = !application
+          ? "todo"
+          : settled === "done"
+            ? "done"
+            : application.current_step === key
+              ? settled === "review"
+                ? "review"
+                : "current"
+              : (settled ?? "todo");
+        return { key, label: labels[key], state } as OnboardingRailStep;
+      }),
+    ];
+
+    const complete = steps.every((s) => s.state === "done");
+    const nextStep =
+      (application?.current_step as string | null) ??
+      STEP_ORDER.find((k) => statusOf(columns[k]) !== "done") ??
+      "kyc";
+
+    return {
+      ndaRequired: Boolean(room?.nda_required),
+      ndaAccepted,
+      hasApplication: Boolean(application),
+      invited: Boolean(access) || Boolean(application),
+      otherOfferingId: (otherApplication?.offering_id as string | undefined) ?? null,
+      canManage: await canManage(supabase, data.offering_id),
+      steps,
+      complete,
+      nextStep,
+    };
+  });
+
+/**
+ * Turn diligence interest into a real application for this fund. Requires the
+ * confidentiality agreement first, and an invitation to the fund.
+ */
+export const startOnboardingFromRoom = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: existing } = await supabase
+      .from("investor_applications")
+      .select("id, offering_id")
+      .eq("user_id", userId)
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (existing) return { application_id: existing.id, created: false };
+
+    const { data: access } = await supabase
+      .from("investor_fund_access")
+      .select("offering_id")
+      .eq("user_id", userId)
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!access) {
+      throw new Error("You need an invitation to this fund before you can start onboarding.");
+    }
+
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id, nda_required, nda_version")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (room?.nda_required) {
+      const { data: acceptance } = await supabase
+        .from("diligence_nda_acceptances")
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", userId)
+        .eq("nda_version", room.nda_version)
+        .maybeSingle();
+      if (!acceptance) {
+        throw new Error("Please accept the confidentiality agreement before starting onboarding.");
+      }
+    }
+
+    const created = await supabase
+      .from("investor_applications")
+      .insert({ user_id: userId, offering_id: data.offering_id, current_step: "kyc" })
+      .select("id")
+      .single();
+    if (created.error) throw new Error(created.error.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room?.id ?? null,
+      "onboarding_started",
+      "Started investor onboarding from the diligence room",
+      { application_id: created.data.id },
+    );
+
+    return { application_id: created.data.id, created: true };
+  });
