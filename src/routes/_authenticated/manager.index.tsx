@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { getManagerPanelSummary } from "@/lib/manager.functions";
+import { getManagerFundProgress } from "@/lib/manager-fund.functions";
 import { money } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,12 +128,24 @@ const TOOLS = [
 
 function ManagerPanel() {
   const load = useServerFn(getManagerPanelSummary);
+  const loadProgress = useServerFn(getManagerFundProgress);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["manager-panel-summary"],
     queryFn: () => load(),
     retry: false,
     refetchInterval: 60_000,
   });
+  const progressQuery = useQuery({
+    queryKey: ["manager-fund-progress"],
+    queryFn: () => loadProgress(),
+    retry: false,
+  });
+
+  const progressOf = (fundId: string) => {
+    const row = (progressQuery.data?.funds ?? []).find((f: any) => f.id === fundId);
+    return row ? (row.percent as number) : null;
+  };
+
 
   if (isLoading) {
     return (
@@ -194,7 +207,9 @@ function ManagerPanel() {
                     </CardDescription>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link to="/manager/investors">Open</Link>
+                    <Link to="/manager/fund/$fundId" params={{ fundId: fund.id }}>
+                      Open fund
+                    </Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -206,6 +221,11 @@ function ManagerPanel() {
                   <Metric label="Complete" value={fund.complete} />
                 </div>
                 <div className="flex flex-wrap gap-1.5">
+                  {progressOf(fund.id) !== null ? (
+                    <Badge variant={progressOf(fund.id) === 100 ? "default" : "secondary"}>
+                      Setup {progressOf(fund.id)}% complete
+                    </Badge>
+                  ) : null}
                   <Badge variant={fund.pendingWires > 0 ? "default" : "outline"}>
                     {fund.pendingWires} wire{fund.pendingWires === 1 ? "" : "s"} awaiting approval
                   </Badge>
