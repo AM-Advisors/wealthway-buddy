@@ -683,6 +683,33 @@ function DocumentsTab({
           </div>
         );
       })}
+
+      <Dialog open={!!viewer} onOpenChange={(o) => !o && setViewer(null)}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>{viewer?.title}</DialogTitle>
+            <DialogDescription>
+              This link expires after a few minutes. Please keep these materials confidential.
+            </DialogDescription>
+          </DialogHeader>
+          {viewer ? (
+            <iframe
+              title={viewer.title}
+              src={viewer.url}
+              className="h-[70vh] w-full rounded-md border bg-muted"
+            />
+          ) : null}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => viewer && window.open(viewer.url, "_blank", "noopener,noreferrer")}
+            >
+              Open in a new tab
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
