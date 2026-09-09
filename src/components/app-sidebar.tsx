@@ -11,6 +11,7 @@ import {
   FileText,
   FolderLock,
   Gauge,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Mail,
