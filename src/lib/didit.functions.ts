@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 const DIDIT_SESSION_URL = "https://verification.didit.me/v2/session/";
 
@@ -29,8 +30,7 @@ export const startIdentityCheck = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, kyc_status")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (appError) throw new Error(appError.message);
     if (!application) throw new Error("No application found. Reload and try again.");

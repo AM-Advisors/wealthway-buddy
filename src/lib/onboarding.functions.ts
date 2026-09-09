@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 const investorType = z.enum(["individual", "joint", "entity", "trust", "ira"]);
 
@@ -81,8 +82,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     application = existingApp.data;
 
@@ -153,8 +153,7 @@ export const submitKyc = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (appError) throw new Error(appError.message);
     if (!application) throw new Error("No application found. Reload and try again.");
@@ -229,8 +228,7 @@ export const submitAml = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, kyc_status")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
     if (appError) throw new Error(appError.message);
     if (!application) throw new Error("No application found. Reload and try again.");

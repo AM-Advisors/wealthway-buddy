@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { activeApplicationId } from "@/lib/active-application";
 
 export const accreditation506bSchema = z.object({
   basis: z.enum([
@@ -44,8 +45,7 @@ async function loadApplication(supabase: any, userId: string): Promise<AppRow> {
     .from("investor_applications")
     .select("id, kyc_status, aml_status")
     .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(1)
+    .eq("id", await activeApplicationId(supabase, userId))
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found. Reload and try again.");
@@ -64,8 +64,7 @@ export const getAccreditation = createServerFn({ method: "GET" })
       .from("investor_applications")
       .select("id, kyc_status, aml_status, accreditation_status, current_step, offering_id")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
 
     if (!application) return { application: null, offering: null, record: null, documents: [] };
