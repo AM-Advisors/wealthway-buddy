@@ -1889,6 +1889,10 @@ export type Database = {
           created_at: string
           id: string
           notes: string | null
+          notified_at: string | null
+          notified_committed_cents: number | null
+          notified_ownership_pct: number | null
+          notified_received_cents: number | null
           offering_id: string
           ownership_pct_override: number | null
           share_class: string
@@ -1901,6 +1905,10 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          notified_at?: string | null
+          notified_committed_cents?: number | null
+          notified_ownership_pct?: number | null
+          notified_received_cents?: number | null
           offering_id: string
           ownership_pct_override?: number | null
           share_class?: string
@@ -1913,6 +1921,10 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          notified_at?: string | null
+          notified_committed_cents?: number | null
+          notified_ownership_pct?: number | null
+          notified_received_cents?: number | null
           offering_id?: string
           ownership_pct_override?: number | null
           share_class?: string
