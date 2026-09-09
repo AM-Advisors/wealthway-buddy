@@ -205,6 +205,13 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
       }
     }
 
+    try {
+      const { drainManagerAlerts } = await import("@/lib/manager-alerts.server");
+      await drainManagerAlerts();
+    } catch (e) {
+      console.error("[admin-applications] alert drain failed", e);
+    }
+
     return {
       ok: true as const,
       applicationId: application.id as string,
