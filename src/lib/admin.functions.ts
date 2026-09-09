@@ -662,6 +662,21 @@ export const decideWireConfirmation = createServerFn({ method: "POST" })
       .eq("id", data.applicationId);
     if (appError) throw new Error(appError.message);
 
+    const wireActivity = await import("@/lib/reviewer-activity.server");
+    await wireActivity.logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: data.applicationId,
+      offeringId: await wireActivity.offeringIdForApplication(supabase, data.applicationId),
+      action: "wire_decision",
+      area: "wire",
+      outcome: data.outcome === "approved" ? "approved" : "declined",
+      summary:
+        data.outcome === "approved"
+          ? "Wire confirmation approved and funding marked received"
+          : "Wire confirmation sent back to the investor",
+      note: data.notes || null,
+    });
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
