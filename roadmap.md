@@ -13,3 +13,5 @@
 - [x] Diligence room: show fund wire instructions + investor commitment in the overview
 - [x] AI diligence assistant with document citations
 - [x] Live walkthrough: fund created, docs uploaded, test investor walked room
+
+- [x] Manager onboarding document submission form with status tracking (/manager/onboarding)
