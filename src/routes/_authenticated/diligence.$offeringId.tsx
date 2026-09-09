@@ -503,7 +503,8 @@ function DocumentsTab({
 
       {roomCategories.map((cat, index) => {
         const items = documents.filter((d) => d.category === cat.value);
-        if (items.length === 0 && !cat.required) return null;
+        const isCapTable = cat.value === "cap_table";
+        if (items.length === 0 && !cat.required && !isCapTable) return null;
         const newSection = index === 0 || roomCategories[index - 1]?.section !== cat.section;
         return (
           <div key={cat.value} className="space-y-3">
@@ -519,12 +520,15 @@ function DocumentsTab({
                   <CardTitle className="text-lg">{cat.label}</CardTitle>
                   {cat.hint ? <CardDescription>{cat.hint}</CardDescription> : null}
                 </div>
-                {items.length === 0 ? <Badge variant="outline">Pending</Badge> : null}
+                {items.length === 0 && !isCapTable ? <Badge variant="outline">Pending</Badge> : null}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {isCapTable ? <CapTableSection offeringId={offeringId} /> : null}
               {items.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nothing filed here yet.</p>
+                isCapTable ? null : (
+                  <p className="text-sm text-muted-foreground">Nothing filed here yet.</p>
+                )
               ) : (
                 <ul className="divide-y rounded-md border">
                   {items.map((doc) => (
