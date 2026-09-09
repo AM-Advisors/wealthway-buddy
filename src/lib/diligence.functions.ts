@@ -44,8 +44,9 @@ export type DiligenceReadiness = {
 function readiness(
   documents: DiligenceDocument[],
   entityType: DiligenceEntityType = "fund",
+  extraCovered: string[] = [],
 ): DiligenceReadiness {
-  const present = new Set(documents.map((d) => d.category));
+  const present = new Set([...documents.map((d) => d.category), ...extraCovered]);
   const required = categoriesFor(entityType).filter((c) => c.required);
   const covered = required.filter((c) => present.has(c.value));
   const missing = required
@@ -97,6 +98,13 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
 
     const entityType = normalizeEntityType((room as any)?.entity_type);
 
+    // A cap table kept in the platform counts as covering the capitalization
+    // section, so nobody has to upload a spreadsheet to satisfy readiness.
+    const { count: capTableRows } = await supabase
+      .from("diligence_cap_table")
+      .select("id", { count: "exact", head: true })
+      .eq("offering_id", data.offering_id);
+
     return {
       offering: { id: offering.id, name: offering.name, reg_type: offering.reg_type, summary: offering.summary },
       room: room
@@ -105,7 +113,8 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       entityType,
       categories: categoriesFor(entityType),
       documents,
-      readiness: readiness(documents, entityType),
+      capTableRows: capTableRows ?? 0,
+      readiness: readiness(documents, entityType, (capTableRows ?? 0) > 0 ? ["cap_table"] : []),
       canManage: await canManage(supabase, data.offering_id),
     };
   });
@@ -1449,4 +1458,164 @@ export const startOnboardingFromRoom = createServerFn({ method: "POST" })
     );
 
     return { application_id: created.data.id, created: true };
+  });
+
+/* ------------------------------------------------------------------ */
+/* Cap table — kept live in the platform, no spreadsheet upload needed */
+/* ------------------------------------------------------------------ */
+
+export type CapTableRow = {
+  id: string;
+  holder_name: string;
+  holder_type: string;
+  security_type: string;
+  shares: number | null;
+  ownership_pct: number | null;
+  fully_diluted_pct: number | null;
+  notes: string | null;
+  sort_order: number;
+  updated_at: string;
+};
+
+export const listCapTable = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: rows, error } = await supabase
+      .from("diligence_cap_table")
+      .select(
+        "id, holder_name, holder_type, security_type, shares, ownership_pct, fully_diluted_pct, notes, sort_order, updated_at",
+      )
+      .eq("offering_id", data.offering_id)
+      .order("sort_order", { ascending: true })
+      .order("holder_name", { ascending: true });
+    if (error) throw new Error(error.message);
+
+    const list = (rows ?? []) as CapTableRow[];
+    const totals = list.reduce(
+      (acc, r) => ({
+        shares: acc.shares + Number(r.shares ?? 0),
+        ownership: acc.ownership + Number(r.ownership_pct ?? 0),
+        fully_diluted: acc.fully_diluted + Number(r.fully_diluted_pct ?? 0),
+      }),
+      { shares: 0, ownership: 0, fully_diluted: 0 },
+    );
+
+    return {
+      rows: list,
+      totals,
+      canManage: await canManage(supabase, data.offering_id),
+      updated_at: list.reduce<string | null>(
+        (latest, r) => (!latest || r.updated_at > latest ? r.updated_at : latest),
+        null,
+      ),
+    };
+  });
+
+const capRowSchema = z.object({
+  offering_id: z.string().uuid(),
+  id: z.string().uuid().optional(),
+  holder_name: z.string().trim().min(1).max(200),
+  holder_type: z.enum(["founder", "investor", "employee_pool", "lp", "gp", "other"]),
+  security_type: z.string().trim().min(1).max(80),
+  shares: z.number().nonnegative().nullable().optional(),
+  ownership_pct: z.number().min(0).max(100).nullable().optional(),
+  fully_diluted_pct: z.number().min(0).max(100).nullable().optional(),
+  notes: z.string().trim().max(500).nullable().optional(),
+  sort_order: z.number().int().min(0).max(9999).optional(),
+});
+
+export const saveCapTableRow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => capRowSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to edit this cap table.");
+    }
+
+    const patch = {
+      offering_id: data.offering_id,
+      holder_name: data.holder_name,
+      holder_type: data.holder_type,
+      security_type: data.security_type,
+      shares: data.shares ?? null,
+      ownership_pct: data.ownership_pct ?? null,
+      fully_diluted_pct: data.fully_diluted_pct ?? null,
+      notes: data.notes ?? null,
+      sort_order: data.sort_order ?? 0,
+      created_by: userId,
+    };
+
+    if (data.id) {
+      const { error } = await supabase
+        .from("diligence_cap_table")
+        .update(patch)
+        .eq("id", data.id)
+        .eq("offering_id", data.offering_id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase.from("diligence_cap_table").insert(patch);
+      if (error) throw new Error(error.message);
+    }
+
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room?.id ?? null,
+      "cap_table_updated",
+      `${data.id ? "Updated" : "Added"} cap table holder ${data.holder_name}`,
+      { holder: data.holder_name },
+    );
+
+    return { ok: true };
+  });
+
+export const removeCapTableRow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ offering_id: z.string().uuid(), id: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to edit this cap table.");
+    }
+    const { data: existing } = await supabase
+      .from("diligence_cap_table")
+      .select("holder_name")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    const { error } = await supabase
+      .from("diligence_cap_table")
+      .delete()
+      .eq("id", data.id)
+      .eq("offering_id", data.offering_id);
+    if (error) throw new Error(error.message);
+
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room?.id ?? null,
+      "cap_table_updated",
+      `Removed cap table holder ${existing?.holder_name ?? ""}`.trim(),
+      {},
+    );
+    return { ok: true };
   });

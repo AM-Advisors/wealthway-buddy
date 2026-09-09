@@ -351,6 +351,62 @@ export type Database = {
           },
         ]
       }
+      diligence_cap_table: {
+        Row: {
+          created_at: string
+          created_by: string
+          fully_diluted_pct: number | null
+          holder_name: string
+          holder_type: string
+          id: string
+          notes: string | null
+          offering_id: string
+          ownership_pct: number | null
+          security_type: string
+          shares: number | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          fully_diluted_pct?: number | null
+          holder_name: string
+          holder_type?: string
+          id?: string
+          notes?: string | null
+          offering_id: string
+          ownership_pct?: number | null
+          security_type?: string
+          shares?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          fully_diluted_pct?: number | null
+          holder_name?: string
+          holder_type?: string
+          id?: string
+          notes?: string | null
+          offering_id?: string
+          ownership_pct?: number | null
+          security_type?: string
+          shares?: number | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_cap_table_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diligence_checklist_items: {
         Row: {
           category: string

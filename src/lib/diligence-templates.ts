@@ -37,6 +37,7 @@ export const ENTITY_TYPES: {
 const FUND_CATEGORIES: DiligenceCategory[] = [
   { value: "formation", label: "Formation & legal", required: true, section: "The vehicle", hint: "LPA, subscription docs, certificate of formation." },
   { value: "offering_terms", label: "Offering terms", required: true, section: "The vehicle", hint: "PPM, fee and carry summary, capital call mechanics." },
+  { value: "cap_table", label: "Capitalization", required: false, section: "The vehicle", hint: "Live capitalization / LP register kept in the platform — no upload needed." },
   { value: "strategy", label: "Strategy & market", required: false, section: "The vehicle", hint: "Investment thesis, pipeline, target market." },
   { value: "financials", label: "Financial statements", required: true, section: "Numbers", hint: "Audited or reviewed statements for the vehicle." },
   { value: "track_record", label: "Track record & performance", required: true, section: "Numbers", hint: "Realised and unrealised performance, prior funds." },
