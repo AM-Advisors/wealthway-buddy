@@ -43,10 +43,6 @@ export const Route = createFileRoute("/_authenticated/diligence/$offeringId")({
   component: DiligenceRoomPage,
 });
 
-function label(category: string) {
-  return DILIGENCE_CATEGORIES.find((c) => c.value === category)?.label ?? category;
-}
-
 function fileSize(bytes: number | null) {
   if (!bytes) return "";
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -352,8 +348,4 @@ function DiligenceRoomPage() {
       </p>
     </div>
   );
-}
-
-function _unused(_: string) {
-  return label(_);
 }
