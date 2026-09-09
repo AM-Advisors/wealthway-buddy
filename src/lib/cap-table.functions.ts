@@ -342,7 +342,8 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
 
     const { data: offering } = await supabaseAdmin
       .from("offerings")
-      .select("id, name, reg_type, target_raise_cents")
+      .select("id, name, reg_type, target_raise_cents, share_price_cents")
+
       .eq("id", data.offering_id)
       .maybeSingle();
     if (!offering) throw new Error("That fund is not available.");
@@ -448,6 +449,8 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
         name: offering.name as string,
         reg_type: (offering.reg_type as string) ?? null,
         target_raise_cents: (offering.target_raise_cents as number) ?? null,
+        share_price_cents: ((offering as any).share_price_cents as number) ?? 0,
+
       },
       rows,
       totals: {
