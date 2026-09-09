@@ -127,7 +127,7 @@ function FundingDashboard() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           label="Total raised"
           value={money(totals?.receivedCents)}
@@ -142,6 +142,11 @@ function FundingDashboard() {
           label="In progress"
           value={String(totals?.inProgress ?? 0)}
           sub={`across ${totals?.funds ?? 0} fund${totals?.funds === 1 ? "" : "s"}`}
+        />
+        <StatCard
+          label="Net after costs"
+          value={money(totals?.netReceivedCents)}
+          sub={`${money(totals?.totalCostsCents)} of wire fees and closing costs`}
         />
         <StatCard
           label="Target raise"
@@ -190,7 +195,7 @@ function FundingDashboard() {
                 </Button>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">Raised</p>
                   <p className="text-lg font-semibold">{money(f.receivedCents)}</p>
@@ -206,6 +211,14 @@ function FundingDashboard() {
                   <p className="text-xs text-muted-foreground">
                     {f.inProgress} in progress · {f.settled} settled
                     {f.declined ? ` · ${f.declined} declined` : ""}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Costs</p>
+                  <p className="text-lg font-semibold">{money(f.totalCostsCents)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {money(f.wireFeesTotalCents)} wire fees · {money(f.closingCostCents)} closing ·{" "}
+                    {money(f.netReceivedCents)} net
                   </p>
                 </div>
                 <div>

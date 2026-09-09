@@ -72,6 +72,8 @@ const offeringSchema = z.object({
   reg_type: z.enum(["506b", "506c"]),
   min_investment_cents: z.number().int().min(0),
   target_raise_cents: z.number().int().min(0).nullable().default(null),
+  wire_fee_cents: z.number().int().min(0).default(0),
+  closing_cost_cents: z.number().int().min(0).default(0),
   is_open: z.boolean().default(true),
   wire_instructions: wireSchema,
 });
@@ -226,6 +228,8 @@ const OFFERING_FIELDS = [
   "reg_type",
   "min_investment_cents",
   "target_raise_cents",
+  "wire_fee_cents",
+  "closing_cost_cents",
   "is_open",
 ];
 
@@ -244,6 +248,8 @@ export const saveOffering = createServerFn({ method: "POST" })
       reg_type: data.reg_type,
       min_investment_cents: data.min_investment_cents,
       target_raise_cents: data.target_raise_cents,
+      wire_fee_cents: data.wire_fee_cents,
+      closing_cost_cents: data.closing_cost_cents,
       is_open: data.is_open,
     };
 

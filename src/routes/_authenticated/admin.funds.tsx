@@ -55,6 +55,8 @@ interface OfferingForm {
   reg_type: "506b" | "506c";
   min_investment: string;
   target_raise: string;
+  wire_fee: string;
+  closing_cost: string;
   is_open: boolean;
   wire: Record<WireKey, string>;
 }
@@ -71,6 +73,8 @@ function toForm(o: any): OfferingForm {
     reg_type: o.reg_type ?? "506b",
     min_investment: o.min_investment_cents ? String(o.min_investment_cents / 100) : "",
     target_raise: o.target_raise_cents ? String(o.target_raise_cents / 100) : "",
+    wire_fee: o.wire_fee_cents ? String(o.wire_fee_cents / 100) : "",
+    closing_cost: o.closing_cost_cents ? String(o.closing_cost_cents / 100) : "",
     is_open: Boolean(o.is_open),
     wire: {
       ...emptyWire(),
@@ -88,6 +92,8 @@ const blankForm = (): OfferingForm => ({
   reg_type: "506b",
   min_investment: "",
   target_raise: "",
+  wire_fee: "",
+  closing_cost: "",
   is_open: true,
   wire: emptyWire(),
 });
@@ -181,6 +187,8 @@ function FundsPage() {
           target_raise_cents: form.target_raise
             ? Math.round(Number(form.target_raise) * 100)
             : null,
+          wire_fee_cents: Math.round(Number(form.wire_fee || 0) * 100),
+          closing_cost_cents: Math.round(Number(form.closing_cost || 0) * 100),
           is_open: form.is_open,
           wire_instructions: form.wire,
         },
@@ -350,6 +358,35 @@ function FundsPage() {
                     setEditing({ ...editing, target_raise: e.target.value.replace(/[^0-9.]/g, "") })
                   }
                 />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="fund_wire_fee">Wire fee per investor ($)</Label>
+                <Input
+                  id="fund_wire_fee"
+                  inputMode="numeric"
+                  value={editing.wire_fee}
+                  onChange={(e) =>
+                    setEditing({ ...editing, wire_fee: e.target.value.replace(/[^0-9.]/g, "") })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Charged once for every wire that arrives.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fund_closing_cost">Closing cost ($)</Label>
+                <Input
+                  id="fund_closing_cost"
+                  inputMode="numeric"
+                  value={editing.closing_cost}
+                  onChange={(e) =>
+                    setEditing({ ...editing, closing_cost: e.target.value.replace(/[^0-9.]/g, "") })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">One-off cost for closing this fund.</p>
               </div>
             </div>
 

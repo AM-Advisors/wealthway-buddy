@@ -64,6 +64,20 @@ export function CommitmentBalancePanel({ fundId }: { fundId: string }) {
           <Stat label="Still to arrive" value={money(totals?.outstandingCents)} />
         </div>
 
+        {totals && (totals.wireFeeCents > 0 || totals.closingCostCents > 0) ? (
+          <div className="rounded-md border p-3">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Costs</p>
+            <p className="mt-1 text-sm">
+              Wire fees {money(totals.wireFeesTotalCents)}
+              {totals.wireFeeCents > 0 ? ` (${money(totals.wireFeeCents)} per wire)` : ""} · Closing
+              cost {money(totals.closingCostCents)}
+            </p>
+            <p className="mt-1 text-sm font-medium">
+              {money(totals.netReceivedCents)} net after {money(totals.totalCostsCents)} of costs
+            </p>
+          </div>
+        ) : null}
+
         {totals?.targetCents ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
