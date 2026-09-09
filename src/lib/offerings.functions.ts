@@ -276,7 +276,8 @@ export const saveOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => documentSchema.parse(data))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertCanEditOffering(context.supabase, context.userId, data.offering_id);
+
 
     const payload = {
       offering_id: data.offering_id,
