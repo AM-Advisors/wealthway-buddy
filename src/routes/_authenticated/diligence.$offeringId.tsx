@@ -139,6 +139,17 @@ function DiligenceRoomPage() {
     void visit({ data: { offering_id: offeringId } }).catch(() => {});
   }, [access.isSuccess, gated, offeringId, visit]);
 
+  // Record that the confidentiality agreement was actually shown to this person,
+  // so we can see who reads it and never agrees.
+  const ndaView = useServerFn(recordNdaView);
+  const ndaViewLogged = useRef(false);
+  useEffect(() => {
+    if (ndaViewLogged.current || !gated || !access.isSuccess) return;
+    ndaViewLogged.current = true;
+    void ndaView({ data: { offering_id: offeringId } }).catch(() => {});
+  }, [access.isSuccess, gated, offeringId, ndaView]);
+
+
   const acceptMutation = useMutation({
     mutationFn: () => acceptNda({ data: { offering_id: offeringId, signer_name: signer.trim() } }),
     onSuccess: () => {
