@@ -222,13 +222,15 @@ function InvestorDatabase() {
               />
               {awaitingAccreditation.map((i) => (
                 <div
-                  key={i.user_id}
+                  key={i.application_id ?? i.user_id}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
                 >
                   <div className="min-w-0">
                     <p className="font-medium">{i.legal_name ?? i.email ?? "Investor"}</p>
                     <p className="text-sm text-muted-foreground">
-                      {i.offeringName ?? "Fund"} · commitment {money(i.commitment_cents)}
+                      {i.offeringName ?? "Fund"}
+                      {i.account_label ? ` · ${i.account_label}` : ""} · commitment{" "}
+                      {money(i.commitment_cents)}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -327,13 +329,16 @@ function InvestorDatabase() {
           <div className="space-y-2">
             {rows.map((i) => (
               <div
-                key={i.user_id}
+                key={i.application_id ?? i.user_id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{i.legal_name ?? "Unnamed investor"}</span>
                     <Badge variant={stepTone(i.step)}>{STEP_LABELS[i.step] ?? i.step}</Badge>
+                    {i.account_label ? (
+                      <Badge variant="outline">{i.account_label}</Badge>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {i.email ?? "no email"}
