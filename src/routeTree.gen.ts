@@ -31,6 +31,7 @@ import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
+import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
 import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
@@ -166,6 +167,11 @@ const AuthenticatedAdminSetupRoute = AuthenticatedAdminSetupRouteImport.update({
   path: '/admin/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminWireRoute = AuthenticatedAdminWireRouteImport.update({
+  id: '/admin/wire',
+  path: '/admin/wire',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDiligenceIndexRoute =
   AuthenticatedDiligenceIndexRouteImport.update({
     id: '/diligence/',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -331,6 +338,7 @@ export interface FileRoutesByTo {
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -417,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin/new-application'
     | '/admin/security'
     | '/admin/setup'
+    | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/onboarding/accreditation'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/admin/new-application'
     | '/admin/security'
     | '/admin/setup'
+    | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/onboarding/accreditation'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/new-application'
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/setup'
+    | '/_authenticated/admin/wire'
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/onboarding/accreditation'
@@ -691,6 +703,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/wire': {
+      id: '/_authenticated/admin/wire'
+      path: '/admin/wire'
+      fullPath: '/admin/wire'
+      preLoaderRoute: typeof AuthenticatedAdminWireRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/diligence/': {
       id: '/_authenticated/diligence/'
       path: '/diligence'
@@ -834,6 +853,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminNewApplicationRoute: typeof AuthenticatedAdminNewApplicationRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
+  AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
@@ -862,6 +882,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminNewApplicationRoute: AuthenticatedAdminNewApplicationRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
+  AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
   AuthenticatedDiligenceOfferingIdRoute: AuthenticatedDiligenceOfferingIdRoute,
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,
