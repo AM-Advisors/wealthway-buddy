@@ -35,10 +35,11 @@ export const listClosingBoard = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [{ data: isAdmin }, { data: assignments }] = await Promise.all([
-      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    const [{ data: roles }, { data: assignments }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin"),
       supabase.from("fund_managers").select("offering_id").eq("user_id", userId),
     ]);
+    const isAdmin = ((roles ?? []) as any[]).length > 0;
 
     let offeringIds: string[] | null = null;
     if (!isAdmin) {
