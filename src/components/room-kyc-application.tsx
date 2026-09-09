@@ -64,7 +64,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
   const profile = (data as any)?.profile ?? null;
   const kyc = (data as any)?.kyc ?? null;
   const accreditation = (data as any)?.accreditation ?? null;
-  const uploads = (((data as any)?.uploads ?? []) as any[]) ?? [];
+  const uploads = ((data as any)?.uploads ?? []) as any[];
   const offering = (data as any)?.offering ?? null;
   const reg = (offering?.reg_type ?? "506b") as string;
 
@@ -111,7 +111,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
   useEffect(() => {
     const q = (accreditation?.questionnaire ?? null) as any;
     if (!q) return;
-    setAcc((prev) => (prev.attested_signature ? prev : { ...prev, ...q, attests: true }));
+    setAcc((prev) => (prev["attested_signature"] ? prev : { ...prev, ...q, attests: true }));
   }, [accreditation]);
 
   const set = (key: string) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
@@ -261,7 +261,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
           <Field id="legal_name" label="Full legal name" value={form["legal_name"]} onChange={set("legal_name")} />
           <div className="space-y-2">
             <Label>Investor type</Label>
-            <Select value={form["investor_type"]} onValueChange={set("investor_type")}>
+            <Select value={form["investor_type"] ?? "individual"} onValueChange={set("investor_type")}>
               <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="individual">Individual</SelectItem>
@@ -285,7 +285,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
           <Field id="country" label="Country" value={form["country"]} onChange={set("country")} />
           <div className="space-y-2">
             <Label>ID document type</Label>
-            <Select value={form["id_document_type"]} onValueChange={set("id_document_type")}>
+            <Select value={form["id_document_type"] ?? "passport"} onValueChange={set("id_document_type")}>
               <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="passport">Passport</SelectItem>
