@@ -100,12 +100,23 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
 
   return (
     <div className="mt-10 space-y-4">
-      <div>
-        <h2 className="text-xl">Investor reviews</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Onboarding status, signed copies and wire requests for each investor, with an action on every line.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl">Investor reviews</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Onboarding status, signed copies and wire requests for each investor, with an action on every line.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={syncMutation.isPending}
+          onClick={() => syncMutation.mutate()}
+        >
+          {syncMutation.isPending ? "Checking…" : "Check for new signatures"}
+        </Button>
       </div>
+
 
       {investors.length === 0 ? (
         <p className="text-sm text-muted-foreground">No investors in this fund yet.</p>
