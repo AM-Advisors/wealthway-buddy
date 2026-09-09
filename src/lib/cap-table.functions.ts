@@ -743,10 +743,15 @@ export const saveCapPosition = createServerFn({ method: "POST" })
       }));
     if (changes.length > 0) {
       await supabaseAdmin.from("cap_table_changes").insert(changes);
+      await (await import("@/lib/ownership-email.server")).notifyOwnershipChange(
+        data.offering_id,
+        "Your fund's cap table was updated, so the ownership split has been recalculated.",
+      );
     }
 
     return { ok: true, logged: changes.length };
   });
+
 
 export type CapTableChange = {
   id: string;
