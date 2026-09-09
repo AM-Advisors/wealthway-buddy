@@ -67,6 +67,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DiligenceAssistant } from "@/components/diligence-assistant";
 import { DiligenceAccessPanel } from "@/components/diligence-access-panel";
 import { RoomKycApplication } from "@/components/room-kyc-application";
+import { PitchDeckPanel } from "@/components/pitch-deck-panel";
 import { getStepRail } from "@/lib/step-rail.functions";
 
 export const Route = createFileRoute("/_authenticated/diligence/$offeringId")({
