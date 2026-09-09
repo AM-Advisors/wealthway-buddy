@@ -210,6 +210,15 @@ function ManagerDocumentsPage() {
                   Remove
                 </Button>
               </div>
+              </div>
+              <OfferingDocumentFile
+                documentId={doc.id}
+                offeringId={activeFund.id}
+                fileName={doc.file_name}
+                fileSizeBytes={doc.file_size_bytes}
+                canEdit
+                onChanged={() => void invalidate()}
+              />
             </div>
           ))}
         </CardContent>
