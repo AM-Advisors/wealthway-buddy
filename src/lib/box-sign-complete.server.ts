@@ -26,7 +26,9 @@ export async function syncBoxSignRequest(
 
   const { data: signature } = await supabaseAdmin
     .from("document_signatures")
-    .select("id, application_id, offering_document_id, signer_name, pdf_path, provider_completed_at")
+    .select(
+      "id, application_id, offering_document_id, signer_name, pdf_path, provider_completed_at, provider_viewed_at",
+    )
     .eq("provider_agreement_id", signRequestId)
     .maybeSingle();
 
