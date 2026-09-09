@@ -358,7 +358,7 @@ export const getApplicationChecklist = createServerFn({ method: "GET" })
           .order("uploaded_at", { ascending: false }),
         supabase
           .from("document_signatures")
-          .select("document_id, status, signed_at")
+          .select("offering_document_id, signed_at")
           .eq("application_id", application.id),
       ]);
 
@@ -372,12 +372,12 @@ export const getApplicationChecklist = createServerFn({ method: "GET" })
         documents: (application as any).documents_status as string,
       },
       fundDocuments: ((fundDocs ?? []) as any[]).map((d) => {
-        const sig = ((signatures ?? []) as any[]).find((s) => s.document_id === d.id);
+        const sig = ((signatures ?? []) as any[]).find((s) => s.offering_document_id === d.id);
         return {
           id: d.id as string,
           title: d.title as string,
           requiresSignature: Boolean(d.requires_signature),
-          signed: sig?.status === "completed" || Boolean(sig?.signed_at),
+          signed: Boolean(sig?.signed_at),
           signedAt: (sig?.signed_at as string) ?? null,
         };
       }),
