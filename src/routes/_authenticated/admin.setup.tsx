@@ -182,7 +182,8 @@ function SetupPage() {
         data: {
           email: inviteEmail.trim(),
           name: inviteName.trim(),
-          offeringId: fundId!,
+          offeringIds: [fundId!],
+
           role: assignKind === "manager" ? "fund_manager" : "investor",
           sendEmail: true,
         },

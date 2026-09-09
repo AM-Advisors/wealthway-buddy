@@ -8,7 +8,7 @@ import {
   type OfferingAuditEventType,
 } from "@/lib/offering-audit";
 
-async function assertAdmin(supabase: any, userId: string) {
+async function isAdminUser(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("user_roles")
     .select("role")
@@ -16,8 +16,28 @@ async function assertAdmin(supabase: any, userId: string) {
     .eq("role", "admin")
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin access required.");
+  return Boolean(data);
 }
+
+async function assertAdmin(supabase: any, userId: string) {
+  if (!(await isAdminUser(supabase, userId))) {
+    throw new Error("Forbidden: admin access required.");
+  }
+}
+
+/** Admins, or a fund manager assigned to this fund. */
+async function assertCanEditOffering(supabase: any, userId: string, offeringId: string) {
+  if (await isAdminUser(supabase, userId)) return;
+  const { data, error } = await supabase
+    .from("fund_managers")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("offering_id", offeringId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: you do not manage that fund.");
+}
+
 
 export const WIRE_FIELDS = [
   "bank_name",
@@ -113,6 +133,51 @@ export const listOfferings = createServerFn({ method: "GET" })
       })),
     };
   });
+
+/** Funds the caller can edit (all for admins, assigned funds for managers) with their documents. */
+export const listManagedFundDocuments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const isAdmin = await isAdminUser(supabase, userId);
+
+    let managedIds: string[] = [];
+    if (!isAdmin) {
+      const { data: assignments, error } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      if (error) throw new Error(error.message);
+      managedIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      if (managedIds.length === 0) return { isAdmin, offerings: [] };
+    }
+
+    let query = supabase
+      .from("offerings")
+      .select("id, name, reg_type, min_investment_cents, is_open")
+      .order("name");
+    if (!isAdmin) query = query.in("id", managedIds);
+    const { data: offerings, error: offeringError } = await query;
+    if (offeringError) throw new Error(offeringError.message);
+
+    const ids = ((offerings ?? []) as any[]).map((o) => o.id as string);
+    const { data: documents } = ids.length
+      ? await supabase
+          .from("offering_documents")
+          .select("id, offering_id, title, doc_type, body, requires_signature, sort_order")
+          .in("offering_id", ids)
+          .order("sort_order", { ascending: true })
+      : { data: [] as any[] };
+
+    return {
+      isAdmin,
+      offerings: ((offerings ?? []) as any[]).map((o) => ({
+        ...o,
+        documents: ((documents ?? []) as any[]).filter((d) => d.offering_id === o.id),
+      })),
+    };
+  });
+
 
 async function actorIdentity(supabase: any, userId: string, claims: any) {
   const { data } = await supabase
@@ -256,7 +321,8 @@ export const saveOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => documentSchema.parse(data))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    await assertCanEditOffering(context.supabase, context.userId, data.offering_id);
+
 
     const payload = {
       offering_id: data.offering_id,
@@ -315,7 +381,18 @@ export const deleteOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { data: target } = await context.supabase
+      .from("offering_documents")
+      .select("offering_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!target) throw new Error("Document not found.");
+    await assertCanEditOffering(
+      context.supabase,
+      context.userId,
+      (target as any).offering_id as string,
+    );
+
 
     const { count } = await context.supabase
       .from("document_signatures")

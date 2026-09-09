@@ -36,6 +36,7 @@ import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
+import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
 import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
@@ -196,6 +197,12 @@ const AuthenticatedManagerApplicationIdRoute =
     path: '/manager/$applicationId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerDocumentsRoute =
+  AuthenticatedManagerDocumentsRouteImport.update({
+    id: '/manager/documents',
+    path: '/manager/documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingAccreditationRoute =
   AuthenticatedOnboardingAccreditationRouteImport.update({
     id: '/onboarding/accreditation',
@@ -300,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
+  '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -341,6 +349,7 @@ export interface FileRoutesByTo {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
+  '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -385,6 +394,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
+  '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
+    | '/manager/documents'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
@@ -470,6 +481,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
+    | '/manager/documents'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
@@ -513,6 +525,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/wire'
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
+    | '/_authenticated/manager/documents'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
     | '/_authenticated/onboarding/documents'
@@ -738,6 +751,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerApplicationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/documents': {
+      id: '/_authenticated/manager/documents'
+      path: '/manager/documents'
+      fullPath: '/manager/documents'
+      preLoaderRoute: typeof AuthenticatedManagerDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/accreditation': {
       id: '/_authenticated/onboarding/accreditation'
       path: '/onboarding/accreditation'
@@ -856,6 +876,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
+  AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
   AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
@@ -886,6 +907,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiligenceOfferingIdRoute: AuthenticatedDiligenceOfferingIdRoute,
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,
+  AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,

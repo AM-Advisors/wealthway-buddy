@@ -21,6 +21,7 @@ interface FundInvitationProps {
   role?: string
   invitedByName?: string
   portalUrl?: string
+  signInUrl?: string
   contactEmail?: string
 }
 
@@ -37,6 +38,7 @@ function FundInvitation({
   role = 'investor',
   invitedByName = 'The Harmonious team',
   portalUrl = `${DEFAULT_PORTAL_ORIGIN}/auth`,
+  signInUrl = `${DEFAULT_PORTAL_ORIGIN}/auth`,
   contactEmail = 'operations@harmonious.co',
 }: FundInvitationProps) {
   const isManager = role === 'fund_manager'
@@ -99,8 +101,10 @@ function FundInvitation({
           <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>{lead}</Text>
 
           <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>
-            Access is tied to this email address. Sign in with it — using a password or your Google
-            account — and {offeringName} will be waiting for you.
+            Use the secure link below to choose your password. It is tied to this email address and
+            expires shortly, so set it up soon. You can also sign in at any time with
+            {' '}<a href={signInUrl} style={{ color: '#142647' }}>{signInUrl}</a>{' '}
+            using Continue with Google on the same address.
           </Text>
 
           <Section style={{ margin: '28px 0' }}>
@@ -117,7 +121,7 @@ function FundInvitation({
                 textDecoration: 'none',
               }}
             >
-              {isManager ? 'Open the manager portal' : 'Open your investor portal'}
+              Set your password and sign in
             </Button>
           </Section>
 
@@ -142,7 +146,8 @@ export const template: TemplateEntry = {
     offeringName: 'Harmonious Growth Fund I',
     role: 'investor',
     invitedByName: 'Harmonious Operations',
-    portalUrl: `${DEFAULT_PORTAL_ORIGIN}/auth`,
+    portalUrl: `${DEFAULT_PORTAL_ORIGIN}/reset-password`,
+    signInUrl: `${DEFAULT_PORTAL_ORIGIN}/auth`,
   },
 }
 
