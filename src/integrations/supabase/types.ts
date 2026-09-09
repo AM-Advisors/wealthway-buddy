@@ -1199,6 +1199,10 @@ export type Database = {
           id: string
           note: string | null
           offering_id: string
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           storage_path: string
           uploaded_at: string
           user_id: string
@@ -1214,6 +1218,10 @@ export type Database = {
           id?: string
           note?: string | null
           offering_id: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           storage_path: string
           uploaded_at?: string
           user_id: string
@@ -1229,6 +1237,10 @@ export type Database = {
           id?: string
           note?: string | null
           offering_id?: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           storage_path?: string
           uploaded_at?: string
           user_id?: string
