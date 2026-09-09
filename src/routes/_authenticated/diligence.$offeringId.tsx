@@ -716,13 +716,17 @@ function DocumentsTab({
               This link expires after a few minutes. Please keep these materials confidential.
             </DialogDescription>
           </DialogHeader>
-          {viewer ? (
+          {viewer?.src ? (
             <iframe
               title={viewer.title}
-              src={viewer.url}
+              src={viewer.src}
               className="h-[70vh] w-full rounded-md border bg-muted"
             />
-          ) : null}
+          ) : (
+            <p className="py-8 text-sm text-muted-foreground">
+              This file type can't be read in the browser. Use the button below to download it.
+            </p>
+          )}
           <div className="flex justify-end">
             <Button
               variant="outline"
