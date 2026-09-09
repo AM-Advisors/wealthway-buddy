@@ -18,6 +18,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
+import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedAdminFundingRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminFundsRouteImport } from './routes/_authenticated/admin.funds'
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
 import { Route as AuthenticatedAdminInvestorsRouteImport } from './routes/_authenticated/admin.investors'
+import { Route as AuthenticatedAdminMemoRouteImport } from './routes/_authenticated/admin.memo'
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
 import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_authenticated/admin.permissions'
 import { Route as AuthenticatedAdminPortfolioValueRouteImport } from './routes/_authenticated/admin.portfolio-value'
@@ -56,6 +58,7 @@ import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_aut
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
 import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authenticated/manager.inbox'
 import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_authenticated/manager.investors'
+import { Route as AuthenticatedManagerMemoRouteImport } from './routes/_authenticated/manager.memo'
 import { Route as AuthenticatedManagerMessagesRouteImport } from './routes/_authenticated/manager.messages'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_authenticated/manager.permissions'
@@ -125,6 +128,11 @@ const AuthenticatedFundDocumentsRoute =
     path: '/fund-documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFundMemoRoute = AuthenticatedFundMemoRouteImport.update({
+  id: '/fund-memo',
+  path: '/fund-memo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -232,6 +240,11 @@ const AuthenticatedAdminInvestorsRoute =
     path: '/admin/investors',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminMemoRoute = AuthenticatedAdminMemoRouteImport.update({
+  id: '/admin/memo',
+  path: '/admin/memo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminNewApplicationRoute =
   AuthenticatedAdminNewApplicationRouteImport.update({
     id: '/admin/new-application',
@@ -342,6 +355,12 @@ const AuthenticatedManagerInvestorsRoute =
   AuthenticatedManagerInvestorsRouteImport.update({
     id: '/manager/investors',
     path: '/manager/investors',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerMemoRoute =
+  AuthenticatedManagerMemoRouteImport.update({
+    id: '/manager/memo',
+    path: '/manager/memo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerMessagesRoute =
@@ -485,6 +504,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
+  '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -503,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
+  '/admin/memo': typeof AuthenticatedAdminMemoRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
@@ -520,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
+  '/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
@@ -555,6 +577,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
+  '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -573,6 +596,7 @@ export interface FileRoutesByTo {
   '/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
+  '/admin/memo': typeof AuthenticatedAdminMemoRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
@@ -590,6 +614,7 @@ export interface FileRoutesByTo {
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
+  '/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
@@ -628,6 +653,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
+  '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
@@ -646,6 +672,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/funds': typeof AuthenticatedAdminFundsRoute
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/investors': typeof AuthenticatedAdminInvestorsRoute
+  '/_authenticated/admin/memo': typeof AuthenticatedAdminMemoRoute
   '/_authenticated/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/_authenticated/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/_authenticated/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
@@ -663,6 +690,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/_authenticated/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/_authenticated/manager/investors': typeof AuthenticatedManagerInvestorsRoute
+  '/_authenticated/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/_authenticated/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
@@ -701,6 +729,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/documents'
     | '/fund-documents'
+    | '/fund-memo'
     | '/portal'
     | '/subscription'
     | '/wire'
@@ -719,6 +748,7 @@ export interface FileRouteTypes {
     | '/admin/funds'
     | '/admin/funnel'
     | '/admin/investors'
+    | '/admin/memo'
     | '/admin/new-application'
     | '/admin/permissions'
     | '/admin/portfolio-value'
@@ -736,6 +766,7 @@ export interface FileRouteTypes {
     | '/manager/documents'
     | '/manager/inbox'
     | '/manager/investors'
+    | '/manager/memo'
     | '/manager/messages'
     | '/manager/onboarding'
     | '/manager/permissions'
@@ -771,6 +802,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/documents'
     | '/fund-documents'
+    | '/fund-memo'
     | '/portal'
     | '/subscription'
     | '/wire'
@@ -789,6 +821,7 @@ export interface FileRouteTypes {
     | '/admin/funds'
     | '/admin/funnel'
     | '/admin/investors'
+    | '/admin/memo'
     | '/admin/new-application'
     | '/admin/permissions'
     | '/admin/portfolio-value'
@@ -806,6 +839,7 @@ export interface FileRouteTypes {
     | '/manager/documents'
     | '/manager/inbox'
     | '/manager/investors'
+    | '/manager/memo'
     | '/manager/messages'
     | '/manager/onboarding'
     | '/manager/permissions'
@@ -843,6 +877,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/documents'
     | '/_authenticated/fund-documents'
+    | '/_authenticated/fund-memo'
     | '/_authenticated/portal'
     | '/_authenticated/subscription'
     | '/_authenticated/wire'
@@ -861,6 +896,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/funds'
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/investors'
+    | '/_authenticated/admin/memo'
     | '/_authenticated/admin/new-application'
     | '/_authenticated/admin/permissions'
     | '/_authenticated/admin/portfolio-value'
@@ -878,6 +914,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/documents'
     | '/_authenticated/manager/inbox'
     | '/_authenticated/manager/investors'
+    | '/_authenticated/manager/memo'
     | '/_authenticated/manager/messages'
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/permissions'
@@ -987,6 +1024,13 @@ declare module '@tanstack/react-router' {
       path: '/fund-documents'
       fullPath: '/fund-documents'
       preLoaderRoute: typeof AuthenticatedFundDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fund-memo': {
+      id: '/_authenticated/fund-memo'
+      path: '/fund-memo'
+      fullPath: '/fund-memo'
+      preLoaderRoute: typeof AuthenticatedFundMemoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/portal': {
@@ -1122,6 +1166,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminInvestorsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/memo': {
+      id: '/_authenticated/admin/memo'
+      path: '/admin/memo'
+      fullPath: '/admin/memo'
+      preLoaderRoute: typeof AuthenticatedAdminMemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/new-application': {
       id: '/_authenticated/admin/new-application'
       path: '/admin/new-application'
@@ -1253,6 +1304,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/investors'
       fullPath: '/manager/investors'
       preLoaderRoute: typeof AuthenticatedManagerInvestorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/memo': {
+      id: '/_authenticated/manager/memo'
+      path: '/manager/memo'
+      fullPath: '/manager/memo'
+      preLoaderRoute: typeof AuthenticatedManagerMemoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/messages': {
@@ -1423,6 +1481,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
+  AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
@@ -1438,6 +1497,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminFundsRoute: typeof AuthenticatedAdminFundsRoute
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminInvestorsRoute: typeof AuthenticatedAdminInvestorsRoute
+  AuthenticatedAdminMemoRoute: typeof AuthenticatedAdminMemoRoute
   AuthenticatedAdminNewApplicationRoute: typeof AuthenticatedAdminNewApplicationRoute
   AuthenticatedAdminPermissionsRoute: typeof AuthenticatedAdminPermissionsRoute
   AuthenticatedAdminPortfolioValueRoute: typeof AuthenticatedAdminPortfolioValueRoute
@@ -1455,6 +1515,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
   AuthenticatedManagerInboxRoute: typeof AuthenticatedManagerInboxRoute
   AuthenticatedManagerInvestorsRoute: typeof AuthenticatedManagerInvestorsRoute
+  AuthenticatedManagerMemoRoute: typeof AuthenticatedManagerMemoRoute
   AuthenticatedManagerMessagesRoute: typeof AuthenticatedManagerMessagesRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerPermissionsRoute: typeof AuthenticatedManagerPermissionsRoute
@@ -1478,6 +1539,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
+  AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
@@ -1493,6 +1555,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminFundsRoute: AuthenticatedAdminFundsRoute,
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminInvestorsRoute: AuthenticatedAdminInvestorsRoute,
+  AuthenticatedAdminMemoRoute: AuthenticatedAdminMemoRoute,
   AuthenticatedAdminNewApplicationRoute: AuthenticatedAdminNewApplicationRoute,
   AuthenticatedAdminPermissionsRoute: AuthenticatedAdminPermissionsRoute,
   AuthenticatedAdminPortfolioValueRoute: AuthenticatedAdminPortfolioValueRoute,
@@ -1512,6 +1575,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
   AuthenticatedManagerInboxRoute: AuthenticatedManagerInboxRoute,
   AuthenticatedManagerInvestorsRoute: AuthenticatedManagerInvestorsRoute,
+  AuthenticatedManagerMemoRoute: AuthenticatedManagerMemoRoute,
   AuthenticatedManagerMessagesRoute: AuthenticatedManagerMessagesRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
   AuthenticatedManagerPermissionsRoute: AuthenticatedManagerPermissionsRoute,
