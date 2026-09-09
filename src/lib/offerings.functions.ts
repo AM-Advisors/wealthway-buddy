@@ -8,7 +8,7 @@ import {
   type OfferingAuditEventType,
 } from "@/lib/offering-audit";
 
-async function assertAdmin(supabase: any, userId: string) {
+async function isAdminUser(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("user_roles")
     .select("role")
@@ -16,8 +16,28 @@ async function assertAdmin(supabase: any, userId: string) {
     .eq("role", "admin")
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin access required.");
+  return Boolean(data);
 }
+
+async function assertAdmin(supabase: any, userId: string) {
+  if (!(await isAdminUser(supabase, userId))) {
+    throw new Error("Forbidden: admin access required.");
+  }
+}
+
+/** Admins, or a fund manager assigned to this fund. */
+async function assertCanEditOffering(supabase: any, userId: string, offeringId: string) {
+  if (await isAdminUser(supabase, userId)) return;
+  const { data, error } = await supabase
+    .from("fund_managers")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("offering_id", offeringId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: you do not manage that fund.");
+}
+
 
 export const WIRE_FIELDS = [
   "bank_name",
