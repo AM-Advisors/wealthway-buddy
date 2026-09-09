@@ -186,15 +186,22 @@ export const uploadFundTaxDocument = createServerFn({ method: "POST" })
       .eq("id", data.offeringId)
       .maybeSingle();
 
-    const { notifyOperations } = await import("@/lib/operations-notify.server");
-    await notifyOperations({
-      itemLabel: FUND_TAX_DOC_TYPES.find((t) => t.value === data.docType)?.label ?? "Tax document",
-      fundName: ((offering as any)?.name as string) ?? "A fund",
-      detail: data.fileName,
-      raisedBy: who.name,
-      linkPath: "/ops/tax-documents",
-      idempotencyKey: `ops-tax-${(inserted as any).id}`,
-    });
+    try {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      await sendTemplateEmail("ops-review-request", "operations@harmonious.co", {
+        templateData: {
+          itemLabel:
+            FUND_TAX_DOC_TYPES.find((t) => t.value === data.docType)?.label ?? "Tax document",
+          fundName: ((offering as any)?.name as string) ?? "A fund",
+          detail: data.fileName,
+          raisedBy: who.name,
+          portalUrl: "https://onboard.harmonious.co/ops/tax-documents",
+        },
+        idempotencyKey: `ops-tax-${(inserted as any).id}`,
+      });
+    } catch (err) {
+      console.error("tax document operations alert failed", err);
+    }
 
     return { id: (inserted as any).id as string };
   });
