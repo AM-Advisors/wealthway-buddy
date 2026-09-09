@@ -10,6 +10,7 @@ import { savePdf } from "@/lib/download-pdf";
 import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { SignedDocumentsCard } from "@/components/signed-documents-card";
 import { PacketEmailCard } from "@/components/packet-email-card";
+import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { Badge } from "@/components/ui/badge";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
 import { Button } from "@/components/ui/button";
@@ -171,6 +172,10 @@ function FundPage() {
 
       <div className="mt-8">
         <WireTrackingPanel offeringId={fundId} />
+      </div>
+
+      <div className="mt-6">
+        <BankFeedPanel fundId={fundId} />
       </div>
 
       <Card className="mt-8">
