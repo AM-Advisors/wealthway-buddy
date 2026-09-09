@@ -193,7 +193,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       });
       const details = (((wireRows ?? []) as any[])[0]?.details ?? {}) as Record<string, unknown>;
       hasWireInstructions = Boolean(
-        String(details.bank_name ?? "").trim() && String(details.account_number ?? "").trim(),
+        String(details["bank_name"] ?? "").trim() && String(details["account_number"] ?? "").trim(),
       );
     } catch {
       hasWireInstructions = false;
