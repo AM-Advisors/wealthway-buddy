@@ -508,8 +508,8 @@ export const syncDiligenceFolder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!room) throw new Error("Create the diligence room first.");
 
-    const { listFolderFiles } = await import("@/lib/box.server");
-    const files = await listFolderFiles(room.box_folder_id);
+    const { listFolderTree } = await import("@/lib/box.server");
+    const files = await listFolderTree(room.box_folder_id);
 
     const { data: known } = await supabase
       .from("diligence_documents")
@@ -517,26 +517,89 @@ export const syncDiligenceFolder = createServerFn({ method: "POST" })
       .eq("room_id", room.id);
     const seen = new Set((known ?? []).map((k: any) => k.box_file_id));
 
-    const rows = files
-      .filter((f) => !seen.has(f.id))
-      .map((f) => ({
-        room_id: room.id,
-        offering_id: data.offering_id,
-        category: "other",
-        title: f.name.replace(/\.[^.]+$/, ""),
-        description: "Added directly in Box",
-        box_file_id: f.id,
-        file_name: f.name,
-        size_bytes: f.size,
-        uploaded_by: userId,
-      }));
+    // A file dropped into a subfolder named after a section lands in that
+    // section; anything else waits in "Other materials".
+    const { data: roomMeta } = await supabase
+      .from("diligence_rooms")
+      .select("entity_type")
+      .eq("id", room.id)
+      .maybeSingle();
+    const cats = categoriesFor(roomMeta?.entity_type);
+    const guessCategory = (path: string[]) => {
+      const folder = (path[path.length - 1] ?? "").trim().toLowerCase();
+      if (!folder) return "other";
+      const hit = cats.find(
+        (c) => c.label.toLowerCase() === folder || c.value === folder.replace(/[\s-]+/g, "_"),
+      );
+      return hit?.value ?? "other";
+    };
+
+    const fresh = files.filter((f) => !seen.has(f.id));
+    const rows = fresh.map((f) => ({
+      room_id: room.id,
+      offering_id: data.offering_id,
+      category: guessCategory(f.path),
+      title: f.name.replace(/\.[^.]+$/, ""),
+      description: f.path.length
+        ? `Added directly in Box (${f.path.join(" / ")})`
+        : "Added directly in Box",
+      box_file_id: f.id,
+      file_name: f.name,
+      size_bytes: f.size,
+      uploaded_by: userId,
+      // Keep the moment the file actually landed in Box, not the sync time.
+      uploaded_at: f.created_at || new Date().toISOString(),
+    }));
 
     if (rows.length) {
       const { error } = await supabase.from("diligence_documents").insert(rows);
       if (error) throw new Error(error.message);
+
+      const names = rows.map((r) => r.file_name);
+      await logActivity(
+        supabase,
+        userId,
+        data.offering_id,
+        room.id,
+        "documents_synced",
+        rows.length === 1
+          ? `Pulled in “${names[0]}” from the Box folder`
+          : `Pulled in ${rows.length} files from the Box folder`,
+        { file_names: names.slice(0, 25) },
+      );
+
+      // Tell the fund's managers, through the same outbox that carries every
+      // other alert. Investors never receive this one.
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await supabaseAdmin.from("notification_events").insert({
+          event_kind: "diligence_documents_synced",
+          offering_id: data.offering_id,
+          metadata: {
+            count: rows.length,
+            file_names: names.slice(0, 10),
+            portal_path: `/diligence/${data.offering_id}`,
+          },
+        });
+        const { kickManagerAlerts } = await import("@/lib/manager-alerts.server");
+        kickManagerAlerts();
+      } catch (e) {
+        console.error("[diligence] sync alert failed", e);
+      }
     }
-    return { added: rows.length, checked: files.length };
+
+    return {
+      added: rows.length,
+      checked: files.length,
+      syncedAt: new Date().toISOString(),
+      files: rows.map((r) => ({
+        file_name: r.file_name,
+        category: r.category,
+        uploaded_at: r.uploaded_at,
+      })),
+    };
   });
+
 
 /* =========================================================================
    NDA gate, checklist, Q&A, activity trail and document versions
