@@ -33,6 +33,7 @@ const applicationSchema = z.object({
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   offering_id: z.string().uuid("Choose a fund"),
   commitment_cents: z.number().int().min(0).nullable().default(null),
+  source: z.enum(["portal", "fund_page", "referral", "admin"]).default("admin"),
   send_invitation: z.boolean().default(true),
 });
 
@@ -155,6 +156,7 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
         offering_id: offering.id,
         status: "in_progress",
         current_step: "kyc",
+        source: data.source,
         commitment_cents: data.commitment_cents && data.commitment_cents > 0 ? data.commitment_cents : null,
       })
       .select("id")

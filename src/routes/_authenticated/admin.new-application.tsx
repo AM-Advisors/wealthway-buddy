@@ -33,6 +33,13 @@ export const Route = createFileRoute("/_authenticated/admin/new-application")({
   component: NewApplication,
 });
 
+const APPLICATION_SOURCES = [
+  { value: "referral", label: "Referral" },
+  { value: "portal", label: "Direct portal form" },
+  { value: "fund_page", label: "Linked from a fund page" },
+  { value: "admin", label: "Opened by an administrator" },
+] as const;
+
 const INVESTOR_TYPES = [
   { value: "individual", label: "Individual" },
   { value: "joint", label: "Joint" },
@@ -62,6 +69,7 @@ function NewApplication() {
   const [entityName, setEntityName] = useState("");
   const [phone, setPhone] = useState("");
   const [offeringId, setOfferingId] = useState("");
+  const [source, setSource] = useState<(typeof APPLICATION_SOURCES)[number]["value"]>("referral");
   const [commitment, setCommitment] = useState("");
   const [sendInvitation, setSendInvitation] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +85,7 @@ function NewApplication() {
           entity_name: entityName,
           phone,
           offering_id: offeringId,
+          source,
           commitment_cents: Number.isFinite(dollars) && dollars > 0 ? Math.round(dollars * 100) : null,
           send_invitation: sendInvitation,
         },
@@ -205,6 +214,21 @@ function NewApplication() {
                   <option key={o.id} value={o.id} disabled={!o.is_open}>
                     {o.name} · Reg D {o.reg_type}
                     {o.is_open ? "" : " (closed)"}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="source">How did this investor apply?</Label>
+              <select
+                id="source"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={source}
+                onChange={(e) => setSource(e.target.value as typeof source)}
+              >
+                {APPLICATION_SOURCES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
                   </option>
                 ))}
               </select>

@@ -418,6 +418,26 @@ function FundsPage() {
                     {o.target_raise_cents ? ` · target ${money(o.target_raise_cents)}` : ""} ·{" "}
                     {o.applicationCount} application{o.applicationCount === 1 ? "" : "s"}
                   </p>
+                  {o.applicationCount > 0 ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Where they applied:{" "}
+                      {(["portal", "fund_page", "referral", "admin"] as const)
+                        .filter((s) => (o.sourceCounts?.[s] ?? 0) > 0)
+                        .map(
+                          (s) =>
+                            `${o.sourceCounts[s]} ${
+                              s === "portal"
+                                ? "portal"
+                                : s === "fund_page"
+                                  ? "fund page"
+                                  : s === "referral"
+                                    ? "referral"
+                                    : "admin"
+                            }`,
+                        )
+                        .join(" · ") || "—"}
+                    </p>
+                  ) : null}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <Badge>Reg D {o.reg_type === "506b" ? "506(b)" : "506(c)"}</Badge>
                     <Badge variant={o.is_open ? "secondary" : "outline"}>

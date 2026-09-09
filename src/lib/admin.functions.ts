@@ -75,7 +75,7 @@ export const listApplications = createServerFn({ method: "GET" })
     let query = supabase
       .from("investor_applications")
       .select(
-        "id, user_id, offering_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, submitted_at, created_at, updated_at",
+        "id, user_id, offering_id, status, current_step, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, source, submitted_at, created_at, updated_at",
       )
       .order("updated_at", { ascending: false })
       .limit(200);
