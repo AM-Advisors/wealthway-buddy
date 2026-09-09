@@ -466,16 +466,16 @@ export const resendInvitation = createServerFn({ method: "POST" })
       .eq("id", (invitation as any).offering_id)
       .maybeSingle();
 
-    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const result = await sendTemplateEmail("fund-invitation", (invitation as any).email, {
-      templateData: {
-        inviteeName: (invitation as any).invited_name || (invitation as any).email,
-        offeringName: (offering as any)?.name ?? "Harmonious",
-        role: (invitation as any).role,
-        invitedByName: await actorName(supabase, userId, claims),
-        portalUrl: `${PORTAL_ORIGIN}/auth`,
-      },
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const sent = await sendInvitationEmail({
+      supabaseAdmin,
+      email: (invitation as any).email as string,
+      name: ((invitation as any).invited_name as string) || "",
+      role: (invitation as any).role as "investor" | "fund_manager",
+      fundNames: [((offering as any)?.name as string) ?? "Harmonious"],
+      invitedByName: await actorName(supabase, userId, claims),
     });
+
 
     await supabase
       .from("fund_invitations")
