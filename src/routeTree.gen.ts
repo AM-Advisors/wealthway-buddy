@@ -96,6 +96,7 @@ import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/l
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
+import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
@@ -594,6 +595,12 @@ const AuthenticatedAdminPacketFundIdRoute =
     path: '/admin/packet/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerFundFundIdRoute =
+  AuthenticatedManagerFundFundIdRouteImport.update({
+    id: '/manager/fund/$fundId',
+    path: '/manager/fund/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFundsFundIdRoute =
   AuthenticatedOpsFundsFundIdRouteImport.update({
     id: '/ops/funds/$fundId',
@@ -725,6 +732,7 @@ export interface FileRoutesByFullPath {
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
@@ -820,6 +828,7 @@ export interface FileRoutesByTo {
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
@@ -918,6 +927,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
@@ -1016,6 +1026,7 @@ export interface FileRouteTypes {
     | '/ops/'
     | '/admin/fund/$fundId'
     | '/admin/packet/$fundId'
+    | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
@@ -1111,6 +1122,7 @@ export interface FileRouteTypes {
     | '/ops'
     | '/admin/fund/$fundId'
     | '/admin/packet/$fundId'
+    | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
@@ -1208,6 +1220,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/'
     | '/_authenticated/admin/fund/$fundId'
     | '/_authenticated/admin/packet/$fundId'
+    | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
@@ -1852,6 +1865,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPacketFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/fund/$fundId': {
+      id: '/_authenticated/manager/fund/$fundId'
+      path: '/manager/fund/$fundId'
+      fullPath: '/manager/fund/$fundId'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/funds/$fundId': {
       id: '/_authenticated/ops/funds/$fundId'
       path: '/ops/funds/$fundId'
@@ -1983,6 +2003,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
   AuthenticatedAdminPacketFundIdRoute: typeof AuthenticatedAdminPacketFundIdRoute
+  AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
 }
 
@@ -2064,6 +2085,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
   AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
   AuthenticatedAdminPacketFundIdRoute: AuthenticatedAdminPacketFundIdRoute,
+  AuthenticatedManagerFundFundIdRoute: AuthenticatedManagerFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
 }
 

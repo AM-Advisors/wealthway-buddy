@@ -194,7 +194,9 @@ function ManagerPanel() {
                     </CardDescription>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link to="/manager/investors">Open</Link>
+                    <Link to="/manager/fund/$fundId" params={{ fundId: fund.id }}>
+                      Open fund
+                    </Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -206,6 +208,11 @@ function ManagerPanel() {
                   <Metric label="Complete" value={fund.complete} />
                 </div>
                 <div className="flex flex-wrap gap-1.5">
+                  {progressOf(fund.id) !== null ? (
+                    <Badge variant={progressOf(fund.id) === 100 ? "default" : "secondary"}>
+                      Setup {progressOf(fund.id)}% complete
+                    </Badge>
+                  ) : null}
                   <Badge variant={fund.pendingWires > 0 ? "default" : "outline"}>
                     {fund.pendingWires} wire{fund.pendingWires === 1 ? "" : "s"} awaiting approval
                   </Badge>
