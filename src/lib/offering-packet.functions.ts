@@ -143,3 +143,144 @@ export const revokePacketLink = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** People connected to this fund who can be sent the packet. */
+export const listPacketRecipients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertFundAccess(supabase, userId, data.fundId);
+
+    const [{ data: apps }, { data: access }] = await Promise.all([
+      supabase.from("investor_applications").select("user_id").eq("offering_id", data.fundId),
+      supabase.from("investor_fund_access").select("user_id").eq("offering_id", data.fundId),
+    ]);
+
+    const ids = Array.from(
+      new Set([...(apps ?? []), ...(access ?? [])].map((r: any) => r.user_id as string)),
+    );
+    if (ids.length === 0) return { recipients: [] as { userId: string; email: string; name: string }[] };
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, email, legal_name")
+      .in("user_id", ids);
+
+    const recipients = (profiles ?? [])
+      .filter((p: any) => !!p.email)
+      .map((p: any) => ({
+        userId: p.user_id as string,
+        email: p.email as string,
+        name: (p.legal_name as string | null) ?? (p.email as string),
+      }))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+    return { recipients };
+  });
+
+/** Creates (or reuses) a packet link and emails it to one investor. */
+export const emailPacketToInvestor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        fundId: z.string().uuid(),
+        email: z.string().trim().email().max(255),
+        name: z.string().trim().max(200).optional(),
+        include_wire: z.boolean().default(true),
+        expires_in_days: z.number().int().min(1).max(365).default(30),
+        note: z.string().trim().max(2000).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertFundAccess(supabase, userId, data.fundId);
+
+    const { data: offering } = await supabase
+      .from("offerings")
+      .select("name")
+      .eq("id", data.fundId)
+      .maybeSingle();
+    const offeringName = (offering as any)?.name ?? "Harmonious";
+
+    const { data: link, error } = await supabase
+      .from("offering_packet_links")
+      .insert({
+        offering_id: data.fundId,
+        token: newToken(),
+        label: `Emailed to ${data.email}`,
+        include_wire: data.include_wire,
+        expires_at: new Date(Date.now() + data.expires_in_days * 86400000).toISOString(),
+        created_by: userId,
+      })
+      .select("id, token, label, include_wire, expires_at, revoked_at, download_count, last_downloaded_at, created_at")
+      .single();
+    if (error) throw new Error(error.message);
+
+    const packetUrl = `https://onboard.harmonious.co/api/public/packet/${link.token}`;
+    const expiresOn = new Date(link.expires_at as string).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
+    const trackedUrl = await buildTrackedUrl({
+      url: packetUrl,
+      recipient: data.email,
+      template: "investor-message",
+      label: "Offering packet",
+    });
+    const pixelUrl = await buildOpenPixelUrl({
+      recipient: data.email,
+      template: "investor-message",
+    });
+
+    const bodyParts = [
+      data.note?.trim() || `Here is the offering packet for ${offeringName}.`,
+      data.include_wire
+        ? "The packet includes the fund documents and the wire instructions for your subscription."
+        : "The packet includes the fund documents.",
+      `Download it here: ${trackedUrl}`,
+      `This link is private to you and stops working on ${expiresOn}.`,
+      "For your security, we will never email you a change of bank details. Always confirm wire instructions by phone with a number you already have for us before sending funds.",
+    ];
+
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    let result: { sent: boolean };
+    try {
+      result = await sendTemplateEmail("investor-message", data.email, {
+        templateData: {
+          investorName: data.name || "Investor",
+          subject: `${offeringName} — offering packet`,
+          body: bodyParts.join("\n\n"),
+          offeringName,
+          pixelUrl,
+        },
+        idempotencyKey: `packet-${link.id}`,
+      });
+    } catch (sendError) {
+      await supabase
+        .from("offering_packet_links")
+        .update({ revoked_at: new Date().toISOString() })
+        .eq("id", link.id);
+      const detail = sendError instanceof Error ? sendError.message : "Unknown error";
+      return { ok: false, message: `Could not send the email. ${detail.slice(0, 200)}`, link: null };
+    }
+
+    if (!result.sent) {
+      await supabase
+        .from("offering_packet_links")
+        .update({ revoked_at: new Date().toISOString() })
+        .eq("id", link.id);
+      return {
+        ok: false,
+        message: "That address has opted out or previously bounced, so nothing was sent.",
+        link: null,
+      };
+    }
+
+    return { ok: true, message: `Packet sent to ${data.email}.`, link };
+  });
