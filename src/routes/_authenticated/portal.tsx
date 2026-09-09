@@ -283,6 +283,32 @@ function Portal() {
         </Card>
       ) : (
         <div className="mt-8 space-y-6">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <PortalHomeLink
+              title="Wire confirmation"
+              description="Tell the fund your wire is on its way."
+              to="/wire-confirmation"
+            />
+            <PortalHomeLink
+              title="Messages"
+              description="A private line to the fund team."
+              href="#portal-messages"
+            />
+            {app.offering_id ? (
+              <PortalHomeLink
+                title="Cap table"
+                description="Your ownership in the fund's room."
+                to="/diligence/$offeringId"
+                params={{ offeringId: app.offering_id as string }}
+              />
+            ) : null}
+            <PortalHomeLink
+              title="Portfolio value"
+              description="What your shares are worth today."
+              to="/my-portfolio"
+            />
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Your fund commitments</CardTitle>
