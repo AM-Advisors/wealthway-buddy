@@ -42,6 +42,14 @@ export async function syncBoxSignRequest(
     provider_last_event_at: now,
   };
 
+  // First time Box tells us the signer opened the document, stamp it once.
+  const alreadyViewed = (signature as any).provider_viewed_at as string | null;
+  const openedNow =
+    remote?.viewed || String(opts.status ?? "").toLowerCase().includes("view") || mapped === "completed";
+  if (!alreadyViewed && openedNow) {
+    patch["provider_viewed_at"] = remote?.viewedAt ?? opts.completedAt ?? now;
+  }
+
   if (mapped === "completed" && remote?.signedFileId) {
     const completedAt = opts.completedAt ?? now;
     const pdfBytes = await downloadFile(remote.signedFileId);
