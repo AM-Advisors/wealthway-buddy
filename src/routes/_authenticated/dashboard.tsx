@@ -170,6 +170,68 @@ function Dashboard() {
   const unlocked = app?.kyc_status === "approved" && app?.aml_status === "approved";
   const signatureByDoc = new Map(documents.map((d) => [d.offering_document_id, d]));
 
+  // Plain-language tracker: everything between signing in and the money landing.
+  const docsToSign = offeringDocs.filter((d) => d.requires_signature);
+  const signedCount = docsToSign.filter((d) => signatureByDoc.has(d.id)).length;
+  const wireApproved =
+    wireConfirmations.some((w) => w.status === "approved") || funding?.payment?.status === "settled";
+  const pathSteps = [
+    {
+      title: "Verify your identity",
+      detail: "Photo ID and a quick liveness check.",
+      done: app?.kyc_status === "approved",
+      to: "/onboarding/kyc" as const,
+      cta: "Verify",
+    },
+    {
+      title: "Background screening",
+      detail: "We run this for you — no action needed.",
+      done: app?.aml_status === "approved",
+      to: "/onboarding/aml" as const,
+      cta: "View",
+    },
+    {
+      title: "Confirm your accreditation",
+      detail: "Answer the questionnaire and attach evidence.",
+      done: app?.accreditation_status === "approved",
+      to: "/onboarding/accreditation" as const,
+      cta: "Continue",
+    },
+    {
+      title: "Sign your fund documents",
+      detail:
+        docsToSign.length === 0
+          ? "Your documents will appear here."
+          : `${signedCount} of ${docsToSign.length} signed.`,
+      done: docsToSign.length > 0 && signedCount === docsToSign.length,
+      to: "/portal" as const,
+      cta: "Sign",
+    },
+    {
+      title: "Choose how you will send funds",
+      detail: "Wire transfer or ACH debit.",
+      done: Boolean(funding?.payment?.method),
+      to: "/onboarding/funding" as const,
+      cta: "Choose",
+    },
+    {
+      title: "Send your wire and confirm it",
+      detail: "Tell us the date, amount and sending bank.",
+      done: wireConfirmations.length > 0 || funding?.payment?.status === "settled",
+      to: "/wire-confirmation" as const,
+      cta: "Confirm wire",
+    },
+    {
+      title: "Funds received",
+      detail: "We confirm the money has landed in the fund account.",
+      done: wireApproved,
+      to: "/wire" as const,
+      cta: "View instructions",
+    },
+  ];
+  const doneSteps = pathSteps.filter((s) => s.done).length;
+  const nextStep = pathSteps.find((s) => !s.done) ?? null;
+
   async function openSigned(signatureId: string) {
     setBusy(signatureId);
     try {
