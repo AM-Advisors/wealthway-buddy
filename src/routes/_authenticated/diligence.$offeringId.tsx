@@ -1387,10 +1387,66 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
 
   const viewers = ((data as any)?.viewers ?? []) as any[];
   const neverOpened = ((data as any)?.neverOpened ?? []) as any[];
+  const documentViews = ((data as any)?.documentViews ?? []) as any[];
   const totalDocuments = Number((data as any)?.totalDocuments ?? 0);
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Who read each document</CardTitle>
+          <CardDescription>
+            Every time someone opens or downloads a document it is recorded here with their name
+            and the time. Your own team's opens are labelled so they don't look like investor
+            interest.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : documentViews.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No documents in this room yet.
+            </p>
+          ) : (
+            <ul className="divide-y rounded-md border">
+              {documentViews.map((d: any) => (
+                <li key={d.id} className="space-y-2 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{d.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {d.investorCount === 0
+                          ? "No investor has opened this yet"
+                          : `${d.investorCount} investor${d.investorCount === 1 ? "" : "s"} · ${d.investorOpens} open${d.investorOpens === 1 ? "" : "s"} · last ${when(d.lastInvestorAt)}`}
+                      </p>
+                    </div>
+                    <Badge variant={d.investorCount > 0 ? "secondary" : "outline"}>
+                      {d.investorCount > 0 ? "Being read" : "Unread by investors"}
+                    </Badge>
+                  </div>
+                  {d.readers.length > 0 ? (
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {d.readers.map((r: any) => (
+                        <li key={r.actor_id}>
+                          <span className={r.isTeam ? "" : "font-medium text-foreground"}>
+                            {r.name || r.email || "Someone"}
+                          </span>
+                          {r.isTeam ? " (your team)" : ""} — first {when(r.firstOpened)}, last{" "}
+                          {when(r.lastOpened)}
+                          {r.opens > 0 ? `, read ${r.opens}×` : ""}
+                          {r.downloads > 0 ? `, downloaded ${r.downloads}×` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Who's opening this room</CardTitle>
