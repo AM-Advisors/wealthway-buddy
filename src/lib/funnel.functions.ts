@@ -158,6 +158,8 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
         email: (profile?.email as string) ?? null,
         offeringId: app.offering_id as string,
         invited,
+        opened,
+        firstOpenedAt: firstOpenByRecipient.get(email) ?? null,
         clicked,
         identity,
         accredited,
