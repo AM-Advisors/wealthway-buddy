@@ -16,6 +16,7 @@ import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SignedDocumentsCard } from "@/components/signed-documents-card";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -172,6 +173,8 @@ export function FundOperations({ offeringId }: { offeringId: string }) {
           )}
         </CardContent>
       </Card>
+
+      <SignedDocumentsCard offeringId={offeringId} />
 
       <Card>
         <CardHeader>
