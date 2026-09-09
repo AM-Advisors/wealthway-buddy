@@ -585,7 +585,14 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
     if (confirmation.payment_id) {
       const paymentUpdate =
         data.outcome === "approved"
-          ? { status: "settled" as const, confirmed_at: now, failure_reason: null, updated_at: now }
+          ? {
+              status: "settled" as const,
+              confirmed_at: now,
+              failure_reason: null,
+              updated_at: now,
+              // Record the money that actually arrived, not the expected figure.
+              ...(confirmation.amount_cents ? { amount_cents: confirmation.amount_cents } : {}),
+            }
           : {
               status: "awaiting_wire" as const,
               confirmed_at: null,
