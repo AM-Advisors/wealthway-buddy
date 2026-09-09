@@ -109,9 +109,12 @@ function Portal() {
   const [consent, setConsent] = useState(false);
   const [signingId, setSigningId] = useState<string | null>(null);
 
+  // Which fund the investor is looking at, when they are in more than one.
+  const [selectedApp, setSelectedApp] = useState<string | null>(null);
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["portal"],
-    queryFn: () => load(),
+    queryKey: ["portal", selectedApp],
+    queryFn: () => load({ data: { applicationId: selectedApp } }),
     // Keep polling while any check is still moving so webhook results appear live.
     refetchInterval: (query) => {
       const app = query.state.data?.application;
