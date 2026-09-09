@@ -187,3 +187,11 @@
 @utility font-heading {
   font-family: var(--font-heading);
 }
+
+/* Subtle engraved grid used behind quiet, document-like pages. */
+@utility paper-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
