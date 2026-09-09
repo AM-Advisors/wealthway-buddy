@@ -468,6 +468,9 @@ function Dashboard() {
             <Link to="/documents">View all documents</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
+            <Link to="/fund-documents">Fund legal documents</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
             <Link to="/diligence">Due diligence</Link>
           </Button>
         </div>
