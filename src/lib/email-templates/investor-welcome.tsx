@@ -70,7 +70,7 @@ function InvestorWelcome({
         >
           <Section style={{ marginBottom: '24px' }}>
             <Img
-              src="https://onboard.harmonious.co/__l5e/assets-v1/7e6bcfbb-6598-4382-8118-886eb02957e5/logo-navy.png"
+              src="https://onboard.harmonious.co/__l5e/assets-v1/97373cb0-919a-4bb4-8395-b0b009111209/logo-navy.png"
               alt="Harmonious"
               height={28}
               style={{ display: 'block', height: '28px', width: 'auto' }}
