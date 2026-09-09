@@ -191,7 +191,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       const { data: wireRows } = await supabase.rpc("get_wire_instructions", {
         p_offering_id: offeringId,
       });
-      const details = (wireRows ?? [])[0]?.details ?? {};
+      const details = (((wireRows ?? []) as any[])[0]?.details ?? {}) as Record<string, unknown>;
       hasWireInstructions = Boolean(
         String(details.bank_name ?? "").trim() && String(details.account_number ?? "").trim(),
       );
