@@ -14,6 +14,8 @@ import { FundEntityCard } from "@/components/fund-entity-card";
 import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
+import { FundComplianceCard } from "@/components/fund-compliance-card";
+import { regTypeLabel } from "@/lib/reg-types";
 
 import { Badge } from "@/components/ui/badge";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
@@ -267,6 +269,8 @@ function FundPage() {
       <div className="mt-6">
         <PublicPageSettings offeringId={offering.id} />
       </div>
+
+      <FundComplianceCard offeringId={offering.id} />
 
 
 
