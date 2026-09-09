@@ -39,6 +39,7 @@ import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminInvestorsRouteImport } from './routes/_authenticated/admin.investors'
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
 import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_authenticated/admin.permissions'
+import { Route as AuthenticatedAdminPortfolioValueRouteImport } from './routes/_authenticated/admin.portfolio-value'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
@@ -58,6 +59,7 @@ import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_aut
 import { Route as AuthenticatedManagerMessagesRouteImport } from './routes/_authenticated/manager.messages'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_authenticated/manager.permissions'
+import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes/_authenticated/manager.portfolio-value'
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
@@ -242,6 +244,12 @@ const AuthenticatedAdminPermissionsRoute =
     path: '/admin/permissions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminPortfolioValueRoute =
+  AuthenticatedAdminPortfolioValueRouteImport.update({
+    id: '/admin/portfolio-value',
+    path: '/admin/portfolio-value',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminSecurityRoute =
   AuthenticatedAdminSecurityRouteImport.update({
     id: '/admin/security',
@@ -352,6 +360,12 @@ const AuthenticatedManagerPermissionsRoute =
   AuthenticatedManagerPermissionsRouteImport.update({
     id: '/manager/permissions',
     path: '/manager/permissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerPortfolioValueRoute =
+  AuthenticatedManagerPortfolioValueRouteImport.update({
+    id: '/manager/portfolio-value',
+    path: '/manager/portfolio-value',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerProfileRoute =
@@ -491,6 +505,7 @@ export interface FileRoutesByFullPath {
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
+  '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
@@ -508,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
+  '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
@@ -559,6 +575,7 @@ export interface FileRoutesByTo {
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
+  '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
@@ -576,6 +593,7 @@ export interface FileRoutesByTo {
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
+  '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
@@ -630,6 +648,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/_authenticated/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/_authenticated/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
+  '/_authenticated/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
@@ -647,6 +666,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/messages': typeof AuthenticatedManagerMessagesRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
+  '/_authenticated/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
@@ -701,6 +721,7 @@ export interface FileRouteTypes {
     | '/admin/investors'
     | '/admin/new-application'
     | '/admin/permissions'
+    | '/admin/portfolio-value'
     | '/admin/security'
     | '/admin/setup'
     | '/admin/wire'
@@ -718,6 +739,7 @@ export interface FileRouteTypes {
     | '/manager/messages'
     | '/manager/onboarding'
     | '/manager/permissions'
+    | '/manager/portfolio-value'
     | '/manager/profile'
     | '/manager/timeline'
     | '/manager/wires'
@@ -769,6 +791,7 @@ export interface FileRouteTypes {
     | '/admin/investors'
     | '/admin/new-application'
     | '/admin/permissions'
+    | '/admin/portfolio-value'
     | '/admin/security'
     | '/admin/setup'
     | '/admin/wire'
@@ -786,6 +809,7 @@ export interface FileRouteTypes {
     | '/manager/messages'
     | '/manager/onboarding'
     | '/manager/permissions'
+    | '/manager/portfolio-value'
     | '/manager/profile'
     | '/manager/timeline'
     | '/manager/wires'
@@ -839,6 +863,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/investors'
     | '/_authenticated/admin/new-application'
     | '/_authenticated/admin/permissions'
+    | '/_authenticated/admin/portfolio-value'
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/setup'
     | '/_authenticated/admin/wire'
@@ -856,6 +881,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/messages'
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/permissions'
+    | '/_authenticated/manager/portfolio-value'
     | '/_authenticated/manager/profile'
     | '/_authenticated/manager/timeline'
     | '/_authenticated/manager/wires'
@@ -1110,6 +1136,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPermissionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/portfolio-value': {
+      id: '/_authenticated/admin/portfolio-value'
+      path: '/admin/portfolio-value'
+      fullPath: '/admin/portfolio-value'
+      preLoaderRoute: typeof AuthenticatedAdminPortfolioValueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/security': {
       id: '/_authenticated/admin/security'
       path: '/admin/security'
@@ -1241,6 +1274,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/permissions'
       fullPath: '/manager/permissions'
       preLoaderRoute: typeof AuthenticatedManagerPermissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/portfolio-value': {
+      id: '/_authenticated/manager/portfolio-value'
+      path: '/manager/portfolio-value'
+      fullPath: '/manager/portfolio-value'
+      preLoaderRoute: typeof AuthenticatedManagerPortfolioValueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/profile': {
@@ -1400,6 +1440,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminInvestorsRoute: typeof AuthenticatedAdminInvestorsRoute
   AuthenticatedAdminNewApplicationRoute: typeof AuthenticatedAdminNewApplicationRoute
   AuthenticatedAdminPermissionsRoute: typeof AuthenticatedAdminPermissionsRoute
+  AuthenticatedAdminPortfolioValueRoute: typeof AuthenticatedAdminPortfolioValueRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
@@ -1417,6 +1458,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerMessagesRoute: typeof AuthenticatedManagerMessagesRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerPermissionsRoute: typeof AuthenticatedManagerPermissionsRoute
+  AuthenticatedManagerPortfolioValueRoute: typeof AuthenticatedManagerPortfolioValueRoute
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
@@ -1453,6 +1495,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminInvestorsRoute: AuthenticatedAdminInvestorsRoute,
   AuthenticatedAdminNewApplicationRoute: AuthenticatedAdminNewApplicationRoute,
   AuthenticatedAdminPermissionsRoute: AuthenticatedAdminPermissionsRoute,
+  AuthenticatedAdminPortfolioValueRoute: AuthenticatedAdminPortfolioValueRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
@@ -1472,6 +1515,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerMessagesRoute: AuthenticatedManagerMessagesRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
   AuthenticatedManagerPermissionsRoute: AuthenticatedManagerPermissionsRoute,
+  AuthenticatedManagerPortfolioValueRoute:
+    AuthenticatedManagerPortfolioValueRoute,
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,

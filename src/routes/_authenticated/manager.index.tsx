@@ -95,6 +95,12 @@ const TOOLS = [
     title: "Cap table board",
     blurb: "Every fund side by side, with one-click edits.",
   },
+  {
+    to: "/manager/portfolio-value",
+    title: "Portfolio value",
+    blurb: "Equity value and value per share, live as wires land.",
+  },
+
 
   { to: "/diligence", title: "Investor view of diligence", blurb: "Materials, checklist and investor Q&A." },
 ] as const;

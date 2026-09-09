@@ -121,6 +121,10 @@ function AdminQueue() {
                 <Link to="/admin/cap-table-board">Cap table board</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
+                <Link to="/admin/portfolio-value">Portfolio value</Link>
+              </Button>
+
+              <Button asChild size="sm" variant="outline">
                 <Link to="/admin/permissions">Document permissions</Link>
               </Button>
 
