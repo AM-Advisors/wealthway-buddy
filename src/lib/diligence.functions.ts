@@ -1816,3 +1816,78 @@ export const removeCapTableRow = createServerFn({ method: "POST" })
     );
     return { ok: true };
   });
+
+/**
+ * Every fund this reviewer can manage, with its diligence room state.
+ * Powers the manager-only diligence portal.
+ */
+export const listManagedDiligenceRooms = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roles = ((roleRows ?? []) as any[]).map((r) => String(r.role));
+    const isAdmin = roles.includes("admin");
+    if (!isAdmin && !roles.includes("fund_manager")) {
+      throw new Error("This area is for fund managers.");
+    }
+
+    let offeringIds: string[] | null = null;
+    if (!isAdmin) {
+      const { data: assignments } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      offeringIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      if (offeringIds.length === 0) return { isAdmin, funds: [] as any[] };
+    }
+
+    let fundQuery = supabase.from("offerings").select("id, name, reg_type, is_open").order("name");
+    if (offeringIds) fundQuery = fundQuery.in("id", offeringIds);
+    const { data: funds, error: fundsError } = await fundQuery;
+    if (fundsError) throw new Error(fundsError.message);
+
+    const ids = ((funds ?? []) as any[]).map((f) => f.id as string);
+    const empty = { data: [] as any[] };
+    const [{ data: rooms }, { data: docs }] = ids.length
+      ? await Promise.all([
+          supabase
+            .from("diligence_rooms")
+            .select("id, offering_id, entity_type, nda_required, intro, created_at")
+            .in("offering_id", ids),
+          supabase
+            .from("diligence_documents")
+            .select("id, offering_id, category, title, file_name, size_bytes, uploaded_at")
+            .in("offering_id", ids)
+            .order("uploaded_at", { ascending: false }),
+        ])
+      : [empty, empty];
+
+    return {
+      isAdmin,
+      funds: ((funds ?? []) as any[]).map((f) => {
+        const room = ((rooms ?? []) as any[]).find((r) => r.offering_id === f.id) ?? null;
+        const mine = ((docs ?? []) as any[]).filter(
+          (d) => d.offering_id === f.id,
+        ) as DiligenceDocument[];
+        const entityType = normalizeEntityType(room?.entity_type);
+        return {
+          offeringId: f.id as string,
+          name: f.name as string,
+          regType: f.reg_type as string | null,
+          isOpen: Boolean(f.is_open),
+          hasRoom: Boolean(room),
+          entityType,
+          ndaRequired: Boolean(room?.nda_required),
+          intro: (room?.intro as string | null) ?? null,
+          documents: mine,
+          documentCount: mine.length,
+          readiness: readiness(mine, entityType),
+        };
+      }),
+    };
+  });
