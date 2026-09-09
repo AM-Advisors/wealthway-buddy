@@ -49,6 +49,7 @@ import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_aut
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
+import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
 import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
@@ -288,6 +289,12 @@ const AuthenticatedManagerTimelineRoute =
     path: '/manager/timeline',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerWiresRoute =
+  AuthenticatedManagerWiresRouteImport.update({
+    id: '/manager/wires',
+    path: '/manager/wires',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingAccreditationRoute =
   AuthenticatedOnboardingAccreditationRouteImport.update({
     id: '/onboarding/accreditation',
@@ -415,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -471,6 +479,7 @@ export interface FileRoutesByTo {
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -530,6 +539,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
@@ -589,6 +599,7 @@ export interface FileRouteTypes {
     | '/manager/onboarding'
     | '/manager/profile'
     | '/manager/timeline'
+    | '/manager/wires'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
@@ -645,6 +656,7 @@ export interface FileRouteTypes {
     | '/manager/onboarding'
     | '/manager/profile'
     | '/manager/timeline'
+    | '/manager/wires'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/documents'
@@ -703,6 +715,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/profile'
     | '/_authenticated/manager/timeline'
+    | '/_authenticated/manager/wires'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
     | '/_authenticated/onboarding/documents'
@@ -1024,6 +1037,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerTimelineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/wires': {
+      id: '/_authenticated/manager/wires'
+      path: '/manager/wires'
+      fullPath: '/manager/wires'
+      preLoaderRoute: typeof AuthenticatedManagerWiresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/accreditation': {
       id: '/_authenticated/onboarding/accreditation'
       path: '/onboarding/accreditation'
@@ -1168,6 +1188,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
+  AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
   AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
@@ -1210,6 +1231,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
+  AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,
