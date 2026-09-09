@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OfferingDocumentFile } from "@/components/offering-document-file";
+import { TemplatePackPicker } from "@/components/template-pack-picker";
 import {
   Select,
   SelectContent,
