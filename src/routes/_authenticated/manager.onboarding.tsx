@@ -10,6 +10,7 @@ import {
   MANAGER_DOC_TYPES,
   listManagerOnboardingDocs,
   openManagerOnboardingDoc,
+  refileManagerOnboardingDoc,
   reviewManagerOnboardingDoc,
   submitManagerOnboardingDoc,
   withdrawManagerOnboardingDoc,
@@ -69,6 +70,7 @@ function ManagerOnboardingPage() {
   const open = useServerFn(openManagerOnboardingDoc);
   const withdraw = useServerFn(withdrawManagerOnboardingDoc);
   const review = useServerFn(reviewManagerOnboardingDoc);
+  const refile = useServerFn(refileManagerOnboardingDoc);
 
   const [docType, setDocType] = useState<string>(MANAGER_DOC_TYPES[0].value);
   const [fundId, setFundId] = useState<string>("none");
@@ -111,11 +113,23 @@ function ManagerOnboardingPage() {
   const reviewMutation = useMutation({
     mutationFn: (vars: { id: string; decision: "approved" | "rejected" }) =>
       review({ data: { id: vars.id, decision: vars.decision, notes: reviewNotes[vars.id] ?? null } }),
-    onSuccess: () => {
-      toast.success("Decision saved.");
+    onSuccess: (res: any) => {
+      const filing = res?.filing;
+      if (filing?.ok) toast.success("Approved and filed to the shared folder.");
+      else if (filing?.error) toast.warning("Approved, but filing to the shared folder failed.");
+      else toast.success("Decision saved.");
       refresh();
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not save that decision."),
+  });
+
+  const refileMutation = useMutation({
+    mutationFn: (id: string) => refile({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Filed to the shared folder.");
+      refresh();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not file that document."),
   });
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -280,6 +294,15 @@ function ManagerOnboardingPage() {
                     {` · sent ${new Date(d.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`}
                   </p>
                   {d.note && <p className="mt-1 text-sm">Your note: {d.note}</p>}
+                  {d.status === "approved" && (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {d.box_uploaded_at
+                        ? `Filed to the shared folder on ${new Date(d.box_uploaded_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`
+                        : d.box_error
+                          ? `Not filed yet — ${d.box_error}`
+                          : "Not filed to the shared folder yet"}
+                    </p>
+                  )}
                   {d.review_notes && (
                     <p className="mt-1 text-sm">
                       Reviewer: {d.review_notes}
@@ -298,6 +321,16 @@ function ManagerOnboardingPage() {
                   >
                     View
                   </Button>
+                  {isAdmin && d.status === "approved" && !d.box_uploaded_at && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={refileMutation.isPending}
+                      onClick={() => refileMutation.mutate(d.id)}
+                    >
+                      File to shared folder
+                    </Button>
+                  )}
                   {d.status === "submitted" && !isAdmin && (
                     <Button
                       size="sm"
