@@ -263,6 +263,7 @@ export const decideApplication = createServerFn({ method: "POST" })
       });
     }
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
 
@@ -546,6 +547,7 @@ export const decidePayment = createServerFn({ method: "POST" })
       .eq("id", data.applicationId);
     if (appError) throw new Error(appError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
 
@@ -637,5 +639,6 @@ export const decideWireConfirmation = createServerFn({ method: "POST" })
       .eq("id", data.applicationId);
     if (appError) throw new Error(appError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });

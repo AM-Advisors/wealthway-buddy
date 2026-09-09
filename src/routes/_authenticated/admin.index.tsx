@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { prettyStatus, statusTone } from "@/lib/status";
+import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
 
 export { prettyStatus, statusTone };
 
@@ -131,6 +132,10 @@ function AdminQueue() {
       </div>
 
 
+
+      <div className="mt-6">
+        <AlertPreferenceToggle />
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((f) => (

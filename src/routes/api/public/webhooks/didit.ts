@@ -124,6 +124,13 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           })
           .eq("event_id", eventId);
 
+        try {
+          const { drainManagerAlerts } = await import("@/lib/manager-alerts.server");
+          await drainManagerAlerts();
+        } catch (e) {
+          console.error("[didit] alert drain failed", e);
+        }
+
         return Response.json({ ok: true });
       },
     },

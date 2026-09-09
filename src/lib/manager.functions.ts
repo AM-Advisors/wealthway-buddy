@@ -493,6 +493,7 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
       .eq("id", data.applicationId);
     if (updateError) throw new Error(updateError.message);
 
+    void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true };
   });
 
