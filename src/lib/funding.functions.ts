@@ -118,7 +118,7 @@ async function loadFundingApplication(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("investor_applications")
     .select(
-      "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
+      "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, manager_review_status, manager_review_notes",
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: true })
@@ -133,6 +133,7 @@ function assertFundable(app: {
   kyc_status?: string;
   accreditation_status: string;
   documents_status: string;
+  manager_review_status?: string | null;
 }) {
   // The fund team has to approve the identity application first — nobody
   // reaches wire instructions on an unapproved file.
@@ -149,6 +150,14 @@ function assertFundable(app: {
       "Your accredited investor status must be confirmed before the fund can accept capital.",
     );
   }
+  // A fund manager signs off on the whole file before funding opens.
+  if (app.manager_review_status && app.manager_review_status !== "approved") {
+    throw new Error(
+      app.manager_review_status === "declined"
+        ? "Your fund manager sent your application back. Check your portal for what is needed."
+        : "Your fund manager is completing a final review of your application. Funding opens once it is approved.",
+    );
+  }
 }
 
 export const getFunding = createServerFn({ method: "GET" })
@@ -159,7 +168,7 @@ export const getFunding = createServerFn({ method: "GET" })
     const { data: application } = await supabase
       .from("investor_applications")
       .select(
-        "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
+        "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, manager_review_status, manager_review_notes",
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: true })
