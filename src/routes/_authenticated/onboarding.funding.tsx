@@ -282,6 +282,53 @@ function FundingStep() {
         </Card>
       )}
 
+      {!isLoading && progress && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-base">
+              Committed capital in {data?.offering?.name ?? "this fund"}
+            </CardTitle>
+            <CardDescription>
+              Updates as soon as your payment is confirmed by the fund.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-md border p-3">
+                <div className="text-xl">{money(progress.committedCents)}</div>
+                <div className="text-xs text-muted-foreground">
+                  Committed by {progress.investors} investor{progress.investors === 1 ? "" : "s"}
+                </div>
+              </div>
+              <div className="rounded-md border p-3">
+                <div className="text-xl">{money(progress.receivedCents)}</div>
+                <div className="text-xs text-muted-foreground">
+                  Received · {progress.fundedInvestors} fully funded
+                </div>
+              </div>
+              <div className="rounded-md border p-3">
+                <div className="text-xl">{money(progress.inFlightCents)}</div>
+                <div className="text-xs text-muted-foreground">On its way to the bank</div>
+              </div>
+            </div>
+            {progress.targetCents ? (
+              <div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${progress.percentOfTarget ?? 0}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {progress.percentOfTarget ?? 0}% of the {money(progress.targetCents)} target raise
+                  received
+                </p>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
+
       {!isLoading && ready && (
         <div className="mt-8 space-y-6">
           {payment && (
