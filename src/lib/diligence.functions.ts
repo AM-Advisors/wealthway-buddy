@@ -1891,3 +1891,132 @@ export const listManagedDiligenceRooms = createServerFn({ method: "GET" })
       }),
     };
   });
+
+/**
+ * Cross-fund traffic for every diligence room this reviewer manages:
+ * how many investors opened the room and how many documents they downloaded.
+ * Team members (admins and this fund's managers) are excluded.
+ */
+export const getDiligenceRoomTraffic = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .in("role", ["admin", "fund_manager"]);
+    const roles = ((roleRows ?? []) as any[]).filter((r) => r.user_id === userId).map((r) => String(r.role));
+    const isAdmin = roles.includes("admin");
+    if (!isAdmin && !roles.includes("fund_manager")) {
+      throw new Error("This area is for fund managers.");
+    }
+    const adminIds = new Set<string>(
+      ((roleRows ?? []) as any[]).filter((r) => r.role === "admin").map((r) => r.user_id as string),
+    );
+
+    let offeringIds: string[] | null = null;
+    if (!isAdmin) {
+      const { data: assignments } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      offeringIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id as string))];
+      if (offeringIds.length === 0) return { rooms: [] as any[] };
+    }
+
+    let fundQuery = supabase.from("offerings").select("id, name").order("name");
+    if (offeringIds) fundQuery = fundQuery.in("id", offeringIds);
+    const { data: funds, error: fundsError } = await fundQuery;
+    if (fundsError) throw new Error(fundsError.message);
+    const ids = ((funds ?? []) as any[]).map((f) => f.id as string);
+    if (ids.length === 0) return { rooms: [] as any[] };
+
+    const [{ data: events }, { data: managerRows }, { data: docs }] = await Promise.all([
+      supabase
+        .from("diligence_activity")
+        .select("offering_id, actor_id, actor_name, actor_email, event_type, created_at")
+        .in("offering_id", ids)
+        .in("event_type", ["room_viewed", "document_viewed", "document_downloaded", "nda_accepted"])
+        .order("created_at", { ascending: true })
+        .limit(10000),
+      supabase.from("fund_managers").select("user_id, offering_id").in("offering_id", ids),
+      supabase.from("diligence_documents").select("offering_id, uploaded_by").in("offering_id", ids),
+    ]);
+
+    const teamFor = (offeringId: string) => {
+      const set = new Set<string>(adminIds);
+      for (const m of (managerRows ?? []) as any[]) {
+        if (m.offering_id === offeringId) set.add(m.user_id as string);
+      }
+      for (const d of (docs ?? []) as any[]) {
+        if (d.offering_id === offeringId && d.uploaded_by) set.add(d.uploaded_by as string);
+      }
+      return set;
+    };
+
+    const rooms = ((funds ?? []) as any[]).map((f) => {
+      const team = teamFor(f.id as string);
+      const mine = ((events ?? []) as any[]).filter(
+        (e) => e.offering_id === f.id && !team.has(e.actor_id),
+      );
+
+      const visitors = new Map<
+        string,
+        { name: string | null; email: string | null; opens: number; downloads: number; views: number; ndaAcceptedAt: string | null; firstSeen: string; lastSeen: string }
+      >();
+      let opens = 0;
+      let downloads = 0;
+      let views = 0;
+
+      for (const e of mine) {
+        const row =
+          visitors.get(e.actor_id) ??
+          {
+            name: (e.actor_name as string | null) ?? null,
+            email: (e.actor_email as string | null) ?? null,
+            opens: 0,
+            downloads: 0,
+            views: 0,
+            ndaAcceptedAt: null as string | null,
+            firstSeen: e.created_at as string,
+            lastSeen: e.created_at as string,
+          };
+        row.name = row.name ?? (e.actor_name as string | null) ?? null;
+        row.email = row.email ?? (e.actor_email as string | null) ?? null;
+        row.lastSeen = e.created_at as string;
+        if (e.event_type === "room_viewed") {
+          row.opens += 1;
+          opens += 1;
+        }
+        if (e.event_type === "document_downloaded") {
+          row.downloads += 1;
+          downloads += 1;
+        }
+        if (e.event_type === "document_viewed") {
+          row.views += 1;
+          views += 1;
+        }
+        if (e.event_type === "nda_accepted") row.ndaAcceptedAt = e.created_at as string;
+        visitors.set(e.actor_id, row);
+      }
+
+      const list = [...visitors.entries()]
+        .map(([actorId, v]) => ({ actorId, ...v }))
+        .sort((a, b) => (a.lastSeen < b.lastSeen ? 1 : -1));
+
+      return {
+        offeringId: f.id as string,
+        name: f.name as string,
+        visitorCount: list.length,
+        opens,
+        downloads,
+        views,
+        lastActivityAt: list.length > 0 ? list[0]!.lastSeen : null,
+        visitors: list.slice(0, 25),
+      };
+    });
+
+    rooms.sort((a, b) => b.opens + b.downloads - (a.opens + a.downloads));
+    return { rooms };
+  });
