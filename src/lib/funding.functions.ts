@@ -173,7 +173,7 @@ export const getFunding = createServerFn({ method: "GET" })
 
     const { data: offeringRow } = await supabase
       .from("offerings")
-      .select("id, name, min_investment_cents")
+      .select("id, name, min_investment_cents, target_raise_cents")
       .eq("id", application.offering_id)
       .maybeSingle();
 
@@ -222,8 +222,60 @@ export const getFunding = createServerFn({ method: "GET" })
       acknowledgements,
       wireConfirmations: wireConfirmations ?? [],
       reference: referenceCode(application.id),
+      fundProgress: await fundProgress(application.offering_id, offeringRow?.target_raise_cents ?? null),
     };
   });
+
+/**
+ * Fund-level capital picture for the offering this investor is in.
+ * Reads across every application in the fund, so it runs with elevated
+ * access after we have already confirmed the caller belongs to the fund.
+ */
+async function fundProgress(offeringId: string, targetCents: number | null) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: apps } = await supabaseAdmin
+      .from("investor_applications")
+      .select("id, commitment_cents, funding_status")
+      .eq("offering_id", offeringId);
+
+    const rows = (apps ?? []) as any[];
+    const ids = rows.map((r) => r.id);
+
+    let payments: any[] = [];
+    if (ids.length) {
+      const { data: pay } = await supabaseAdmin
+        .from("payments")
+        .select("application_id, amount_cents, status")
+        .in("application_id", ids);
+      payments = (pay ?? []) as any[];
+    }
+
+    const committedCents = rows.reduce((sum, r) => sum + Number(r.commitment_cents ?? 0), 0);
+    const receivedCents = payments
+      .filter((p) => p.status === "settled")
+      .reduce((sum, p) => sum + Number(p.amount_cents ?? 0), 0);
+    const inFlightCents = payments
+      .filter((p) => p.status === "processing" || p.status === "awaiting_wire")
+      .reduce((sum, p) => sum + Number(p.amount_cents ?? 0), 0);
+
+    return {
+      investors: rows.length,
+      fundedInvestors: rows.filter((r) => r.funding_status === "settled").length,
+      committedCents,
+      receivedCents,
+      inFlightCents,
+      targetCents,
+      percentOfTarget:
+        targetCents && targetCents > 0
+          ? Math.min(100, Math.round((receivedCents / targetCents) * 100))
+          : null,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export const acknowledgeFunding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
