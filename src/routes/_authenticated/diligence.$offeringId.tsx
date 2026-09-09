@@ -55,6 +55,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { DiligenceAssistant } from "@/components/diligence-assistant";
 
 export const Route = createFileRoute("/_authenticated/diligence/$offeringId")({
   head: () => ({
@@ -286,6 +287,7 @@ function DiligenceRoomPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="assistant">Ask AI</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
@@ -298,6 +300,9 @@ function DiligenceRoomPage() {
         </TabsContent>
         <TabsContent value="documents" className="mt-6">
           <DocumentsTab offeringId={offeringId} data={data} canManage={canManage} />
+        </TabsContent>
+        <TabsContent value="assistant" className="mt-6">
+          <DiligenceAssistant offeringId={offeringId} />
         </TabsContent>
         <TabsContent value="checklist" className="mt-6">
           <ChecklistTab
