@@ -2658,6 +2658,60 @@ export type Database = {
           },
         ]
       }
+      portal_messages: {
+        Row: {
+          application_id: string
+          body: string
+          created_at: string
+          id: string
+          offering_id: string
+          read_at: string | null
+          sender_id: string
+          sender_name: string | null
+          sender_role: string
+          updated_at: string
+        }
+        Insert: {
+          application_id: string
+          body: string
+          created_at?: string
+          id?: string
+          offering_id: string
+          read_at?: string | null
+          sender_id: string
+          sender_name?: string | null
+          sender_role: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          offering_id?: string
+          read_at?: string | null
+          sender_id?: string
+          sender_name?: string | null
+          sender_role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_messages_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_messages_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address_line1: string | null
