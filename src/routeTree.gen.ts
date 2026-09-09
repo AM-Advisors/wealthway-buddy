@@ -28,6 +28,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
 import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authenticated/admin.activity'
+import { Route as AuthenticatedAdminCapTableRouteImport } from './routes/_authenticated/admin.cap-table'
 import { Route as AuthenticatedAdminDocumentLogRouteImport } from './routes/_authenticated/admin.document-log'
 import { Route as AuthenticatedAdminEmailPreviewRouteImport } from './routes/_authenticated/admin.email-preview'
 import { Route as AuthenticatedAdminFundingRouteImport } from './routes/_authenticated/admin.funding'
@@ -44,6 +45,7 @@ import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
 import { Route as AuthenticatedManagerActivityRouteImport } from './routes/_authenticated/manager.activity'
 import { Route as AuthenticatedManagerApprovalsRouteImport } from './routes/_authenticated/manager.approvals'
+import { Route as AuthenticatedManagerCapTableRouteImport } from './routes/_authenticated/manager.cap-table'
 import { Route as AuthenticatedManagerClosingRouteImport } from './routes/_authenticated/manager.closing'
 import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_authenticated/manager.diligence'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
@@ -169,6 +171,12 @@ const AuthenticatedAdminActivityRoute =
     path: '/admin/activity',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminCapTableRoute =
+  AuthenticatedAdminCapTableRouteImport.update({
+    id: '/admin/cap-table',
+    path: '/admin/cap-table',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminDocumentLogRoute =
   AuthenticatedAdminDocumentLogRouteImport.update({
     id: '/admin/document-log',
@@ -260,6 +268,12 @@ const AuthenticatedManagerApprovalsRoute =
   AuthenticatedManagerApprovalsRouteImport.update({
     id: '/manager/approvals',
     path: '/manager/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerCapTableRoute =
+  AuthenticatedManagerCapTableRouteImport.update({
+    id: '/manager/cap-table',
+    path: '/manager/cap-table',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerClosingRoute =
@@ -424,6 +438,7 @@ export interface FileRoutesByFullPath {
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -438,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
+  '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -484,6 +500,7 @@ export interface FileRoutesByTo {
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -498,6 +515,7 @@ export interface FileRoutesByTo {
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
+  '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -547,6 +565,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
   '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/_authenticated/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/_authenticated/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/_authenticated/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/_authenticated/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -561,6 +580,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
   '/_authenticated/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
+  '/_authenticated/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/_authenticated/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/_authenticated/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -610,6 +630,7 @@ export interface FileRouteTypes {
     | '/admin/$applicationId'
     | '/admin/access'
     | '/admin/activity'
+    | '/admin/cap-table'
     | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funding'
@@ -624,6 +645,7 @@ export interface FileRouteTypes {
     | '/manager/$applicationId'
     | '/manager/activity'
     | '/manager/approvals'
+    | '/manager/cap-table'
     | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
@@ -670,6 +692,7 @@ export interface FileRouteTypes {
     | '/admin/$applicationId'
     | '/admin/access'
     | '/admin/activity'
+    | '/admin/cap-table'
     | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funding'
@@ -684,6 +707,7 @@ export interface FileRouteTypes {
     | '/manager/$applicationId'
     | '/manager/activity'
     | '/manager/approvals'
+    | '/manager/cap-table'
     | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
@@ -732,6 +756,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
     | '/_authenticated/admin/activity'
+    | '/_authenticated/admin/cap-table'
     | '/_authenticated/admin/document-log'
     | '/_authenticated/admin/email-preview'
     | '/_authenticated/admin/funding'
@@ -746,6 +771,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
     | '/_authenticated/manager/approvals'
+    | '/_authenticated/manager/cap-table'
     | '/_authenticated/manager/closing'
     | '/_authenticated/manager/diligence'
     | '/_authenticated/manager/documents'
@@ -929,6 +955,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/cap-table': {
+      id: '/_authenticated/admin/cap-table'
+      path: '/admin/cap-table'
+      fullPath: '/admin/cap-table'
+      preLoaderRoute: typeof AuthenticatedAdminCapTableRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/document-log': {
       id: '/_authenticated/admin/document-log'
       path: '/admin/document-log'
@@ -1039,6 +1072,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/approvals'
       fullPath: '/manager/approvals'
       preLoaderRoute: typeof AuthenticatedManagerApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/cap-table': {
+      id: '/_authenticated/manager/cap-table'
+      path: '/manager/cap-table'
+      fullPath: '/manager/cap-table'
+      preLoaderRoute: typeof AuthenticatedManagerCapTableRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/closing': {
@@ -1229,6 +1269,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedAdminActivityRoute: typeof AuthenticatedAdminActivityRoute
+  AuthenticatedAdminCapTableRoute: typeof AuthenticatedAdminCapTableRoute
   AuthenticatedAdminDocumentLogRoute: typeof AuthenticatedAdminDocumentLogRoute
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
   AuthenticatedAdminFundingRoute: typeof AuthenticatedAdminFundingRoute
@@ -1243,6 +1284,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
   AuthenticatedManagerApprovalsRoute: typeof AuthenticatedManagerApprovalsRoute
+  AuthenticatedManagerCapTableRoute: typeof AuthenticatedManagerCapTableRoute
   AuthenticatedManagerClosingRoute: typeof AuthenticatedManagerClosingRoute
   AuthenticatedManagerDiligenceRoute: typeof AuthenticatedManagerDiligenceRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
@@ -1274,6 +1316,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedAdminActivityRoute: AuthenticatedAdminActivityRoute,
+  AuthenticatedAdminCapTableRoute: AuthenticatedAdminCapTableRoute,
   AuthenticatedAdminDocumentLogRoute: AuthenticatedAdminDocumentLogRoute,
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
   AuthenticatedAdminFundingRoute: AuthenticatedAdminFundingRoute,
@@ -1289,6 +1332,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerApplicationIdRoute,
   AuthenticatedManagerActivityRoute: AuthenticatedManagerActivityRoute,
   AuthenticatedManagerApprovalsRoute: AuthenticatedManagerApprovalsRoute,
+  AuthenticatedManagerCapTableRoute: AuthenticatedManagerCapTableRoute,
   AuthenticatedManagerClosingRoute: AuthenticatedManagerClosingRoute,
   AuthenticatedManagerDiligenceRoute: AuthenticatedManagerDiligenceRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
