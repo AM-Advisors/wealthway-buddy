@@ -390,6 +390,7 @@ function DiligenceRoomPage() {
       <Tabs defaultValue="overview" className="mt-8">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          {canManage ? null : <TabsTrigger value="application">Your application</TabsTrigger>}
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="assistant">Ask AI</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
