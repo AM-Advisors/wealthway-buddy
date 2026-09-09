@@ -128,12 +128,7 @@ export function WireTrackingPanel() {
                   </p>
                 </div>
                 <Button asChild size="sm" variant="outline">
-                  <Link
-                    to="/manager/investors"
-                    search={{ application: row.applicationId } as never}
-                  >
-                    Open
-                  </Link>
+                  <Link to="/manager/investors">Open</Link>
                 </Button>
               </div>
             ))}
