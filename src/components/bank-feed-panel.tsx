@@ -66,7 +66,9 @@ export function BankFeedPanel({ fundId }: { fundId: string }) {
 
   const { open, ready } = usePlaidLink({
     token: linkToken ?? "",
-    onSuccess: (publicToken) => void onLinkSuccess(publicToken),
+    onSuccess: (publicToken: string | null) => {
+      if (publicToken) void onLinkSuccess(publicToken);
+    },
     onExit: () => setLinkToken(null),
   });
 
