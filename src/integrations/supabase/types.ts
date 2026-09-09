@@ -2077,6 +2077,10 @@ export type Database = {
       }
       manager_onboarding_documents: {
         Row: {
+          box_error: string | null
+          box_file_id: string | null
+          box_folder_id: string | null
+          box_uploaded_at: string | null
           created_at: string
           doc_type: string
           file_name: string
@@ -2092,6 +2096,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          box_error?: string | null
+          box_file_id?: string | null
+          box_folder_id?: string | null
+          box_uploaded_at?: string | null
           created_at?: string
           doc_type: string
           file_name: string
@@ -2107,6 +2115,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          box_error?: string | null
+          box_file_id?: string | null
+          box_folder_id?: string | null
+          box_uploaded_at?: string | null
           created_at?: string
           doc_type?: string
           file_name?: string

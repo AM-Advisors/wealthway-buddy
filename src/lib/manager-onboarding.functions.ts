@@ -34,6 +34,9 @@ export type ManagerDocRow = {
   offering_id: string | null;
   offeringName: string | null;
   submittedBy: string | null;
+  box_file_id: string | null;
+  box_uploaded_at: string | null;
+  box_error: string | null;
 };
 
 async function roles(supabase: any, userId: string) {
@@ -53,7 +56,7 @@ export const listManagerOnboardingDocs = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("manager_onboarding_documents")
       .select(
-        "id, user_id, offering_id, doc_type, file_name, note, status, review_notes, reviewed_at, created_at",
+        "id, user_id, offering_id, doc_type, file_name, note, status, review_notes, reviewed_at, created_at, box_file_id, box_uploaded_at, box_error",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -77,6 +80,9 @@ export const listManagerOnboardingDocs = createServerFn({ method: "GET" })
       status: r.status,
       review_notes: r.review_notes,
       reviewed_at: r.reviewed_at,
+      box_file_id: r.box_file_id ?? null,
+      box_uploaded_at: r.box_uploaded_at ?? null,
+      box_error: r.box_error ?? null,
       created_at: r.created_at,
       offering_id: r.offering_id,
       offeringName: r.offering_id ? (offeringName.get(r.offering_id) ?? null) : null,
@@ -191,5 +197,38 @@ export const reviewManagerOnboardingDoc = createServerFn({ method: "POST" })
       })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+
+    let filing: { ok: boolean; filedAt?: string; error?: string; skipped?: string } = { ok: false };
+    if (data.decision === "approved") {
+      try {
+        const { archiveManagerDocToBox } = await import("@/lib/manager-onboarding-box.server");
+        filing = await archiveManagerDocToBox(data.id);
+      } catch (e: any) {
+        filing = { ok: false, error: String(e?.message ?? e).slice(0, 300) };
+      }
+    }
+    return { ok: true, filing };
+  });
+
+/** Retries filing an approved document into the shared folder. */
+export const refileManagerOnboardingDoc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { isAdmin } = await roles(supabase, userId);
+    if (!isAdmin) throw new Error("Forbidden: administrator access required.");
+
+    const { archiveManagerDocToBox } = await import("@/lib/manager-onboarding-box.server");
+    const result = await archiveManagerDocToBox(data.id);
+    if (!result.ok) {
+      throw new Error(
+        result.skipped === "box_not_configured"
+          ? "The shared folder is not connected yet."
+          : result.skipped === "not_approved"
+            ? "Only approved documents are filed."
+            : (result.error ?? "Could not file that document."),
+      );
+    }
+    return { ok: true, filedAt: result.filedAt ?? null };
   });
