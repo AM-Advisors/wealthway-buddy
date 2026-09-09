@@ -125,6 +125,35 @@ function buildEmail(
     };
   }
 
+  if (row.event_kind === "diligence_nda_accepted") {
+    const meta = row.metadata ?? {};
+    const signer = String(meta["signer_name"] ?? investorName);
+    return {
+      headline: `Confidentiality agreement accepted — ${offeringName}`,
+      intro: `${signer} accepted the confidentiality agreement and now has access to the ${offeringName} diligence room.`,
+      details: [
+        { label: "Signed by", value: signer },
+        { label: "Fund", value: offeringName },
+      ],
+    };
+  }
+
+  if (row.event_kind === "diligence_document_uploaded") {
+    const meta = row.metadata ?? {};
+    const names = Array.isArray(meta["file_names"]) ? (meta["file_names"] as string[]) : [];
+    const title = String(meta["title"] ?? names[0] ?? "A document");
+    return {
+      headline: `New diligence document — ${offeringName}`,
+      intro: `“${title}” was added to the ${offeringName} diligence room.`,
+      details: [
+        { label: "Fund", value: offeringName },
+        { label: "Document", value: title },
+        ...(meta["category"] ? [{ label: "Section", value: String(meta["category"]).replace(/_/g, " ") }] : []),
+        ...(names.length ? [{ label: "File", value: names.join(", ") }] : []),
+      ],
+    };
+  }
+
   if (row.event_kind === "wire_confirmation_submitted") {
 
     const meta = row.metadata ?? {};
