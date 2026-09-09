@@ -1,0 +1,1 @@
+ALTER TABLE public.offerings ADD COLUMN IF NOT EXISTS share_price_cents integer NOT NULL DEFAULT 0;
