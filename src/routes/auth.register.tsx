@@ -1,7 +1,10 @@
 import { useState } from "react";
 
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+
+import { checkInviteEligibility } from "@/lib/portal-access.functions";
 
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -35,6 +38,7 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const checkEligibility = useServerFn(checkInviteEligibility);
 
   async function signUpWithGoogle() {
     setBusy(true);
