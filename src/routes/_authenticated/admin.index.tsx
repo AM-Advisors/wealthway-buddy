@@ -118,6 +118,10 @@ function AdminQueue() {
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/email-preview">Email preview</Link>
               </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/admin/funnel">Onboarding funnel</Link>
+              </Button>
+
             </>
           )}
         </div>
