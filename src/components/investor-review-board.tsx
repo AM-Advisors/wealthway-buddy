@@ -183,17 +183,48 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
                         key={doc.signatureId}
                         className="flex flex-wrap items-center justify-between gap-2"
                       >
-                        <p className="text-xs text-muted-foreground">
-                          {doc.title} · signed {when(doc.signedAt)}
-                        </p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={!doc.hasPdf || downloadMutation.isPending}
-                          onClick={() => downloadMutation.mutate(doc.signatureId)}
-                        >
-                          {doc.hasPdf ? "Download" : "Preparing"}
-                        </Button>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">
+                            {doc.title} · signed {when(doc.signedAt)}
+                          </p>
+                          <p className="text-xs">
+                            {doc.inBox ? (
+                              <span className="text-muted-foreground">
+                                <Badge variant="secondary" className="mr-1.5">
+                                  In Box
+                                </Badge>
+                                filed {when(doc.boxUploadedAt)}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                <Badge variant="outline" className="mr-1.5">
+                                  Not in Box yet
+                                </Badge>
+                                {doc.boxError ? doc.boxError : "filing…"}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {!doc.inBox && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={!doc.hasPdf || archiveMutation.isPending}
+                              onClick={() => archiveMutation.mutate(doc.signatureId)}
+                            >
+                              File in Box
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={!doc.hasPdf || downloadMutation.isPending}
+                            onClick={() => downloadMutation.mutate(doc.signatureId)}
+                          >
+                            {doc.hasPdf ? "Download" : "Preparing"}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
