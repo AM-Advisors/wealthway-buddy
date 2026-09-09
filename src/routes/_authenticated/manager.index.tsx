@@ -146,6 +146,13 @@ function ManagerPanel() {
     return row ? (row.percent as number) : null;
   };
 
+  const complianceOf = (fundId: string) => {
+    const row = (progressQuery.data?.funds ?? []).find((f: any) => f.id === fundId) as any;
+    return row && row.compliancePercent !== null && row.compliancePercent !== undefined
+      ? (row.compliancePercent as number)
+      : null;
+  };
+
 
   if (isLoading) {
     return (
@@ -224,6 +231,11 @@ function ManagerPanel() {
                   {progressOf(fund.id) !== null ? (
                     <Badge variant={progressOf(fund.id) === 100 ? "default" : "secondary"}>
                       Setup {progressOf(fund.id)}% complete
+                    </Badge>
+                  ) : null}
+                  {complianceOf(fund.id) !== null ? (
+                    <Badge variant={complianceOf(fund.id) === 100 ? "default" : "secondary"}>
+                      Compliance {complianceOf(fund.id)}% filed
                     </Badge>
                   ) : null}
                   <Badge variant={fund.pendingWires > 0 ? "default" : "outline"}>

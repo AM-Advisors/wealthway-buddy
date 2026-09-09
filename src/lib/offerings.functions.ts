@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { REG_TYPE_VALUES } from "@/lib/reg-types";
 import {
   diffRecords,
   summarizeChanges,
@@ -80,7 +81,7 @@ const offeringSchema = z.object({
     .max(80)
     .regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers and dashes only"),
   summary: z.string().trim().max(1000).default(""),
-  reg_type: z.enum(["506b", "506c"]),
+  reg_type: z.enum(REG_TYPE_VALUES),
   min_investment_cents: z.number().int().min(0),
   target_raise_cents: z.number().int().min(0).nullable().default(null),
   wire_fee_cents: z.number().int().min(0).default(0),

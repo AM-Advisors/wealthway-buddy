@@ -1,3 +1,4 @@
+import { regTypeLabel, requiresVerifiedAccreditation } from "@/lib/reg-types";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -115,12 +116,12 @@ export function ApplicationChecklist({ taxClassification }: { taxClassification:
               done={isDone(checks["accreditation"])}
               pending={isPending(checks["accreditation"])}
               title={
-                offering?.reg_type === "506c"
+                requiresVerifiedAccreditation(offering?.reg_type)
                   ? "Accreditation with third-party evidence (506(c))"
-                  : "Accreditation self-certification (506(b))"
+                  : `Accreditation self-certification (${regTypeLabel(offering?.reg_type)})`
               }
               detail={
-                offering?.reg_type === "506c"
+                requiresVerifiedAccreditation(offering?.reg_type)
                   ? "This fund must verify your accreditation, so a letter from your CPA, attorney, or adviser is required."
                   : "You confirm you qualify; the fund team reviews your answers."
               }

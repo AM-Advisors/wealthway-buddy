@@ -14,6 +14,8 @@ import { FundEntityCard } from "@/components/fund-entity-card";
 import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
+import { FundComplianceCard } from "@/components/fund-compliance-card";
+import { regTypeLabel } from "@/lib/reg-types";
 
 import { Badge } from "@/components/ui/badge";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
@@ -127,7 +129,7 @@ function FundPage() {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl">{offering.name}</h1>
-            <Badge variant="secondary">Reg D {offering.reg_type === "506c" ? "506(c)" : "506(b)"}</Badge>
+            <Badge variant="secondary">{regTypeLabel(offering.reg_type)}</Badge>
             <Badge variant={offering.is_open ? "default" : "outline"}>
               {offering.is_open ? "Open" : "Closed"}
             </Badge>
@@ -267,6 +269,8 @@ function FundPage() {
       <div className="mt-6">
         <PublicPageSettings offeringId={offering.id} />
       </div>
+
+      <FundComplianceCard offeringId={offering.id} />
 
 
 

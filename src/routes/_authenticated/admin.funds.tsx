@@ -14,6 +14,12 @@ import {
   saveOfferingDocument,
 } from "@/lib/offerings.functions";
 import { FIELD_LABELS, type OfferingAuditEventType } from "@/lib/offering-audit";
+import {
+  REG_TYPES,
+  regTypeDescription,
+  regTypeLabel,
+  type RegTypeValue,
+} from "@/lib/reg-types";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +58,7 @@ interface OfferingForm {
   name: string;
   slug: string;
   summary: string;
-  reg_type: "506b" | "506c";
+  reg_type: RegTypeValue;
   min_investment: string;
   target_raise: string;
   wire_fee: string;
@@ -323,24 +329,22 @@ function FundsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Regulation D exemption</Label>
+              <Label>Offering exemption</Label>
               <div className="flex flex-wrap gap-2">
-                {(["506b", "506c"] as const).map((rt) => (
+                {REG_TYPES.map((rt) => (
                   <Button
-                    key={rt}
+                    key={rt.value}
                     type="button"
                     size="sm"
-                    variant={editing.reg_type === rt ? "default" : "outline"}
-                    onClick={() => setEditing({ ...editing, reg_type: rt })}
+                    variant={editing.reg_type === rt.value ? "default" : "outline"}
+                    onClick={() => setEditing({ ...editing, reg_type: rt.value })}
                   >
-                    Reg D {rt === "506b" ? "506(b)" : "506(c)"}
+                    {rt.short}
                   </Button>
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                {editing.reg_type === "506b"
-                  ? "506(b): no general solicitation; investors self-certify accreditation and confirm a pre-existing relationship."
-                  : "506(c): general solicitation allowed; every investor must upload third-party verification evidence."}
+                {regTypeDescription(editing.reg_type)}
               </p>
             </div>
 
@@ -499,7 +503,7 @@ function FundsPage() {
                     </p>
                   ) : null}
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Badge>Reg D {o.reg_type === "506b" ? "506(b)" : "506(c)"}</Badge>
+                    <Badge>{regTypeLabel(o.reg_type)}</Badge>
                     <Badge variant={o.is_open ? "secondary" : "outline"}>
                       {o.is_open ? "Open" : "Closed"}
                     </Badge>

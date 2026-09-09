@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { regTypeLabel } from "@/lib/reg-types";
 import { activeApplicationId } from "@/lib/active-application";
 
 export type RailStatus = "not_started" | "in_progress" | "in_review" | "complete" | "attention";
@@ -177,7 +178,7 @@ export const getStepRail = createServerFn({ method: "GET" })
     if (acc.data) {
       accFacts.push({
         label: "Offering rule",
-        value: acc.data.reg_type === "506c" ? "Reg D 506(c)" : "Reg D 506(b)",
+        value: regTypeLabel(acc.data.reg_type),
       });
       if (acc.data.method) accFacts.push({ label: "Basis", value: titleize(acc.data.method) });
       if (typeof acc.data.qualifies === "boolean")

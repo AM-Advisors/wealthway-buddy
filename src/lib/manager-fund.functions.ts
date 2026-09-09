@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { regTypeLabel } from "@/lib/reg-types";
 
 /**
  * One fund, seen by the manager who runs it: how far setup has got,
@@ -249,7 +250,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
         label: "Fund basics",
         done: fundOf(offering).basics,
         detail: fundOf(offering).basics
-          ? `${(offering as any).reg_type === "506c" ? "506(c)" : "506(b)"} · minimum $${(
+          ? `${regTypeLabel((offering as any).reg_type)} · minimum $${(
               Number((offering as any).min_investment_cents ?? 0) / 100
             ).toLocaleString("en-US")} · target $${(
               Number((offering as any).target_raise_cents ?? 0) / 100
@@ -573,7 +574,7 @@ export const getManagerFundProgress = createServerFn({ method: "GET" })
     const ids = (offerings ?? []).map((o: any) => o.id as string);
     if (ids.length === 0) return { funds: [] as any[] };
 
-    const [docsRes, roomsRes, memosRes, statementsRes, timelineRes] = await Promise.all([
+    const [docsRes, roomsRes, memosRes, statementsRes, timelineRes, complianceRes] = await Promise.all([
       supabase
         .from("offering_documents")
         .select("offering_id, requires_signature")
@@ -596,6 +597,11 @@ export const getManagerFundProgress = createServerFn({ method: "GET" })
         .select("offering_id")
         .in("offering_id", ids)
         .limit(2000),
+      supabase
+        .from("fund_compliance_items")
+        .select("offering_id, status")
+        .in("offering_id", ids)
+        .limit(2000),
     ]);
 
     const has = (rows: any[] | null | undefined, id: string, extra?: (r: any) => boolean) =>
@@ -613,11 +619,20 @@ export const getManagerFundProgress = createServerFn({ method: "GET" })
           has(timelineRes.data as any[], o.id),
         ];
         const done = checks.filter(Boolean).length;
+        const compliance = ((complianceRes.data ?? []) as any[]).filter(
+          (r) => r.offering_id === o.id && r.status !== "not_applicable",
+        );
+        const complianceFiled = compliance.filter((r) => r.status === "filed").length;
         return {
           id: o.id as string,
           done,
           total: checks.length,
           percent: Math.round((done / checks.length) * 100),
+          complianceTotal: compliance.length,
+          complianceFiled,
+          compliancePercent: compliance.length
+            ? Math.round((complianceFiled / compliance.length) * 100)
+            : null,
         };
       }),
     };
