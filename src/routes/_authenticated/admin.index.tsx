@@ -130,6 +130,9 @@ function AdminQueue() {
                 <Link to="/admin/activity">Activity log</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
+                <Link to="/admin/funding">Funding dashboard</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
                 <Link to="/diligence">Diligence rooms</Link>
               </Button>
 
