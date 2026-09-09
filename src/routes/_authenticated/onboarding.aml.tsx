@@ -112,8 +112,8 @@ function AmlPage() {
     setBusy(true);
     try {
       await save({ data: parsed.data });
-      toast.success("Application submitted for KYC/AML review.");
-      navigate({ to: "/dashboard" });
+      toast.success("Submitted for review — next, confirm your accredited status.");
+      navigate({ to: "/onboarding/accreditation" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not submit the questionnaire");
     } finally {
@@ -283,7 +283,7 @@ function AmlPage() {
               Back
             </Button>
             <Button type="submit" disabled={busy}>
-              {busy ? "Submitting…" : "Submit application for review"}
+              {busy ? "Submitting…" : "Submit and continue to accreditation"}
             </Button>
           </div>
         </form>
