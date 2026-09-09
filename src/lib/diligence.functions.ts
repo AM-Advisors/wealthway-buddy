@@ -269,13 +269,23 @@ export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
     // RLS only returns rows the caller is allowed to see.
     const { data: doc } = await supabase
       .from("diligence_documents")
-      .select("id, box_file_id, file_name")
+      .select("id, box_file_id, file_name, title, offering_id, room_id")
       .eq("id", data.id)
       .maybeSingle();
     if (!doc) throw new Error("That document is not available.");
 
     const { temporaryDownloadUrl } = await import("@/lib/box.server");
-    return { url: await temporaryDownloadUrl(doc.box_file_id), file_name: doc.file_name };
+    const url = await temporaryDownloadUrl(doc.box_file_id);
+    await logActivity(
+      supabase,
+      context.userId,
+      doc.offering_id,
+      doc.room_id,
+      "document_downloaded",
+      `Opened “${doc.title}”`,
+      { document_id: doc.id },
+    );
+    return { url, file_name: doc.file_name };
   });
 
 /** Pulls in any files added straight into the fund's Box folder outside the app. */
@@ -323,4 +333,694 @@ export const syncDiligenceFolder = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
     return { added: rows.length, checked: files.length };
+  });
+
+/* =========================================================================
+   NDA gate, checklist, Q&A, activity trail and document versions
+   ========================================================================= */
+
+async function actorIdentity(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("legal_name, email")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return { name: data?.legal_name ?? null, email: data?.email ?? null };
+}
+
+async function logActivity(
+  supabase: any,
+  userId: string,
+  offeringId: string,
+  roomId: string | null,
+  eventType: string,
+  summary: string,
+  metadata: Record<string, unknown> = {},
+) {
+  const who = await actorIdentity(supabase, userId);
+  await supabase.from("diligence_activity").insert({
+    room_id: roomId,
+    offering_id: offeringId,
+    actor_id: userId,
+    actor_name: who.name,
+    actor_email: who.email,
+    event_type: eventType,
+    summary,
+    metadata,
+  });
+}
+
+const DEFAULT_NDA = `CONFIDENTIALITY ACKNOWLEDGEMENT
+
+The materials in this diligence room are confidential and are provided solely so that you can evaluate a possible investment. By continuing you agree that you will:
+
+1. Keep these materials, and the fact that they were provided to you, confidential.
+2. Use them only to evaluate this opportunity, and for no other purpose.
+3. Not copy, forward, publish or otherwise share them with anyone outside your own professional advisers, who must agree to the same terms.
+4. Destroy or return the materials on request.
+
+This acknowledgement is recorded with your name, the date and time, and your network address.`;
+
+function ndaHash(text: string, version: number) {
+  let h = 0;
+  const src = `${version}::${text}`;
+  for (let i = 0; i < src.length; i += 1) h = (h * 31 + src.charCodeAt(i)) | 0;
+  return `nda_${version}_${(h >>> 0).toString(16)}`;
+}
+
+/** Room-level NDA status for the signed-in person. */
+export const getDiligenceAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id, nda_required, nda_text, nda_version")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) return { room: null, ndaRequired: false, accepted: false, ndaText: null, ndaVersion: 1 };
+
+    const { data: acceptance } = await supabase
+      .from("diligence_nda_acceptances")
+      .select("accepted_at, signer_name")
+      .eq("room_id", room.id)
+      .eq("user_id", userId)
+      .eq("nda_version", room.nda_version)
+      .maybeSingle();
+
+    return {
+      room: { id: room.id },
+      ndaRequired: room.nda_required,
+      ndaVersion: room.nda_version,
+      ndaText: room.nda_text ?? DEFAULT_NDA,
+      accepted: Boolean(acceptance),
+      acceptedAt: acceptance?.accepted_at ?? null,
+      canManage: await canManage(supabase, data.offering_id),
+    };
+  });
+
+export const acceptDiligenceNda = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({ offering_id: z.string().uuid(), signer_name: z.string().min(2).max(160) })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id, nda_text, nda_version")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) throw new Error("That diligence room is not available.");
+
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const ip =
+      getRequestHeader("cf-connecting-ip") ??
+      getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ??
+      null;
+
+    const { error } = await supabase.from("diligence_nda_acceptances").insert({
+      room_id: room.id,
+      offering_id: data.offering_id,
+      user_id: userId,
+      nda_version: room.nda_version,
+      signer_name: data.signer_name.trim(),
+      nda_hash: ndaHash(room.nda_text ?? DEFAULT_NDA, room.nda_version),
+      ip_address: ip,
+      user_agent: getRequestHeader("user-agent") ?? null,
+    });
+    if (error && !error.message.includes("duplicate")) throw new Error(error.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room.id,
+      "nda_accepted",
+      `${data.signer_name.trim()} accepted the confidentiality agreement`,
+      { nda_version: room.nda_version },
+    );
+    return { ok: true };
+  });
+
+export const updateDiligenceNda = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        offering_id: z.string().uuid(),
+        nda_required: z.boolean(),
+        nda_text: z.string().max(20000).optional().nullable(),
+        bump_version: z.boolean().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to change this agreement.");
+    }
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id, nda_version")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) throw new Error("Create the diligence room first.");
+
+    const nextVersion = data.bump_version ? room.nda_version + 1 : room.nda_version;
+    const { error } = await supabase
+      .from("diligence_rooms")
+      .update({
+        nda_required: data.nda_required,
+        nda_text: data.nda_text?.trim() ? data.nda_text.trim() : null,
+        nda_version: nextVersion,
+      })
+      .eq("id", room.id);
+    if (error) throw new Error(error.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room.id,
+      "nda_updated",
+      data.bump_version
+        ? `Confidentiality agreement updated — investors must accept again (v${nextVersion})`
+        : "Confidentiality agreement settings updated",
+      { nda_required: data.nda_required, nda_version: nextVersion },
+    );
+    return { ok: true, nda_version: nextVersion };
+  });
+
+/* ----------------------------- Checklist ----------------------------- */
+
+export const listDiligenceChecklist = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: items, error } = await supabase
+      .from("diligence_checklist_items")
+      .select(
+        "id, category, label, description, is_required, sort_order, status, document_id, completed_at",
+      )
+      .eq("offering_id", data.offering_id)
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    const rows = items ?? [];
+    const required = rows.filter((i: any) => i.is_required);
+    const done = required.filter((i: any) => i.status === "complete" || i.status === "waived");
+    return {
+      items: rows,
+      progress: required.length === 0 ? 0 : Math.round((done.length / required.length) * 100),
+    };
+  });
+
+export const saveChecklistItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        offering_id: z.string().uuid(),
+        category: z.enum(categoryValues).default("other"),
+        label: z.string().min(2).max(200),
+        description: z.string().max(1000).optional().nullable(),
+        is_required: z.boolean().default(true),
+        status: z.enum(["pending", "in_progress", "complete", "waived"]).default("pending"),
+        document_id: z.string().uuid().optional().nullable(),
+        sort_order: z.number().int().min(0).max(999).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to change this checklist.");
+    }
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) throw new Error("Create the diligence room first.");
+
+    const complete = data.status === "complete" || data.status === "waived";
+    const payload: any = {
+      room_id: room.id,
+      offering_id: data.offering_id,
+      category: data.category,
+      label: data.label.trim(),
+      description: data.description?.trim() ? data.description.trim() : null,
+      is_required: data.is_required,
+      status: data.status,
+      document_id: data.document_id ?? null,
+      completed_at: complete ? new Date().toISOString() : null,
+      completed_by: complete ? userId : null,
+    };
+
+    if (data.id) {
+      const { error } = await supabase
+        .from("diligence_checklist_items")
+        .update(payload)
+        .eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { count } = await supabase
+        .from("diligence_checklist_items")
+        .select("id", { count: "exact", head: true })
+        .eq("room_id", room.id);
+      payload["created_by"] = userId;
+      payload["sort_order"] = data.sort_order ?? (count ?? 0);
+      const { error } = await supabase.from("diligence_checklist_items").insert(payload);
+      if (error) throw new Error(error.message);
+    }
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room.id,
+      data.id ? "checklist_updated" : "checklist_added",
+      `${data.id ? "Updated" : "Added"} checklist item “${data.label.trim()}”`,
+      { status: data.status },
+    );
+    return { ok: true };
+  });
+
+export const removeChecklistItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: item } = await supabase
+      .from("diligence_checklist_items")
+      .select("id, offering_id, room_id, label")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!item) throw new Error("That checklist item is not available.");
+    if (!(await canManage(supabase, item.offering_id))) {
+      throw new Error("You do not have permission to change this checklist.");
+    }
+    const { error } = await supabase.from("diligence_checklist_items").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logActivity(
+      supabase,
+      userId,
+      item.offering_id,
+      item.room_id,
+      "checklist_removed",
+      `Removed checklist item “${item.label}”`,
+    );
+    return { ok: true };
+  });
+
+/** Creates a starter checklist covering the core diligence categories. */
+export const seedDiligenceChecklist = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!(await canManage(supabase, data.offering_id))) {
+      throw new Error("You do not have permission to change this checklist.");
+    }
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) throw new Error("Create the diligence room first.");
+
+    const { data: existing } = await supabase
+      .from("diligence_checklist_items")
+      .select("label")
+      .eq("room_id", room.id);
+    const seen = new Set((existing ?? []).map((e: any) => e.label));
+
+    const rows = DILIGENCE_CATEGORIES.filter((c) => c.value !== "other")
+      .map((c, i) => ({
+        room_id: room.id,
+        offering_id: data.offering_id,
+        category: c.value,
+        label: c.label,
+        is_required: c.required,
+        sort_order: i,
+        created_by: userId,
+      }))
+      .filter((r) => !seen.has(r.label));
+
+    if (rows.length) {
+      const { error } = await supabase.from("diligence_checklist_items").insert(rows);
+      if (error) throw new Error(error.message);
+      await logActivity(
+        supabase,
+        userId,
+        data.offering_id,
+        room.id,
+        "checklist_added",
+        `Added ${rows.length} starter checklist items`,
+      );
+    }
+    return { added: rows.length };
+  });
+
+/* ------------------------------ Q & A ------------------------------- */
+
+export const listDiligenceQuestions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(offeringInput)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: questions, error } = await supabase
+      .from("diligence_questions")
+      .select("id, subject, body, status, is_published, asker_name, asked_by, created_at")
+      .eq("offering_id", data.offering_id)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const ids = (questions ?? []).map((q: any) => q.id);
+    const { data: messages } = ids.length
+      ? await supabase
+          .from("diligence_question_messages")
+          .select("id, question_id, author_name, from_reviewer, body, created_at")
+          .in("question_id", ids)
+          .order("created_at", { ascending: true })
+      : { data: [] as any[] };
+
+    return {
+      questions: (questions ?? []).map((q: any) => ({
+        ...q,
+        messages: (messages ?? []).filter((m: any) => m.question_id === q.id),
+      })),
+      canManage: await canManage(supabase, data.offering_id),
+    };
+  });
+
+export const askDiligenceQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        offering_id: z.string().uuid(),
+        subject: z.string().min(3).max(200),
+        body: z.string().min(3).max(5000),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("id")
+      .eq("offering_id", data.offering_id)
+      .maybeSingle();
+    if (!room) throw new Error("That diligence room is not available.");
+
+    const who = await actorIdentity(supabase, userId);
+    const { data: created, error } = await supabase
+      .from("diligence_questions")
+      .insert({
+        room_id: room.id,
+        offering_id: data.offering_id,
+        asked_by: userId,
+        asker_name: who.name,
+        subject: data.subject.trim(),
+        body: data.body.trim(),
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      data.offering_id,
+      room.id,
+      "question_asked",
+      `Asked “${data.subject.trim()}”`,
+      { question_id: created.id },
+    );
+    return { id: created.id };
+  });
+
+export const replyToDiligenceQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({ question_id: z.string().uuid(), body: z.string().min(1).max(5000) })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: question } = await supabase
+      .from("diligence_questions")
+      .select("id, offering_id, room_id, subject, asked_by")
+      .eq("id", data.question_id)
+      .maybeSingle();
+    if (!question) throw new Error("That question is not available.");
+
+    const reviewer = await canManage(supabase, question.offering_id);
+    if (!reviewer && question.asked_by !== userId) {
+      throw new Error("You cannot reply to this question.");
+    }
+
+    const who = await actorIdentity(supabase, userId);
+    const { error } = await supabase.from("diligence_question_messages").insert({
+      question_id: question.id,
+      offering_id: question.offering_id,
+      author_id: userId,
+      author_name: who.name,
+      from_reviewer: reviewer,
+      body: data.body.trim(),
+    });
+    if (error) throw new Error(error.message);
+
+    if (reviewer) {
+      await supabase
+        .from("diligence_questions")
+        .update({ status: "answered" })
+        .eq("id", question.id);
+    }
+
+    await logActivity(
+      supabase,
+      userId,
+      question.offering_id,
+      question.room_id,
+      reviewer ? "question_answered" : "question_replied",
+      `${reviewer ? "Answered" : "Replied on"} “${question.subject}”`,
+      { question_id: question.id },
+    );
+    return { ok: true };
+  });
+
+export const updateDiligenceQuestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        question_id: z.string().uuid(),
+        status: z.enum(["open", "answered", "closed"]).optional(),
+        is_published: z.boolean().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: question } = await supabase
+      .from("diligence_questions")
+      .select("id, offering_id, room_id, subject")
+      .eq("id", data.question_id)
+      .maybeSingle();
+    if (!question) throw new Error("That question is not available.");
+    if (!(await canManage(supabase, question.offering_id))) {
+      throw new Error("You do not have permission to change this question.");
+    }
+
+    const patch: any = {};
+    if (data.status) patch["status"] = data.status;
+    if (data.is_published !== undefined) patch["is_published"] = data.is_published;
+    if (Object.keys(patch).length === 0) return { ok: true };
+
+    const { error } = await supabase
+      .from("diligence_questions")
+      .update(patch)
+      .eq("id", question.id);
+    if (error) throw new Error(error.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      question.offering_id,
+      question.room_id,
+      "question_updated",
+      `Updated “${question.subject}”${data.is_published === true ? " — shared with all investors" : ""}`,
+      patch,
+    );
+    return { ok: true };
+  });
+
+/* --------------------------- Activity trail -------------------------- */
+
+export const listDiligenceActivity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ offering_id: z.string().uuid(), limit: z.number().int().min(1).max(200).default(50) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: events, error } = await supabase
+      .from("diligence_activity")
+      .select("id, event_type, summary, actor_name, actor_email, metadata, created_at")
+      .eq("offering_id", data.offering_id)
+      .order("created_at", { ascending: false })
+      .limit(data.limit);
+    if (error) throw new Error(error.message);
+    return { events: events ?? [], canManage: await canManage(supabase, data.offering_id) };
+  });
+
+/* ------------------------- Document versions ------------------------- */
+
+export const listDocumentVersions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ document_id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: versions, error } = await supabase
+      .from("diligence_document_versions")
+      .select("id, version, file_name, size_bytes, note, uploaded_at")
+      .eq("document_id", data.document_id)
+      .order("version", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { versions: versions ?? [] };
+  });
+
+/** Uploads a replacement file for a document and keeps the previous version. */
+export const addDocumentVersion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        document_id: z.string().uuid(),
+        file_name: z.string().min(1).max(255),
+        content_type: z.string().max(120).optional(),
+        content_base64: z.string().min(1).max(28_000_000),
+        note: z.string().max(500).optional().nullable(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: doc } = await supabase
+      .from("diligence_documents")
+      .select("id, offering_id, room_id, title, version, box_file_id, file_name, size_bytes")
+      .eq("id", data.document_id)
+      .maybeSingle();
+    if (!doc) throw new Error("That document is not available.");
+    if (!(await canManage(supabase, doc.offering_id))) {
+      throw new Error("You do not have permission to update this document.");
+    }
+
+    const { data: room } = await supabase
+      .from("diligence_rooms")
+      .select("box_folder_id")
+      .eq("id", doc.room_id)
+      .maybeSingle();
+    if (!room) throw new Error("That diligence room is not available.");
+
+    const binary = Buffer.from(data.content_base64, "base64");
+    if (binary.length === 0) throw new Error("That file appears to be empty.");
+    if (binary.length > 20 * 1024 * 1024) throw new Error("Files must be 20 MB or smaller.");
+
+    // Keep a record of the version being replaced.
+    const { error: histErr } = await supabase.from("diligence_document_versions").insert({
+      document_id: doc.id,
+      offering_id: doc.offering_id,
+      version: doc.version,
+      box_file_id: doc.box_file_id,
+      file_name: doc.file_name,
+      size_bytes: doc.size_bytes,
+      note: "Previous version",
+      uploaded_by: userId,
+    });
+    if (histErr && !histErr.message.includes("duplicate")) throw new Error(histErr.message);
+
+    const { uploadFileTo } = await import("@/lib/box.server");
+    const nextVersion = doc.version + 1;
+    const base = data.file_name.replace(/[\\/:*?"<>|]/g, "_");
+    const dot = base.lastIndexOf(".");
+    const versioned =
+      dot > 0 ? `${base.slice(0, dot)} (v${nextVersion})${base.slice(dot)}` : `${base} (v${nextVersion})`;
+
+    const uploaded = await uploadFileTo(
+      room.box_folder_id,
+      versioned,
+      new Uint8Array(binary),
+      data.content_type || "application/octet-stream",
+    );
+
+    const { error } = await supabase
+      .from("diligence_documents")
+      .update({
+        box_file_id: uploaded.id,
+        file_name: versioned,
+        size_bytes: uploaded.size,
+        version: nextVersion,
+        uploaded_by: userId,
+        uploaded_at: new Date().toISOString(),
+      })
+      .eq("id", doc.id);
+    if (error) throw new Error(error.message);
+
+    const { error: newErr } = await supabase.from("diligence_document_versions").insert({
+      document_id: doc.id,
+      offering_id: doc.offering_id,
+      version: nextVersion,
+      box_file_id: uploaded.id,
+      file_name: versioned,
+      size_bytes: uploaded.size,
+      note: data.note?.trim() ? data.note.trim() : null,
+      uploaded_by: userId,
+    });
+    if (newErr) throw new Error(newErr.message);
+
+    await logActivity(
+      supabase,
+      userId,
+      doc.offering_id,
+      doc.room_id,
+      "document_version_added",
+      `Uploaded version ${nextVersion} of “${doc.title}”`,
+      { document_id: doc.id, version: nextVersion },
+    );
+    return { version: nextVersion };
+  });
+
+export const getVersionDownloadUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: version } = await supabase
+      .from("diligence_document_versions")
+      .select("id, box_file_id, file_name, version, offering_id, document_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!version) throw new Error("That version is not available.");
+
+    const { temporaryDownloadUrl } = await import("@/lib/box.server");
+    const url = await temporaryDownloadUrl(version.box_file_id);
+    await logActivity(
+      supabase,
+      userId,
+      version.offering_id,
+      null,
+      "document_downloaded",
+      `Downloaded ${version.file_name} (version ${version.version})`,
+      { document_id: version.document_id, version: version.version },
+    );
+    return { url, file_name: version.file_name };
   });

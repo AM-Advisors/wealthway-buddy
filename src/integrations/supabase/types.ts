@@ -297,6 +297,190 @@ export type Database = {
           },
         ]
       }
+      diligence_activity: {
+        Row: {
+          actor_email: string | null
+          actor_id: string
+          actor_name: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          offering_id: string
+          room_id: string | null
+          summary: string
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_id: string
+          actor_name?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          offering_id: string
+          room_id?: string | null
+          summary: string
+        }
+        Update: {
+          actor_email?: string | null
+          actor_id?: string
+          actor_name?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          offering_id?: string
+          room_id?: string | null
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_activity_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_activity_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_checklist_items: {
+        Row: {
+          category: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          document_id: string | null
+          id: string
+          is_required: boolean
+          label: string
+          offering_id: string
+          room_id: string
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          document_id?: string | null
+          id?: string
+          is_required?: boolean
+          label: string
+          offering_id: string
+          room_id: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          document_id?: string | null
+          id?: string
+          is_required?: boolean
+          label?: string
+          offering_id?: string
+          room_id?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_checklist_items_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_checklist_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_checklist_items_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_document_versions: {
+        Row: {
+          box_file_id: string
+          document_id: string
+          file_name: string
+          id: string
+          note: string | null
+          offering_id: string
+          size_bytes: number | null
+          uploaded_at: string
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          box_file_id: string
+          document_id: string
+          file_name: string
+          id?: string
+          note?: string | null
+          offering_id: string
+          size_bytes?: number | null
+          uploaded_at?: string
+          uploaded_by: string
+          version: number
+        }
+        Update: {
+          box_file_id?: string
+          document_id?: string
+          file_name?: string
+          id?: string
+          note?: string | null
+          offering_id?: string
+          size_bytes?: number | null
+          uploaded_at?: string
+          uploaded_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_document_versions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diligence_documents: {
         Row: {
           box_file_id: string
@@ -310,6 +494,7 @@ export type Database = {
           title: string
           uploaded_at: string
           uploaded_by: string
+          version: number
         }
         Insert: {
           box_file_id: string
@@ -323,6 +508,7 @@ export type Database = {
           title: string
           uploaded_at?: string
           uploaded_by: string
+          version?: number
         }
         Update: {
           box_file_id?: string
@@ -336,6 +522,7 @@ export type Database = {
           title?: string
           uploaded_at?: string
           uploaded_by?: string
+          version?: number
         }
         Relationships: [
           {
@@ -354,6 +541,165 @@ export type Database = {
           },
         ]
       }
+      diligence_nda_acceptances: {
+        Row: {
+          accepted_at: string
+          id: string
+          ip_address: string | null
+          nda_hash: string
+          nda_version: number
+          offering_id: string
+          room_id: string
+          signer_name: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          ip_address?: string | null
+          nda_hash: string
+          nda_version: number
+          offering_id: string
+          room_id: string
+          signer_name: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          ip_address?: string | null
+          nda_hash?: string
+          nda_version?: number
+          offering_id?: string
+          room_id?: string
+          signer_name?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_nda_acceptances_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_nda_acceptances_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_question_messages: {
+        Row: {
+          author_id: string
+          author_name: string | null
+          body: string
+          created_at: string
+          from_reviewer: boolean
+          id: string
+          offering_id: string
+          question_id: string
+        }
+        Insert: {
+          author_id: string
+          author_name?: string | null
+          body: string
+          created_at?: string
+          from_reviewer?: boolean
+          id?: string
+          offering_id: string
+          question_id: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          from_reviewer?: boolean
+          id?: string
+          offering_id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_question_messages_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_question_messages_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diligence_questions: {
+        Row: {
+          asked_by: string
+          asker_name: string | null
+          body: string
+          created_at: string
+          id: string
+          is_published: boolean
+          offering_id: string
+          room_id: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          asked_by: string
+          asker_name?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          offering_id: string
+          room_id: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          asked_by?: string
+          asker_name?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          offering_id?: string
+          room_id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diligence_questions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diligence_questions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "diligence_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diligence_rooms: {
         Row: {
           box_folder_id: string
@@ -361,6 +707,9 @@ export type Database = {
           created_by: string
           id: string
           intro: string | null
+          nda_required: boolean
+          nda_text: string | null
+          nda_version: number
           offering_id: string
           updated_at: string
         }
@@ -370,6 +719,9 @@ export type Database = {
           created_by: string
           id?: string
           intro?: string | null
+          nda_required?: boolean
+          nda_text?: string | null
+          nda_version?: number
           offering_id: string
           updated_at?: string
         }
@@ -379,6 +731,9 @@ export type Database = {
           created_by?: string
           id?: string
           intro?: string | null
+          nda_required?: boolean
+          nda_text?: string | null
+          nda_version?: number
           offering_id?: string
           updated_at?: string
         }
@@ -1422,6 +1777,10 @@ export type Database = {
         Returns: boolean
       }
       can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
+      diligence_access_open: {
+        Args: { _offering_id: string }
+        Returns: boolean
+      }
       get_wire_instructions: {
         Args: { p_offering_id: string }
         Returns: {
