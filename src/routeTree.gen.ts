@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
+import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
@@ -125,6 +126,12 @@ const AuthenticatedAdminSetupRoute = AuthenticatedAdminSetupRouteImport.update({
   path: '/admin/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDiligenceIndexRoute =
+  AuthenticatedDiligenceIndexRouteImport.update({
+    id: '/diligence/',
+    path: '/diligence/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerIndexRoute =
   AuthenticatedManagerIndexRouteImport.update({
     id: '/manager/',
@@ -230,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -261,6 +269,7 @@ export interface FileRoutesByTo {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/diligence': typeof AuthenticatedDiligenceIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin/'
+    | '/diligence/'
     | '/manager/'
     | '/admin/fund/$fundId'
     | '/api/public/email/click'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin'
+    | '/diligence'
     | '/manager'
     | '/admin/fund/$fundId'
     | '/api/public/email/click'
@@ -390,6 +402,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
+    | '/_authenticated/diligence/'
     | '/_authenticated/manager/'
     | '/_authenticated/admin/fund/$fundId'
     | '/api/public/email/click'
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/diligence/': {
+      id: '/_authenticated/diligence/'
+      path: '/diligence'
+      fullPath: '/diligence/'
+      preLoaderRoute: typeof AuthenticatedDiligenceIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/': {
       id: '/_authenticated/manager/'
       path: '/manager'
@@ -645,6 +665,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingFundingRoute: typeof AuthenticatedOnboardingFundingRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
   AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
 }
@@ -670,6 +691,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingFundingRoute: AuthenticatedOnboardingFundingRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
   AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
 }
