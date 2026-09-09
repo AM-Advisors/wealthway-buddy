@@ -2391,6 +2391,72 @@ export type Database = {
           },
         ]
       }
+      wire_requests: {
+        Row: {
+          amount_cents: number
+          application_id: string | null
+          created_at: string
+          expected_date: string | null
+          id: string
+          note: string | null
+          offering_id: string
+          purpose: string
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          application_id?: string | null
+          created_at?: string
+          expected_date?: string | null
+          id?: string
+          note?: string | null
+          offering_id: string
+          purpose?: string
+          requested_by: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          application_id?: string | null
+          created_at?: string
+          expected_date?: string | null
+          id?: string
+          note?: string | null
+          offering_id?: string
+          purpose?: string
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wire_requests_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wire_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

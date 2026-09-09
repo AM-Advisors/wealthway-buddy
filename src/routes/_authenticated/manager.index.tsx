@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FundInvitations } from "@/components/fund-invitations";
 import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
+import { WireRequestForm, WireRequestQueue } from "@/components/wire-requests";
 
 export const Route = createFileRoute("/_authenticated/manager/")({
   head: () => ({
@@ -171,6 +172,12 @@ function ManagerPanel() {
       <section className="mt-10">
         <h2 className="mb-3 text-xl">Wire tracking</h2>
         <WireTrackingPanel />
+      </section>
+
+      <section className="mt-10 space-y-6">
+        <h2 className="text-xl">Wire requests</h2>
+        <WireRequestForm />
+        <WireRequestQueue />
       </section>
 
       <section className="mt-10">

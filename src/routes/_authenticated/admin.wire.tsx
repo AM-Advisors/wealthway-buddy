@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WireRequestForm, WireRequestQueue } from "@/components/wire-requests";
 
 export const Route = createFileRoute("/_authenticated/admin/wire")({
   head: () => ({
@@ -120,6 +121,9 @@ function WireAdminPage() {
           details on their wire page immediately — you never need to edit a fund page.
         </p>
       </div>
+
+      <WireRequestQueue />
+      <WireRequestForm />
 
       {(data.funds as any[]).length === 0 ? (
         <Card>

@@ -154,6 +154,20 @@ function buildEmail(
     };
   }
 
+  if (row.event_kind === "wire_request_submitted") {
+    const meta = row.metadata ?? {};
+    const purpose = String(meta["purpose"] ?? "wire").replace(/_/g, " ");
+    return {
+      headline: `Wire request for approval — ${offeringName}`,
+      intro: `A wire request of ${money(row.amount_cents)} was submitted for ${offeringName} and is waiting for approval.`,
+      details: [
+        { label: "Fund", value: offeringName },
+        { label: "Amount", value: money(row.amount_cents) },
+        { label: "Reason", value: purpose },
+      ],
+    };
+  }
+
   if (row.event_kind === "wire_confirmation_submitted") {
 
     const meta = row.metadata ?? {};
