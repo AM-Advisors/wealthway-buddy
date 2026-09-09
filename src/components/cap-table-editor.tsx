@@ -8,6 +8,7 @@ import {
   getCapTableEditor,
   listCapTableFunds,
   saveCapPosition,
+  getCapTableLog,
   type CapPositionInput,
   type CapTableEditorRow,
 } from "@/lib/cap-table.functions";
@@ -75,6 +76,7 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
       toast.success("Cap table updated.");
       setEditing(null);
       void queryClient.invalidateQueries({ queryKey: ["cap-table-editor", fundId] });
+      void queryClient.invalidateQueries({ queryKey: ["cap-table-log", fundId] });
     },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save."),
   });
@@ -267,6 +269,9 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
         </Card>
       ) : null}
 
+      {fundId ? <CapTableLog offeringId={fundId} /> : null}
+
+
       <Dialog open={Boolean(editing)} onOpenChange={(open) => (open ? null : setEditing(null))}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -338,5 +343,63 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function displayValue(field: string, value: string | null) {
+  if (value == null || value === "") return "—";
+  if (field === "commitment_cents") return money(Number(value));
+  if (field === "ownership_pct_override") return `${value}%`;
+  if (field === "shares") return Number(value).toLocaleString("en-US");
+  return value;
+}
+
+function CapTableLog({ offeringId }: { offeringId: string }) {
+  const loadLog = useServerFn(getCapTableLog);
+  const logQuery = useQuery({
+    queryKey: ["cap-table-log", offeringId],
+    queryFn: () => loadLog({ data: { offering_id: offeringId, limit: 100 } }),
+    enabled: Boolean(offeringId),
+  });
+  const entries = logQuery.data?.entries ?? [];
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle className="text-base">Change log</CardTitle>
+        <CardDescription>
+          Every ownership and commitment edit for this fund, newest first.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {logQuery.isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No edits recorded yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {entries.map((entry) => (
+              <li key={entry.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-2.5 text-sm">
+                <span className="font-medium">{entry.investor_name}</span>
+                <Badge variant="outline">{entry.field_label}</Badge>
+                <span className="text-muted-foreground">
+                  {displayValue(entry.field, entry.old_value)} →{" "}
+                  <span className="text-foreground">
+                    {displayValue(entry.field, entry.new_value)}
+                  </span>
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {entry.changed_by_name} ·{" "}
+                  {new Date(entry.created_at).toLocaleString("en-US", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

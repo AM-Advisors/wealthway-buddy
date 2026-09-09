@@ -420,6 +420,57 @@ export type Database = {
           },
         ]
       }
+      cap_table_changes: {
+        Row: {
+          application_id: string
+          changed_by: string | null
+          created_at: string
+          field: string
+          id: string
+          new_value: string | null
+          note: string | null
+          offering_id: string
+          old_value: string | null
+        }
+        Insert: {
+          application_id: string
+          changed_by?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          offering_id: string
+          old_value?: string | null
+        }
+        Update: {
+          application_id?: string
+          changed_by?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          offering_id?: string
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_table_changes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_table_changes_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       closing_documents: {
         Row: {
           application_id: string
