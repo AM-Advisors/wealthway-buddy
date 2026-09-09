@@ -657,6 +657,57 @@ export type Database = {
           },
         ]
       }
+      investor_documents: {
+        Row: {
+          application_id: string
+          doc_kind: string
+          file_name: string
+          id: string
+          note: string | null
+          offering_id: string
+          storage_path: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          doc_kind: string
+          file_name: string
+          id?: string
+          note?: string | null
+          offering_id: string
+          storage_path: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          doc_kind?: string
+          file_name?: string
+          id?: string
+          note?: string | null
+          offering_id?: string
+          storage_path?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_documents_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_emails: {
         Row: {
           application_id: string
