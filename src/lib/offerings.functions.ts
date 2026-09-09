@@ -81,7 +81,7 @@ const documentSchema = z.object({
   offering_id: z.string().uuid(),
   title: z.string().trim().min(2, "Enter a document title").max(200),
   doc_type: z.string().trim().min(2).max(60),
-  body: z.string().trim().min(10, "Add the document text").max(200000),
+  body: z.string().trim().max(200000).default(""),
   requires_signature: z.boolean().default(false),
   sort_order: z.number().int().min(0).default(0),
 });
