@@ -15,6 +15,30 @@ export interface PortalDocument {
   downloadable: boolean;
 }
 
+export interface PortalQuestion {
+  assignment_id: string;
+  prompt: string;
+  category: string | null;
+  is_required: boolean;
+  sort_order: number;
+  status: string;
+  due_date: string | null;
+  answered_at: string | null;
+}
+
+export interface PortalWireConfirmation {
+  id: string;
+  amount_cents: number | null;
+  sent_on: string | null;
+  sending_bank_name: string | null;
+  sending_account_last4: string | null;
+  bank_reference: string | null;
+  status: string;
+  review_notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+}
+
 /** Everything an investor needs to see about their own application in one read. */
 export const getPortal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -171,6 +195,8 @@ export const getPortal = createServerFn({ method: "GET" })
       subscription,
       payment,
       kyc,
+      questions,
+      wireConfirmations: (wireConfirmations ?? []) as PortalWireConfirmation[],
       wireInstructions: Object.fromEntries(
         Object.entries(((wire as any)?.details ?? {}) as Record<string, unknown>)
           .filter(([, v]) => String(v ?? "").trim() !== "")
