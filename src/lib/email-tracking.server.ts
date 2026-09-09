@@ -97,3 +97,59 @@ export async function decodeTrackedUrl(token: string): Promise<DecodedTrackedLin
     return null;
   }
 }
+
+export interface OpenPixel {
+  recipient: string;
+  template?: string;
+  emailId?: string;
+  applicationId?: string;
+}
+
+/** Signed 1x1 pixel URL used to record that an onboarding email was opened. */
+export async function buildOpenPixelUrl(pixel: OpenPixel): Promise<string> {
+  const payload = b64url(
+    enc.encode(
+      JSON.stringify({
+        r: pixel.recipient,
+        t: pixel.template ?? null,
+        e: pixel.emailId ?? null,
+        a: pixel.applicationId ?? null,
+      }),
+    ),
+  );
+  const token = `${payload}.${await sign(payload)}`;
+  return `${TRACKING_BASE}/api/public/email/open?t=${encodeURIComponent(token)}`;
+}
+
+export interface DecodedOpenPixel {
+  recipient: string;
+  template: string | null;
+  emailId: string | null;
+  applicationId: string | null;
+}
+
+/** Verifies an open-tracking token and returns its contents, or null when invalid. */
+export async function decodeOpenPixel(token: string): Promise<DecodedOpenPixel | null> {
+  const dot = token.lastIndexOf(".");
+  if (dot <= 0) return null;
+  const payload = token.slice(0, dot);
+  const provided = token.slice(dot + 1);
+  const expected = await sign(payload);
+  if (provided.length !== expected.length) return null;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i += 1) diff |= provided.charCodeAt(i) ^ expected.charCodeAt(i);
+  if (diff !== 0) return null;
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(fromB64url(payload)));
+    const recipient = String(parsed.r ?? "");
+    if (!recipient) return null;
+    return {
+      recipient,
+      template: parsed.t ?? null,
+      emailId: parsed.e ?? null,
+      applicationId: parsed.a ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
