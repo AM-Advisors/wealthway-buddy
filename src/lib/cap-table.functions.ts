@@ -353,7 +353,7 @@ export const getMyPortfolioValue = createServerFn({ method: "GET" })
         commitment_cents: you.commitment_cents,
         funded_cents: you.funded_cents,
         pct_of_committed: you.pct_of_committed,
-        equity_value_cents: valuedByPrice ? Math.round(shares * price) : you.funded_cents,
+        equity_value_cents: valuedByPrice ? Math.round(shares! * price!) : you.funded_cents,
         valued_by: valuedByPrice ? "share_price" : "capital",
       });
     }
