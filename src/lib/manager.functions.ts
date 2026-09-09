@@ -186,6 +186,8 @@ export const getFundSignedDocuments = createServerFn({ method: "GET" })
       title: titleOf.get(s.offering_document_id as string) ?? "Fund document",
       pending: s.provider_status === "out_for_signature",
       signedAt: (s.provider_completed_at as string) ?? (s.signed_at as string) ?? null,
+      sentAt: (s.provider_sent_at as string) ?? null,
+      openedAt: (s.provider_viewed_at as string) ?? null,
       viaBoxSign: s.provider === "box_sign",
       hasPdf: Boolean(s.pdf_path),
       inBox: Boolean(s.box_file_id),
