@@ -203,3 +203,61 @@ export const refreshBoxSignatures = createServerFn({ method: "POST" })
     }
     return { updated };
   });
+
+/**
+ * Reviewer-side safety net: pulls Box for every in-flight signing request on a
+ * fund, so a missed webhook never leaves a signed document out of the portal.
+ */
+export const syncFundSignatures = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["admin", "fund_manager"]);
+    if (!roles?.length) throw new Error("Forbidden: reviewer access required.");
+
+    const isAdmin = roles.some((r: any) => r.role === "admin");
+    if (!isAdmin) {
+      const { data: assignment } = await supabase
+        .from("fund_managers")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("offering_id", data.offering_id)
+        .maybeSingle();
+      if (!assignment) throw new Error("Forbidden: not assigned to this fund.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: applications } = await supabaseAdmin
+      .from("investor_applications")
+      .select("id")
+      .eq("offering_id", data.offering_id);
+
+    const appIds = (applications ?? []).map((a: any) => a.id as string);
+    if (appIds.length === 0) return { checked: 0, completed: 0 };
+
+    const { data: pending } = await supabaseAdmin
+      .from("document_signatures")
+      .select("provider_agreement_id")
+      .in("application_id", appIds)
+      .eq("provider", "box_sign")
+      .eq("provider_status", "out_for_signature");
+
+    const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
+    let completed = 0;
+    for (const row of pending ?? []) {
+      if (!row.provider_agreement_id) continue;
+      try {
+        const res = await syncBoxSignRequest(row.provider_agreement_id);
+        if (res.completed) completed += 1;
+      } catch (e) {
+        console.error("[box-sign] fund sync failed", e);
+      }
+    }
+    return { checked: (pending ?? []).length, completed };
+  });
