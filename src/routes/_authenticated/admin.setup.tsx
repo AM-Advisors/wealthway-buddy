@@ -446,10 +446,10 @@ function SetupPage() {
             </div>
 
             <div className="flex justify-between">
-              <Button variant="ghost" onClick={() => setStep(0)}>
+              <Button variant="ghost" onClick={() => setStep(1)}>
                 Back
               </Button>
-              <Button onClick={() => setStep(2)} disabled={documents.length === 0}>
+              <Button onClick={() => setStep(3)} disabled={documents.length === 0}>
                 Continue to access
               </Button>
             </div>
