@@ -458,7 +458,58 @@ async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string
         ownership_pct: Math.round(rows.reduce((s, r) => s + r.ownership_pct, 0) * 10000) / 10000,
       },
     };
+  }
+}
+
+export type FundCapTableEditor = Awaited<ReturnType<typeof buildFundCapTable>>;
+
+/** Every investor position in one fund, with the numbers a manager can edit. */
+export const getCapTableEditor = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertCanManage(context.supabase, data.offering_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return buildFundCapTable(supabaseAdmin, data);
   });
+
+/** Every fund the viewer can manage, each with its full cap table. */
+export const getCapTableBoard = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin");
+    const isAdmin = (roles ?? []).length > 0;
+
+    let ids: string[] = [];
+    if (isAdmin) {
+      const { data } = await supabase.from("offerings").select("id");
+      ids = ((data ?? []) as any[]).map((o) => o.id as string);
+    } else {
+      const { data } = await supabase
+        .from("fund_managers")
+        .select("offering_id")
+        .eq("user_id", userId);
+      ids = ((data ?? []) as any[]).map((m) => m.offering_id as string);
+    }
+    if (ids.length === 0) return { isAdmin, funds: [] as FundCapTableEditor[] };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const funds = await Promise.all(
+      ids.map((id) => buildFundCapTable(supabaseAdmin, { offering_id: id })),
+    );
+    funds.sort(
+      (a, b) =>
+        b.totals.committed_cents - a.totals.committed_cents ||
+        a.offering.name.localeCompare(b.offering.name),
+    );
+    return { isAdmin, funds };
+  });
+
 
 const positionSchema = z.object({
   application_id: z.string().uuid(),
