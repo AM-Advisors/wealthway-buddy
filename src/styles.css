@@ -59,6 +59,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-deep-navy: var(--brand-deep-navy);
+  --color-brand-black: var(--brand-black);
+  --color-brand-white: var(--brand-white);
   --color-brand-blue: var(--brand-blue);
   --color-brand-sky: var(--brand-sky);
   --color-brand-mint: var(--brand-mint);
@@ -71,32 +76,40 @@
   --radius: 0.625rem;
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Rubik", "Poppins", ui-sans-serif, system-ui, sans-serif;
-  /* Harmonious brand guide (July 2026): navy #142647, ink #221F20, teal #5DC6D1 */
-  --brand-ink: oklch(0.243 0.005 355.2);
-  --brand-blue: oklch(0.531 0.195 264.9);
-  --brand-sky: oklch(0.646 0.138 244.2);
-  --brand-mint: oklch(0.799 0.144 172.6);
-  --brand-violet: oklch(0.461 0.242 273.7);
-  --brand-lightblue: oklch(0.743 0.082 240.8);
+  /* Harmonious brand guide (July 2026)
+     Primary: teal #5DC6D1, navy #002856, black #000000, white #FFFFFF
+     Secondary: #3260DB #3295DB #32DBB4 #3B32DB #7CB3DB
+     Gradient/type: deep navy #142647, ink #221F20 */
+  --brand-teal: #5dc6d1;
+  --brand-navy: #002856;
+  --brand-deep-navy: #142647;
+  --brand-black: #000000;
+  --brand-white: #ffffff;
+  --brand-ink: #221f20;
+  --brand-blue: #3260db;
+  --brand-sky: #3295db;
+  --brand-mint: #32dbb4;
+  --brand-violet: #3b32db;
+  --brand-lightblue: #7cb3db;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.243 0.005 355.2);
+  --foreground: var(--brand-ink);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.243 0.005 355.2);
+  --card-foreground: var(--brand-ink);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.243 0.005 355.2);
-  --primary: oklch(0.273 0.066 261.5);
-  --primary-foreground: oklch(0.985 0.004 247);
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-navy);
+  --primary-foreground: var(--brand-white);
   --secondary: oklch(0.955 0.012 230);
-  --secondary-foreground: oklch(0.273 0.066 261.5);
+  --secondary-foreground: var(--brand-navy);
   --muted: oklch(0.977 0.006 239.8);
   --muted-foreground: oklch(0.467 0.04 257.8);
-  --accent: oklch(0.769 0.098 204.6);
-  --accent-foreground: oklch(0.273 0.066 261.5);
+  --accent: var(--brand-teal);
+  --accent-foreground: var(--brand-navy);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.92 0.014 245);
   --input: oklch(0.92 0.014 245);
-  --ring: oklch(0.769 0.098 204.6);
+  --ring: var(--brand-teal);
   --chart-1: var(--brand-blue);
   --chart-2: var(--brand-sky);
   --chart-3: var(--brand-mint);
@@ -119,19 +132,19 @@
   --card-foreground: oklch(0.96 0.01 230);
   --popover: oklch(0.26 0.055 261);
   --popover-foreground: oklch(0.96 0.01 230);
-  --primary: oklch(0.769 0.098 204.6);
-  --primary-foreground: oklch(0.22 0.05 261);
+  --primary: var(--brand-teal);
+  --primary-foreground: var(--brand-deep-navy);
   --secondary: oklch(0.32 0.05 260);
   --secondary-foreground: oklch(0.96 0.01 230);
   --muted: oklch(0.32 0.05 260);
   --muted-foreground: oklch(0.8 0.04 230);
-  --accent: oklch(0.769 0.098 204.6);
-  --accent-foreground: oklch(0.22 0.05 261);
+  --accent: var(--brand-teal);
+  --accent-foreground: var(--brand-deep-navy);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.769 0.098 204.6);
+  --ring: var(--brand-teal);
   --chart-1: var(--brand-sky);
   --chart-2: var(--brand-mint);
   --chart-3: var(--brand-lightblue);
@@ -175,12 +188,12 @@
   }
 }
 
-/* Brand gradient: navy #142647 → ink #221F20 */
+/* Brand gradient: deep navy #142647 → black #000000 */
 @utility bg-brand-gradient {
   background-image: linear-gradient(
     135deg,
-    oklch(0.273 0.066 261.5),
-    oklch(0.243 0.005 355.2)
+    var(--brand-deep-navy),
+    var(--brand-black)
   );
 }
 
