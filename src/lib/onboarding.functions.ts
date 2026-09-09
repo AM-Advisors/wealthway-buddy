@@ -74,6 +74,10 @@ export const getOnboarding = createServerFn({ method: "GET" })
       profile = inserted.data;
     }
 
+    // Everything below is scoped to the investing account the person is acting
+    // as, so an LLC application never picks up the individual's answers.
+    const personaId = await ensureActivePersona(supabase, userId, profile as any);
+
     // Access is invitation-only: an existing application, or a fund the person
     // has been invited to, decides which offering they see. Nothing is created
     // for people who have not been invited.
