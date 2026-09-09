@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requiresPreExistingRelationship } from "@/lib/reg-types";
 import { kycSchema } from "@/lib/onboarding.functions";
 
 /**
@@ -266,14 +267,14 @@ export const saveRoomAccreditation = createServerFn({ method: "POST" })
       );
     }
 
-    if ((offering?.reg_type ?? "506b") === "506b" && (data.pre_existing_relationship ?? "").length < 10) {
+    if (requiresPreExistingRelationship(offering?.reg_type) && (data.pre_existing_relationship ?? "").length < 10) {
       throw new Error("Describe your existing relationship with the fund manager.");
     }
 
     const now = new Date().toISOString();
     const payload = {
       application_id: application.id,
-      reg_type: (offering?.reg_type ?? "506b") as "506b" | "506c",
+      reg_type: (offering?.reg_type ?? "506b") as string,
       method: data.basis,
       questionnaire: { ...data, submitted_at: now },
       qualifies: true,

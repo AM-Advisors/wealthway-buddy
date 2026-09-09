@@ -1,3 +1,4 @@
+import { regTypeLabel, requiresPreExistingRelationship } from "@/lib/reg-types";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -359,7 +360,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle className="text-base">3. Accreditation</CardTitle>
           <CardDescription>
-            This is a Regulation D {reg === "506c" ? "506(c)" : "506(b)"} offering, so you must qualify as an
+            This is a {regTypeLabel(reg)} offering, so you must qualify as an
             accredited investor.
           </CardDescription>
         </CardHeader>
@@ -403,7 +404,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
             />
           </div>
 
-          {reg === "506b" ? (
+          {requiresPreExistingRelationship(reg) ? (
             <div className="space-y-2">
               <Label htmlFor="relationship">Your existing relationship with the fund manager</Label>
               <Textarea

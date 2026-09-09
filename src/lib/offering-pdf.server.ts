@@ -1,3 +1,4 @@
+import { regTypeDescription, regTypeLongLabel, requiresVerifiedAccreditation } from "@/lib/reg-types";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 const MARGIN = 56;
@@ -59,7 +60,7 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
 
-  const regLabel = input.regType === "506c" ? "Regulation D, Rule 506(c)" : "Regulation D, Rule 506(b)";
+  const regLabel = regTypeLongLabel(input.regType);
   const generatedAt = input.generatedAt ?? new Date().toISOString();
 
   pdf.setTitle(`${input.offeringName} — ${input.title}`);
@@ -152,9 +153,9 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
   );
   y -= 6;
   draw(
-    input.regType === "506c"
+    requiresVerifiedAccreditation(input.regType)
       ? "Offered under Rule 506(c). Participation is limited to accredited investors whose status has been verified."
-      : "Offered under Rule 506(b). Offered only to investors with a pre-existing substantive relationship; no general solicitation.",
+      : regTypeDescription(input.regType),
     italic,
     9.5,
     MUTED,
@@ -218,7 +219,7 @@ export async function buildOfferingPacketPdf(input: OfferingPacketInput): Promis
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
 
-  const regLabel = input.regType === "506c" ? "Regulation D, Rule 506(c)" : "Regulation D, Rule 506(b)";
+  const regLabel = regTypeLongLabel(input.regType);
   const generatedAt = input.generatedAt ?? new Date().toISOString();
   const issued = new Date(generatedAt).toLocaleDateString("en-US", {
     year: "numeric",
