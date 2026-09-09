@@ -535,8 +535,11 @@ export interface PortfolioFundValue {
   target_raise_cents: number | null;
   committed_cents: number;
   received_cents: number;
-  /** Equity value of the fund: money actually received so far. */
+  /** Equity value of the fund: shares x share price, or money received when no price is set. */
   equity_value_cents: number;
+  /** The fund's set share price in cents, 0 when none is set. */
+  share_price_cents: number;
+
   shares: number;
   /** Equity value divided by shares, in cents. Null when no shares are recorded. */
   value_per_share_cents: number | null;
@@ -585,10 +588,13 @@ export const getPortfolioValue = createServerFn({ method: "GET" })
 
     const funds: PortfolioFundValue[] = tables
       .map((t) => {
-        const equity = t.totals.funded_cents;
         const shares = t.totals.shares;
-        const perShare = shares > 0 ? equity / shares : null;
+        // When the fund has a set share price, value the equity at that price.
+        const sharePrice = t.offering.share_price_cents ?? 0;
+        const equity = sharePrice > 0 && shares > 0 ? sharePrice * shares : t.totals.funded_cents;
+        const perShare = sharePrice > 0 ? sharePrice : shares > 0 ? equity / shares : null;
         const holders: PortfolioHolderValue[] = t.rows.map((r) => {
+
           const value =
             perShare != null && r.shares != null
               ? Math.round(perShare * r.shares)
