@@ -796,6 +796,12 @@ export const closeOffboardingCase = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
 
+    await context.supabase
+      .from("clients")
+      .update({ status: "terminated" })
+      .eq("id", row.client_id);
+
+
     await audit(context, who, {
       action: "termination closed",
       clientId: row.client_id,
