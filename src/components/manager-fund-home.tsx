@@ -1,3 +1,4 @@
+import { FundProvidersPanel } from "@/components/fund-providers-panel";
 import { useEffect, useMemo, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
@@ -174,6 +175,7 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
       <div className="mt-6 space-y-4">
         <ScopeSummary scope={scope} />
         <ScopeServicesPanel scope={scope} offeringId={offeringId} />
+        <FundProvidersPanel scope={scope} />
       </div>
 
       <Card className="mt-8">

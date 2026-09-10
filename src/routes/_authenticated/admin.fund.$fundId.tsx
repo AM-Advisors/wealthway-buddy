@@ -1,3 +1,4 @@
+import { FundProvidersPanel } from "@/components/fund-providers-panel";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -195,6 +196,7 @@ function FundPage() {
       <div className="mt-6 space-y-4">
         <ScopeSummary scope={scope} />
         <ScopeServicesPanel scope={scope} offeringId={fundId} />
+        <FundProvidersPanel scope={scope} />
       </div>
 
       <div className="mt-8">
