@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ClientsBoard } from "@/components/clients-board";
+import { ServiceRequestsBoard } from "@/components/service-requests-board";
 
 export const Route = createFileRoute("/_authenticated/admin/contracts/")({
   head: () => ({
@@ -29,6 +30,12 @@ export const Route = createFileRoute("/_authenticated/admin/contracts/")({
         recorded here are offered to the client.
       </p>
       <ClientsBoard />
+      <h2 className="mb-2 mt-10 text-2xl">Additional service requests</h2>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Review what clients have asked for, propose the fee in writing, and activate the service
+        once they've signed the amendment.
+      </p>
+      <ServiceRequestsBoard />
     </main>
   ),
 });
