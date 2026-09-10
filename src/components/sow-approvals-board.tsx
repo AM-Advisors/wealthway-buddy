@@ -214,12 +214,37 @@ export function SowApprovalsBoard() {
         </CardContent>
       </Card>
 
+      {sentBack.length > 0 ? (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-base">Sent back by the client</CardTitle>
+              <Badge variant="destructive">{sentBack.length}</Badge>
+            </div>
+            <CardDescription>
+              The client asked for changes before signing. Revise the agreement and re-issue it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {sentBack.map((row) => (
+              <div key={row.id} className="space-y-2 rounded-md border p-3 text-sm">
+                {line(row)}
+                {row.clientSentBackReason ? (
+                  <p className="text-sm">Client note: {row.clientSentBackReason}</p>
+                ) : null}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
+
       {unsigned.length > 0 ? (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Not ready for approval</CardTitle>
             <CardDescription>
-              These agreements have no recorded client signature yet, so they cannot be approved.
+              These agreements are still waiting on a client signature — on the paperwork, in the
+              client portal, or both — so they cannot be approved yet.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
