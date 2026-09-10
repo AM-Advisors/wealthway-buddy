@@ -4,6 +4,51 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertFundConditions } from "@/lib/fund-conditions.functions";
 import { assertNoHold } from "@/lib/compliance-holds.functions";
+import { NO_SCOPE_MESSAGE } from "@/lib/fund-conditions.functions";
+
+export const OUT_OF_SCOPE_MESSAGE =
+  "This service is not currently included in your active scope. Request service.";
+
+/** Catalog services that cover each kind of movement. */
+export function scopeKeysForPurpose(purpose: string) {
+  if (purpose === "distribution" || purpose === "return_of_capital") return ["distributions"];
+  return ["wire_instructions", "payment_facilitation"];
+}
+
+/**
+ * Money only moves for work inside the client's active statement of work.
+ * A fund with no client, and so no agreement, is stopped by the conditions
+ * check instead.
+ */
+async function assertServiceInScope(
+  supabase: any,
+  opts: { offeringId?: string | null; clientId?: string | null; purpose: string },
+) {
+  let clientId = opts.clientId ?? null;
+  if (!clientId && opts.offeringId) {
+    const { data: fund } = await supabase
+      .from("offerings")
+      .select("client_id")
+      .eq("id", opts.offeringId)
+      .maybeSingle();
+    clientId = (fund as any)?.client_id ?? null;
+  }
+  if (!clientId) return;
+
+  const { data: rows } = await supabase
+    .from("service_entitlements")
+    .select("service_key, status, offering_id")
+    .eq("client_id", clientId);
+  const all = (rows ?? []) as any[];
+  if (!all.length) throw new Error(NO_SCOPE_MESSAGE);
+
+  const relevant = all.filter(
+    (r) => !r.offering_id || !opts.offeringId || r.offering_id === opts.offeringId,
+  );
+  const keys = scopeKeysForPurpose(opts.purpose);
+  const included = relevant.some((r) => keys.includes(r.service_key) && r.status === "included");
+  if (!included) throw new Error(OUT_OF_SCOPE_MESSAGE);
+}
 
 const STAFF = [
   "admin",
@@ -129,6 +174,11 @@ export const createPaymentInstruction = createServerFn({ method: "POST" })
       offeringId: data.offeringId ?? null,
       clientId: data.clientId ?? null,
     });
+    await assertServiceInScope(context.supabase, {
+      offeringId: data.offeringId ?? null,
+      clientId: data.clientId ?? null,
+      purpose: data.purpose,
+    });
     if (data.offeringId) {
       await assertFundConditions(context.supabase, data.offeringId, "funding");
     }
@@ -203,12 +253,42 @@ export const updatePaymentChecks = createServerFn({ method: "POST" })
     if (data.bankStatus === "settled") {
       const { data: instruction } = await context.supabase
         .from("payment_instructions")
-        .select("invoice_id, status")
+        .select("invoice_id, status, purpose, offering_id, amount_cents")
         .eq("id", data.id)
         .maybeSingle();
-      const invoiceId = (instruction as any)?.invoice_id;
+
+      // A settled distribution becomes the fund's record of money paid out.
+      const inst = instruction as any;
+      if (
+        inst &&
+        inst.offering_id &&
+        ["distribution", "return_of_capital"].includes(String(inst.purpose))
+      ) {
+        if (inst.status !== "approved") {
+          throw new Error("This payment has not cleared dual approval yet.");
+        }
+        const reference = `Instruction ${data.id}`;
+        const { data: already } = await context.supabase
+          .from("fund_distributions")
+          .select("id")
+          .eq("offering_id", inst.offering_id)
+          .eq("note", reference)
+          .maybeSingle();
+        if (!already) {
+          await context.supabase.from("fund_distributions").insert({
+            offering_id: inst.offering_id,
+            paid_on: new Date().toISOString().slice(0, 10),
+            amount_cents: inst.amount_cents,
+            kind: String(inst.purpose) === "return_of_capital" ? "return_of_capital" : "distribution",
+            note: reference,
+            created_by: context.userId,
+          });
+        }
+      }
+
+      const invoiceId = inst?.invoice_id;
       if (invoiceId) {
-        if ((instruction as any)?.status !== "approved") {
+        if (inst?.status !== "approved") {
           throw new Error("This payment has not cleared dual approval yet.");
         }
         await context.supabase
@@ -268,6 +348,11 @@ export const decidePaymentInstruction = createServerFn({ method: "POST" })
       await assertNoHold(context.supabase, "wires", {
         offeringId: instruction.offering_id,
         clientId: instruction.client_id,
+      });
+      await assertServiceInScope(context.supabase, {
+        offeringId: instruction.offering_id,
+        clientId: instruction.client_id,
+        purpose: String(instruction.purpose ?? ""),
       });
       if (instruction.offering_id) {
         await assertFundConditions(context.supabase, instruction.offering_id, "funding");
