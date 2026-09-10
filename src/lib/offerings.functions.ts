@@ -321,7 +321,22 @@ export const saveOffering = createServerFn({ method: "POST" })
         .maybeSingle();
       previousWire = ((existingWire as any)?.details ?? null) as Record<string, unknown> | null;
 
-      const { error } = await context.supabase.from("offerings").update(payload).eq("id", offeringId);
+      // A fee typed in by hand stops following a rate card until it is pointed
+      // back at one on the fund's fee panel.
+      const feePatch: Record<string, unknown> = {};
+      if (previousOffering && previousOffering["wire_fee_cents"] !== data.wire_fee_cents) {
+        feePatch["wire_fee_source"] = "custom";
+        feePatch["wire_fee_rate_id"] = null;
+      }
+      if (previousOffering && previousOffering["closing_cost_cents"] !== data.closing_cost_cents) {
+        feePatch["closing_cost_source"] = "custom";
+        feePatch["closing_cost_rate_id"] = null;
+      }
+
+      const { error } = await context.supabase
+        .from("offerings")
+        .update({ ...payload, ...feePatch } as any)
+        .eq("id", offeringId);
       if (error) throw new Error(error.message);
     } else {
       const { data: inserted, error } = await context.supabase
