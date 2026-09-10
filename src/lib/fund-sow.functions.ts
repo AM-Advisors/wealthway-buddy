@@ -31,6 +31,7 @@ export type SetupSow = {
   title: string;
   sowType: string;
   status: string;
+  approvalStatus: string;
   signedBy: string | null;
   signedOn: string | null;
   offeringId: string | null;
