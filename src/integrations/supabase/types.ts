@@ -5122,6 +5122,216 @@ export type Database = {
           },
         ]
       }
+      provider_documents: {
+        Row: {
+          created_at: string
+          doc_type: string
+          expires_on: string | null
+          file_name: string | null
+          file_path: string
+          id: string
+          note: string | null
+          provider_id: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          submitted_by: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: string
+          expires_on?: string | null
+          file_name?: string | null
+          file_path: string
+          id?: string
+          note?: string | null
+          provider_id: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          expires_on?: string | null
+          file_name?: string | null
+          file_path?: string
+          id?: string
+          note?: string | null
+          provider_id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_documents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "third_party_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_expense_submissions: {
+        Row: {
+          amount_cents: number
+          client_id: string | null
+          created_at: string
+          currency: string
+          description: string
+          expense_id: string | null
+          file_path: string | null
+          id: string
+          incurred_on: string
+          note: string | null
+          offering_id: string | null
+          provider_id: string
+          reference: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          description: string
+          expense_id?: string | null
+          file_path?: string | null
+          id?: string
+          incurred_on: string
+          note?: string | null
+          offering_id?: string | null
+          provider_id: string
+          reference?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string
+          expense_id?: string | null
+          file_path?: string | null
+          id?: string
+          incurred_on?: string
+          note?: string | null
+          offering_id?: string | null
+          provider_id?: string
+          reference?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_expense_submissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_expense_submissions_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pass_through_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_expense_submissions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_expense_submissions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "third_party_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_users: {
+        Row: {
+          contact_name: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          provider_id: string
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          provider_id: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          provider_id?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_users_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "third_party_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       record_retention: {
         Row: {
           client_id: string | null
