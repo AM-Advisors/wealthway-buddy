@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { saveSow } from "@/lib/contracts.functions";
+import { saveSow, uploadSowDocument } from "@/lib/contracts.functions";
 import { listEligibilityRules } from "@/lib/eligibility.functions";
 
 const SOW_TYPES = [
@@ -457,6 +457,62 @@ export function SowEditor({
           </CardContent>
         </Card>
       ) : null}
+    </div>
+  );
+}
+
+/** Attach the signed agreement (PDF or Word) so the client can read it in their
+ *  portal before signing. Stored privately; the portal only gets timed links. */
+function SowDocumentUpload({ sow }: { sow: any }) {
+  const queryClient = useQueryClient();
+  const upload = useServerFn(uploadSowDocument);
+  const [busy, setBusy] = useState(false);
+
+  const onPick = async (file: File | null) => {
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error("That file is larger than 25 MB.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const buffer = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      buffer.forEach((b) => {
+        binary += String.fromCharCode(b);
+      });
+      await upload({
+        data: {
+          id: sow.id,
+          fileName: file.name,
+          contentBase64: btoa(binary),
+          contentType: file.type || "application/pdf",
+        },
+      });
+      toast.success("Document attached. The client can read it in their portal.");
+      queryClient.invalidateQueries();
+    } catch (e: any) {
+      toast.error(e?.message ?? "That document could not be uploaded.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Badge variant={sow.document_path ? "secondary" : "outline"}>
+        {sow.document_path ? "Document attached" : "No document"}
+      </Badge>
+      <label className="cursor-pointer text-xs underline underline-offset-4">
+        {busy ? "Uploading…" : sow.document_path ? "Replace" : "Upload"}
+        <input
+          type="file"
+          className="sr-only"
+          accept=".pdf,.doc,.docx"
+          disabled={busy}
+          onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+        />
+      </label>
     </div>
   );
 }
