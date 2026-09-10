@@ -152,7 +152,7 @@ export function FundReadinessPanel({ offeringId }: { offeringId: string }) {
           );
         })}
 
-        {scope.clientId ? (
+        {scope.isStaff ? (
           <p className="text-xs text-muted-foreground">
             Scope and conditions come from the client's agreement.{" "}
             <Link to="/admin/pricing" className="underline">
