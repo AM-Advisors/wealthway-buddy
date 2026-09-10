@@ -695,6 +695,9 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
         effectiveDate: z.string().optional().or(z.literal("")),
         amendmentTerms: z.string().trim().max(8000).optional().or(z.literal("")),
         amendmentPath: z.string().max(500).optional().or(z.literal("")),
+        feeSource: z.enum(["client_rate", "standard", "custom"]).optional(),
+        feeRateId: z.string().uuid().nullable().optional(),
+        feeOverrideReason: z.string().trim().max(500).optional().or(z.literal("")),
         note: z.string().trim().max(2000).optional().or(z.literal("")),
       })
       .parse(d),
