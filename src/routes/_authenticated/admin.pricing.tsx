@@ -13,6 +13,7 @@ import { OffboardingBoard } from "@/components/offboarding-board";
 import { PolicyAcceptancesBoard, PolicyDocumentsBoard } from "@/components/policy-admin";
 import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
 import { ProvidersBoard } from "@/components/providers-board";
+import { ProviderSubmissionsBoard } from "@/components/provider-submissions-board";
 import { ServiceRequestsBoard } from "@/components/service-requests-board";
 import { SowEditor } from "@/components/sow-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -81,6 +82,7 @@ function PricingConsole() {
           <TabsTrigger value="team">Team access</TabsTrigger>
           <TabsTrigger value="holds">Holds</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
+          <TabsTrigger value="providersubmissions">Provider portal</TabsTrigger>
           <TabsTrigger value="requests">Service requests</TabsTrigger>
           <TabsTrigger value="termination">Termination</TabsTrigger>
           <TabsTrigger value="policies">Policies</TabsTrigger>
@@ -130,6 +132,9 @@ function PricingConsole() {
         </TabsContent>
         <TabsContent value="providers" className="pt-4">
           <ProvidersBoard canManage={data.canManage} />
+        </TabsContent>
+        <TabsContent value="providersubmissions" className="pt-4">
+          <ProviderSubmissionsBoard />
         </TabsContent>
         <TabsContent value="requests" className="pt-4">
           <ServiceRequestsBoard />
