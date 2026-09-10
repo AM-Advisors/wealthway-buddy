@@ -53,7 +53,9 @@ export const listFundSetupAgreements = createServerFn({ method: "GET" })
       context.supabase.from("clients").select("id, legal_name, status").order("legal_name"),
       context.supabase
         .from("client_sows")
-        .select("id, client_id, title, sow_type, status, signed_by, signed_on, offering_id")
+        .select(
+          "id, client_id, title, sow_type, status, signed_by, signed_on, offering_id, approval_status",
+        )
         .order("created_at", { ascending: false }),
     ]);
     if (clientsRes.error) throw new Error(clientsRes.error.message);
@@ -61,6 +63,8 @@ export const listFundSetupAgreements = createServerFn({ method: "GET" })
 
     const sows: SetupSow[] = ((sowsRes.data ?? []) as any[]).map((s) => {
       const isSigned = Boolean(s.signed_on) && Boolean(s.signed_by) && s.status === "active";
+      const approval = (s.approval_status as string) ?? "pending";
+      const approved = approval === "approved";
       const taken = Boolean(s.offering_id);
       return {
         id: s.id as string,
@@ -68,17 +72,22 @@ export const listFundSetupAgreements = createServerFn({ method: "GET" })
         title: s.title as string,
         sowType: s.sow_type as string,
         status: s.status as string,
+        approvalStatus: approval,
         signedBy: (s.signed_by as string) ?? null,
         signedOn: (s.signed_on as string) ?? null,
         offeringId: (s.offering_id as string) ?? null,
-        signed: isSigned && !taken,
+        signed: isSigned && approved && !taken,
         reason: !isSigned
           ? s.status !== "active"
             ? "Not active yet"
             : "Not signed yet"
-          : taken
-            ? "Already used for another fund"
-            : null,
+          : !approved
+            ? approval === "rejected"
+              ? "Rejected in review"
+              : "Waiting for approval"
+            : taken
+              ? "Already used for another fund"
+              : null,
       };
     });
 
