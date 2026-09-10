@@ -129,6 +129,13 @@ export function SowApprovalsBoard() {
       </p>
     </div>
   );
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Awaiting approval</CardTitle>
             <Badge variant={waiting.length ? "destructive" : "secondary"}>{waiting.length}</Badge>
           </div>
           <CardDescription>
