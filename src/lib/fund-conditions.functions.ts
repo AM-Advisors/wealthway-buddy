@@ -75,56 +75,28 @@ export async function evaluateFundConditions(
   supabase: any,
   offeringId: string,
 ): Promise<FundConditions> {
-  const { data: fund, error } = await supabase
-    .from("offerings")
-    .select("id, name, reg_type, client_id")
-    .eq("id", offeringId)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!fund) throw new Error("That fund isn't available.");
-
-  const [{ data: rules }, { data: sows }, { data: client }, { data: clearances }] =
-    await Promise.all([
-      supabase.from("eligibility_rules").select("*").eq("active", true).order("sort_order"),
-      fund.client_id
-        ? supabase
-            .from("client_sows")
-            .select("id, eligibility, status")
-            .eq("client_id", fund.client_id)
-            .eq("status", "active")
-        : Promise.resolve({ data: [] as any[] }),
-      fund.client_id
-        ? supabase.from("clients").select("name").eq("id", fund.client_id).maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("fund_condition_clearances")
-        .select("rule_key, kind, reason, snapshot, created_at")
-        .eq("offering_id", fund.id)
-        .order("created_at", { ascending: false }),
-    ]);
-
-  const activeSows = (sows ?? []) as any[];
-  const overrides: Record<string, unknown> = {};
-  for (const sow of activeSows) {
-    Object.assign(overrides, (sow.eligibility ?? {}) as Record<string, unknown>);
-  }
-
-  const [{ data: applications }, { count: investorCount }] = await Promise.all([
-    supabase
-      .from("investor_applications")
-      .select("id, accreditation_status")
-      .eq("offering_id", fund.id),
-    supabase
-      .from("investor_applications")
-      .select("id", { count: "exact", head: true })
-      .eq("offering_id", fund.id),
+  // One guarded lookup gives the same picture to investors, managers and staff,
+  // so a fund's limits can't read differently depending on who is looking.
+  const [{ data: context, error: contextError }, { data: rules }] = await Promise.all([
+    supabase.rpc("fund_condition_context", { p_offering_id: offeringId }),
+    supabase.from("eligibility_rules").select("*").eq("active", true).order("sort_order"),
   ]);
+  if (contextError) throw new Error(contextError.message);
+  if (!context) throw new Error("That fund isn't available.");
 
-  const apps = (applications ?? []) as any[];
-  const notAccredited = apps.filter(
-    (a) => a.accreditation_status === "declined" || a.accreditation_status === "not_started",
-  ).length;
-  const total = investorCount ?? apps.length;
+  const ctx = context as any;
+  const fund = {
+    id: offeringId,
+    name: String(ctx.name ?? ""),
+    reg_type: String(ctx.reg_type ?? ""),
+    client_id: (ctx.client_id ?? null) as string | null,
+  };
+  const client = ctx.client_name ? { name: String(ctx.client_name) } : null;
+  const overrides = (ctx.overrides ?? {}) as Record<string, unknown>;
+  const clearances = (ctx.clearances ?? []) as any[];
+  const notAccredited = Number(ctx.unaccredited_count ?? 0);
+  const total = Number(ctx.investor_count ?? 0);
+  const configured = Boolean(ctx.configured);
 
   const clearedFor = (key: string) =>
     ((clearances ?? []) as any[]).find((c) => c.rule_key === key && c.kind === "cleared") ?? null;
