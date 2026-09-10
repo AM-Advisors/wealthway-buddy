@@ -4054,7 +4054,27 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "investor" | "fund_manager" | "operations"
+      app_role:
+        | "admin"
+        | "investor"
+        | "fund_manager"
+        | "operations"
+        | "super_admin"
+        | "legal"
+        | "compliance"
+        | "fund_administration"
+        | "tax"
+        | "finance"
+        | "client_success"
+        | "executive"
+        | "client_gp"
+        | "client_signatory"
+        | "client_finance"
+        | "client_legal"
+        | "client_compliance"
+        | "client_readonly"
+        | "entity_representative"
+        | "beneficial_owner"
       check_status:
         | "not_started"
         | "pending"
@@ -4199,7 +4219,28 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "investor", "fund_manager", "operations"],
+      app_role: [
+        "admin",
+        "investor",
+        "fund_manager",
+        "operations",
+        "super_admin",
+        "legal",
+        "compliance",
+        "fund_administration",
+        "tax",
+        "finance",
+        "client_success",
+        "executive",
+        "client_gp",
+        "client_signatory",
+        "client_finance",
+        "client_legal",
+        "client_compliance",
+        "client_readonly",
+        "entity_representative",
+        "beneficial_owner",
+      ],
       check_status: [
         "not_started",
         "pending",
