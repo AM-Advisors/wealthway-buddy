@@ -189,19 +189,63 @@ export const signDocument = createServerFn({ method: "POST" })
     const userAgent = request?.headers.get("user-agent") ?? null;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { buildSignedPdf } = await import("@/lib/signed-pdf.server");
+    const { buildSignedPdf, stampSignedPdf } = await import("@/lib/signed-pdf.server");
 
-    const pdfBytes = await buildSignedPdf({
-      title: doc.title,
-      body: doc.body,
-      signerName: data.signer_name,
-      initials: data.initials,
-      signedAt,
-      documentHash,
-      commitmentCents: subscription.commitment_cents,
-      ownershipTitle: subscription.ownership_title ?? "",
-      ipAddress: ip,
-    });
+    // When the client uploaded their own PDF and placed signature blocks on it,
+    // the signer's details are stamped into those exact spots.
+    let pdfBytes: Uint8Array | null = null;
+    if ((doc as any).file_path) {
+      const { data: placed } = await supabaseAdmin
+        .from("offering_document_signature_blocks")
+        .select("page_number, x, y, width, height, block_type")
+        .eq("offering_document_id", doc.id)
+        .order("page_number", { ascending: true })
+        .order("sort_order", { ascending: true });
+
+      if ((placed ?? []).length > 0) {
+        try {
+          const download = await supabaseAdmin.storage
+            .from("offering-files")
+            .download((doc as any).file_path as string);
+          if (download.data) {
+            pdfBytes = await stampSignedPdf({
+              fileBytes: new Uint8Array(await download.data.arrayBuffer()),
+              blocks: (placed ?? []).map((b: any) => ({
+                page_number: Number(b.page_number),
+                x: Number(b.x),
+                y: Number(b.y),
+                width: Number(b.width),
+                height: Number(b.height),
+                block_type: b.block_type,
+              })),
+              signerName: data.signer_name,
+              initials: data.initials,
+              ownershipTitle: subscription.ownership_title ?? "",
+              signedAt,
+              documentHash,
+              commitmentCents: subscription.commitment_cents,
+              ipAddress: ip,
+            });
+          }
+        } catch (err) {
+          console.error("stamping the uploaded PDF failed; falling back", err);
+        }
+      }
+    }
+
+    if (!pdfBytes) {
+      pdfBytes = await buildSignedPdf({
+        title: doc.title,
+        body: doc.body,
+        signerName: data.signer_name,
+        initials: data.initials,
+        signedAt,
+        documentHash,
+        commitmentCents: subscription.commitment_cents,
+        ownershipTitle: subscription.ownership_title ?? "",
+        ipAddress: ip,
+      });
+    }
 
     const pdfPath = `${userId}/${application.id}/${doc.id}.pdf`;
     const upload = await supabaseAdmin.storage
