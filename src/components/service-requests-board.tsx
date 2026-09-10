@@ -464,6 +464,9 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                     effectiveDate: quoteDraft.effectiveDate,
                     amendmentTerms: quoteDraft.amendmentTerms,
                     note: quoteDraft.note,
+                    feeSource: quoteDraft.feeSource,
+                    feeRateId: quoteDraft.feeRateId,
+                    feeOverrideReason: quoteDraft.feeOverrideReason,
                   })
                 }
               >
