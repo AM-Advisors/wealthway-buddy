@@ -255,27 +255,58 @@ export const getOffboardingCase = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     if (!row) throw new Error("That termination record is not available.");
 
-    const [{ data: client }, { data: sow }, { data: retention }, { data: pricing }, { data: sows }] =
-      await Promise.all([
-        context.supabase.from("clients").select("*").eq("id", row.client_id).maybeSingle(),
-        row.sow_id
-          ? context.supabase.from("client_sows").select("*").eq("id", row.sow_id).maybeSingle()
-          : Promise.resolve({ data: null }),
-        context.supabase
-          .from("record_retention")
-          .select("*")
-          .eq("client_id", row.client_id)
-          .order("created_at", { ascending: false }),
-        context.supabase.from("client_pricing").select("*").eq("client_id", row.client_id),
-        context.supabase
-          .from("client_sows")
-          .select("id, title, status, sow_type, notice_days, effective_date")
-          .eq("client_id", row.client_id),
-      ]);
+    const [
+      { data: client },
+      { data: sow },
+      { data: retention },
+      { data: pricing },
+      { data: sows },
+      { data: members },
+    ] = await Promise.all([
+      context.supabase.from("clients").select("*").eq("id", row.client_id).maybeSingle(),
+      row.sow_id
+        ? context.supabase.from("client_sows").select("*").eq("id", row.sow_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      context.supabase
+        .from("record_retention")
+        .select("*")
+        .eq("client_id", row.client_id)
+        .order("created_at", { ascending: false }),
+      context.supabase.from("client_pricing").select("*").eq("client_id", row.client_id),
+      context.supabase
+        .from("client_sows")
+        .select("id, title, status, sow_type, notice_days, effective_date")
+        .eq("client_id", row.client_id),
+      context.supabase
+        .from("client_users")
+        .select("id, user_id, client_role, can_approve, created_at")
+        .eq("client_id", row.client_id),
+    ]);
+
+    const memberRows = (members ?? []) as any[];
+    const { data: people } = memberRows.length
+      ? await context.supabase
+          .from("profiles")
+          .select("user_id, legal_name, email")
+          .in(
+            "user_id",
+            memberRows.map((m) => m.user_id),
+          )
+      : { data: [] as any[] };
+    const byUser = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p]));
 
     return {
       canManage: who.canManage,
       case: caseDetail(row, client, sow, (retention ?? []) as any[]),
+      clientStatus: client?.status ?? null,
+      access: memberRows.map((m) => ({
+        id: m.id,
+        userId: m.user_id,
+        name: byUser.get(m.user_id)?.legal_name ?? null,
+        email: byUser.get(m.user_id)?.email ?? null,
+        role: m.client_role,
+        canApprove: m.can_approve,
+      })),
       rates: ((pricing ?? []) as any[]).map((p) => ({
         key: p.id,
         label: p.label,
@@ -291,6 +322,7 @@ export const getOffboardingCase = createServerFn({ method: "GET" })
       })),
     };
   });
+
 
 /** The client's own read-only view of their wind-down. */
 export const getMyOffboarding = createServerFn({ method: "GET" })
