@@ -433,11 +433,18 @@ function FundPage() {
                   ))}
                 </dl>
               )}
-              <Button asChild size="sm">
-                <Link to="/admin/fund-banking/$fundId" params={{ fundId }}>
-                  Open fund banking
-                </Link>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild size="sm">
+                  <Link to="/admin/fund-banking/$fundId" params={{ fundId }}>
+                    Open fund banking
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/admin/fund-payments/$fundId" params={{ fundId }}>
+                    Fund payments
+                  </Link>
+                </Button>
+              </div>
               <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground">
                 Harmonious never changes these details by email. Investors are told to confirm any
                 instructions by phone with a known contact before sending funds.

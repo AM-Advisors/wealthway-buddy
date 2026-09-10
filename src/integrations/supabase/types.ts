@@ -3242,6 +3242,7 @@ export type Database = {
           service_key: string | null
           sort_order: number
           source: string
+          source_ref: string | null
           unit_cents: number
         }
         Insert: {
@@ -3258,6 +3259,7 @@ export type Database = {
           service_key?: string | null
           sort_order?: number
           source?: string
+          source_ref?: string | null
           unit_cents?: number
         }
         Update: {
@@ -3274,6 +3276,7 @@ export type Database = {
           service_key?: string | null
           sort_order?: number
           source?: string
+          source_ref?: string | null
           unit_cents?: number
         }
         Relationships: [
