@@ -22,6 +22,7 @@ import {
 } from "@/lib/reg-types";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
+import { FundFeePanel } from "@/components/fund-fee-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
