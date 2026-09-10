@@ -22,6 +22,8 @@ import {
   deleteInvoiceLine,
   INVOICE_STATUSES,
   issueInvoice,
+  raiseInvoiceWire,
+  requestInvoiceApproval,
   listInvoices,
   previewInvoice,
   recordInvoicePayment,
@@ -52,6 +54,8 @@ export function InvoicesBoard() {
   const saveLine = useServerFn(saveInvoiceLine);
   const removeLine = useServerFn(deleteInvoiceLine);
   const issue = useServerFn(issueInvoice);
+  const askApproval = useServerFn(requestInvoiceApproval);
+  const raiseWire = useServerFn(raiseInvoiceWire);
   const pay = useServerFn(recordInvoicePayment);
   const cancel = useServerFn(voidInvoice);
 
@@ -129,9 +133,35 @@ export function InvoicesBoard() {
     onError: (e: any) => toast.error(e?.message ?? "That line couldn't be removed."),
   });
 
+  const approvalMutation = useMutation({
+    mutationFn: (id: string) => askApproval({ data: { id } }),
+    onSuccess: () => {
+      toast.success("The client has been asked to approve this invoice.");
+      refresh();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "That request couldn't be sent."),
+  });
+
+  const wireMutation = useMutation({
+    mutationFn: (input: { id: string; method: "wire" | "ach" }) => raiseWire({ data: input }),
+    onSuccess: () => {
+      toast.success("Payment raised. It now needs two approvals on the payments board.");
+      queryClient.invalidateQueries({ queryKey: ["payment-instructions"] });
+      refresh();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "That payment couldn't be raised."),
+  });
+
   const issueMutation = useMutation({
-    mutationFn: (input: { id: string; netDays: number }) =>
-      issue({ data: { id: input.id, issueDate: today(), netDays: input.netDays } }),
+    mutationFn: (input: { id: string; netDays: number; overrideReason?: string }) =>
+      issue({
+        data: {
+          id: input.id,
+          issueDate: today(),
+          netDays: input.netDays,
+          overrideReason: input.overrideReason ?? "",
+        },
+      }),
     onSuccess: (res: any) => {
       toast.success(`Invoice ${res?.number} issued. Payment due ${res?.dueDate}.`);
       refresh();
@@ -360,6 +390,20 @@ export function InvoicesBoard() {
                       <span className="font-medium">{inv.number ?? "Draft"}</span>
                       <Badge variant="outline">{statusLabel(inv.status)}</Badge>
                       {inv.overdue ? <Badge variant="destructive">Past due</Badge> : null}
+                      {inv.status === "issued" && inv.approval_status === "pending" ? (
+                        <Badge variant="outline">Waiting on client approval</Badge>
+                      ) : null}
+                      {inv.approval_status === "approved" ? (
+                        <Badge variant="outline">
+                          Approved by {inv.client_signer_name}
+                        </Badge>
+                      ) : null}
+                      {inv.approval_status === "disputed" ? (
+                        <Badge variant="destructive">Client query</Badge>
+                      ) : null}
+                      {Number(inv.rate_variance_cents ?? 0) > 0 ? (
+                        <Badge variant="destructive">Above contracted rate</Badge>
+                      ) : null}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {inv.clientName} · {inv.period_start} to {inv.period_end}
@@ -478,15 +522,53 @@ export function InvoicesBoard() {
                         {inv.status === "draft" ? (
                           <Button
                             size="sm"
-                            onClick={() =>
+                            onClick={() => {
+                              const offRate = (inv.lines ?? []).some(
+                                (l: any) => l.source === "manual",
+                              );
+                              const overrideReason = offRate
+                                ? (window.prompt(
+                                    "Any line above the contracted rate needs the client's written authorisation. Reference it here (leave blank if every line is on the rate card).",
+                                  ) ?? "")
+                                : "";
                               issueMutation.mutate({
                                 id: inv.id,
                                 netDays: Number(inv.net_days ?? 30),
-                              })
-                            }
+                                overrideReason,
+                              });
+                            }}
                           >
                             Issue invoice
                           </Button>
+                        ) : null}
+                        {inv.status === "issued" && inv.approval_status !== "pending" &&
+                        inv.approval_status !== "approved" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => approvalMutation.mutate(inv.id)}
+                          >
+                            Ask client to approve
+                          </Button>
+                        ) : null}
+                        {inv.status === "issued" &&
+                        inv.approval_status === "approved" &&
+                        !inv.payment_instruction_id ? (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => wireMutation.mutate({ id: inv.id, method: "wire" })}
+                            >
+                              Raise wire
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => wireMutation.mutate({ id: inv.id, method: "ach" })}
+                            >
+                              Raise ACH
+                            </Button>
+                          </>
                         ) : null}
                         {inv.status === "issued" ? (
                           <Button
@@ -521,6 +603,21 @@ export function InvoicesBoard() {
                       <p className="text-sm text-muted-foreground">
                         Paid {inv.paid_on}
                         {inv.payment_reference ? ` · reference ${inv.payment_reference}` : ""}
+                      </p>
+                    ) : null}
+                    {inv.payment_instruction_id ? (
+                      <p className="text-sm text-muted-foreground">
+                        A payment has been raised. Two approvals are recorded on the Payments tab.
+                      </p>
+                    ) : null}
+                    {inv.approval_status === "disputed" && inv.dispute_reason ? (
+                      <p className="text-sm text-destructive">
+                        Client query: {inv.dispute_reason}
+                      </p>
+                    ) : null}
+                    {inv.rate_override_reason ? (
+                      <p className="text-sm text-muted-foreground">
+                        Above-rate authorisation: {inv.rate_override_reason}
                       </p>
                     ) : null}
                     {inv.status === "void" ? (
