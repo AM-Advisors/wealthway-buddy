@@ -77,13 +77,44 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
   const queryClient = useQueryClient();
   const load = useServerFn(listProviders);
   const save = useServerFn(saveProvider);
+  const retire = useServerFn(setProviderRetired);
+  const loadExpenses = useServerFn(listExpenses);
 
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [showRetired, setShowRetired] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["third-party-providers"],
     queryFn: () => load(),
     retry: false,
+  });
+
+  const { data: expenseData } = useQuery({
+    queryKey: ["pass-through-expenses"],
+    queryFn: () => loadExpenses(),
+    retry: false,
+  });
+
+  const costsByProvider = useMemo(() => {
+    const map = new Map<string, { count: number; total: number }>();
+    for (const e of (expenseData?.expenses ?? []) as any[]) {
+      if (!e.provider_id) continue;
+      const entry = map.get(e.provider_id) ?? { count: 0, total: 0 };
+      entry.count += 1;
+      entry.total += Number(e.amount_cents ?? 0);
+      map.set(e.provider_id, entry);
+    }
+    return map;
+  }, [expenseData]);
+
+  const retireMutation = useMutation({
+    mutationFn: (input: { id: string; retired: boolean }) => retire({ data: input }),
+    onSuccess: () => {
+      toast.success("Provider updated.");
+      queryClient.invalidateQueries({ queryKey: ["third-party-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["contract-audit"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "That provider couldn't be updated."),
   });
 
   const saveMutation = useMutation({
