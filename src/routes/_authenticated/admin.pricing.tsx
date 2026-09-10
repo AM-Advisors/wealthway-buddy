@@ -6,6 +6,7 @@ import { ClientPricingBoard } from "@/components/client-pricing-board";
 import { ExpensesBoard } from "@/components/expenses-board";
 import { FeeSourcesBoard } from "@/components/fee-sources-board";
 import { HoldsBoard } from "@/components/holds-board";
+import { InvoicesBoard } from "@/components/invoices-board";
 import { OffboardingBoard } from "@/components/offboarding-board";
 import { PolicyAcceptancesBoard, PolicyDocumentsBoard } from "@/components/policy-admin";
 import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
@@ -73,6 +74,7 @@ function PricingConsole() {
           <TabsTrigger value="sows">Statements of work</TabsTrigger>
           <TabsTrigger value="fundfees">Fund fees</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="holds">Holds</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
           <TabsTrigger value="requests">Service requests</TabsTrigger>
@@ -109,6 +111,9 @@ function PricingConsole() {
         </TabsContent>
         <TabsContent value="expenses" className="pt-4">
           <ExpensesBoard />
+        </TabsContent>
+        <TabsContent value="invoices" className="pt-4">
+          <InvoicesBoard />
         </TabsContent>
         <TabsContent value="holds" className="pt-4">
           <HoldsBoard clients={data.clients} funds={data.funds} canManage={data.canManage} />
