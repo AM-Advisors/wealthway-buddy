@@ -49,7 +49,7 @@ export const getClientPortal = createServerFn({ method: "GET" })
       context.supabase.from("clients").select("*").eq("id", selectedId).maybeSingle(),
       context.supabase
         .from("offerings")
-        .select("id, name, reg_type, status, target_raise_cents, sow_id, created_at")
+        .select("id, name, slug, reg_type, is_open, target_raise_cents, legal_entity_name, created_at")
         .eq("client_id", selectedId)
         .order("name"),
       context.supabase
