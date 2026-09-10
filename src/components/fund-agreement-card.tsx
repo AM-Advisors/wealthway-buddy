@@ -145,55 +145,7 @@ export function FundAgreementCard({ offeringId }: { offeringId: string }) {
           </TabsContent>
 
           <TabsContent value="conditions" className="space-y-2 pt-4">
-            {eligibility.isLoading ? (
-              <p className="text-sm text-muted-foreground">Checking…</p>
-            ) : eligibility.data ? (
-              <>
-                {eligibility.data.blockers > 0 ? (
-                  <p className="text-sm">
-                    {eligibility.data.blockers} condition
-                    {eligibility.data.blockers === 1 ? "" : "s"} need attention before Harmonious can
-                    continue.
-                  </p>
-                ) : null}
-                {eligibility.data.findings.map((finding: any) => (
-                  <div
-                    key={finding.key}
-                    className="flex flex-wrap items-start gap-2 rounded-md border p-3"
-                  >
-                    <div className="min-w-56">
-                      <p className="text-sm font-medium">{finding.label}</p>
-                      <p className="text-xs text-muted-foreground">{finding.description}</p>
-                      {finding.sourceReference ? (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {finding.sourceReference}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="ml-auto text-right">
-                      <Badge
-                        variant={
-                          finding.state === "pass"
-                            ? "default"
-                            : finding.state === "attention"
-                              ? "destructive"
-                              : "outline"
-                        }
-                      >
-                        {finding.state === "pass"
-                          ? "Met"
-                          : finding.state === "attention"
-                            ? "Needs attention"
-                            : "Confirm"}
-                      </Badge>
-                      <p className="mt-1 max-w-64 text-xs text-muted-foreground">{finding.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Conditions aren't available.</p>
-            )}
+            <FundConditionsPanel offeringId={offeringId} />
           </TabsContent>
 
           <TabsContent value="yours" className="space-y-2 pt-4">
