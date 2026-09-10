@@ -893,7 +893,7 @@ export const acceptServiceQuote = createServerFn({ method: "POST" })
     const { error } = await context.supabase.rpc("accept_service_quote", {
       _request_id: data.requestId,
       _signer_name: data.signerName,
-      _signer_title: data.signerTitle || undefined,
+      ...(data.signerTitle ? { _signer_title: data.signerTitle } : {}),
     });
     if (error) throw new Error(error.message);
     return { ok: true };
