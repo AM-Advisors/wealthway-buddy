@@ -566,119 +566,351 @@ export const requestService = createServerFn({ method: "POST" })
     return { id: created.id as string };
   });
 
+type RequestRow = Record<string, any>;
+
+async function decorateRequests(context: any, requests: RequestRow[]) {
+  const [{ data: clients }, { data: funds }, { data: catalog }, { data: sows }, { data: people }, { data: published }] =
+    await Promise.all([
+      context.supabase.from("clients").select("id, name"),
+      context.supabase.from("offerings").select("id, name"),
+      context.supabase.from("service_catalog").select("key, name, material, description, category"),
+      context.supabase.from("client_sows").select("id, client_id, offering_id, title, status"),
+      context.supabase.from("profiles").select("id, full_name, email"),
+      context.supabase.from("pricing_versions").select("id").eq("status", "published").limit(1).maybeSingle(),
+    ]);
+  let rateCard: Record<string, { amount_cents: number | null; pricing_model: string | null }> = {};
+  if (published) {
+    const { data: items } = await context.supabase
+      .from("pricing_items")
+      .select("service_key, amount_cents, pricing_model")
+      .eq("version_id", published.id)
+      .not("service_key", "is", null);
+    for (const i of items ?? []) {
+      rateCard[(i as any).service_key] = {
+        amount_cents: (i as any).amount_cents,
+        pricing_model: (i as any).pricing_model,
+      };
+    }
+  }
+  return (requests ?? []).map((r: any) => ({
+    ...r,
+    clientName: (clients ?? []).find((c: any) => c.id === r.client_id)?.name ?? "Client",
+    fundName: r.offering_id
+      ? ((funds ?? []).find((f: any) => f.id === r.offering_id)?.name ?? "Fund")
+      : null,
+    serviceName: (catalog ?? []).find((c: any) => c.key === r.service_key)?.name ?? r.service_key,
+    serviceDescription:
+      (catalog ?? []).find((c: any) => c.key === r.service_key)?.description ?? null,
+    material: (catalog ?? []).find((c: any) => c.key === r.service_key)?.material ?? false,
+    requesterName:
+      (people ?? []).find((p: any) => p.id === r.requested_by)?.full_name ??
+      (people ?? []).find((p: any) => p.id === r.requested_by)?.email ??
+      null,
+    sowTitle: (sows ?? []).find((s: any) => s.id === (r as any).sow_id)?.title ?? null,
+    suggested: rateCard[r.service_key] ?? null,
+  }));
+}
+
+/** Staff queue of every change-of-scope request. */
 export const listServiceRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await requireStaff(context);
-    const [{ data: requests }, { data: clients }, { data: catalog }] = await Promise.all([
-      context.supabase.from("service_requests").select("*").order("created_at", { ascending: false }),
-      context.supabase.from("clients").select("id, name"),
-      context.supabase.from("service_catalog").select("key, name, material"),
-    ]);
+    const who = await requireStaff(context);
+    const { data: requests } = await context.supabase
+      .from("service_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+    const { data: sows } = await context.supabase
+      .from("client_sows")
+      .select("id, client_id, offering_id, title, status")
+      .order("created_at", { ascending: false });
     return {
-      requests: (requests ?? []).map((r: any) => ({
-        ...r,
-        clientName: (clients ?? []).find((c: any) => c.id === r.client_id)?.name ?? "Client",
-        serviceName: (catalog ?? []).find((c: any) => c.key === r.service_key)?.name ?? r.service_key,
-        material: (catalog ?? []).find((c: any) => c.key === r.service_key)?.material ?? false,
-      })),
+      canManage: who.canManage,
+      requests: await decorateRequests(context, (requests ?? []) as RequestRow[]),
+      sows: sows ?? [],
     };
   });
 
-export const reviewServiceRequest = createServerFn({ method: "POST" })
+/** The signed-in person's own client-side view of their requests. */
+export const getMyServiceRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await whoIs(context);
+    const { data: requests } = await context.supabase
+      .from("service_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+    const rows = await decorateRequests(context, (requests ?? []) as RequestRow[]);
+    return { requests: rows };
+  });
+
+async function loadRequest(context: any, id: string) {
+  const { data: request, error } = await context.supabase
+    .from("service_requests")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!request) throw new Error("That request isn't available.");
+  return request as any;
+}
+
+/** Staff: acknowledge the request and start scoping it. */
+export const startServiceReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), note: z.string().trim().max(2000).optional().or(z.literal("")) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const request = await loadRequest(context, data.id);
+    if (request.status !== "requested") throw new Error("Only a new request can move into review.");
+    const { error } = await context.supabase
+      .from("service_requests")
+      .update({ status: "in_review", reviewer_id: who.userId, review_note: data.note || null } as any)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "service request",
+      action: "in review",
+      clientId: request.client_id,
+      offeringId: request.offering_id,
+      target: request.service_key,
+      previous: { status: request.status },
+      next: { status: "in_review" },
+    });
+    return { ok: true };
+  });
+
+/** Staff: propose the fee, basis, start date and amendment terms. */
+export const quoteServiceRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
-        decision: z.enum(["in_review", "quoted", "declined", "approved", "activated"]),
-        note: z.string().trim().max(2000).optional().or(z.literal("")),
         feeCents: z.number().int().min(0).nullable().optional(),
         pricingModel: z.string().max(40).optional().or(z.literal("")),
         sowId: z.string().uuid().nullable().optional(),
+        effectiveDate: z.string().optional().or(z.literal("")),
+        amendmentTerms: z.string().trim().max(8000).optional().or(z.literal("")),
+        amendmentPath: z.string().max(500).optional().or(z.literal("")),
+        note: z.string().trim().max(2000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const request = await loadRequest(context, data.id);
+    if (!["requested", "in_review", "quoted"].includes(request.status)) {
+      throw new Error("This request is no longer open for a quote.");
+    }
+    if (data.feeCents === null || data.feeCents === undefined) {
+      throw new Error("Enter the proposed fee first.");
+    }
+    const { error } = await context.supabase
+      .from("service_requests")
+      .update({
+        status: "quoted",
+        reviewer_id: who.userId,
+        review_note: data.note || null,
+        proposed_fee_cents: data.feeCents,
+        proposed_pricing_model: data.pricingModel || null,
+        effective_date: data.effectiveDate || null,
+        amendment_terms: data.amendmentTerms || null,
+        amendment_path: data.amendmentPath || null,
+        sow_id: data.sowId ?? request.sow_id ?? null,
+      } as any)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "service request",
+      action: "quoted",
+      clientId: request.client_id,
+      offeringId: request.offering_id,
+      target: request.service_key,
+      previous: { status: request.status },
+      next: {
+        status: "quoted",
+        fee_cents: data.feeCents,
+        pricing_model: data.pricingModel || null,
+        effective_date: data.effectiveDate || null,
+      },
+    });
+    return { ok: true };
+  });
+
+/** Staff: decline with a reason the client can read. */
+export const declineServiceRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), reason: z.string().trim().min(2).max(2000) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const request = await loadRequest(context, data.id);
+    if (["activated", "withdrawn"].includes(request.status)) {
+      throw new Error("This request can no longer be declined.");
+    }
+    const { error } = await context.supabase
+      .from("service_requests")
+      .update({
+        status: "declined",
+        reviewer_id: who.userId,
+        declined_reason: data.reason,
+      } as any)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "service request",
+      action: "declined",
+      clientId: request.client_id,
+      offeringId: request.offering_id,
+      target: request.service_key,
+      previous: { status: request.status },
+      next: { status: "declined", reason: data.reason },
+    });
+    return { ok: true };
+  });
+
+/** Staff: switch the service on after the client has signed. */
+export const activateServiceRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        sowId: z.string().uuid(),
         effectiveDate: z.string().optional().or(z.literal("")),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
-    const { data: request, error: readError } = await context.supabase
-      .from("service_requests")
-      .select("*")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (readError) throw new Error(readError.message);
-    if (!request) throw new Error("That request isn't available.");
-
-    if (data.decision === "activated" && !data.sowId) {
-      throw new Error(
-        "Attach the signed statement of work or order form before activating the service.",
-      );
+    const request = await loadRequest(context, data.id);
+    if (request.status !== "signed") {
+      throw new Error("The client needs to sign the amendment before this service can go live.");
     }
+    const effectiveDate = data.effectiveDate || request.effective_date || new Date().toISOString().slice(0, 10);
 
-    const patch: Record<string, unknown> = {
-      status: data.decision,
-      reviewer_id: who.userId,
-      review_note: data.note || null,
-      proposed_fee_cents: data.feeCents ?? request.proposed_fee_cents,
-      proposed_pricing_model: data.pricingModel || request.proposed_pricing_model,
-      effective_date: data.effectiveDate || request.effective_date,
+    const scope = {
+      client_id: request.client_id,
+      offering_id: request.offering_id,
+      sow_id: data.sowId,
+      service_key: request.service_key,
+      status: "included",
+      effective_date: effectiveDate,
+      approved_by: who.userId,
+      approved_at: new Date().toISOString(),
+      created_by: who.userId,
     };
+    const existing = context.supabase
+      .from("service_entitlements")
+      .select("id")
+      .eq("client_id", request.client_id)
+      .eq("service_key", request.service_key);
+    const { data: found } = request.offering_id
+      ? await existing.eq("offering_id", request.offering_id).maybeSingle()
+      : await existing.is("offering_id", null).maybeSingle();
 
-    if (data.decision === "activated") {
-      const scope = {
-        client_id: request.client_id,
-        offering_id: request.offering_id,
-        sow_id: data.sowId ?? null,
-        service_key: request.service_key,
-        status: "included",
-        effective_date: data.effectiveDate || new Date().toISOString().slice(0, 10),
-        approved_by: who.userId,
-        approved_at: new Date().toISOString(),
-        created_by: who.userId,
-      };
-      const existing = context.supabase
+    let entitlementId: string;
+    if (found) {
+      const { error } = await context.supabase
         .from("service_entitlements")
+        .update(scope as any)
+        .eq("id", found.id);
+      if (error) throw new Error(error.message);
+      entitlementId = found.id;
+    } else {
+      const { data: made, error } = await context.supabase
+        .from("service_entitlements")
+        .insert(scope as any)
         .select("id")
-        .eq("client_id", request.client_id)
-        .eq("service_key", request.service_key);
-      const { data: found } = request.offering_id
-        ? await existing.eq("offering_id", request.offering_id).maybeSingle()
-        : await existing.is("offering_id", null).maybeSingle();
-
-      if (found) {
-        await context.supabase.from("service_entitlements").update(scope).eq("id", found.id);
-        patch["activated_entitlement_id"] = found.id;
-      } else {
-        const { data: made, error } = await context.supabase
-          .from("service_entitlements")
-          .insert(scope)
-          .select("id")
-          .single();
-        if (error) throw new Error(error.message);
-        patch["activated_entitlement_id"] = made.id;
-      }
-      patch["client_approved_at"] = new Date().toISOString();
+        .single();
+      if (error) throw new Error(error.message);
+      entitlementId = made.id;
     }
+
+    // Record the agreed rate against the client so invoicing reads one place.
+    const { data: catalogRow } = await context.supabase
+      .from("service_catalog")
+      .select("name")
+      .eq("key", request.service_key)
+      .maybeSingle();
+    await context.supabase.from("client_pricing").insert({
+      client_id: request.client_id,
+      sow_id: data.sowId,
+      service_key: request.service_key,
+      label: catalogRow?.name ?? request.service_key,
+      standard_cents: request.proposed_fee_cents,
+      contracted_cents: request.proposed_fee_cents,
+      pricing_model: request.proposed_pricing_model,
+      effective_date: effectiveDate,
+      approved_by: who.userId,
+      approved_at: new Date().toISOString(),
+      created_by: who.userId,
+      notes: `Agreed through service request ${request.id}`,
+    } as any);
 
     const { error } = await context.supabase
       .from("service_requests")
-      .update(patch as any)
+      .update({
+        status: "activated",
+        activated_entitlement_id: entitlementId,
+        activated_at: new Date().toISOString(),
+        activated_by: who.userId,
+        effective_date: effectiveDate,
+      } as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
 
     await audit(context, who, {
       area: "service request",
-      action: data.decision,
+      action: "activated",
       clientId: request.client_id,
       offeringId: request.offering_id,
       target: request.service_key,
       previous: { status: request.status },
-      next: patch,
-      approval: data.sowId ? `SOW ${data.sowId}` : null,
+      next: { status: "activated", entitlement_id: entitlementId, effective_date: effectiveDate },
+      approval: `SOW ${data.sowId}`,
     });
     return { ok: true };
   });
+
+/** Client: sign the quoted amendment. The guarded RPC does the checks. */
+export const acceptServiceQuote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        requestId: z.string().uuid(),
+        signerName: z.string().trim().min(2).max(200),
+        signerTitle: z.string().trim().max(200).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("accept_service_quote", {
+      _request_id: data.requestId,
+      _signer_name: data.signerName,
+      _signer_title: data.signerTitle || null,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Client: withdraw their own request before it is active. */
+export const withdrawServiceRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("withdraw_service_request", {
+      _request_id: data.requestId,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 
 /* ------------------------------------------------------------------ pricing */
 
