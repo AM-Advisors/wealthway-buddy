@@ -724,6 +724,49 @@ export const markRetentionReviewed = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Removes one person's, or everyone's, access to the client workspace. Records stay. */
+export const removeClientAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), memberId: z.string().uuid().optional() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireAuthority(context);
+    const { data: row } = await context.supabase
+      .from("offboarding_cases")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("That termination record is not available.");
+    if (row.status === "closed") throw new Error("This termination is closed and can no longer change.");
+
+    let query = context.supabase.from("client_users").delete().eq("client_id", row.client_id);
+    if (data.memberId) query = query.eq("id", data.memberId);
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+
+    const { data: left } = await context.supabase
+      .from("client_users")
+      .select("id")
+      .eq("client_id", row.client_id);
+    const remaining = ((left ?? []) as any[]).length;
+
+    const steps = stepsOf(row);
+    if (remaining === 0) {
+      steps.accessRemovedAt = new Date().toISOString();
+      await context.supabase.from("offboarding_cases").update({ steps }).eq("id", data.id);
+    }
+
+    await audit(context, who, {
+      action: data.memberId ? "client access removed for one person" : "all client access removed",
+      clientId: row.client_id,
+      target: data.memberId ?? null,
+      next: { remaining },
+    });
+    return { ok: true, remaining };
+  });
+
+
 export const closeOffboardingCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
