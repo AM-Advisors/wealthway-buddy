@@ -76,6 +76,7 @@ function PricingConsole() {
           <TabsTrigger value="catalog">Standard rate card</TabsTrigger>
           <TabsTrigger value="clients">Client rates</TabsTrigger>
           <TabsTrigger value="sows">Statements of work</TabsTrigger>
+          <TabsTrigger value="approvals">Approvals</TabsTrigger>
           <TabsTrigger value="fundfees">Fund fees</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
