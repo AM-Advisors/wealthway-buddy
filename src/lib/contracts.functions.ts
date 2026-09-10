@@ -479,6 +479,19 @@ export const setEntitlement = createServerFn({ method: "POST" })
       );
     }
 
+    if (data.status === "included" && data.sow_id) {
+      const { data: coverSow } = await context.supabase
+        .from("client_sows")
+        .select("title, approval_status")
+        .eq("id", data.sow_id)
+        .maybeSingle();
+      if (((coverSow as any)?.approval_status as string) !== "approved") {
+        throw new Error(
+          `${(coverSow as any)?.title ?? "That statement of work"} is waiting for administrator approval. Services cannot be switched on under it yet.`,
+        );
+      }
+    }
+
     const existingQuery = context.supabase
       .from("service_entitlements")
       .select("id, status")
@@ -804,6 +817,18 @@ export const activateServiceRequest = createServerFn({ method: "POST" })
     if (request.status !== "signed") {
       throw new Error("The client needs to sign the amendment before this service can go live.");
     }
+    const { data: coveringSow } = await context.supabase
+      .from("client_sows")
+      .select("title, approval_status")
+      .eq("id", data.sowId)
+      .maybeSingle();
+    const coverApproval = ((coveringSow as any)?.approval_status as string) ?? "pending";
+    if (coverApproval !== "approved") {
+      throw new Error(
+        `${(coveringSow as any)?.title ?? "That statement of work"} is not approved yet. An administrator has to approve it before services can be activated under it.`,
+      );
+    }
+
     const effectiveDate = data.effectiveDate || request.effective_date || new Date().toISOString().slice(0, 10);
 
     const scope = {
@@ -1305,3 +1330,123 @@ export const archivePricingVersion = createServerFn({ method: "POST" })
     await audit(context, who, { area: "pricing", action: "version archived", target: data.id });
     return { ok: true };
   });
+
+/* -------------------------------------------------- statement of work sign-off */
+
+async function requireAdmin(context: any) {
+  const who = await whoIs(context);
+  if (!who.roles.some((r) => r === "admin" || r === "super_admin")) {
+    throw new Error("Forbidden: only an administrator can approve a statement of work.");
+  }
+  return who;
+}
+
+/** Every statement of work with its approval state, for the approvals board. */
+export const listSowApprovals = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const who = await requireStaff(context);
+    const [{ data: sows, error }, { data: clients }, { data: funds }, { data: profiles }] =
+      await Promise.all([
+        context.supabase
+          .from("client_sows")
+          .select("*")
+          .order("signed_on", { ascending: true, nullsFirst: false }),
+        context.supabase.from("clients").select("id, legal_name, name"),
+        context.supabase.from("offerings").select("id, name"),
+        context.supabase.from("profiles").select("user_id, legal_name"),
+      ]);
+    if (error) throw new Error(error.message);
+
+    const clientName = new Map(
+      ((clients ?? []) as any[]).map((c) => [c.id as string, (c.legal_name ?? c.name) as string]),
+    );
+    const fundName = new Map(((funds ?? []) as any[]).map((f) => [f.id as string, f.name as string]));
+    const person = new Map(
+      ((profiles ?? []) as any[]).map((p) => [p.user_id as string, (p.legal_name as string) ?? ""]),
+    );
+
+    const rows = ((sows ?? []) as any[]).map((s) => ({
+      id: s.id as string,
+      clientId: (s.client_id as string) ?? null,
+      clientName: clientName.get(s.client_id as string) ?? "Unassigned client",
+      title: s.title as string,
+      sowType: s.sow_type as string,
+      status: s.status as string,
+      effectiveDate: (s.effective_date as string) ?? null,
+      signedBy: (s.signed_by as string) ?? null,
+      signedOn: (s.signed_on as string) ?? null,
+      offeringId: (s.offering_id as string) ?? null,
+      fundName: s.offering_id ? (fundName.get(s.offering_id as string) ?? null) : null,
+      approvalStatus: ((s.approval_status as string) ?? "pending") as
+        | "pending"
+        | "approved"
+        | "rejected",
+      approvalNote: (s.approval_note as string) ?? null,
+      approvedAt: (s.approved_at as string) ?? null,
+      approvedByName: s.approved_by ? (person.get(s.approved_by as string) || null) : null,
+      signed: Boolean(s.signed_on) && Boolean(s.signed_by),
+    }));
+
+    return { canDecide: who.roles.some((r) => r === "admin" || r === "super_admin"), rows };
+  });
+
+/** Administrator decision on a signed statement of work. */
+export const decideSowApproval = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        decision: z.enum(["approved", "rejected", "pending"]),
+        note: z.string().trim().max(2000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireAdmin(context);
+    const { data: sow, error } = await context.supabase
+      .from("client_sows")
+      .select("id, client_id, offering_id, title, signed_on, signed_by, approval_status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!sow) throw new Error("That statement of work could not be found.");
+    const row = sow as any;
+
+    if (data.decision === "approved" && (!row.signed_on || !row.signed_by)) {
+      throw new Error("Record the client signature before approving this statement of work.");
+    }
+    if (data.decision === "rejected" && !data.note) {
+      throw new Error("Give a reason so the team knows what has to change.");
+    }
+
+    const patch =
+      data.decision === "pending"
+        ? { approval_status: "pending", approved_by: null, approved_at: null, approval_note: data.note || null }
+        : {
+            approval_status: data.decision,
+            approved_by: who.userId,
+            approved_at: new Date().toISOString(),
+            approval_note: data.note || null,
+          };
+
+    const { error: updateError } = await context.supabase
+      .from("client_sows")
+      .update(patch as any)
+      .eq("id", data.id);
+    if (updateError) throw new Error(updateError.message);
+
+    await audit(context, who, {
+      area: "sow",
+      action: `approval ${data.decision}`,
+      clientId: row.client_id,
+      offeringId: row.offering_id,
+      target: row.title,
+      previous: { approval_status: row.approval_status },
+      next: { approval_status: data.decision, note: data.note || null },
+      approval: data.decision,
+    });
+    return { ok: true };
+  });
+

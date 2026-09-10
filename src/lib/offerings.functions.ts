@@ -349,7 +349,7 @@ export const saveOffering = createServerFn({ method: "POST" })
       }
       const { data: sow, error: sowError } = await context.supabase
         .from("client_sows")
-        .select("id, client_id, title, status, signed_on, signed_by, offering_id")
+        .select("id, client_id, title, status, signed_on, signed_by, offering_id, approval_status")
         .eq("id", data.sow_id)
         .maybeSingle();
       if (sowError) throw new Error(sowError.message);
@@ -358,6 +358,13 @@ export const saveOffering = createServerFn({ method: "POST" })
       if (row.status !== "active" || !row.signed_on || !row.signed_by) {
         throw new Error(
           "That statement of work is not signed yet. A fund can only be created once the client has signed.",
+        );
+      }
+      if (row.approval_status !== "approved") {
+        throw new Error(
+          row.approval_status === "rejected"
+            ? "That statement of work was rejected in review. It cannot be used for a fund."
+            : "That statement of work is still waiting for approval. An administrator has to approve it before a fund can be created.",
         );
       }
       if (row.offering_id) {

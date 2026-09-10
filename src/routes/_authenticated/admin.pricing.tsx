@@ -16,6 +16,7 @@ import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
 import { ProvidersBoard } from "@/components/providers-board";
 import { ProviderSubmissionsBoard } from "@/components/provider-submissions-board";
 import { ServiceRequestsBoard } from "@/components/service-requests-board";
+import { SowApprovalsBoard } from "@/components/sow-approvals-board";
 import { SowEditor } from "@/components/sow-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPricingBoard } from "@/lib/contracts.functions";
@@ -76,6 +77,7 @@ function PricingConsole() {
           <TabsTrigger value="catalog">Standard rate card</TabsTrigger>
           <TabsTrigger value="clients">Client rates</TabsTrigger>
           <TabsTrigger value="sows">Statements of work</TabsTrigger>
+          <TabsTrigger value="approvals">Approvals</TabsTrigger>
           <TabsTrigger value="fundfees">Fund fees</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
@@ -113,6 +115,9 @@ function PricingConsole() {
             funds={data.funds}
             canManage={data.canManage}
           />
+        </TabsContent>
+        <TabsContent value="approvals" className="pt-4">
+          <SowApprovalsBoard />
         </TabsContent>
         <TabsContent value="fundfees" className="pt-4">
           <FeeSourcesBoard />
