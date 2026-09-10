@@ -141,11 +141,15 @@ export function RequestServiceCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {service.status === "requested" ? (
-          <p className="text-sm text-muted-foreground">
-            Harmonious is reviewing this request. It becomes available once the scope and fee are
-            agreed in writing.
-          </p>
+        {latest ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              {STAGE_NOTE[latest.status] ?? "Harmonious is reviewing this request."}
+            </p>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/portal">View in your portal</Link>
+            </Button>
+          </div>
         ) : !clientId ? (
           <p className="text-sm text-muted-foreground">
             Ask your Harmonious contact to add this service to your statement of work.
