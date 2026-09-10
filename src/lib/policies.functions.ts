@@ -12,6 +12,7 @@ export const POLICY_KINDS = [
   { key: "terms", label: "Platform terms of use" },
   { key: "pricing", label: "Fee schedule" },
   { key: "e_records", label: "Electronic records and signatures consent" },
+  { key: "migration", label: "Fund migration agreement" },
 ] as const;
 
 async function isSuperAdmin(context: any) {
@@ -49,6 +50,7 @@ export const getPolicyStatus = createServerFn({ method: "GET" })
     );
 
     return {
+      documents,
       outstanding: documents.filter((d) => !acceptedIds.has(d.id)),
       accepted: (accepted ?? []) as any[],
       email: (context.claims?.email as string | undefined) ?? "",
@@ -119,7 +121,7 @@ export const savePolicyDocument = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid().optional(),
-        kind: z.enum(["privacy", "terms", "pricing", "e_records"]),
+        kind: z.enum(["privacy", "terms", "pricing", "e_records", "migration"]),
         title: z.string().min(2).max(200),
         body: z.string().min(10).max(50000),
         effectiveDate: z.string().min(10),
