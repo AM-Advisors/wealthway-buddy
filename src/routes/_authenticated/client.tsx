@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
+import { ClientSowPanel } from "@/components/client-sow-panel";
 import { getClientPortal } from "@/lib/client-portal.functions";
 import { ClientInvoicesPanel } from "@/components/client-invoices-panel";
 import { MyServiceRequests } from "@/components/service-request-signing";
