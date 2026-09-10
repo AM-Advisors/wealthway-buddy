@@ -20,7 +20,7 @@ export type ConditionFinding = {
   blocking: boolean;
   appliesTo: string;
   sourceReference: string | null;
-  value: unknown;
+  value: string | number | boolean | string[] | null;
   overridden: boolean;
   state: ConditionState;
   detail: string;
@@ -102,7 +102,7 @@ export async function evaluateFundConditions(
     ((clearances ?? []) as any[]).find((c) => c.rule_key === key && c.kind === "cleared") ?? null;
 
   const findings: ConditionFinding[] = ((rules ?? []) as any[]).map((rule) => {
-    const value = rule.key in overrides ? overrides[rule.key] : rule.default_value;
+    const value = (rule.key in overrides ? overrides[rule.key] : rule.default_value) as ConditionFinding["value"];
     let state: ConditionState = "confirm";
     let detail = "Harmonious cannot check this automatically. Confirm it with the client.";
 
