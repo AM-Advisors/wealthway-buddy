@@ -41,6 +41,7 @@ export function OfferingDocumentFile({
   const link = useServerFn(getOfferingDocumentFileUrl);
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"upload" | "download" | "remove" | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const upload = async (file: File) => {
     if (file.size > MAX_BYTES) {
