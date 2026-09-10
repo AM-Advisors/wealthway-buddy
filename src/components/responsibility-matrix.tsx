@@ -20,11 +20,11 @@ export function ResponsibilityMatrix({ service }: { service: ScopeService }) {
         </div>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-3">
-        <Column title="Harmonious handles" body={service.harmoniousHandles} />
-        <Column title="You handle" body={service.clientHandles} />
+        <Column title="Harmonious handles" body={service.harmoniousHandles ?? null} />
+        <Column title="You handle" body={service.clientHandles ?? null} />
         <Column
           title="Third party handles"
-          body={service.thirdPartyHandles}
+          body={service.thirdPartyHandles ?? null}
           footnote={
             service.thirdPartyDependency
               ? `Depends on ${service.thirdPartyDependency}. Timing and outcome are theirs, not ours.`

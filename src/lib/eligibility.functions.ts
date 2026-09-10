@@ -46,7 +46,7 @@ async function rulesFor(context: any, clientId: string | null) {
     Object.assign(overrides, (sow.eligibility ?? {}) as Record<string, unknown>);
   }
 
-  return (rules ?? []).map((rule: any) => ({
+  return ((rules ?? []) as any[]).map((rule: any) => ({
     key: rule.key as string,
     label: rule.label as string,
     description: rule.description as string | null,
@@ -96,7 +96,7 @@ export const checkFundEligibility = createServerFn({ method: "GET" })
     ).length;
     const total = investorCount ?? apps.length;
 
-    const findings = rules.map((rule) => {
+    const findings = rules.map((rule: any) => {
       let state: "pass" | "attention" | "confirm" = "confirm";
       let detail = "Harmonious cannot check this automatically. Confirm it with the client.";
 
@@ -133,7 +133,7 @@ export const checkFundEligibility = createServerFn({ method: "GET" })
       fund,
       isStaff: roles.some((r) => STAFF.includes(r)),
       findings,
-      blockers: findings.filter((f) => f.blocking && f.state === "attention").length,
+      blockers: findings.filter((f: any) => f.blocking && f.state === "attention").length,
     };
   });
 

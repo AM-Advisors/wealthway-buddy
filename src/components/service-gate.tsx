@@ -68,7 +68,7 @@ export function ServiceGate({
     return <>{children}</>;
   }
   return (
-    <RequestServiceCard service={service} clientId={clientId} offeringId={offeringId} />
+    <RequestServiceCard service={service} clientId={clientId ?? null} offeringId={offeringId ?? null} />
   );
 }
 
