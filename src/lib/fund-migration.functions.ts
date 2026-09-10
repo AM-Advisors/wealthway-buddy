@@ -622,7 +622,7 @@ export const inviteMigratedInvestors = createServerFn({ method: "POST" })
     for (const row of list) {
       const { error } = await context.supabase.from("fund_invitations").insert({
         email: String(row.email).toLowerCase(),
-        name: row.full_name || null,
+        invited_name: row.full_name || null,
         offering_id: data.offeringId,
         role: "investor" as any,
         invited_by: who.userId,
