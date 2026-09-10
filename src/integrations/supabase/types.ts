@@ -3209,10 +3209,16 @@ export type Database = {
       }
       invoices: {
         Row: {
+          approval_requested_at: string | null
+          approval_status: string
+          client_approved_at: string | null
+          client_approved_by: string | null
           client_id: string
+          client_signer_name: string | null
           created_at: string
           created_by: string | null
           currency: string
+          dispute_reason: string | null
           due_date: string | null
           id: string
           issue_date: string | null
@@ -3223,9 +3229,13 @@ export type Database = {
           number: string | null
           offering_id: string | null
           paid_on: string | null
+          payment_instruction_id: string | null
           payment_reference: string | null
           period_end: string | null
           period_start: string | null
+          rate_check: Json | null
+          rate_override_reason: string | null
+          rate_variance_cents: number
           sow_id: string | null
           status: string
           total_cents: number
@@ -3234,10 +3244,16 @@ export type Database = {
           voided_at: string | null
         }
         Insert: {
+          approval_requested_at?: string | null
+          approval_status?: string
+          client_approved_at?: string | null
+          client_approved_by?: string | null
           client_id: string
+          client_signer_name?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          dispute_reason?: string | null
           due_date?: string | null
           id?: string
           issue_date?: string | null
@@ -3248,9 +3264,13 @@ export type Database = {
           number?: string | null
           offering_id?: string | null
           paid_on?: string | null
+          payment_instruction_id?: string | null
           payment_reference?: string | null
           period_end?: string | null
           period_start?: string | null
+          rate_check?: Json | null
+          rate_override_reason?: string | null
+          rate_variance_cents?: number
           sow_id?: string | null
           status?: string
           total_cents?: number
@@ -3259,10 +3279,16 @@ export type Database = {
           voided_at?: string | null
         }
         Update: {
+          approval_requested_at?: string | null
+          approval_status?: string
+          client_approved_at?: string | null
+          client_approved_by?: string | null
           client_id?: string
+          client_signer_name?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          dispute_reason?: string | null
           due_date?: string | null
           id?: string
           issue_date?: string | null
@@ -3273,9 +3299,13 @@ export type Database = {
           number?: string | null
           offering_id?: string | null
           paid_on?: string | null
+          payment_instruction_id?: string | null
           payment_reference?: string | null
           period_end?: string | null
           period_start?: string | null
+          rate_check?: Json | null
+          rate_override_reason?: string | null
+          rate_variance_cents?: number
           sow_id?: string | null
           status?: string
           total_cents?: number
@@ -3296,6 +3326,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_payment_instruction_id_fkey"
+            columns: ["payment_instruction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_instructions"
             referencedColumns: ["id"]
           },
           {
@@ -4481,6 +4518,7 @@ export type Database = {
           direction: string
           dual_approval_required: boolean
           id: string
+          invoice_id: string | null
           note: string | null
           offering_id: string | null
           originating_account: string | null
@@ -4507,6 +4545,7 @@ export type Database = {
           direction?: string
           dual_approval_required?: boolean
           id?: string
+          invoice_id?: string | null
           note?: string | null
           offering_id?: string | null
           originating_account?: string | null
@@ -4533,6 +4572,7 @@ export type Database = {
           direction?: string
           dual_approval_required?: boolean
           id?: string
+          invoice_id?: string | null
           note?: string | null
           offering_id?: string | null
           originating_account?: string | null
@@ -4551,6 +4591,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_instructions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
           {
@@ -5958,6 +6005,15 @@ export type Database = {
         }[]
       }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
+      respond_to_invoice: {
+        Args: {
+          _decision: string
+          _invoice_id: string
+          _reason?: string
+          _signer_name?: string
+        }
+        Returns: undefined
+      }
       review_offering_entity: {
         Args: {
           p_ein_status: string
