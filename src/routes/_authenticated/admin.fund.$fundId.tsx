@@ -195,6 +195,7 @@ function FundPage() {
       <div className="mt-6 space-y-4">
         <ScopeSummary scope={scope} />
         <ScopeServicesPanel scope={scope} offeringId={fundId} />
+        <FundProvidersPanel scope={scope} />
       </div>
 
       <div className="mt-8">
