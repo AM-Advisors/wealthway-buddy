@@ -94,7 +94,24 @@ export function OfferingDocumentFile({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
+    <div
+      className={`flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2 text-xs transition-colors ${
+        dragging ? "border-primary bg-primary/5" : "border-transparent"
+      }`}
+      onDragOver={(e) => {
+        if (!canEdit) return;
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        if (!canEdit) return;
+        e.preventDefault();
+        setDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) void upload(file);
+      }}
+    >
       {fileName ? (
         <>
           <span className="text-muted-foreground">
