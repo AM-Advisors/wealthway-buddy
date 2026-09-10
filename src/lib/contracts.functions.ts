@@ -717,6 +717,16 @@ export const savePricingItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
+    const { data: version } = await context.supabase
+      .from("pricing_versions")
+      .select("status")
+      .eq("id", data.version_id)
+      .maybeSingle();
+    if (version?.status === "published" || version?.status === "archived") {
+      throw new Error(
+        "Published rate cards stay as they were agreed. Copy this one into a new version to change a fee.",
+      );
+    }
     const row = {
       version_id: data.version_id,
       service_key: data.service_key || null,
