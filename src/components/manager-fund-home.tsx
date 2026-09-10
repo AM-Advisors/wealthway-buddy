@@ -10,6 +10,8 @@ import { money, prettyStatus, statusTone } from "@/lib/status";
 import { regTypeLabel } from "@/lib/reg-types";
 import { FundComplianceCard } from "@/components/fund-compliance-card";
 import { FundAgreementCard } from "@/components/fund-agreement-card";
+import { ScopeSection, ScopeSummary } from "@/components/fund-scope-section";
+import { useFundScope } from "@/lib/fund-scope";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +57,7 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState<string>("all");
+  const scope = useFundScope(offeringId);
 
   const query = useQuery({
     queryKey: ["manager-fund-home", offeringId],
@@ -164,6 +167,10 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         />
       </div>
 
+      <div className="mt-6">
+        <ScopeSummary scope={scope} />
+      </div>
+
       <Card className="mt-8">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -205,7 +212,9 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
+      <div className="mt-6">
+      <ScopeSection scope={scope} section="documents" offeringId={offeringId} label="Fund documents">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Documents investors sign</CardTitle>
           <CardDescription>
@@ -252,7 +261,12 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
+      </ScopeSection>
+      </div>
+
+      <div className="mt-6">
+      <ScopeSection scope={scope} section="diligence" offeringId={offeringId} label="Diligence room">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Diligence room materials</CardTitle>
           <CardDescription>
@@ -304,7 +318,16 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         </CardContent>
       </Card>
 
+      </ScopeSection>
+      </div>
+
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <ScopeSection
+          scope={scope}
+          section="signed_documents"
+          offeringId={offeringId}
+          label="Signed documents"
+        >
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Signed copies filed back</CardTitle>
@@ -327,6 +350,9 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
           </CardContent>
         </Card>
 
+        </ScopeSection>
+
+        <ScopeSection scope={scope} section="tax" offeringId={offeringId} label="Tax documents">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Tax documents</CardTitle>
@@ -352,9 +378,18 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
             )}
           </CardContent>
         </Card>
+        </ScopeSection>
       </div>
 
-      <Card className="mt-6">
+
+      <div className="mt-6">
+      <ScopeSection
+        scope={scope}
+        section="applications"
+        offeringId={offeringId}
+        label="Investor onboarding"
+      >
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">Investor applications</CardTitle>
           <CardDescription>
@@ -425,6 +460,8 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
           )}
         </CardContent>
       </Card>
+      </ScopeSection>
+      </div>
 
       <FundComplianceCard offeringId={offeringId} />
 

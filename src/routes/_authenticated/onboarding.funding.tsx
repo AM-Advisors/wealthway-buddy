@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScopeNotice } from "@/components/fund-scope-section";
 
 export const Route = createFileRoute("/_authenticated/onboarding/funding")({
   head: () => ({
@@ -305,6 +306,7 @@ function FundingStep() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
+      <ScopeNotice offeringId={data?.offering?.id ?? null} section="funding" label="Funding" />
       <OnboardingStepper current="funding" />
       <h1 className="mt-8 text-3xl">Fund your subscription</h1>
       <p className="mt-2 text-sm text-muted-foreground">

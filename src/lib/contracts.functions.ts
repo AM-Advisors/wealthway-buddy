@@ -395,6 +395,7 @@ export const getFundScope = createServerFn({ method: "GET" })
         services: [] as any[],
         holds: [] as any[],
         canManage: who.canManage,
+        isStaff: who.isStaff,
       };
     }
 
@@ -443,6 +444,7 @@ export const getFundScope = createServerFn({ method: "GET" })
       services,
       holds: holds ?? [],
       canManage: who.canManage,
+      isStaff: who.isStaff,
     };
   });
 

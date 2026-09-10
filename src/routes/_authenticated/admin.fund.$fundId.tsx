@@ -15,6 +15,8 @@ import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
 import { FundComplianceCard } from "@/components/fund-compliance-card";
+import { ScopeSection, ScopeSummary } from "@/components/fund-scope-section";
+import { useFundScope } from "@/lib/fund-scope";
 import { regTypeLabel } from "@/lib/reg-types";
 
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +65,7 @@ function FundPage() {
   const getPacket = useServerFn(downloadOfferingPacket);
 
   const queryClient = useQueryClient();
+  const scope = useFundScope(fundId);
   const [openDoc, setOpenDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -185,20 +188,31 @@ function FundPage() {
         <Stat label="Committed" value={money(stats.committedCents)} note={`${money(stats.settledCents)} settled`} />
       </div>
 
+      <div className="mt-6">
+        <ScopeSummary scope={scope} />
+      </div>
+
       <div className="mt-8">
-        <CommitmentBalancePanel fundId={fundId} />
+        <ScopeSection scope={scope} section="funding" offeringId={fundId} label="Funding tracking">
+          <CommitmentBalancePanel fundId={fundId} />
+        </ScopeSection>
       </div>
 
       <div className="mt-6">
-        <WireTrackingPanel offeringId={fundId} />
+        <ScopeSection scope={scope} section="wires" offeringId={fundId} label="Wire instructions">
+          <WireTrackingPanel offeringId={fundId} />
+        </ScopeSection>
       </div>
-
 
       <div className="mt-6">
-        <BankFeedPanel fundId={fundId} />
+        <ScopeSection scope={scope} section="banking" offeringId={fundId} label="Bank account">
+          <BankFeedPanel fundId={fundId} />
+        </ScopeSection>
       </div>
 
-      <Card className="mt-8">
+      <div className="mt-8">
+      <ScopeSection scope={scope} section="documents" offeringId={fundId} label="Fund documents">
+      <Card>
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle>Offering documents</CardTitle>
@@ -262,9 +276,18 @@ function FundPage() {
           ))}
         </CardContent>
       </Card>
+      </ScopeSection>
+      </div>
 
       <div className="mt-8">
-        <SignedDocumentsCard offeringId={offering.id} />
+        <ScopeSection
+          scope={scope}
+          section="signed_documents"
+          offeringId={fundId}
+          label="Signed documents"
+        >
+          <SignedDocumentsCard offeringId={offering.id} />
+        </ScopeSection>
       </div>
 
       <div className="mt-6">
@@ -281,7 +304,9 @@ function FundPage() {
 
 
 
-      <Card className="mt-6">
+      <div className="mt-6">
+      <ScopeSection scope={scope} section="wires" offeringId={fundId} label="Wire instructions">
+      <Card>
         <CardHeader>
           <CardTitle>Funding details</CardTitle>
           <CardDescription>
@@ -310,6 +335,8 @@ function FundPage() {
           </p>
         </CardContent>
       </Card>
+      </ScopeSection>
+      </div>
 
       <p className="mt-6 text-xs text-muted-foreground">
         {stats.investorsWithAccess} investor{stats.investorsWithAccess === 1 ? "" : "s"} granted access ·{" "}
