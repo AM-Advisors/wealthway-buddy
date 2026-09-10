@@ -552,6 +552,7 @@ export const requestService = createServerFn({ method: "POST" })
         client_id: data.clientId,
         offering_id: data.offeringId ?? null,
         service_key: data.serviceKey,
+        status: "requested",
         requested_by: who.userId,
         requester_note: data.note || null,
       })
