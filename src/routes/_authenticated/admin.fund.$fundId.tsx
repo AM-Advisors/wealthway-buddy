@@ -139,7 +139,13 @@ function FundPage() {
               ? offering.summary
               : "No fund description has been written yet. Add one in Fund setup so investors know what they are subscribing to."}
           </p>
+          <p className="mt-2 max-w-2xl text-xs text-muted-foreground">
+            Harmonious supports this fund administratively within the client's active statement of
+            work. Offering terms, investment decisions and legal documents remain the client's and
+            its counsel's responsibility.
+          </p>
         </div>
+
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm" variant="outline">
             <Link to="/admin/packet/$fundId" params={{ fundId }}>
