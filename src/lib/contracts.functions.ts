@@ -16,7 +16,8 @@ export const STAFF_ROLES = [
   "executive",
 ] as const;
 
-/** Roles allowed to change contractual scope, pricing or entitlements. */
+/** Roles allowed to change contractual scope, pricing or entitlements.
+ *  CEO/CRO carry the executive role. */
 export const CONTRACT_ROLES = [
   "admin",
   "super_admin",
@@ -24,6 +25,7 @@ export const CONTRACT_ROLES = [
   "client_success",
   "compliance",
   "finance",
+  "executive",
 ] as const;
 
 export const SERVICE_CATEGORIES = [
