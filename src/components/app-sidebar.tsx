@@ -81,6 +81,8 @@ const adminItems: NavItem[] = [
   { title: "Fund access", url: "/admin/access", icon: BadgeCheck },
   { title: "Fund setup", url: "/admin/setup", icon: Building2 },
   { title: "Clients and scope", url: "/admin/contracts", icon: FileText },
+  { title: "Pricing and agreements", url: "/admin/pricing", icon: Landmark },
+
 
   { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
   { title: "Onboarding funnel", url: "/admin/funnel", icon: Gauge },
