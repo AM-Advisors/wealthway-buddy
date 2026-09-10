@@ -65,7 +65,9 @@ type Steps = {
   export?: ExportDelivery;
   endDateReason?: string | null;
   retentionReviewedAt?: string | null;
+  accessRemovedAt?: string | null;
 };
+
 
 type Who = { userId: string; roles: string[]; isStaff: boolean; canManage: boolean };
 
