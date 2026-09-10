@@ -479,6 +479,19 @@ export const setEntitlement = createServerFn({ method: "POST" })
       );
     }
 
+    if (data.status === "included" && data.sow_id) {
+      const { data: coverSow } = await context.supabase
+        .from("client_sows")
+        .select("title, approval_status")
+        .eq("id", data.sow_id)
+        .maybeSingle();
+      if (((coverSow as any)?.approval_status as string) !== "approved") {
+        throw new Error(
+          `${(coverSow as any)?.title ?? "That statement of work"} is waiting for administrator approval. Services cannot be switched on under it yet.`,
+        );
+      }
+    }
+
     const existingQuery = context.supabase
       .from("service_entitlements")
       .select("id, status")
