@@ -727,6 +727,9 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
         amendment_terms: data.amendmentTerms || null,
         amendment_path: data.amendmentPath || null,
         sow_id: data.sowId ?? request.sow_id ?? null,
+        fee_source: feeSource,
+        fee_rate_id: feeSource === "client_rate" ? (data.feeRateId ?? null) : null,
+        fee_override_reason: feeSource === "custom" ? data.feeOverrideReason || null : null,
       } as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
