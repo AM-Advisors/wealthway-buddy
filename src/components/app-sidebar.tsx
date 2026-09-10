@@ -38,6 +38,7 @@ import {
 import { getAdminAccess } from "@/lib/admin.functions";
 import { getOperationsAccess } from "@/lib/operations.functions";
 import { getNavState } from "@/lib/nav.functions";
+import { getPolicyStatus } from "@/lib/policies.functions";
 import { cn } from "@/lib/utils";
 
 type NavItem = { title: string; url: string; icon: typeof LayoutDashboard };
@@ -118,6 +119,11 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
     queryKey: ["operations-access"],
     queryFn: () => opsAccess(),
   });
+  const policyStatus = useServerFn(getPolicyStatus);
+  const { data: signOff } = useQuery({ queryKey: ["policy-status"], queryFn: () => policyStatus() });
+  const signOffComplete = Boolean(signOff && signOff.outstanding.length === 0);
+
+
 
   const isActive = (url: string) =>
     url === "/admin" || url === "/manager" || url === "/diligence" || url === "/ops"
@@ -214,7 +220,29 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         {!collapsed && nav?.profile?.email && (
           <p className="truncate px-2 text-xs text-muted-foreground">{nav.profile.email}</p>
         )}
+        {!collapsed && signOff && (
+          <p className="px-2 text-xs">
+            {signOffComplete ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+                <BadgeCheck className="h-3 w-3" aria-hidden /> Sign-off complete
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                <FileSignature className="h-3 w-3" aria-hidden />
+                {signOff.outstanding.length} to sign
+              </span>
+            )}
+          </p>
+        )}
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Your sign-off">
+              <Link to="/sign-off">
+                <FileSignature className="h-4 w-4" />
+                {!collapsed && <span>Your sign-off</span>}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={onSignOut} tooltip="Sign out">
               <LogOut className="h-4 w-4" />

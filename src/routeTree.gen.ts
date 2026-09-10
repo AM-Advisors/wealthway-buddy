@@ -30,6 +30,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
+import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
 import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_authenticated/wire-confirmation'
@@ -224,6 +225,11 @@ const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
 const AuthenticatedProviderRoute = AuthenticatedProviderRouteImport.update({
   id: '/provider',
   path: '/provider',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSignOffRoute = AuthenticatedSignOffRouteImport.update({
+  id: '/sign-off',
+  path: '/sign-off',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSubscriptionRoute =
@@ -758,6 +764,7 @@ export interface FileRoutesByFullPath {
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
+  '/sign-off': typeof AuthenticatedSignOffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
@@ -868,6 +875,7 @@ export interface FileRoutesByTo {
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
+  '/sign-off': typeof AuthenticatedSignOffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
@@ -981,6 +989,7 @@ export interface FileRoutesById {
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
+  '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
@@ -1094,6 +1103,7 @@ export interface FileRouteTypes {
     | '/my-portfolio'
     | '/portal'
     | '/provider'
+    | '/sign-off'
     | '/subscription'
     | '/wire'
     | '/wire-confirmation'
@@ -1204,6 +1214,7 @@ export interface FileRouteTypes {
     | '/my-portfolio'
     | '/portal'
     | '/provider'
+    | '/sign-off'
     | '/subscription'
     | '/wire'
     | '/wire-confirmation'
@@ -1316,6 +1327,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
     | '/_authenticated/provider'
+    | '/_authenticated/sign-off'
     | '/_authenticated/subscription'
     | '/_authenticated/wire'
     | '/_authenticated/wire-confirmation'
@@ -1577,6 +1589,13 @@ declare module '@tanstack/react-router' {
       path: '/provider'
       fullPath: '/provider'
       preLoaderRoute: typeof AuthenticatedProviderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sign-off': {
+      id: '/_authenticated/sign-off'
+      path: '/sign-off'
+      fullPath: '/sign-off'
+      preLoaderRoute: typeof AuthenticatedSignOffRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/subscription': {
@@ -2217,6 +2236,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
+  AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
   AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
@@ -2307,6 +2327,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,
+  AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
   AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
