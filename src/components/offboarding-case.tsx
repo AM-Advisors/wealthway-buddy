@@ -378,6 +378,67 @@ export function OffboardingCase({ caseId }: { caseId: string }) {
 
       <Card>
         <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle>Access removal</CardTitle>
+              <CardDescription>
+                Take away the client team's access to this workspace. Their records stay retained
+                and the audit trail is kept.
+              </CardDescription>
+            </div>
+            {canManage && data.access.length ? (
+              <Button
+                variant="destructive"
+                disabled={removeAccess.isPending}
+                onClick={() => removeAccess.mutate(undefined)}
+              >
+                Remove all access
+              </Button>
+            ) : null}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {data.access.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {c.accessRemovedAt
+                ? `Access removed on ${new Date(c.accessRemovedAt).toLocaleDateString("en-US")}. Records are retained.`
+                : "Nobody from the client has access to this workspace."}
+            </p>
+          ) : (
+            data.access.map((person) => (
+              <div
+                key={person.id}
+                className="flex flex-wrap items-center gap-2 rounded-lg border p-3 text-sm"
+              >
+                <span className="font-medium">{person.name ?? person.email ?? "Client user"}</span>
+                {person.email ? (
+                  <span className="text-muted-foreground">{person.email}</span>
+                ) : null}
+                <Badge variant="outline">{person.role.replace(/_/g, " ")}</Badge>
+                {person.canApprove ? <Badge variant="secondary">Can approve</Badge> : null}
+                {canManage ? (
+                  <Button
+                    className="ml-auto"
+                    variant="outline"
+                    size="sm"
+                    disabled={removeAccess.isPending}
+                    onClick={() => removeAccess.mutate(person.id)}
+                  >
+                    Remove
+                  </Button>
+                ) : null}
+              </div>
+            ))
+          )}
+          {data.clientStatus === "terminated" ? (
+            <p className="text-sm text-muted-foreground">This client is marked terminated.</p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+
+      <Card>
+        <CardHeader>
           <CardTitle>Close out</CardTitle>
           <CardDescription>
             A termination closes once amounts are settled, the export delivery is recorded and the
