@@ -1,3 +1,4 @@
+import { FundAgreementGate } from "@/components/fund-agreement-gate";
 import { FundProvidersPanel } from "@/components/fund-providers-panel";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -194,6 +195,7 @@ function FundPage() {
       </div>
 
       <div className="mt-6 space-y-4">
+        <FundAgreementGate fundId={fundId} />
         <ScopeSummary scope={scope} />
         <ScopeServicesPanel scope={scope} offeringId={fundId} />
         <FundProvidersPanel scope={scope} />

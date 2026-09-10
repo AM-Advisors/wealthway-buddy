@@ -1,3 +1,4 @@
+import { FundAgreementGate } from "@/components/fund-agreement-gate";
 import { FundProvidersPanel } from "@/components/fund-providers-panel";
 import { useEffect, useMemo, useState } from "react";
 
@@ -173,6 +174,7 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
       </div>
 
       <div className="mt-6 space-y-4">
+        <FundAgreementGate fundId={fundId} />
         <ScopeSummary scope={scope} />
         <ScopeServicesPanel scope={scope} offeringId={offeringId} />
         <FundProvidersPanel scope={scope} />
