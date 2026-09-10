@@ -16,6 +16,7 @@ import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
 import { ProvidersBoard } from "@/components/providers-board";
 import { ProviderSubmissionsBoard } from "@/components/provider-submissions-board";
 import { ServiceRequestsBoard } from "@/components/service-requests-board";
+import { SowApprovalsBoard } from "@/components/sow-approvals-board";
 import { SowEditor } from "@/components/sow-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPricingBoard } from "@/lib/contracts.functions";
