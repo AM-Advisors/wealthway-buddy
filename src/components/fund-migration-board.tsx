@@ -135,9 +135,9 @@ export function FundMigrationBoard({ offeringId }: { offeringId: string }) {
 
   const totals = useMemo(
     () => ({
-      pending: rows.filter((r) => r.status !== "imported").length,
-      invalid: rows.filter((r) => (r.errors ?? []).length > 0).length,
-      imported: rows.filter((r) => r.status === "imported").length,
+      pending: rows.filter((r) => r.row_status !== "imported").length,
+      invalid: rows.filter((r) => r.row_status === "error").length,
+      imported: rows.filter((r) => r.row_status === "imported").length,
       committed: rows.reduce((sum, r) => sum + (r.commitment_cents ?? 0), 0),
     }),
     [rows],
