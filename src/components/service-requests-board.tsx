@@ -74,6 +74,15 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
   const [declineReason, setDeclineReason] = useState("");
   const [activateDraft, setActivateDraft] = useState<any | null>(null);
 
+  const suggestRate = useServerFn(getServiceRateSuggestion);
+  const rateSuggestion = useQuery({
+    queryKey: ["service-rate-suggestion", quoteDraft?.clientId, quoteDraft?.serviceKey],
+    queryFn: () =>
+      suggestRate({ data: { clientId: quoteDraft.clientId, serviceKey: quoteDraft.serviceKey } }),
+    enabled: Boolean(quoteDraft?.clientId && quoteDraft?.serviceKey),
+    retry: false,
+  });
+
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["service-requests"] });
   const fail = (e: any) => toast.error(e?.message ?? "That didn't save.");
 
