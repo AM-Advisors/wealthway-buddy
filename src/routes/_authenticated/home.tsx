@@ -94,8 +94,11 @@ function RoleHome() {
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {data.name}</h1>
         <p className="text-sm text-muted-foreground">
-          Everything waiting on you today, grouped by what you do here.
+          Everything waiting on you today, grouped by what you do here. Harmonious provides
+          administrative, technology, onboarding, reporting, payment facilitation and recordkeeping
+          support within each client's active scope.
         </p>
+
         <div className="flex flex-wrap gap-2 pt-1">
           {hats.map((hat) => (
             <Badge key={hat} variant="secondary">
