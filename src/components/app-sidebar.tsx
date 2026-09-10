@@ -70,6 +70,7 @@ const managerItems: NavItem[] = [
 ];
 
 const operationsItems: NavItem[] = [
+  { title: "My clients", url: "/staff", icon: Users },
   { title: "Operations", url: "/ops", icon: ShieldCheck },
   { title: "Banking requests", url: "/ops/banking", icon: Landmark },
   { title: "EIN and SS-4", url: "/ops/ss4", icon: FileText },
