@@ -528,6 +528,11 @@ function FundsPage() {
                       Packet page
                     </Link>
                   </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/admin/fund-migration/$fundId" params={{ fundId: o.id }}>
+                      Transfer records
+                    </Link>
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => setEditing(toForm(o))}>
                     Edit fund
                   </Button>
