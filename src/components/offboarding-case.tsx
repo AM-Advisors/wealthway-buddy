@@ -441,8 +441,9 @@ export function OffboardingCase({ caseId }: { caseId: string }) {
         <CardHeader>
           <CardTitle>Close out</CardTitle>
           <CardDescription>
-            A termination closes once amounts are settled, the export delivery is recorded and the
-            retained-records list is confirmed.
+            A termination closes once amounts are settled, the export delivery is recorded, the
+            retained-records list is confirmed and client access is removed.
+
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
