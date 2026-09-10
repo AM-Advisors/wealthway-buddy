@@ -307,6 +307,19 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
 
     const rows: AuditEntry[] = [];
 
+    const plain = (value: unknown): string | null => {
+      if (value === null || value === undefined) return null;
+      if (typeof value === "string") return value || null;
+      if (typeof value === "number" || typeof value === "boolean") return String(value);
+      if (typeof value === "object") {
+        const entries = Object.entries(value as Record<string, unknown>)
+          .filter(([, v]) => v !== null && v !== undefined && typeof v !== "object")
+          .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`);
+        return entries.length ? entries.join(", ") : null;
+      }
+      return null;
+    };
+
     for (const k of (kyc.data ?? []) as any[]) {
       const w = who(k.application_id);
       rows.push({
@@ -317,8 +330,8 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         category: "Identity verification",
         summary: `Identity check with ${k.provider ?? "provider"}`,
         detail: joinDetail([
-          k.decision ? `Provider decision: ${k.decision}` : null,
-          k.result ? `Result: ${typeof k.result === "string" ? k.result : "recorded"}` : null,
+          plain(k.decision) ? `Provider decision: ${plain(k.decision)}` : null,
+          plain(k.result) ? `Result: ${plain(k.result)}` : null,
           k.completed_at ? `Completed ${dateOnly(k.completed_at)}` : null,
           k.expired_at ? `Expires ${dateOnly(k.expired_at)}` : null,
         ]),
@@ -326,6 +339,36 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         status: k.status ?? null,
       });
     }
+
+    const AREA_LABEL: Record<string, string> = {
+      kyc: "Identity verification",
+      aml: "Screening",
+      accreditation: "Accreditation",
+      documents: "Documents",
+    };
+
+    for (const d of (decisions.data ?? []) as any[]) {
+      const w = who(d.application_id ?? "");
+      const meta = (d.metadata ?? {}) as Record<string, any>;
+      const label = AREA_LABEL[String(d.area)] ?? "Review";
+      rows.push({
+        id: `review-decision-${d.id}`,
+        at: d.created_at,
+        actor: personName.get(d.actor_id) ?? null,
+        fundName: w.fund ?? (d.offering_id ? (fundName.get(d.offering_id) ?? null) : null),
+        category: `${label} decision`,
+        summary: `${label} changed from ${meta.previous ?? "not set"} to ${meta.next ?? d.outcome ?? "—"}`,
+        detail: joinDetail([
+          w.person ? `Investor ${w.person}` : null,
+          `Previous value: ${meta.previous ?? "not set"}`,
+          `New value: ${meta.next ?? d.outcome ?? "—"}`,
+          d.note,
+        ]),
+        amountCents: null,
+        status: (meta.next ?? d.outcome ?? null) as string | null,
+      });
+    }
+
 
     for (const a of (aml.data ?? []) as any[]) {
       const w = who(a.application_id);
