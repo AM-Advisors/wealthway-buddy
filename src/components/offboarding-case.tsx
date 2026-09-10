@@ -68,6 +68,8 @@ export function OffboardingCase({ caseId }: { caseId: string }) {
   const recordExport = useServerFn(recordExportDelivery);
   const runExport = useServerFn(exportClientData);
   const close = useServerFn(closeOffboardingCase);
+  const revoke = useServerFn(removeClientAccess);
+
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["offboarding-case", caseId],
