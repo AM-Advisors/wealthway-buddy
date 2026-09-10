@@ -116,19 +116,46 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
 
     const range = (q: any) => (since ? q.gte("created_at", since) : q);
 
-    const [requests, confirmations, instructions, approvals, payments] = await Promise.all([
-      range(context.supabase.from("wire_requests").select("*")).limit(500),
-      range(context.supabase.from("wire_confirmations").select("*")).limit(500),
-      range(context.supabase.from("payment_instructions").select("*")).limit(500),
-      range(context.supabase.from("payment_approvals").select("*")).limit(500),
-      range(context.supabase.from("payments").select("*")).limit(500),
-    ]);
+    const [requests, confirmations, instructions, approvals, payments, wireDecisions] =
+      await Promise.all([
+        range(context.supabase.from("wire_requests").select("*")).limit(500),
+        range(context.supabase.from("wire_confirmations").select("*")).limit(500),
+        range(context.supabase.from("payment_instructions").select("*")).limit(500),
+        range(context.supabase.from("payment_approvals").select("*")).limit(500),
+        range(context.supabase.from("payments").select("*")).limit(500),
+        range(
+          context.supabase
+            .from("reviewer_activity")
+            .select("*")
+            .in("action", ["wire_request_decision", "wire_decision"]),
+        ).limit(500),
+      ]);
+
+    const decisionRows: AuditEntry[] = ((wireDecisions.data ?? []) as any[]).map((d) => {
+      const meta = (d.metadata ?? {}) as Record<string, any>;
+      const fund = d.offering_id ?? app.get(d.application_id ?? "")?.offering_id ?? null;
+      return {
+        id: `wire-decision-${d.id}`,
+        at: d.created_at,
+        actor: personName.get(d.actor_id) ?? null,
+        fundName: fund ? (fundName.get(fund) ?? null) : null,
+        category: "Wire decision",
+        summary: d.summary ?? "Wire decision recorded",
+        detail: joinDetail([
+          `Previous value: ${meta['previous'] ?? "not set"}`,
+          `New value: ${meta['next'] ?? d.outcome ?? "—"}`,
+          d.note,
+        ]),
+        amountCents: (meta['amount_cents'] as number) ?? null,
+        status: (meta['next'] ?? d.outcome ?? null) as string | null,
+      };
+    });
 
     const instructionFund = new Map<string, string | null>(
       ((instructions.data ?? []) as any[]).map((i) => [i.id, i.offering_id ?? null]),
     );
 
-    const rows: AuditEntry[] = [];
+    const rows: AuditEntry[] = [...decisionRows];
 
     for (const r of (requests.data ?? []) as any[]) {
       const fund = r.offering_id ?? app.get(r.application_id)?.offering_id ?? null;
@@ -284,10 +311,17 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
     const { fundName, personName, app } = await lookups(context);
     const range = (q: any) => (since ? q.gte("created_at", since) : q);
 
-    const [kyc, aml, accreditation] = await Promise.all([
+    const [kyc, aml, accreditation, decisions] = await Promise.all([
       range(context.supabase.from("kyc_verifications").select("*")).limit(500),
       range(context.supabase.from("aml_screenings").select("*")).limit(500),
       range(context.supabase.from("accreditation_records").select("*")).limit(500),
+      range(
+        context.supabase
+          .from("reviewer_activity")
+          .select("*")
+          .eq("action", "application_decision")
+          .in("area", ["kyc", "aml", "accreditation", "documents"]),
+      ).limit(500),
     ]);
 
     const who = (applicationId: string) => {
@@ -300,6 +334,19 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
 
     const rows: AuditEntry[] = [];
 
+    const plain = (value: unknown): string | null => {
+      if (value === null || value === undefined) return null;
+      if (typeof value === "string") return value || null;
+      if (typeof value === "number" || typeof value === "boolean") return String(value);
+      if (typeof value === "object") {
+        const entries = Object.entries(value as Record<string, unknown>)
+          .filter(([, v]) => v !== null && v !== undefined && typeof v !== "object")
+          .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`);
+        return entries.length ? entries.join(", ") : null;
+      }
+      return null;
+    };
+
     for (const k of (kyc.data ?? []) as any[]) {
       const w = who(k.application_id);
       rows.push({
@@ -310,8 +357,8 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         category: "Identity verification",
         summary: `Identity check with ${k.provider ?? "provider"}`,
         detail: joinDetail([
-          k.decision ? `Provider decision: ${k.decision}` : null,
-          k.result ? `Result: ${typeof k.result === "string" ? k.result : "recorded"}` : null,
+          plain(k.decision) ? `Provider decision: ${plain(k.decision)}` : null,
+          plain(k.result) ? `Result: ${plain(k.result)}` : null,
           k.completed_at ? `Completed ${dateOnly(k.completed_at)}` : null,
           k.expired_at ? `Expires ${dateOnly(k.expired_at)}` : null,
         ]),
@@ -319,6 +366,36 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         status: k.status ?? null,
       });
     }
+
+    const AREA_LABEL: Record<string, string> = {
+      kyc: "Identity verification",
+      aml: "Screening",
+      accreditation: "Accreditation",
+      documents: "Documents",
+    };
+
+    for (const d of (decisions.data ?? []) as any[]) {
+      const w = who(d.application_id ?? "");
+      const meta = (d.metadata ?? {}) as Record<string, any>;
+      const label = AREA_LABEL[String(d.area)] ?? "Review";
+      rows.push({
+        id: `review-decision-${d.id}`,
+        at: d.created_at,
+        actor: personName.get(d.actor_id) ?? null,
+        fundName: w.fund ?? (d.offering_id ? (fundName.get(d.offering_id) ?? null) : null),
+        category: `${label} decision`,
+        summary: `${label} changed from ${meta['previous'] ?? "not set"} to ${meta['next'] ?? d.outcome ?? "—"}`,
+        detail: joinDetail([
+          w.person ? `Investor ${w.person}` : null,
+          `Previous value: ${meta['previous'] ?? "not set"}`,
+          `New value: ${meta['next'] ?? d.outcome ?? "—"}`,
+          d.note,
+        ]),
+        amountCents: null,
+        status: (meta['next'] ?? d.outcome ?? null) as string | null,
+      });
+    }
+
 
     for (const a of (aml.data ?? []) as any[]) {
       const w = who(a.application_id);

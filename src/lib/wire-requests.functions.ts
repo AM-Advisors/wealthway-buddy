@@ -191,6 +191,12 @@ export const decideWireRequest = createServerFn({ method: "POST" })
     const { isAdmin } = await roles(supabase, userId);
     if (!isAdmin) throw new Error("Only an admin can decide wire requests.");
 
+    const { data: before } = await supabase
+      .from("wire_requests")
+      .select("status, amount_cents, offering_id, application_id")
+      .eq("id", data.id)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("wire_requests")
       .update({
@@ -201,5 +207,23 @@ export const decideWireRequest = createServerFn({ method: "POST" })
       })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    const activity = await import("@/lib/reviewer-activity.server");
+    await activity.logReviewerActivity(supabase, {
+      actorId: userId,
+      applicationId: (before as any)?.application_id ?? null,
+      offeringId: (before as any)?.offering_id ?? null,
+      action: "wire_request_decision",
+      area: "wire",
+      outcome: data.status,
+      summary: `Wire request changed from ${(before as any)?.status ?? "not set"} to ${data.status}`,
+      note: data.review_note?.trim() || null,
+      metadata: {
+        field: "status",
+        previous: (before as any)?.status ?? null,
+        next: data.status,
+        amount_cents: (before as any)?.amount_cents ?? null,
+      },
+    });
     return { ok: true };
   });

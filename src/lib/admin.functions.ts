@@ -229,6 +229,12 @@ export const decideApplication = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
 
     const column = `${data.area}_status` as const;
+    const { data: before } = await supabase
+      .from("investor_applications")
+      .select(column)
+      .eq("id", data.applicationId)
+      .maybeSingle();
+    const previousStatus = (before as any)?.[column] ?? null;
     const { error } = await supabase
       .from("investor_applications")
       .update({ [column]: data.decision, updated_at: now } as any)
@@ -273,6 +279,7 @@ export const decideApplication = createServerFn({ method: "POST" })
       outcome: data.decision === "review" ? "delayed" : data.decision,
       summary: `${data.area} marked ${data.decision === "review" ? "needs more review" : data.decision}`,
       note: data.notes || null,
+      metadata: { field: column, previous: previousStatus, next: data.decision },
     });
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
