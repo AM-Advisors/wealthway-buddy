@@ -475,13 +475,15 @@ export const setEntitlement = createServerFn({ method: "POST" })
       );
     }
 
-    const { data: existing } = await context.supabase
+    const existingQuery = context.supabase
       .from("service_entitlements")
-      .select("*")
+      .select("id, status")
       .eq("client_id", data.client_id)
-      .eq("service_key", data.service_key)
-      .is("offering_id", data.offering_id ? undefined : (null as any))
-      .maybeSingle();
+      .eq("service_key", data.service_key);
+    const { data: existing } = data.offering_id
+      ? await existingQuery.eq("offering_id", data.offering_id).maybeSingle()
+      : await existingQuery.is("offering_id", null).maybeSingle();
+
 
     const row = {
       client_id: data.client_id,
