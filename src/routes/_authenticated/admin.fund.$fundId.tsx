@@ -15,7 +15,11 @@ import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
 import { FundComplianceCard } from "@/components/fund-compliance-card";
-import { ScopeSection, ScopeSummary } from "@/components/fund-scope-section";
+import {
+  ScopeSection,
+  ScopeServicesPanel,
+  ScopeSummary,
+} from "@/components/fund-scope-section";
 import { useFundScope } from "@/lib/fund-scope";
 import { regTypeLabel } from "@/lib/reg-types";
 
@@ -188,8 +192,9 @@ function FundPage() {
         <Stat label="Committed" value={money(stats.committedCents)} note={`${money(stats.settledCents)} settled`} />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
         <ScopeSummary scope={scope} />
+        <ScopeServicesPanel scope={scope} offeringId={fundId} />
       </div>
 
       <div className="mt-8">

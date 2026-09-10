@@ -10,8 +10,12 @@ import { money, prettyStatus, statusTone } from "@/lib/status";
 import { regTypeLabel } from "@/lib/reg-types";
 import { FundComplianceCard } from "@/components/fund-compliance-card";
 import { FundAgreementCard } from "@/components/fund-agreement-card";
-import { ScopeSection, ScopeSummary } from "@/components/fund-scope-section";
-import { useFundScope } from "@/lib/fund-scope";
+import {
+  ScopeSection,
+  ScopeServicesPanel,
+  ScopeSummary,
+} from "@/components/fund-scope-section";
+import { SETUP_STEP_SECTIONS, sectionState, useFundScope } from "@/lib/fund-scope";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -167,8 +171,9 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
         <ScopeSummary scope={scope} />
+        <ScopeServicesPanel scope={scope} offeringId={offeringId} />
       </div>
 
       <Card className="mt-8">
@@ -187,28 +192,45 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          {progress.steps.map((step: any) => (
-            <div
-              key={step.key}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
-            >
-              <div className="min-w-0">
-                <p className="text-sm">
-                  {step.done ? "✓ " : "• "}
-                  {step.label}
-                </p>
-                <p className="text-xs text-muted-foreground">{step.detail}</p>
+          {progress.steps.map((step: any) => {
+            const section = SETUP_STEP_SECTIONS[step.key as string];
+            const state = section ? sectionState(scope, section) : "open";
+            const blocked = state === "blocked";
+            return (
+              <div
+                key={step.key}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm">
+                    {step.done ? "✓ " : "• "}
+                    {step.label}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {blocked
+                      ? "This service is not currently included in your active scope."
+                      : step.detail}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {blocked ? <Badge variant="outline">Not in scope</Badge> : null}
+                  {state === "unknown" ? (
+                    <Badge variant="outline">Scope not recorded</Badge>
+                  ) : null}
+                  {!blocked ? (
+                    <>
+                      <Badge variant={step.done ? "default" : "outline"}>
+                        {step.done ? "Done" : "To do"}
+                      </Badge>
+                      <Button asChild size="sm" variant="outline">
+                        <Link to={step.href}>{step.done ? "Review" : "Finish"}</Link>
+                      </Button>
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={step.done ? "default" : "outline"}>
-                  {step.done ? "Done" : "To do"}
-                </Badge>
-                <Button asChild size="sm" variant="outline">
-                  <Link to={step.href}>{step.done ? "Review" : "Finish"}</Link>
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
 
