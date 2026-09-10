@@ -804,6 +804,18 @@ export const activateServiceRequest = createServerFn({ method: "POST" })
     if (request.status !== "signed") {
       throw new Error("The client needs to sign the amendment before this service can go live.");
     }
+    const { data: coveringSow } = await context.supabase
+      .from("client_sows")
+      .select("title, approval_status")
+      .eq("id", data.sowId)
+      .maybeSingle();
+    const coverApproval = ((coveringSow as any)?.approval_status as string) ?? "pending";
+    if (coverApproval !== "approved") {
+      throw new Error(
+        `${(coveringSow as any)?.title ?? "That statement of work"} is not approved yet. An administrator has to approve it before services can be activated under it.`,
+      );
+    }
+
     const effectiveDate = data.effectiveDate || request.effective_date || new Date().toISOString().slice(0, 10);
 
     const scope = {
