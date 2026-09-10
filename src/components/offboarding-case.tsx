@@ -22,10 +22,12 @@ import {
   exportClientData,
   getOffboardingCase,
   recordExportDelivery,
+  removeClientAccess,
   saveSettlementLine,
   seedSettlementLines,
   updateOffboardingCase,
 } from "@/lib/offboarding.functions";
+
 
 const STAGE_OPTIONS = [
   { value: "open", label: "Notice received" },
