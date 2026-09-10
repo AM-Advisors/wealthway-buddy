@@ -284,10 +284,17 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
     const { fundName, personName, app } = await lookups(context);
     const range = (q: any) => (since ? q.gte("created_at", since) : q);
 
-    const [kyc, aml, accreditation] = await Promise.all([
+    const [kyc, aml, accreditation, decisions] = await Promise.all([
       range(context.supabase.from("kyc_verifications").select("*")).limit(500),
       range(context.supabase.from("aml_screenings").select("*")).limit(500),
       range(context.supabase.from("accreditation_records").select("*")).limit(500),
+      range(
+        context.supabase
+          .from("reviewer_activity")
+          .select("*")
+          .eq("action", "application_decision")
+          .in("area", ["kyc", "aml", "accreditation", "documents"]),
+      ).limit(500),
     ]);
 
     const who = (applicationId: string) => {
