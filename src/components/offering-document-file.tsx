@@ -129,7 +129,11 @@ export function OfferingDocumentFile({
           )}
         </>
       ) : (
-        canEdit && <span className="text-muted-foreground">No file uploaded yet.</span>
+        canEdit && (
+          <span className="text-muted-foreground">
+            No file uploaded yet. Drag a PDF or Word file here, or browse.
+          </span>
+        )
       )}
       {canEdit && (
         <>
