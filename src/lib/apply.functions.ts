@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { ensureActivePersona } from "@/lib/active-application";
+import { assertFundConditions } from "@/lib/fund-conditions.functions";
 
 const INVESTOR_TYPES = ["individual", "joint", "entity", "trust", "ira"] as const;
 
@@ -145,6 +146,9 @@ export const applyToFund = createServerFn({ method: "POST" })
     if (offeringError) throw new Error(offeringError.message);
     if (!offering) throw new Error("That fund is not available.");
     if (!offering.is_open) throw new Error("That fund is not accepting new investors right now.");
+
+    // The conditions in the client's statement of work gate new applications.
+    await assertFundConditions(supabase, data.offering_id, "application");
 
     const minimum = Number(offering.min_investment_cents ?? 0);
     if (minimum > 0 && commitmentCents < minimum) {

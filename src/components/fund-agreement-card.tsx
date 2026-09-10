@@ -12,11 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FundConditionsPanel } from "@/components/fund-conditions-panel";
 import { HoldBanner } from "@/components/hold-banner";
 import { ResponsibilityMatrix } from "@/components/responsibility-matrix";
 import { RequestServiceCard, statusLabel, statusTone } from "@/components/service-gate";
 import { getFundScope, SERVICE_CATEGORIES } from "@/lib/contracts.functions";
-import { checkFundEligibility } from "@/lib/eligibility.functions";
 import { getResponsibilities, setResponsibilityStatus } from "@/lib/responsibilities.functions";
 
 const RESPONSIBILITY_STATUSES = [
@@ -29,7 +29,6 @@ const RESPONSIBILITY_STATUSES = [
 /** Scope, conditions, client to-do list and any holds for one fund. */
 export function FundAgreementCard({ offeringId }: { offeringId: string }) {
   const loadScope = useServerFn(getFundScope);
-  const loadEligibility = useServerFn(checkFundEligibility);
   const loadResponsibilities = useServerFn(getResponsibilities);
   const save = useServerFn(setResponsibilityStatus);
   const queryClient = useQueryClient();
@@ -37,11 +36,6 @@ export function FundAgreementCard({ offeringId }: { offeringId: string }) {
   const scope = useQuery({
     queryKey: ["fund-scope", offeringId],
     queryFn: () => loadScope({ data: { offeringId } }),
-    retry: false,
-  });
-  const eligibility = useQuery({
-    queryKey: ["fund-eligibility", offeringId],
-    queryFn: () => loadEligibility({ data: { offeringId } }),
     retry: false,
   });
   const responsibilities = useQuery({
@@ -145,55 +139,7 @@ export function FundAgreementCard({ offeringId }: { offeringId: string }) {
           </TabsContent>
 
           <TabsContent value="conditions" className="space-y-2 pt-4">
-            {eligibility.isLoading ? (
-              <p className="text-sm text-muted-foreground">Checking…</p>
-            ) : eligibility.data ? (
-              <>
-                {eligibility.data.blockers > 0 ? (
-                  <p className="text-sm">
-                    {eligibility.data.blockers} condition
-                    {eligibility.data.blockers === 1 ? "" : "s"} need attention before Harmonious can
-                    continue.
-                  </p>
-                ) : null}
-                {eligibility.data.findings.map((finding: any) => (
-                  <div
-                    key={finding.key}
-                    className="flex flex-wrap items-start gap-2 rounded-md border p-3"
-                  >
-                    <div className="min-w-56">
-                      <p className="text-sm font-medium">{finding.label}</p>
-                      <p className="text-xs text-muted-foreground">{finding.description}</p>
-                      {finding.sourceReference ? (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {finding.sourceReference}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="ml-auto text-right">
-                      <Badge
-                        variant={
-                          finding.state === "pass"
-                            ? "default"
-                            : finding.state === "attention"
-                              ? "destructive"
-                              : "outline"
-                        }
-                      >
-                        {finding.state === "pass"
-                          ? "Met"
-                          : finding.state === "attention"
-                            ? "Needs attention"
-                            : "Confirm"}
-                      </Badge>
-                      <p className="mt-1 max-w-64 text-xs text-muted-foreground">{finding.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Conditions aren't available.</p>
-            )}
+            <FundConditionsPanel offeringId={offeringId} />
           </TabsContent>
 
           <TabsContent value="yours" className="space-y-2 pt-4">

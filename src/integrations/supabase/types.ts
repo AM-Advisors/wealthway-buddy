@@ -2284,6 +2284,47 @@ export type Database = {
           },
         ]
       }
+      fund_condition_clearances: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          offering_id: string
+          reason: string | null
+          rule_key: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          offering_id: string
+          reason?: string | null
+          rule_key: string
+          snapshot?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          offering_id?: string
+          reason?: string | null
+          rule_key?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_condition_clearances_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_distributions: {
         Row: {
           amount_cents: number
@@ -5319,6 +5360,7 @@ export type Database = {
         Args: { _document_id: string }
         Returns: boolean
       }
+      fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
       get_bank_access_token: {
         Args: { p_offering_id: string }
         Returns: string
