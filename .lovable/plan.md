@@ -45,7 +45,7 @@ Every stage change is written to the contract audit trail with who, when and the
 
 ## Rules built in
 
-- Only legal, compliance, finance, client success, executive or admin authority can review, quote,
+- Only legal, finance, client success, CEO, CRO or admin authority can review, quote,
   decline or activate. Any staff member can view the queue.
 - Clients can only sign their own request, only while it is quoted, and only the acceptance fields —
   they cannot change the fee or activate anything.
