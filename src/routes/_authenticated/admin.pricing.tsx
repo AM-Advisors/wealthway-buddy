@@ -115,6 +115,9 @@ function PricingConsole() {
             canManage={data.canManage}
           />
         </TabsContent>
+        <TabsContent value="approvals" className="pt-4">
+          <SowApprovalsBoard />
+        </TabsContent>
         <TabsContent value="fundfees" className="pt-4">
           <FeeSourcesBoard />
         </TabsContent>
