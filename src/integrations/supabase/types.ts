@@ -4888,6 +4888,7 @@ export type Database = {
           signed_ip: string | null
           signer_name: string | null
           signer_title: string | null
+          sow_id: string | null
           status: string
           updated_at: string
           withdrawn_at: string | null
@@ -4916,6 +4917,7 @@ export type Database = {
           signed_ip?: string | null
           signer_name?: string | null
           signer_title?: string | null
+          sow_id?: string | null
           status?: string
           updated_at?: string
           withdrawn_at?: string | null
@@ -4944,6 +4946,7 @@ export type Database = {
           signed_ip?: string | null
           signer_name?: string | null
           signer_title?: string | null
+          sow_id?: string | null
           status?: string
           updated_at?: string
           withdrawn_at?: string | null
@@ -4968,6 +4971,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
             referencedColumns: ["id"]
           },
         ]
