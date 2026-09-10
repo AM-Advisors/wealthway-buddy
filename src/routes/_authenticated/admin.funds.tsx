@@ -22,6 +22,7 @@ import {
 } from "@/lib/reg-types";
 import { downloadOfferingDocument, downloadOfferingPacket } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
+import { FundFeePanel } from "@/components/fund-fee-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -167,6 +168,7 @@ function FundsPage() {
   };
 
   const [packetBusy, setPacketBusy] = useState<string | null>(null);
+  const [feesFor, setFeesFor] = useState<string | null>(null);
   const getPacket = useServerFn(downloadOfferingPacket);
 
   const downloadPacket = async (offeringId: string) => {
@@ -533,11 +535,26 @@ function FundsPage() {
                       Transfer records
                     </Link>
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setFeesFor(feesFor === o.id ? null : o.id)}
+                  >
+                    {feesFor === o.id ? "Hide fees" : "Fees & rates"}
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => setEditing(toForm(o))}>
                     Edit fund
                   </Button>
                 </div>
               </div>
+
+              {feesFor === o.id ? (
+                <div className="space-y-2 border-t pt-4">
+                  <p className="text-sm font-medium">Fees &amp; rates</p>
+                  <FundFeePanel offeringId={o.id} />
+                </div>
+              ) : null}
+
 
               <div className="space-y-2 border-t pt-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">

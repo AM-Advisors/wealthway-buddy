@@ -24,6 +24,7 @@ import {
   quoteServiceRequest,
   startServiceReview,
 } from "@/lib/contracts.functions";
+import { getServiceRateSuggestion } from "@/lib/fund-fees.functions";
 
 const STAGES: { value: string; label: string }[] = [
   { value: "requested", label: "Requested" },
@@ -73,6 +74,15 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
   const [declineDraft, setDeclineDraft] = useState<any | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [activateDraft, setActivateDraft] = useState<any | null>(null);
+
+  const suggestRate = useServerFn(getServiceRateSuggestion);
+  const rateSuggestion = useQuery({
+    queryKey: ["service-rate-suggestion", quoteDraft?.clientId, quoteDraft?.serviceKey],
+    queryFn: () =>
+      suggestRate({ data: { clientId: quoteDraft.clientId, serviceKey: quoteDraft.serviceKey } }),
+    enabled: Boolean(quoteDraft?.clientId && quoteDraft?.serviceKey),
+    retry: false,
+  });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["service-requests"] });
   const fail = (e: any) => toast.error(e?.message ?? "That didn't save.");
@@ -264,6 +274,11 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                             effectiveDate: r.effective_date ?? "",
                             amendmentTerms: r.amendment_terms ?? "",
                             note: "",
+                            clientId: r.client_id,
+                            serviceKey: r.service_key,
+                            feeSource: r.fee_source ?? "custom",
+                            feeRateId: r.fee_rate_id ?? null,
+                            feeOverrideReason: r.fee_override_reason ?? "",
                           })
                         }
                       >
@@ -304,15 +319,78 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
+            <div className="md:col-span-2 rounded-md border bg-muted/40 p-3 text-sm">
+              {rateSuggestion.isLoading ? (
+                <span className="text-muted-foreground">Checking the rates on file…</span>
+              ) : rateSuggestion.data?.cents != null ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span>
+                    On file: <strong>{money(rateSuggestion.data.cents)}</strong> —{" "}
+                    {rateSuggestion.data.source === "client_rate"
+                      ? "this client's agreed rate"
+                      : "the standard rate card"}{" "}
+                    ({rateSuggestion.data.label})
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setQuoteDraft({
+                        ...quoteDraft,
+                        fee: String((rateSuggestion.data!.cents as number) / 100),
+                        pricingModel:
+                          rateSuggestion.data!.pricingModel ?? quoteDraft.pricingModel,
+                        feeSource: rateSuggestion.data!.source,
+                        feeRateId: rateSuggestion.data!.rateId,
+                        feeOverrideReason: "",
+                      })
+                    }
+                  >
+                    Use this rate
+                  </Button>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">
+                  No rate on file for this service — enter a fee and say why below.
+                </span>
+              )}
+            </div>
             <div>
               <Label>Fee (USD)</Label>
               <Input
                 inputMode="decimal"
                 value={quoteDraft.fee}
-                onChange={(e) => setQuoteDraft({ ...quoteDraft, fee: e.target.value })}
+                onChange={(e) =>
+                  setQuoteDraft({
+                    ...quoteDraft,
+                    fee: e.target.value,
+                    feeSource: "custom",
+                    feeRateId: null,
+                  })
+                }
                 placeholder="2500"
               />
             </div>
+            {quoteDraft.feeSource === "custom" ? (
+              <div>
+                <Label>Why this fee isn't the rate on file</Label>
+                <Input
+                  value={quoteDraft.feeOverrideReason}
+                  onChange={(e) =>
+                    setQuoteDraft({ ...quoteDraft, feeOverrideReason: e.target.value })
+                  }
+                  placeholder="Agreed with the client on 12 March"
+                />
+              </div>
+            ) : (
+              <div className="self-end text-sm text-muted-foreground">
+                Taken from{" "}
+                {quoteDraft.feeSource === "client_rate"
+                  ? "the client's agreed rates"
+                  : "the standard rate card"}
+                .
+              </div>
+            )}
             <div>
               <Label>Pricing basis</Label>
               <Select
@@ -386,6 +464,9 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                     effectiveDate: quoteDraft.effectiveDate,
                     amendmentTerms: quoteDraft.amendmentTerms,
                     note: quoteDraft.note,
+                    feeSource: quoteDraft.feeSource,
+                    feeRateId: quoteDraft.feeRateId,
+                    feeOverrideReason: quoteDraft.feeOverrideReason,
                   })
                 }
               >

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { ClientPricingBoard } from "@/components/client-pricing-board";
+import { FeeSourcesBoard } from "@/components/fee-sources-board";
 import { HoldsBoard } from "@/components/holds-board";
 import { OffboardingBoard } from "@/components/offboarding-board";
 import { PolicyAcceptancesBoard, PolicyDocumentsBoard } from "@/components/policy-admin";
@@ -69,6 +70,7 @@ function PricingConsole() {
           <TabsTrigger value="catalog">Standard rate card</TabsTrigger>
           <TabsTrigger value="clients">Client rates</TabsTrigger>
           <TabsTrigger value="sows">Statements of work</TabsTrigger>
+          <TabsTrigger value="fundfees">Fund fees</TabsTrigger>
           <TabsTrigger value="holds">Holds</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
           <TabsTrigger value="requests">Service requests</TabsTrigger>
@@ -99,6 +101,9 @@ function PricingConsole() {
             funds={data.funds}
             canManage={data.canManage}
           />
+        </TabsContent>
+        <TabsContent value="fundfees" className="pt-4">
+          <FeeSourcesBoard />
         </TabsContent>
         <TabsContent value="holds" className="pt-4">
           <HoldsBoard clients={data.clients} funds={data.funds} canManage={data.canManage} />

@@ -695,6 +695,9 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
         effectiveDate: z.string().optional().or(z.literal("")),
         amendmentTerms: z.string().trim().max(8000).optional().or(z.literal("")),
         amendmentPath: z.string().max(500).optional().or(z.literal("")),
+        feeSource: z.enum(["client_rate", "standard", "custom"]).optional(),
+        feeRateId: z.string().uuid().nullable().optional(),
+        feeOverrideReason: z.string().trim().max(500).optional().or(z.literal("")),
         note: z.string().trim().max(2000).optional().or(z.literal("")),
       })
       .parse(d),
@@ -708,6 +711,10 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
     if (data.feeCents === null || data.feeCents === undefined) {
       throw new Error("Enter the proposed fee first.");
     }
+    const feeSource = data.feeSource ?? "custom";
+    if (feeSource === "custom" && !(data.feeOverrideReason && data.feeOverrideReason.length >= 3)) {
+      throw new Error("Say why this quote uses a fee that isn't on the rate card.");
+    }
     const { error } = await context.supabase
       .from("service_requests")
       .update({
@@ -720,6 +727,9 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
         amendment_terms: data.amendmentTerms || null,
         amendment_path: data.amendmentPath || null,
         sow_id: data.sowId ?? request.sow_id ?? null,
+        fee_source: feeSource,
+        fee_rate_id: feeSource === "client_rate" ? (data.feeRateId ?? null) : null,
+        fee_override_reason: feeSource === "custom" ? data.feeOverrideReason || null : null,
       } as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
