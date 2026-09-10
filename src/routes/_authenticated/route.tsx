@@ -37,9 +37,11 @@ function AuthenticatedLayout() {
             <SidebarTrigger />
           </header>
           <main className="min-w-0 flex-1">
-            <PortalGate onSignOut={signOut}>
-              <Outlet />
-            </PortalGate>
+            <PolicyGate onSignOut={signOut}>
+              <PortalGate onSignOut={signOut}>
+                <Outlet />
+              </PortalGate>
+            </PolicyGate>
           </main>
         </div>
       </div>
