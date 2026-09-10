@@ -73,6 +73,8 @@ function PricingConsole() {
           <TabsTrigger value="providers">Providers</TabsTrigger>
           <TabsTrigger value="requests">Service requests</TabsTrigger>
           <TabsTrigger value="termination">Termination</TabsTrigger>
+          <TabsTrigger value="policies">Policies</TabsTrigger>
+          <TabsTrigger value="acceptances">Acceptances</TabsTrigger>
         </TabsList>
         <TabsContent value="catalog" className="pt-4">
           <PricingCatalogBoard
