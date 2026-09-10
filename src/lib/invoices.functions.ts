@@ -356,6 +356,54 @@ export const deleteInvoiceLine = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Compare every billed line with the client's contracted rate card. */
+async function checkRates(context: any, invoiceId: string, clientId: string) {
+  const [{ data: lines }, { data: pricing }] = await Promise.all([
+    context.supabase.from("invoice_lines").select("*").eq("invoice_id", invoiceId),
+    context.supabase.from("client_pricing").select("*").eq("client_id", clientId),
+  ]);
+  const rateById = new Map(((pricing ?? []) as any[]).map((p) => [p.id, p]));
+  const rateByKey = new Map(((pricing ?? []) as any[]).map((p) => [String(p.service_key), p]));
+
+  const items = ((lines ?? []) as any[])
+    .filter((l) => l.source !== "expense")
+    .map((l) => {
+      const rate = l.pricing_id
+        ? rateById.get(l.pricing_id)
+        : l.service_key
+          ? rateByKey.get(String(l.service_key))
+          : null;
+      const contracted = rate ? Number(rate.contracted_cents ?? rate.standard_cents ?? 0) : null;
+      const billed = Number(l.amount_cents ?? 0) ;
+      const expected = contracted === null ? null : contracted * Number(l.quantity ?? 1);
+      return {
+        label: l.label as string,
+        billedCents: billed,
+        contractedCents: expected,
+        varianceCents: expected === null ? billed : billed - expected,
+        offRateCard: expected === null,
+      };
+    });
+
+  const variance = items.reduce((s, i) => s + Math.max(0, i.varianceCents), 0);
+  return { items, varianceCents: variance };
+}
+
+/** Everything that must be true before money is asked for or moved. */
+export const reviewInvoiceRates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await requireStaff(context);
+    const { data: invoice } = await context.supabase
+      .from("invoices")
+      .select("id, client_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!invoice) throw new Error("That invoice isn't available.");
+    return await checkRates(context, data.id, (invoice as any).client_id);
+  });
+
 /** Issue a draft: stamp the number, the issue date and the payment due date. */
 export const issueInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -365,6 +413,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         issueDate: z.string().min(4).max(20),
         netDays: z.number().int().min(0).max(180).default(30),
+        overrideReason: z.string().max(500).optional().or(z.literal("")),
       })
       .parse(d),
   )
@@ -380,6 +429,14 @@ export const issueInvoice = createServerFn({ method: "POST" })
 
     const total = await recalcTotal(context, data.id);
     if (total <= 0) throw new Error("An invoice needs at least one payable line before it is issued.");
+
+    const rates = await checkRates(context, data.id, (invoice as any).client_id);
+    if (rates.varianceCents > 0 && !data.overrideReason) {
+      throw new Error(
+        "This invoice bills above the client's contracted rate. Record the written authorisation for the difference before issuing it.",
+      );
+    }
+
 
     const year = data.issueDate.slice(0, 4);
     const { count } = await context.supabase
