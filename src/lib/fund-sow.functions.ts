@@ -117,7 +117,7 @@ export const getFundAgreement = createServerFn({ method: "GET" })
 
     const { data: sowRow } = await context.supabase
       .from("client_sows")
-      .select("id, client_id, title, sow_type, status, signed_by, signed_on")
+      .select("id, client_id, title, sow_type, status, signed_by, signed_on, approval_status")
       .eq("offering_id", data.offeringId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -135,7 +135,13 @@ export const getFundAgreement = createServerFn({ method: "GET" })
     }
 
     const sow = sowRow as any;
-    const signed = Boolean(sow) && sow.status === "active" && Boolean(sow.signed_on) && Boolean(sow.signed_by);
+    const approvalStatus = (sow?.approval_status as string) ?? "pending";
+    const signed =
+      Boolean(sow) &&
+      sow.status === "active" &&
+      Boolean(sow.signed_on) &&
+      Boolean(sow.signed_by) &&
+      approvalStatus === "approved";
 
     return {
       canSee: await isStaff(context).catch(() => false),
@@ -148,6 +154,7 @@ export const getFundAgreement = createServerFn({ method: "GET" })
             title: sow.title as string,
             sowType: sow.sow_type as string,
             status: sow.status as string,
+            approvalStatus,
             signedBy: (sow.signed_by as string) ?? null,
             signedOn: (sow.signed_on as string) ?? null,
           }
