@@ -92,14 +92,14 @@ export const inviteStaff = createServerFn({ method: "POST" })
       .from("staff_invitations")
       .select("id")
       .eq("email", email)
-      .eq("role", data.role)
+      .eq("role", data.role as any)
       .eq("status", "pending")
       .maybeSingle();
     if (existing) throw new Error("That person already has a pending invitation for this role.");
 
     const { error } = await context.supabase.from("staff_invitations").insert({
       email,
-      role: data.role,
+      role: data.role as any,
       invited_name: data.name || null,
       invited_by: who.userId,
     });
