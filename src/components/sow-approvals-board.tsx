@@ -24,6 +24,13 @@ type Row = {
   approvedAt: string | null;
   approvedByName: string | null;
   signed: boolean;
+  clientStatus: "pending" | "signed" | "sent_back";
+  clientSignatureName: string | null;
+  clientSignatureTitle: string | null;
+  clientSignedAt: string | null;
+  clientSentBackReason: string | null;
+  clientSentBackAt: string | null;
+  hasDocument: boolean;
 };
 
 function formatDate(value: string | null) {
