@@ -1,0 +1,16 @@
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'legal';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'compliance';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'fund_administration';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'tax';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'finance';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'client_success';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'executive';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'client_gp';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'client_signatory';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'client_finance';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'client_legal';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'client_compliance';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'client_readonly';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'entity_representative';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'beneficial_owner';

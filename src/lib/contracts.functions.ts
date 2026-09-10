@@ -1,0 +1,937 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export const STAFF_ROLES = [
+  "admin",
+  "super_admin",
+  "operations",
+  "legal",
+  "compliance",
+  "fund_administration",
+  "tax",
+  "finance",
+  "client_success",
+  "executive",
+] as const;
+
+/** Roles allowed to change contractual scope, pricing or entitlements. */
+export const CONTRACT_ROLES = [
+  "admin",
+  "super_admin",
+  "legal",
+  "client_success",
+  "compliance",
+  "finance",
+] as const;
+
+export const SERVICE_CATEGORIES = [
+  { key: "formation", label: "Fund & SPV formation" },
+  { key: "onboarding", label: "Investor onboarding & compliance" },
+  { key: "administration", label: "Fund administration" },
+  { key: "banking", label: "Banking & payments" },
+  { key: "filings", label: "Regulatory filings" },
+  { key: "tax", label: "Tax coordination" },
+  { key: "reporting", label: "Financial reporting" },
+] as const;
+
+export const ENTITLEMENT_STATUSES = [
+  { value: "included", label: "Included" },
+  { value: "optional", label: "Optional" },
+  { value: "requested", label: "Pending approval" },
+  { value: "not_included", label: "Not included" },
+] as const;
+
+export const PRICING_MODELS = [
+  { value: "one_time", label: "One-time" },
+  { value: "annual", label: "Annual" },
+  { value: "recurring", label: "Recurring" },
+  { value: "transaction", label: "Transaction-based" },
+  { value: "pass_through", label: "Pass-through" },
+] as const;
+
+type Who = { userId: string; roles: string[]; isStaff: boolean; canManage: boolean; email: string };
+
+async function whoIs(context: any): Promise<Who> {
+  const { data, error } = await context.supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId);
+  if (error) throw new Error(error.message);
+  const roles = ((data ?? []) as any[]).map((r) => String(r.role));
+  return {
+    userId: context.userId,
+    roles,
+    isStaff: roles.some((r) => (STAFF_ROLES as readonly string[]).includes(r)),
+    canManage: roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r)),
+    email: (context.claims?.email as string | undefined) ?? "",
+  };
+}
+
+async function requireStaff(context: any) {
+  const who = await whoIs(context);
+  if (!who.isStaff) throw new Error("Forbidden: this area is for the Harmonious team.");
+  return who;
+}
+
+async function requireContractAuthority(context: any) {
+  const who = await whoIs(context);
+  if (!who.canManage) {
+    throw new Error(
+      "Forbidden: changing contracted scope, pricing or entitlements needs legal, compliance, finance, client success or admin authority.",
+    );
+  }
+  return who;
+}
+
+async function audit(
+  context: any,
+  who: Who,
+  entry: {
+    area: string;
+    action: string;
+    target?: string | null;
+    clientId?: string | null;
+    offeringId?: string | null;
+    previous?: unknown;
+    next?: unknown;
+    approval?: string | null;
+    source?: string | null;
+  },
+) {
+  await context.supabase.from("contract_audit_events").insert({
+    actor_id: who.userId,
+    actor_role: who.roles.join(", ") || null,
+    client_id: entry.clientId ?? null,
+    offering_id: entry.offeringId ?? null,
+    area: entry.area,
+    action: entry.action,
+    target: entry.target ?? null,
+    previous_value: (entry.previous ?? null) as any,
+    new_value: (entry.next ?? null) as any,
+    approval: entry.approval ?? null,
+    source: entry.source ?? "web",
+  });
+}
+
+/* ------------------------------------------------------------------ access */
+
+/** Tells the app which contract areas the signed-in person may see or change. */
+export const getContractAccess = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const who = await whoIs(context);
+    return { isStaff: who.isStaff, canManage: who.canManage, roles: who.roles };
+  });
+
+/* ----------------------------------------------------------------- clients */
+
+export const listClients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireStaff(context);
+    const [{ data: clients }, { data: funds }, { data: sows }] = await Promise.all([
+      context.supabase.from("clients").select("*").order("name"),
+      context.supabase.from("offerings").select("id, name, client_id, reg_type, is_open"),
+      context.supabase.from("client_sows").select("id, client_id, title, status, sow_type"),
+    ]);
+    return {
+      clients: (clients ?? []).map((c: any) => ({
+        ...c,
+        funds: (funds ?? []).filter((f: any) => f.client_id === c.id),
+        sows: (sows ?? []).filter((s: any) => s.client_id === c.id),
+      })),
+      unassignedFunds: (funds ?? []).filter((f: any) => !f.client_id),
+    };
+  });
+
+const clientInput = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(2).max(160),
+  legal_name: z.string().trim().max(200).optional().or(z.literal("")),
+  status: z.enum(["active", "prospect", "terminated"]).default("active"),
+  msa_signed_on: z.string().optional().or(z.literal("")),
+  msa_version: z.string().trim().max(60).optional().or(z.literal("")),
+  primary_contact_name: z.string().trim().max(160).optional().or(z.literal("")),
+  primary_contact_email: z.string().trim().max(200).optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+export const saveClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => clientInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const row = {
+      name: data.name,
+      legal_name: data.legal_name || null,
+      status: data.status,
+      msa_signed_on: data.msa_signed_on || null,
+      msa_version: data.msa_version || null,
+      primary_contact_name: data.primary_contact_name || null,
+      primary_contact_email: data.primary_contact_email || null,
+      notes: data.notes || null,
+    };
+    if (data.id) {
+      const { error } = await context.supabase.from("clients").update(row).eq("id", data.id);
+      if (error) throw new Error(error.message);
+      await audit(context, who, {
+        area: "client",
+        action: "updated",
+        clientId: data.id,
+        next: row,
+      });
+      return { id: data.id };
+    }
+    const { data: created, error } = await context.supabase
+      .from("clients")
+      .insert({ ...row, created_by: who.userId })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "client",
+      action: "created",
+      clientId: created.id,
+      next: row,
+    });
+    return { id: created.id as string };
+  });
+
+export const assignFundToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ offeringId: z.string().uuid(), clientId: z.string().uuid().nullable() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { error } = await context.supabase
+      .from("offerings")
+      .update({ client_id: data.clientId })
+      .eq("id", data.offeringId);
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "client",
+      action: data.clientId ? "fund assigned" : "fund unassigned",
+      clientId: data.clientId,
+      offeringId: data.offeringId,
+    });
+    return { ok: true };
+  });
+
+/* -------------------------------------------------------------------- SOWs */
+
+const sowInput = z.object({
+  id: z.string().uuid().optional(),
+  client_id: z.string().uuid(),
+  offering_id: z.string().uuid().nullable().optional(),
+  title: z.string().trim().min(2).max(200),
+  sow_type: z.enum(["spv", "fund", "administration", "other"]).default("spv"),
+  status: z.enum(["draft", "active", "terminated"]).default("draft"),
+  effective_date: z.string().optional().or(z.literal("")),
+  termination_date: z.string().optional().or(z.literal("")),
+  notice_days: z.number().int().min(0).max(365).default(60),
+  signed_by: z.string().trim().max(160).optional().or(z.literal("")),
+  signed_on: z.string().optional().or(z.literal("")),
+  eligibility: z.record(z.string(), z.any()).default({}),
+  notes: z.string().trim().max(4000).optional().or(z.literal("")),
+});
+
+export const saveSow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => sowInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const row = {
+      client_id: data.client_id,
+      offering_id: data.offering_id ?? null,
+      title: data.title,
+      sow_type: data.sow_type,
+      status: data.status,
+      effective_date: data.effective_date || null,
+      termination_date: data.termination_date || null,
+      notice_days: data.notice_days,
+      signed_by: data.signed_by || null,
+      signed_on: data.signed_on || null,
+      eligibility: data.eligibility,
+      notes: data.notes || null,
+    };
+    if (data.id) {
+      const { error } = await context.supabase.from("client_sows").update(row).eq("id", data.id);
+      if (error) throw new Error(error.message);
+      await audit(context, who, {
+        area: "sow",
+        action: "updated",
+        clientId: data.client_id,
+        target: data.id,
+        next: row,
+      });
+      return { id: data.id };
+    }
+    const { data: created, error } = await context.supabase
+      .from("client_sows")
+      .insert({ ...row, created_by: who.userId })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "sow",
+      action: "created",
+      clientId: data.client_id,
+      target: created.id,
+      next: row,
+    });
+    return { id: created.id as string };
+  });
+
+/* ------------------------------------------------------ catalog and scope */
+
+export const getServiceCatalog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("service_catalog")
+      .select("*")
+      .eq("active", true)
+      .order("sort_order");
+    if (error) throw new Error(error.message);
+    return { services: data ?? [] };
+  });
+
+/**
+ * The scope picture for one client (and optionally one fund): every catalog
+ * service with its entitlement status. Services with no entitlement row are
+ * reported as "unset" so existing funds keep working until scope is recorded.
+ */
+export const getClientScope = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({ clientId: z.string().uuid(), offeringId: z.string().uuid().optional() })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await whoIs(context);
+    const [{ data: client }, { data: catalog }, { data: rows }, { data: sows }, { data: pricing }] =
+      await Promise.all([
+        context.supabase.from("clients").select("*").eq("id", data.clientId).maybeSingle(),
+        context.supabase.from("service_catalog").select("*").eq("active", true).order("sort_order"),
+        context.supabase.from("service_entitlements").select("*").eq("client_id", data.clientId),
+        context.supabase
+          .from("client_sows")
+          .select("*")
+          .eq("client_id", data.clientId)
+          .order("created_at"),
+        context.supabase.from("client_pricing").select("*").eq("client_id", data.clientId),
+      ]);
+
+    if (!client) throw new Error("That client isn't available.");
+
+    const relevant = (rows ?? []).filter(
+      (r: any) => !r.offering_id || !data.offeringId || r.offering_id === data.offeringId,
+    );
+
+    const services = (catalog ?? []).map((s: any) => {
+      const fundRow = relevant.find(
+        (r: any) => r.service_key === s.key && r.offering_id === (data.offeringId ?? null),
+      );
+      const clientRow = relevant.find((r: any) => r.service_key === s.key && !r.offering_id);
+      const row = fundRow ?? clientRow ?? null;
+      return {
+        key: s.key,
+        name: s.name,
+        category: s.category,
+        description: s.description,
+        material: s.material,
+        status: row ? (row.status as string) : "unset",
+        entitlementId: row?.id ?? null,
+        sowId: row?.sow_id ?? null,
+        scope: fundRow ? "fund" : clientRow ? "client" : "none",
+        pricingModel: row?.pricing_model ?? s.default_pricing_model,
+        effectiveDate: row?.effective_date ?? null,
+        terminationDate: row?.termination_date ?? null,
+        note: row?.note ?? null,
+        harmoniousHandles: row?.harmonious_handles ?? s.harmonious_handles,
+        clientHandles: row?.client_handles ?? s.client_handles,
+        thirdPartyHandles: row?.third_party_handles ?? s.third_party_handles,
+        requiredDocuments: row?.required_documents ?? s.required_documents ?? [],
+        requiredApprovals: row?.required_approvals ?? s.required_approvals ?? [],
+        requiredChecks: row?.required_checks ?? s.required_checks ?? [],
+        thirdPartyDependency: row?.third_party_dependency ?? s.third_party_dependency,
+      };
+    });
+
+    return {
+      client,
+      sows: sows ?? [],
+      pricing: pricing ?? [],
+      services,
+      canManage: who.canManage,
+      isStaff: who.isStaff,
+    };
+  });
+
+/** The scope picture for one fund, resolved through the fund's client. */
+export const getFundScope = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await whoIs(context);
+    const { data: fund, error } = await context.supabase
+      .from("offerings")
+      .select("id, name, client_id, reg_type")
+      .eq("id", data.offeringId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!fund) throw new Error("That fund isn't available.");
+    if (!fund.client_id) {
+      return {
+        fund,
+        client: null,
+        configured: false,
+        services: [] as any[],
+        holds: [] as any[],
+        canManage: who.canManage,
+      };
+    }
+
+    const [{ data: catalog }, { data: rows }, { data: client }, { data: holds }] =
+      await Promise.all([
+        context.supabase.from("service_catalog").select("*").eq("active", true).order("sort_order"),
+        context.supabase.from("service_entitlements").select("*").eq("client_id", fund.client_id),
+        context.supabase.from("clients").select("*").eq("id", fund.client_id).maybeSingle(),
+        context.supabase
+          .from("compliance_holds")
+          .select("*")
+          .eq("status", "active")
+          .or(`offering_id.eq.${fund.id},client_id.eq.${fund.client_id}`),
+      ]);
+
+    const relevant = (rows ?? []).filter(
+      (r: any) => !r.offering_id || r.offering_id === fund.id,
+    );
+
+    const services = (catalog ?? []).map((s: any) => {
+      const fundRow = relevant.find((r: any) => r.service_key === s.key && r.offering_id === fund.id);
+      const clientRow = relevant.find((r: any) => r.service_key === s.key && !r.offering_id);
+      const row = fundRow ?? clientRow ?? null;
+      return {
+        key: s.key,
+        name: s.name,
+        category: s.category,
+        description: s.description,
+        material: s.material,
+        status: row ? (row.status as string) : "unset",
+        harmoniousHandles: row?.harmonious_handles ?? s.harmonious_handles,
+        clientHandles: row?.client_handles ?? s.client_handles,
+        thirdPartyHandles: row?.third_party_handles ?? s.third_party_handles,
+        thirdPartyDependency: row?.third_party_dependency ?? s.third_party_dependency,
+        requiredDocuments: row?.required_documents ?? s.required_documents ?? [],
+        requiredApprovals: row?.required_approvals ?? s.required_approvals ?? [],
+        requiredChecks: row?.required_checks ?? s.required_checks ?? [],
+        note: row?.note ?? null,
+      };
+    });
+
+    return {
+      fund,
+      client: client ?? null,
+      configured: (rows ?? []).length > 0,
+      services,
+      holds: holds ?? [],
+      canManage: who.canManage,
+    };
+  });
+
+const entitlementInput = z.object({
+  client_id: z.string().uuid(),
+  offering_id: z.string().uuid().nullable().optional(),
+  sow_id: z.string().uuid().nullable().optional(),
+  service_key: z.string().min(2),
+  status: z.enum(["included", "optional", "requested", "not_included"]),
+  pricing_model: z.string().max(40).optional().or(z.literal("")),
+  effective_date: z.string().optional().or(z.literal("")),
+  termination_date: z.string().optional().or(z.literal("")),
+  note: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+export const setEntitlement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => entitlementInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+
+    const { data: service } = await context.supabase
+      .from("service_catalog")
+      .select("key, material, name")
+      .eq("key", data.service_key)
+      .maybeSingle();
+    if (!service) throw new Error("Unknown service.");
+
+    if (service.material && data.status === "included" && !data.sow_id) {
+      throw new Error(
+        `${service.name} is a material service. Attach the statement of work that includes it before switching it on.`,
+      );
+    }
+
+    const existingQuery = context.supabase
+      .from("service_entitlements")
+      .select("id, status")
+      .eq("client_id", data.client_id)
+      .eq("service_key", data.service_key);
+    const { data: existing } = data.offering_id
+      ? await existingQuery.eq("offering_id", data.offering_id).maybeSingle()
+      : await existingQuery.is("offering_id", null).maybeSingle();
+
+
+    const row = {
+      client_id: data.client_id,
+      offering_id: data.offering_id ?? null,
+      sow_id: data.sow_id ?? null,
+      service_key: data.service_key,
+      status: data.status,
+      pricing_model: data.pricing_model || null,
+      effective_date: data.effective_date || null,
+      termination_date: data.termination_date || null,
+      note: data.note || null,
+      approved_by: data.status === "included" ? who.userId : null,
+      approved_at: data.status === "included" ? new Date().toISOString() : null,
+    };
+
+    if (existing) {
+      const { error } = await context.supabase
+        .from("service_entitlements")
+        .update(row)
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await context.supabase
+        .from("service_entitlements")
+        .insert({ ...row, created_by: who.userId });
+      if (error) throw new Error(error.message);
+    }
+
+
+    await audit(context, who, {
+      area: "entitlement",
+      action: `set ${data.status}`,
+      clientId: data.client_id,
+      offeringId: data.offering_id ?? null,
+      target: data.service_key,
+      previous: existing ? { status: existing.status } : null,
+      next: { status: data.status, sow_id: data.sow_id ?? null },
+      approval: data.sow_id ? `SOW ${data.sow_id}` : null,
+    });
+    return { ok: true };
+  });
+
+/* --------------------------------------------------------- change of scope */
+
+export const requestService = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        clientId: z.string().uuid(),
+        offeringId: z.string().uuid().nullable().optional(),
+        serviceKey: z.string().min(2),
+        note: z.string().trim().max(2000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await whoIs(context);
+    const { data: created, error } = await context.supabase
+      .from("service_requests")
+      .insert({
+        client_id: data.clientId,
+        offering_id: data.offeringId ?? null,
+        service_key: data.serviceKey,
+        requested_by: who.userId,
+        requester_note: data.note || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "service request",
+      action: "submitted",
+      clientId: data.clientId,
+      offeringId: data.offeringId ?? null,
+      target: data.serviceKey,
+    });
+    return { id: created.id as string };
+  });
+
+export const listServiceRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireStaff(context);
+    const [{ data: requests }, { data: clients }, { data: catalog }] = await Promise.all([
+      context.supabase.from("service_requests").select("*").order("created_at", { ascending: false }),
+      context.supabase.from("clients").select("id, name"),
+      context.supabase.from("service_catalog").select("key, name, material"),
+    ]);
+    return {
+      requests: (requests ?? []).map((r: any) => ({
+        ...r,
+        clientName: (clients ?? []).find((c: any) => c.id === r.client_id)?.name ?? "Client",
+        serviceName: (catalog ?? []).find((c: any) => c.key === r.service_key)?.name ?? r.service_key,
+        material: (catalog ?? []).find((c: any) => c.key === r.service_key)?.material ?? false,
+      })),
+    };
+  });
+
+export const reviewServiceRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        decision: z.enum(["in_review", "quoted", "declined", "approved", "activated"]),
+        note: z.string().trim().max(2000).optional().or(z.literal("")),
+        feeCents: z.number().int().min(0).nullable().optional(),
+        pricingModel: z.string().max(40).optional().or(z.literal("")),
+        sowId: z.string().uuid().nullable().optional(),
+        effectiveDate: z.string().optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: request, error: readError } = await context.supabase
+      .from("service_requests")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!request) throw new Error("That request isn't available.");
+
+    if (data.decision === "activated" && !data.sowId) {
+      throw new Error(
+        "Attach the signed statement of work or order form before activating the service.",
+      );
+    }
+
+    const patch: Record<string, unknown> = {
+      status: data.decision,
+      reviewer_id: who.userId,
+      review_note: data.note || null,
+      proposed_fee_cents: data.feeCents ?? request.proposed_fee_cents,
+      proposed_pricing_model: data.pricingModel || request.proposed_pricing_model,
+      effective_date: data.effectiveDate || request.effective_date,
+    };
+
+    if (data.decision === "activated") {
+      const scope = {
+        client_id: request.client_id,
+        offering_id: request.offering_id,
+        sow_id: data.sowId ?? null,
+        service_key: request.service_key,
+        status: "included",
+        effective_date: data.effectiveDate || new Date().toISOString().slice(0, 10),
+        approved_by: who.userId,
+        approved_at: new Date().toISOString(),
+        created_by: who.userId,
+      };
+      const existing = context.supabase
+        .from("service_entitlements")
+        .select("id")
+        .eq("client_id", request.client_id)
+        .eq("service_key", request.service_key);
+      const { data: found } = request.offering_id
+        ? await existing.eq("offering_id", request.offering_id).maybeSingle()
+        : await existing.is("offering_id", null).maybeSingle();
+
+      if (found) {
+        await context.supabase.from("service_entitlements").update(scope).eq("id", found.id);
+        patch["activated_entitlement_id"] = found.id;
+      } else {
+        const { data: made, error } = await context.supabase
+          .from("service_entitlements")
+          .insert(scope)
+          .select("id")
+          .single();
+        if (error) throw new Error(error.message);
+        patch["activated_entitlement_id"] = made.id;
+      }
+      patch["client_approved_at"] = new Date().toISOString();
+    }
+
+    const { error } = await context.supabase
+      .from("service_requests")
+      .update(patch)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    await audit(context, who, {
+      area: "service request",
+      action: data.decision,
+      clientId: request.client_id,
+      offeringId: request.offering_id,
+      target: request.service_key,
+      previous: { status: request.status },
+      next: patch,
+      approval: data.sowId ? `SOW ${data.sowId}` : null,
+    });
+    return { ok: true };
+  });
+
+/* ------------------------------------------------------------------ pricing */
+
+export const getPricing = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireStaff(context);
+    const [{ data: versions }, { data: items }] = await Promise.all([
+      context.supabase.from("pricing_versions").select("*").order("created_at", { ascending: false }),
+      context.supabase.from("pricing_items").select("*").order("sort_order"),
+    ]);
+    return {
+      versions: (versions ?? []).map((v: any) => ({
+        ...v,
+        items: (items ?? []).filter((i: any) => i.version_id === v.id),
+      })),
+    };
+  });
+
+export const savePricingItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        version_id: z.string().uuid(),
+        service_key: z.string().max(80).optional().or(z.literal("")),
+        label: z.string().trim().min(2).max(160),
+        category: z.string().max(40).default("other"),
+        pricing_model: z.string().max(40).default("one_time"),
+        amount_cents: z.number().int().min(0).nullable().optional(),
+        unit: z.string().max(60).optional().or(z.literal("")),
+        condition: z.string().max(300).optional().or(z.literal("")),
+        pass_through: z.boolean().default(false),
+        sort_order: z.number().int().default(100),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const row = {
+      version_id: data.version_id,
+      service_key: data.service_key || null,
+      label: data.label,
+      category: data.category,
+      pricing_model: data.pricing_model,
+      amount_cents: data.amount_cents ?? null,
+      unit: data.unit || null,
+      condition: data.condition || null,
+      pass_through: data.pass_through,
+      sort_order: data.sort_order,
+    };
+    if (data.id) {
+      const { error } = await context.supabase.from("pricing_items").update(row).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await context.supabase.from("pricing_items").insert(row);
+      if (error) throw new Error(error.message);
+    }
+    await audit(context, who, {
+      area: "pricing",
+      action: data.id ? "item updated" : "item added",
+      target: data.label,
+      next: row,
+    });
+    return { ok: true };
+  });
+
+export const createPricingVersion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        label: z.string().trim().min(2).max(120),
+        copyFromVersionId: z.string().uuid().optional(),
+        effectiveDate: z.string().optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: version, error } = await context.supabase
+      .from("pricing_versions")
+      .insert({ label: data.label, effective_date: data.effectiveDate || null })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    if (data.copyFromVersionId) {
+      const { data: items } = await context.supabase
+        .from("pricing_items")
+        .select("*")
+        .eq("version_id", data.copyFromVersionId);
+      if (items?.length) {
+        await context.supabase.from("pricing_items").insert(
+          items.map((i: any) => ({
+            version_id: version.id,
+            service_key: i.service_key,
+            label: i.label,
+            category: i.category,
+            pricing_model: i.pricing_model,
+            amount_cents: i.amount_cents,
+            unit: i.unit,
+            condition: i.condition,
+            pass_through: i.pass_through,
+            sort_order: i.sort_order,
+          })),
+        );
+      }
+    }
+    await audit(context, who, { area: "pricing", action: "version created", target: data.label });
+    return { id: version.id as string };
+  });
+
+export const publishPricingVersion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { error } = await context.supabase
+      .from("pricing_versions")
+      .update({ status: "published", published_at: new Date().toISOString(), published_by: who.userId })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, { area: "pricing", action: "version published", target: data.id });
+    return { ok: true };
+  });
+
+export const saveClientPrice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        client_id: z.string().uuid(),
+        sow_id: z.string().uuid().nullable().optional(),
+        service_key: z.string().max(80).optional().or(z.literal("")),
+        label: z.string().trim().min(2).max(160),
+        standard_cents: z.number().int().min(0).nullable().optional(),
+        contracted_cents: z.number().int().min(0).nullable().optional(),
+        discount_note: z.string().max(300).optional().or(z.literal("")),
+        pricing_model: z.string().max(40).default("one_time"),
+        version_id: z.string().uuid().nullable().optional(),
+        effective_date: z.string().optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const row = {
+      client_id: data.client_id,
+      sow_id: data.sow_id ?? null,
+      service_key: data.service_key || null,
+      label: data.label,
+      standard_cents: data.standard_cents ?? null,
+      contracted_cents: data.contracted_cents ?? null,
+      discount_note: data.discount_note || null,
+      pricing_model: data.pricing_model,
+      version_id: data.version_id ?? null,
+      effective_date: data.effective_date || null,
+      approved_by: who.userId,
+      approved_at: new Date().toISOString(),
+    };
+    if (data.id) {
+      const { error } = await context.supabase.from("client_pricing").update(row).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await context.supabase.from("client_pricing").insert(row);
+      if (error) throw new Error(error.message);
+    }
+    await audit(context, who, {
+      area: "pricing",
+      action: "client price set",
+      clientId: data.client_id,
+      target: data.label,
+      next: row,
+    });
+    return { ok: true };
+  });
+
+/* --------------------------------------------------------------- providers */
+
+export const listProviders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("third_party_providers")
+      .select("*")
+      .order("provider_type")
+      .order("name");
+    if (error) throw new Error(error.message);
+    return { providers: data ?? [] };
+  });
+
+export const saveProvider = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        name: z.string().trim().min(2).max(160),
+        provider_type: z.string().trim().min(2).max(60),
+        service_dependency: z.string().max(300).optional().or(z.literal("")),
+        data_categories: z.array(z.string()).default([]),
+        contract_status: z.string().max(40).default("active"),
+        security_doc_url: z.string().max(500).optional().or(z.literal("")),
+        sla: z.string().max(300).optional().or(z.literal("")),
+        status: z.string().max(40).default("operational"),
+        outage_note: z.string().max(500).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const row = {
+      name: data.name,
+      provider_type: data.provider_type,
+      service_dependency: data.service_dependency || null,
+      data_categories: data.data_categories,
+      contract_status: data.contract_status,
+      security_doc_url: data.security_doc_url || null,
+      sla: data.sla || null,
+      status: data.status,
+      outage_note: data.outage_note || null,
+    };
+    if (data.id) {
+      const { error } = await context.supabase
+        .from("third_party_providers")
+        .update(row)
+        .eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await context.supabase.from("third_party_providers").insert(row);
+      if (error) throw new Error(error.message);
+    }
+    await audit(context, who, { area: "provider", action: "saved", target: data.name, next: row });
+    return { ok: true };
+  });
+
+/* ------------------------------------------------------------- audit trail */
+
+export const listContractAudit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ clientId: z.string().uuid().optional(), limit: z.number().int().max(200).default(100) }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    await requireStaff(context);
+    let query = context.supabase
+      .from("contract_audit_events")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(data.limit);
+    if (data.clientId) query = query.eq("client_id", data.clientId);
+    const { data: rows, error } = await query;
+    if (error) throw new Error(error.message);
+    return { events: rows ?? [] };
+  });
