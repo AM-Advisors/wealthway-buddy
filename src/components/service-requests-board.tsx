@@ -274,6 +274,11 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                             effectiveDate: r.effective_date ?? "",
                             amendmentTerms: r.amendment_terms ?? "",
                             note: "",
+                            clientId: r.client_id,
+                            serviceKey: r.service_key,
+                            feeSource: r.fee_source ?? "custom",
+                            feeRateId: r.fee_rate_id ?? null,
+                            feeOverrideReason: r.fee_override_reason ?? "",
                           })
                         }
                       >
