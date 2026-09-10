@@ -499,20 +499,11 @@ export const setEntitlement = createServerFn({ method: "POST" })
       approved_at: data.status === "included" ? new Date().toISOString() : null,
     };
 
-    const match = context.supabase
-      .from("service_entitlements")
-      .select("id")
-      .eq("client_id", data.client_id)
-      .eq("service_key", data.service_key);
-    const { data: found } = data.offering_id
-      ? await match.eq("offering_id", data.offering_id).maybeSingle()
-      : await match.is("offering_id", null).maybeSingle();
-
-    if (found) {
+    if (existing) {
       const { error } = await context.supabase
         .from("service_entitlements")
         .update(row)
-        .eq("id", found.id);
+        .eq("id", existing.id);
       if (error) throw new Error(error.message);
     } else {
       const { error } = await context.supabase
@@ -520,6 +511,7 @@ export const setEntitlement = createServerFn({ method: "POST" })
         .insert({ ...row, created_by: who.userId });
       if (error) throw new Error(error.message);
     }
+
 
     await audit(context, who, {
       area: "entitlement",
