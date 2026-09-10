@@ -112,6 +112,12 @@ function PricingConsole() {
         <TabsContent value="termination" className="pt-4">
           <OffboardingBoard />
         </TabsContent>
+        <TabsContent value="policies" className="pt-4">
+          <PolicyDocumentsBoard />
+        </TabsContent>
+        <TabsContent value="acceptances" className="pt-4">
+          <PolicyAcceptancesBoard />
+        </TabsContent>
       </Tabs>
     </main>
   );
