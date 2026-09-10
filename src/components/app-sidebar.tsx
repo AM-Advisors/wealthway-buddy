@@ -64,6 +64,7 @@ const managerItems: NavItem[] = [
   { title: "Fund tax profile", url: "/manager/tax", icon: FileText },
 
   { title: "Fund pages", url: "/admin/funds", icon: Building2 },
+  { title: "Wires and distributions", url: "/admin/money", icon: Landmark },
   { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
 ];
 
@@ -84,6 +85,7 @@ const adminItems: NavItem[] = [
   { title: "Pricing and agreements", url: "/admin/pricing", icon: Landmark },
 
 
+  { title: "Wires and distributions", url: "/admin/money", icon: Landmark },
   { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
   { title: "Onboarding funnel", url: "/admin/funnel", icon: Gauge },
   { title: "Document activity", url: "/admin/document-log", icon: FileText },

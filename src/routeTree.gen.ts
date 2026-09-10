@@ -51,6 +51,7 @@ import { Route as AuthenticatedAdminFundsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminFunnelRouteImport } from './routes/_authenticated/admin.funnel'
 import { Route as AuthenticatedAdminInvestorsRouteImport } from './routes/_authenticated/admin.investors'
 import { Route as AuthenticatedAdminMemoRouteImport } from './routes/_authenticated/admin.memo'
+import { Route as AuthenticatedAdminMoneyRouteImport } from './routes/_authenticated/admin.money'
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
 import { Route as AuthenticatedAdminOfferingStatementRouteImport } from './routes/_authenticated/admin.offering-statement'
 import { Route as AuthenticatedAdminPerformanceRouteImport } from './routes/_authenticated/admin.performance'
@@ -339,6 +340,11 @@ const AuthenticatedAdminInvestorsRoute =
 const AuthenticatedAdminMemoRoute = AuthenticatedAdminMemoRouteImport.update({
   id: '/admin/memo',
   path: '/admin/memo',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminMoneyRoute = AuthenticatedAdminMoneyRouteImport.update({
+  id: '/admin/money',
+  path: '/admin/money',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminNewApplicationRoute =
@@ -765,6 +771,7 @@ export interface FileRoutesByFullPath {
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/memo': typeof AuthenticatedAdminMemoRoute
+  '/admin/money': typeof AuthenticatedAdminMoneyRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
@@ -873,6 +880,7 @@ export interface FileRoutesByTo {
   '/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/admin/memo': typeof AuthenticatedAdminMemoRoute
+  '/admin/money': typeof AuthenticatedAdminMoneyRoute
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
@@ -984,6 +992,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/funnel': typeof AuthenticatedAdminFunnelRoute
   '/_authenticated/admin/investors': typeof AuthenticatedAdminInvestorsRoute
   '/_authenticated/admin/memo': typeof AuthenticatedAdminMemoRoute
+  '/_authenticated/admin/money': typeof AuthenticatedAdminMoneyRoute
   '/_authenticated/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/_authenticated/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/_authenticated/admin/performance': typeof AuthenticatedAdminPerformanceRoute
@@ -1095,6 +1104,7 @@ export interface FileRouteTypes {
     | '/admin/funnel'
     | '/admin/investors'
     | '/admin/memo'
+    | '/admin/money'
     | '/admin/new-application'
     | '/admin/offering-statement'
     | '/admin/performance'
@@ -1203,6 +1213,7 @@ export interface FileRouteTypes {
     | '/admin/funnel'
     | '/admin/investors'
     | '/admin/memo'
+    | '/admin/money'
     | '/admin/new-application'
     | '/admin/offering-statement'
     | '/admin/performance'
@@ -1313,6 +1324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/funnel'
     | '/_authenticated/admin/investors'
     | '/_authenticated/admin/memo'
+    | '/_authenticated/admin/money'
     | '/_authenticated/admin/new-application'
     | '/_authenticated/admin/offering-statement'
     | '/_authenticated/admin/performance'
@@ -1699,6 +1711,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/memo'
       fullPath: '/admin/memo'
       preLoaderRoute: typeof AuthenticatedAdminMemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/money': {
+      id: '/_authenticated/admin/money'
+      path: '/admin/money'
+      fullPath: '/admin/money'
+      preLoaderRoute: typeof AuthenticatedAdminMoneyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/new-application': {
@@ -2194,6 +2213,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminFunnelRoute: typeof AuthenticatedAdminFunnelRoute
   AuthenticatedAdminInvestorsRoute: typeof AuthenticatedAdminInvestorsRoute
   AuthenticatedAdminMemoRoute: typeof AuthenticatedAdminMemoRoute
+  AuthenticatedAdminMoneyRoute: typeof AuthenticatedAdminMoneyRoute
   AuthenticatedAdminNewApplicationRoute: typeof AuthenticatedAdminNewApplicationRoute
   AuthenticatedAdminOfferingStatementRoute: typeof AuthenticatedAdminOfferingStatementRoute
   AuthenticatedAdminPerformanceRoute: typeof AuthenticatedAdminPerformanceRoute
@@ -2282,6 +2302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminFunnelRoute: AuthenticatedAdminFunnelRoute,
   AuthenticatedAdminInvestorsRoute: AuthenticatedAdminInvestorsRoute,
   AuthenticatedAdminMemoRoute: AuthenticatedAdminMemoRoute,
+  AuthenticatedAdminMoneyRoute: AuthenticatedAdminMoneyRoute,
   AuthenticatedAdminNewApplicationRoute: AuthenticatedAdminNewApplicationRoute,
   AuthenticatedAdminOfferingStatementRoute:
     AuthenticatedAdminOfferingStatementRoute,
