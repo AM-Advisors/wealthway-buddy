@@ -2460,6 +2460,138 @@ export type Database = {
           },
         ]
       }
+      fund_migration_rows: {
+        Row: {
+          accreditation_status: string | null
+          application_id: string | null
+          closing_date: string | null
+          commitment_cents: number
+          created_at: string
+          email: string
+          error_text: string | null
+          full_name: string
+          funded_cents: number
+          id: string
+          imported_at: string | null
+          investor_type: string | null
+          migration_id: string
+          note: string | null
+          offering_id: string
+          row_status: string
+          units: number | null
+          updated_at: string
+        }
+        Insert: {
+          accreditation_status?: string | null
+          application_id?: string | null
+          closing_date?: string | null
+          commitment_cents?: number
+          created_at?: string
+          email?: string
+          error_text?: string | null
+          full_name?: string
+          funded_cents?: number
+          id?: string
+          imported_at?: string | null
+          investor_type?: string | null
+          migration_id: string
+          note?: string | null
+          offering_id: string
+          row_status?: string
+          units?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accreditation_status?: string | null
+          application_id?: string | null
+          closing_date?: string | null
+          commitment_cents?: number
+          created_at?: string
+          email?: string
+          error_text?: string | null
+          full_name?: string
+          funded_cents?: number
+          id?: string
+          imported_at?: string | null
+          investor_type?: string | null
+          migration_id?: string
+          note?: string | null
+          offering_id?: string
+          row_status?: string
+          units?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_migration_rows_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_migration_rows_migration_id_fkey"
+            columns: ["migration_id"]
+            isOneToOne: false
+            referencedRelation: "fund_migrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_migration_rows_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_migrations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          offering_id: string
+          prior_administrator: string | null
+          records_as_of: string | null
+          status: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          offering_id: string
+          prior_administrator?: string | null
+          records_as_of?: string | null
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          offering_id?: string
+          prior_administrator?: string | null
+          records_as_of?: string | null
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_migrations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_tax_documents: {
         Row: {
           created_at: string
@@ -4291,6 +4423,92 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      policy_acceptances: {
+        Row: {
+          accepted_at: string
+          document_id: string
+          email: string | null
+          id: string
+          ip_address: string | null
+          kind: string
+          signer_name: string
+          user_agent: string | null
+          user_id: string
+          version: number
+        }
+        Insert: {
+          accepted_at?: string
+          document_id: string
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          kind: string
+          signer_name: string
+          user_agent?: string | null
+          user_id: string
+          version: number
+        }
+        Update: {
+          accepted_at?: string
+          document_id?: string
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          kind?: string
+          signer_name?: string
+          user_agent?: string | null
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_acceptances_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "policy_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_documents: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          id: string
+          kind: string
+          published: boolean
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          kind: string
+          published?: boolean
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          kind?: string
+          published?: boolean
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
       }
       portal_messages: {
         Row: {
