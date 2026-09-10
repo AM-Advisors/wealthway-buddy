@@ -54,7 +54,8 @@ export function ClientOnboardingBoard() {
   const fail = (error: unknown) => toast.error(error instanceof Error ? error.message : "That didn't work.");
 
   const inviteMutation = useMutation({
-    mutationFn: (input: Parameters<typeof invite>[0]["data"]) => invite({ data: input }),
+    mutationFn: (input: { clientId: string; email: string; name?: string; role: string; canApprove: boolean; note?: string }) =>
+      invite({ data: input as never }),
     onSuccess: () => {
       toast.success("Invitation sent. They join this client the first time they sign in.");
       setDraft({ ...emptyInvite });
@@ -73,7 +74,8 @@ export function ClientOnboardingBoard() {
   });
 
   const accessMutation = useMutation({
-    mutationFn: (input: Parameters<typeof changeAccess>[0]["data"]) => changeAccess({ data: input }),
+    mutationFn: (input: { id: string; role?: string; canApprove?: boolean; remove: boolean }) =>
+      changeAccess({ data: input as never }),
     onSuccess: () => {
       toast.success("Access updated.");
       refresh();
@@ -82,7 +84,7 @@ export function ClientOnboardingBoard() {
   });
 
   const stepMutation = useMutation({
-    mutationFn: (input: Parameters<typeof markStep>[0]["data"]) => markStep({ data: input }),
+    mutationFn: (input: { clientId: string; step: string; done: boolean }) => markStep({ data: input as never }),
     onSuccess: () => refresh(),
     onError: fail,
   });
