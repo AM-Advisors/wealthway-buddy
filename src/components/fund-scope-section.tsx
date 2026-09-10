@@ -1,6 +1,9 @@
+import { useState } from "react";
+
 import { Link } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RequestServiceCard } from "@/components/service-gate";
 import { useFundScope, type FundScope, type FundSection } from "@/lib/fund-scope";
@@ -175,6 +178,91 @@ export function ScopeNotice({
   return (
     <div className="mb-4 rounded-md border p-3 text-sm">
       This service is not currently included in your active scope.
+    </div>
+  );
+}
+
+/**
+ * The fund dashboard view of the client's agreement: every service Harmonious
+ * has activated for this fund, and what is still outside the agreement.
+ */
+export function ScopeServicesPanel({
+  scope,
+  offeringId,
+}: {
+  scope: FundScope;
+  offeringId?: string | null;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  if (!scope.canRead) return null;
+
+  const active = scope.services.filter((s) => s.status === "included");
+  const pending = scope.services.filter((s) => s.status === "requested");
+  const outside = scope.services.filter(
+    (s) => s.status === "not_included" || s.status === "optional",
+  );
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Services in this fund</CardTitle>
+        <CardDescription>
+          {scope.configured
+            ? "Taken from the client's active statement of work. Anything outside it stays blocked until it is added."
+            : "No scope has been recorded for this client yet."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {active.length > 0 ? (
+          <ServiceList title="Active" services={active} tone="secondary" />
+        ) : (
+          <p className="text-sm text-muted-foreground">No services activated yet.</p>
+        )}
+        {pending.length > 0 ? (
+          <ServiceList title="Awaiting approval" services={pending} tone="outline" />
+        ) : null}
+        {outside.length > 0 ? (
+          <div className="space-y-2">
+            <ServiceList title="Outside scope" services={outside} tone="destructive" />
+            <Button size="sm" variant="outline" onClick={() => setShowAll((v) => !v)}>
+              {showAll ? "Hide requests" : "Request a service"}
+            </Button>
+            {showAll
+              ? outside.map((s) => (
+                  <RequestServiceCard
+                    key={s.key}
+                    service={s}
+                    clientId={scope.clientId}
+                    offeringId={offeringId ?? null}
+                  />
+                ))
+              : null}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ServiceList({
+  title,
+  services,
+  tone,
+}: {
+  title: string;
+  services: { key: string; name: string }[];
+  tone: "secondary" | "outline" | "destructive";
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+      <div className="flex flex-wrap gap-2">
+        {services.map((s) => (
+          <Badge key={s.key} variant={tone}>
+            {s.name}
+          </Badge>
+        ))}
+      </div>
     </div>
   );
 }
