@@ -135,9 +135,9 @@ export function FundMigrationBoard({ offeringId }: { offeringId: string }) {
 
   const totals = useMemo(
     () => ({
-      pending: rows.filter((r) => r.status !== "imported").length,
-      invalid: rows.filter((r) => (r.errors ?? []).length > 0).length,
-      imported: rows.filter((r) => r.status === "imported").length,
+      pending: rows.filter((r) => r.row_status !== "imported").length,
+      invalid: rows.filter((r) => r.row_status === "error").length,
+      imported: rows.filter((r) => r.row_status === "imported").length,
       committed: rows.reduce((sum, r) => sum + (r.commitment_cents ?? 0), 0),
     }),
     [rows],
@@ -413,21 +413,31 @@ export function FundMigrationBoard({ offeringId }: { offeringId: string }) {
                     <td className="px-3 py-2">
                       <span className="block">{r.full_name || "—"}</span>
                       <span className="block text-xs text-muted-foreground">{r.email || "No email"}</span>
-                      {(r.errors ?? []).length > 0 && (
-                        <span className="mt-1 block text-xs text-destructive">
-                          {(r.errors ?? []).join(" · ")}
-                        </span>
+                      {r.error_text && (
+                        <span className="mt-1 block text-xs text-destructive">{r.error_text}</span>
                       )}
                     </td>
                     <td className="px-3 py-2">{money(r.commitment_cents)}</td>
                     <td className="px-3 py-2">{money(r.funded_cents)}</td>
                     <td className="px-3 py-2">
-                      <Badge variant={r.status === "imported" ? "secondary" : "outline"}>
-                        {r.status === "imported" ? "Brought across" : "Waiting"}
+                      <Badge
+                        variant={
+                          r.row_status === "imported"
+                            ? "secondary"
+                            : r.row_status === "error"
+                              ? "destructive"
+                              : "outline"
+                        }
+                      >
+                        {r.row_status === "imported"
+                          ? "Brought across"
+                          : r.row_status === "error"
+                            ? "Needs a fix"
+                            : "Waiting"}
                       </Badge>
                     </td>
                     <td className="px-3 py-2 text-right">
-                      {canManage && r.status !== "imported" && (
+                      {canManage && r.row_status !== "imported" && (
                         <span className="flex justify-end gap-2">
                           <Button size="sm" variant="outline" onClick={() => setEditing(r)}>
                             Edit

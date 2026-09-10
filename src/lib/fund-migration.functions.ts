@@ -474,7 +474,11 @@ export const importMigrationRows = createServerFn({ method: "POST" })
     if (data.rowIds?.length) query = query.in("id", data.rowIds);
     const { data: rows } = await query;
 
-    const pending = ((rows ?? []) as any[]).filter((r) => r.row_status !== "error");
+    // Rows flagged earlier are retried when the record itself is now valid, so a
+    // failed run can simply be run again once the cause is cleared.
+    const pending = ((rows ?? []) as any[]).filter(
+      (r) => r.row_status !== "error" || normaliseRow(r).errors.length === 0,
+    );
     if (!pending.length) {
       throw new Error("There is nothing ready to bring across. Fix the flagged records first.");
     }
