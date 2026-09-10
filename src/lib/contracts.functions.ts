@@ -1466,3 +1466,55 @@ export const decideSowApproval = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+/** Staff upload the agreement document (PDF or Word) so the client can read it
+ *  before signing. Stored privately; the portal only ever gets a short-lived link. */
+export const uploadSowDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        fileName: z.string().trim().min(1).max(200),
+        contentBase64: z.string().min(1).max(40_000_000),
+        contentType: z.string().trim().max(160).default("application/pdf"),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: sow, error } = await context.supabase
+      .from("client_sows")
+      .select("id, client_id, offering_id, title, document_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!sow) throw new Error("That statement of work could not be found.");
+
+    const binary = Buffer.from(data.contentBase64, "base64");
+    const safeName = data.fileName.replace(/[^A-Za-z0-9._-]/g, "_");
+    const path = `client-sows/${data.id}/${Date.now()}-${safeName}`;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from("fund-formation")
+      .upload(path, new Uint8Array(binary), { contentType: data.contentType, upsert: true });
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { error: updateError } = await context.supabase
+      .from("client_sows")
+      .update({ document_path: path } as any)
+      .eq("id", data.id);
+    if (updateError) throw new Error(updateError.message);
+
+    await audit(context, who, {
+      area: "sow",
+      action: "document uploaded",
+      clientId: (sow as any).client_id,
+      offeringId: (sow as any).offering_id,
+      target: (sow as any).title,
+      previous: { document_path: (sow as any).document_path ?? null },
+      next: { document_path: path, file_name: data.fileName },
+    });
+    return { ok: true, path };
+  });
