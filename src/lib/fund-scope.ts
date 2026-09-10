@@ -97,3 +97,35 @@ export function useFundScope(offeringId: string | null | undefined): FundScope {
     },
   };
 }
+
+/** Setup progress steps on the fund dashboard, and the service each depends on. */
+export const SETUP_STEP_SECTIONS: Record<string, FundSection> = {
+  bank: "banking",
+  documents: "documents",
+  room: "diligence",
+  investors: "applications",
+};
+
+/** Compliance checklist rows, and the service that covers the filing. */
+export function sectionForComplianceItem(
+  key: string | null | undefined,
+  category: string | null | undefined,
+): FundSection | undefined {
+  const k = (key ?? "").toLowerCase();
+  const c = (category ?? "").toLowerCase();
+  if (k.startsWith("tax") || c === "tax") return "tax";
+  if (k === "ein_ss4" || c === "formation") return undefined; // formation sits with the client
+  if (c === "federal" || c === "state" || k.startsWith("form_") || k === "blue_sky")
+    return "filings";
+  return undefined;
+}
+
+/** Status of a section for a viewer, once the "no scope recorded" rule is applied. */
+export function sectionState(scope: FundScope, section: FundSection) {
+  if (!scope.canRead) return "open" as const;
+  const service = scope.serviceFor(section);
+  const status = service?.status ?? "unset";
+  if (status === "included") return "included" as const;
+  if (status === "unset" || !scope.configured) return scope.isStaff ? "unknown" : "blocked";
+  return "blocked" as const;
+}
