@@ -409,13 +409,13 @@ export function InvoicesBoard() {
 
                     {canManage && inv.status === "draft" ? (
                       <div className="space-y-2">
-                        {lineDraft?.invoiceId === inv.id ? (
+                        {lineDraft && lineDraft.invoiceId === inv.id ? (
                           <div className="grid gap-2 md:grid-cols-4">
                             <Input
                               placeholder="Description"
                               value={lineDraft.label}
                               onChange={(e) =>
-                                setLineDraft({ ...lineDraft, label: e.target.value })
+                                setLineDraft({ ...lineDraft!, label: e.target.value })
                               }
                             />
                             <Input
@@ -424,7 +424,7 @@ export function InvoicesBoard() {
                               placeholder="Quantity"
                               value={lineDraft.quantity}
                               onChange={(e) =>
-                                setLineDraft({ ...lineDraft, quantity: e.target.value })
+                                setLineDraft({ ...lineDraft!, quantity: e.target.value })
                               }
                             />
                             <Input
@@ -433,7 +433,7 @@ export function InvoicesBoard() {
                               step="0.01"
                               placeholder="Amount each"
                               value={lineDraft.unit}
-                              onChange={(e) => setLineDraft({ ...lineDraft, unit: e.target.value })}
+                              onChange={(e) => setLineDraft({ ...lineDraft!, unit: e.target.value })}
                             />
                             <div className="flex gap-2">
                               <Button
@@ -441,9 +441,9 @@ export function InvoicesBoard() {
                                 onClick={() =>
                                   lineMutation.mutate({
                                     invoiceId: inv.id,
-                                    label: lineDraft.label.trim(),
-                                    quantity: Number(lineDraft.quantity || 1),
-                                    unitCents: Math.round(Number(lineDraft.unit || 0) * 100),
+                                    label: lineDraft!.label.trim(),
+                                    quantity: Number(lineDraft!.quantity || 1),
+                                    unitCents: Math.round(Number(lineDraft!.unit || 0) * 100),
                                   })
                                 }
                               >
