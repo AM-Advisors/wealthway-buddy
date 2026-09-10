@@ -188,40 +188,7 @@ function ClientPortal() {
         </TabsContent>
 
         <TabsContent value="agreement" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Statements of work</CardTitle>
-              <CardDescription>
-                Your master service agreement plus these statements of work control which services
-                Harmonious provides, on what terms and at what fees.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {sows.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No statement of work is recorded yet. Your Harmonious contact can share one for
-                  signature.
-                </p>
-              )}
-              {sows.map((s: any) => (
-                <div key={s.id} className="rounded-md border p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium">{s.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Effective {date(s.effective_date)}
-                        {s.notice_days ? ` · ${s.notice_days}-day notice period` : ""}
-                      </p>
-                    </div>
-                    <Badge variant={s.status === "signed" ? "default" : "secondary"}>
-                      {String(s.status ?? "draft").replace(/_/g, " ")}
-                    </Badge>
-                  </div>
-                  {s.notes && <p className="mt-2 text-sm">{s.notes}</p>}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <ClientSowPanel sows={sows as any} />
 
           <Card>
             <CardHeader>
