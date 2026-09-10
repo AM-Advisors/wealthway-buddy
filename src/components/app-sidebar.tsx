@@ -119,6 +119,11 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
     queryKey: ["operations-access"],
     queryFn: () => opsAccess(),
   });
+  const policyStatus = useServerFn(getPolicyStatus);
+  const { data: signOff } = useQuery({ queryKey: ["policy-status"], queryFn: () => policyStatus() });
+  const signOffComplete = Boolean(signOff && signOff.outstanding.length === 0);
+
+
 
   const isActive = (url: string) =>
     url === "/admin" || url === "/manager" || url === "/diligence" || url === "/ops"
