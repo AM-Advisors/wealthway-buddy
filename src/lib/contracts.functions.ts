@@ -1175,7 +1175,13 @@ export const saveProvider = createServerFn({ method: "POST" })
 export const listContractAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ clientId: z.string().uuid().optional(), limit: z.number().int().max(200).default(100) }).parse(d ?? {}),
+    z
+      .object({
+        clientId: z.string().uuid().optional(),
+        areas: z.array(z.string().max(40)).optional(),
+        limit: z.number().int().max(200).default(100),
+      })
+      .parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
     await requireStaff(context);
@@ -1185,6 +1191,7 @@ export const listContractAudit = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(data.limit);
     if (data.clientId) query = query.eq("client_id", data.clientId);
+    if (data.areas && data.areas.length > 0) query = query.in("area", data.areas);
     const { data: rows, error } = await query;
     if (error) throw new Error(error.message);
     return { events: rows ?? [] };
