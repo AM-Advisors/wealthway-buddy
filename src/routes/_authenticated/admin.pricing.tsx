@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { ClientPricingBoard } from "@/components/client-pricing-board";
+import { HoldsBoard } from "@/components/holds-board";
 import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
+import { ProvidersBoard } from "@/components/providers-board";
+import { ServiceRequestsBoard } from "@/components/service-requests-board";
 import { SowEditor } from "@/components/sow-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPricingBoard } from "@/lib/contracts.functions";
