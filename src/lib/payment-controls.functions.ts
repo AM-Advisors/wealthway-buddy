@@ -409,3 +409,39 @@ export const decidePaymentInstruction = createServerFn({ method: "POST" })
     });
     return { status: data.decision, approvals: 0, needed: 0 };
   });
+
+/** A short-lived link to the paperwork behind one payment, for the team only. */
+export const getPaymentDocumentUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await requireStaff(context);
+    const { data: instruction } = await context.supabase
+      .from("payment_instructions")
+      .select("supporting_document_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    const path = (instruction as any)?.supporting_document_path as string | null;
+    if (!path) throw new Error("No supporting document is attached to this payment.");
+    const { data: signed, error } = await context.supabase.storage
+      .from("payment-documents")
+      .createSignedUrl(path, 300);
+    if (error) throw new Error(error.message);
+    return { url: signed?.signedUrl as string };
+  });
+
+/** Funds and clients a movement can be raised against. */
+export const getMoneyMovementOptions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const roles = await requireStaff(context);
+    const [{ data: funds }, { data: clients }] = await Promise.all([
+      context.supabase.from("offerings").select("id, name, client_id").order("name"),
+      context.supabase.from("clients").select("id, name").order("name"),
+    ]);
+    return {
+      funds: (funds ?? []) as any[],
+      clients: (clients ?? []) as any[],
+      canApprove: roles.some((r) => APPROVERS.includes(r)),
+    };
+  });
