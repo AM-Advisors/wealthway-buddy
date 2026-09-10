@@ -432,7 +432,10 @@ export const updateOffboardingCase = createServerFn({ method: "POST" })
       patch['steps'] = steps;
     }
 
-    const { error } = await context.supabase.from("offboarding_cases").update(patch).eq("id", data.id);
+    const { error } = await context.supabase
+      .from("offboarding_cases")
+      .update(patch as any)
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
 
     await audit(context, who, {
