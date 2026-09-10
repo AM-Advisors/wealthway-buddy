@@ -22,6 +22,7 @@ import {
   ScopeServicesPanel,
   ScopeSummary,
 } from "@/components/fund-scope-section";
+import { FundReadinessPanel } from "@/components/fund-readiness-panel";
 import { useFundScope } from "@/lib/fund-scope";
 import { regTypeLabel } from "@/lib/reg-types";
 
@@ -458,6 +459,7 @@ function FundPage() {
         </TabsContent>
 
         <TabsContent value="compliance" className="mt-6 space-y-6">
+          <FundReadinessPanel offeringId={offering.id} />
           <FundComplianceCard offeringId={offering.id} />
           <FundEntityCard fundId={offering.id} />
         </TabsContent>

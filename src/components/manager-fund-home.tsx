@@ -17,6 +17,7 @@ import {
   ScopeServicesPanel,
   ScopeSummary,
 } from "@/components/fund-scope-section";
+import { FundReadinessPanel } from "@/components/fund-readiness-panel";
 import { SETUP_STEP_SECTIONS, sectionState, useFundScope } from "@/lib/fund-scope";
 
 import { Badge } from "@/components/ui/badge";
@@ -177,6 +178,7 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         <FundAgreementGate fundId={offeringId} />
         <ScopeSummary scope={scope} />
         <ScopeServicesPanel scope={scope} offeringId={offeringId} />
+        <FundReadinessPanel offeringId={offeringId} />
         <FundProvidersPanel scope={scope} />
       </div>
 
