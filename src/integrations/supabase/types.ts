@@ -3127,6 +3127,186 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_lines: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          description: string | null
+          expense_id: string | null
+          id: string
+          invoice_id: string
+          label: string
+          offering_id: string | null
+          pricing_id: string | null
+          quantity: number
+          service_key: string | null
+          sort_order: number
+          source: string
+          unit_cents: number
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          description?: string | null
+          expense_id?: string | null
+          id?: string
+          invoice_id: string
+          label: string
+          offering_id?: string | null
+          pricing_id?: string | null
+          quantity?: number
+          service_key?: string | null
+          sort_order?: number
+          source?: string
+          unit_cents?: number
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          description?: string | null
+          expense_id?: string | null
+          id?: string
+          invoice_id?: string
+          label?: string
+          offering_id?: string | null
+          pricing_id?: string | null
+          quantity?: number
+          service_key?: string | null
+          sort_order?: number
+          source?: string
+          unit_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_lines_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pass_through_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_pricing_id_fkey"
+            columns: ["pricing_id"]
+            isOneToOne: false
+            referencedRelation: "client_pricing"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          due_date: string | null
+          id: string
+          issue_date: string | null
+          issued_at: string | null
+          issued_by: string | null
+          net_days: number
+          note: string | null
+          number: string | null
+          offering_id: string | null
+          paid_on: string | null
+          payment_reference: string | null
+          period_end: string | null
+          period_start: string | null
+          sow_id: string | null
+          status: string
+          total_cents: number
+          updated_at: string
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issued_at?: string | null
+          issued_by?: string | null
+          net_days?: number
+          note?: string | null
+          number?: string | null
+          offering_id?: string | null
+          paid_on?: string | null
+          payment_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          sow_id?: string | null
+          status?: string
+          total_cents?: number
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issued_at?: string | null
+          issued_by?: string | null
+          net_days?: number
+          note?: string | null
+          number?: string | null
+          offering_id?: string | null
+          paid_on?: string | null
+          payment_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          sow_id?: string | null
+          status?: string
+          total_cents?: number
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           application_id: string
