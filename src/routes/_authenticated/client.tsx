@@ -217,7 +217,7 @@ function ClientPortal() {
                       {String(s.status ?? "draft").replace(/_/g, " ")}
                     </Badge>
                   </div>
-                  {s.scope_note && <p className="mt-2 text-sm">{s.scope_note}</p>}
+                  {s.notes && <p className="mt-2 text-sm">{s.notes}</p>}
                 </div>
               ))}
             </CardContent>
