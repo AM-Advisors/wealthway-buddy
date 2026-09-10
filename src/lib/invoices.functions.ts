@@ -457,9 +457,15 @@ export const issueInvoice = createServerFn({ method: "POST" })
         net_days: data.netDays,
         issued_by: who.userId,
         issued_at: new Date().toISOString(),
+        approval_status: "pending",
+        approval_requested_at: new Date().toISOString(),
+        rate_variance_cents: rates.varianceCents,
+        rate_override_reason: data.overrideReason || null,
+        rate_check: rates.items as any,
       })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+
 
     const { data: lines } = await context.supabase
       .from("invoice_lines")
