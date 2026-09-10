@@ -166,6 +166,9 @@ function RoleHome() {
               <QuickLink to="/portal" icon={Building2}>
                 Investor portal
               </QuickLink>
+              <QuickLink to="/client" icon={Building2}>
+                Client portal
+              </QuickLink>
               <QuickLink to="/documents" icon={FileText}>
                 Documents
               </QuickLink>
