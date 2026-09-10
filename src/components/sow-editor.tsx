@@ -188,7 +188,17 @@ export function SowEditor({
                         engagement
                       </p>
                     ) : null}
+                    <p className="text-xs text-muted-foreground">
+                      {sow.client_status === "signed"
+                        ? `Client signed in the portal: ${sow.client_signature_name ?? "recorded"}${
+                            sow.client_signature_title ? `, ${sow.client_signature_title}` : ""
+                          }${sow.client_signed_at ? ` on ${new Date(sow.client_signed_at).toLocaleDateString("en-US")}` : ""}`
+                        : sow.client_status === "sent_back"
+                          ? `Client sent this back${sow.client_sent_back_reason ? `: ${sow.client_sent_back_reason}` : ""}`
+                          : "Client has not signed this in their portal yet"}
+                    </p>
                   </div>
+                  {canManage ? <SowDocumentUpload sow={sow} /> : null}
                   <Badge variant={sow.status === "active" ? "default" : "secondary"}>
                     {sow.status}
                   </Badge>
