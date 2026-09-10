@@ -78,6 +78,7 @@ const operationsItems: NavItem[] = [
 ];
 
 const adminItems: NavItem[] = [
+  { title: "My clients", url: "/staff", icon: UserPlus },
   { title: "Applications", url: "/admin", icon: ClipboardList },
   { title: "New application", url: "/admin/new-application", icon: UserPlus },
   { title: "Fund access", url: "/admin/access", icon: BadgeCheck },

@@ -31,6 +31,7 @@ import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
+import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
 import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_authenticated/wire-confirmation'
@@ -230,6 +231,11 @@ const AuthenticatedProviderRoute = AuthenticatedProviderRouteImport.update({
 const AuthenticatedSignOffRoute = AuthenticatedSignOffRouteImport.update({
   id: '/sign-off',
   path: '/sign-off',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSubscriptionRoute =
@@ -765,6 +771,7 @@ export interface FileRoutesByFullPath {
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
+  '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
@@ -876,6 +883,7 @@ export interface FileRoutesByTo {
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
+  '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
@@ -990,6 +998,7 @@ export interface FileRoutesById {
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
+  '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
@@ -1104,6 +1113,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/provider'
     | '/sign-off'
+    | '/staff'
     | '/subscription'
     | '/wire'
     | '/wire-confirmation'
@@ -1215,6 +1225,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/provider'
     | '/sign-off'
+    | '/staff'
     | '/subscription'
     | '/wire'
     | '/wire-confirmation'
@@ -1328,6 +1339,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal'
     | '/_authenticated/provider'
     | '/_authenticated/sign-off'
+    | '/_authenticated/staff'
     | '/_authenticated/subscription'
     | '/_authenticated/wire'
     | '/_authenticated/wire-confirmation'
@@ -1596,6 +1608,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-off'
       fullPath: '/sign-off'
       preLoaderRoute: typeof AuthenticatedSignOffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/staff': {
+      id: '/_authenticated/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof AuthenticatedStaffRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/subscription': {
@@ -2237,6 +2256,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
+  AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
   AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
@@ -2328,6 +2348,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
+  AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
   AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
