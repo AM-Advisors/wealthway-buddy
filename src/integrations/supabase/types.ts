@@ -1985,6 +1985,54 @@ export type Database = {
           },
         ]
       }
+      eligibility_rules: {
+        Row: {
+          active: boolean
+          applies_to: string
+          blocking: boolean
+          created_at: string
+          default_value: Json
+          description: string | null
+          id: string
+          key: string
+          label: string
+          rule_type: string
+          sort_order: number
+          source_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          applies_to?: string
+          blocking?: boolean
+          created_at?: string
+          default_value?: Json
+          description?: string | null
+          id?: string
+          key: string
+          label: string
+          rule_type?: string
+          sort_order?: number
+          source_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          applies_to?: string
+          blocking?: boolean
+          created_at?: string
+          default_value?: Json
+          description?: string | null
+          id?: string
+          key?: string
+          label?: string
+          rule_type?: string
+          sort_order?: number
+          source_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_delivery_events: {
         Row: {
           event_id: string
@@ -4470,6 +4518,126 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      responsibility_items: {
+        Row: {
+          client_id: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          detail: string | null
+          due_on: string | null
+          id: string
+          label: string
+          note: string | null
+          offering_id: string | null
+          owner: string
+          phase: string
+          status: string
+          template_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail?: string | null
+          due_on?: string | null
+          id?: string
+          label: string
+          note?: string | null
+          offering_id?: string | null
+          owner?: string
+          phase?: string
+          status?: string
+          template_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail?: string | null
+          due_on?: string | null
+          id?: string
+          label?: string
+          note?: string | null
+          offering_id?: string | null
+          owner?: string
+          phase?: string
+          status?: string
+          template_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "responsibility_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "responsibility_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      responsibility_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          detail: string | null
+          id: string
+          key: string
+          label: string
+          lead_time_note: string | null
+          owner: string
+          phase: string
+          service_key: string | null
+          sort_order: number
+          source_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          detail?: string | null
+          id?: string
+          key: string
+          label: string
+          lead_time_note?: string | null
+          owner?: string
+          phase?: string
+          service_key?: string | null
+          sort_order?: number
+          source_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          detail?: string | null
+          id?: string
+          key?: string
+          label?: string
+          lead_time_note?: string | null
+          owner?: string
+          phase?: string
+          service_key?: string | null
+          sort_order?: number
+          source_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       reviewer_activity: {
         Row: {
