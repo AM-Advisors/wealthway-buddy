@@ -174,7 +174,7 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
       </div>
 
       <div className="mt-6 space-y-4">
-        <FundAgreementGate fundId={fundId} />
+        <FundAgreementGate fundId={offeringId} />
         <ScopeSummary scope={scope} />
         <ScopeServicesPanel scope={scope} offeringId={offeringId} />
         <FundProvidersPanel scope={scope} />
