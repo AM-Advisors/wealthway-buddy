@@ -17,7 +17,7 @@ export const getClientPortal = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: memberships } = await context.supabase
       .from("client_users")
-      .select("client_id, role")
+      .select("client_id, client_role")
       .eq("user_id", context.userId);
 
     const clientIds = [...new Set((memberships ?? []).map((m: any) => String(m.client_id)))];
@@ -27,7 +27,7 @@ export const getClientPortal = createServerFn({ method: "GET" })
 
     const { data: clientRows } = await context.supabase
       .from("clients")
-      .select("id, name, status, entity_type, primary_contact_name, primary_contact_email")
+      .select("id, name, legal_name, status, primary_contact_name, primary_contact_email")
       .in("id", clientIds)
       .order("name");
 
@@ -104,7 +104,7 @@ export const getClientPortal = createServerFn({ method: "GET" })
     return {
       clients,
       client: client ?? null,
-      role: (memberships ?? []).find((m: any) => m.client_id === selectedId)?.role ?? null,
+      role: (memberships ?? []).find((m: any) => m.client_id === selectedId)?.client_role ?? null,
       funds: funds ?? [],
       sows: sows ?? [],
       services: included,
