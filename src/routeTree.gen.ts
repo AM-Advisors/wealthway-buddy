@@ -100,10 +100,12 @@ import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/l
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
+import { Route as AuthenticatedAdminFundBankingFundIdRouteImport } from './routes/_authenticated/admin.fund-banking.$fundId'
 import { Route as AuthenticatedAdminFundMigrationFundIdRouteImport } from './routes/_authenticated/admin.fund-migration.$fundId'
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
 import { Route as AuthenticatedAdminOffboardingCaseIdRouteImport } from './routes/_authenticated/admin.offboarding.$caseId'
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
+import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
@@ -624,6 +626,12 @@ const AuthenticatedAdminContractsClientIdRoute =
     path: '/admin/contracts/$clientId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminFundBankingFundIdRoute =
+  AuthenticatedAdminFundBankingFundIdRouteImport.update({
+    id: '/admin/fund-banking/$fundId',
+    path: '/admin/fund-banking/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminFundMigrationFundIdRoute =
   AuthenticatedAdminFundMigrationFundIdRouteImport.update({
     id: '/admin/fund-migration/$fundId',
@@ -646,6 +654,12 @@ const AuthenticatedAdminPacketFundIdRoute =
   AuthenticatedAdminPacketFundIdRouteImport.update({
     id: '/admin/packet/$fundId',
     path: '/admin/packet/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerFundBankingFundIdRoute =
+  AuthenticatedManagerFundBankingFundIdRouteImport.update({
+    id: '/manager/fund-banking/$fundId',
+    path: '/manager/fund-banking/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerFundFundIdRoute =
@@ -788,10 +802,12 @@ export interface FileRoutesByFullPath {
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -892,10 +908,12 @@ export interface FileRoutesByTo {
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -999,10 +1017,12 @@ export interface FileRoutesById {
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/_authenticated/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/_authenticated/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/_authenticated/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -1106,10 +1126,12 @@ export interface FileRouteTypes {
     | '/manager/'
     | '/ops/'
     | '/admin/contracts/$clientId'
+    | '/admin/fund-banking/$fundId'
     | '/admin/fund-migration/$fundId'
     | '/admin/fund/$fundId'
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
+    | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/api/public/email/click'
@@ -1210,10 +1232,12 @@ export interface FileRouteTypes {
     | '/manager'
     | '/ops'
     | '/admin/contracts/$clientId'
+    | '/admin/fund-banking/$fundId'
     | '/admin/fund-migration/$fundId'
     | '/admin/fund/$fundId'
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
+    | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/api/public/email/click'
@@ -1316,10 +1340,12 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/'
     | '/_authenticated/ops/'
     | '/_authenticated/admin/contracts/$clientId'
+    | '/_authenticated/admin/fund-banking/$fundId'
     | '/_authenticated/admin/fund-migration/$fundId'
     | '/_authenticated/admin/fund/$fundId'
     | '/_authenticated/admin/offboarding/$caseId'
     | '/_authenticated/admin/packet/$fundId'
+    | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
     | '/api/public/email/click'
@@ -1994,6 +2020,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminContractsClientIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/fund-banking/$fundId': {
+      id: '/_authenticated/admin/fund-banking/$fundId'
+      path: '/admin/fund-banking/$fundId'
+      fullPath: '/admin/fund-banking/$fundId'
+      preLoaderRoute: typeof AuthenticatedAdminFundBankingFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/fund-migration/$fundId': {
       id: '/_authenticated/admin/fund-migration/$fundId'
       path: '/admin/fund-migration/$fundId'
@@ -2020,6 +2053,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/packet/$fundId'
       fullPath: '/admin/packet/$fundId'
       preLoaderRoute: typeof AuthenticatedAdminPacketFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/fund-banking/$fundId': {
+      id: '/_authenticated/manager/fund-banking/$fundId'
+      path: '/manager/fund-banking/$fundId'
+      fullPath: '/manager/fund-banking/$fundId'
+      preLoaderRoute: typeof AuthenticatedManagerFundBankingFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/fund/$fundId': {
@@ -2163,10 +2203,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedAdminContractsClientIdRoute: typeof AuthenticatedAdminContractsClientIdRoute
+  AuthenticatedAdminFundBankingFundIdRoute: typeof AuthenticatedAdminFundBankingFundIdRoute
   AuthenticatedAdminFundMigrationFundIdRoute: typeof AuthenticatedAdminFundMigrationFundIdRoute
   AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
   AuthenticatedAdminOffboardingCaseIdRoute: typeof AuthenticatedAdminOffboardingCaseIdRoute
   AuthenticatedAdminPacketFundIdRoute: typeof AuthenticatedAdminPacketFundIdRoute
+  AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedAdminContractsIndexRoute: typeof AuthenticatedAdminContractsIndexRoute
@@ -2254,12 +2296,16 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
   AuthenticatedAdminContractsClientIdRoute:
     AuthenticatedAdminContractsClientIdRoute,
+  AuthenticatedAdminFundBankingFundIdRoute:
+    AuthenticatedAdminFundBankingFundIdRoute,
   AuthenticatedAdminFundMigrationFundIdRoute:
     AuthenticatedAdminFundMigrationFundIdRoute,
   AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
   AuthenticatedAdminOffboardingCaseIdRoute:
     AuthenticatedAdminOffboardingCaseIdRoute,
   AuthenticatedAdminPacketFundIdRoute: AuthenticatedAdminPacketFundIdRoute,
+  AuthenticatedManagerFundBankingFundIdRoute:
+    AuthenticatedManagerFundBankingFundIdRoute,
   AuthenticatedManagerFundFundIdRoute: AuthenticatedManagerFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
   AuthenticatedAdminContractsIndexRoute: AuthenticatedAdminContractsIndexRoute,

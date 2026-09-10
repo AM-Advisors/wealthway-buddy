@@ -3825,6 +3825,65 @@ export type Database = {
           },
         ]
       }
+      offering_document_signature_blocks: {
+        Row: {
+          block_type: string
+          created_at: string
+          created_by: string | null
+          height: number
+          id: string
+          offering_document_id: string
+          page_number: number
+          required: boolean
+          signer_role: string
+          sort_order: number
+          updated_at: string
+          width: number
+          x: number
+          y: number
+        }
+        Insert: {
+          block_type: string
+          created_at?: string
+          created_by?: string | null
+          height?: number
+          id?: string
+          offering_document_id: string
+          page_number?: number
+          required?: boolean
+          signer_role?: string
+          sort_order?: number
+          updated_at?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Update: {
+          block_type?: string
+          created_at?: string
+          created_by?: string | null
+          height?: number
+          id?: string
+          offering_document_id?: string
+          page_number?: number
+          required?: boolean
+          signer_role?: string
+          sort_order?: number
+          updated_at?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_document_signature_blocks_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_document_versions: {
         Row: {
           created_at: string

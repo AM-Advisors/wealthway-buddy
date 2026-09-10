@@ -41,6 +41,7 @@ export function OfferingDocumentFile({
   const link = useServerFn(getOfferingDocumentFileUrl);
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"upload" | "download" | "remove" | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const upload = async (file: File) => {
     if (file.size > MAX_BYTES) {
@@ -94,7 +95,24 @@ export function OfferingDocumentFile({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
+    <div
+      className={`flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2 text-xs transition-colors ${
+        dragging ? "border-primary bg-primary/5" : "border-transparent"
+      }`}
+      onDragOver={(e) => {
+        if (!canEdit) return;
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        if (!canEdit) return;
+        e.preventDefault();
+        setDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) void upload(file);
+      }}
+    >
       {fileName ? (
         <>
           <span className="text-muted-foreground">
@@ -111,7 +129,11 @@ export function OfferingDocumentFile({
           )}
         </>
       ) : (
-        canEdit && <span className="text-muted-foreground">No file uploaded yet.</span>
+        canEdit && (
+          <span className="text-muted-foreground">
+            No file uploaded yet. Drag a PDF or Word file here, or browse.
+          </span>
+        )
       )}
       {canEdit && (
         <>

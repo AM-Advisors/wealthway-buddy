@@ -239,6 +239,27 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
       </Card>
 
       <div className="mt-6">
+      <ScopeSection scope={scope} section="banking" offeringId={offeringId} label="Banking">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Banking</CardTitle>
+            <CardDescription>
+              Enter your fund's receiving account details, or apply for an account through the
+              portal.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild size="sm">
+              <Link to="/manager/fund-banking/$fundId" params={{ fundId: offeringId }}>
+                Open fund banking
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </ScopeSection>
+      </div>
+
+      <div className="mt-6">
       <ScopeSection scope={scope} section="documents" offeringId={offeringId} label="Fund documents">
       <Card>
         <CardHeader>
