@@ -90,8 +90,18 @@ export function SowApprovalsBoard() {
   }
 
   const data = query.data as { canDecide: boolean; rows: Row[] };
-  const waiting = data.rows.filter((r) => r.approvalStatus === "pending" && r.signed);
-  const unsigned = data.rows.filter((r) => r.approvalStatus === "pending" && !r.signed);
+  const waiting = data.rows.filter(
+    (r) => r.approvalStatus === "pending" && r.signed && r.clientStatus === "signed",
+  );
+  const sentBack = data.rows.filter(
+    (r) => r.approvalStatus === "pending" && r.clientStatus === "sent_back",
+  );
+  const unsigned = data.rows.filter(
+    (r) =>
+      r.approvalStatus === "pending" &&
+      r.clientStatus !== "sent_back" &&
+      (!r.signed || r.clientStatus !== "signed"),
+  );
   const approved = data.rows.filter((r) => r.approvalStatus === "approved");
   const rejected = data.rows.filter((r) => r.approvalStatus === "rejected");
 
@@ -109,15 +119,16 @@ export function SowApprovalsBoard() {
           ? `Signed by ${row.signedBy} on ${formatDate(row.signedOn)}`
           : "No client signature recorded"}
       </p>
+      <p className="text-xs text-muted-foreground">
+        {row.clientStatus === "signed"
+          ? `Signed in the client portal by ${row.clientSignatureName ?? "the client"}${row.clientSignatureTitle ? `, ${row.clientSignatureTitle}` : ""} on ${formatDate(row.clientSignedAt)}`
+          : row.clientStatus === "sent_back"
+            ? `Sent back by the client on ${formatDate(row.clientSentBackAt)}`
+            : "Not yet signed in the client portal"}
+        {row.hasDocument ? " · document attached" : " · no document uploaded"}
+      </p>
     </div>
   );
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle className="text-base">Awaiting approval</CardTitle>
             <Badge variant={waiting.length ? "destructive" : "secondary"}>{waiting.length}</Badge>
           </div>
           <CardDescription>
