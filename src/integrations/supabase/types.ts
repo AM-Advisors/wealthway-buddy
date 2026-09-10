@@ -4165,6 +4165,89 @@ export type Database = {
           },
         ]
       }
+      pass_through_expenses: {
+        Row: {
+          amount_cents: number
+          billing_status: string
+          client_id: string | null
+          created_at: string
+          currency: string
+          description: string
+          id: string
+          incurred_on: string
+          note: string | null
+          offering_id: string | null
+          pricing_item_id: string | null
+          provider_id: string | null
+          recorded_by: string | null
+          reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          billing_status?: string
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          description: string
+          id?: string
+          incurred_on?: string
+          note?: string | null
+          offering_id?: string | null
+          pricing_item_id?: string | null
+          provider_id?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          billing_status?: string
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: string
+          incurred_on?: string
+          note?: string | null
+          offering_id?: string | null
+          pricing_item_id?: string | null
+          provider_id?: string | null
+          recorded_by?: string | null
+          reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pass_through_expenses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pass_through_expenses_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pass_through_expenses_pricing_item_id_fkey"
+            columns: ["pricing_item_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pass_through_expenses_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "third_party_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_approvals: {
         Row: {
           approver_id: string
@@ -5411,6 +5494,7 @@ export type Database = {
           name: string
           outage_note: string | null
           provider_type: string
+          retired_at: string | null
           security_doc_url: string | null
           service_dependency: string | null
           sla: string | null
@@ -5425,6 +5509,7 @@ export type Database = {
           name: string
           outage_note?: string | null
           provider_type: string
+          retired_at?: string | null
           security_doc_url?: string | null
           service_dependency?: string | null
           sla?: string | null
@@ -5439,6 +5524,7 @@ export type Database = {
           name?: string
           outage_note?: string | null
           provider_type?: string
+          retired_at?: string | null
           security_doc_url?: string | null
           service_dependency?: string | null
           sla?: string | null
