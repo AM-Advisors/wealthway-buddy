@@ -67,6 +67,9 @@ function PricingConsole() {
           <TabsTrigger value="catalog">Standard rate card</TabsTrigger>
           <TabsTrigger value="clients">Client rates</TabsTrigger>
           <TabsTrigger value="sows">Statements of work</TabsTrigger>
+          <TabsTrigger value="holds">Holds</TabsTrigger>
+          <TabsTrigger value="providers">Providers</TabsTrigger>
+          <TabsTrigger value="requests">Service requests</TabsTrigger>
         </TabsList>
         <TabsContent value="catalog" className="pt-4">
           <PricingCatalogBoard
