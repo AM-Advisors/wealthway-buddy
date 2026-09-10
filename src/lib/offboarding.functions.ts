@@ -65,7 +65,9 @@ type Steps = {
   export?: ExportDelivery;
   endDateReason?: string | null;
   retentionReviewedAt?: string | null;
+  accessRemovedAt?: string | null;
 };
+
 
 type Who = { userId: string; roles: string[]; isStaff: boolean; canManage: boolean };
 
@@ -149,8 +151,10 @@ function blockers(row: any) {
   if (lines.some((l) => l.state === "disputed" && !l.note)) list.push("A disputed amount needs a reason");
   if (!steps.export) list.push("Data export delivery not recorded");
   if (!steps.retentionReviewedAt) list.push("Retained records not reviewed");
+  if (!steps.accessRemovedAt) list.push("Client access not removed");
   return list;
 }
+
 
 /* ------------------------------------------------------------------ reads */
 
@@ -220,6 +224,8 @@ const caseDetail = (row: any, client: any, sow: any, retention: any[]) => {
     settlement: steps.settlement ?? [],
     exportDelivery: steps.export ?? null,
     retentionReviewedAt: steps.retentionReviewedAt ?? null,
+    accessRemovedAt: steps.accessRemovedAt ?? null,
+
     closedAt: row.closed_at,
     blockers: row.status === "closed" ? [] : blockers(row),
     retention: retention.map((r) => ({
@@ -249,27 +255,58 @@ export const getOffboardingCase = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     if (!row) throw new Error("That termination record is not available.");
 
-    const [{ data: client }, { data: sow }, { data: retention }, { data: pricing }, { data: sows }] =
-      await Promise.all([
-        context.supabase.from("clients").select("*").eq("id", row.client_id).maybeSingle(),
-        row.sow_id
-          ? context.supabase.from("client_sows").select("*").eq("id", row.sow_id).maybeSingle()
-          : Promise.resolve({ data: null }),
-        context.supabase
-          .from("record_retention")
-          .select("*")
-          .eq("client_id", row.client_id)
-          .order("created_at", { ascending: false }),
-        context.supabase.from("client_pricing").select("*").eq("client_id", row.client_id),
-        context.supabase
-          .from("client_sows")
-          .select("id, title, status, sow_type, notice_days, effective_date")
-          .eq("client_id", row.client_id),
-      ]);
+    const [
+      { data: client },
+      { data: sow },
+      { data: retention },
+      { data: pricing },
+      { data: sows },
+      { data: members },
+    ] = await Promise.all([
+      context.supabase.from("clients").select("*").eq("id", row.client_id).maybeSingle(),
+      row.sow_id
+        ? context.supabase.from("client_sows").select("*").eq("id", row.sow_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      context.supabase
+        .from("record_retention")
+        .select("*")
+        .eq("client_id", row.client_id)
+        .order("created_at", { ascending: false }),
+      context.supabase.from("client_pricing").select("*").eq("client_id", row.client_id),
+      context.supabase
+        .from("client_sows")
+        .select("id, title, status, sow_type, notice_days, effective_date")
+        .eq("client_id", row.client_id),
+      context.supabase
+        .from("client_users")
+        .select("id, user_id, client_role, can_approve, created_at")
+        .eq("client_id", row.client_id),
+    ]);
+
+    const memberRows = (members ?? []) as any[];
+    const { data: people } = memberRows.length
+      ? await context.supabase
+          .from("profiles")
+          .select("user_id, legal_name, email")
+          .in(
+            "user_id",
+            memberRows.map((m) => m.user_id),
+          )
+      : { data: [] as any[] };
+    const byUser = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p]));
 
     return {
       canManage: who.canManage,
       case: caseDetail(row, client, sow, (retention ?? []) as any[]),
+      clientStatus: client?.status ?? null,
+      access: memberRows.map((m) => ({
+        id: m.id,
+        userId: m.user_id,
+        name: byUser.get(m.user_id)?.legal_name ?? null,
+        email: byUser.get(m.user_id)?.email ?? null,
+        role: m.client_role,
+        canApprove: m.can_approve,
+      })),
       rates: ((pricing ?? []) as any[]).map((p) => ({
         key: p.id,
         label: p.label,
@@ -285,6 +322,7 @@ export const getOffboardingCase = createServerFn({ method: "GET" })
       })),
     };
   });
+
 
 /** The client's own read-only view of their wind-down. */
 export const getMyOffboarding = createServerFn({ method: "GET" })
@@ -686,6 +724,49 @@ export const markRetentionReviewed = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Removes one person's, or everyone's, access to the client workspace. Records stay. */
+export const removeClientAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), memberId: z.string().uuid().optional() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireAuthority(context);
+    const { data: row } = await context.supabase
+      .from("offboarding_cases")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("That termination record is not available.");
+    if (row.status === "closed") throw new Error("This termination is closed and can no longer change.");
+
+    let query = context.supabase.from("client_users").delete().eq("client_id", row.client_id);
+    if (data.memberId) query = query.eq("id", data.memberId);
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+
+    const { data: left } = await context.supabase
+      .from("client_users")
+      .select("id")
+      .eq("client_id", row.client_id);
+    const remaining = ((left ?? []) as any[]).length;
+
+    const steps = stepsOf(row);
+    if (remaining === 0) {
+      steps.accessRemovedAt = new Date().toISOString();
+      await context.supabase.from("offboarding_cases").update({ steps }).eq("id", data.id);
+    }
+
+    await audit(context, who, {
+      action: data.memberId ? "client access removed for one person" : "all client access removed",
+      clientId: row.client_id,
+      target: data.memberId ?? null,
+      next: { remaining },
+    });
+    return { ok: true, remaining };
+  });
+
+
 export const closeOffboardingCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -714,6 +795,12 @@ export const closeOffboardingCase = createServerFn({ method: "POST" })
       })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    await context.supabase
+      .from("clients")
+      .update({ status: "terminated" })
+      .eq("id", row.client_id);
+
 
     await audit(context, who, {
       action: "termination closed",
