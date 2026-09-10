@@ -203,30 +203,49 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
                   {OPERATING_STATUSES.find((s) => s.value === p.status)?.label ?? p.status}
                 </Badge>
                 <Badge variant="secondary">Contract: {p.contract_status}</Badge>
+                {p.retired_at ? <Badge variant="secondary">Retired</Badge> : null}
                 {canManage ? (
-                  <Button
-                    className="ml-auto"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      setDraft({
-                        id: p.id,
-                        name: p.name ?? "",
-                        provider_type: p.provider_type ?? "other",
-                        service_dependency: p.service_dependency ?? "",
-                        data_categories: (p.data_categories ?? []).join(", "),
-                        contract_status: p.contract_status ?? "active",
-                        security_doc_url: p.security_doc_url ?? "",
-                        sla: p.sla ?? "",
-                        status: p.status ?? "operational",
-                        outage_note: p.outage_note ?? "",
-                      })
-                    }
-                  >
-                    Edit
-                  </Button>
+                  <div className="ml-auto flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setDraft({
+                          id: p.id,
+                          name: p.name ?? "",
+                          provider_type: p.provider_type ?? "other",
+                          service_dependency: p.service_dependency ?? "",
+                          data_categories: (p.data_categories ?? []).join(", "),
+                          contract_status: p.contract_status ?? "active",
+                          security_doc_url: p.security_doc_url ?? "",
+                          sla: p.sla ?? "",
+                          status: p.status ?? "operational",
+                          outage_note: p.outage_note ?? "",
+                        })
+                      }
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={retireMutation.isPending}
+                      onClick={() =>
+                        retireMutation.mutate({ id: p.id, retired: !p.retired_at })
+                      }
+                    >
+                      {p.retired_at ? "Reinstate" : "Retire"}
+                    </Button>
+                  </div>
                 ) : null}
               </div>
+              {costsByProvider.get(p.id) ? (
+                <p className="text-sm text-muted-foreground">
+                  {costsByProvider.get(p.id)!.count} cost
+                  {costsByProvider.get(p.id)!.count === 1 ? "" : "s"} logged ·{" "}
+                  {money(costsByProvider.get(p.id)!.total)} — see the Expenses tab.
+                </p>
+              ) : null}
               {p.service_dependency ? (
                 <p className="text-sm text-muted-foreground">Supports: {p.service_dependency}</p>
               ) : null}
