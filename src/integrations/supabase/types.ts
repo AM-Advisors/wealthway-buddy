@@ -5122,6 +5122,210 @@ export type Database = {
           },
         ]
       }
+      provider_agreement_conditions: {
+        Row: {
+          agreement_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          detail: string | null
+          evidence_url: string | null
+          id: string
+          label: string
+          met: boolean
+          required: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          agreement_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          detail?: string | null
+          evidence_url?: string | null
+          id?: string
+          label: string
+          met?: boolean
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          agreement_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          detail?: string | null
+          evidence_url?: string | null
+          id?: string
+          label?: string
+          met?: boolean
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_agreement_conditions_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "provider_agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_agreement_rates: {
+        Row: {
+          agreement_id: string
+          amount_cents: number
+          basis: string
+          billed_to_client: boolean
+          cap_cents: number | null
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          minimum_cents: number | null
+          note: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          agreement_id: string
+          amount_cents?: number
+          basis?: string
+          billed_to_client?: boolean
+          cap_cents?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          minimum_cents?: number | null
+          note?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          agreement_id?: string
+          amount_cents?: number
+          basis?: string
+          billed_to_client?: boolean
+          cap_cents?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          minimum_cents?: number | null
+          note?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_agreement_rates_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "provider_agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_agreements: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          document_url: string | null
+          end_date: string | null
+          harmonious_signed_at: string | null
+          harmonious_signer_name: string | null
+          harmonious_signer_title: string | null
+          id: string
+          note: string | null
+          notice_days: number
+          provider_id: string
+          provider_signed_at: string | null
+          provider_signer_name: string | null
+          provider_signer_title: string | null
+          reference: string | null
+          scope_summary: string | null
+          services: string[]
+          start_date: string | null
+          status: string
+          terminated_at: string | null
+          termination_reason: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          document_url?: string | null
+          end_date?: string | null
+          harmonious_signed_at?: string | null
+          harmonious_signer_name?: string | null
+          harmonious_signer_title?: string | null
+          id?: string
+          note?: string | null
+          notice_days?: number
+          provider_id: string
+          provider_signed_at?: string | null
+          provider_signer_name?: string | null
+          provider_signer_title?: string | null
+          reference?: string | null
+          scope_summary?: string | null
+          services?: string[]
+          start_date?: string | null
+          status?: string
+          terminated_at?: string | null
+          termination_reason?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          document_url?: string | null
+          end_date?: string | null
+          harmonious_signed_at?: string | null
+          harmonious_signer_name?: string | null
+          harmonious_signer_title?: string | null
+          id?: string
+          note?: string | null
+          notice_days?: number
+          provider_id?: string
+          provider_signed_at?: string | null
+          provider_signer_name?: string | null
+          provider_signer_title?: string | null
+          reference?: string | null
+          scope_summary?: string | null
+          services?: string[]
+          start_date?: string | null
+          status?: string
+          terminated_at?: string | null
+          termination_reason?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_agreements_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "third_party_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_documents: {
         Row: {
           created_at: string
