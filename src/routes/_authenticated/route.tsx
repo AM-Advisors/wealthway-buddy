@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/app-sidebar";
+import { PolicyGate } from "@/components/policy-gate";
 import { PortalGate } from "@/components/portal-gate";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
