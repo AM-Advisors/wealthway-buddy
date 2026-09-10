@@ -935,3 +935,96 @@ export const listContractAudit = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { events: rows ?? [] };
   });
+
+/* ------------------------------------------------- pricing console extras */
+
+/** Everything the pricing and agreements console needs in one read. */
+export const getPricingBoard = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const who = await requireStaff(context);
+    const [{ data: versions }, { data: items }, { data: clients }, { data: prices }, { data: sows }, { data: catalog }, { data: funds }] =
+      await Promise.all([
+        context.supabase.from("pricing_versions").select("*").order("created_at", { ascending: false }),
+        context.supabase.from("pricing_items").select("*").order("sort_order"),
+        context.supabase.from("clients").select("id, name, status").order("name"),
+        context.supabase.from("client_pricing").select("*").order("created_at", { ascending: false }),
+        context.supabase.from("client_sows").select("*").order("created_at", { ascending: false }),
+        context.supabase.from("service_catalog").select("key, name, category").eq("active", true).order("sort_order"),
+        context.supabase.from("offerings").select("id, name, client_id").order("name"),
+      ]);
+
+    return {
+      canManage: who.canManage,
+      versions: (versions ?? []).map((v: any) => ({
+        ...v,
+        items: (items ?? []).filter((i: any) => i.version_id === v.id),
+      })),
+      clients: clients ?? [],
+      clientPricing: prices ?? [],
+      sows: sows ?? [],
+      catalog: catalog ?? [],
+      funds: funds ?? [],
+    };
+  });
+
+export const deletePricingItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: row } = await context.supabase
+      .from("pricing_items")
+      .select("*, pricing_versions(status)")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("That line item isn't available.");
+    if ((row as any).pricing_versions?.status === "published") {
+      throw new Error("Published rate cards can't be edited. Copy it into a new version first.");
+    }
+    const { error } = await context.supabase.from("pricing_items").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "pricing",
+      action: "item removed",
+      target: (row as any).label,
+      previous: row,
+    });
+    return { ok: true };
+  });
+
+export const deleteClientPrice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: row } = await context.supabase
+      .from("client_pricing")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    const { error } = await context.supabase.from("client_pricing").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      area: "pricing",
+      action: "client price removed",
+      clientId: (row as any)?.client_id ?? null,
+      target: (row as any)?.label ?? data.id,
+      previous: row ?? null,
+    });
+    return { ok: true };
+  });
+
+export const archivePricingVersion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { error } = await context.supabase
+      .from("pricing_versions")
+      .update({ status: "archived" })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, { area: "pricing", action: "version archived", target: data.id });
+    return { ok: true };
+  });
