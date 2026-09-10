@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { ClientPricingBoard } from "@/components/client-pricing-board";
+import { HoldsBoard } from "@/components/holds-board";
 import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
+import { ProvidersBoard } from "@/components/providers-board";
+import { ServiceRequestsBoard } from "@/components/service-requests-board";
 import { SowEditor } from "@/components/sow-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPricingBoard } from "@/lib/contracts.functions";
@@ -64,6 +67,9 @@ function PricingConsole() {
           <TabsTrigger value="catalog">Standard rate card</TabsTrigger>
           <TabsTrigger value="clients">Client rates</TabsTrigger>
           <TabsTrigger value="sows">Statements of work</TabsTrigger>
+          <TabsTrigger value="holds">Holds</TabsTrigger>
+          <TabsTrigger value="providers">Providers</TabsTrigger>
+          <TabsTrigger value="requests">Service requests</TabsTrigger>
         </TabsList>
         <TabsContent value="catalog" className="pt-4">
           <PricingCatalogBoard
@@ -88,6 +94,15 @@ function PricingConsole() {
             funds={data.funds}
             canManage={data.canManage}
           />
+        </TabsContent>
+        <TabsContent value="holds" className="pt-4">
+          <HoldsBoard clients={data.clients} funds={data.funds} canManage={data.canManage} />
+        </TabsContent>
+        <TabsContent value="providers" className="pt-4">
+          <ProvidersBoard canManage={data.canManage} />
+        </TabsContent>
+        <TabsContent value="requests" className="pt-4">
+          <ServiceRequestsBoard />
         </TabsContent>
       </Tabs>
     </main>
