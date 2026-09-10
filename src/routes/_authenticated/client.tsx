@@ -1,0 +1,324 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+
+import { getClientPortal } from "@/lib/client-portal.functions";
+import { ClientInvoicesPanel } from "@/components/client-invoices-panel";
+import { MyServiceRequests } from "@/components/service-request-signing";
+import { ClientOffboardingPanel } from "@/components/client-offboarding-panel";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export const Route = createFileRoute("/_authenticated/client")({
+  head: () => ({
+    meta: [
+      { title: "Client Portal — Harmonious" },
+      {
+        name: "description",
+        content:
+          "Your Harmonious client portal: the funds we administer for you, your statement of work, what it covers, your invoices and approved payments.",
+      },
+      { property: "og:title", content: "Client Portal — Harmonious" },
+      {
+        property: "og:description",
+        content: "Funds, statement of work, invoices and approved payments in one place.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: ClientPortal,
+});
+
+const money = (cents: number | null | undefined) =>
+  typeof cents === "number"
+    ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
+    : "—";
+
+const date = (value: string | null | undefined) =>
+  value ? new Date(value).toLocaleDateString("en-US") : "—";
+
+const PAYMENT_LABEL: Record<string, string> = {
+  approved: "Approved",
+  sent: "Sent",
+  released: "Released",
+  settled: "Settled",
+  completed: "Completed",
+};
+
+function ClientPortal() {
+  const load = useServerFn(getClientPortal);
+  const [clientId, setClientId] = useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["client-portal", clientId],
+    queryFn: () => load({ data: { clientId } }),
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-10">
+        <p className="text-sm text-muted-foreground">Loading your engagement…</p>
+      </main>
+    );
+  }
+
+  if (!data?.client) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-10">
+        <h1 className="text-3xl">Client portal</h1>
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-base">No client engagement linked yet</CardTitle>
+            <CardDescription>
+              This portal shows the funds, agreement, invoices and approved payments for a
+              Harmonious client. Your sign-in isn't attached to one yet — ask your Harmonious
+              contact to add you.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </main>
+    );
+  }
+
+  const client = data.client as any;
+  const clients = (data.clients ?? []) as any[];
+  const funds = (data.funds ?? []) as any[];
+  const sows = (data.sows ?? []) as any[];
+  const services = (data.services ?? []) as any[];
+  const payments = (data.payments ?? []) as any[];
+  const openInvoices = (data.invoices ?? []).filter((i: any) => i.status === "issued");
+
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-10">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl">{client.name}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your Harmonious engagement: the funds we administer for you, what your agreement covers,
+            your invoices and payments already approved.
+          </p>
+        </div>
+        {clients.length > 1 && (
+          <div className="flex flex-wrap gap-2">
+            {clients.map((c) => (
+              <Button
+                key={c.id}
+                size="sm"
+                variant={c.id === client.id ? "default" : "outline"}
+                onClick={() => setClientId(c.id)}
+              >
+                {c.name}
+              </Button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Funds</CardDescription>
+            <CardTitle className="text-2xl">{funds.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Invoices awaiting payment</CardDescription>
+            <CardTitle className="text-2xl">{openInvoices.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Approved payments</CardDescription>
+            <CardTitle className="text-2xl">{payments.length}</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="funds" className="mt-8">
+        <TabsList className="flex flex-wrap">
+          <TabsTrigger value="funds">Funds</TabsTrigger>
+          <TabsTrigger value="agreement">Agreement &amp; scope</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="funds" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Funds we administer for you</CardTitle>
+              <CardDescription>
+                Harmonious provides administration, technology, onboarding, reporting, payment
+                facilitation and recordkeeping support for these funds.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {funds.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No funds are attached to your engagement yet.
+                </p>
+              )}
+              {funds.map((f) => (
+                <div key={f.id} className="rounded-md border p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">{f.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {f.legal_entity_name ? `${f.legal_entity_name} · ` : ""}
+                        {f.reg_type ? `Reg D ${f.reg_type}` : "Exemption not recorded"}
+                        {f.target_raise_cents
+                          ? ` · target ${money(Number(f.target_raise_cents))}`
+                          : ""}
+                      </p>
+                    </div>
+                    <Badge variant={f.is_open ? "default" : "secondary"}>
+                      {f.is_open ? "Open" : "Closed"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="agreement" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Statements of work</CardTitle>
+              <CardDescription>
+                Your master service agreement plus these statements of work control which services
+                Harmonious provides, on what terms and at what fees.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {sows.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No statement of work is recorded yet. Your Harmonious contact can share one for
+                  signature.
+                </p>
+              )}
+              {sows.map((s: any) => (
+                <div key={s.id} className="rounded-md border p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">{s.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Effective {date(s.effective_date)}
+                        {s.notice_days ? ` · ${s.notice_days}-day notice period` : ""}
+                      </p>
+                    </div>
+                    <Badge variant={s.status === "signed" ? "default" : "secondary"}>
+                      {String(s.status ?? "draft").replace(/_/g, " ")}
+                    </Badge>
+                  </div>
+                  {s.scope_note && <p className="mt-2 text-sm">{s.scope_note}</p>}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Included in your scope</CardTitle>
+              <CardDescription>
+                Anything not listed here isn't currently included in your active scope. You can ask
+                for it below and Harmonious will confirm the fee and paperwork first.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {services.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No services are recorded against your scope yet.
+                </p>
+              )}
+              {services.map((s: any) => (
+                <div key={`${s.key}-${s.offeringId ?? "client"}`} className="rounded-md border p-3">
+                  <p className="text-sm font-medium">{s.name}</p>
+                  {s.description && (
+                    <p className="text-xs text-muted-foreground">{s.description}</p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {s.offeringId ? "Fund-specific" : "Applies across your engagement"}
+                    {s.effectiveDate ? ` · from ${date(s.effectiveDate)}` : ""}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <MyServiceRequests />
+          <ClientOffboardingPanel />
+        </TabsContent>
+
+        <TabsContent value="invoices" className="mt-6">
+          <ClientInvoicesPanel />
+          {(data.invoices ?? []).length === 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Invoices</CardTitle>
+                <CardDescription>
+                  Nothing has been invoiced yet. Issued invoices appear here for your approval.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="payments" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Approved payments</CardTitle>
+              <CardDescription>
+                Payments that have cleared Harmonious approval. Harmonious facilitates payments and
+                keeps the records; it does not hold your funds as a bank, custodian or escrow agent.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {payments.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No approved payments yet. Anything awaiting approval stays with the Harmonious
+                  team until both approvals are recorded.
+                </p>
+              )}
+              {payments.map((p) => (
+                <div key={p.id} className="rounded-md border p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium">{money(Number(p.amount_cents))}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {String(p.purpose ?? "payment").replace(/_/g, " ")}
+                        {p.fundName ? ` · ${p.fundName}` : ""}
+                        {p.beneficiary_name ? ` · to ${p.beneficiary_name}` : ""}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Last updated {date(p.updated_at)}
+                        {p.authorization_reference ? ` · ref ${p.authorization_reference}` : ""}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">
+                      {PAYMENT_LABEL[p.status as string] ?? String(p.status).replace(/_/g, " ")}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <p className="mt-8 text-xs text-muted-foreground">
+        Harmonious provides administrative, technology, onboarding, reporting, payment-facilitation,
+        recordkeeping and compliance-support services under your master service agreement and
+        statements of work. Harmonious is not your investment adviser, broker-dealer, custodian,
+        transfer agent, escrow agent, auditor, accountant, tax preparer or legal counsel unless a
+        statement of work expressly says so.
+      </p>
+    </main>
+  );
+}
