@@ -11,6 +11,7 @@ import {
   seedComplianceChecklist,
 } from "@/lib/compliance.functions";
 import { Badge } from "@/components/ui/badge";
+import { useFundScope, sectionForComplianceItem, sectionState } from "@/lib/fund-scope";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,7 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
   const remove = useServerFn(deleteComplianceItem);
   const reseed = useServerFn(seedComplianceChecklist);
   const queryClient = useQueryClient();
+  const scope = useFundScope(offeringId);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -345,6 +347,9 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
                   </p>
                   <div className="grid gap-2">
                     {list.map((item) => {
+                      const section = sectionForComplianceItem(item.key, item.category);
+                      const state = section ? sectionState(scope, section) : "open";
+                      const blocked = state === "blocked";
                       const overdue =
                         item.status !== "filed" &&
                         item.status !== "not_applicable" &&
@@ -365,6 +370,10 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
                               ) : null}
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
+                              {blocked ? <Badge variant="outline">Not in scope</Badge> : null}
+                              {state === "unknown" ? (
+                                <Badge variant="outline">Scope not recorded</Badge>
+                              ) : null}
                               {overdue ? <Badge variant="destructive">Overdue</Badge> : null}
                               <Badge
                                 variant={
@@ -377,7 +386,7 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
                               >
                                 {STATUS_LABEL[item.status] ?? item.status}
                               </Badge>
-                              {item.status !== "filed" ? (
+                              {item.status !== "filed" && !blocked ? (
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -387,10 +396,12 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
                                   Mark filed
                                 </Button>
                               ) : null}
-                              <Button size="sm" variant="ghost" onClick={() => startEdit(item)}>
-                                Edit
-                              </Button>
-                              {!item.key ? (
+                              {!blocked ? (
+                                <Button size="sm" variant="ghost" onClick={() => startEdit(item)}>
+                                  Edit
+                                </Button>
+                              ) : null}
+                              {!item.key || blocked ? null : (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -399,10 +410,17 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
                                 >
                                   Remove
                                 </Button>
-                              ) : null}
+                              )}
                             </div>
                           </div>
-                          {editingId === item.id ? <div className="mt-3">{form}</div> : null}
+                          {blocked ? (
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              This service is not currently included in your active scope.
+                            </p>
+                          ) : null}
+                          {editingId === item.id && !blocked ? (
+                            <div className="mt-3">{form}</div>
+                          ) : null}
                         </div>
                       );
                     })}
