@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { CONTRACT_ROLES, STAFF_ROLES } from "@/lib/contracts.functions";
+import { assertNoHold } from "@/lib/compliance-holds.functions";
 
 export const INVOICE_STATUSES = [
   { value: "draft", label: "Draft" },
@@ -550,4 +551,170 @@ export const voidInvoice = createServerFn({ method: "POST" })
       next: { status: "void", reason: data.reason },
     });
     return { ok: true };
+  });
+
+/** Ask the client to approve an issued invoice (or re-ask after a dispute). */
+export const requestInvoiceApproval = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: invoice } = await context.supabase
+      .from("invoices")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!invoice) throw new Error("That invoice isn't available.");
+    if ((invoice as any).status !== "issued") {
+      throw new Error("Issue the invoice before asking the client to approve it.");
+    }
+    const { error } = await context.supabase
+      .from("invoices")
+      .update({
+        approval_status: "pending",
+        approval_requested_at: new Date().toISOString(),
+        dispute_reason: null,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context, who, {
+      action: "approval requested",
+      target: (invoice as any).number,
+      clientId: (invoice as any).client_id,
+    });
+    return { ok: true };
+  });
+
+/** Invoices a client contact can see, with the one waiting on them first. */
+export const listMyInvoices = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: invoices, error } = await context.supabase
+      .from("invoices")
+      .select("*")
+      .neq("status", "draft")
+      .order("issue_date", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    const ids = (invoices ?? []).map((i: any) => i.id);
+    let lines: any[] = [];
+    if (ids.length) {
+      const { data } = await context.supabase
+        .from("invoice_lines")
+        .select("*")
+        .in("invoice_id", ids)
+        .order("sort_order");
+      lines = data ?? [];
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    return {
+      invoices: (invoices ?? []).map((inv: any) => ({
+        ...inv,
+        overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
+        lines: lines.filter((l) => l.invoice_id === inv.id),
+      })),
+    };
+  });
+
+/** A client contact approves or disputes their own invoice. */
+export const respondToInvoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        decision: z.enum(["approved", "disputed"]),
+        signerName: z.string().max(160).optional().or(z.literal("")),
+        reason: z.string().max(1000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("respond_to_invoice", {
+      _invoice_id: data.id,
+      _decision: data.decision,
+      _signer_name: data.signerName || null,
+      _reason: data.reason || null,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Turn an approved invoice into a wire instruction for dual approval. */
+export const raiseInvoiceWire = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        method: z.enum(["wire", "ach"]).default("wire"),
+        originatingAccount: z.string().max(160).optional().or(z.literal("")),
+        beneficiaryName: z.string().max(160).optional().or(z.literal("")),
+        beneficiaryAccount: z.string().max(160).optional().or(z.literal("")),
+        note: z.string().max(1000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: invoice } = await context.supabase
+      .from("invoices")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!invoice) throw new Error("That invoice isn't available.");
+    const inv = invoice as any;
+    if (inv.status !== "issued") throw new Error("Only an issued invoice can be collected.");
+    if (inv.approval_status !== "approved") {
+      throw new Error("The client has to approve this invoice before a payment is raised.");
+    }
+    if (inv.payment_instruction_id) {
+      throw new Error("A payment has already been raised for this invoice.");
+    }
+    await assertNoHold(context.supabase, "wires", {
+      clientId: inv.client_id,
+      offeringId: inv.offering_id ?? null,
+    });
+
+    const rates = await checkRates(context, data.id, inv.client_id);
+    if (rates.varianceCents > 0 && !inv.rate_override_reason) {
+      throw new Error(
+        "This invoice is above the contracted rate and has no recorded authorisation. Fix the rate before collecting payment.",
+      );
+    }
+
+    const { data: created, error } = await context.supabase
+      .from("payment_instructions")
+      .insert({
+        client_id: inv.client_id,
+        offering_id: inv.offering_id ?? null,
+        invoice_id: inv.id,
+        direction: "inbound",
+        purpose: "fee",
+        amount_cents: Number(inv.total_cents ?? 0),
+        originating_account: data.originatingAccount || null,
+        beneficiary_name: data.beneficiaryName || null,
+        beneficiary_account: data.beneficiaryAccount || null,
+        authorization_reference: `Invoice ${inv.number} approved by ${inv.client_signer_name} on ${String(inv.client_approved_at ?? "").slice(0, 10)}`,
+        callback_status: "not_required",
+        requested_by: who.userId,
+        status: "awaiting_approval",
+        note: `${data.method === "ach" ? "ACH" : "Wire"} collection. ${data.note ?? ""}`.trim(),
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    await context.supabase
+      .from("invoices")
+      .update({ payment_instruction_id: (created as any).id })
+      .eq("id", data.id);
+
+    await audit(context, who, {
+      action: "payment raised",
+      target: inv.number,
+      clientId: inv.client_id,
+      next: { amount_cents: inv.total_cents, method: data.method },
+    });
+    return { ok: true, instructionId: (created as any).id as string };
   });
