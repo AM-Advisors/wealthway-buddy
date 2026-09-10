@@ -531,6 +531,47 @@ export type Database = {
           },
         ]
       }
+      client_assignments: {
+        Row: {
+          assigned_by: string | null
+          assignment_role: string
+          client_id: string
+          created_at: string
+          id: string
+          note: string | null
+          staff_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          assignment_role?: string
+          client_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          staff_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          assignment_role?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          staff_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_invitations: {
         Row: {
           accepted_at: string | null
