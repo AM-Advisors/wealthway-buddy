@@ -73,7 +73,43 @@ function FundPage() {
   const queryClient = useQueryClient();
   const scope = useFundScope(fundId);
   const [openDoc, setOpenDoc] = useState<string | null>(null);
+  const [blockDoc, setBlockDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newDoc, setNewDoc] = useState({
+    title: "",
+    doc_type: "agreement",
+    requires_signature: true,
+  });
+  const createDocument = useServerFn(saveOfferingDocument);
+
+  const addDocument = async () => {
+    if (newDoc.title.trim().length < 2) {
+      toast.error("Give the document a title first.");
+      return;
+    }
+    setBusy("new-doc");
+    try {
+      await createDocument({
+        data: {
+          offering_id: fundId,
+          title: newDoc.title.trim(),
+          doc_type: newDoc.doc_type.trim() || "agreement",
+          body: "",
+          requires_signature: newDoc.requires_signature,
+          sort_order: 0,
+        } as any,
+      });
+      toast.success("Document added. Upload the PDF or Word file against it below.");
+      setNewDoc({ title: "", doc_type: "agreement", requires_signature: true });
+      setAdding(false);
+      void queryClient.invalidateQueries({ queryKey: ["fund-page"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not add that document.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["fund-page", fundId],
