@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ClientScopeBoard } from "@/components/client-scope-board";
+import { ServiceRequestsBoard } from "@/components/service-requests-board";
 
 export const Route = createFileRoute("/_authenticated/admin/contracts/$clientId")({
   head: () => ({
@@ -29,6 +30,8 @@ function ClientScopeRoute() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <ClientScopeBoard clientId={clientId} />
+      <h2 className="mb-4 mt-10 text-2xl">Additional service requests</h2>
+      <ServiceRequestsBoard clientId={clientId} />
     </main>
   );
 }

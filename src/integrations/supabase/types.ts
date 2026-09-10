@@ -4865,12 +4865,16 @@ export type Database = {
       }
       service_requests: {
         Row: {
+          activated_at: string | null
+          activated_by: string | null
           activated_entitlement_id: string | null
           amendment_path: string | null
+          amendment_terms: string | null
           client_approved_at: string | null
           client_approved_by: string | null
           client_id: string
           created_at: string
+          declined_reason: string | null
           effective_date: string | null
           id: string
           offering_id: string | null
@@ -4881,16 +4885,25 @@ export type Database = {
           review_note: string | null
           reviewer_id: string | null
           service_key: string
+          signed_ip: string | null
+          signer_name: string | null
+          signer_title: string | null
+          sow_id: string | null
           status: string
           updated_at: string
+          withdrawn_at: string | null
         }
         Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
           activated_entitlement_id?: string | null
           amendment_path?: string | null
+          amendment_terms?: string | null
           client_approved_at?: string | null
           client_approved_by?: string | null
           client_id: string
           created_at?: string
+          declined_reason?: string | null
           effective_date?: string | null
           id?: string
           offering_id?: string | null
@@ -4901,16 +4914,25 @@ export type Database = {
           review_note?: string | null
           reviewer_id?: string | null
           service_key: string
+          signed_ip?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          sow_id?: string | null
           status?: string
           updated_at?: string
+          withdrawn_at?: string | null
         }
         Update: {
+          activated_at?: string | null
+          activated_by?: string | null
           activated_entitlement_id?: string | null
           amendment_path?: string | null
+          amendment_terms?: string | null
           client_approved_at?: string | null
           client_approved_by?: string | null
           client_id?: string
           created_at?: string
+          declined_reason?: string | null
           effective_date?: string | null
           id?: string
           offering_id?: string | null
@@ -4921,8 +4943,13 @@ export type Database = {
           review_note?: string | null
           reviewer_id?: string | null
           service_key?: string
+          signed_ip?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          sow_id?: string | null
           status?: string
           updated_at?: string
+          withdrawn_at?: string | null
         }
         Relationships: [
           {
@@ -4944,6 +4971,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
             referencedColumns: ["id"]
           },
         ]
@@ -5258,6 +5292,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_service_quote: {
+        Args: {
+          _request_id: string
+          _signer_name: string
+          _signer_title?: string
+        }
+        Returns: undefined
+      }
       can_manage_diligence: { Args: { _offering_id: string }; Returns: boolean }
       can_read_wire_instructions: {
         Args: { _offering_id: string }
@@ -5366,6 +5408,10 @@ export type Database = {
       }
       save_wire_instructions: {
         Args: { p_details: Json; p_offering_id: string }
+        Returns: undefined
+      }
+      withdraw_service_request: {
+        Args: { _request_id: string }
         Returns: undefined
       }
     }
