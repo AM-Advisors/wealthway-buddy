@@ -197,155 +197,235 @@ function FundPage() {
       <div className="mt-6 space-y-4">
         <FundAgreementGate fundId={fundId} />
         <ScopeSummary scope={scope} />
-        <ScopeServicesPanel scope={scope} offeringId={fundId} />
-        <FundProvidersPanel scope={scope} />
       </div>
 
-      <div className="mt-8">
-        <ScopeSection scope={scope} section="funding" offeringId={fundId} label="Funding tracking">
-          <CommitmentBalancePanel fundId={fundId} />
-        </ScopeSection>
-      </div>
+      <Tabs defaultValue="overview" className="mt-8">
+        <TabsList className="flex flex-wrap">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="banking">Banking</TabsTrigger>
+          <TabsTrigger value="investors">Investors &amp; funding</TabsTrigger>
+          <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
-      <div className="mt-6">
-        <ScopeSection scope={scope} section="wires" offeringId={fundId} label="Wire instructions">
-          <WireTrackingPanel offeringId={fundId} />
-        </ScopeSection>
-      </div>
+        <TabsContent value="overview" className="mt-6 space-y-6">
+          <ScopeServicesPanel scope={scope} offeringId={fundId} />
+          <FundProvidersPanel scope={scope} />
+        </TabsContent>
 
-      <div className="mt-6">
-        <ScopeSection scope={scope} section="banking" offeringId={fundId} label="Bank account">
-          <BankFeedPanel fundId={fundId} />
-        </ScopeSection>
-      </div>
+        <TabsContent value="documents" className="mt-6 space-y-6">
+          <ScopeSection scope={scope} section="documents" offeringId={fundId} label="Fund documents">
+            <Card>
+              <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle>Offering documents</CardTitle>
+                  <CardDescription>
+                    The paperwork investors read and sign for this fund, in the order they see it.
+                    PDF and Word files can be uploaded against each one.
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setAdding((v) => !v)}>
+                    {adding ? "Cancel" : "Add document"}
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy === "packet"}
+                      onClick={downloadPacket}
+                    >
+                      {busy === "packet" ? "Preparing…" : "Download full packet (PDF)"}
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {adding && (
+                  <div className="grid gap-3 rounded-md border p-4 sm:grid-cols-2">
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="new-doc-title">Title</Label>
+                      <Input
+                        id="new-doc-title"
+                        value={newDoc.title}
+                        onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
+                        placeholder="Subscription agreement"
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="new-doc-type">Type</Label>
+                      <Input
+                        id="new-doc-type"
+                        value={newDoc.doc_type}
+                        onChange={(e) => setNewDoc({ ...newDoc, doc_type: e.target.value })}
+                        placeholder="agreement"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={newDoc.requires_signature}
+                        onChange={(e) =>
+                          setNewDoc({ ...newDoc, requires_signature: e.target.checked })
+                        }
+                      />
+                      Investors must sign this document
+                    </label>
+                    <div className="flex items-end">
+                      <Button size="sm" disabled={busy === "new-doc"} onClick={addDocument}>
+                        {busy === "new-doc" ? "Adding…" : "Create, then upload the file"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
-      <div className="mt-8">
-      <ScopeSection scope={scope} section="documents" offeringId={fundId} label="Fund documents">
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle>Offering documents</CardTitle>
-            <CardDescription>
-              The paperwork investors read and sign for this fund, in the order they see it.
-            </CardDescription>
-          </div>
-          {isAdmin && (
-            <Button size="sm" variant="outline" disabled={busy === "packet"} onClick={downloadPacket}>
-              {busy === "packet" ? "Preparing…" : "Download full packet (PDF)"}
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {documents.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No documents yet. Add the subscription agreement and offering memorandum in Fund setup.
-            </p>
-          )}
-          {documents.map((doc: any) => (
-            <div key={doc.id} className="rounded-md border p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium">{doc.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {doc.doc_type}
-                    {doc.requires_signature ? " · signature required" : " · for information"}
-                    {doc.length ? ` · ${doc.length.toLocaleString("en-US")} characters` : ""}
+                {documents.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No documents yet. Add the subscription agreement and offering memorandum here or
+                    in Fund setup.
                   </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setOpenDoc(openDoc === doc.id ? null : doc.id)}
-                  >
-                    {openDoc === doc.id ? "Hide" : "Read"}
-                  </Button>
-                  <Button size="sm" variant="outline" disabled={busy === doc.id} onClick={() => downloadDoc(doc.id)}>
-                    {busy === doc.id ? "Preparing…" : "PDF"}
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-3">
-                <OfferingDocumentFile
-                  documentId={doc.id}
-                  offeringId={offering.id}
-                  fileName={doc.file_name}
-                  fileSizeBytes={doc.file_size_bytes}
-                  canEdit
-                  onChanged={() => void queryClient.invalidateQueries({ queryKey: ["fund-page"] })}
-                />
-              </div>
-              {openDoc === doc.id && (
-                <div className="mt-3 max-h-96 overflow-y-auto whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">
-                  {bodyQuery.isLoading && "Loading document…"}
-                  {bodyQuery.data?.document?.body}
-                </div>
+                )}
+                {documents.map((doc: any) => (
+                  <div key={doc.id} className="rounded-md border p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium">{doc.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {doc.doc_type}
+                          {doc.requires_signature ? " · signature required" : " · for information"}
+                          {doc.length ? ` · ${doc.length.toLocaleString("en-US")} characters` : ""}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setOpenDoc(openDoc === doc.id ? null : doc.id)}
+                        >
+                          {openDoc === doc.id ? "Hide" : "Read"}
+                        </Button>
+                        {doc.requires_signature && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setBlockDoc(blockDoc === doc.id ? null : doc.id)}
+                          >
+                            {blockDoc === doc.id ? "Close blocks" : "Place signature blocks"}
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy === doc.id}
+                          onClick={() => downloadDoc(doc.id)}
+                        >
+                          {busy === doc.id ? "Preparing…" : "PDF"}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <OfferingDocumentFile
+                        documentId={doc.id}
+                        offeringId={offering.id}
+                        fileName={doc.file_name}
+                        fileSizeBytes={doc.file_size_bytes}
+                        canEdit
+                        onChanged={() =>
+                          void queryClient.invalidateQueries({ queryKey: ["fund-page"] })
+                        }
+                      />
+                    </div>
+                    {openDoc === doc.id && (
+                      <div className="mt-3 max-h-96 overflow-y-auto whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">
+                        {bodyQuery.isLoading && "Loading document…"}
+                        {bodyQuery.data?.document?.body}
+                      </div>
+                    )}
+                    {blockDoc === doc.id && (
+                      <div className="mt-4 border-t pt-4">
+                        <SignatureBlockEditor
+                          documentId={doc.id}
+                          onClose={() => setBlockDoc(null)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </ScopeSection>
+
+          <ScopeSection
+            scope={scope}
+            section="signed_documents"
+            offeringId={fundId}
+            label="Signed documents"
+          >
+            <SignedDocumentsCard offeringId={offering.id} />
+          </ScopeSection>
+        </TabsContent>
+
+        <TabsContent value="banking" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Banking</CardTitle>
+              <CardDescription>
+                {wireEntries.length === 0
+                  ? "No account details saved for this fund yet. Investors cannot fund until they are added."
+                  : `Receiving account on file${
+                      wire.updatedAt
+                        ? ` · last updated ${new Date(wire.updatedAt).toLocaleDateString()}`
+                        : ""
+                    }.`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {wireEntries.length > 0 && (
+                <dl className="grid gap-3 sm:grid-cols-2">
+                  {wireEntries.map(([key, label]) => (
+                    <div key={key} className="rounded-md border p-3">
+                      <dt className="text-xs text-muted-foreground">{label}</dt>
+                      <dd className="mt-1 break-words text-sm font-medium">{wire.details[key]}</dd>
+                    </div>
+                  ))}
+                </dl>
               )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-      </ScopeSection>
-      </div>
+              <Button asChild size="sm">
+                <Link to="/admin/fund-banking/$fundId" params={{ fundId }}>
+                  Open fund banking
+                </Link>
+              </Button>
+              <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground">
+                Harmonious never changes these details by email. Investors are told to confirm any
+                instructions by phone with a known contact before sending funds.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      <div className="mt-8">
-        <ScopeSection
-          scope={scope}
-          section="signed_documents"
-          offeringId={fundId}
-          label="Signed documents"
-        >
-          <SignedDocumentsCard offeringId={offering.id} />
-        </ScopeSection>
-      </div>
+        <TabsContent value="investors" className="mt-6 space-y-6">
+          <ScopeSection scope={scope} section="funding" offeringId={fundId} label="Funding tracking">
+            <CommitmentBalancePanel fundId={fundId} />
+          </ScopeSection>
+          <ScopeSection scope={scope} section="wires" offeringId={fundId} label="Wire tracking">
+            <WireTrackingPanel offeringId={fundId} />
+          </ScopeSection>
+          <ScopeSection scope={scope} section="banking" offeringId={fundId} label="Deposits">
+            <BankFeedPanel fundId={fundId} />
+          </ScopeSection>
+        </TabsContent>
 
-      <div className="mt-6">
-        <FundEntityCard fundId={offering.id} />
-        <PacketEmailCard fundId={offering.id} />
-      </div>
+        <TabsContent value="compliance" className="mt-6 space-y-6">
+          <FundComplianceCard offeringId={offering.id} />
+          <FundEntityCard fundId={offering.id} />
+        </TabsContent>
 
-      <div className="mt-6">
-        <PublicPageSettings offeringId={offering.id} />
-      </div>
-
-      <FundComplianceCard offeringId={offering.id} />
-
-
-
-
-      <div className="mt-6">
-      <ScopeSection scope={scope} section="wires" offeringId={fundId} label="Wire instructions">
-      <Card>
-        <CardHeader>
-          <CardTitle>Funding details</CardTitle>
-          <CardDescription>
-            The wire instructions investors see for this fund
-            {wire.updatedAt ? ` · last updated ${new Date(wire.updatedAt).toLocaleDateString()}` : ""}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {wireEntries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No wire details saved for this fund yet. Investors cannot fund until these are added in Fund setup.
-            </p>
-          ) : (
-            <dl className="grid gap-3 sm:grid-cols-2">
-              {wireEntries.map(([key, label]) => (
-                <div key={key} className="rounded-md border p-3">
-                  <dt className="text-xs text-muted-foreground">{label}</dt>
-                  <dd className="mt-1 break-words text-sm font-medium">{wire.details[key]}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground">
-            Harmonious never changes these details by email. Investors are told to confirm any instructions by
-            phone with a known contact before sending funds.
-          </p>
-        </CardContent>
-      </Card>
-      </ScopeSection>
-      </div>
+        <TabsContent value="settings" className="mt-6 space-y-6">
+          <PublicPageSettings offeringId={offering.id} />
+          <PacketEmailCard fundId={offering.id} />
+        </TabsContent>
+      </Tabs>
 
       <p className="mt-6 text-xs text-muted-foreground">
         {stats.investorsWithAccess} investor{stats.investorsWithAccess === 1 ? "" : "s"} granted access ·{" "}
