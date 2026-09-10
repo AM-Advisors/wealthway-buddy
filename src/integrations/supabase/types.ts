@@ -5360,6 +5360,7 @@ export type Database = {
         Args: { _document_id: string }
         Returns: boolean
       }
+      fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
       get_bank_access_token: {
         Args: { p_offering_id: string }
         Returns: string
