@@ -167,6 +167,7 @@ function FundsPage() {
   };
 
   const [packetBusy, setPacketBusy] = useState<string | null>(null);
+  const [feesFor, setFeesFor] = useState<string | null>(null);
   const getPacket = useServerFn(downloadOfferingPacket);
 
   const downloadPacket = async (offeringId: string) => {
