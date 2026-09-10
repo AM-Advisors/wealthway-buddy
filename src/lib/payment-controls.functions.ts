@@ -80,6 +80,12 @@ export const listPaymentInstructions = createServerFn({ method: "GET" })
       context.supabase.from("offerings").select("id, name"),
     ]);
 
+    const invoiceIds = (rows ?? []).map((r: any) => r.invoice_id).filter(Boolean);
+    const { data: invoices } = invoiceIds.length
+      ? await context.supabase.from("invoices").select("id, number, total_cents, client_id").in("id", invoiceIds)
+      : { data: [] as any[] };
+    const { data: clients } = await context.supabase.from("clients").select("id, name");
+
     return {
       canApprove: roles.some((r) => APPROVERS.includes(r)),
       instructions: (rows ?? []).map((r: any) => {
@@ -87,6 +93,8 @@ export const listPaymentInstructions = createServerFn({ method: "GET" })
         return {
           ...r,
           fundName: (funds ?? []).find((f: any) => f.id === r.offering_id)?.name ?? null,
+          clientName: (clients ?? []).find((c: any) => c.id === r.client_id)?.name ?? null,
+          invoiceNumber: (invoices ?? []).find((i: any) => i.id === r.invoice_id)?.number ?? null,
           approvals: mine,
           approvalCount: mine.filter((a: any) => a.decision === "approved").length,
         };
@@ -191,6 +199,30 @@ export const updatePaymentChecks = createServerFn({ method: "POST" })
       .update(patch as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    if (data.bankStatus === "settled") {
+      const { data: instruction } = await context.supabase
+        .from("payment_instructions")
+        .select("invoice_id, status")
+        .eq("id", data.id)
+        .maybeSingle();
+      const invoiceId = (instruction as any)?.invoice_id;
+      if (invoiceId) {
+        if ((instruction as any)?.status !== "approved") {
+          throw new Error("This payment has not cleared dual approval yet.");
+        }
+        await context.supabase
+          .from("invoices")
+          .update({
+            status: "paid",
+            paid_on: new Date().toISOString().slice(0, 10),
+            payment_reference: `Instruction ${data.id}`,
+          })
+          .eq("id", invoiceId)
+          .eq("status", "issued");
+      }
+    }
+
     await log(context, roles, { action: "checks updated", target: data.id, new_value: patch as any });
     return { ok: true };
   });
