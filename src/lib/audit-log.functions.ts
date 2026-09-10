@@ -142,12 +142,12 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         category: "Wire decision",
         summary: d.summary ?? "Wire decision recorded",
         detail: joinDetail([
-          `Previous value: ${meta.previous ?? "not set"}`,
-          `New value: ${meta.next ?? d.outcome ?? "—"}`,
+          `Previous value: ${meta['previous'] ?? "not set"}`,
+          `New value: ${meta['next'] ?? d.outcome ?? "—"}`,
           d.note,
         ]),
-        amountCents: (meta.amount_cents as number) ?? null,
-        status: (meta.next ?? d.outcome ?? null) as string | null,
+        amountCents: (meta['amount_cents'] as number) ?? null,
+        status: (meta['next'] ?? d.outcome ?? null) as string | null,
       };
     });
 
@@ -384,15 +384,15 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         actor: personName.get(d.actor_id) ?? null,
         fundName: w.fund ?? (d.offering_id ? (fundName.get(d.offering_id) ?? null) : null),
         category: `${label} decision`,
-        summary: `${label} changed from ${meta.previous ?? "not set"} to ${meta.next ?? d.outcome ?? "—"}`,
+        summary: `${label} changed from ${meta['previous'] ?? "not set"} to ${meta['next'] ?? d.outcome ?? "—"}`,
         detail: joinDetail([
           w.person ? `Investor ${w.person}` : null,
-          `Previous value: ${meta.previous ?? "not set"}`,
-          `New value: ${meta.next ?? d.outcome ?? "—"}`,
+          `Previous value: ${meta['previous'] ?? "not set"}`,
+          `New value: ${meta['next'] ?? d.outcome ?? "—"}`,
           d.note,
         ]),
         amountCents: null,
-        status: (meta.next ?? d.outcome ?? null) as string | null,
+        status: (meta['next'] ?? d.outcome ?? null) as string | null,
       });
     }
 
