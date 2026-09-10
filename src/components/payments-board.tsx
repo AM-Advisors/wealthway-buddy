@@ -304,7 +304,7 @@ function CheckSelect({
   return (
     <div>
       <Label>{label}</Label>
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <Select value={value} onValueChange={onChange} disabled={disabled ?? false}>
         <SelectTrigger>
           <SelectValue />
         </SelectTrigger>

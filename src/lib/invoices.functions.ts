@@ -633,8 +633,8 @@ export const respondToInvoice = createServerFn({ method: "POST" })
     const { error } = await context.supabase.rpc("respond_to_invoice", {
       _invoice_id: data.id,
       _decision: data.decision,
-      _signer_name: data.signerName || null,
-      _reason: data.reason || null,
+      _signer_name: data.signerName || undefined,
+      _reason: data.reason || undefined,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
