@@ -24,6 +24,13 @@ type Row = {
   approvedAt: string | null;
   approvedByName: string | null;
   signed: boolean;
+  clientStatus: "pending" | "signed" | "sent_back";
+  clientSignatureName: string | null;
+  clientSignatureTitle: string | null;
+  clientSignedAt: string | null;
+  clientSentBackReason: string | null;
+  clientSentBackAt: string | null;
+  hasDocument: boolean;
 };
 
 function formatDate(value: string | null) {
@@ -83,8 +90,18 @@ export function SowApprovalsBoard() {
   }
 
   const data = query.data as { canDecide: boolean; rows: Row[] };
-  const waiting = data.rows.filter((r) => r.approvalStatus === "pending" && r.signed);
-  const unsigned = data.rows.filter((r) => r.approvalStatus === "pending" && !r.signed);
+  const waiting = data.rows.filter(
+    (r) => r.approvalStatus === "pending" && r.signed && r.clientStatus === "signed",
+  );
+  const sentBack = data.rows.filter(
+    (r) => r.approvalStatus === "pending" && r.clientStatus === "sent_back",
+  );
+  const unsigned = data.rows.filter(
+    (r) =>
+      r.approvalStatus === "pending" &&
+      r.clientStatus !== "sent_back" &&
+      (!r.signed || r.clientStatus !== "signed"),
+  );
   const approved = data.rows.filter((r) => r.approvalStatus === "approved");
   const rejected = data.rows.filter((r) => r.approvalStatus === "rejected");
 
@@ -101,6 +118,14 @@ export function SowApprovalsBoard() {
         {row.signed
           ? `Signed by ${row.signedBy} on ${formatDate(row.signedOn)}`
           : "No client signature recorded"}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {row.clientStatus === "signed"
+          ? `Signed in the client portal by ${row.clientSignatureName ?? "the client"}${row.clientSignatureTitle ? `, ${row.clientSignatureTitle}` : ""} on ${formatDate(row.clientSignedAt)}`
+          : row.clientStatus === "sent_back"
+            ? `Sent back by the client on ${formatDate(row.clientSentBackAt)}`
+            : "Not yet signed in the client portal"}
+        {row.hasDocument ? " · document attached" : " · no document uploaded"}
       </p>
     </div>
   );
@@ -189,12 +214,37 @@ export function SowApprovalsBoard() {
         </CardContent>
       </Card>
 
+      {sentBack.length > 0 ? (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-base">Sent back by the client</CardTitle>
+              <Badge variant="destructive">{sentBack.length}</Badge>
+            </div>
+            <CardDescription>
+              The client asked for changes before signing. Revise the agreement and re-issue it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {sentBack.map((row) => (
+              <div key={row.id} className="space-y-2 rounded-md border p-3 text-sm">
+                {line(row)}
+                {row.clientSentBackReason ? (
+                  <p className="text-sm">Client note: {row.clientSentBackReason}</p>
+                ) : null}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
+
       {unsigned.length > 0 ? (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Not ready for approval</CardTitle>
             <CardDescription>
-              These agreements have no recorded client signature yet, so they cannot be approved.
+              These agreements are still waiting on a client signature — on the paperwork, in the
+              client portal, or both — so they cannot be approved yet.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

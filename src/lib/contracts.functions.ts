@@ -1386,6 +1386,13 @@ export const listSowApprovals = createServerFn({ method: "GET" })
       approvedAt: (s.approved_at as string) ?? null,
       approvedByName: s.approved_by ? (person.get(s.approved_by as string) || null) : null,
       signed: Boolean(s.signed_on) && Boolean(s.signed_by),
+      clientStatus: ((s.client_status as string) ?? "pending") as "pending" | "signed" | "sent_back",
+      clientSignatureName: (s.client_signature_name as string) ?? null,
+      clientSignatureTitle: (s.client_signature_title as string) ?? null,
+      clientSignedAt: (s.client_signed_at as string) ?? null,
+      clientSentBackReason: (s.client_sent_back_reason as string) ?? null,
+      clientSentBackAt: (s.client_sent_back_at as string) ?? null,
+      hasDocument: Boolean(s.document_path),
     }));
 
     return { canDecide: who.roles.some((r) => r === "admin" || r === "super_admin"), rows };
@@ -1407,7 +1414,9 @@ export const decideSowApproval = createServerFn({ method: "POST" })
     const who = await requireAdmin(context);
     const { data: sow, error } = await context.supabase
       .from("client_sows")
-      .select("id, client_id, offering_id, title, signed_on, signed_by, approval_status")
+      .select(
+        "id, client_id, offering_id, title, signed_on, signed_by, approval_status, client_status",
+      )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -1416,6 +1425,13 @@ export const decideSowApproval = createServerFn({ method: "POST" })
 
     if (data.decision === "approved" && (!row.signed_on || !row.signed_by)) {
       throw new Error("Record the client signature before approving this statement of work.");
+    }
+    if (data.decision === "approved" && row.client_status !== "signed") {
+      throw new Error(
+        row.client_status === "sent_back"
+          ? "The client sent this agreement back. Revise and re-issue it before approving."
+          : "The client has not signed this agreement in their portal yet.",
+      );
     }
     if (data.decision === "rejected" && !data.note) {
       throw new Error("Give a reason so the team knows what has to change.");
@@ -1450,3 +1466,55 @@ export const decideSowApproval = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+
+/** Staff upload the agreement document (PDF or Word) so the client can read it
+ *  before signing. Stored privately; the portal only ever gets a short-lived link. */
+export const uploadSowDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        fileName: z.string().trim().min(1).max(200),
+        contentBase64: z.string().min(1).max(40_000_000),
+        contentType: z.string().trim().max(160).default("application/pdf"),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: sow, error } = await context.supabase
+      .from("client_sows")
+      .select("id, client_id, offering_id, title, document_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!sow) throw new Error("That statement of work could not be found.");
+
+    const binary = Buffer.from(data.contentBase64, "base64");
+    const safeName = data.fileName.replace(/[^A-Za-z0-9._-]/g, "_");
+    const path = `client-sows/${data.id}/${Date.now()}-${safeName}`;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from("fund-formation")
+      .upload(path, new Uint8Array(binary), { contentType: data.contentType, upsert: true });
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { error: updateError } = await context.supabase
+      .from("client_sows")
+      .update({ document_path: path } as any)
+      .eq("id", data.id);
+    if (updateError) throw new Error(updateError.message);
+
+    await audit(context, who, {
+      area: "sow",
+      action: "document uploaded",
+      clientId: (sow as any).client_id,
+      offeringId: (sow as any).offering_id,
+      target: (sow as any).title,
+      previous: { document_path: (sow as any).document_path ?? null },
+      next: { document_path: path, file_name: data.fileName },
+    });
+    return { ok: true, path };
+  });
