@@ -29,6 +29,11 @@ import { Badge } from "@/components/ui/badge";
 import { WireTrackingPanel } from "@/components/wire-tracking-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SignatureBlockEditor } from "@/components/signature-block-editor";
+import { saveOfferingDocument } from "@/lib/offerings.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/fund/$fundId")({
   head: () => ({
