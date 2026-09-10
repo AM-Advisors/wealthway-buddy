@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+import { ScopeNotice } from "@/components/fund-scope-section";
   Select,
   SelectContent,
   SelectItem,
@@ -72,6 +73,7 @@ function AccreditationPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
+      <ScopeNotice offeringId={data?.offering?.id ?? null} section="accreditation" label="Accreditation" />
       <OnboardingStepper current="accreditation" />
       <h1 className="mt-8 text-3xl">Accredited investor status</h1>
       <p className="mt-2 text-sm text-muted-foreground">

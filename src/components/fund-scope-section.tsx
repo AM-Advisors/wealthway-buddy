@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RequestServiceCard } from "@/components/service-gate";
-import type { FundScope, FundSection } from "@/lib/fund-scope";
+import { useFundScope, type FundScope, type FundSection } from "@/lib/fund-scope";
 
 /**
  * Wraps one fund page section. The section renders normally when the service is
@@ -140,6 +140,41 @@ export function ScopeSummary({ scope }: { scope: FundScope }) {
           Full scope
         </Link>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * A banner for investor-facing steps: silent when the step is inside the
+ * client's scope (or when the viewer cannot see scope at all).
+ */
+export function ScopeNotice({
+  offeringId,
+  section,
+  label,
+}: {
+  offeringId: string | null | undefined;
+  section: FundSection;
+  label?: string;
+}) {
+  const scope = useFundScope(offeringId);
+  if (!scope.canRead) return null;
+  const service = scope.serviceFor(section);
+  const status = service?.status ?? "unset";
+  if (status === "included") return null;
+
+  if (status === "unset" || !scope.configured) {
+    if (!scope.isStaff) return null;
+    return (
+      <div className="mb-4 rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+        Scope not recorded for this step{label ? ` (${label})` : ""}.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 rounded-md border p-3 text-sm">
+      This service is not currently included in your active scope.
     </div>
   );
 }

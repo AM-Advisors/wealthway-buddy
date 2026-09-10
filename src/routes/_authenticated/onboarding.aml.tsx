@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+import { ScopeNotice } from "@/components/fund-scope-section";
   Select,
   SelectContent,
   SelectItem,
@@ -125,6 +126,7 @@ function AmlPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
+      <ScopeNotice offeringId={data?.offering?.id ?? null} section="screening" label="Screening" />
       <OnboardingStepper current="aml" />
 
       <h1 className="mt-8 text-3xl">AML questionnaire</h1>

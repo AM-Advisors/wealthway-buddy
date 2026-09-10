@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+import { ScopeNotice } from "@/components/fund-scope-section";
   Select,
   SelectContent,
   SelectItem,
@@ -186,6 +187,7 @@ function DocumentsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
+      <ScopeNotice offeringId={data?.offering?.id ?? null} section="documents" label="Fund documents" />
       <OnboardingStepper current="documents" />
       <h1 className="mt-8 text-3xl">Fund documents</h1>
       <p className="mt-2 text-sm text-muted-foreground">

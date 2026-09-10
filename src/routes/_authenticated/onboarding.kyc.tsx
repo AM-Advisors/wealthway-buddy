@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ScopeNotice } from "@/components/fund-scope-section";
 
 export const Route = createFileRoute("/_authenticated/onboarding/kyc")({
   head: () => ({
@@ -182,6 +183,7 @@ function KycPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
+      <ScopeNotice offeringId={data?.offering?.id ?? null} section="identity" label="Identity checks" />
       <OnboardingStepper current="kyc" />
 
 
