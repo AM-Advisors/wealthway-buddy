@@ -224,6 +224,8 @@ const caseDetail = (row: any, client: any, sow: any, retention: any[]) => {
     settlement: steps.settlement ?? [],
     exportDelivery: steps.export ?? null,
     retentionReviewedAt: steps.retentionReviewedAt ?? null,
+    accessRemovedAt: steps.accessRemovedAt ?? null,
+
     closedAt: row.closed_at,
     blockers: row.status === "closed" ? [] : blockers(row),
     retention: retention.map((r) => ({
