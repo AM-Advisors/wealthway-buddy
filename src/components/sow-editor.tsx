@@ -192,6 +192,21 @@ export function SowEditor({
                   <Badge variant={sow.status === "active" ? "default" : "secondary"}>
                     {sow.status}
                   </Badge>
+                  <Badge
+                    variant={
+                      (sow as any).approval_status === "approved"
+                        ? "default"
+                        : (sow as any).approval_status === "rejected"
+                          ? "destructive"
+                          : "secondary"
+                    }
+                  >
+                    {(sow as any).approval_status === "approved"
+                      ? "Approved"
+                      : (sow as any).approval_status === "rejected"
+                        ? "Rejected"
+                        : "Awaiting approval"}
+                  </Badge>
                   {canManage ? (
                     <Button
                       size="sm"
