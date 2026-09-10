@@ -425,6 +425,11 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
       </Card>
 
       <FundComplianceCard offeringId={offeringId} />
+
+      <div className="mt-8">
+        <FundAgreementCard offeringId={offeringId} />
+      </div>
+
     </main>
   );
 }
