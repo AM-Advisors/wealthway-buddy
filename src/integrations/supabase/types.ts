@@ -3997,6 +3997,9 @@ export type Database = {
         Row: {
           client_id: string | null
           closing_cost_cents: number
+          closing_cost_rate_id: string | null
+          closing_cost_reason: string | null
+          closing_cost_source: string
           created_at: string
           date_formed: string | null
           entity_type: string | null
@@ -4018,10 +4021,16 @@ export type Database = {
           target_raise_cents: number | null
           updated_at: string
           wire_fee_cents: number
+          wire_fee_rate_id: string | null
+          wire_fee_reason: string | null
+          wire_fee_source: string
         }
         Insert: {
           client_id?: string | null
           closing_cost_cents?: number
+          closing_cost_rate_id?: string | null
+          closing_cost_reason?: string | null
+          closing_cost_source?: string
           created_at?: string
           date_formed?: string | null
           entity_type?: string | null
@@ -4043,10 +4052,16 @@ export type Database = {
           target_raise_cents?: number | null
           updated_at?: string
           wire_fee_cents?: number
+          wire_fee_rate_id?: string | null
+          wire_fee_reason?: string | null
+          wire_fee_source?: string
         }
         Update: {
           client_id?: string | null
           closing_cost_cents?: number
+          closing_cost_rate_id?: string | null
+          closing_cost_reason?: string | null
+          closing_cost_source?: string
           created_at?: string
           date_formed?: string | null
           entity_type?: string | null
@@ -4068,6 +4083,9 @@ export type Database = {
           target_raise_cents?: number | null
           updated_at?: string
           wire_fee_cents?: number
+          wire_fee_rate_id?: string | null
+          wire_fee_reason?: string | null
+          wire_fee_source?: string
         }
         Relationships: [
           {
@@ -4075,6 +4093,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offerings_closing_cost_rate_id_fkey"
+            columns: ["closing_cost_rate_id"]
+            isOneToOne: false
+            referencedRelation: "client_pricing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offerings_wire_fee_rate_id_fkey"
+            columns: ["wire_fee_rate_id"]
+            isOneToOne: false
+            referencedRelation: "client_pricing"
             referencedColumns: ["id"]
           },
         ]
@@ -5144,6 +5176,9 @@ export type Database = {
           created_at: string
           declined_reason: string | null
           effective_date: string | null
+          fee_override_reason: string | null
+          fee_rate_id: string | null
+          fee_source: string | null
           id: string
           offering_id: string | null
           proposed_fee_cents: number | null
@@ -5173,6 +5208,9 @@ export type Database = {
           created_at?: string
           declined_reason?: string | null
           effective_date?: string | null
+          fee_override_reason?: string | null
+          fee_rate_id?: string | null
+          fee_source?: string | null
           id?: string
           offering_id?: string | null
           proposed_fee_cents?: number | null
@@ -5202,6 +5240,9 @@ export type Database = {
           created_at?: string
           declined_reason?: string | null
           effective_date?: string | null
+          fee_override_reason?: string | null
+          fee_rate_id?: string | null
+          fee_source?: string | null
           id?: string
           offering_id?: string | null
           proposed_fee_cents?: number | null
@@ -5232,6 +5273,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_fee_rate_id_fkey"
+            columns: ["fee_rate_id"]
+            isOneToOne: false
+            referencedRelation: "client_pricing"
             referencedColumns: ["id"]
           },
           {
