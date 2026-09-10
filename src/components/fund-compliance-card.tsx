@@ -283,8 +283,12 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
       <CardHeader>
         <CardTitle>Compliance checklist</CardTitle>
         <CardDescription>
-          Every filing this fund owes, who owns it and when it was filed. Investors never see this.
+          Every filing this fund owes, who owns it and when it was filed. Harmonious prepares and
+          submits only the filings named in the active statement of work, using information the
+          client supplies; the client and its counsel remain responsible for the rest. Investors
+          never see this.
         </CardDescription>
+
       </CardHeader>
       <CardContent className="grid gap-5">
         {query.isLoading ? (
