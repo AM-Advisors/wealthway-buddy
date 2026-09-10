@@ -342,7 +342,7 @@ export const inviteClientContact = createServerFn({ method: "POST" })
         );
       await supabaseAdmin
         .from("user_roles")
-        .upsert({ user_id: match.id, role: data.role }, { onConflict: "user_id,role" });
+        .upsert({ user_id: match.id, role: data.role as never }, { onConflict: "user_id,role" });
       await supabaseAdmin
         .from("client_invitations")
         .update({ status: "accepted", accepted_at: new Date().toISOString(), accepted_by: match.id })
