@@ -630,12 +630,13 @@ export const respondToInvoice = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.rpc("respond_to_invoice", {
+    const args: Record<string, string> = {
       _invoice_id: data.id,
       _decision: data.decision,
-      _signer_name: data.signerName || undefined,
-      _reason: data.reason || undefined,
-    });
+    };
+    if (data.signerName) args["_signer_name"] = data.signerName;
+    if (data.reason) args["_reason"] = data.reason;
+    const { error } = await context.supabase.rpc("respond_to_invoice", args as any);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
