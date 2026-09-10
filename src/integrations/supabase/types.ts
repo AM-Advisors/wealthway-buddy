@@ -531,6 +531,65 @@ export type Database = {
           },
         ]
       }
+      client_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          can_approve: boolean
+          client_id: string
+          client_role: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          invited_name: string | null
+          note: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          can_approve?: boolean
+          client_id: string
+          client_role?: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          invited_name?: string | null
+          note?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          can_approve?: boolean
+          client_id?: string
+          client_role?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          invited_name?: string | null
+          note?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_invitations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_pricing: {
         Row: {
           approved_at: string | null
