@@ -191,7 +191,12 @@ export const placeHold = createServerFn({ method: "POST" })
 export const clearHold = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ id: z.string().uuid(), note: z.string().max(1000).optional().or(z.literal("")) }).parse(d),
+    z
+      .object({
+        id: z.string().uuid(),
+        note: z.string().trim().min(3, "Say what resolved this hold.").max(1000),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const roles = await requireStaff(context);
@@ -222,7 +227,7 @@ export const clearHold = createServerFn({ method: "POST" })
       action: "cleared",
       target: `${hold.scope} — ${hold.reason}`,
       previous_value: { status: "active" } as any,
-      new_value: { status: "cleared" } as any,
+      new_value: { status: "cleared", note: data.note } as any,
       source: "web",
     });
     return { ok: true };
