@@ -102,6 +102,8 @@ const offeringSchema = z.object({
 
   is_open: z.boolean().default(true),
   wire_instructions: wireSchema,
+  client_id: z.string().uuid().nullable().optional(),
+  sow_id: z.string().uuid().nullable().optional(),
 });
 
 
@@ -339,13 +341,46 @@ export const saveOffering = createServerFn({ method: "POST" })
         .eq("id", offeringId);
       if (error) throw new Error(error.message);
     } else {
+      // A fund cannot exist before its statement of work is signed.
+      if (!data.sow_id) {
+        throw new Error(
+          "Choose the signed statement of work that covers this fund before creating it.",
+        );
+      }
+      const { data: sow, error: sowError } = await context.supabase
+        .from("client_sows")
+        .select("id, client_id, title, status, signed_on, signed_by, offering_id")
+        .eq("id", data.sow_id)
+        .maybeSingle();
+      if (sowError) throw new Error(sowError.message);
+      if (!sow) throw new Error("That statement of work could not be found.");
+      const row = sow as any;
+      if (row.status !== "active" || !row.signed_on || !row.signed_by) {
+        throw new Error(
+          "That statement of work is not signed yet. A fund can only be created once the client has signed.",
+        );
+      }
+      if (row.offering_id) {
+        throw new Error("That statement of work already covers another fund.");
+      }
+      if (data.client_id && row.client_id !== data.client_id) {
+        throw new Error("That statement of work belongs to a different client.");
+      }
+
       const { data: inserted, error } = await context.supabase
         .from("offerings")
-        .insert(payload)
+        .insert({ ...payload, client_id: row.client_id } as any)
         .select("id")
         .single();
       if (error) throw new Error(error.message);
       offeringId = (inserted as any).id as string;
+
+      const { error: linkError } = await context.supabase
+        .from("client_sows")
+        .update({ offering_id: offeringId } as any)
+        .eq("id", row.id)
+        .is("offering_id", null);
+      if (linkError) throw new Error(linkError.message);
     }
 
     const { error: wireError } = await context.supabase.rpc("save_wire_instructions", {

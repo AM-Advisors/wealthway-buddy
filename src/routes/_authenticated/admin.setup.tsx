@@ -21,6 +21,7 @@ import { saveOffering, saveOfferingDocument, WIRE_FIELDS } from "@/lib/offerings
 import { listAccessDirectory, assignFundAccess } from "@/lib/access.functions";
 import { FundEntityCard } from "@/components/fund-entity-card";
 import { inviteToFund } from "@/lib/invitations.functions";
+import { listFundSetupAgreements } from "@/lib/fund-sow.functions";
 import { REG_TYPES, regTypeDescription, type RegTypeValue } from "@/lib/reg-types";
 
 export const Route = createFileRoute("/_authenticated/admin/setup")({
@@ -81,6 +82,8 @@ function SetupPage() {
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState(0);
+  const [clientId, setClientId] = useState("");
+  const [sowId, setSowId] = useState("");
   const [fundId, setFundId] = useState<string | null>(null);
 
   const [fund, setFund] = useState({
@@ -112,6 +115,30 @@ function SetupPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
 
+  const loadAgreements = useServerFn(listFundSetupAgreements);
+  const agreementsQuery = useQuery({
+    queryKey: ["fund-setup-agreements"],
+    queryFn: () => loadAgreements(),
+    retry: false,
+  });
+  const clientList = ((agreementsQuery.data as any)?.clients ?? []) as {
+    id: string;
+    name: string;
+    status: string;
+  }[];
+  const allSows = ((agreementsQuery.data as any)?.sows ?? []) as {
+    id: string;
+    clientId: string;
+    title: string;
+    sowType: string;
+    status: string;
+    signedOn: string | null;
+    signed: boolean;
+    reason: string | null;
+  }[];
+  const clientSows = allSows.filter((s) => s.clientId === clientId);
+  const chosenSow = allSows.find((s) => s.id === sowId) ?? null;
+
   const directoryQuery = useQuery({
     queryKey: ["access-directory"],
     queryFn: () => loadDirectory(),
@@ -126,6 +153,7 @@ function SetupPage() {
       createFund({
         data: {
           ...(fundId ? { id: fundId } : {}),
+          ...(fundId ? {} : { client_id: clientId, sow_id: sowId }),
           name: fund.name.trim(),
           slug: fund.slug.trim() || slugify(fund.name),
           summary: fund.summary.trim(),
@@ -206,7 +234,9 @@ function SetupPage() {
   });
 
   const canSaveFund =
-    fund.name.trim().length >= 2 && (fund.slug.trim() || slugify(fund.name)).length >= 2;
+    fund.name.trim().length >= 2 &&
+    (fund.slug.trim() || slugify(fund.name)).length >= 2 &&
+    (Boolean(fundId) || Boolean(chosenSow?.signed));
   const canAddDoc = docForm.title.trim().length >= 2 && docForm.body.trim().length >= 10;
   const canAssign = Boolean(existingUserId) || /\S+@\S+\.\S+/.test(inviteEmail.trim());
 
@@ -251,6 +281,77 @@ function SetupPage() {
             </p>
           </CardHeader>
           <CardContent className="grid gap-4">
+            <div className="rounded-md border p-4">
+              <p className="text-sm font-medium">Client and signed statement of work</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                A fund can only be created once its client has signed the statement of work that
+                covers it. That agreement sets the services, fees and terms for this fund.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label>Client</Label>
+                  <Select
+                    value={clientId}
+                    onValueChange={(v) => {
+                      setClientId(v);
+                      setSowId("");
+                    }}
+                    disabled={Boolean(fundId)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientList.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Statement of work</Label>
+                  <Select
+                    value={sowId}
+                    onValueChange={setSowId}
+                    disabled={Boolean(fundId) || !clientId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a signed agreement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientSows.map((s) => (
+                        <SelectItem key={s.id} value={s.id} disabled={!s.signed}>
+                          {s.title}
+                          {s.signed ? "" : ` — ${s.reason}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {clientId && clientSows.length === 0 && (
+                <p className="mt-3 text-xs text-destructive">
+                  This client has no statement of work yet. Create and sign one under Pricing and
+                  agreements first.
+                </p>
+              )}
+              {chosenSow?.signed && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Signed on{" "}
+                  {chosenSow.signedOn
+                    ? new Date(chosenSow.signedOn).toLocaleDateString("en-US")
+                    : "—"}
+                  . Creating the fund attaches it to this agreement.
+                </p>
+              )}
+              {!fundId && !chosenSow?.signed && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Choose a signed agreement to continue.
+                </p>
+              )}
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Fund name</Label>
               <Input
