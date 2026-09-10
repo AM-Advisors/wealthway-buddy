@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { ClientPricingBoard } from "@/components/client-pricing-board";
+import { FeeSourcesBoard } from "@/components/fee-sources-board";
 import { HoldsBoard } from "@/components/holds-board";
 import { OffboardingBoard } from "@/components/offboarding-board";
 import { PolicyAcceptancesBoard, PolicyDocumentsBoard } from "@/components/policy-admin";
