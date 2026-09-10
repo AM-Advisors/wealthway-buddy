@@ -305,24 +305,58 @@ export const inviteClientContact = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) throw new Error("That person already has an invitation waiting for this client.");
 
-    const { error } = await context.supabase.from("client_invitations").insert({
-      client_id: data.clientId,
-      email,
-      invited_name: data.name || null,
-      client_role: data.role,
-      can_approve: data.canApprove,
-      note: data.note || null,
-      invited_by: who.userId,
-    });
+    const { data: created, error } = await context.supabase
+      .from("client_invitations")
+      .insert({
+        client_id: data.clientId,
+        email,
+        invited_name: data.name || null,
+        client_role: data.role,
+        can_approve: data.canApprove,
+        note: data.note || null,
+        invited_by: who.userId,
+      })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
 
+    // If they already have an account, attach them now rather than waiting for
+    // a first sign-in that has already happened.
+    let attached = false;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: found } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const match = (found?.users ?? []).find(
+      (u: any) => String(u.email ?? "").toLowerCase() === email && u.email_confirmed_at,
+    );
+    if (match) {
+      await supabaseAdmin
+        .from("client_users")
+        .upsert(
+          {
+            client_id: data.clientId,
+            user_id: match.id,
+            client_role: data.role,
+            can_approve: data.canApprove,
+          },
+          { onConflict: "client_id,user_id" },
+        );
+      await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: match.id, role: data.role }, { onConflict: "user_id,role" });
+      await supabaseAdmin
+        .from("client_invitations")
+        .update({ status: "accepted", accepted_at: new Date().toISOString(), accepted_by: match.id })
+        .eq("id", (created as any).id);
+      attached = true;
+    }
+
     await audit(context, who, {
-      action: "contact invited",
+      action: attached ? "contact added" : "contact invited",
       clientId: data.clientId,
       target: email,
-      next: { role: data.role, can_approve: data.canApprove },
+      next: { role: data.role, can_approve: data.canApprove, attached },
     });
-    return { ok: true };
+    return { ok: true, attached };
   });
 
 export const cancelClientInvitation = createServerFn({ method: "POST" })
