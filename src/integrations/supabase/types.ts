@@ -714,6 +714,15 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           client_id: string
+          client_sent_back_at: string | null
+          client_sent_back_reason: string | null
+          client_signature_ip: string | null
+          client_signature_name: string | null
+          client_signature_title: string | null
+          client_signature_user_agent: string | null
+          client_signed_at: string | null
+          client_signed_user_id: string | null
+          client_status: string
           created_at: string
           created_by: string | null
           document_path: string | null
@@ -737,6 +746,15 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           client_id: string
+          client_sent_back_at?: string | null
+          client_sent_back_reason?: string | null
+          client_signature_ip?: string | null
+          client_signature_name?: string | null
+          client_signature_title?: string | null
+          client_signature_user_agent?: string | null
+          client_signed_at?: string | null
+          client_signed_user_id?: string | null
+          client_status?: string
           created_at?: string
           created_by?: string | null
           document_path?: string | null
@@ -760,6 +778,15 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           client_id?: string
+          client_sent_back_at?: string | null
+          client_sent_back_reason?: string | null
+          client_signature_ip?: string | null
+          client_signature_name?: string | null
+          client_signature_title?: string | null
+          client_signature_user_agent?: string | null
+          client_signed_at?: string | null
+          client_signed_user_id?: string | null
+          client_status?: string
           created_at?: string
           created_by?: string | null
           document_path?: string | null
@@ -6566,6 +6593,20 @@ export type Database = {
       }
       can_review_operations: { Args: never; Returns: boolean }
       can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
+      client_send_back_sow: {
+        Args: { _reason: string; _sow_id: string }
+        Returns: undefined
+      }
+      client_sign_sow: {
+        Args: {
+          _ip?: string
+          _name: string
+          _sow_id: string
+          _title?: string
+          _user_agent?: string
+        }
+        Returns: undefined
+      }
       diligence_access_open: {
         Args: { _offering_id: string }
         Returns: boolean
