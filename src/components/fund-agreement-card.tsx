@@ -12,11 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FundConditionsPanel } from "@/components/fund-conditions-panel";
 import { HoldBanner } from "@/components/hold-banner";
 import { ResponsibilityMatrix } from "@/components/responsibility-matrix";
 import { RequestServiceCard, statusLabel, statusTone } from "@/components/service-gate";
 import { getFundScope, SERVICE_CATEGORIES } from "@/lib/contracts.functions";
-import { checkFundEligibility } from "@/lib/eligibility.functions";
 import { getResponsibilities, setResponsibilityStatus } from "@/lib/responsibilities.functions";
 
 const RESPONSIBILITY_STATUSES = [
@@ -29,7 +29,6 @@ const RESPONSIBILITY_STATUSES = [
 /** Scope, conditions, client to-do list and any holds for one fund. */
 export function FundAgreementCard({ offeringId }: { offeringId: string }) {
   const loadScope = useServerFn(getFundScope);
-  const loadEligibility = useServerFn(checkFundEligibility);
   const loadResponsibilities = useServerFn(getResponsibilities);
   const save = useServerFn(setResponsibilityStatus);
   const queryClient = useQueryClient();
@@ -37,11 +36,6 @@ export function FundAgreementCard({ offeringId }: { offeringId: string }) {
   const scope = useQuery({
     queryKey: ["fund-scope", offeringId],
     queryFn: () => loadScope({ data: { offeringId } }),
-    retry: false,
-  });
-  const eligibility = useQuery({
-    queryKey: ["fund-eligibility", offeringId],
-    queryFn: () => loadEligibility({ data: { offeringId } }),
     retry: false,
   });
   const responsibilities = useQuery({
