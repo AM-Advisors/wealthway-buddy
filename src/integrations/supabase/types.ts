@@ -709,6 +709,10 @@ export type Database = {
       }
       client_sows: {
         Row: {
+          approval_note: string | null
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           client_id: string
           created_at: string
           created_by: string | null
@@ -728,6 +732,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approval_note?: string | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           client_id: string
           created_at?: string
           created_by?: string | null
@@ -747,6 +755,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approval_note?: string | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           client_id?: string
           created_at?: string
           created_by?: string | null
