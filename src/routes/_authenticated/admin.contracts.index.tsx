@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ClientsBoard } from "@/components/clients-board";
+import { FundConditionExceptions } from "@/components/fund-condition-exceptions";
 import { ServiceRequestsBoard } from "@/components/service-requests-board";
 
 export const Route = createFileRoute("/_authenticated/admin/contracts/")({
@@ -36,6 +37,13 @@ export const Route = createFileRoute("/_authenticated/admin/contracts/")({
         once they've signed the amendment.
       </p>
       <ServiceRequestsBoard />
+      <h2 className="mb-2 mt-10 text-2xl">Funds paused on agreement conditions</h2>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Funds with no recorded statement of work, an unmet condition, or an additional per-investor
+        fee waiting to be acknowledged. New investors and funding stay paused until these are
+        handled.
+      </p>
+      <FundConditionExceptions />
     </main>
   ),
 });

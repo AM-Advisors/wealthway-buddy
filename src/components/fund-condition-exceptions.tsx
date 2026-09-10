@@ -63,8 +63,8 @@ export function FundConditionExceptions() {
               </p>
             ) : null}
             <Link
-              to="/funds/$offeringId"
-              params={{ offeringId: row.id }}
+              to="/admin/fund/$fundId"
+              params={{ fundId: row.id }}
               className="inline-block pt-1 text-sm underline"
             >
               Open the fund
