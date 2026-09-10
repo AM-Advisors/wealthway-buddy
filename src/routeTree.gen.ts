@@ -101,6 +101,7 @@ import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/e
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
 import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_authenticated/admin.fund.$fundId'
+import { Route as AuthenticatedAdminOffboardingCaseIdRouteImport } from './routes/_authenticated/admin.offboarding.$caseId'
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
@@ -628,6 +629,12 @@ const AuthenticatedAdminFundFundIdRoute =
     path: '/admin/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminOffboardingCaseIdRoute =
+  AuthenticatedAdminOffboardingCaseIdRouteImport.update({
+    id: '/admin/offboarding/$caseId',
+    path: '/admin/offboarding/$caseId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPacketFundIdRoute =
   AuthenticatedAdminPacketFundIdRouteImport.update({
     id: '/admin/packet/$fundId',
@@ -775,6 +782,7 @@ export interface FileRoutesByFullPath {
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -877,6 +885,7 @@ export interface FileRoutesByTo {
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -982,6 +991,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
+  '/_authenticated/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -1087,6 +1097,7 @@ export interface FileRouteTypes {
     | '/ops/'
     | '/admin/contracts/$clientId'
     | '/admin/fund/$fundId'
+    | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -1189,6 +1200,7 @@ export interface FileRouteTypes {
     | '/ops'
     | '/admin/contracts/$clientId'
     | '/admin/fund/$fundId'
+    | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -1293,6 +1305,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/'
     | '/_authenticated/admin/contracts/$clientId'
     | '/_authenticated/admin/fund/$fundId'
+    | '/_authenticated/admin/offboarding/$caseId'
     | '/_authenticated/admin/packet/$fundId'
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
@@ -1975,6 +1988,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/offboarding/$caseId': {
+      id: '/_authenticated/admin/offboarding/$caseId'
+      path: '/admin/offboarding/$caseId'
+      fullPath: '/admin/offboarding/$caseId'
+      preLoaderRoute: typeof AuthenticatedAdminOffboardingCaseIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/packet/$fundId': {
       id: '/_authenticated/admin/packet/$fundId'
       path: '/admin/packet/$fundId'
@@ -2124,6 +2144,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedAdminContractsClientIdRoute: typeof AuthenticatedAdminContractsClientIdRoute
   AuthenticatedAdminFundFundIdRoute: typeof AuthenticatedAdminFundFundIdRoute
+  AuthenticatedAdminOffboardingCaseIdRoute: typeof AuthenticatedAdminOffboardingCaseIdRoute
   AuthenticatedAdminPacketFundIdRoute: typeof AuthenticatedAdminPacketFundIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
@@ -2213,6 +2234,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminContractsClientIdRoute:
     AuthenticatedAdminContractsClientIdRoute,
   AuthenticatedAdminFundFundIdRoute: AuthenticatedAdminFundFundIdRoute,
+  AuthenticatedAdminOffboardingCaseIdRoute:
+    AuthenticatedAdminOffboardingCaseIdRoute,
   AuthenticatedAdminPacketFundIdRoute: AuthenticatedAdminPacketFundIdRoute,
   AuthenticatedManagerFundFundIdRoute: AuthenticatedManagerFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { ClientPricingBoard } from "@/components/client-pricing-board";
 import { HoldsBoard } from "@/components/holds-board";
+import { OffboardingBoard } from "@/components/offboarding-board";
 import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
 import { ProvidersBoard } from "@/components/providers-board";
 import { ServiceRequestsBoard } from "@/components/service-requests-board";
@@ -70,6 +71,7 @@ function PricingConsole() {
           <TabsTrigger value="holds">Holds</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
           <TabsTrigger value="requests">Service requests</TabsTrigger>
+          <TabsTrigger value="termination">Termination</TabsTrigger>
         </TabsList>
         <TabsContent value="catalog" className="pt-4">
           <PricingCatalogBoard
@@ -103,6 +105,9 @@ function PricingConsole() {
         </TabsContent>
         <TabsContent value="requests" className="pt-4">
           <ServiceRequestsBoard />
+        </TabsContent>
+        <TabsContent value="termination" className="pt-4">
+          <OffboardingBoard />
         </TabsContent>
       </Tabs>
     </main>

@@ -3304,10 +3304,13 @@ export type Database = {
       offboarding_cases: {
         Row: {
           client_id: string
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
           created_by: string | null
           effective_end_date: string | null
           id: string
+          initiated_by: string
           note: string | null
           notice_days: number
           notice_received_on: string | null
@@ -3318,10 +3321,13 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by?: string | null
           effective_end_date?: string | null
           id?: string
+          initiated_by?: string
           note?: string | null
           notice_days?: number
           notice_received_on?: string | null
@@ -3332,10 +3338,13 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by?: string | null
           effective_end_date?: string | null
           id?: string
+          initiated_by?: string
           note?: string | null
           notice_days?: number
           notice_received_on?: string | null

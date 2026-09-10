@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { MyServiceRequests } from "@/components/service-request-signing";
+import { ClientOffboardingPanel } from "@/components/client-offboarding-panel";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({
@@ -900,6 +901,7 @@ function Portal() {
             </Card>
           ) : null}
           <MyServiceRequests />
+          <ClientOffboardingPanel />
         </div>
       )}
     </main>
