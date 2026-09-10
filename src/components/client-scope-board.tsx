@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { ResponsibilityMatrix } from "@/components/responsibility-matrix";
 import { statusLabel, statusTone } from "@/components/service-gate";
 import { money } from "@/lib/status";
@@ -280,11 +279,5 @@ export function ClientScopeBoard({ clientId }: { clientId: string }) {
         </p>
       ) : null}
     </div>
-  );
-}
-
-export function ScopeNote() {
-  return (
-    <Textarea className="hidden" readOnly value="" aria-hidden />
   );
 }
