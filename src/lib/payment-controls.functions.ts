@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertFundConditions } from "@/lib/fund-conditions.functions";
 import { assertNoHold } from "@/lib/compliance-holds.functions";
 
 const STAFF = [
@@ -120,6 +121,9 @@ export const createPaymentInstruction = createServerFn({ method: "POST" })
       offeringId: data.offeringId ?? null,
       clientId: data.clientId ?? null,
     });
+    if (data.offeringId) {
+      await assertFundConditions(context.supabase, data.offeringId, "funding");
+    }
 
     if (data.purpose === "fee" && !data.authorizationReference) {
       throw new Error(
@@ -233,6 +237,9 @@ export const decidePaymentInstruction = createServerFn({ method: "POST" })
         offeringId: instruction.offering_id,
         clientId: instruction.client_id,
       });
+      if (instruction.offering_id) {
+        await assertFundConditions(context.supabase, instruction.offering_id, "funding");
+      }
 
       const { error: approvalError } = await context.supabase.from("payment_approvals").insert({
         instruction_id: data.id,
