@@ -74,6 +74,7 @@ function PricingConsole() {
           <TabsTrigger value="sows">Statements of work</TabsTrigger>
           <TabsTrigger value="fundfees">Fund fees</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="holds">Holds</TabsTrigger>
           <TabsTrigger value="providers">Providers</TabsTrigger>
           <TabsTrigger value="requests">Service requests</TabsTrigger>
