@@ -378,10 +378,9 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
             )}
           </CardContent>
         </Card>
-      </div>
-
         </ScopeSection>
       </div>
+
 
       <div className="mt-6">
       <ScopeSection
