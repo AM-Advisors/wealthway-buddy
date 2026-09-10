@@ -1156,7 +1156,14 @@ export const saveProvider = createServerFn({ method: "POST" })
       status: data.status,
       outage_note: data.outage_note || null,
     };
+    let previous: any = null;
     if (data.id) {
+      const { data: existing } = await context.supabase
+        .from("third_party_providers")
+        .select("*")
+        .eq("id", data.id)
+        .maybeSingle();
+      previous = existing ?? null;
       const { error } = await context.supabase
         .from("third_party_providers")
         .update(row)
@@ -1166,7 +1173,13 @@ export const saveProvider = createServerFn({ method: "POST" })
       const { error } = await context.supabase.from("third_party_providers").insert(row);
       if (error) throw new Error(error.message);
     }
-    await audit(context, who, { area: "provider", action: "saved", target: data.name, next: row });
+    await audit(context, who, {
+      area: "provider",
+      action: data.id ? "updated" : "added",
+      target: data.name,
+      previous,
+      next: row,
+    });
     return { ok: true };
   });
 
