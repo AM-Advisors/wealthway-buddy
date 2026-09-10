@@ -534,7 +534,7 @@ export function InvoicesBoard() {
         </CardContent>
       </Card>
 
-      <ActivityPanel area="invoice" title="Invoice history" />
+      <ActivityPanel areas={["invoice"]} title="Invoice history" />
     </div>
   );
 }
