@@ -86,7 +86,25 @@ export function RequestServiceCard({
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
   const send = useServerFn(requestService);
+  const loadMine = useServerFn(getMyServiceRequests);
   const queryClient = useQueryClient();
+
+  const { data: mine } = useQuery({
+    queryKey: ["my-service-requests"],
+    queryFn: () => loadMine(),
+    retry: false,
+  });
+  const latest = (mine?.requests ?? []).find((r: any) => r.service_key === service.key);
+
+  const STAGE_NOTE: Record<string, string> = {
+    requested: "Harmonious has your request and will come back with a written fee proposal.",
+    in_review: "Harmonious is reviewing this request. You'll see the fee proposal here when it's ready.",
+    quoted: "Harmonious has proposed a fee. Review and sign it from your portal to go ahead.",
+    signed: "You've signed the amendment. Harmonious will switch the service on shortly.",
+    activated: "Active — this service is now part of your scope.",
+    declined: "Harmonious has declined this request. The reason is on your portal.",
+    withdrawn: "This request was withdrawn.",
+  };
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -117,7 +135,9 @@ export function RequestServiceCard({
               This service is not currently included in your active scope.
             </CardDescription>
           </div>
-          <Badge variant={statusTone(service.status)}>{statusLabel(service.status)}</Badge>
+          <Badge variant={latest ? "secondary" : statusTone(service.status)}>
+            {latest ? stageLabel(latest.status) : statusLabel(service.status)}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
