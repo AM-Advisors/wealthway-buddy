@@ -461,6 +461,8 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
           )}
         </CardContent>
       </Card>
+      </ScopeSection>
+      </div>
 
       <FundComplianceCard offeringId={offeringId} />
 
