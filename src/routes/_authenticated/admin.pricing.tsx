@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ClientPricingBoard } from "@/components/client-pricing-board";
 import { HoldsBoard } from "@/components/holds-board";
 import { OffboardingBoard } from "@/components/offboarding-board";
+import { PolicyAcceptancesBoard, PolicyDocumentsBoard } from "@/components/policy-admin";
 import { PricingCatalogBoard } from "@/components/pricing-catalog-board";
 import { ProvidersBoard } from "@/components/providers-board";
 import { ServiceRequestsBoard } from "@/components/service-requests-board";
