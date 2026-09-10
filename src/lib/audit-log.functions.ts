@@ -116,13 +116,40 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
 
     const range = (q: any) => (since ? q.gte("created_at", since) : q);
 
-    const [requests, confirmations, instructions, approvals, payments] = await Promise.all([
-      range(context.supabase.from("wire_requests").select("*")).limit(500),
-      range(context.supabase.from("wire_confirmations").select("*")).limit(500),
-      range(context.supabase.from("payment_instructions").select("*")).limit(500),
-      range(context.supabase.from("payment_approvals").select("*")).limit(500),
-      range(context.supabase.from("payments").select("*")).limit(500),
-    ]);
+    const [requests, confirmations, instructions, approvals, payments, wireDecisions] =
+      await Promise.all([
+        range(context.supabase.from("wire_requests").select("*")).limit(500),
+        range(context.supabase.from("wire_confirmations").select("*")).limit(500),
+        range(context.supabase.from("payment_instructions").select("*")).limit(500),
+        range(context.supabase.from("payment_approvals").select("*")).limit(500),
+        range(context.supabase.from("payments").select("*")).limit(500),
+        range(
+          context.supabase
+            .from("reviewer_activity")
+            .select("*")
+            .in("action", ["wire_request_decision", "wire_decision"]),
+        ).limit(500),
+      ]);
+
+    const decisionRows: AuditEntry[] = ((wireDecisions.data ?? []) as any[]).map((d) => {
+      const meta = (d.metadata ?? {}) as Record<string, any>;
+      const fund = d.offering_id ?? app.get(d.application_id ?? "")?.offering_id ?? null;
+      return {
+        id: `wire-decision-${d.id}`,
+        at: d.created_at,
+        actor: personName.get(d.actor_id) ?? null,
+        fundName: fund ? (fundName.get(fund) ?? null) : null,
+        category: "Wire decision",
+        summary: d.summary ?? "Wire decision recorded",
+        detail: joinDetail([
+          `Previous value: ${meta.previous ?? "not set"}`,
+          `New value: ${meta.next ?? d.outcome ?? "—"}`,
+          d.note,
+        ]),
+        amountCents: (meta.amount_cents as number) ?? null,
+        status: (meta.next ?? d.outcome ?? null) as string | null,
+      };
+    });
 
     const instructionFund = new Map<string, string | null>(
       ((instructions.data ?? []) as any[]).map((i) => [i.id, i.offering_id ?? null]),
