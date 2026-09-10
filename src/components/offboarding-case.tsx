@@ -148,7 +148,17 @@ export function OffboardingCase({ caseId }: { caseId: string }) {
     onError: fail,
   });
 
+  const removeAccess = useMutation({
+    mutationFn: (memberId?: string) => revoke({ data: { id: caseId, memberId } }),
+    onSuccess: () => {
+      toast.success("Access removed. Records are retained.");
+      refresh();
+    },
+    onError: fail,
+  });
+
   const finish = useMutation({
+
     mutationFn: () => close({ data: { id: caseId } }),
     onSuccess: () => {
       toast.success("Termination closed.");
