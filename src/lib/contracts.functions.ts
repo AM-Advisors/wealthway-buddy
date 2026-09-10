@@ -1386,6 +1386,13 @@ export const listSowApprovals = createServerFn({ method: "GET" })
       approvedAt: (s.approved_at as string) ?? null,
       approvedByName: s.approved_by ? (person.get(s.approved_by as string) || null) : null,
       signed: Boolean(s.signed_on) && Boolean(s.signed_by),
+      clientStatus: ((s.client_status as string) ?? "pending") as "pending" | "signed" | "sent_back",
+      clientSignatureName: (s.client_signature_name as string) ?? null,
+      clientSignatureTitle: (s.client_signature_title as string) ?? null,
+      clientSignedAt: (s.client_signed_at as string) ?? null,
+      clientSentBackReason: (s.client_sent_back_reason as string) ?? null,
+      clientSentBackAt: (s.client_sent_back_at as string) ?? null,
+      hasDocument: Boolean(s.document_path),
     }));
 
     return { canDecide: who.roles.some((r) => r === "admin" || r === "super_admin"), rows };
