@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { ActivityPanel } from "@/components/activity-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { listProviders, saveProvider } from "@/lib/contracts.functions";
+import { listExpenses, setProviderRetired } from "@/lib/expenses.functions";
+
+const money = (cents: number) =>
+  (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 const PROVIDER_TYPES = [
   "bank",
@@ -72,13 +77,44 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
   const queryClient = useQueryClient();
   const load = useServerFn(listProviders);
   const save = useServerFn(saveProvider);
+  const retire = useServerFn(setProviderRetired);
+  const loadExpenses = useServerFn(listExpenses);
 
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [showRetired, setShowRetired] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["third-party-providers"],
     queryFn: () => load(),
     retry: false,
+  });
+
+  const { data: expenseData } = useQuery({
+    queryKey: ["pass-through-expenses"],
+    queryFn: () => loadExpenses(),
+    retry: false,
+  });
+
+  const costsByProvider = useMemo(() => {
+    const map = new Map<string, { count: number; total: number }>();
+    for (const e of (expenseData?.expenses ?? []) as any[]) {
+      if (!e.provider_id) continue;
+      const entry = map.get(e.provider_id) ?? { count: 0, total: 0 };
+      entry.count += 1;
+      entry.total += Number(e.amount_cents ?? 0);
+      map.set(e.provider_id, entry);
+    }
+    return map;
+  }, [expenseData]);
+
+  const retireMutation = useMutation({
+    mutationFn: (input: { id: string; retired: boolean }) => retire({ data: input }),
+    onSuccess: () => {
+      toast.success("Provider updated.");
+      queryClient.invalidateQueries({ queryKey: ["third-party-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["contract-audit"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "That provider couldn't be updated."),
   });
 
   const saveMutation = useMutation({
@@ -108,13 +144,17 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
     onError: (e: any) => toast.error(e?.message ?? "That provider couldn't be saved."),
   });
 
-  const providers = useMemo(() => {
+  const allProviders = useMemo(() => {
     const rows = ((data?.providers ?? []) as any[]).slice();
     const rank = (s: string) => (s === "down" ? 0 : s === "degraded" ? 1 : s === "retired" ? 3 : 2);
     return rows.sort(
       (a, b) => rank(a.status) - rank(b.status) || String(a.name).localeCompare(String(b.name)),
     );
   }, [data]);
+
+  const retiredCount = allProviders.filter((p) => p.retired_at).length;
+  const providers = showRetired ? allProviders : allProviders.filter((p) => !p.retired_at);
+  const disrupted = providers.filter((p) => p.status === "down" || p.status === "degraded").length;
 
   return (
     <div className="space-y-6">
@@ -125,13 +165,23 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
             <CardDescription>
               Services Harmonious depends on to deliver contracted work. Availability and timing of
               these providers is outside Harmonious's control.
+              {" "}
+              {providers.length} in use
+              {disrupted > 0 ? `, ${disrupted} currently disrupted` : ", all operating normally"}.
             </CardDescription>
           </div>
-          {canManage ? (
-            <Button size="sm" onClick={() => setDraft({ ...emptyDraft })}>
-              Add provider
-            </Button>
-          ) : null}
+          <div className="flex gap-2">
+            {retiredCount > 0 ? (
+              <Button size="sm" variant="outline" onClick={() => setShowRetired(!showRetired)}>
+                {showRetired ? "Hide retired" : `Show retired (${retiredCount})`}
+              </Button>
+            ) : null}
+            {canManage ? (
+              <Button size="sm" onClick={() => setDraft({ ...emptyDraft })}>
+                Add provider
+              </Button>
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? <p className="text-sm text-muted-foreground">Loading providers…</p> : null}
@@ -153,30 +203,49 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
                   {OPERATING_STATUSES.find((s) => s.value === p.status)?.label ?? p.status}
                 </Badge>
                 <Badge variant="secondary">Contract: {p.contract_status}</Badge>
+                {p.retired_at ? <Badge variant="secondary">Retired</Badge> : null}
                 {canManage ? (
-                  <Button
-                    className="ml-auto"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      setDraft({
-                        id: p.id,
-                        name: p.name ?? "",
-                        provider_type: p.provider_type ?? "other",
-                        service_dependency: p.service_dependency ?? "",
-                        data_categories: (p.data_categories ?? []).join(", "),
-                        contract_status: p.contract_status ?? "active",
-                        security_doc_url: p.security_doc_url ?? "",
-                        sla: p.sla ?? "",
-                        status: p.status ?? "operational",
-                        outage_note: p.outage_note ?? "",
-                      })
-                    }
-                  >
-                    Edit
-                  </Button>
+                  <div className="ml-auto flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setDraft({
+                          id: p.id,
+                          name: p.name ?? "",
+                          provider_type: p.provider_type ?? "other",
+                          service_dependency: p.service_dependency ?? "",
+                          data_categories: (p.data_categories ?? []).join(", "),
+                          contract_status: p.contract_status ?? "active",
+                          security_doc_url: p.security_doc_url ?? "",
+                          sla: p.sla ?? "",
+                          status: p.status ?? "operational",
+                          outage_note: p.outage_note ?? "",
+                        })
+                      }
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={retireMutation.isPending}
+                      onClick={() =>
+                        retireMutation.mutate({ id: p.id, retired: !p.retired_at })
+                      }
+                    >
+                      {p.retired_at ? "Reinstate" : "Retire"}
+                    </Button>
+                  </div>
                 ) : null}
               </div>
+              {costsByProvider.get(p.id) ? (
+                <p className="text-sm text-muted-foreground">
+                  {costsByProvider.get(p.id)!.count} cost
+                  {costsByProvider.get(p.id)!.count === 1 ? "" : "s"} logged ·{" "}
+                  {money(costsByProvider.get(p.id)!.total)} — see the Expenses tab.
+                </p>
+              ) : null}
               {p.service_dependency ? (
                 <p className="text-sm text-muted-foreground">Supports: {p.service_dependency}</p>
               ) : null}
@@ -326,6 +395,8 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
           </CardContent>
         </Card>
       ) : null}
+
+      <ActivityPanel areas={["provider"]} title="Recent provider activity" />
     </div>
   );
 }

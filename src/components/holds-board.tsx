@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { ActivityPanel } from "@/components/activity-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,14 @@ const scopeLabel = (v: string) => HOLD_SCOPES.find((s) => s.value === v)?.label 
 const reasonLabel = (v: string) => HOLD_REASONS.find((s) => s.value === v)?.label ?? v.replace(/_/g, " ");
 const when = (v: string | null | undefined) =>
   v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+const ageInDays = (v: string | null | undefined) =>
+  v ? Math.max(0, Math.floor((Date.now() - new Date(v).getTime()) / 86_400_000)) : 0;
+
+const ageLabel = (v: string | null | undefined) => {
+  const days = ageInDays(v);
+  return days === 0 ? "Opened today" : `Open ${days} day${days === 1 ? "" : "s"}`;
+};
 
 type Draft = {
   clientId: string;
@@ -62,6 +71,9 @@ export function HoldsBoard({
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [clearingId, setClearingId] = useState<string | null>(null);
   const [clearNote, setClearNote] = useState("");
+  const [fundFilter, setFundFilter] = useState("all");
+  const [scopeFilter, setScopeFilter] = useState("all");
+  const [reasonFilter, setReasonFilter] = useState("all");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["compliance-holds", includeCleared],
@@ -69,7 +81,10 @@ export function HoldsBoard({
     retry: false,
   });
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["compliance-holds"] });
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["compliance-holds"] });
+    queryClient.invalidateQueries({ queryKey: ["contract-audit"] });
+  };
 
   const placeMutation = useMutation({
     mutationFn: (input: Draft) =>
@@ -104,8 +119,15 @@ export function HoldsBoard({
   });
 
   const holds = (data?.holds ?? []) as any[];
-  const active = holds.filter((h) => h.status === "active");
-  const cleared = holds.filter((h) => h.status !== "active");
+  const matches = (h: any) =>
+    (fundFilter === "all" || h.offering_id === fundFilter) &&
+    (scopeFilter === "all" || h.scope === scopeFilter) &&
+    (reasonFilter === "all" || h.reason === reasonFilter);
+  const active = holds
+    .filter((h) => h.status === "active" && matches(h))
+    .sort((a, b) => new Date(a.placed_at).getTime() - new Date(b.placed_at).getTime());
+  const cleared = holds.filter((h) => h.status !== "active" && matches(h));
+  const oldest = active.length > 0 ? ageInDays(active[0].placed_at) : 0;
 
   return (
     <div className="space-y-6">
@@ -226,14 +248,58 @@ export function HoldsBoard({
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
-            <CardTitle>Live holds</CardTitle>
-            <CardDescription>Activity currently paused pending Harmonious review.</CardDescription>
+            <CardTitle>Holds queue</CardTitle>
+            <CardDescription>
+              Activity currently paused pending Harmonious review, oldest first. {active.length} open
+              {active.length > 0 ? `, oldest ${oldest} day${oldest === 1 ? "" : "s"}` : ""}.
+            </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={() => setIncludeCleared(!includeCleared)}>
             {includeCleared ? "Hide history" : "Show cleared holds"}
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
+          <div className="grid gap-2 md:grid-cols-3">
+            <Select value={fundFilter} onValueChange={setFundFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All funds" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All funds</SelectItem>
+                {funds.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={scopeFilter} onValueChange={setScopeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Anything paused" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Anything paused</SelectItem>
+                {HOLD_SCOPES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={reasonFilter} onValueChange={setReasonFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Any reason" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any reason</SelectItem>
+                {HOLD_REASONS.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {isLoading ? <p className="text-sm text-muted-foreground">Loading holds…</p> : null}
           {error ? (
             <p className="text-sm text-muted-foreground">
@@ -253,6 +319,9 @@ export function HoldsBoard({
                   {h.clientName ?? "All clients"}
                   {h.fundName ? ` · ${h.fundName}` : ""}
                 </span>
+                <Badge variant={ageInDays(h.placed_at) >= 14 ? "destructive" : "secondary"}>
+                  {ageLabel(h.placed_at)}
+                </Badge>
                 <span className="ml-auto text-xs text-muted-foreground">
                   Placed {when(h.placed_at)}
                 </span>
@@ -270,7 +339,7 @@ export function HoldsBoard({
               {canManage ? (
                 clearingId === h.id ? (
                   <div className="space-y-2 pt-1">
-                    <Label>Closing note</Label>
+                    <Label>Closing note (required)</Label>
                     <Textarea
                       value={clearNote}
                       onChange={(e) => setClearNote(e.target.value)}
@@ -279,8 +348,8 @@ export function HoldsBoard({
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        disabled={clearMutation.isPending}
-                        onClick={() => clearMutation.mutate({ id: h.id, note: clearNote })}
+                        disabled={clearMutation.isPending || clearNote.trim().length < 3}
+                        onClick={() => clearMutation.mutate({ id: h.id, note: clearNote.trim() })}
                       >
                         {clearMutation.isPending ? "Clearing…" : "Confirm clear"}
                       </Button>
@@ -322,6 +391,8 @@ export function HoldsBoard({
           ) : null}
         </CardContent>
       </Card>
+
+      <ActivityPanel areas={["compliance hold"]} title="Recent holds activity" />
     </div>
   );
 }
