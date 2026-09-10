@@ -1,0 +1,2 @@
+ALTER TABLE public.investor_applications DROP CONSTRAINT investor_applications_source_check;
+ALTER TABLE public.investor_applications ADD CONSTRAINT investor_applications_source_check CHECK (source = ANY (ARRAY['portal'::text, 'fund_page'::text, 'referral'::text, 'admin'::text, 'migration'::text]));
