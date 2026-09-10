@@ -2284,6 +2284,47 @@ export type Database = {
           },
         ]
       }
+      fund_condition_clearances: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          offering_id: string
+          reason: string | null
+          rule_key: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          offering_id: string
+          reason?: string | null
+          rule_key: string
+          snapshot?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          offering_id?: string
+          reason?: string | null
+          rule_key?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_condition_clearances_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_distributions: {
         Row: {
           amount_cents: number
