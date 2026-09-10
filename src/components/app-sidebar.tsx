@@ -88,6 +88,7 @@ const adminItems: NavItem[] = [
   { title: "Onboarding funnel", url: "/admin/funnel", icon: Gauge },
   { title: "Document activity", url: "/admin/document-log", icon: FileText },
   { title: "Activity log", url: "/admin/activity", icon: ClipboardList },
+  { title: "Audit log", url: "/admin/audit", icon: ShieldCheck },
   { title: "Email preview", url: "/admin/email-preview", icon: Mail },
   { title: "Security", url: "/admin/security", icon: ShieldCheck },
 ];
