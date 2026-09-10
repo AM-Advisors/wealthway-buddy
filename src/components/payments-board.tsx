@@ -18,6 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   decidePaymentInstruction,
+  getPaymentDocumentUrl,
   listPaymentInstructions,
   updatePaymentChecks,
 } from "@/lib/payment-controls.functions";
@@ -44,11 +45,12 @@ const BANK_LABEL: Record<string, string> = {
 };
 
 /** Every movement of money, the checks behind it and the two approvals it needs. */
-export function PaymentsBoard() {
+export function PaymentsBoard({ purposes }: { purposes?: string[] } = {}) {
   const queryClient = useQueryClient();
   const load = useServerFn(listPaymentInstructions);
   const setChecks = useServerFn(updatePaymentChecks);
   const decide = useServerFn(decidePaymentInstruction);
+  const documentUrl = useServerFn(getPaymentDocumentUrl);
 
   const [statusFilter, setStatusFilter] = useState("open");
   const [search, setSearch] = useState("");
@@ -91,6 +93,7 @@ export function PaymentsBoard() {
     const all = (data?.instructions ?? []) as any[];
     const term = search.trim().toLowerCase();
     return all.filter((r) => {
+      if (purposes && !purposes.includes(String(r.purpose))) return false;
       if (statusFilter === "open" && ["rejected"].includes(r.status)) return false;
       if (statusFilter === "awaiting" && r.status !== "awaiting_approval") return false;
       if (statusFilter === "approved" && r.status !== "approved") return false;
@@ -100,7 +103,7 @@ export function PaymentsBoard() {
         .filter(Boolean)
         .some((v: string) => String(v).toLowerCase().includes(term));
     });
-  }, [data, statusFilter, search]);
+  }, [data, statusFilter, search, purposes]);
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading payments…</p>;
   if (error) {
@@ -230,6 +233,25 @@ export function PaymentsBoard() {
                   onChange={(v) => checks.mutate({ id: r.id, bankStatus: v })}
                 />
               </div>
+
+              {r.supporting_document_path ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const res: any = await documentUrl({ data: { id: r.id } });
+                      window.open(res.url, "_blank", "noopener");
+                    } catch (e: any) {
+                      toast.error(e?.message ?? "That document isn't available.");
+                    }
+                  }}
+                >
+                  Open supporting document
+                </Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">No supporting document attached.</p>
+              )}
 
               {r.pause_reason ? (
                 <p className="text-sm text-destructive">Paused: {r.pause_reason}</p>
