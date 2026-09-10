@@ -661,7 +661,7 @@ export const reviewServiceRequest = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("service_requests")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
 

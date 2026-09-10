@@ -184,7 +184,7 @@ export const updatePaymentChecks = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("payment_instructions")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     await log(context, roles, { action: "checks updated", target: data.id, new_value: patch as any });
