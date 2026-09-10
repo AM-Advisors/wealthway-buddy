@@ -20,8 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
 import { ScopeNotice } from "@/components/fund-scope-section";
+import {
   Select,
   SelectContent,
   SelectItem,

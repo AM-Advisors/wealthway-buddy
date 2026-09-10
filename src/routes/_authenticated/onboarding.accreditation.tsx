@@ -24,8 +24,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
 import { ScopeNotice } from "@/components/fund-scope-section";
+import {
   Select,
   SelectContent,
   SelectItem,
