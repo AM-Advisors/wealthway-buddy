@@ -144,13 +144,17 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
     onError: (e: any) => toast.error(e?.message ?? "That provider couldn't be saved."),
   });
 
-  const providers = useMemo(() => {
+  const allProviders = useMemo(() => {
     const rows = ((data?.providers ?? []) as any[]).slice();
     const rank = (s: string) => (s === "down" ? 0 : s === "degraded" ? 1 : s === "retired" ? 3 : 2);
     return rows.sort(
       (a, b) => rank(a.status) - rank(b.status) || String(a.name).localeCompare(String(b.name)),
     );
   }, [data]);
+
+  const retiredCount = allProviders.filter((p) => p.retired_at).length;
+  const providers = showRetired ? allProviders : allProviders.filter((p) => !p.retired_at);
+  const disrupted = providers.filter((p) => p.status === "down" || p.status === "degraded").length;
 
   return (
     <div className="space-y-6">
@@ -161,13 +165,23 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
             <CardDescription>
               Services Harmonious depends on to deliver contracted work. Availability and timing of
               these providers is outside Harmonious's control.
+              {" "}
+              {providers.length} in use
+              {disrupted > 0 ? `, ${disrupted} currently disrupted` : ", all operating normally"}.
             </CardDescription>
           </div>
-          {canManage ? (
-            <Button size="sm" onClick={() => setDraft({ ...emptyDraft })}>
-              Add provider
-            </Button>
-          ) : null}
+          <div className="flex gap-2">
+            {retiredCount > 0 ? (
+              <Button size="sm" variant="outline" onClick={() => setShowRetired(!showRetired)}>
+                {showRetired ? "Hide retired" : `Show retired (${retiredCount})`}
+              </Button>
+            ) : null}
+            {canManage ? (
+              <Button size="sm" onClick={() => setDraft({ ...emptyDraft })}>
+                Add provider
+              </Button>
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? <p className="text-sm text-muted-foreground">Loading providers…</p> : null}
