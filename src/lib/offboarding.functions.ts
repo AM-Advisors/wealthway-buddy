@@ -151,8 +151,10 @@ function blockers(row: any) {
   if (lines.some((l) => l.state === "disputed" && !l.note)) list.push("A disputed amount needs a reason");
   if (!steps.export) list.push("Data export delivery not recorded");
   if (!steps.retentionReviewedAt) list.push("Retained records not reviewed");
+  if (!steps.accessRemovedAt) list.push("Client access not removed");
   return list;
 }
+
 
 /* ------------------------------------------------------------------ reads */
 
