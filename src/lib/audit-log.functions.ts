@@ -155,7 +155,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
       ((instructions.data ?? []) as any[]).map((i) => [i.id, i.offering_id ?? null]),
     );
 
-    const rows: AuditEntry[] = [];
+    const rows: AuditEntry[] = [...decisionRows];
 
     for (const r of (requests.data ?? []) as any[]) {
       const fund = r.offering_id ?? app.get(r.application_id)?.offering_id ?? null;
