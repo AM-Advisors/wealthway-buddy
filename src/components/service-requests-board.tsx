@@ -24,6 +24,7 @@ import {
   quoteServiceRequest,
   startServiceReview,
 } from "@/lib/contracts.functions";
+import { getServiceRateSuggestion } from "@/lib/fund-fees.functions";
 
 const STAGES: { value: string; label: string }[] = [
   { value: "requested", label: "Requested" },
