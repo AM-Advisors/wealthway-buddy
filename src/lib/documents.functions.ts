@@ -164,7 +164,7 @@ export const signDocument = createServerFn({ method: "POST" })
 
     const { data: doc } = await supabase
       .from("offering_documents")
-      .select("id, title, body, offering_id")
+      .select("id, title, body, offering_id, file_path")
       .eq("id", data.offering_document_id)
       .maybeSingle();
     if (!doc || doc.offering_id !== application.offering_id) {
