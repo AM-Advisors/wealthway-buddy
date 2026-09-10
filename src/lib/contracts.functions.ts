@@ -711,6 +711,10 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
     if (data.feeCents === null || data.feeCents === undefined) {
       throw new Error("Enter the proposed fee first.");
     }
+    const feeSource = data.feeSource ?? "custom";
+    if (feeSource === "custom" && !(data.feeOverrideReason && data.feeOverrideReason.length >= 3)) {
+      throw new Error("Say why this quote uses a fee that isn't on the rate card.");
+    }
     const { error } = await context.supabase
       .from("service_requests")
       .update({
