@@ -395,6 +395,8 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
           </CardContent>
         </Card>
       ) : null}
+
+      <ActivityPanel areas={["provider"]} title="Recent provider activity" />
     </div>
   );
 }
