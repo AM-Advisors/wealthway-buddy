@@ -1,0 +1,5 @@
+INSERT INTO public.policy_documents (kind, title, body, version, published) VALUES
+('migration', 'Fund migration agreement',
+ 'This agreement covers moving an existing fund''s records onto the Harmonious platform. You confirm that the investor, commitment, cap table and document records you provide, or authorise a prior administrator to provide, are accurate and complete to the best of your knowledge, and that you have the authority to move them. Harmonious loads, validates and stores those records and makes them available to the people you authorise. Harmonious does not audit, verify, value or re-issue prior records, does not act as custodian, transfer agent or auditor for them, and is not responsible for errors carried over from a prior administrator. Records already loaded are retained under your Master Service Agreement and the applicable Statement of Work. Anything outside your active scope is quoted and signed before it begins.',
+ 1, true)
+ON CONFLICT (kind, version) DO NOTHING;
