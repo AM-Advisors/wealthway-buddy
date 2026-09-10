@@ -51,23 +51,39 @@ export function FundAgreementGate({ fundId }: { fundId: string }) {
     );
   }
 
+  const awaitingApproval =
+    data.sow &&
+    data.sow.signedOn &&
+    data.sow.signedBy &&
+    data.sow.status === "active" &&
+    data.sow.approvalStatus !== "approved";
+
   return (
     <Card className="border-destructive/40 bg-destructive/5">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">Statement of work not signed</CardTitle>
+          <CardTitle className="text-base">
+            {awaitingApproval
+              ? data.sow.approvalStatus === "rejected"
+                ? "Statement of work rejected in review"
+                : "Statement of work waiting for approval"
+              : "Statement of work not signed"}
+          </CardTitle>
           <Badge variant="destructive">Action needed</Badge>
         </div>
         <CardDescription>
-          {data.sow
-            ? `${data.sow.title} is recorded as ${data.sow.status} and has no recorded client signature.`
-            : "No statement of work is attached to this fund."}
+          {awaitingApproval
+            ? `${data.sow.title} is signed but has not been approved by an administrator.`
+            : data.sow
+              ? `${data.sow.title} is recorded as ${data.sow.status} and has no recorded client signature.`
+              : "No statement of work is attached to this fund."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-muted-foreground">
         <p>
-          Harmonious only performs services covered by a signed statement of work. Attach and sign
-          the agreement before running this fund's onboarding, documents, banking or payments.
+          {awaitingApproval
+            ? "Harmonious reviews every signed agreement before work begins. This fund's onboarding, documents, banking and payments wait for that approval."
+            : "Harmonious only performs services covered by a signed statement of work. Attach and sign the agreement before running this fund's onboarding, documents, banking or payments."}
         </p>
         {data.canSee ? (
           <Button asChild size="sm" variant="outline">
