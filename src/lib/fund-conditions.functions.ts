@@ -171,7 +171,7 @@ export async function evaluateFundConditions(
   return {
     fund: fund as FundConditions["fund"],
     clientName: (client as any)?.name ?? null,
-    configured: activeSows.length > 0,
+    configured,
     findings,
     blocking: findings.filter((f) => f.blocking && f.state === "attention" && !f.clearedAt),
     feeNotice,
