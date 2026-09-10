@@ -472,7 +472,7 @@ export const advanceProviderAgreement = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("provider_agreements")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     await audit(context, who, {
