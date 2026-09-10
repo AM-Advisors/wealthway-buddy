@@ -112,6 +112,9 @@ function PricingConsole() {
         <TabsContent value="expenses" className="pt-4">
           <ExpensesBoard />
         </TabsContent>
+        <TabsContent value="invoices" className="pt-4">
+          <InvoicesBoard />
+        </TabsContent>
         <TabsContent value="holds" className="pt-4">
           <HoldsBoard clients={data.clients} funds={data.funds} canManage={data.canManage} />
         </TabsContent>
