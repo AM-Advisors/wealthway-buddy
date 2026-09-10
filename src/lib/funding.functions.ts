@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { activeApplicationId } from "@/lib/active-application";
+import { assertFundConditions } from "@/lib/fund-conditions.functions";
 
 export const wireSentSchema = z.object({
   expected_date: z.string().trim().min(1, "Choose the date the wire was sent"),
@@ -129,7 +130,10 @@ async function loadFundingApplication(supabase: any, userId: string) {
   return data;
 }
 
-function assertFundable(app: {
+async function assertFundable(
+  supabase: any,
+  app: {
+  offering_id?: string;
   kyc_status?: string;
   accreditation_status: string;
   documents_status: string;
@@ -157,6 +161,10 @@ function assertFundable(app: {
         ? "Your fund manager sent your application back. Check your portal for what is needed."
         : "Your fund manager is completing a final review of your application. Funding opens once it is approved.",
     );
+  }
+  // The client's agreement conditions have to hold before capital moves.
+  if (app.offering_id) {
+    await assertFundConditions(supabase, app.offering_id, "funding");
   }
 }
 
@@ -299,7 +307,7 @@ export const acknowledgeFunding = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
-    assertFundable(application);
+    await assertFundable(supabase, application as any);
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
     const hash = await instructionsFingerprint(supabase, application as any, data.method);
@@ -326,7 +334,7 @@ export const chooseWire = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
-    assertFundable(application);
+    await assertFundable(supabase, application as any);
     await assertAcknowledged(supabase, application as any, "wire");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
@@ -373,7 +381,7 @@ export const markWireSent = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
-    assertFundable(application);
+    await assertFundable(supabase, application as any);
 
     const now = new Date().toISOString();
     const { error } = await supabase
@@ -407,7 +415,7 @@ export const submitWireConfirmation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
-    assertFundable(application);
+    await assertFundable(supabase, application as any);
     await assertAcknowledged(supabase, application as any, "wire");
 
     const { data: payment } = await supabase
@@ -482,7 +490,7 @@ export const startAchDebit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId);
-    assertFundable(application);
+    await assertFundable(supabase, application as any);
     await assertAcknowledged(supabase, application as any, "ach");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
