@@ -1414,7 +1414,9 @@ export const decideSowApproval = createServerFn({ method: "POST" })
     const who = await requireAdmin(context);
     const { data: sow, error } = await context.supabase
       .from("client_sows")
-      .select("id, client_id, offering_id, title, signed_on, signed_by, approval_status")
+      .select(
+        "id, client_id, offering_id, title, signed_on, signed_by, approval_status, client_status",
+      )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -1423,6 +1425,13 @@ export const decideSowApproval = createServerFn({ method: "POST" })
 
     if (data.decision === "approved" && (!row.signed_on || !row.signed_by)) {
       throw new Error("Record the client signature before approving this statement of work.");
+    }
+    if (data.decision === "approved" && row.client_status !== "signed") {
+      throw new Error(
+        row.client_status === "sent_back"
+          ? "The client sent this agreement back. Revise and re-issue it before approving."
+          : "The client has not signed this agreement in their portal yet.",
+      );
     }
     if (data.decision === "rejected" && !data.note) {
       throw new Error("Give a reason so the team knows what has to change.");
