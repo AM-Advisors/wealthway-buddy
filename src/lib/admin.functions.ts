@@ -279,6 +279,7 @@ export const decideApplication = createServerFn({ method: "POST" })
       outcome: data.decision === "review" ? "delayed" : data.decision,
       summary: `${data.area} marked ${data.decision === "review" ? "needs more review" : data.decision}`,
       note: data.notes || null,
+      metadata: { field: column, previous: previousStatus, next: data.decision },
     });
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
