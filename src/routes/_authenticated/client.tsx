@@ -96,6 +96,9 @@ function ClientPortal() {
   const services = (data.services ?? []) as any[];
   const payments = (data.payments ?? []) as any[];
   const openInvoices = (data.invoices ?? []).filter((i: any) => i.status === "issued");
+  const paymentsInProgress = payments.filter(
+    (p: any) => !["settled", "completed", "cancelled", "canceled", "rejected"].includes(String(p.status)),
+  ).length;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
