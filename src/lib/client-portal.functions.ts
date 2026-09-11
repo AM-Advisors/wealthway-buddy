@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 
 /** Everything a client contact can see about their own engagement: the funds
  *  Harmonious administers for them, their statements of work and what those
@@ -243,6 +244,72 @@ export const signClientSow = createServerFn({ method: "POST" })
     } as any);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+/** Sends the client welcome email the first time a contact opens the portal
+ *  after signing up. Once per person per client: a matching audit event means
+ *  the email already went out, and the idempotency key dedupes any retries of
+ *  the same send. Never throws — a failed email must not break the portal. */
+export const maybeSendClientWelcome = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    try {
+      const { data: memberships } = await context.supabase
+        .from("client_users")
+        .select("client_id")
+        .eq("user_id", context.userId);
+      const clientId = memberships?.[0]?.client_id as string | undefined;
+      if (!clientId) return { sent: false as const, reason: "no_client" as const };
+
+      const { data: already } = await context.supabase
+        .from("contract_audit_events")
+        .select("id")
+        .eq("area", "welcome email")
+        .eq("client_id", clientId)
+        .contains("new_value", { user_id: context.userId })
+        .limit(1);
+      if (already && already.length > 0) return { sent: false as const, reason: "already_sent" as const };
+
+      const [{ data: profile }, { data: client }] = await Promise.all([
+        context.supabase
+          .from("profiles")
+          .select("legal_name, email")
+          .eq("user_id", context.userId)
+          .maybeSingle(),
+        context.supabase.from("clients").select("name").eq("id", clientId).maybeSingle(),
+      ]);
+      const email = profile?.email as string | undefined;
+      if (!email) return { sent: false as const, reason: "no_email" as const };
+
+      const origin = process.env["SITE_URL"] || "https://onboard.harmonious.co";
+      const result = await sendTemplateEmail("client-welcome", email, {
+        templateData: {
+          contactName: (profile?.legal_name as string | undefined) || "there",
+          clientName: (client?.name as string | undefined) || "your organisation",
+          portalUrl: `${origin}/client`,
+          signOffUrl: `${origin}/sign-off`,
+        },
+        idempotencyKey: `client-welcome-${context.userId}-${clientId}`,
+      });
+
+      if (result.sent) {
+        await context.supabase.from("contract_audit_events").insert({
+          actor_id: context.userId,
+          actor_role: "client",
+          client_id: clientId,
+          area: "welcome email",
+          action: "sent",
+          target: email,
+          new_value: { user_id: context.userId, email } as any,
+          source: "portal",
+        });
+      }
+      return result.sent
+        ? { sent: true as const }
+        : { sent: false as const, reason: result.reason };
+    } catch {
+      return { sent: false as const, reason: "error" as const };
+    }
   });
 
 /** The client sends the agreement back with a reason instead of signing it. */
