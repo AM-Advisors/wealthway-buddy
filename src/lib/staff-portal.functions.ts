@@ -131,7 +131,8 @@ export const getMyDesk = createServerFn({ method: "GET" })
 
     if (ids.length === 0) return { ...empty, unassignedCount };
 
-    const [reqRes, holdRes, fundRes, sowRes] = await Promise.all([
+    const [reqRes, holdRes, fundRes, sowRes, contactRes, policyRes, invoiceRes] =
+      await Promise.all([
       context.supabase
         .from("service_requests")
         .select(
@@ -155,11 +156,59 @@ export const getMyDesk = createServerFn({ method: "GET" })
         .from("client_sows")
         .select("id, client_id, title, status, effective_date, termination_date")
         .in("client_id", ids),
-    ]);
+      context.supabase
+        .from("client_users")
+        .select("id, client_id, user_id, client_role, created_at")
+        .in("client_id", ids),
+      context.supabase
+        .from("policy_documents")
+        .select("id, kind, title, version, published, effective_date")
+        .eq("published", true),
+      context.supabase
+        .from("invoices")
+        .select(
+          "id, client_id, offering_id, number, status, total_cents, issue_date, due_date, paid_on, approval_status, client_payment_method, client_payment_reference, client_paid_on, client_payment_declared_at, created_at, updated_at",
+        )
+        .in("client_id", ids)
+        .order("due_date", { ascending: true }),
+      ]);
 
     const requests = (reqRes.data ?? []) as any[];
     const funds = (fundRes.data ?? []) as any[];
     const sows = (sowRes.data ?? []) as any[];
+    const contacts = (contactRes.data ?? []) as any[];
+    const policies = ((policyRes.data ?? []) as any[]).filter((p: any) => p.published);
+    const invoicesAll = (invoiceRes.data ?? []) as any[];
+
+    // Latest published version of each policy document — that is what people must sign.
+    const latestPolicies = Array.from(
+      policies
+        .reduce((map: Map<string, any>, p: any) => {
+          const current = map.get(String(p.kind));
+          if (!current || Number(p.version) > Number(current.version)) map.set(String(p.kind), p);
+          return map;
+        }, new Map<string, any>())
+        .values(),
+    );
+
+    const contactUserIds = Array.from(new Set(contacts.map((c: any) => String(c.user_id))));
+    let acceptances: any[] = [];
+    let profiles: any[] = [];
+    if (contactUserIds.length > 0) {
+      const [accRes, profRes] = await Promise.all([
+        context.supabase
+          .from("policy_acceptances")
+          .select("user_id, kind, version, accepted_at")
+          .in("user_id", contactUserIds),
+        context.supabase
+          .from("profiles")
+          .select("user_id, legal_name, email")
+          .in("user_id", contactUserIds),
+      ]);
+      acceptances = (accRes.data ?? []) as any[];
+      profiles = (profRes.data ?? []) as any[];
+    }
+
 
     const fundName = (id: string | null) =>
       id ? (funds.find((f: any) => String(f.id) === String(id))?.name ?? null) : null;
@@ -171,6 +220,53 @@ export const getMyDesk = createServerFn({ method: "GET" })
       clientName: clientName(r.client_id),
       fundName: fundName(r.offering_id),
     });
+
+    const personName = (userId: string) => {
+      const p = profiles.find((x: any) => String(x.user_id) === String(userId));
+      return p?.legal_name || p?.email || "A client contact";
+    };
+    const personEmail = (userId: string) =>
+      profiles.find((x: any) => String(x.user_id) === String(userId))?.email ?? null;
+
+    // One row per contact who still owes a signature on a published document.
+    const signOffs: any[] = [];
+    for (const contact of contacts) {
+      const uid = String(contact.user_id);
+      const outstanding = latestPolicies.filter(
+        (p: any) =>
+          !acceptances.some(
+            (a: any) =>
+              String(a.user_id) === uid &&
+              String(a.kind) === String(p.kind) &&
+              Number(a.version) === Number(p.version),
+          ),
+      );
+      if (outstanding.length === 0) continue;
+      signOffs.push({
+        id: `${contact.client_id}-${uid}`,
+        client_id: String(contact.client_id),
+        clientName: clientName(String(contact.client_id)),
+        userId: uid,
+        personName: personName(uid),
+        personEmail: personEmail(uid),
+        clientRole: contact.client_role ?? null,
+        since: contact.created_at ?? null,
+        outstanding: outstanding.map((p: any) => ({
+          kind: String(p.kind),
+          title: p.title as string,
+          version: Number(p.version),
+        })),
+      });
+    }
+
+    // Money waiting on someone: unpaid invoices, and payments a client says they sent.
+    const openInvoices = invoicesAll
+      .filter((i: any) => !["paid", "void", "draft"].includes(String(i.status)))
+      .map(decorate);
+    const declaredPayments = invoicesAll
+      .filter((i: any) => i.client_payment_declared_at && String(i.status) !== "paid")
+      .map(decorate);
+
 
     return {
       me: who.userId,
@@ -197,6 +293,8 @@ export const getMyDesk = createServerFn({ method: "GET" })
             (r: any) => String(r.client_id) === cid && String(r.status) === "quoted",
           ).length,
           openHolds: (holdRes.data ?? []).filter((h: any) => String(h.client_id) === cid).length,
+          pendingSignOffs: signOffs.filter((s: any) => s.client_id === cid).length,
+          openInvoices: openInvoices.filter((i: any) => String(i.client_id) === cid).length,
           activeSow: activeSow ? { id: activeSow.id, title: activeSow.title } : null,
         };
       }),
@@ -207,6 +305,9 @@ export const getMyDesk = createServerFn({ method: "GET" })
         .filter((r: any) => ["quoted", "signed"].includes(String(r.status)))
         .map(decorate),
       holds: ((holdRes.data ?? []) as any[]).map(decorate),
+      signOffs,
+      invoices: openInvoices,
+      declaredPayments,
       funds: funds.map((f: any) => ({ ...f, clientName: clientName(f.client_id) })),
     };
   });
