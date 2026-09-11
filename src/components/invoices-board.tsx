@@ -202,6 +202,11 @@ export function InvoicesBoard() {
     .filter((i) => i.status === "issued")
     .reduce((s, i) => s + Number(i.total_cents ?? 0), 0);
   const overdue = ((data?.invoices ?? []) as any[]).filter((i) => i.overdue);
+  const clientPayments = ((data?.invoices ?? []) as any[])
+    .filter((i) => i.client_payment_declared_at)
+    .sort((a, b) =>
+      String(b.client_payment_declared_at).localeCompare(String(a.client_payment_declared_at)),
+    );
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading invoices…</div>;
   if (error) {
