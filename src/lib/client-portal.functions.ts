@@ -261,3 +261,34 @@ export const getSowDocumentUrl = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { url: signed?.signedUrl ?? null };
   });
+
+/** A client contact asks Harmonious to send a wire. This only creates a request:
+ *  the database checks the person is a contact on that fund's client, that wire
+ *  facilitation is in their active scope and that no compliance hold is open.
+ *  Harmonious still runs its checks and records two separate approvals before
+ *  any money moves. */
+export const createClientWireRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        offeringId: z.string().uuid(),
+        amountCents: z.number().int().positive().max(100_000_000_000),
+        purpose: z.enum(["investor_wire", "capital_call", "expense", "distribution", "other"]),
+        expectedDate: z.string().trim().max(20).optional().nullable(),
+        note: z.string().trim().max(2000).optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("client_create_wire_request", {
+      _offering_id: data.offeringId,
+      _amount_cents: data.amountCents,
+      _purpose: data.purpose,
+      _expected_date: data.expectedDate || null,
+      _note: data.note || null,
+    } as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
