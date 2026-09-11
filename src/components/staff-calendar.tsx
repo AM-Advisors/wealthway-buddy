@@ -484,9 +484,9 @@ export function StaffCalendar() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Running late</CardTitle>
+          <CardTitle className="text-base">Past their due date</CardTitle>
           <CardDescription>
-            Items sitting longer than the team's working targets, oldest first.
+            Requests, fee proposals and holds whose due date has already passed, oldest first.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
