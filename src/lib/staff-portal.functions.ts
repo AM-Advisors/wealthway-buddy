@@ -131,7 +131,8 @@ export const getMyDesk = createServerFn({ method: "GET" })
 
     if (ids.length === 0) return { ...empty, unassignedCount };
 
-    const [reqRes, holdRes, fundRes, sowRes] = await Promise.all([
+    const [reqRes, holdRes, fundRes, sowRes, contactRes, policyRes, invoiceRes] =
+      await Promise.all([
       context.supabase
         .from("service_requests")
         .select(
