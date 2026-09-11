@@ -325,6 +325,7 @@ export const billFundFees = createServerFn({ method: "POST" })
         source: "fund_fee",
         source_ref: e.ref,
         service_key: e.kind,
+        pricing_id: (clientRates as any)[e.kind]?.id ?? null,
         label: e.label,
         description: e.description,
         quantity: 1,
