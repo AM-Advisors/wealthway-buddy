@@ -280,26 +280,42 @@ export function ClientOnboardingBoard() {
               )}
 
               <div>
-                <h3 className="text-sm font-medium">Invitations waiting</h3>
-                {selected.invitations.filter((i: any) => i.status === "pending").length === 0 ? (
-                  <p className="mt-1 text-sm text-muted-foreground">None outstanding.</p>
+                <h3 className="text-sm font-medium">Invitations and welcome emails</h3>
+                {selected.invitations.filter((i: any) => i.status !== "cancelled").length === 0 ? (
+                  <p className="mt-1 text-sm text-muted-foreground">Nobody has been invited yet.</p>
                 ) : (
                   <ul className="mt-2 space-y-2">
                     {selected.invitations
-                      .filter((i: any) => i.status === "pending")
+                      .filter((i: any) => i.status !== "cancelled")
                       .map((i: any) => (
                         <li key={i.id} className="flex items-center justify-between gap-3 rounded-md border p-2 text-sm">
                           <span>
                             {i.invited_name ? `${i.invited_name} · ` : ""}
                             {i.email} · {roleLabel(i.client_role)}
                             <span className="block text-xs text-muted-foreground">
-                              Invited {when(i.created_at)} · expires {when(i.expires_at)}
+                              {i.invite_status === "sent"
+                                ? `Welcome email sent ${when(i.invite_sent_at)}`
+                                : i.invite_status
+                                  ? `Not delivered — ${i.invite_note ?? "the welcome email did not go out"}`
+                                  : "No welcome email sent"}
                             </span>
                           </span>
                           {canManage ? (
-                            <Button size="sm" variant="ghost" onClick={() => cancelMutation.mutate(i.id)}>
-                              Withdraw
-                            </Button>
+                            <span className="flex shrink-0 gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={resendMutation.isPending}
+                                onClick={() => resendMutation.mutate(i.id)}
+                              >
+                                Resend welcome email
+                              </Button>
+                              {i.status === "pending" ? (
+                                <Button size="sm" variant="ghost" onClick={() => cancelMutation.mutate(i.id)}>
+                                  Withdraw
+                                </Button>
+                              ) : null}
+                            </span>
                           ) : null}
                         </li>
                       ))}
