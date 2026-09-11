@@ -3356,6 +3356,12 @@ export type Database = {
           client_approved_at: string | null
           client_approved_by: string | null
           client_id: string
+          client_paid_on: string | null
+          client_payment_declared_at: string | null
+          client_payment_declared_by: string | null
+          client_payment_method: string | null
+          client_payment_note: string | null
+          client_payment_reference: string | null
           client_signer_name: string | null
           created_at: string
           created_by: string | null
@@ -3391,6 +3397,12 @@ export type Database = {
           client_approved_at?: string | null
           client_approved_by?: string | null
           client_id: string
+          client_paid_on?: string | null
+          client_payment_declared_at?: string | null
+          client_payment_declared_by?: string | null
+          client_payment_method?: string | null
+          client_payment_note?: string | null
+          client_payment_reference?: string | null
           client_signer_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -3426,6 +3438,12 @@ export type Database = {
           client_approved_at?: string | null
           client_approved_by?: string | null
           client_id?: string
+          client_paid_on?: string | null
+          client_payment_declared_at?: string | null
+          client_payment_declared_by?: string | null
+          client_payment_method?: string | null
+          client_payment_note?: string | null
+          client_payment_reference?: string | null
           client_signer_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -6602,6 +6620,16 @@ export type Database = {
           _purpose?: string
         }
         Returns: string
+      }
+      client_declare_invoice_payment: {
+        Args: {
+          _invoice_id: string
+          _method: string
+          _note?: string
+          _paid_on: string
+          _reference?: string
+        }
+        Returns: undefined
       }
       client_send_back_sow: {
         Args: { _reason: string; _sow_id: string }

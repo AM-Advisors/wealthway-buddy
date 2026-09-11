@@ -66,6 +66,7 @@ import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
 import { Route as AuthenticatedAdminTimelineRouteImport } from './routes/_authenticated/admin.timeline'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
+import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client_.invoices'
 import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
@@ -431,6 +432,12 @@ const AuthenticatedAdminWireRoute = AuthenticatedAdminWireRouteImport.update({
   path: '/admin/wire',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedClientInvoicesRoute =
+  AuthenticatedClientInvoicesRouteImport.update({
+    id: '/client_/invoices',
+    path: '/client/invoices',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDiligenceIndexRoute =
   AuthenticatedDiligenceIndexRouteImport.update({
     id: '/diligence/',
@@ -812,6 +819,7 @@ export interface FileRoutesByFullPath {
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -925,6 +933,7 @@ export interface FileRoutesByTo {
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -1041,6 +1050,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/_authenticated/client_/invoices': typeof AuthenticatedClientInvoicesRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -1157,6 +1167,7 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/invoices'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
@@ -1270,6 +1281,7 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/invoices'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
@@ -1385,6 +1397,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/setup'
     | '/_authenticated/admin/timeline'
     | '/_authenticated/admin/wire'
+    | '/_authenticated/client_/invoices'
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
@@ -1868,6 +1881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWireRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/client_/invoices': {
+      id: '/_authenticated/client_/invoices'
+      path: '/client/invoices'
+      fullPath: '/client/invoices'
+      preLoaderRoute: typeof AuthenticatedClientInvoicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/diligence/': {
       id: '/_authenticated/diligence/'
       path: '/diligence'
@@ -2306,6 +2326,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedAdminTimelineRoute: typeof AuthenticatedAdminTimelineRoute
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
+  AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
@@ -2400,6 +2421,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedAdminTimelineRoute: AuthenticatedAdminTimelineRoute,
   AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
+  AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
   AuthenticatedDiligenceOfferingIdRoute: AuthenticatedDiligenceOfferingIdRoute,
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,

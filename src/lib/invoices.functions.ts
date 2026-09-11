@@ -719,3 +719,31 @@ export const raiseInvoiceWire = createServerFn({ method: "POST" })
     });
     return { ok: true, instructionId: (created as any).id as string };
   });
+
+/** A client contact records that they have sent payment for an approved invoice.
+ *  This is their confirmation of the transfer — Harmonious still checks the money
+ *  has arrived before the invoice is marked paid. Guarded in the database. */
+export const declareInvoicePayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        method: z.enum(["wire", "ach"]),
+        paidOn: z.string().min(10).max(10),
+        reference: z.string().max(160).optional().or(z.literal("")),
+        note: z.string().max(1000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("client_declare_invoice_payment", {
+      _invoice_id: data.id,
+      _method: data.method,
+      _paid_on: data.paidOn,
+      _reference: data.reference || null,
+      _note: data.note || null,
+    } as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
