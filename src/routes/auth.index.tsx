@@ -157,6 +157,13 @@ function SignInPage() {
       </form>
 
       <p className="mt-6 text-sm text-muted-foreground">
+        Signing in as a client?{" "}
+        <Link to="/client-login" className="font-medium text-foreground hover:underline">
+          Use the client portal sign in
+        </Link>
+      </p>
+
+      <p className="mt-2 text-sm text-muted-foreground">
         Have an invitation?{" "}
         <Link to="/auth/register" className="font-medium text-foreground hover:underline">
           Create your account
