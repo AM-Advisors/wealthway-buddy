@@ -169,6 +169,12 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
             Closing cost <strong>{money(data.fund.closingCostCents)}</strong> (
             {data.fund.closingCostSource})
           </span>
+          <span>
+            Share price{" "}
+            <strong>
+              {data.fund.sharePriceCents > 0 ? money(data.fund.sharePriceCents) : "not set"}
+            </strong>
+          </span>
           <span>{data.activeSow ? data.activeSow.title : "No active statement of work"}</span>
         </CardContent>
       </Card>
@@ -177,7 +183,8 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
         <CardHeader>
           <CardTitle className="text-base">Fees earned but not invoiced</CardTitle>
           <CardDescription>
-            One wire fee for each settled investor funding, one closing cost for each closing.
+            One wire fee for each settled investor funding, one closing cost and one subscription
+            for each closing.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -199,19 +206,36 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
                         v ? [...selected, e.ref] : selected.filter((r) => r !== e.ref),
                       )
                     }
-                    disabled={!data.canManage}
+                    disabled={!data.canManage || e.rateMissing}
                   />
                   <span className="flex-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <strong>{e.label}</strong>
                       <Badge variant="outline">{e.kindLabel}</Badge>
                       {e.custom ? <Badge variant="secondary">One-off rate</Badge> : null}
+                      {e.rateMissing ? (
+                        <Badge variant="destructive">
+                          {e.kind === "subscription" ? "Share price not set" : "Rate not set"}
+                        </Badge>
+                      ) : null}
                     </span>
                     <span className="block text-muted-foreground">
                       {e.description} · {e.occurredOn}
                     </span>
                   </span>
-                  <span className="font-medium">{money(e.cents)}</span>
+                  <span className="font-medium">
+                    {e.rateMissing ? (
+                      <Link
+                        to={backTo === "admin" ? "/admin/fund/$fundId" : "/manager/fund/$fundId"}
+                        params={{ fundId }}
+                        className="text-sm underline"
+                      >
+                        Set the rate
+                      </Link>
+                    ) : (
+                      money(e.cents)
+                    )}
+                  </span>
                 </label>
               ))}
 

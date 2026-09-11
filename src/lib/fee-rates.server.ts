@@ -122,6 +122,28 @@ export async function resolveFeeRates(supabase: any, clientId: string | null) {
   return { client, standard };
 }
 
+/** Columns a brand new fund should start with: the client's agreed rate for
+ *  each fee, falling back to the published standard rate card. A fee with no
+ *  rate anywhere is left at zero and shows as "set just for this fund". */
+export async function seedFundFeeColumns(supabase: any, clientId: string | null) {
+  const { client, standard } = await resolveFeeRates(supabase, clientId);
+  const patch: Record<string, unknown> = {};
+  for (const kind of FUND_FEE_KINDS) {
+    const agreed = client[kind.key];
+    const card = standard[kind.key];
+    if (agreed?.cents != null) {
+      patch[kind.amountColumn] = agreed.cents;
+      patch[kind.sourceColumn] = "client_rate";
+      patch[kind.rateColumn] = agreed.id;
+    } else if (card?.cents != null) {
+      patch[kind.amountColumn] = card.cents;
+      patch[kind.sourceColumn] = "standard";
+      patch[kind.rateColumn] = null;
+    }
+  }
+  return patch;
+}
+
 export function sourceLabel(source: string | null | undefined) {
   if (source === "client_rate") return "From the client's agreed rates";
   if (source === "standard") return "From the standard rate card";

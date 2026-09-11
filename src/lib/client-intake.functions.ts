@@ -254,9 +254,15 @@ export const submitFundIntake = createServerFn({ method: "POST" })
       (s) => s.signed_on && s.signed_by && s.approval_status === "approved",
     );
 
+    // Start the fund on the client's agreed rates (then the standard card) so
+    // its wire fee and closing cost are ready to invoice.
+    const { seedFundFeeColumns } = await import("@/lib/fee-rates.server");
+    const seededFees = await seedFundFeeColumns(supabaseAdmin, data.clientId);
+
     const { data: inserted, error } = await supabaseAdmin
       .from("offerings")
       .insert({
+        ...seededFees,
         client_id: data.clientId,
         name: d.fund_name.trim(),
         slug,

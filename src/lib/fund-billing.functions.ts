@@ -91,6 +91,7 @@ async function buildEvents(context: any, offeringId: string) {
   for (const a of ((apps ?? []) as any[])) {
     if (!SETTLED.includes(String(a.funding_status ?? ""))) continue;
     const cents = Number(a.wire_fee_cents ?? fundWire ?? 0);
+    const rateMissing = cents <= 0;
     events.push({
       ref: `wire_fee:${a.id}`,
       kind: "wire_fee",
@@ -100,8 +101,11 @@ async function buildEvents(context: any, offeringId: string) {
       occurredOn: String(a.updated_at ?? a.created_at ?? "").slice(0, 10),
       cents,
       custom: a.wire_fee_cents != null && Number(a.wire_fee_cents) !== fundWire,
+      rateMissing,
     });
   }
+
+  const sharePrice = Number((offering as any).share_price_cents ?? 0);
 
   for (const c of ((closings ?? []) as any[])) {
     const app = appById.get(String(c.application_id));
@@ -114,10 +118,38 @@ async function buildEvents(context: any, offeringId: string) {
       occurredOn: String(c.closing_date ?? c.created_at ?? "").slice(0, 10),
       cents: fundClosing,
       custom: false,
+      rateMissing: fundClosing <= 0,
+    });
+
+    // Subscription: units bought at the fund's share price. With no share
+    // price on file the funded amount stands on its own.
+    const funded = Number(c.funded_amount_cents ?? app?.commitment_cents ?? 0);
+    const units = sharePrice > 0 ? Math.floor(funded / sharePrice) : 0;
+    const amount = sharePrice > 0 ? units * sharePrice : funded;
+    const remainder = sharePrice > 0 ? funded - amount : 0;
+    events.push({
+      ref: `subscription:${c.id}`,
+      kind: "subscription",
+      kindLabel: "Subscription",
+      label: `Subscription — ${nameOf(app)}`,
+      description:
+        sharePrice > 0
+          ? `${units.toLocaleString()} units at $${(sharePrice / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} each` +
+            (remainder > 0
+              ? ` · $${(remainder / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} funded above whole units`
+              : "")
+          : "Funded amount — no share price set for this fund",
+      occurredOn: String(c.closing_date ?? c.created_at ?? "").slice(0, 10),
+      cents: amount,
+      custom: false,
+      units: sharePrice > 0 ? units : null,
+      unitCents: sharePrice > 0 ? sharePrice : null,
+      remainderCents: remainder,
+      rateMissing: sharePrice <= 0,
     });
   }
 
-  return { offering, events, fundWire, fundClosing };
+  return { offering, events, fundWire, fundClosing, sharePrice };
 }
 
 /** One fund's fee position: what is billable, what is invoiced, what is paid. */
@@ -126,7 +158,7 @@ export const getFundBilling = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
-    const { offering, events, fundWire, fundClosing } = await buildEvents(
+    const { offering, events, fundWire, fundClosing, sharePrice } = await buildEvents(
       context,
       data.offeringId,
     );
@@ -218,6 +250,7 @@ export const getFundBilling = createServerFn({ method: "POST" })
         name: (offering as any).name,
         wireFeeCents: fundWire,
         closingCostCents: fundClosing,
+        sharePriceCents: sharePrice,
         wireFeeSource: String((offering as any).wire_fee_source ?? "custom"),
         closingCostSource: String((offering as any).closing_cost_source ?? "custom"),
       },
@@ -266,9 +299,11 @@ export const billFundFees = createServerFn({ method: "POST" })
 
     const chosen = events.filter((e) => data.refs.includes(e.ref));
     if (!chosen.length) throw new Error("Nothing selected to bill.");
-    if (chosen.some((e) => Number(e.cents ?? 0) <= 0)) {
+    const missing = chosen.filter((e) => Number(e.cents ?? 0) <= 0);
+    if (missing.length) {
+      const what = Array.from(new Set(missing.map((e) => e.kindLabel.toLowerCase()))).join(" and ");
       throw new Error(
-        "One of these fees is set to zero. Set the fund's wire fee and closing cost from the agreed rates first.",
+        `${(offering as any).name} has no ${what} rate on file, so it would bill as zero. Set it on the fund's fee settings first.`,
       );
     }
 
@@ -328,8 +363,8 @@ export const billFundFees = createServerFn({ method: "POST" })
         pricing_id: (clientRates as any)[e.kind]?.id ?? null,
         label: e.label,
         description: e.description,
-        quantity: 1,
-        unit_cents: e.cents,
+        quantity: e.units && e.units > 0 ? e.units : 1,
+        unit_cents: e.unitCents ?? e.cents,
         amount_cents: e.cents,
         offering_id: data.offeringId,
         sort_order: index,
