@@ -113,6 +113,7 @@ const clientsAndMoneyItems: NavItem[] = [
   },
   { title: "Wires and distributions", url: "/admin/money", icon: Banknote },
   { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
+  { title: "Bank accounts", url: "/admin/bank-accounts", icon: Landmark },
 ];
 
 const applicationsAndFundsItems: NavItem[] = [
