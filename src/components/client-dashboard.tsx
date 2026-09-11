@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClientDueCalendar, type DueItem } from "@/components/client-due-calendar";
 
 function money(cents: number | null | undefined) {
   if (cents === null || cents === undefined) return "—";
@@ -35,7 +36,15 @@ type Props = {
   wireRequests: any[];
   serviceRequests: any[];
   services: any[];
+  sows?: any[];
 };
+
+function addDays(value: string, days: number) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 /** One place for the client: fund status, open asks, fees agreed and money in flight. */
 export function ClientDashboard({
@@ -45,6 +54,7 @@ export function ClientDashboard({
   wireRequests,
   serviceRequests,
   services,
+  sows = [],
 }: Props) {
   const openInvoices = (invoices ?? []).filter((i: any) => OPEN_INVOICES.includes(i.status));
   const approvedInvoices = (invoices ?? []).filter(
@@ -65,6 +75,52 @@ export function ClientDashboard({
     (sum: number, i: any) => sum + Number(i.total_cents ?? 0),
     0,
   );
+
+  const signedSows = (sows ?? []).filter((s: any) => s.client_signed_at || s.signed_on);
+
+  const dueItems: DueItem[] = [];
+  for (const inv of openInvoices) {
+    if (!inv.due_date) continue;
+    dueItems.push({
+      id: `inv-${inv.id}`,
+      date: String(inv.due_date).slice(0, 10),
+      kind: "invoice",
+      label: `${inv.number ?? inv.invoice_number ?? "Invoice"} due — ${money(inv.total_cents)}`,
+      detail: inv.client_approved_at ? "Approved by you" : "Awaiting your approval",
+    });
+  }
+  for (const r of openRequests) {
+    const base = r.quoted_at ?? r.updated_at ?? r.created_at;
+    const date = base ? addDays(String(base), r.status === "quoted" ? 10 : 5) : null;
+    if (!date) continue;
+    dueItems.push({
+      id: `req-${r.id}`,
+      date,
+      kind: "request",
+      label: `${r.serviceName} — ${REQUEST_STATE[r.status] ?? r.status}`,
+      detail: r.fundName ?? null,
+    });
+  }
+  for (const s of signedSows) {
+    if (s.effective_date) {
+      dueItems.push({
+        id: `sow-eff-${s.id}`,
+        date: String(s.effective_date).slice(0, 10),
+        kind: "agreement",
+        label: `${s.title ?? "Statement of work"} starts`,
+        detail: null,
+      });
+    }
+    if (s.termination_date) {
+      dueItems.push({
+        id: `sow-end-${s.id}`,
+        date: String(s.termination_date).slice(0, 10),
+        kind: "agreement",
+        label: `${s.title ?? "Statement of work"} ends`,
+        detail: s.notice_days ? `${s.notice_days} days' notice applies` : null,
+      });
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -180,7 +236,7 @@ export function ClientDashboard({
             {openInvoices.slice(0, 5).map((i: any) => (
               <div key={i.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{i.invoice_number ?? "Invoice"}</p>
+                  <p className="text-sm font-medium">{i.number ?? i.invoice_number ?? "Invoice"}</p>
                   <p className="text-xs text-muted-foreground">
                     {i.due_date ? `Due ${when(i.due_date)}` : "No due date"} ·{" "}
                     {i.client_approved_at ? "Approved by you" : "Awaiting your approval"}
@@ -233,7 +289,42 @@ export function ClientDashboard({
             ))}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Signed agreements</CardTitle>
+            <CardDescription>
+              The statements of work you have signed, and where each one stands.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {signedSows.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nothing is signed yet. Agreements appear here once you sign them.
+              </p>
+            )}
+            {signedSows.map((s: any) => (
+              <div key={s.id} className="rounded-md border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{s.title ?? "Statement of work"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Signed {when(s.client_signed_at ?? s.signed_on)}
+                      {s.effective_date ? ` · starts ${when(s.effective_date)}` : ""}
+                      {s.termination_date ? ` · ends ${when(s.termination_date)}` : ""}
+                    </p>
+                  </div>
+                  <Badge variant={s.approval_status === "approved" ? "default" : "secondary"}>
+                    {s.approval_status === "approved" ? "Approved" : "Awaiting approval"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
+
+      <ClientDueCalendar items={dueItems} />
     </div>
   );
 }

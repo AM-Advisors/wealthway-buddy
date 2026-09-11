@@ -177,6 +177,7 @@ function ClientPortal() {
             wireRequests={(data.wireRequests ?? []) as any[]}
             serviceRequests={((data as any).serviceRequests ?? []) as any[]}
             services={services as any[]}
+            sows={((data as any).sows ?? []) as any[]}
           />
         </TabsContent>
 
