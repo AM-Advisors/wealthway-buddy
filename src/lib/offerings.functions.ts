@@ -414,7 +414,11 @@ export const saveOffering = createServerFn({ method: "POST" })
     });
     if (wireError) throw new Error(wireError.message);
 
-    const offeringChanges = diffRecords(previousOffering, payload, OFFERING_FIELDS);
+    const offeringChanges = diffRecords(
+      previousOffering,
+      payload,
+      OFFERING_FIELDS.filter((f) => f in payload),
+    );
     if (!data.id) {
       await recordAudit(context.supabase, identity, {
         offering_id: offeringId!,
