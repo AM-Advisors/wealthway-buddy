@@ -677,6 +677,16 @@ export const getMyServiceRequests = createServerFn({ method: "GET" })
     return { requests: rows };
   });
 
+/** Friendly service name for notices; falls back to the raw key. */
+async function serviceLabel(context: any, key: string) {
+  const { data } = await context.supabase
+    .from("service_catalog")
+    .select("name")
+    .eq("key", key)
+    .maybeSingle();
+  return String((data as any)?.name ?? key);
+}
+
 async function loadRequest(context: any, id: string) {
   const { data: request, error } = await context.supabase
     .from("service_requests")
