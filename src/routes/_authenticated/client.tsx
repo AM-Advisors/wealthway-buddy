@@ -212,6 +212,12 @@ function ClientPortal() {
                       {f.is_open ? "Open" : "Closed"}
                     </Badge>
                   </div>
+                  {!f.is_open ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Harmonious is setting this fund up. It stays closed to investors until your
+                      statement of work is signed and approved.
+                    </p>
+                  ) : null}
                 </div>
               ))}
             </CardContent>
