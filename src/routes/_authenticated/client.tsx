@@ -112,6 +112,12 @@ function ClientShell() {
 
   const items: NavItem[] = [
     { to: "/client", label: "Overview", icon: LayoutDashboard, exact: true },
+    {
+      to: "/client/inbox",
+      label: "Inbox",
+      icon: Mail,
+      badge: unreadMessages || undefined,
+    },
     { to: "/client/funds", label: "Funds", icon: Briefcase, badge: funds.length || undefined },
     {
       to: "/client/invoices",
