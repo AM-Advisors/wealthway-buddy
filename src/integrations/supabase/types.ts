@@ -658,6 +658,68 @@ export type Database = {
           },
         ]
       }
+      client_bank_accounts: {
+        Row: {
+          account_holder: string
+          account_last4: string | null
+          account_type: string
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          institution_name: string
+          is_primary: boolean
+          label: string | null
+          notes: string | null
+          reference_hint: string | null
+          routing_last4: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_holder: string
+          account_last4?: string | null
+          account_type?: string
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_name: string
+          is_primary?: boolean
+          label?: string | null
+          notes?: string | null
+          reference_hint?: string | null
+          routing_last4?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_holder?: string
+          account_last4?: string | null
+          account_type?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          institution_name?: string
+          is_primary?: boolean
+          label?: string | null
+          notes?: string | null
+          reference_hint?: string | null
+          routing_last4?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_bank_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_fund_intakes: {
         Row: {
           client_id: string

@@ -49,6 +49,7 @@ import { Route as AuthenticatedAdminBankAccountsRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminCapTableRouteImport } from './routes/_authenticated/admin.cap-table'
 import { Route as AuthenticatedAdminCapTableBoardRouteImport } from './routes/_authenticated/admin.cap-table-board'
 import { Route as AuthenticatedAdminClientActivityRouteImport } from './routes/_authenticated/admin.client-activity'
+import { Route as AuthenticatedAdminClientBankAccountsRouteImport } from './routes/_authenticated/admin.client-bank-accounts'
 import { Route as AuthenticatedAdminDocumentLogRouteImport } from './routes/_authenticated/admin.document-log'
 import { Route as AuthenticatedAdminEmailPreviewRouteImport } from './routes/_authenticated/admin.email-preview'
 import { Route as AuthenticatedAdminFundingRouteImport } from './routes/_authenticated/admin.funding'
@@ -348,6 +349,12 @@ const AuthenticatedAdminClientActivityRoute =
   AuthenticatedAdminClientActivityRouteImport.update({
     id: '/admin/client-activity',
     path: '/admin/client-activity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminClientBankAccountsRoute =
+  AuthenticatedAdminClientBankAccountsRouteImport.update({
+    id: '/admin/client-bank-accounts',
+    path: '/admin/client-bank-accounts',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminDocumentLogRoute =
@@ -913,6 +920,7 @@ export interface FileRoutesByFullPath {
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
+  '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -1042,6 +1050,7 @@ export interface FileRoutesByTo {
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
+  '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -1175,6 +1184,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/_authenticated/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/_authenticated/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
+  '/_authenticated/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/_authenticated/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/_authenticated/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/_authenticated/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -1308,6 +1318,7 @@ export interface FileRouteTypes {
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/client-activity'
+    | '/admin/client-bank-accounts'
     | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funding'
@@ -1437,6 +1448,7 @@ export interface FileRouteTypes {
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/client-activity'
+    | '/admin/client-bank-accounts'
     | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funding'
@@ -1569,6 +1581,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cap-table'
     | '/_authenticated/admin/cap-table-board'
     | '/_authenticated/admin/client-activity'
+    | '/_authenticated/admin/client-bank-accounts'
     | '/_authenticated/admin/document-log'
     | '/_authenticated/admin/email-preview'
     | '/_authenticated/admin/funding'
@@ -1967,6 +1980,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/client-activity'
       fullPath: '/admin/client-activity'
       preLoaderRoute: typeof AuthenticatedAdminClientActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/client-bank-accounts': {
+      id: '/_authenticated/admin/client-bank-accounts'
+      path: '/admin/client-bank-accounts'
+      fullPath: '/admin/client-bank-accounts'
+      preLoaderRoute: typeof AuthenticatedAdminClientBankAccountsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/document-log': {
@@ -2654,6 +2674,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminCapTableRoute: typeof AuthenticatedAdminCapTableRoute
   AuthenticatedAdminCapTableBoardRoute: typeof AuthenticatedAdminCapTableBoardRoute
   AuthenticatedAdminClientActivityRoute: typeof AuthenticatedAdminClientActivityRoute
+  AuthenticatedAdminClientBankAccountsRoute: typeof AuthenticatedAdminClientBankAccountsRoute
   AuthenticatedAdminDocumentLogRoute: typeof AuthenticatedAdminDocumentLogRoute
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
   AuthenticatedAdminFundingRoute: typeof AuthenticatedAdminFundingRoute
@@ -2753,6 +2774,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminCapTableRoute: AuthenticatedAdminCapTableRoute,
   AuthenticatedAdminCapTableBoardRoute: AuthenticatedAdminCapTableBoardRoute,
   AuthenticatedAdminClientActivityRoute: AuthenticatedAdminClientActivityRoute,
+  AuthenticatedAdminClientBankAccountsRoute:
+    AuthenticatedAdminClientBankAccountsRoute,
   AuthenticatedAdminDocumentLogRoute: AuthenticatedAdminDocumentLogRoute,
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
   AuthenticatedAdminFundingRoute: AuthenticatedAdminFundingRoute,
