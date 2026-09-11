@@ -50,6 +50,7 @@ export const PRICING_MODELS = [
   { value: "annual", label: "Annual" },
   { value: "recurring", label: "Recurring" },
   { value: "transaction", label: "Transaction-based" },
+  { value: "per_request", label: "Per request (quoted each time)" },
   { value: "pass_through", label: "Pass-through" },
 ] as const;
 

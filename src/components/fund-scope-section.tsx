@@ -214,7 +214,13 @@ export function ScopeServicesPanel({
       </CardHeader>
       <CardContent className="space-y-4">
         {active.length > 0 ? (
-          <ServiceList title="Active" services={active} tone="secondary" />
+          <>
+            <ServiceList title="Active" services={active} tone="secondary" showBasis />
+            <p className="text-xs text-muted-foreground">
+              The label after each service is how it's billed. Services shown as “per request” are
+              quoted before the work starts, because the amount depends on what's required.
+            </p>
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">No services activated yet.</p>
         )}
@@ -244,24 +250,39 @@ export function ScopeServicesPanel({
   );
 }
 
+const BASIS_LABEL: Record<string, string> = {
+  one_time: "one-time",
+  annual: "per year",
+  recurring: "recurring",
+  transaction: "each time",
+  per_request: "per request",
+  pass_through: "passed through at cost",
+};
+
 function ServiceList({
   title,
   services,
   tone,
+  showBasis,
 }: {
   title: string;
-  services: { key: string; name: string }[];
+  services: { key: string; name: string; pricingModel?: string | null }[];
   tone: "secondary" | "outline" | "destructive";
+  showBasis?: boolean;
 }) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
       <div className="flex flex-wrap gap-2">
-        {services.map((s) => (
-          <Badge key={s.key} variant={tone}>
-            {s.name}
-          </Badge>
-        ))}
+        {services.map((s) => {
+          const basis = showBasis && s.pricingModel ? BASIS_LABEL[s.pricingModel] : null;
+          return (
+            <Badge key={s.key} variant={tone}>
+              {s.name}
+              {basis ? <span className="ml-1 font-normal opacity-80">· {basis}</span> : null}
+            </Badge>
+          );
+        })}
       </div>
     </div>
   );

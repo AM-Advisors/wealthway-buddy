@@ -228,6 +228,14 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                       : ""}
                     {r.effective_date ? ` · starts ${r.effective_date}` : ""}
                   </p>
+                ) : r.proposed_pricing_model === "per_request" ? (
+                  <p className="text-sm">
+                    Proposed fee:{" "}
+                    <span className="font-medium">
+                      Quoted per request — the amount depends on the services required
+                    </span>
+                    {r.effective_date ? ` · starts ${r.effective_date}` : ""}
+                  </p>
                 ) : null}
                 {r.status === "signed" && r.signer_name ? (
                   <p className="text-sm">

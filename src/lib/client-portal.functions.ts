@@ -86,7 +86,7 @@ export const getClientPortal = createServerFn({ method: "GET" })
     const { data: serviceRequests } = await context.supabase
       .from("service_requests")
       .select(
-        "id, service_key, offering_id, status, proposed_fee_cents, requester_note, created_at, updated_at",
+        "id, service_key, offering_id, status, proposed_fee_cents, proposed_pricing_model, requester_note, created_at, updated_at",
       )
       .eq("client_id", selectedId)
       .order("updated_at", { ascending: false })

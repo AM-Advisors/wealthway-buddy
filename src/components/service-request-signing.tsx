@@ -21,6 +21,21 @@ function money(cents: number | null | undefined) {
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
+/** Some services have no flat price — they're quoted each time they're asked for. */
+export function feeText(cents: number | null | undefined, model?: string | null) {
+  if (cents === null || cents === undefined) {
+    return model === "per_request"
+      ? "Quoted per request — the amount depends on the services required"
+      : "Quoted at the time";
+  }
+  const amount = money(cents);
+  if (!model) return amount as string;
+  if (model === "per_request") return `${amount} per request`;
+  if (model === "annual") return `${amount} per year`;
+  if (model === "transaction") return `${amount} each time`;
+  return `${amount} (${model.replace(/_/g, " ")})`;
+}
+
 const WAITING: Record<string, string> = {
   requested: "Waiting on Harmonious to review it.",
   in_review: "Harmonious is reviewing it.",
@@ -108,8 +123,8 @@ export function MyServiceRequests() {
             {r.status === "quoted" ? (
               <div className="space-y-2 rounded-md bg-muted p-3 text-sm">
                 <p>
-                  Proposed fee: <span className="font-medium">{money(r.proposed_fee_cents) ?? "—"}</span>
-                  {r.proposed_pricing_model ? ` (${r.proposed_pricing_model.replace(/_/g, " ")})` : ""}
+                  Proposed fee:{" "}
+                  <span className="font-medium">{feeText(r.proposed_fee_cents, r.proposed_pricing_model)}</span>
                   {r.effective_date ? ` · starts ${r.effective_date}` : ""}
                 </p>
                 {r.amendment_terms ? <p className="whitespace-pre-wrap">{r.amendment_terms}</p> : null}
@@ -141,7 +156,10 @@ export function MyServiceRequests() {
           <div className="space-y-3 rounded-md border border-primary p-4">
             <p className="text-sm font-medium">Sign the amendment — {signing.serviceName}</p>
             <p className="text-sm">
-              Fee: <span className="font-medium">{money(signing.proposed_fee_cents) ?? "—"}</span>
+              Fee:{" "}
+              <span className="font-medium">
+                {feeText(signing.proposed_fee_cents, signing.proposed_pricing_model)}
+              </span>
               {signing.effective_date ? ` · starts ${signing.effective_date}` : ""}
             </p>
             {signing.amendment_terms ? (
