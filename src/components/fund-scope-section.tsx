@@ -214,7 +214,13 @@ export function ScopeServicesPanel({
       </CardHeader>
       <CardContent className="space-y-4">
         {active.length > 0 ? (
-          <ServiceList title="Active" services={active} tone="secondary" />
+          <>
+            <ServiceList title="Active" services={active} tone="secondary" showBasis />
+            <p className="text-xs text-muted-foreground">
+              The label after each service is how it's billed. Services shown as “per request” are
+              quoted before the work starts, because the amount depends on what's required.
+            </p>
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">No services activated yet.</p>
         )}
