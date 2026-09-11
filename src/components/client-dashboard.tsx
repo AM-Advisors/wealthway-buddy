@@ -36,7 +36,15 @@ type Props = {
   wireRequests: any[];
   serviceRequests: any[];
   services: any[];
+  sows?: any[];
 };
+
+function addDays(value: string, days: number) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 /** One place for the client: fund status, open asks, fees agreed and money in flight. */
 export function ClientDashboard({
