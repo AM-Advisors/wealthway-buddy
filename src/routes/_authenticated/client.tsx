@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  Banknote,
   Briefcase,
   FileText,
   HandCoins,
@@ -132,6 +133,7 @@ function ClientShell() {
       badge: paymentsInProgress || undefined,
     },
     { to: "/client/wires", label: "Wire requests", icon: Send },
+    { to: "/client/banking", label: "Bank accounts", icon: Banknote },
     {
       to: "/client/agreements",
       label: "Agreements & scope",
