@@ -58,9 +58,25 @@ export function ClientOnboardingBoard() {
   const inviteMutation = useMutation({
     mutationFn: (input: { clientId: string; email: string; name?: string; role: string; canApprove: boolean; note?: string }) =>
       invite({ data: input as never }),
-    onSuccess: () => {
-      toast.success("Invitation sent. They join this client the first time they sign in.");
+    onSuccess: (result: any) => {
+      const delivery = result?.delivery;
+      if (delivery?.status === "sent") {
+        toast.success("Welcome email sent. They can set their own password from it.");
+      } else {
+        toast.warning(`Access granted, but the welcome email did not go out. ${delivery?.message ?? ""}`);
+      }
       setDraft({ ...emptyInvite });
+      refresh();
+    },
+    onError: fail,
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: (id: string) => resendInvite({ data: { id } }),
+    onSuccess: (result: any) => {
+      const delivery = result?.delivery;
+      if (delivery?.status === "sent") toast.success("Welcome email sent again with a fresh password link.");
+      else toast.warning(delivery?.message ?? "The welcome email could not be sent.");
       refresh();
     },
     onError: fail,
