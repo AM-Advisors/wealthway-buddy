@@ -534,7 +534,9 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
       action: "payment recorded",
       target: (invoice as any).number,
       clientId: (invoice as any).client_id,
-      next: { paid_on: data.paidOn, reference: data.reference || null },
+      offeringId: await invoiceOfferingId(context, data.id),
+      previous: { status: "issued", paid_on: null, reference: null },
+      next: { status: "paid", paid_on: data.paidOn, reference: data.reference || null },
     });
     return { ok: true };
   });
