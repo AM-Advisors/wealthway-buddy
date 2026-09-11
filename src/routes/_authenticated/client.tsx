@@ -1,13 +1,18 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Briefcase,
   FileText,
   HandCoins,
   LayoutDashboard,
+  Mail,
   PenLine,
   ScrollText,
   Send,
 } from "lucide-react";
+
+import { listMyMessages } from "@/lib/client-inbox.functions";
 
 import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
@@ -58,6 +63,11 @@ type NavItem = {
 function ClientShell() {
   const { data, isLoading, clientId, setClientId } = useClientPortal();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const listMessages = useServerFn(listMyMessages);
+  const inboxQuery = useQuery({ queryKey: ["client-inbox"], queryFn: () => listMessages() });
+  const unreadMessages = ((inboxQuery.data?.messages ?? []) as any[]).filter(
+    (m) => !m.read_at,
+  ).length;
 
   if (isLoading) {
     return (
@@ -102,6 +112,12 @@ function ClientShell() {
 
   const items: NavItem[] = [
     { to: "/client", label: "Overview", icon: LayoutDashboard, exact: true },
+    {
+      to: "/client/inbox",
+      label: "Inbox",
+      icon: Mail,
+      badge: unreadMessages || undefined,
+    },
     { to: "/client/funds", label: "Funds", icon: Briefcase, badge: funds.length || undefined },
     {
       to: "/client/invoices",

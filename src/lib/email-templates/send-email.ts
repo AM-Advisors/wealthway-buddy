@@ -88,5 +88,21 @@ export async function sendTemplateEmail(
     throw error
   }
 
+  // Mirror the email into the recipient's portal inbox when they are a client
+  // contact. Best-effort only — the email has already gone out.
+  try {
+    const { recordClientInboxCopy } = await import('@/lib/client-inbox.server')
+    await recordClientInboxCopy({
+      recipientEmail: recipient,
+      template: templateName,
+      subject,
+      html,
+      text,
+      dedupeKey: options.idempotencyKey,
+    })
+  } catch (error) {
+    console.error('[send-email] inbox copy failed', templateName, error)
+  }
+
   return { sent: true }
 }

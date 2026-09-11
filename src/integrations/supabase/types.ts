@@ -780,6 +780,56 @@ export type Database = {
           },
         ]
       }
+      client_messages: {
+        Row: {
+          body_html: string
+          client_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: string
+          preview: string | null
+          read_at: string | null
+          recipient_email: string
+          subject: string
+          template: string
+          user_id: string
+        }
+        Insert: {
+          body_html: string
+          client_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          preview?: string | null
+          read_at?: string | null
+          recipient_email: string
+          subject: string
+          template: string
+          user_id: string
+        }
+        Update: {
+          body_html?: string
+          client_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          preview?: string | null
+          read_at?: string | null
+          recipient_email?: string
+          subject?: string
+          template?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_pricing: {
         Row: {
           approved_at: string | null
