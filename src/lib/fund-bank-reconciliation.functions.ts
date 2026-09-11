@@ -176,7 +176,9 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
         .limit(100),
       supabase
         .from("invoices")
-        .select("id, number, status, total_cents, due_date, paid_on, payment_reference")
+        .select(
+          "id, number, status, total_cents, due_date, paid_on, payment_reference, client_payment_method, client_payment_reference, client_paid_on, client_payment_declared_at",
+        )
         .eq("offering_id", data.offeringId)
         .in("status", ["issued", "paid"])
         .order("issue_date", { ascending: false }),
@@ -190,6 +192,10 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
       dueDate: (i.due_date ?? null) as string | null,
       paidOn: (i.paid_on ?? null) as string | null,
       reference: (i.payment_reference ?? null) as string | null,
+      declaredMethod: (i.client_payment_method ?? null) as string | null,
+      declaredReference: (i.client_payment_reference ?? null) as string | null,
+      declaredPaidOn: (i.client_paid_on ?? null) as string | null,
+      declaredAt: (i.client_payment_declared_at ?? null) as string | null,
     }));
     const byId = new Map(invoiceList.map((i) => [i.id, i]));
     const openInvoices = invoiceList.filter((i) => i.status === "issued");
@@ -216,6 +222,9 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
         matchedApplicationId: (t.matched_application_id ?? null) as string | null,
         matchedInvoiceId: matched?.id ?? null,
         matchedInvoiceNumber: matched?.number ?? null,
+        declaredMethod: matched?.declaredMethod ?? suggestion?.declaredMethod ?? null,
+        declaredReference: matched?.declaredReference ?? suggestion?.declaredReference ?? null,
+        declaredPaidOn: matched?.declaredPaidOn ?? suggestion?.declaredPaidOn ?? null,
         matchedAt: (t.invoice_matched_at ?? null) as string | null,
         suggestedInvoiceId: suggestion?.id ?? null,
         suggestedInvoiceNumber: suggestion?.number ?? null,
@@ -229,6 +238,8 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
       lines: rows,
       openInvoices,
       canMatch: roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r)),
+      autoMatched,
+      awaitingArrival: openInvoices.filter((i) => i.declaredAt),
       unreconciledCount: rows.filter((r) => !r.matchedInvoiceId && !r.matchedApplicationId).length,
     };
   });
