@@ -141,6 +141,10 @@ export function buildInvoiceHtml(invoice: any) {
     Fees are billed under your statement of work. Harmonious facilitates payments and keeps the
     records; it does not hold client money, act as custodian or as escrow agent.
   </p>
+  <p class="note">
+    Questions about this invoice: ${escape(COMPANY.billingEmail || COMPANY.email)}. Please quote
+    ${escape(invoice?.number ?? "the invoice number")} on your wire or ACH payment so we can match it.
+  </p>
 </body>
 </html>`;
 }
