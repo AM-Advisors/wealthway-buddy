@@ -22,6 +22,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SpvRouteImport } from './routes/spv'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
+import { Route as AuthenticatedCapitalRouteImport } from './routes/_authenticated/capital'
 import { Route as AuthenticatedClientRouteImport } from './routes/_authenticated/client'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
@@ -203,6 +204,11 @@ const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
 const AuthenticatedApplyRoute = AuthenticatedApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCapitalRoute = AuthenticatedCapitalRouteImport.update({
+  id: '/capital',
+  path: '/capital',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedClientRoute = AuthenticatedClientRouteImport.update({
@@ -894,6 +900,7 @@ export interface FileRoutesByFullPath {
   '/spv': typeof SpvRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
+  '/capital': typeof AuthenticatedCapitalRoute
   '/client': typeof AuthenticatedClientRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -1025,6 +1032,7 @@ export interface FileRoutesByTo {
   '/spv': typeof SpvRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
+  '/capital': typeof AuthenticatedCapitalRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
@@ -1158,6 +1166,7 @@ export interface FileRoutesById {
   '/spv': typeof SpvRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRoute
+  '/_authenticated/capital': typeof AuthenticatedCapitalRoute
   '/_authenticated/client': typeof AuthenticatedClientRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
@@ -1292,6 +1301,7 @@ export interface FileRouteTypes {
     | '/spv'
     | '/accounts'
     | '/apply'
+    | '/capital'
     | '/client'
     | '/dashboard'
     | '/documents'
@@ -1423,6 +1433,7 @@ export interface FileRouteTypes {
     | '/spv'
     | '/accounts'
     | '/apply'
+    | '/capital'
     | '/dashboard'
     | '/documents'
     | '/fund-documents'
@@ -1555,6 +1566,7 @@ export interface FileRouteTypes {
     | '/spv'
     | '/_authenticated/accounts'
     | '/_authenticated/apply'
+    | '/_authenticated/capital'
     | '/_authenticated/client'
     | '/_authenticated/dashboard'
     | '/_authenticated/documents'
@@ -1791,6 +1803,13 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof AuthenticatedApplyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/capital': {
+      id: '/_authenticated/capital'
+      path: '/capital'
+      fullPath: '/capital'
+      preLoaderRoute: typeof AuthenticatedCapitalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/client': {
@@ -2652,6 +2671,7 @@ const AuthenticatedClientRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedApplyRoute: typeof AuthenticatedApplyRoute
+  AuthenticatedCapitalRoute: typeof AuthenticatedCapitalRoute
   AuthenticatedClientRoute: typeof AuthenticatedClientRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
@@ -2752,6 +2772,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedApplyRoute: AuthenticatedApplyRoute,
+  AuthenticatedCapitalRoute: AuthenticatedCapitalRoute,
   AuthenticatedClientRoute: AuthenticatedClientRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
