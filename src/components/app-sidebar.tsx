@@ -227,17 +227,14 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       </SidebarContent>
 
       <SidebarFooter>
-        {!collapsed && nav?.profile?.email && (
-          <p className="truncate px-2 text-xs text-muted-foreground">{nav.profile.email}</p>
-        )}
         {!collapsed && signOff && (
           <p className="px-2 text-xs">
             {signOffComplete ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+              <span className="inline-flex items-center gap-1 rounded-full bg-sidebar-primary/20 px-2 py-0.5 text-sidebar-foreground">
                 <BadgeCheck className="h-3 w-3" aria-hidden /> Sign-off complete
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full bg-sidebar-accent px-2 py-0.5 text-sidebar-accent-foreground">
                 <FileSignature className="h-3 w-3" aria-hidden />
                 {signOff.outstanding.length} to sign
               </span>
