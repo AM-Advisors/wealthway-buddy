@@ -13,6 +13,8 @@ import {
   removeClosingDocument,
   reopenClosing,
 } from "@/lib/closing.functions";
+import { generateStatementsForFund } from "@/lib/capital-statements.functions";
+import { CapitalStatementPanel } from "@/components/capital-statement-panel";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -290,6 +292,10 @@ function InvestorClosing({ row }: { row: any }) {
             </div>
           </div>
         )}
+
+        {row.closing ? (
+          <CapitalStatementPanel applicationId={row.applicationId} canRegenerate />
+        ) : null}
 
         {showDocs && row.closing ? <ClosingDocuments row={row} /> : null}
       </CardContent>

@@ -807,6 +807,9 @@ function ClosingCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         {closing.note ? <p className="text-sm">{closing.note}</p> : null}
+        {closing.applicationId ? (
+          <CapitalStatementPanel applicationId={closing.applicationId} />
+        ) : null}
         <div>
           <p className="text-sm font-medium">Final documents</p>
           {documents.length === 0 ? (
