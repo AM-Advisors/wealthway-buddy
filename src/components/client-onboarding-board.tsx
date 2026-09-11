@@ -40,6 +40,7 @@ export function ClientOnboardingBoard() {
   const load = useServerFn(getClientOnboarding);
   const invite = useServerFn(inviteClientContact);
   const cancelInvite = useServerFn(cancelClientInvitation);
+  const resendInvite = useServerFn(resendClientInvitation);
   const changeAccess = useServerFn(setContactAccess);
   const markStep = useServerFn(markOnboardingStep);
 
