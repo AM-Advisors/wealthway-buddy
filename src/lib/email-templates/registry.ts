@@ -45,5 +45,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ops-review-request': opsReviewRequest,
   'ops-review-decision': opsReviewDecision,
   'client-admin-alert': clientAdminAlert,
+  'client-invitation': clientInvitation,
 
 }
