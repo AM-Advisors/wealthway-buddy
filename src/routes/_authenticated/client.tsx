@@ -63,6 +63,11 @@ type NavItem = {
 function ClientShell() {
   const { data, isLoading, clientId, setClientId } = useClientPortal();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const listMessages = useServerFn(listMyMessages);
+  const inboxQuery = useQuery({ queryKey: ["client-inbox"], queryFn: () => listMessages() });
+  const unreadMessages = ((inboxQuery.data?.messages ?? []) as any[]).filter(
+    (m) => !m.read_at,
+  ).length;
 
   if (isLoading) {
     return (
