@@ -236,7 +236,7 @@ export function ClientDashboard({
             {openInvoices.slice(0, 5).map((i: any) => (
               <div key={i.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{i.invoice_number ?? "Invoice"}</p>
+                  <p className="text-sm font-medium">{i.number ?? i.invoice_number ?? "Invoice"}</p>
                   <p className="text-xs text-muted-foreground">
                     {i.due_date ? `Due ${when(i.due_date)}` : "No due date"} ·{" "}
                     {i.client_approved_at ? "Approved by you" : "Awaiting your approval"}
