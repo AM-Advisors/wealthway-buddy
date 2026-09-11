@@ -41,14 +41,15 @@ async function auditEvent(
   },
 ) {
   await supabase.from("contract_audit_events").insert({
-    entity_type: "invoice",
+    area: "invoice",
     action: entry.action,
     target: entry.target,
     client_id: entry.clientId,
     offering_id: entry.offeringId,
     actor_id: userId,
-    previous_state: entry.previous ?? null,
-    next_state: entry.next ?? null,
+    previous_value: entry.previous ?? null,
+    new_value: entry.next ?? null,
+    source: "bank statement",
   });
 }
 
