@@ -101,6 +101,18 @@ export function StaffDesk() {
             <CardTitle className="text-2xl">{data.holds.length}</CardTitle>
           </CardHeader>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Sign-offs pending</CardDescription>
+            <CardTitle className="text-2xl">{signOffs.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Unpaid invoices</CardDescription>
+            <CardTitle className="text-2xl">{invoices.length}</CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
       {data.isAdmin ? (
