@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { StaffCalendar } from "@/components/staff-calendar";
 import { ClientCoverageBoard, StaffDesk } from "@/components/staff-desk";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
