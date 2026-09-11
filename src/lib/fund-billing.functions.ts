@@ -103,6 +103,8 @@ async function buildEvents(context: any, offeringId: string) {
     });
   }
 
+  const sharePrice = Number((offering as any).share_price_cents ?? 0);
+
   for (const c of ((closings ?? []) as any[])) {
     const app = appById.get(String(c.application_id));
     events.push({
@@ -114,10 +116,38 @@ async function buildEvents(context: any, offeringId: string) {
       occurredOn: String(c.closing_date ?? c.created_at ?? "").slice(0, 10),
       cents: fundClosing,
       custom: false,
+      rateMissing: fundClosing <= 0,
+    });
+
+    // Subscription: units bought at the fund's share price. With no share
+    // price on file the funded amount stands on its own.
+    const funded = Number(c.funded_amount_cents ?? app?.commitment_cents ?? 0);
+    const units = sharePrice > 0 ? Math.floor(funded / sharePrice) : 0;
+    const amount = sharePrice > 0 ? units * sharePrice : funded;
+    const remainder = sharePrice > 0 ? funded - amount : 0;
+    events.push({
+      ref: `subscription:${c.id}`,
+      kind: "subscription",
+      kindLabel: "Subscription",
+      label: `Subscription — ${nameOf(app)}`,
+      description:
+        sharePrice > 0
+          ? `${units.toLocaleString()} units at $${(sharePrice / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} each` +
+            (remainder > 0
+              ? ` · $${(remainder / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} funded above whole units`
+              : "")
+          : "Funded amount — no share price set for this fund",
+      occurredOn: String(c.closing_date ?? c.created_at ?? "").slice(0, 10),
+      cents: amount,
+      custom: false,
+      units: sharePrice > 0 ? units : null,
+      unitCents: sharePrice > 0 ? sharePrice : null,
+      remainderCents: remainder,
+      rateMissing: sharePrice <= 0,
     });
   }
 
-  return { offering, events, fundWire, fundClosing };
+  return { offering, events, fundWire, fundClosing, sharePrice };
 }
 
 /** One fund's fee position: what is billable, what is invoiced, what is paid. */
