@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Kind = "request" | "quote" | "hold";
+type Kind = "request" | "quote" | "hold" | "signoff" | "payment";
 
 interface CalendarItem {
   id: string;
