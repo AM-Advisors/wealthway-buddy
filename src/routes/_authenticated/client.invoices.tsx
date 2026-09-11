@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -10,11 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { downloadInvoice, printInvoice } from "@/components/invoice-document";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 
-export const Route = createFileRoute("/_authenticated/client_/invoices")({
+export const Route = createFileRoute("/_authenticated/client/invoices")({
   head: () => ({
     meta: [
       { title: "Your invoices — Harmonious" },
@@ -36,11 +35,7 @@ export const Route = createFileRoute("/_authenticated/client_/invoices")({
 });
 
 function ClientInvoicesRoute() {
-  return (
-    <ClientIntakeGate>
-      <ClientInvoicesPage />
-    </ClientIntakeGate>
-  );
+  return <ClientInvoicesPage />;
 }
 
 const money = (cents: number | null | undefined) =>
@@ -121,19 +116,14 @@ function ClientInvoicesPage() {
     setPay((s) => ({ ...s, [id]: { ...payState(id), [field]: value } }));
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-3xl">Your invoices</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Fees billed under your statement of work, including fund wire fees and closing costs.
-            Approve an invoice, send the transfer, then confirm it here. Harmonious facilitates
-            payments and keeps the records; it does not hold your money.
-          </p>
-        </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/client">Back to portal</Link>
-        </Button>
+    <div>
+      <div>
+        <h2 className="text-2xl">Your invoices</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Fees billed under your statement of work, including fund wire fees and closing costs.
+          Approve an invoice, send the transfer, then confirm it here. Harmonious facilitates
+          payments and keeps the records; it does not hold your money.
+        </p>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -373,6 +363,6 @@ function ClientInvoicesPage() {
           })}
         </div>
       )}
-    </main>
+    </div>
   );
 }

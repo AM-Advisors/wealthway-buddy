@@ -1,22 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import {
+  Briefcase,
+  FileText,
+  HandCoins,
+  LayoutDashboard,
+  PenLine,
+  ScrollText,
+  Send,
+} from "lucide-react";
 
 import { ClientIntakeGate } from "@/components/client-intake-gate";
-import { ClientSowPanel } from "@/components/client-sow-panel";
-import { ClientDashboard } from "@/components/client-dashboard";
-import { getClientPortal } from "@/lib/client-portal.functions";
-import { ClientInvoicesPanel } from "@/components/client-invoices-panel";
-import { ClientPaymentsPanel } from "@/components/client-payments-panel";
-import { ClientWireRequestsPanel } from "@/components/client-wire-requests-panel";
-import { MyServiceRequests } from "@/components/service-request-signing";
-import { ClientOffboardingPanel } from "@/components/client-offboarding-panel";
-
+import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/client")({
   head: () => ({
@@ -36,46 +34,34 @@ export const Route = createFileRoute("/_authenticated/client")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ClientPortalPage,
+  component: ClientPortalLayout,
 });
 
-function ClientPortalPage() {
+function ClientPortalLayout() {
   return (
-    <ClientIntakeGate>
-      <ClientPortal />
-    </ClientIntakeGate>
+    <ClientPortalProvider>
+      <ClientIntakeGate>
+        <ClientShell />
+      </ClientIntakeGate>
+    </ClientPortalProvider>
   );
 }
 
-const money = (cents: number | null | undefined) =>
-  typeof cents === "number"
-    ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
-
-const date = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-US") : "—";
-
-const PAYMENT_LABEL: Record<string, string> = {
-  approved: "Approved",
-  sent: "Sent",
-  released: "Released",
-  settled: "Settled",
-  completed: "Completed",
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof Briefcase;
+  exact?: boolean;
+  badge?: number | undefined;
 };
 
-function ClientPortal() {
-  const load = useServerFn(getClientPortal);
-  const [clientId, setClientId] = useState<string | null>(null);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["client-portal", clientId],
-    queryFn: () => load({ data: { clientId } }),
-    retry: false,
-  });
+function ClientShell() {
+  const { data, isLoading, clientId, setClientId } = useClientPortal();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   if (isLoading) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-10">
+      <main className="mx-auto w-full max-w-6xl px-4 py-10">
         <p className="text-sm text-muted-foreground">Loading your engagement…</p>
       </main>
     );
@@ -83,7 +69,7 @@ function ClientPortal() {
 
   if (!data?.client) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-10">
+      <main className="mx-auto w-full max-w-6xl px-4 py-10">
         <h1 className="text-3xl">Client portal</h1>
         <Card className="mt-6">
           <CardHeader>
@@ -103,21 +89,57 @@ function ClientPortal() {
   const clients = (data.clients ?? []) as any[];
   const funds = (data.funds ?? []) as any[];
   const sows = (data.sows ?? []) as any[];
-  const services = (data.services ?? []) as any[];
+  const invoices = (data.invoices ?? []) as any[];
   const payments = (data.payments ?? []) as any[];
-  const openInvoices = (data.invoices ?? []).filter((i: any) => i.status === "issued");
+  const serviceRequests = ((data as any).serviceRequests ?? []) as any[];
+
+  const openInvoices = invoices.filter((i: any) => i.status === "issued").length;
   const paymentsInProgress = payments.filter(
-    (p: any) => !["settled", "completed", "cancelled", "canceled", "rejected"].includes(String(p.status)),
+    (p: any) =>
+      !["settled", "completed", "cancelled", "canceled", "rejected"].includes(String(p.status)),
   ).length;
+  const awaitingSignature = serviceRequests.filter((r: any) => r.status === "quoted").length;
+
+  const items: NavItem[] = [
+    { to: "/client", label: "Overview", icon: LayoutDashboard, exact: true },
+    { to: "/client/funds", label: "Funds", icon: Briefcase, badge: funds.length || undefined },
+    {
+      to: "/client/invoices",
+      label: "Invoices",
+      icon: FileText,
+      badge: openInvoices || undefined,
+    },
+    {
+      to: "/client/payments",
+      label: "Payments",
+      icon: HandCoins,
+      badge: paymentsInProgress || undefined,
+    },
+    { to: "/client/wires", label: "Wire requests", icon: Send },
+    {
+      to: "/client/agreements",
+      label: "Agreements & scope",
+      icon: ScrollText,
+      badge: sows.length || undefined,
+    },
+    {
+      to: "/client/sign-offs",
+      label: "Sign-offs",
+      icon: PenLine,
+      badge: awaitingSignature || undefined,
+    },
+  ];
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
+    <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl">{client.name}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your Harmonious engagement: the funds we administer for you, what your agreement covers,
-            your invoices and payments already approved.
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Client portal
+          </p>
+          <h1 className="mt-1 text-2xl sm:text-3xl">{client.name}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your funds, agreements, invoices and payments with Harmonious in one place.
           </p>
         </div>
         {clients.length > 1 && (
@@ -136,194 +158,45 @@ function ClientPortal() {
         )}
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Funds</CardDescription>
-            <CardTitle className="text-2xl">{funds.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Invoices awaiting payment</CardDescription>
-            <CardTitle className="text-2xl">{openInvoices.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Payments in progress</CardDescription>
-            <CardTitle className="text-2xl">{paymentsInProgress}</CardTitle>
-          </CardHeader>
-        </Card>
+      <div className="mt-6 flex flex-col gap-6 md:flex-row">
+        <aside className="md:w-56 md:shrink-0">
+          <nav
+            aria-label="Client portal"
+            className="flex gap-1 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0"
+          >
+            {items.map((item) => {
+              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
+                    active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                  )}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span>{item.label}</span>
+                  {item.badge ? (
+                    <Badge
+                      variant={active ? "outline" : "secondary"}
+                      className="ml-auto hidden md:inline-flex"
+                    >
+                      {item.badge}
+                    </Badge>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
 
+        <section className="min-w-0 flex-1">
+          <Outlet />
+        </section>
       </div>
 
-      <Tabs defaultValue="overview" className="mt-8">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="funds">Funds</TabsTrigger>
-          <TabsTrigger value="agreement">Agreement &amp; scope</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="wires">Wire requests</TabsTrigger>
-
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-6">
-          <ClientDashboard
-            funds={funds}
-            invoices={(data.invoices ?? []) as any[]}
-            payments={payments as any[]}
-            wireRequests={(data.wireRequests ?? []) as any[]}
-            serviceRequests={((data as any).serviceRequests ?? []) as any[]}
-            services={services as any[]}
-            sows={((data as any).sows ?? []) as any[]}
-          />
-        </TabsContent>
-
-        <TabsContent value="funds" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Funds we administer for you</CardTitle>
-              <CardDescription>
-                Harmonious provides administration, technology, onboarding, reporting, payment
-                facilitation and recordkeeping support for these funds.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {funds.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No funds are attached to your engagement yet.
-                </p>
-              )}
-              {funds.map((f) => (
-                <div key={f.id} className="rounded-md border p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium">{f.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {f.legal_entity_name ? `${f.legal_entity_name} · ` : ""}
-                        {f.reg_type ? `Reg D ${f.reg_type}` : "Exemption not recorded"}
-                        {f.target_raise_cents
-                          ? ` · target ${money(Number(f.target_raise_cents))}`
-                          : ""}
-                      </p>
-                    </div>
-                    <Badge variant={f.is_open ? "default" : "secondary"}>
-                      {f.is_open ? "Open" : "Closed"}
-                    </Badge>
-                  </div>
-                  <dl className="mt-3 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
-                    <div>
-                      <dt className="text-muted-foreground">Legal entity</dt>
-                      <dd className="font-medium">{f.legal_entity_name || "Not recorded"}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted-foreground">Type</dt>
-                      <dd className="font-medium">
-                        {(f.fund_type === "other" ? f.fund_type_other : f.fund_type) || "Not recorded"}
-                        {f.entity_type ? ` · ${f.entity_type}` : ""}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted-foreground">State formed</dt>
-                      <dd className="font-medium">{f.state_formed || "Not recorded"}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted-foreground">Date formed</dt>
-                      <dd className="font-medium">
-                        {f.date_formed
-                          ? new Date(f.date_formed).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
-                          : "Not recorded"}
-                      </dd>
-                    </div>
-                  </dl>
-                  {!f.is_open ? (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Harmonious is setting this fund up. It stays closed to investors until your
-                      statement of work is signed and approved.
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="agreement" className="mt-6 space-y-6">
-          <ClientSowPanel sows={sows as any} />
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Included in your scope</CardTitle>
-              <CardDescription>
-                Anything not listed here isn't currently included in your active scope. You can ask
-                for it below and Harmonious will confirm the fee and paperwork first.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {services.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No services are recorded against your scope yet.
-                </p>
-              )}
-              {services.map((s: any) => (
-                <div key={`${s.key}-${s.offeringId ?? "client"}`} className="rounded-md border p-3">
-                  <p className="text-sm font-medium">{s.name}</p>
-                  {s.description && (
-                    <p className="text-xs text-muted-foreground">{s.description}</p>
-                  )}
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {s.offeringId ? "Fund-specific" : "Applies across your engagement"}
-                    {s.effectiveDate ? ` · from ${date(s.effectiveDate)}` : ""}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <MyServiceRequests />
-          <ClientOffboardingPanel />
-        </TabsContent>
-
-        <TabsContent value="invoices" className="mt-6 space-y-4">
-          <div className="flex justify-end">
-            <Button asChild size="sm">
-              <Link to="/client/invoices">View and pay invoices</Link>
-            </Button>
-          </div>
-          <ClientInvoicesPanel />
-          {(data.invoices ?? []).length === 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Invoices</CardTitle>
-                <CardDescription>
-                  Nothing has been invoiced yet. Issued invoices appear here for your approval.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="payments" className="mt-6">
-          <ClientPaymentsPanel payments={payments} />
-        </TabsContent>
-
-        <TabsContent value="wires" className="mt-6">
-          <ClientWireRequestsPanel
-            requests={(data.wireRequests ?? []) as any[]}
-            funds={funds}
-            canRequest={!!(data as any).canRequestWire}
-          />
-        </TabsContent>
-      </Tabs>
-
-
-      <p className="mt-8 text-xs text-muted-foreground">
+      <p className="mt-10 text-xs text-muted-foreground">
         Harmonious provides administrative, technology, onboarding, reporting, payment-facilitation,
         recordkeeping and compliance-support services under your master service agreement and
         statements of work. Harmonious is not your investment adviser, broker-dealer, custodian,
