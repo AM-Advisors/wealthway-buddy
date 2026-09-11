@@ -103,6 +103,8 @@ const clientsAndMoneyItems: NavItem[] = [
   { title: "Client onboarding", url: "/admin/onboarding", icon: UserPlus },
   { title: "Clients and scope", url: "/admin/contracts", icon: Handshake },
   { title: "Pricing and agreements", url: "/admin/pricing", icon: ScrollText },
+  { title: "Rate proposals", url: "/admin/rate-proposals", icon: Handshake },
+
   {
     title: "Unpaid invoices",
     url: "/admin/invoices",
