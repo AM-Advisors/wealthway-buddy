@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 
 /** Everything a client contact can see about their own engagement: the funds
  *  Harmonious administers for them, their statements of work and what those
