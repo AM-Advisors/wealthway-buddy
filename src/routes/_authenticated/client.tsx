@@ -232,7 +232,12 @@ function ClientPortal() {
           <ClientOffboardingPanel />
         </TabsContent>
 
-        <TabsContent value="invoices" className="mt-6">
+        <TabsContent value="invoices" className="mt-6 space-y-4">
+          <div className="flex justify-end">
+            <Button asChild size="sm">
+              <Link to="/client/invoices">View and pay invoices</Link>
+            </Button>
+          </div>
           <ClientInvoicesPanel />
           {(data.invoices ?? []).length === 0 && (
             <Card>
