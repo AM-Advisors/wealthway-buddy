@@ -213,6 +213,35 @@ function ClientPortal() {
                       {f.is_open ? "Open" : "Closed"}
                     </Badge>
                   </div>
+                  <dl className="mt-3 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <dt className="text-muted-foreground">Legal entity</dt>
+                      <dd className="font-medium">{f.legal_entity_name || "Not recorded"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Type</dt>
+                      <dd className="font-medium">
+                        {(f.fund_type === "other" ? f.fund_type_other : f.fund_type) || "Not recorded"}
+                        {f.entity_type ? ` · ${f.entity_type}` : ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">State formed</dt>
+                      <dd className="font-medium">{f.state_formed || "Not recorded"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Date formed</dt>
+                      <dd className="font-medium">
+                        {f.date_formed
+                          ? new Date(f.date_formed).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "Not recorded"}
+                      </dd>
+                    </div>
+                  </dl>
                   {!f.is_open ? (
                     <p className="mt-2 text-xs text-muted-foreground">
                       Harmonious is setting this fund up. It stays closed to investors until your
