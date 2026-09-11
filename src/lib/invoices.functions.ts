@@ -71,6 +71,19 @@ async function audit(
   });
 }
 
+/** The fund an invoice's lines belong to, so fund-level trails show the
+ *  issuing and payment steps alongside the fees themselves. */
+async function invoiceOfferingId(context: any, invoiceId: string) {
+  const { data } = await context.supabase
+    .from("invoice_lines")
+    .select("offering_id")
+    .eq("invoice_id", invoiceId)
+    .not("offering_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+  return (data as any)?.offering_id ?? null;
+}
+
 function addDays(iso: string, days: number) {
   const d = new Date(`${iso}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
@@ -485,7 +498,9 @@ export const issueInvoice = createServerFn({ method: "POST" })
       action: "issued",
       target: number,
       clientId: (invoice as any).client_id,
-      next: { total_cents: total, due_date: dueDate },
+      offeringId: await invoiceOfferingId(context, data.id),
+      previous: { status: "draft", number: (invoice as any).number ?? null, due_date: null },
+      next: { status: "issued", number, total_cents: total, due_date: dueDate },
     });
     return { ok: true, number, dueDate };
   });
@@ -519,7 +534,9 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
       action: "payment recorded",
       target: (invoice as any).number,
       clientId: (invoice as any).client_id,
-      next: { paid_on: data.paidOn, reference: data.reference || null },
+      offeringId: await invoiceOfferingId(context, data.id),
+      previous: { status: "issued", paid_on: null, reference: null },
+      next: { status: "paid", paid_on: data.paidOn, reference: data.reference || null },
     });
     return { ok: true };
   });

@@ -321,9 +321,10 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
                         </div>
                         <Button
                           size="sm"
-                          disabled={payMut.isPending}
+                          disabled={payMut.isPending || !(payRef[inv.id] ?? "").trim()}
+                          title="Enter the wire or ACH reference first"
                           onClick={() =>
-                            payMut.mutate({ id: inv.id, reference: payRef[inv.id] ?? "" })
+                            payMut.mutate({ id: inv.id, reference: (payRef[inv.id] ?? "").trim() })
                           }
                         >
                           Record payment
