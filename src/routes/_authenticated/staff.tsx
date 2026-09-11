@@ -38,10 +38,14 @@ function StaffPortalPage() {
       <Tabs defaultValue="desk">
         <TabsList>
           <TabsTrigger value="desk">My desk</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="coverage">Who covers whom</TabsTrigger>
         </TabsList>
         <TabsContent value="desk" className="mt-6">
           <StaffDesk />
+        </TabsContent>
+        <TabsContent value="calendar" className="mt-6">
+          <StaffCalendar />
         </TabsContent>
         <TabsContent value="coverage" className="mt-6">
           <ClientCoverageBoard />
