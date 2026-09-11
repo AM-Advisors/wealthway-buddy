@@ -280,7 +280,7 @@ export function ClientOnboardingBoard() {
                 ))
               )}
 
-              <ClientIntakePanel clientId={selected.client.id} />
+              <ClientIntakePanel clientId={selected.id} />
 
               <div>
                 <h3 className="text-sm font-medium">Invitations and welcome emails</h3>
