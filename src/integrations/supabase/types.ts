@@ -6593,6 +6593,16 @@ export type Database = {
       }
       can_review_operations: { Args: never; Returns: boolean }
       can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
+      client_create_wire_request: {
+        Args: {
+          _amount_cents: number
+          _expected_date?: string
+          _note?: string
+          _offering_id: string
+          _purpose?: string
+        }
+        Returns: string
+      }
       client_send_back_sow: {
         Args: { _reason: string; _sow_id: string }
         Returns: undefined
