@@ -373,8 +373,9 @@ export function StaffCalendar() {
           <span className={`h-2 w-2 rounded-full ${KIND_DOT.hold}`} /> Holds
         </span>
         <span>
-          {monthCount} item{monthCount === 1 ? "" : "s"} this month
+          {monthCount} item{monthCount === 1 ? "" : "s"} due this month
         </span>
+        <span>Each item sits on the day it is due.</span>
       </div>
 
       <div className="overflow-hidden rounded-lg border">
