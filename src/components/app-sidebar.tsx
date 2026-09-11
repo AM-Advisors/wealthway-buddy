@@ -167,9 +167,9 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       <SidebarHeader>
         <Link to="/" aria-label="Harmonious home" className="flex items-center px-2 py-1">
           {collapsed ? (
-            <Logo variant="navy" className="h-6 w-6 object-contain object-left" />
+            <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (
-            <Logo variant="navy" className="h-7 w-auto" />
+            <Logo variant="white" className="h-7 w-auto" />
           )}
         </Link>
       </SidebarHeader>
