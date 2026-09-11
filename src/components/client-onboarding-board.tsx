@@ -5,6 +5,7 @@ import { Check, CircleDashed } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
+import { ClientIntakePanel } from "@/components/client-intake-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -278,6 +279,8 @@ export function ClientOnboardingBoard() {
                   </div>
                 ))
               )}
+
+              <ClientIntakePanel clientId={selected.client.id} />
 
               <div>
                 <h3 className="text-sm font-medium">Invitations and welcome emails</h3>
