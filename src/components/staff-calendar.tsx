@@ -90,6 +90,34 @@ function ageInDays(iso?: string | null) {
   return Math.floor((Date.now() - then) / 86_400_000);
 }
 
+/** The day something is due: the day it arrived plus the team's working target. */
+function dueKey(from: string | null | undefined, days: number) {
+  if (!from) return "";
+  const d = new Date(from);
+  if (Number.isNaN(d.getTime())) return "";
+  d.setDate(d.getDate() + days);
+  return dayKey(d);
+}
+
+/** "due today", "due in 3 days", "3 days late" — plain wording for a due date. */
+function dueWording(key: string) {
+  if (!key) return "No due date";
+  const [y, m, d] = key.split("-").map(Number);
+  if (!y || !m || !d) return "No due date";
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const diff = Math.round((new Date(y, m - 1, d).getTime() - start) / 86_400_000);
+  if (diff === 0) return "Due today";
+  if (diff === 1) return "Due tomorrow";
+  if (diff > 1) return `Due in ${diff} days`;
+  if (diff === -1) return "1 day late";
+  return `${Math.abs(diff)} days late`;
+}
+
+function isPast(key: string) {
+  return Boolean(key) && key < dayKey(new Date());
+}
+
 function longDay(key: string) {
   const [y, m, d] = key.split("-").map(Number);
   if (!y || !m || !d) return key;
