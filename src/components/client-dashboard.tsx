@@ -78,6 +78,59 @@ export function ClientDashboard({
 
   const signedSows = (sows ?? []).filter((s: any) => s.client_signed_at || s.signed_on);
 
+  // What Harmonious has decided recently, with the note the team left.
+  const decisions: {
+    id: string;
+    label: string;
+    outcome: string;
+    note: string | null;
+    at: string | null;
+    tone: "good" | "plain";
+  }[] = [
+    ...(serviceRequests ?? [])
+      .filter((r: any) => ["activated", "declined"].includes(r.status))
+      .map((r: any) => ({
+        id: `req-${r.id}`,
+        label: `${r.serviceName ?? r.service_key} request`,
+        outcome: r.status === "activated" ? "Approved" : "Declined",
+        note: (r.declined_reason as string) ?? null,
+        at: (r.updated_at as string) ?? null,
+        tone: (r.status === "activated" ? "good" : "plain") as "good" | "plain",
+      })),
+    ...(wireRequests ?? [])
+      .filter((w: any) => ["approved", "declined"].includes(w.status))
+      .map((w: any) => ({
+        id: `wire-${w.id}`,
+        label: `${String(w.purpose ?? "Wire").replace(/_/g, " ")} request${w.fundName ? ` · ${w.fundName}` : ""}`,
+        outcome: w.status === "approved" ? "Approved" : "Declined",
+        note: (w.review_note as string) ?? null,
+        at: (w.reviewed_at as string) ?? null,
+        tone: (w.status === "approved" ? "good" : "plain") as "good" | "plain",
+      })),
+    ...(invoices ?? [])
+      .filter((i: any) => i.dispute_resolution)
+      .map((i: any) => ({
+        id: `inv-${i.id}`,
+        label: `Query on invoice ${i.number ?? ""}`.trim(),
+        outcome: i.dispute_resolution === "accepted" ? "Being corrected" : "Invoice stands",
+        note: (i.dispute_resolution_note as string) ?? null,
+        at: (i.dispute_resolved_at as string) ?? null,
+        tone: "plain" as const,
+      })),
+    ...(sows ?? [])
+      .filter((s: any) => ["approved", "rejected"].includes(s.approval_status))
+      .map((s: any) => ({
+        id: `sow-${s.id}`,
+        label: s.title ?? "Statement of work",
+        outcome: s.approval_status === "approved" ? "Approved" : "Sent back",
+        note: (s.approval_note as string) ?? null,
+        at: (s.approved_at as string) ?? (s.updated_at as string) ?? null,
+        tone: (s.approval_status === "approved" ? "good" : "plain") as "good" | "plain",
+      })),
+  ]
+    .sort((a, b) => String(b.at ?? "").localeCompare(String(a.at ?? "")))
+    .slice(0, 6);
+
   const dueItems: DueItem[] = [];
   for (const inv of openInvoices) {
     if (!inv.due_date) continue;
