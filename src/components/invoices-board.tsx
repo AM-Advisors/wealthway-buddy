@@ -244,6 +244,57 @@ export function InvoicesBoard() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Payments reported by clients</CardTitle>
+          <CardDescription>
+            Each wire or ACH a client has confirmed sending, with their bank reference, and whether
+            it has been matched to the money that arrived.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {clientPayments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No client payments reported yet — when a client confirms a wire or ACH from their
+              portal it appears here.
+            </p>
+          ) : (
+            clientPayments.map((inv: any) => (
+              <div
+                key={`pay-${inv.id}`}
+                className="flex flex-wrap items-center gap-2 rounded-md border p-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {inv.client_payment_method === "ach" ? "ACH" : "Wire"} ·{" "}
+                    {money(Number(inv.total_cents))}
+                    <span className="ml-2 font-normal text-muted-foreground">
+                      {inv.clientName} · {inv.number ?? "Invoice"}
+                    </span>
+                  </p>
+                  <p className="text-muted-foreground">
+                    Sent {inv.client_paid_on ?? "—"}
+                    {inv.client_payment_reference
+                      ? ` · reference ${inv.client_payment_reference}`
+                      : " · no reference given"}
+                    {inv.client_payment_note ? ` · “${inv.client_payment_note}”` : ""}
+                  </p>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  {inv.status === "paid" ? (
+                    <Badge variant="secondary">
+                      Received and matched{inv.paid_on ? ` on ${inv.paid_on}` : ""}
+                    </Badge>
+                  ) : (
+                    <Badge variant="default">Awaiting arrival</Badge>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Prepare an invoice</CardTitle>
           <CardDescription>
             Pulls the client's contracted fees on services that are in scope, plus third-party costs
