@@ -84,21 +84,23 @@ const offeringSchema = z.object({
   reg_type: z.enum(REG_TYPE_VALUES),
   min_investment_cents: z.number().int().min(0),
   target_raise_cents: z.number().int().min(0).nullable().default(null),
-  wire_fee_cents: z.number().int().min(0).default(0),
-  closing_cost_cents: z.number().int().min(0).default(0),
-  share_price_cents: z.number().int().min(0).default(0),
+  // Fields a screen may leave out. Anything omitted is left exactly as it is
+  // on the fund rather than being reset, so one editor never wipes another's work.
+  wire_fee_cents: z.number().int().min(0).optional(),
+  closing_cost_cents: z.number().int().min(0).optional(),
+  share_price_cents: z.number().int().min(0).optional(),
 
-  legal_entity_name: z.string().trim().max(200).default(""),
-  fund_type: z.enum(FUND_TYPES).nullable().default(null),
-  fund_type_other: z.string().trim().max(120).default(""),
-  entity_type: z.enum(ENTITY_TYPES).nullable().default(null),
-  state_formed: z.string().trim().max(60).default(""),
+  legal_entity_name: z.string().trim().max(200).optional(),
+  fund_type: z.enum(FUND_TYPES).nullable().optional(),
+  fund_type_other: z.string().trim().max(120).optional(),
+  entity_type: z.enum(ENTITY_TYPES).nullable().optional(),
+  state_formed: z.string().trim().max(60).optional(),
   date_formed: z
     .string()
     .trim()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-01-31")
     .nullable()
-    .default(null),
+    .optional(),
 
   is_open: z.boolean().default(true),
   wire_instructions: wireSchema,
@@ -279,26 +281,34 @@ export const saveOffering = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
 
-    const payload = {
+    // Only the fields the screen actually sent are written. A screen that does
+    // not show the legal entity details or the fees leaves them untouched.
+    const payload: Record<string, unknown> = {
       name: data.name,
       slug: data.slug,
       summary: data.summary || null,
       reg_type: data.reg_type,
       min_investment_cents: data.min_investment_cents,
       target_raise_cents: data.target_raise_cents,
-      wire_fee_cents: data.wire_fee_cents,
-      closing_cost_cents: data.closing_cost_cents,
-      share_price_cents: data.share_price_cents,
-      legal_entity_name: data.legal_entity_name || null,
-      fund_type: data.fund_type,
-      fund_type_other: data.fund_type === "Other" ? data.fund_type_other || null : null,
-      entity_type: data.entity_type,
-      state_formed: data.state_formed || null,
-      date_formed: data.date_formed,
-
-
       is_open: data.is_open,
     };
+    if (data.wire_fee_cents !== undefined) payload["wire_fee_cents"] = data.wire_fee_cents;
+    if (data.closing_cost_cents !== undefined)
+      payload["closing_cost_cents"] = data.closing_cost_cents;
+    if (data.share_price_cents !== undefined)
+      payload["share_price_cents"] = data.share_price_cents;
+    if (data.legal_entity_name !== undefined)
+      payload["legal_entity_name"] = data.legal_entity_name || null;
+    if (data.fund_type !== undefined) {
+      payload["fund_type"] = data.fund_type;
+      payload["fund_type_other"] =
+        data.fund_type === "Other" ? data.fund_type_other || null : null;
+    } else if (data.fund_type_other !== undefined) {
+      payload["fund_type_other"] = data.fund_type_other || null;
+    }
+    if (data.entity_type !== undefined) payload["entity_type"] = data.entity_type;
+    if (data.state_formed !== undefined) payload["state_formed"] = data.state_formed || null;
+    if (data.date_formed !== undefined) payload["date_formed"] = data.date_formed;
 
     const wireDetails = Object.fromEntries(
       Object.entries(data.wire_instructions).filter(([, v]) => String(v).trim() !== ""),
@@ -326,11 +336,19 @@ export const saveOffering = createServerFn({ method: "POST" })
       // A fee typed in by hand stops following a rate card until it is pointed
       // back at one on the fund's fee panel.
       const feePatch: Record<string, unknown> = {};
-      if (previousOffering && previousOffering["wire_fee_cents"] !== data.wire_fee_cents) {
+      if (
+        previousOffering &&
+        data.wire_fee_cents !== undefined &&
+        previousOffering["wire_fee_cents"] !== data.wire_fee_cents
+      ) {
         feePatch["wire_fee_source"] = "custom";
         feePatch["wire_fee_rate_id"] = null;
       }
-      if (previousOffering && previousOffering["closing_cost_cents"] !== data.closing_cost_cents) {
+      if (
+        previousOffering &&
+        data.closing_cost_cents !== undefined &&
+        previousOffering["closing_cost_cents"] !== data.closing_cost_cents
+      ) {
         feePatch["closing_cost_source"] = "custom";
         feePatch["closing_cost_rate_id"] = null;
       }
@@ -396,7 +414,11 @@ export const saveOffering = createServerFn({ method: "POST" })
     });
     if (wireError) throw new Error(wireError.message);
 
-    const offeringChanges = diffRecords(previousOffering, payload, OFFERING_FIELDS);
+    const offeringChanges = diffRecords(
+      previousOffering,
+      payload,
+      OFFERING_FIELDS.filter((f) => f in payload),
+    );
     if (!data.id) {
       await recordAudit(context.supabase, identity, {
         offering_id: offeringId!,
