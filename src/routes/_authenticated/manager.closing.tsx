@@ -13,7 +13,6 @@ import {
   removeClosingDocument,
   reopenClosing,
 } from "@/lib/closing.functions";
-import { generateStatementsForFund } from "@/lib/capital-statements.functions";
 import { CapitalStatementPanel } from "@/components/capital-statement-panel";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
