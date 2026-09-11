@@ -61,6 +61,7 @@ import { Route as AuthenticatedAdminMoneyRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminNewApplicationRouteImport } from './routes/_authenticated/admin.new-application'
 import { Route as AuthenticatedAdminOfferingStatementRouteImport } from './routes/_authenticated/admin.offering-statement'
 import { Route as AuthenticatedAdminOnboardingRouteImport } from './routes/_authenticated/admin.onboarding'
+import { Route as AuthenticatedAdminOnboardingProgressRouteImport } from './routes/_authenticated/admin.onboarding-progress'
 import { Route as AuthenticatedAdminPerformanceRouteImport } from './routes/_authenticated/admin.performance'
 import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_authenticated/admin.permissions'
 import { Route as AuthenticatedAdminPortfolioValueRouteImport } from './routes/_authenticated/admin.portfolio-value'
@@ -416,6 +417,12 @@ const AuthenticatedAdminOnboardingRoute =
   AuthenticatedAdminOnboardingRouteImport.update({
     id: '/admin/onboarding',
     path: '/admin/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminOnboardingProgressRoute =
+  AuthenticatedAdminOnboardingProgressRouteImport.update({
+    id: '/admin/onboarding-progress',
+    path: '/admin/onboarding-progress',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminPerformanceRoute =
@@ -918,6 +925,7 @@ export interface FileRoutesByFullPath {
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/admin/onboarding': typeof AuthenticatedAdminOnboardingRoute
+  '/admin/onboarding-progress': typeof AuthenticatedAdminOnboardingProgressRoute
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
@@ -1046,6 +1054,7 @@ export interface FileRoutesByTo {
   '/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/admin/onboarding': typeof AuthenticatedAdminOnboardingRoute
+  '/admin/onboarding-progress': typeof AuthenticatedAdminOnboardingProgressRoute
   '/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
@@ -1178,6 +1187,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/new-application': typeof AuthenticatedAdminNewApplicationRoute
   '/_authenticated/admin/offering-statement': typeof AuthenticatedAdminOfferingStatementRoute
   '/_authenticated/admin/onboarding': typeof AuthenticatedAdminOnboardingRoute
+  '/_authenticated/admin/onboarding-progress': typeof AuthenticatedAdminOnboardingProgressRoute
   '/_authenticated/admin/performance': typeof AuthenticatedAdminPerformanceRoute
   '/_authenticated/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/_authenticated/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
@@ -1310,6 +1320,7 @@ export interface FileRouteTypes {
     | '/admin/new-application'
     | '/admin/offering-statement'
     | '/admin/onboarding'
+    | '/admin/onboarding-progress'
     | '/admin/performance'
     | '/admin/permissions'
     | '/admin/portfolio-value'
@@ -1438,6 +1449,7 @@ export interface FileRouteTypes {
     | '/admin/new-application'
     | '/admin/offering-statement'
     | '/admin/onboarding'
+    | '/admin/onboarding-progress'
     | '/admin/performance'
     | '/admin/permissions'
     | '/admin/portfolio-value'
@@ -1569,6 +1581,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/new-application'
     | '/_authenticated/admin/offering-statement'
     | '/_authenticated/admin/onboarding'
+    | '/_authenticated/admin/onboarding-progress'
     | '/_authenticated/admin/performance'
     | '/_authenticated/admin/permissions'
     | '/_authenticated/admin/portfolio-value'
@@ -2038,6 +2051,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/onboarding'
       fullPath: '/admin/onboarding'
       preLoaderRoute: typeof AuthenticatedAdminOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/onboarding-progress': {
+      id: '/_authenticated/admin/onboarding-progress'
+      path: '/admin/onboarding-progress'
+      fullPath: '/admin/onboarding-progress'
+      preLoaderRoute: typeof AuthenticatedAdminOnboardingProgressRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/performance': {
@@ -2646,6 +2666,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminNewApplicationRoute: typeof AuthenticatedAdminNewApplicationRoute
   AuthenticatedAdminOfferingStatementRoute: typeof AuthenticatedAdminOfferingStatementRoute
   AuthenticatedAdminOnboardingRoute: typeof AuthenticatedAdminOnboardingRoute
+  AuthenticatedAdminOnboardingProgressRoute: typeof AuthenticatedAdminOnboardingProgressRoute
   AuthenticatedAdminPerformanceRoute: typeof AuthenticatedAdminPerformanceRoute
   AuthenticatedAdminPermissionsRoute: typeof AuthenticatedAdminPermissionsRoute
   AuthenticatedAdminPortfolioValueRoute: typeof AuthenticatedAdminPortfolioValueRoute
@@ -2745,6 +2766,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminOfferingStatementRoute:
     AuthenticatedAdminOfferingStatementRoute,
   AuthenticatedAdminOnboardingRoute: AuthenticatedAdminOnboardingRoute,
+  AuthenticatedAdminOnboardingProgressRoute:
+    AuthenticatedAdminOnboardingProgressRoute,
   AuthenticatedAdminPerformanceRoute: AuthenticatedAdminPerformanceRoute,
   AuthenticatedAdminPermissionsRoute: AuthenticatedAdminPermissionsRoute,
   AuthenticatedAdminPortfolioValueRoute: AuthenticatedAdminPortfolioValueRoute,
