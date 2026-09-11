@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
+import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { ClientSowPanel } from "@/components/client-sow-panel";
 import { ClientDashboard } from "@/components/client-dashboard";
 import { getClientPortal } from "@/lib/client-portal.functions";
@@ -35,8 +36,16 @@ export const Route = createFileRoute("/_authenticated/client")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ClientPortal,
+  component: ClientPortalPage,
 });
+
+function ClientPortalPage() {
+  return (
+    <ClientIntakeGate>
+      <ClientPortal />
+    </ClientIntakeGate>
+  );
+}
 
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
