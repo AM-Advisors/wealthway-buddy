@@ -25,7 +25,12 @@ export type InvestorCapitalFund = {
   sharePriceCents: number | null;
   fundDistributionsCents: number;
   myDistributionsCents: number | null;
-  distributions: { date: string | null; amountCents: number; myShareCents: number | null }[];
+  distributions: {
+    date: string | null;
+    kind: string | null;
+    amountCents: number;
+    myShareCents: number | null;
+  }[];
   valuation: { asOf: string; navCents: number; myShareCents: number | null } | null;
   statementCount: number;
   latestStatementDate: string | null;
@@ -83,7 +88,7 @@ export const getMyCapitalSummary = createServerFn({ method: "GET" })
         .in("application_id", applicationIds),
       supabaseAdmin
         .from("fund_distributions")
-        .select("offering_id, amount_cents, distribution_date, paid_on, created_at")
+        .select("offering_id, amount_cents, kind, paid_on, created_at")
         .in("offering_id", offeringIds),
       supabaseAdmin
         .from("fund_valuations")
@@ -196,7 +201,8 @@ export const getMyCapitalSummary = createServerFn({ method: "GET" })
         myDistributionsCents: share(fundDistributionsCents),
         distributions: fundDistributions
           .map((d) => ({
-            date: (d.distribution_date ?? d.paid_on ?? d.created_at ?? null) as string | null,
+            date: (d.paid_on ?? d.created_at ?? null) as string | null,
+            kind: (d.kind ?? null) as string | null,
             amountCents: Number(d.amount_cents ?? 0),
             myShareCents: share(Number(d.amount_cents ?? 0)),
           }))
