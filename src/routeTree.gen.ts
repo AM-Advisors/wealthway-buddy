@@ -64,6 +64,7 @@ import { Route as AuthenticatedAdminPerformanceRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminPermissionsRouteImport } from './routes/_authenticated/admin.permissions'
 import { Route as AuthenticatedAdminPortfolioValueRouteImport } from './routes/_authenticated/admin.portfolio-value'
 import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authenticated/admin.pricing'
+import { Route as AuthenticatedAdminRateProposalsRouteImport } from './routes/_authenticated/admin.rate-proposals'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
@@ -424,6 +425,12 @@ const AuthenticatedAdminPricingRoute =
   AuthenticatedAdminPricingRouteImport.update({
     id: '/admin/pricing',
     path: '/admin/pricing',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRateProposalsRoute =
+  AuthenticatedAdminRateProposalsRouteImport.update({
+    id: '/admin/rate-proposals',
+    path: '/admin/rate-proposals',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminRequestsRoute =
@@ -851,6 +858,7 @@ export interface FileRoutesByFullPath {
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin/rate-proposals': typeof AuthenticatedAdminRateProposalsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
@@ -970,6 +978,7 @@ export interface FileRoutesByTo {
   '/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/admin/rate-proposals': typeof AuthenticatedAdminRateProposalsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
@@ -1092,6 +1101,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/permissions': typeof AuthenticatedAdminPermissionsRoute
   '/_authenticated/admin/portfolio-value': typeof AuthenticatedAdminPortfolioValueRoute
   '/_authenticated/admin/pricing': typeof AuthenticatedAdminPricingRoute
+  '/_authenticated/admin/rate-proposals': typeof AuthenticatedAdminRateProposalsRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
@@ -1214,6 +1224,7 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/portfolio-value'
     | '/admin/pricing'
+    | '/admin/rate-proposals'
     | '/admin/requests'
     | '/admin/security'
     | '/admin/setup'
@@ -1333,6 +1344,7 @@ export interface FileRouteTypes {
     | '/admin/permissions'
     | '/admin/portfolio-value'
     | '/admin/pricing'
+    | '/admin/rate-proposals'
     | '/admin/requests'
     | '/admin/security'
     | '/admin/setup'
@@ -1454,6 +1466,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/permissions'
     | '/_authenticated/admin/portfolio-value'
     | '/_authenticated/admin/pricing'
+    | '/_authenticated/admin/rate-proposals'
     | '/_authenticated/admin/requests'
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/setup'
@@ -1931,6 +1944,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/pricing'
       fullPath: '/admin/pricing'
       preLoaderRoute: typeof AuthenticatedAdminPricingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/rate-proposals': {
+      id: '/_authenticated/admin/rate-proposals'
+      path: '/admin/rate-proposals'
+      fullPath: '/admin/rate-proposals'
+      preLoaderRoute: typeof AuthenticatedAdminRateProposalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/requests': {
@@ -2424,6 +2444,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPermissionsRoute: typeof AuthenticatedAdminPermissionsRoute
   AuthenticatedAdminPortfolioValueRoute: typeof AuthenticatedAdminPortfolioValueRoute
   AuthenticatedAdminPricingRoute: typeof AuthenticatedAdminPricingRoute
+  AuthenticatedAdminRateProposalsRoute: typeof AuthenticatedAdminRateProposalsRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
@@ -2522,6 +2543,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPermissionsRoute: AuthenticatedAdminPermissionsRoute,
   AuthenticatedAdminPortfolioValueRoute: AuthenticatedAdminPortfolioValueRoute,
   AuthenticatedAdminPricingRoute: AuthenticatedAdminPricingRoute,
+  AuthenticatedAdminRateProposalsRoute: AuthenticatedAdminRateProposalsRoute,
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
