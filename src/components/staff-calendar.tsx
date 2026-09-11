@@ -443,6 +443,12 @@ export function StaffCalendar() {
         <span className="flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full ${KIND_DOT.hold}`} /> Holds
         </span>
+        <span className="flex items-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${KIND_DOT.signoff}`} /> Sign-offs
+        </span>
+        <span className="flex items-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${KIND_DOT.payment}`} /> Payments
+        </span>
         <span>
           {monthCount} item{monthCount === 1 ? "" : "s"} due this month
         </span>
