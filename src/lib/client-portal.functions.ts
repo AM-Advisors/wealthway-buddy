@@ -83,6 +83,15 @@ export const getClientPortal = createServerFn({ method: "GET" })
         .limit(50),
     ]);
 
+    const { data: serviceRequests } = await context.supabase
+      .from("service_requests")
+      .select(
+        "id, service_key, service_name, offering_id, status, quoted_fee_cents, quoted_at, created_at, updated_at",
+      )
+      .eq("client_id", selectedId)
+      .order("updated_at", { ascending: false })
+      .limit(50);
+
     const catalogByKey = new Map((catalog ?? []).map((c: any) => [c.key, c]));
     const included = (entitlements ?? [])
       .filter((e: any) => e.status === "included")
