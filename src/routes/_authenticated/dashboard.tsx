@@ -13,6 +13,7 @@ import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { OwnershipCard } from "@/components/ownership-card";
+import { CapitalStatementPanel } from "@/components/capital-statement-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -807,6 +808,9 @@ function ClosingCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         {closing.note ? <p className="text-sm">{closing.note}</p> : null}
+        {closing.applicationId ? (
+          <CapitalStatementPanel applicationId={closing.applicationId} />
+        ) : null}
         <div>
           <p className="text-sm font-medium">Final documents</p>
           {documents.length === 0 ? (

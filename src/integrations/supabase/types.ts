@@ -547,6 +547,76 @@ export type Database = {
           },
         ]
       }
+      capital_account_statements: {
+        Row: {
+          application_id: string
+          closing_id: string | null
+          created_at: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          offering_id: string
+          period_end: string | null
+          snapshot: Json
+          statement_date: string
+          superseded: boolean
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          application_id: string
+          closing_id?: string | null
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          offering_id: string
+          period_end?: string | null
+          snapshot?: Json
+          statement_date?: string
+          superseded?: boolean
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          application_id?: string
+          closing_id?: string | null
+          created_at?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          offering_id?: string
+          period_end?: string | null
+          snapshot?: Json
+          statement_date?: string
+          superseded?: boolean
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_account_statements_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_account_statements_closing_id_fkey"
+            columns: ["closing_id"]
+            isOneToOne: false
+            referencedRelation: "application_closings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_account_statements_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_assignments: {
         Row: {
           assigned_by: string | null
