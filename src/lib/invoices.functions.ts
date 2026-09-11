@@ -395,7 +395,7 @@ async function checkRates(context: any, invoiceId: string, clientId: string) {
       const rate = l.pricing_id
         ? rateById.get(l.pricing_id)
         : l.service_key
-          ? rateByKey.get(String(l.service_key))
+          ? (rateByKey.get(String(l.service_key)) ?? fallback)
           : null;
       const contracted = rate ? Number(rate.contracted_cents ?? rate.standard_cents ?? 0) : null;
       const billed = Number(l.amount_cents ?? 0) ;
