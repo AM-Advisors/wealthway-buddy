@@ -438,8 +438,8 @@ export function StaffCalendar() {
           </CardTitle>
           <CardDescription>
             {selectedItems.length === 0
-              ? "Nothing lands on this day."
-              : `${selectedItems.length} item${selectedItems.length === 1 ? "" : "s"} for your team.`}
+              ? "Nothing is due on this day."
+              : `${selectedItems.length} item${selectedItems.length === 1 ? "" : "s"} due for your team.`}
           </CardDescription>
         </CardHeader>
         {selectedItems.length > 0 ? (
