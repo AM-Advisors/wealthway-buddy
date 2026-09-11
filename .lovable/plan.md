@@ -1,62 +1,49 @@
-# Fund website page: agreement, pricing and investor contact
+# Real welcome emails for new client sign-ups
 
-Each fund already has a public web page at `/fund/<fund-name>` with the headline, summary,
-raise progress, pitch deck, document list and an access-request form. This adds three things
-to that page: the signed agreement status, what an investor pays, and a proper contact form
-with a place for staff to work the enquiries.
+Today, inviting someone on a client's team only records the invitation in the system. No email
+goes out, so the person never learns they have access. Fund invitations already do this properly:
+they create the account, generate a one-time link where the person chooses their own password,
+and send a branded email. This brings client invitations up to the same standard.
 
-## What visitors will see
+## What changes
 
-**Administration and agreement**
-A short panel confirming the fund is administered by Harmonious under a signed and approved
-statement of work, with the effective date and the services in scope for that fund. No fees,
-no document, no client commercial terms. When the fund has no signed and approved agreement,
-the panel is hidden entirely rather than showing a gap.
+When an administrator invites a contact from Onboarding:
 
-The fund's own client, signed in to their portal, keeps the existing full view of the signed
-agreement — nothing about that changes.
+1. Their account is created straight away (or reused if they already have one).
+2. They are attached to the client with the role and approval rights chosen.
+3. A one-time secure link is generated where they set their own password.
+4. A branded Harmonious welcome email is sent with: who invited them, the client they now act for,
+   their role, the note written for them, a "Set your password" button, and what to do first
+   (sign the privacy, pricing and migration documents, then their portal).
+5. The invitation is recorded as sent, and the audit trail notes whether the email went out.
 
-Wording stays MSA-aligned: Harmonious provides administration, onboarding, reporting,
-payment facilitation and recordkeeping support. Nothing implies adviser, broker-dealer,
-custodian, transfer agent or escrow roles.
+Passwords are never written into an email. The link expires and only works once — that is both
+safer and what regulated clients expect. The person lands on the existing password page and then
+their portal.
 
-**What it costs to invest**
-A clear investor-cost panel: minimum investment, unit price, and any investor-paid fees
-already recorded on the fund (outbound wire fee, closing cost), each labelled per investment
-or one-time. Contracted administration rates between the fund's client and Harmonious are
-never shown publicly. If no investor-paid fees are recorded, the panel shows minimum and
-unit price only.
+If the invite email cannot be sent (for example, the address previously bounced), the invitation
+is still created, the screen says so plainly, and the administrator can copy a sign-in link
+instead.
 
-**Contact form**
-A dedicated "Contact the fund team" form: name, email, firm, phone, and message, with the
-existing spam trap and the same rate limiting the access form uses. This sits alongside the
-access request, which keeps its own purpose (getting into the document room).
+## Screen updates
 
-Submitting shows a confirmation and no investor data beyond what they typed is stored.
+- Onboarding contact list shows "Welcome email sent" with the date, or "Not delivered".
+- A "Resend welcome email" action on pending invitations, generating a fresh password link.
+- Cancelling an invitation stays as it is.
 
-## What staff will see
+## Technical details
 
-A new **Enquiries** view listing contact-form submissions across funds: fund, name, email,
-firm, message, received date and status (new, in progress, replied, closed), newest first,
-with a filter by fund and by status. Staff can change status and add an internal note; each
-change is written to the audit trail with who and when. Reachable from the admin sidebar and
-from each fund's admin page.
-
-## Technical notes
-
-- New table `fund_enquiries` (offering_id, name, email, firm, phone, message, status,
-  handled_by, handled_at, internal_note, ip, created_at) with RLS: insert via the
-  service-role server function only, read/update restricted to staff. Explicit GRANTs to
-  `authenticated` and `service_role`; no `anon` grant.
-- `src/lib/public-fund.functions.ts`: extend `getPublicFundPage` to return
-  `agreement` (signed + approved SOW only: effective date, notice period omitted, in-scope
-  service names) and `investor_costs` (min investment, share price, `wire_fee_cents`,
-  `closing_cost_cents` with their labels). Add `submitFundEnquiry` mirroring
-  `requestFundAccess` validation, honeypot and throttling; Zod-validated with length caps.
-- `src/lib/fund-enquiries.functions.ts`: staff-gated list and status-update functions,
-  writing `contract_audit_events` (or the existing offering audit stream) on each change.
-- `src/routes/fund.$slug.tsx`: three new sections plus anchor link in the page header.
-- `src/components/fund-enquiries-board.tsx` and route `/admin/enquiries`, plus a link from
-  `admin.fund.$fundId.tsx`.
-- Fund page `head()` metadata stays as-is; no `og:image` is added since fund covers are
-  bundled assets, not absolute URLs.
+- New template `src/lib/email-templates/client-invitation.tsx` registered in
+  `src/lib/email-templates/registry.ts`, styled with the existing Harmonious palette
+  (navy #142647, teal #5DC6D1, Rubik/Poppins) and matching `investor-invitation.tsx` structure.
+- `inviteClientContact` in `src/lib/client-onboarding.functions.ts` reuses the proven
+  `ensureAccount` + `setPasswordLink` (recovery link to `/reset-password`) pattern from
+  `src/lib/invitations.functions.ts`; extract both into a small shared server helper rather than
+  duplicating them.
+- Send through `sendTemplateEmail` with an idempotency key of `client-invite-<invitationId>` so
+  retries do not double-send; treat `{ sent: false, reason: 'recipient_suppressed' }` as a
+  non-error outcome surfaced in the UI.
+- Migration: add `invite_sent_at` and `invite_status` to `client_invitations`; existing rows keep
+  a null value meaning "no email sent".
+- New `resendClientInvitation` server function under the same contract-authority guard as
+  `inviteClientContact`, writing an audit event.
