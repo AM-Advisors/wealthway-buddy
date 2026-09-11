@@ -48,6 +48,15 @@ export function buildInvoiceHtml(invoice: any) {
       }.</p>`
     : "";
 
+  const addressLines = companyAddressLines()
+    .map((line) => `<p>${escape(line)}</p>`)
+    .join("");
+  const contactLines = [
+    COMPANY.phone ? `<p>${escape(COMPANY.phone)}</p>` : "",
+    `<p>${escape(COMPANY.billingEmail || COMPANY.email)}</p>`,
+    `<p>${escape(COMPANY.website)}</p>`,
+  ].join("");
+
   return `<!doctype html>
 <html lang="en">
 <head>
