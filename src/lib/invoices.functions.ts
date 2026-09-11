@@ -71,6 +71,19 @@ async function audit(
   });
 }
 
+/** The fund an invoice's lines belong to, so fund-level trails show the
+ *  issuing and payment steps alongside the fees themselves. */
+async function invoiceOfferingId(context: any, invoiceId: string) {
+  const { data } = await context.supabase
+    .from("invoice_lines")
+    .select("offering_id")
+    .eq("invoice_id", invoiceId)
+    .not("offering_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+  return (data as any)?.offering_id ?? null;
+}
+
 function addDays(iso: string, days: number) {
   const d = new Date(`${iso}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
