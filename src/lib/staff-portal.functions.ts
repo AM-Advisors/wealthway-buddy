@@ -221,6 +221,53 @@ export const getMyDesk = createServerFn({ method: "GET" })
       fundName: fundName(r.offering_id),
     });
 
+    const personName = (userId: string) => {
+      const p = profiles.find((x: any) => String(x.user_id) === String(userId));
+      return p?.legal_name || p?.email || "A client contact";
+    };
+    const personEmail = (userId: string) =>
+      profiles.find((x: any) => String(x.user_id) === String(userId))?.email ?? null;
+
+    // One row per contact who still owes a signature on a published document.
+    const signOffs: any[] = [];
+    for (const contact of contacts) {
+      const uid = String(contact.user_id);
+      const outstanding = latestPolicies.filter(
+        (p: any) =>
+          !acceptances.some(
+            (a: any) =>
+              String(a.user_id) === uid &&
+              String(a.kind) === String(p.kind) &&
+              Number(a.version) === Number(p.version),
+          ),
+      );
+      if (outstanding.length === 0) continue;
+      signOffs.push({
+        id: `${contact.client_id}-${uid}`,
+        client_id: String(contact.client_id),
+        clientName: clientName(String(contact.client_id)),
+        userId: uid,
+        personName: personName(uid),
+        personEmail: personEmail(uid),
+        clientRole: contact.client_role ?? null,
+        since: contact.created_at ?? null,
+        outstanding: outstanding.map((p: any) => ({
+          kind: String(p.kind),
+          title: p.title as string,
+          version: Number(p.version),
+        })),
+      });
+    }
+
+    // Money waiting on someone: unpaid invoices, and payments a client says they sent.
+    const openInvoices = invoicesAll
+      .filter((i: any) => !["paid", "void", "draft"].includes(String(i.status)))
+      .map(decorate);
+    const declaredPayments = invoicesAll
+      .filter((i: any) => i.client_payment_declared_at && String(i.status) !== "paid")
+      .map(decorate);
+
+
     return {
       me: who.userId,
       roles: who.roles,
