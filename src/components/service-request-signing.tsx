@@ -21,6 +21,21 @@ function money(cents: number | null | undefined) {
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
+/** Some services have no flat price — they're quoted each time they're asked for. */
+export function feeText(cents: number | null | undefined, model?: string | null) {
+  if (cents === null || cents === undefined) {
+    return model === "per_request"
+      ? "Quoted per request — the amount depends on the services required"
+      : "Quoted at the time";
+  }
+  const amount = money(cents);
+  if (!model) return amount as string;
+  if (model === "per_request") return `${amount} per request`;
+  if (model === "annual") return `${amount} per year`;
+  if (model === "transaction") return `${amount} each time`;
+  return `${amount} (${model.replace(/_/g, " ")})`;
+}
+
 const WAITING: Record<string, string> = {
   requested: "Waiting on Harmonious to review it.",
   in_review: "Harmonious is reviewing it.",
