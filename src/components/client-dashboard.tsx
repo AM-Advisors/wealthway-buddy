@@ -154,6 +154,31 @@ export function ClientDashboard({
         </Card>
       </div>
 
+      {decisions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Decisions from Harmonious</CardTitle>
+            <CardDescription>What we've decided recently, and why.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {decisions.map((d) => (
+              <div key={d.id} className="rounded-md border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{d.label}</p>
+                    {d.note ? <p className="text-xs text-muted-foreground">{d.note}</p> : null}
+                  </div>
+                  <Badge variant={d.tone === "good" ? "default" : "secondary"}>{d.outcome}</Badge>
+                </div>
+                {d.at ? (
+                  <p className="mt-1 text-xs text-muted-foreground">Decided {when(d.at)}</p>
+                ) : null}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
