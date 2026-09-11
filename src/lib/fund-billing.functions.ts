@@ -297,6 +297,11 @@ export const billFundFees = createServerFn({ method: "POST" })
 
     const total = toBill.reduce((s, e) => s + Number(e.cents ?? 0), 0);
 
+    // Tie each fee back to the client's agreed rate line so the rate check on
+    // issuing compares like with like instead of treating it as off rate card.
+    const { resolveClientRates } = await import("@/lib/fee-rates.server");
+    const clientRates = await resolveClientRates(context.supabase, clientId);
+
     const { data: invoice, error } = await context.supabase
       .from("invoices")
       .insert({
