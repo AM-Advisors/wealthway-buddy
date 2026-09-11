@@ -23,6 +23,7 @@ import {
   getClientOnboarding,
   inviteClientContact,
   markOnboardingStep,
+  resendClientInvitation,
   setContactAccess,
 } from "@/lib/client-onboarding.functions";
 
