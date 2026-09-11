@@ -118,6 +118,13 @@ export function FundBankStatement({ fundId }: { fundId: string }) {
                     Posted {line.postedOn}
                     {line.description ? ` · ${line.description}` : ""}
                   </p>
+                  {line.declaredMethod ? (
+                    <p className="text-xs text-muted-foreground">
+                      Client said they sent this by {line.declaredMethod === "ach" ? "ACH" : "wire"}
+                      {line.declaredPaidOn ? ` on ${line.declaredPaidOn}` : ""}
+                      {line.declaredReference ? ` · reference ${line.declaredReference}` : ""}
+                    </p>
+                  ) : null}
                 </div>
                 {line.matchedInvoiceId ? (
                   <Badge>Pays {line.matchedInvoiceNumber}</Badge>
@@ -204,7 +211,14 @@ export function FundBankStatement({ fundId }: { fundId: string }) {
           {data?.account
             ? ` — ${data.account.institution_name ?? "Bank"} ${data.account.account_mask ? `••${data.account.account_mask}` : ""}`
             : ""}
-          . Match a deposit to an invoice to record the fee as paid.
+          . Payments clients report from their portal are matched to the invoice on their own when
+          the amount and the reference or date agree; anything else is matched here by hand.
+          {data && data.autoMatched > 0
+            ? ` ${data.autoMatched} payment${data.autoMatched === 1 ? " was" : "s were"} matched just now.`
+            : ""}
+          {data && data.awaitingArrival.length > 0
+            ? ` ${data.awaitingArrival.length} reported payment${data.awaitingArrival.length === 1 ? " has" : "s have"} not landed yet.`
+            : ""}
           {data && data.unreconciledCount > 0
             ? ` ${data.unreconciledCount} line${data.unreconciledCount === 1 ? "" : "s"} still unmatched.`
             : ""}
