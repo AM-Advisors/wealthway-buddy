@@ -342,6 +342,8 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
         </CardContent>
       </Card>
 
+      <FundBankStatement fundId={fundId} />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Trail</CardTitle>
