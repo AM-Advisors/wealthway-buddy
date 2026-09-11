@@ -1,6 +1,9 @@
 /** Builds a printable invoice a client can save as a PDF from their browser.
  *  Kept as plain HTML so the download works without a server round-trip. */
 
+import { COMPANY, companyAddressLines, companyLogoUrl } from "@/lib/company-details";
+
+
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
