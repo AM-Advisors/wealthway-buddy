@@ -122,6 +122,7 @@ import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_au
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
+import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
@@ -762,6 +763,12 @@ const ApiPublicEmailOpenRoute = ApiPublicEmailOpenRouteImport.update({
   path: '/api/public/email/open',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksInvoiceRemindersRoute =
+  ApiPublicHooksInvoiceRemindersRouteImport.update({
+    id: '/api/public/hooks/invoice-reminders',
+    path: '/api/public/hooks/invoice-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNotifyDrainRoute = ApiPublicNotifyDrainRouteImport.update({
   id: '/api/public/notify/drain',
   path: '/api/public/notify/drain',
@@ -902,6 +909,7 @@ export interface FileRoutesByFullPath {
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -1020,6 +1028,7 @@ export interface FileRoutesByTo {
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -1141,6 +1150,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
@@ -1262,6 +1272,7 @@ export interface FileRouteTypes {
     | '/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -1380,6 +1391,7 @@ export interface FileRouteTypes {
     | '/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -1500,6 +1512,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/funds/$fundId'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/webhooks/box-sign'
@@ -1525,6 +1538,7 @@ export interface RootRouteChildren {
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
+  ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
@@ -2325,6 +2339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmailOpenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/invoice-reminders': {
+      id: '/api/public/hooks/invoice-reminders'
+      path: '/api/public/hooks/invoice-reminders'
+      fullPath: '/api/public/hooks/invoice-reminders'
+      preLoaderRoute: typeof ApiPublicHooksInvoiceRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/notify/drain': {
       id: '/api/public/notify/drain'
       path: '/api/public/notify/drain'
@@ -2603,6 +2624,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
+  ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,

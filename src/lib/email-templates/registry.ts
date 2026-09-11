@@ -13,6 +13,7 @@ import { template as opsReviewDecision } from './ops-review-decision'
 import { template as clientAdminAlert } from './client-admin-alert'
 import { template as clientInvitation } from './client-invitation'
 import { template as invoiceIssued } from './invoice-issued'
+import { template as invoiceReminder } from './invoice-reminder'
 
 
 
@@ -48,5 +49,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'client-admin-alert': clientAdminAlert,
   'client-invitation': clientInvitation,
   'invoice-issued': invoiceIssued,
+  'invoice-reminder': invoiceReminder,
 
 }

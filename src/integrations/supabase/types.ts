@@ -6100,6 +6100,24 @@ export type Database = {
           },
         ]
       }
+      scheduled_job_runs: {
+        Row: {
+          job_key: string
+          last_run_at: string
+          last_run_on: string
+        }
+        Insert: {
+          job_key: string
+          last_run_at?: string
+          last_run_on: string
+        }
+        Update: {
+          job_key?: string
+          last_run_at?: string
+          last_run_on?: string
+        }
+        Relationships: []
+      }
       service_catalog: {
         Row: {
           active: boolean

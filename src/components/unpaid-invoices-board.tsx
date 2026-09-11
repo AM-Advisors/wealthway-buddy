@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { InvoiceEmailStatus } from "@/components/invoice-email-status";
 import { listInvoices } from "@/lib/invoices.functions";
 
 const money = (cents: number | null | undefined) =>
@@ -223,6 +224,9 @@ export function UnpaidInvoicesBoard() {
                     <Button asChild size="sm" variant="ghost">
                       <Link to="/admin/pricing">Manage in Pricing</Link>
                     </Button>
+                  </div>
+                  <div className="w-full">
+                    <InvoiceEmailStatus invoiceId={inv.id} />
                   </div>
                 </div>
               );

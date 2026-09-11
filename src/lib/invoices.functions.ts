@@ -553,6 +553,96 @@ export const issueInvoice = createServerFn({ method: "POST" })
     return { ok: true, number, dueDate };
   });
 
+/** Who the invoice email reached, and whether anything went wrong. Staff only. */
+export const getInvoiceDelivery = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await requireStaff(context);
+    const { data: invoice } = await context.supabase
+      .from("invoices")
+      .select("id, client_id, status, issued_at")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!invoice) throw new Error("That invoice isn't available.");
+    if ((invoice as any).status === "draft") {
+      return { rows: [], confirmed: false, problem: false, available: true, draft: true };
+    }
+    const { invoiceDelivery } = await import("@/lib/invoice-delivery.server");
+    const result = await invoiceDelivery(
+      String((invoice as any).client_id),
+      (invoice as any).issued_at ?? null,
+    );
+    return { ...result, draft: false };
+  });
+
+/** Send the invoice email again to the client's decision makers. */
+export const resendInvoiceEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: invoice } = await context.supabase
+      .from("invoices")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!invoice) throw new Error("That invoice isn't available.");
+    if ((invoice as any).status === "draft") {
+      throw new Error("Issue this invoice before sending it to the client.");
+    }
+    if ((invoice as any).status === "void") {
+      throw new Error("This invoice was voided, so it can't be sent again.");
+    }
+
+    const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import(
+      "@/lib/client-notify.server"
+    );
+    const { data: billed } = await context.supabase
+      .from("invoice_lines")
+      .select("label, amount_cents, sort_order")
+      .eq("invoice_id", data.id)
+      .order("sort_order", { ascending: true });
+    const { data: clientRow } = await context.supabase
+      .from("clients")
+      .select("legal_name, name")
+      .eq("id", (invoice as any).client_id)
+      .maybeSingle();
+
+    const stamp = new Date().toISOString();
+    await notifyClientAdminsWith(
+      (invoice as any).client_id,
+      "invoice-issued",
+      `invoice-resend:${data.id}:${stamp}`,
+      (person) => ({
+        contactName: person.name,
+        clientName:
+          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organisation",
+        invoiceNumber: String((invoice as any).number ?? ""),
+        amount: money(Number((invoice as any).total_cents ?? 0)),
+        issueDate: String((invoice as any).issue_date ?? ""),
+        dueDate: String((invoice as any).due_date ?? ""),
+        periodLabel: `${(invoice as any).period_start} to ${(invoice as any).period_end}`,
+        lines: (billed ?? []).map((l: any) => ({
+          label: String(l.label ?? "Service fee"),
+          amount: money(Number(l.amount_cents ?? 0)),
+        })),
+        payUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${data.id}`,
+        note: (invoice as any).note || "",
+      }),
+    );
+
+    await audit(context, who, {
+      action: "email_resent",
+      target: String((invoice as any).number ?? data.id),
+      clientId: (invoice as any).client_id,
+      offeringId: await invoiceOfferingId(context, data.id),
+      next: { resent_at: stamp },
+    });
+
+    return { ok: true };
+  });
+
 export const recordInvoicePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
