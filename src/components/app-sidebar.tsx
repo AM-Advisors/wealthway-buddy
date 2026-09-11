@@ -101,6 +101,7 @@ const operationsItems: NavItem[] = [
 
 const clientsAndMoneyItems: NavItem[] = [
   { title: "Client onboarding", url: "/admin/onboarding", icon: UserPlus },
+  { title: "Onboarding progress", url: "/admin/onboarding-progress", icon: Gauge },
   { title: "Clients and scope", url: "/admin/contracts", icon: Handshake },
   { title: "Pricing and agreements", url: "/admin/pricing", icon: ScrollText },
   { title: "Rate proposals", url: "/admin/rate-proposals", icon: Handshake },
