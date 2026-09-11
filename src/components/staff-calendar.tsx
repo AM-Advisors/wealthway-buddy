@@ -26,7 +26,9 @@ type Kind = "request" | "quote" | "hold";
 interface CalendarItem {
   id: string;
   kind: Kind;
-  day: string; // yyyy-mm-dd
+  day: string; // yyyy-mm-dd — the day it is due
+  raised: string; // yyyy-mm-dd — the day it arrived
+  dueLabel: string;
   title: string;
   clientId: string;
   clientName: string;
@@ -35,6 +37,14 @@ interface CalendarItem {
   status: string;
   overdue: boolean;
 }
+
+/** Working targets, in days, from the day an item arrives to the day it is due. */
+const TARGET_DAYS = {
+  request: 5,
+  quote: 10,
+  activate: 2,
+  hold: 3,
+} as const;
 
 const KIND_LABEL: Record<Kind, string> = {
   request: "Request",
@@ -80,6 +90,34 @@ function ageInDays(iso?: string | null) {
   return Math.floor((Date.now() - then) / 86_400_000);
 }
 
+/** The day something is due: the day it arrived plus the team's working target. */
+function dueKey(from: string | null | undefined, days: number) {
+  if (!from) return "";
+  const d = new Date(from);
+  if (Number.isNaN(d.getTime())) return "";
+  d.setDate(d.getDate() + days);
+  return dayKey(d);
+}
+
+/** "due today", "due in 3 days", "3 days late" — plain wording for a due date. */
+function dueWording(key: string) {
+  if (!key) return "No due date";
+  const [y, m, d] = key.split("-").map(Number);
+  if (!y || !m || !d) return "No due date";
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const diff = Math.round((new Date(y, m - 1, d).getTime() - start) / 86_400_000);
+  if (diff === 0) return "Due today";
+  if (diff === 1) return "Due tomorrow";
+  if (diff > 1) return `Due in ${diff} days`;
+  if (diff === -1) return "1 day late";
+  return `${Math.abs(diff)} days late`;
+}
+
+function isPast(key: string) {
+  return Boolean(key) && key < dayKey(new Date());
+}
+
 function longDay(key: string) {
   const [y, m, d] = key.split("-").map(Number);
   if (!y || !m || !d) return key;
@@ -113,30 +151,43 @@ export function StaffCalendar() {
 
     for (const r of data.requests as any[]) {
       const age = ageInDays(r.created_at);
+      const raised = dayKey(r.created_at);
+      const due = dueKey(r.created_at, TARGET_DAYS.request);
       out.push({
         id: `request-${r.id}`,
         kind: "request",
-        day: dayKey(r.created_at),
+        day: due || raised,
+        raised,
+        dueLabel: "Reply to the client by",
         title: serviceLabel(r.service_key),
         clientId: String(r.client_id),
         clientName: r.clientName ?? "—",
         fundName: r.fundName ?? null,
         detail:
-          r.status === "requested"
-            ? `Waiting for a first look · ${age} day${age === 1 ? "" : "s"} old`
-            : `In review · ${age} day${age === 1 ? "" : "s"} old`,
+          (r.status === "requested" ? "Waiting for a first look" : "In review") +
+          ` · raised ${age} day${age === 1 ? "" : "s"} ago`,
         status: r.status === "requested" ? "New" : "In review",
-        overdue: age >= 5,
+        overdue: isPast(due || raised),
       });
     }
 
     for (const q of data.quotes as any[]) {
-      const day = plainDayKey(q.effective_date) || dayKey(q.updated_at ?? q.created_at);
+      const raised = dayKey(q.updated_at ?? q.created_at);
+      const signed = q.status !== "quoted";
+      const start = plainDayKey(q.effective_date);
+      // A signed proposal is due to be switched on quickly, or by its own start date.
+      const due = signed
+        ? start && !isPast(start)
+          ? start
+          : dueKey(q.updated_at ?? q.created_at, TARGET_DAYS.activate)
+        : dueKey(q.updated_at ?? q.created_at, TARGET_DAYS.quote);
       const fee = money(q.proposed_fee_cents);
       out.push({
         id: `quote-${q.id}`,
         kind: "quote",
-        day,
+        day: due || raised,
+        raised,
+        dueLabel: signed ? "Switch the service on by" : "Client signature due by",
         title: serviceLabel(q.service_key),
         clientId: String(q.client_id),
         clientName: q.clientName ?? "—",
@@ -144,24 +195,28 @@ export function StaffCalendar() {
         detail:
           (fee ? `${fee} proposed` : "No fee set") +
           (q.effective_date ? ` · starts ${q.effective_date}` : " · no start date yet"),
-        status: q.status === "quoted" ? "With the client" : "Signed — activate",
-        overdue: q.status === "quoted" && ageInDays(q.updated_at) >= 10,
+        status: signed ? "Signed — activate" : "With the client",
+        overdue: isPast(due || raised),
       });
     }
 
     for (const h of data.holds as any[]) {
       const age = ageInDays(h.placed_at);
+      const raised = dayKey(h.placed_at);
+      const due = dueKey(h.placed_at, TARGET_DAYS.hold);
       out.push({
         id: `hold-${h.id}`,
         kind: "hold",
-        day: dayKey(h.placed_at),
+        day: due || raised,
+        raised,
+        dueLabel: "Clear or escalate by",
         title: h.service_key ? serviceLabel(h.service_key) : `${h.scope ?? "Client"} hold`,
         clientId: String(h.client_id),
         clientName: h.clientName ?? "—",
         fundName: h.fundName ?? null,
         detail: `${h.reason ?? "On hold"} · open ${age} day${age === 1 ? "" : "s"}`,
         status: "Open hold",
-        overdue: age >= 3,
+        overdue: isPast(due || raised),
       });
     }
 
@@ -318,8 +373,9 @@ export function StaffCalendar() {
           <span className={`h-2 w-2 rounded-full ${KIND_DOT.hold}`} /> Holds
         </span>
         <span>
-          {monthCount} item{monthCount === 1 ? "" : "s"} this month
+          {monthCount} item{monthCount === 1 ? "" : "s"} due this month
         </span>
+        <span>Each item sits on the day it is due.</span>
       </div>
 
       <div className="overflow-hidden rounded-lg border">
@@ -344,7 +400,7 @@ export function StaffCalendar() {
                   cell.inMonth ? "" : "bg-muted/30 text-muted-foreground",
                   isSelected ? "ring-2 ring-inset ring-primary" : "hover:bg-muted/40",
                 ].join(" ")}
-                aria-label={`${longDay(cell.key)} — ${dayItems.length} item${dayItems.length === 1 ? "" : "s"}`}
+                aria-label={`${longDay(cell.key)} — ${dayItems.length} item${dayItems.length === 1 ? "" : "s"} due`}
               >
                 <span
                   className={[
@@ -358,7 +414,7 @@ export function StaffCalendar() {
                   {dayItems.slice(0, 3).map((item) => (
                     <div key={item.id} className="flex items-center gap-1 text-[11px] leading-tight">
                       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${KIND_DOT[item.kind]}`} />
-                      <span className="truncate">
+                      <span className={`truncate ${item.overdue ? "text-destructive" : ""}`}>
                         {item.clientName}: {item.title}
                       </span>
                     </div>
@@ -382,8 +438,8 @@ export function StaffCalendar() {
           </CardTitle>
           <CardDescription>
             {selectedItems.length === 0
-              ? "Nothing lands on this day."
-              : `${selectedItems.length} item${selectedItems.length === 1 ? "" : "s"} for your team.`}
+              ? "Nothing is due on this day."
+              : `${selectedItems.length} item${selectedItems.length === 1 ? "" : "s"} due for your team.`}
           </CardDescription>
         </CardHeader>
         {selectedItems.length > 0 ? (
@@ -397,13 +453,18 @@ export function StaffCalendar() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{KIND_LABEL[item.kind]}</Badge>
                     <Badge variant={item.overdue ? "destructive" : "secondary"}>
-                      {item.overdue ? "Needs attention" : item.status}
+                      {dueWording(item.day)}
                     </Badge>
+                    <Badge variant="secondary">{item.status}</Badge>
                   </div>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {item.fundName ? `${item.fundName} · ` : ""}
                   {item.detail}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {item.dueLabel} {longDay(item.day)}
+                  {item.raised ? ` · raised ${longDay(item.raised)}` : ""}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
@@ -423,9 +484,9 @@ export function StaffCalendar() {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Running late</CardTitle>
+          <CardTitle className="text-base">Past their due date</CardTitle>
           <CardDescription>
-            Items sitting longer than the team's working targets, oldest first.
+            Requests, fee proposals and holds whose due date has already passed, oldest first.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -445,6 +506,7 @@ export function StaffCalendar() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{KIND_LABEL[item.kind]}</Badge>
+                  <Badge variant="destructive">{dueWording(item.day)}</Badge>
                   <Button
                     size="sm"
                     variant="ghost"
