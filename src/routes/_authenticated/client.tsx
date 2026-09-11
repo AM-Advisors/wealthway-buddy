@@ -6,6 +6,8 @@ import { useState } from "react";
 import { ClientSowPanel } from "@/components/client-sow-panel";
 import { getClientPortal } from "@/lib/client-portal.functions";
 import { ClientInvoicesPanel } from "@/components/client-invoices-panel";
+import { ClientPaymentsPanel } from "@/components/client-payments-panel";
+import { ClientWireRequestsPanel } from "@/components/client-wire-requests-panel";
 import { MyServiceRequests } from "@/components/service-request-signing";
 import { ClientOffboardingPanel } from "@/components/client-offboarding-panel";
 
