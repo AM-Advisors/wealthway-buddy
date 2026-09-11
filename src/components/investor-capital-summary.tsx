@@ -21,7 +21,7 @@ const units = (value: number | null) =>
 const day = (value: string | null | undefined) =>
   value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—";
 
-function Figure({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Figure({ label, value, hint }: { label: string; value: string; hint?: string | undefined }) {
   return (
     <div className="min-w-0 space-y-0.5">
       <p className="text-xs text-muted-foreground">{label}</p>
