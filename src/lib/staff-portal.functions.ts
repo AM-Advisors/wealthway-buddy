@@ -293,6 +293,8 @@ export const getMyDesk = createServerFn({ method: "GET" })
             (r: any) => String(r.client_id) === cid && String(r.status) === "quoted",
           ).length,
           openHolds: (holdRes.data ?? []).filter((h: any) => String(h.client_id) === cid).length,
+          pendingSignOffs: signOffs.filter((s: any) => s.client_id === cid).length,
+          openInvoices: openInvoices.filter((i: any) => String(i.client_id) === cid).length,
           activeSow: activeSow ? { id: activeSow.id, title: activeSow.title } : null,
         };
       }),
