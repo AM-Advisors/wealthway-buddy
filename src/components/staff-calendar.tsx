@@ -421,6 +421,8 @@ export function StaffCalendar() {
             <SelectItem value="request">Requests only</SelectItem>
             <SelectItem value="quote">Quotes only</SelectItem>
             <SelectItem value="hold">Holds only</SelectItem>
+            <SelectItem value="signoff">Sign-offs only</SelectItem>
+            <SelectItem value="payment">Payments only</SelectItem>
           </SelectContent>
         </Select>
 
