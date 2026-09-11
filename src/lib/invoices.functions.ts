@@ -502,6 +502,22 @@ export const issueInvoice = createServerFn({ method: "POST" })
       previous: { status: "draft", number: (invoice as any).number ?? null, due_date: null },
       next: { status: "issued", number, total_cents: total, due_date: dueDate },
     });
+
+    const { notifyClientAdmins, money } = await import("@/lib/client-notify.server");
+    await notifyClientAdmins((invoice as any).client_id, {
+      eventKey: `invoice-issued:${data.id}`,
+      headline: `Invoice ${number} is ready`,
+      intro: "a fee invoice has been issued on your Harmonious account.",
+      details: [
+        { label: "Invoice", value: number },
+        { label: "Amount", value: money(total) },
+        { label: "Issued", value: data.issueDate },
+        { label: "Payment due", value: dueDate },
+      ],
+      actionLabel: "View the invoice",
+      actionPath: "/client/invoices",
+    });
+
     return { ok: true, number, dueDate };
   });
 
