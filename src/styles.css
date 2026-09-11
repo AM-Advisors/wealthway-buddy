@@ -115,8 +115,8 @@
   --chart-3: var(--brand-mint);
   --chart-4: var(--brand-violet);
   --chart-5: var(--brand-lightblue);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar: var(--brand-deep-navy);
+  --sidebar-foreground: oklch(0.97 0.01 230);
   --sidebar-primary: var(--brand-teal);
   --sidebar-primary-foreground: var(--brand-deep-navy);
   --sidebar-accent: oklch(0.34 0.07 258);
