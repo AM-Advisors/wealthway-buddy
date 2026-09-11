@@ -498,7 +498,9 @@ export const issueInvoice = createServerFn({ method: "POST" })
       action: "issued",
       target: number,
       clientId: (invoice as any).client_id,
-      next: { total_cents: total, due_date: dueDate },
+      offeringId: await invoiceOfferingId(context, data.id),
+      previous: { status: "draft", number: (invoice as any).number ?? null, due_date: null },
+      next: { status: "issued", number, total_cents: total, due_date: dueDate },
     });
     return { ok: true, number, dueDate };
   });
