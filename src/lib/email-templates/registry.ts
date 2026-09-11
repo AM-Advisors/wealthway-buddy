@@ -10,6 +10,7 @@ import { template as ownershipUpdate } from './ownership-update'
 import { template as bankSetupRequest } from './bank-setup-request'
 import { template as opsReviewRequest } from './ops-review-request'
 import { template as opsReviewDecision } from './ops-review-decision'
+import { template as clientAdminAlert } from './client-admin-alert'
 
 
 
@@ -42,5 +43,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'bank-setup-request': bankSetupRequest,
   'ops-review-request': opsReviewRequest,
   'ops-review-decision': opsReviewDecision,
+  'client-admin-alert': clientAdminAlert,
 
 }

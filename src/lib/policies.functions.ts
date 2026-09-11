@@ -175,6 +175,21 @@ export const savePolicyDocument = createServerFn({ method: "POST" })
         .update({ published: false })
         .eq("kind", data.kind)
         .neq("version", version);
+
+      const { notifyClientAdmins } = await import("@/lib/client-notify.server");
+      await notifyClientAdmins(null, {
+        eventKey: `policy-published:${data.kind}:${version}`,
+        headline: `New document to sign — ${data.title}`,
+        intro:
+          "a new version of one of your Harmonious documents is ready for sign-off. You will be asked to accept it the next time you sign in.",
+        details: [
+          { label: "Document", value: data.title },
+          { label: "Version", value: `v${version}` },
+          { label: "Effective", value: data.effectiveDate },
+        ],
+        actionLabel: "Review and sign",
+        actionPath: "/sign-off",
+      });
     }
 
     return { ok: true, republished: true, version };
