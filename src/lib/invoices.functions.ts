@@ -650,10 +650,22 @@ export const listMyInvoices = createServerFn({ method: "GET" })
       lines = data ?? [];
     }
     const today = new Date().toISOString().slice(0, 10);
+    const clientIds = Array.from(
+      new Set((invoices ?? []).map((i: any) => i.client_id).filter(Boolean)),
+    );
+    let clients: any[] = [];
+    if (clientIds.length) {
+      const { data } = await context.supabase
+        .from("clients")
+        .select("id, name")
+        .in("id", clientIds);
+      clients = data ?? [];
+    }
     return {
       invoices: (invoices ?? []).map((inv: any) => ({
         ...inv,
         overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
+        client_name: clients.find((c) => c.id === inv.client_id)?.name ?? null,
         lines: lines.filter((l) => l.invoice_id === inv.id),
       })),
     };

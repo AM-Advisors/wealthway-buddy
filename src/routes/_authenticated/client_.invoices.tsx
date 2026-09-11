@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ClientIntakeGate } from "@/components/client-intake-gate";
+import { downloadInvoice, printInvoice } from "@/components/invoice-document";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 
 export const Route = createFileRoute("/_authenticated/client_/invoices")({
@@ -212,6 +213,25 @@ function ClientInvoicesPage() {
                       </li>
                     ))}
                   </ul>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => downloadInvoice(inv)}>
+                      Download invoice
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (!printInvoice(inv)) {
+                          toast.error("Your browser blocked the print window — allow pop-ups and try again.");
+                        }
+                      }}
+                    >
+                      Print or save as PDF
+                    </Button>
+                  </div>
+
+
 
                   {inv.status === "issued" && inv.approval_status === "pending" ? (
                     <div className="space-y-2 rounded-md border p-3">
