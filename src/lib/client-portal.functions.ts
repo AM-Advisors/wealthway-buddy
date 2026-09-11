@@ -83,6 +83,15 @@ export const getClientPortal = createServerFn({ method: "GET" })
         .limit(50),
     ]);
 
+    const { data: serviceRequests } = await context.supabase
+      .from("service_requests")
+      .select(
+        "id, service_key, offering_id, status, proposed_fee_cents, requester_note, created_at, updated_at",
+      )
+      .eq("client_id", selectedId)
+      .order("updated_at", { ascending: false })
+      .limit(50);
+
     const catalogByKey = new Map((catalog ?? []).map((c: any) => [c.key, c]));
     const included = (entitlements ?? [])
       .filter((e: any) => e.status === "included")
@@ -163,6 +172,12 @@ export const getClientPortal = createServerFn({ method: "GET" })
       sows: sows ?? [],
       services: included,
       canRequestWire: included.some((s) => s.key === "wire_instructions"),
+      serviceRequests: ((serviceRequests ?? []) as any[]).map((r) => ({
+        ...r,
+        serviceName:
+          (catalogByKey.get(r.service_key) as any)?.name ?? String(r.service_key).replace(/_/g, " "),
+        fundName: r.offering_id ? fundNameById.get(r.offering_id) ?? null : null,
+      })),
       invoices: (invoices ?? []).map((inv: any) => ({
         ...inv,
         overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
