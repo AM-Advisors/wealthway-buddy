@@ -580,6 +580,22 @@ export const requestService = createServerFn({ method: "POST" })
       offeringId: data.offeringId ?? null,
       target: data.serviceKey,
     });
+
+    const serviceName = await serviceLabel(context, data.serviceKey);
+    const { notifyClientAdmins } = await import("@/lib/client-notify.server");
+    await notifyClientAdmins(data.clientId, {
+      eventKey: `service-request-open:${created.id}`,
+      headline: `Service request pending — ${serviceName}`,
+      intro:
+        "a request to add a service to your scope is open with Harmonious. We will review it and come back with a written fee proposal for your signature.",
+      details: [
+        { label: "Service", value: serviceName },
+        { label: "Status", value: "Pending review by Harmonious" },
+      ],
+      actionLabel: "Track the request",
+      actionPath: "/client",
+    });
+
     return { id: created.id as string };
   });
 
