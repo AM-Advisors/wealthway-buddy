@@ -70,6 +70,29 @@ export async function matchDeclaredPayments(
   const open = ((invoices ?? []) as any[]).filter((i) => Number(i.total_cents ?? 0) > 0);
   if (!open.length || !((lines ?? []) as any[]).length) return 0;
 
+  // The paying accounts staff recorded for these clients: a deposit that carries
+  // the client's own account holder name, reference or last four digits is theirs.
+  const clientIds = Array.from(
+    new Set(open.map((i) => String(i.client_id ?? "")).filter(Boolean)),
+  );
+  const hintsByClient = new Map<string, string[]>();
+  if (clientIds.length) {
+    const { data: clientAccounts } = await supabase
+      .from("client_bank_accounts")
+      .select("client_id, account_holder, reference_hint, account_last4")
+      .in("client_id", clientIds)
+      .eq("status", "active");
+    for (const account of (clientAccounts ?? []) as any[]) {
+      const key = String(account.client_id);
+      const hints = [account.account_holder, account.reference_hint]
+        .map((v) => normalise(String(v ?? "")))
+        .filter((v) => v.length >= 5);
+      const digits = String(account.account_last4 ?? "").replace(/\D/g, "");
+      if (digits.length === 4) hints.push(digits);
+      hintsByClient.set(key, [...(hintsByClient.get(key) ?? []), ...hints]);
+    }
+  }
+
   const used = new Set<string>();
   let matched = 0;
 
@@ -82,12 +105,15 @@ export async function matchDeclaredPayments(
       if (Number(inv.total_cents ?? 0) !== amount) return false;
       const ref = String(inv.client_payment_reference ?? "").trim();
       if (ref.length >= 4 && text.includes(normalise(ref))) return true;
+      const hints = hintsByClient.get(String(inv.client_id ?? "")) ?? [];
+      if (hints.some((hint) => text.includes(hint))) return true;
       return (
         Boolean(inv.client_paid_on) &&
         daysApart(String(inv.client_paid_on), String(line.posted_on)) <= 6
       );
     });
     if (!hit) continue;
+
 
     const reference =
       String(hit.client_payment_reference ?? "").trim() ||
