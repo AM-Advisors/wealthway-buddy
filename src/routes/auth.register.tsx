@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { checkInviteEligibility } from "@/lib/portal-access.functions";
 
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,10 +44,10 @@ function RegisterPage() {
   async function signUpWithGoogle() {
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth` },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/auth`,
       });
+      const error = result.error;
       if (error) toast.error(error.message ?? "Google sign-up failed");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-up failed");
