@@ -67,6 +67,7 @@ import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
+import { Route as AuthenticatedAdminSignoffRouteImport } from './routes/_authenticated/admin.signoff'
 import { Route as AuthenticatedAdminTimelineRouteImport } from './routes/_authenticated/admin.timeline'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
 import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client_.invoices'
@@ -441,6 +442,12 @@ const AuthenticatedAdminSetupRoute = AuthenticatedAdminSetupRouteImport.update({
   path: '/admin/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminSignoffRoute =
+  AuthenticatedAdminSignoffRouteImport.update({
+    id: '/admin/signoff',
+    path: '/admin/signoff',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminTimelineRoute =
   AuthenticatedAdminTimelineRouteImport.update({
     id: '/admin/timeline',
@@ -840,6 +847,7 @@ export interface FileRoutesByFullPath {
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -957,6 +965,7 @@ export interface FileRoutesByTo {
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1077,6 +1086,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
+  '/_authenticated/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/_authenticated/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
   '/_authenticated/client_/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1197,6 +1207,7 @@ export interface FileRouteTypes {
     | '/admin/requests'
     | '/admin/security'
     | '/admin/setup'
+    | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
     | '/client/invoices'
@@ -1314,6 +1325,7 @@ export interface FileRouteTypes {
     | '/admin/requests'
     | '/admin/security'
     | '/admin/setup'
+    | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
     | '/client/invoices'
@@ -1433,6 +1445,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/requests'
     | '/_authenticated/admin/security'
     | '/_authenticated/admin/setup'
+    | '/_authenticated/admin/signoff'
     | '/_authenticated/admin/timeline'
     | '/_authenticated/admin/wire'
     | '/_authenticated/client_/invoices'
@@ -1927,6 +1940,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/signoff': {
+      id: '/_authenticated/admin/signoff'
+      path: '/admin/signoff'
+      fullPath: '/admin/signoff'
+      preLoaderRoute: typeof AuthenticatedAdminSignoffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/timeline': {
       id: '/_authenticated/admin/timeline'
       path: '/admin/timeline'
@@ -2386,6 +2406,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
+  AuthenticatedAdminSignoffRoute: typeof AuthenticatedAdminSignoffRoute
   AuthenticatedAdminTimelineRoute: typeof AuthenticatedAdminTimelineRoute
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
   AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
@@ -2483,6 +2504,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
+  AuthenticatedAdminSignoffRoute: AuthenticatedAdminSignoffRoute,
   AuthenticatedAdminTimelineRoute: AuthenticatedAdminTimelineRoute,
   AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
   AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
