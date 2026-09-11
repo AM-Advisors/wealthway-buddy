@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
 import { useAuth } from "@/hooks/useAuth";
-import { Logo } from "@/components/Logo";
+import { AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,12 +90,16 @@ function ClientLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <Link to="/" aria-label="Harmonious home">
-          <Logo variant="navy" className="mb-8 h-7 w-auto" />
-        </Link>
-
+    <AuthShell
+      heading="Your fund, administered in one place."
+      blurb="Sign in to see your funds, agreements, invoices and payments, and to ask us for anything outside your current scope."
+      points={[
+        "Each person on your team signs in separately",
+        "Every approval recorded under their own name",
+        "Documents and wire details kept private to your engagement",
+      ]}
+    >
+      <div>
         <h1 className="text-3xl">Client sign in</h1>
         <p className="mt-2 text-muted-foreground">
           Use your own email and password — each person on your team signs in separately, and every
@@ -167,6 +171,6 @@ function ClientLoginPage() {
           </Link>
         </p>
       </div>
-    </main>
+    </AuthShell>
   );
 }

@@ -21,7 +21,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { Logo } from "@/components/Logo";
+import { Logo, LogoIcon } from "@/components/Logo";
 import {
   Sidebar,
   SidebarContent,
@@ -142,7 +142,12 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.url}>
-              <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive(item.url)}
+                tooltip={item.title}
+                className="data-[active=true]:border-l-2 data-[active=true]:border-sidebar-primary data-[active=true]:font-medium"
+              >
                 <Link to={item.url as never} className="flex items-center gap-2">
                   <item.icon className="h-4 w-4" />
                   {!collapsed && <span>{item.title}</span>}
@@ -162,9 +167,9 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       <SidebarHeader>
         <Link to="/" aria-label="Harmonious home" className="flex items-center px-2 py-1">
           {collapsed ? (
-            <Logo variant="navy" className="h-6 w-6 object-contain object-left" />
+            <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (
-            <Logo variant="navy" className="h-7 w-auto" />
+            <Logo variant="white" className="h-7 w-auto" />
           )}
         </Link>
       </SidebarHeader>
@@ -222,17 +227,14 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       </SidebarContent>
 
       <SidebarFooter>
-        {!collapsed && nav?.profile?.email && (
-          <p className="truncate px-2 text-xs text-muted-foreground">{nav.profile.email}</p>
-        )}
         {!collapsed && signOff && (
           <p className="px-2 text-xs">
             {signOffComplete ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+              <span className="inline-flex items-center gap-1 rounded-full bg-sidebar-primary/20 px-2 py-0.5 text-sidebar-foreground">
                 <BadgeCheck className="h-3 w-3" aria-hidden /> Sign-off complete
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full bg-sidebar-accent px-2 py-0.5 text-sidebar-accent-foreground">
                 <FileSignature className="h-3 w-3" aria-hidden />
                 {signOff.outstanding.length} to sign
               </span>
