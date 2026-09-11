@@ -280,14 +280,14 @@ function SetupPage() {
               Bank details are stored privately and only shown to people with access to this fund.
             </p>
           </CardHeader>
-          <CardContent className="grid gap-4">
+          <CardContent className="grid gap-4 [&>*]:min-w-0">
             <div className="rounded-md border p-4">
               <p className="text-sm font-medium">Client and signed statement of work</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 A fund can only be created once its client has signed the statement of work that
                 covers it. That agreement sets the services, fees and terms for this fund.
               </p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="mt-3 grid gap-3 [&>*]:min-w-0 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label>Client</Label>
                   <Select
@@ -386,7 +386,7 @@ function SetupPage() {
                 placeholder="What this fund invests in and who it is for."
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 [&>*]:min-w-0 sm:grid-cols-3">
               <div className="grid gap-2">
                 <Label>Exemption</Label>
                 <Select
@@ -436,7 +436,7 @@ function SetupPage() {
 
             <div className="mt-2 rounded-md border p-4">
               <p className="text-sm font-medium">Wire details</p>
-              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div className="mt-3 grid gap-4 [&>*]:min-w-0 sm:grid-cols-2">
                 {WIRE_FIELDS.map((field) => (
                   <div key={field} className="grid gap-2">
                     <Label htmlFor={field}>{WIRE_LABELS[field] ?? field}</Label>
@@ -482,7 +482,7 @@ function SetupPage() {
               Add each document investors will read. Mark the ones they must sign before funding.
             </p>
           </CardHeader>
-          <CardContent className="grid gap-4">
+          <CardContent className="grid gap-4 [&>*]:min-w-0">
             {documents.length > 0 && (
               <ul className="grid gap-2">
                 {documents.map((d) => (
@@ -502,7 +502,7 @@ function SetupPage() {
             )}
 
             <div className="grid gap-4 rounded-md border p-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 [&>*]:min-w-0 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label htmlFor="doc-title">Title</Label>
                   <Input
@@ -573,7 +573,7 @@ function SetupPage() {
               onboarding.
             </p>
           </CardHeader>
-          <CardContent className="grid gap-4">
+          <CardContent className="grid gap-4 [&>*]:min-w-0">
             {grants.length > 0 && (
               <ul className="grid gap-2">
                 {grants.map((g, i) => (
@@ -629,7 +629,7 @@ function SetupPage() {
               </div>
 
               {!existingUserId && (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 [&>*]:min-w-0 sm:grid-cols-2">
                   <div className="grid gap-2">
                     <Label htmlFor="invite-email">Email</Label>
                     <Input

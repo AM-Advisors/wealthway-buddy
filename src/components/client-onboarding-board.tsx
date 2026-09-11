@@ -117,7 +117,7 @@ export function ClientOnboardingBoard() {
   const canManage = data.canManage;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="grid min-w-0 gap-6 [&>*]:min-w-0 lg:grid-cols-[280px_minmax(0,1fr)]">
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Clients</CardTitle>
@@ -222,7 +222,7 @@ export function ClientOnboardingBoard() {
                 data.people.map((person: any) => (
                   <div key={person.id} className="rounded-md border p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
+                      <div className="min-w-0 break-words">
                         <p className="text-sm font-medium">{person.name ?? person.email ?? "Client contact"}</p>
                         <p className="text-xs text-muted-foreground">
                           {person.email ?? "Email not visible"} · {roleLabel(person.client_role)}
@@ -230,12 +230,12 @@ export function ClientOnboardingBoard() {
                         </p>
                       </div>
                       {canManage ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <Select
                             value={person.client_role}
                             onValueChange={(role) => accessMutation.mutate({ id: person.id, role, remove: false })}
                           >
-                            <SelectTrigger className="h-8 w-52">
+                            <SelectTrigger className="h-8 w-full sm:w-52">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -291,8 +291,11 @@ export function ClientOnboardingBoard() {
                     {selected.invitations
                       .filter((i: any) => i.status !== "cancelled")
                       .map((i: any) => (
-                        <li key={i.id} className="flex items-center justify-between gap-3 rounded-md border p-2 text-sm">
-                          <span>
+                        <li
+                          key={i.id}
+                          className="flex flex-col gap-2 rounded-md border p-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                        >
+                          <span className="min-w-0 break-words">
                             {i.invited_name ? `${i.invited_name} · ` : ""}
                             {i.email} · {roleLabel(i.client_role)}
                             <span className="block text-xs text-muted-foreground">
@@ -304,7 +307,7 @@ export function ClientOnboardingBoard() {
                             </span>
                           </span>
                           {canManage ? (
-                            <span className="flex shrink-0 gap-1">
+                            <span className="flex flex-wrap gap-1 sm:shrink-0">
                               <Button
                                 size="sm"
                                 variant="outline"

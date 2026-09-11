@@ -79,9 +79,9 @@ function personLine(p: any) {
 
 function Row({ label, value }: { label: string; value: string | undefined | null }) {
   return (
-    <div className="flex gap-2">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd>{String(value ?? "").trim() === "" ? "—" : value}</dd>
+    <div className="flex min-w-0 flex-wrap gap-x-2">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 break-words">{String(value ?? "").trim() === "" ? "—" : value}</dd>
     </div>
   );
 }

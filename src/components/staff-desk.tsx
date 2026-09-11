@@ -141,7 +141,7 @@ export function StaffDesk() {
         </Card>
       ) : (
         <Tabs defaultValue="clients">
-          <TabsList className="flex flex-wrap">
+          <TabsList>
             <TabsTrigger value="clients">Clients</TabsTrigger>
             <TabsTrigger value="requests">Requests ({data.requests.length})</TabsTrigger>
             <TabsTrigger value="quotes">Quotes ({data.quotes.length})</TabsTrigger>
