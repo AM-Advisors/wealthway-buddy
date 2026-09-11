@@ -71,7 +71,13 @@ import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSignoffRouteImport } from './routes/_authenticated/admin.signoff'
 import { Route as AuthenticatedAdminTimelineRouteImport } from './routes/_authenticated/admin.timeline'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
-import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client_.invoices'
+import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
+import { Route as AuthenticatedClientAgreementsRouteImport } from './routes/_authenticated/client.agreements'
+import { Route as AuthenticatedClientFundsRouteImport } from './routes/_authenticated/client.funds'
+import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client.invoices'
+import { Route as AuthenticatedClientPaymentsRouteImport } from './routes/_authenticated/client.payments'
+import { Route as AuthenticatedClientSignOffsRouteImport } from './routes/_authenticated/client.sign-offs'
+import { Route as AuthenticatedClientWiresRouteImport } from './routes/_authenticated/client.wires'
 import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
@@ -467,11 +473,47 @@ const AuthenticatedAdminWireRoute = AuthenticatedAdminWireRouteImport.update({
   path: '/admin/wire',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedClientIndexRoute =
+  AuthenticatedClientIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientAgreementsRoute =
+  AuthenticatedClientAgreementsRouteImport.update({
+    id: '/agreements',
+    path: '/agreements',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientFundsRoute =
+  AuthenticatedClientFundsRouteImport.update({
+    id: '/funds',
+    path: '/funds',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedClientInvoicesRoute =
   AuthenticatedClientInvoicesRouteImport.update({
-    id: '/client_/invoices',
-    path: '/client/invoices',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientPaymentsRoute =
+  AuthenticatedClientPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientSignOffsRoute =
+  AuthenticatedClientSignOffsRouteImport.update({
+    id: '/sign-offs',
+    path: '/sign-offs',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientWiresRoute =
+  AuthenticatedClientWiresRouteImport.update({
+    id: '/wires',
+    path: '/wires',
+    getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedDiligenceIndexRoute =
   AuthenticatedDiligenceIndexRouteImport.update({
@@ -817,7 +859,7 @@ export interface FileRoutesByFullPath {
   '/spv': typeof SpvRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
-  '/client': typeof AuthenticatedClientRoute
+  '/client': typeof AuthenticatedClientRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
@@ -865,7 +907,12 @@ export interface FileRoutesByFullPath {
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/agreements': typeof AuthenticatedClientAgreementsRoute
+  '/client/funds': typeof AuthenticatedClientFundsRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
+  '/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
+  '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -902,6 +949,7 @@ export interface FileRoutesByFullPath {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/client/': typeof AuthenticatedClientIndexRoute
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
@@ -937,7 +985,6 @@ export interface FileRoutesByTo {
   '/spv': typeof SpvRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
-  '/client': typeof AuthenticatedClientRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
@@ -985,7 +1032,12 @@ export interface FileRoutesByTo {
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/agreements': typeof AuthenticatedClientAgreementsRoute
+  '/client/funds': typeof AuthenticatedClientFundsRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
+  '/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
+  '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -1022,6 +1074,7 @@ export interface FileRoutesByTo {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/client': typeof AuthenticatedClientIndexRoute
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
@@ -1060,7 +1113,7 @@ export interface FileRoutesById {
   '/spv': typeof SpvRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRoute
-  '/_authenticated/client': typeof AuthenticatedClientRoute
+  '/_authenticated/client': typeof AuthenticatedClientRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
@@ -1108,7 +1161,12 @@ export interface FileRoutesById {
   '/_authenticated/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/_authenticated/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
-  '/_authenticated/client_/invoices': typeof AuthenticatedClientInvoicesRoute
+  '/_authenticated/client/agreements': typeof AuthenticatedClientAgreementsRoute
+  '/_authenticated/client/funds': typeof AuthenticatedClientFundsRoute
+  '/_authenticated/client/invoices': typeof AuthenticatedClientInvoicesRoute
+  '/_authenticated/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/_authenticated/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
+  '/_authenticated/client/wires': typeof AuthenticatedClientWiresRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -1145,6 +1203,7 @@ export interface FileRoutesById {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
@@ -1231,7 +1290,12 @@ export interface FileRouteTypes {
     | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/agreements'
+    | '/client/funds'
     | '/client/invoices'
+    | '/client/payments'
+    | '/client/sign-offs'
+    | '/client/wires'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
@@ -1268,6 +1332,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin/'
+    | '/client/'
     | '/diligence/'
     | '/manager/'
     | '/ops/'
@@ -1303,7 +1368,6 @@ export interface FileRouteTypes {
     | '/spv'
     | '/accounts'
     | '/apply'
-    | '/client'
     | '/dashboard'
     | '/documents'
     | '/fund-documents'
@@ -1351,7 +1415,12 @@ export interface FileRouteTypes {
     | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/agreements'
+    | '/client/funds'
     | '/client/invoices'
+    | '/client/payments'
+    | '/client/sign-offs'
+    | '/client/wires'
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
@@ -1388,6 +1457,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin'
+    | '/client'
     | '/diligence'
     | '/manager'
     | '/ops'
@@ -1473,7 +1543,12 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/signoff'
     | '/_authenticated/admin/timeline'
     | '/_authenticated/admin/wire'
-    | '/_authenticated/client_/invoices'
+    | '/_authenticated/client/agreements'
+    | '/_authenticated/client/funds'
+    | '/_authenticated/client/invoices'
+    | '/_authenticated/client/payments'
+    | '/_authenticated/client/sign-offs'
+    | '/_authenticated/client/wires'
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
@@ -1510,6 +1585,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
+    | '/_authenticated/client/'
     | '/_authenticated/diligence/'
     | '/_authenticated/manager/'
     | '/_authenticated/ops/'
@@ -1995,12 +2071,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWireRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/client_/invoices': {
-      id: '/_authenticated/client_/invoices'
-      path: '/client/invoices'
+    '/_authenticated/client/': {
+      id: '/_authenticated/client/'
+      path: '/'
+      fullPath: '/client/'
+      preLoaderRoute: typeof AuthenticatedClientIndexRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/agreements': {
+      id: '/_authenticated/client/agreements'
+      path: '/agreements'
+      fullPath: '/client/agreements'
+      preLoaderRoute: typeof AuthenticatedClientAgreementsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/funds': {
+      id: '/_authenticated/client/funds'
+      path: '/funds'
+      fullPath: '/client/funds'
+      preLoaderRoute: typeof AuthenticatedClientFundsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/invoices': {
+      id: '/_authenticated/client/invoices'
+      path: '/invoices'
       fullPath: '/client/invoices'
       preLoaderRoute: typeof AuthenticatedClientInvoicesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/payments': {
+      id: '/_authenticated/client/payments'
+      path: '/payments'
+      fullPath: '/client/payments'
+      preLoaderRoute: typeof AuthenticatedClientPaymentsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/sign-offs': {
+      id: '/_authenticated/client/sign-offs'
+      path: '/sign-offs'
+      fullPath: '/client/sign-offs'
+      preLoaderRoute: typeof AuthenticatedClientSignOffsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/wires': {
+      id: '/_authenticated/client/wires'
+      path: '/wires'
+      fullPath: '/client/wires'
+      preLoaderRoute: typeof AuthenticatedClientWiresRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/diligence/': {
       id: '/_authenticated/diligence/'
@@ -2404,10 +2522,33 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedClientRouteChildren {
+  AuthenticatedClientAgreementsRoute: typeof AuthenticatedClientAgreementsRoute
+  AuthenticatedClientFundsRoute: typeof AuthenticatedClientFundsRoute
+  AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
+  AuthenticatedClientPaymentsRoute: typeof AuthenticatedClientPaymentsRoute
+  AuthenticatedClientSignOffsRoute: typeof AuthenticatedClientSignOffsRoute
+  AuthenticatedClientWiresRoute: typeof AuthenticatedClientWiresRoute
+  AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
+}
+
+const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
+  AuthenticatedClientAgreementsRoute: AuthenticatedClientAgreementsRoute,
+  AuthenticatedClientFundsRoute: AuthenticatedClientFundsRoute,
+  AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
+  AuthenticatedClientPaymentsRoute: AuthenticatedClientPaymentsRoute,
+  AuthenticatedClientSignOffsRoute: AuthenticatedClientSignOffsRoute,
+  AuthenticatedClientWiresRoute: AuthenticatedClientWiresRoute,
+  AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
+}
+
+const AuthenticatedClientRouteWithChildren =
+  AuthenticatedClientRoute._addFileChildren(AuthenticatedClientRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedApplyRoute: typeof AuthenticatedApplyRoute
-  AuthenticatedClientRoute: typeof AuthenticatedClientRoute
+  AuthenticatedClientRoute: typeof AuthenticatedClientRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
@@ -2451,7 +2592,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminSignoffRoute: typeof AuthenticatedAdminSignoffRoute
   AuthenticatedAdminTimelineRoute: typeof AuthenticatedAdminTimelineRoute
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
-  AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
@@ -2505,7 +2645,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedApplyRoute: AuthenticatedApplyRoute,
-  AuthenticatedClientRoute: AuthenticatedClientRoute,
+  AuthenticatedClientRoute: AuthenticatedClientRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
@@ -2550,7 +2690,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminSignoffRoute: AuthenticatedAdminSignoffRoute,
   AuthenticatedAdminTimelineRoute: AuthenticatedAdminTimelineRoute,
   AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
-  AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
   AuthenticatedDiligenceOfferingIdRoute: AuthenticatedDiligenceOfferingIdRoute,
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,
