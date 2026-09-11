@@ -171,6 +171,6 @@ function ClientLoginPage() {
           </Link>
         </p>
       </div>
-    </main>
+    </AuthShell>
   );
 }
