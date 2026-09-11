@@ -52,7 +52,7 @@ type NavItem = {
   label: string;
   icon: typeof Briefcase;
   exact?: boolean;
-  badge?: number;
+  badge?: number | undefined;
 };
 
 function ClientShell() {
