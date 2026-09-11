@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { ClientSowPanel } from "@/components/client-sow-panel";
+import { ClientDashboard } from "@/components/client-dashboard";
 import { getClientPortal } from "@/lib/client-portal.functions";
 import { ClientInvoicesPanel } from "@/components/client-invoices-panel";
 import { ClientPaymentsPanel } from "@/components/client-payments-panel";
