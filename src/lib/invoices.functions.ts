@@ -379,9 +379,19 @@ async function checkRates(context: any, invoiceId: string, clientId: string) {
   const rateById = new Map(((pricing ?? []) as any[]).map((p) => [p.id, p]));
   const rateByKey = new Map(((pricing ?? []) as any[]).map((p) => [String(p.service_key), p]));
 
+  // Fund fees agreed after a draft was raised have no pricing_id on the line.
+  // Fall back to the same rate lookup the fund fee screens use so the check
+  // compares like with like instead of treating the line as off rate card.
+  const { resolveClientRates } = await import("@/lib/fee-rates.server");
+  const fundRates = await resolveClientRates(context.supabase, clientId);
+
   const items = ((lines ?? []) as any[])
     .filter((l) => l.source !== "expense")
     .map((l) => {
+      const fallback =
+        l.service_key && (fundRates as any)[String(l.service_key)]
+          ? rateById.get(String((fundRates as any)[String(l.service_key)].id))
+          : null;
       const rate = l.pricing_id
         ? rateById.get(l.pricing_id)
         : l.service_key
