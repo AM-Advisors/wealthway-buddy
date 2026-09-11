@@ -21,7 +21,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { Logo } from "@/components/Logo";
+import { Logo, LogoIcon } from "@/components/Logo";
 import {
   Sidebar,
   SidebarContent,
