@@ -426,9 +426,12 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          invoice_matched_at: string | null
+          invoice_matched_by: string | null
           matched_application_id: string | null
           matched_at: string | null
           matched_by: string | null
+          matched_invoice_id: string | null
           name: string
           offering_id: string
           plaid_transaction_id: string
@@ -440,9 +443,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          invoice_matched_at?: string | null
+          invoice_matched_by?: string | null
           matched_application_id?: string | null
           matched_at?: string | null
           matched_by?: string | null
+          matched_invoice_id?: string | null
           name: string
           offering_id: string
           plaid_transaction_id: string
@@ -454,9 +460,12 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          invoice_matched_at?: string | null
+          invoice_matched_by?: string | null
           matched_application_id?: string | null
           matched_at?: string | null
           matched_by?: string | null
+          matched_invoice_id?: string | null
           name?: string
           offering_id?: string
           plaid_transaction_id?: string
@@ -469,6 +478,13 @@ export type Database = {
             columns: ["matched_application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_matched_invoice_id_fkey"
+            columns: ["matched_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
           {
