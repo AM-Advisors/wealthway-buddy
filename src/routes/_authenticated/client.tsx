@@ -148,8 +148,9 @@ function ClientPortal() {
 
       </div>
 
-      <Tabs defaultValue="funds" className="mt-8">
+      <Tabs defaultValue="overview" className="mt-8">
         <TabsList className="flex flex-wrap">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="funds">Funds</TabsTrigger>
           <TabsTrigger value="agreement">Agreement &amp; scope</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
@@ -157,6 +158,17 @@ function ClientPortal() {
           <TabsTrigger value="wires">Wire requests</TabsTrigger>
 
         </TabsList>
+
+        <TabsContent value="overview" className="mt-6">
+          <ClientDashboard
+            funds={funds}
+            invoices={(data.invoices ?? []) as any[]}
+            payments={payments as any[]}
+            wireRequests={(data.wireRequests ?? []) as any[]}
+            serviceRequests={((data as any).serviceRequests ?? []) as any[]}
+            services={services as any[]}
+          />
+        </TabsContent>
 
         <TabsContent value="funds" className="mt-6">
           <Card>
