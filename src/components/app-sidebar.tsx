@@ -88,6 +88,7 @@ const adminItems: NavItem[] = [
   { title: "Client onboarding", url: "/admin/onboarding", icon: UserPlus },
   { title: "Pricing and agreements", url: "/admin/pricing", icon: Landmark },
   { title: "Unpaid invoices", url: "/admin/invoices", icon: Landmark },
+  { title: "Client portal activity", url: "/admin/client-activity", icon: FileText },
 
 
   { title: "Wires and distributions", url: "/admin/money", icon: Landmark },
