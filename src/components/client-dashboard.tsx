@@ -76,6 +76,52 @@ export function ClientDashboard({
     0,
   );
 
+  const signedSows = (sows ?? []).filter((s: any) => s.client_signed_at || s.signed_on);
+
+  const dueItems: DueItem[] = [];
+  for (const inv of openInvoices) {
+    if (!inv.due_date) continue;
+    dueItems.push({
+      id: `inv-${inv.id}`,
+      date: String(inv.due_date).slice(0, 10),
+      kind: "invoice",
+      label: `${inv.number ?? inv.invoice_number ?? "Invoice"} due — ${money(inv.total_cents)}`,
+      detail: inv.client_approved_at ? "Approved by you" : "Awaiting your approval",
+    });
+  }
+  for (const r of openRequests) {
+    const base = r.quoted_at ?? r.updated_at ?? r.created_at;
+    const date = base ? addDays(String(base), r.status === "quoted" ? 10 : 5) : null;
+    if (!date) continue;
+    dueItems.push({
+      id: `req-${r.id}`,
+      date,
+      kind: "request",
+      label: `${r.serviceName} — ${REQUEST_STATE[r.status] ?? r.status}`,
+      detail: r.fundName ?? null,
+    });
+  }
+  for (const s of signedSows) {
+    if (s.effective_date) {
+      dueItems.push({
+        id: `sow-eff-${s.id}`,
+        date: String(s.effective_date).slice(0, 10),
+        kind: "agreement",
+        label: `${s.title ?? "Statement of work"} starts`,
+        detail: null,
+      });
+    }
+    if (s.termination_date) {
+      dueItems.push({
+        id: `sow-end-${s.id}`,
+        date: String(s.termination_date).slice(0, 10),
+        kind: "agreement",
+        label: `${s.title ?? "Statement of work"} ends`,
+        detail: s.notice_days ? `${s.notice_days} days' notice applies` : null,
+      });
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
