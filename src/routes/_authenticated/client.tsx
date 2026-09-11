@@ -1,13 +1,18 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Briefcase,
   FileText,
   HandCoins,
   LayoutDashboard,
+  Mail,
   PenLine,
   ScrollText,
   Send,
 } from "lucide-react";
+
+import { listMyMessages } from "@/lib/client-inbox.functions";
 
 import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
