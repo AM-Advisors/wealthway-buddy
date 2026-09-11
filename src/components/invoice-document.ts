@@ -78,21 +78,27 @@ export function buildInvoiceHtml(invoice: any) {
   tfoot td { font-weight: 600; border-bottom: none; padding-top: 16px; }
   .note { margin-top: 20px; font-size: 12px; color: #55585c; }
   .status { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 999px; background: #eef7f9; color: #142647; font-size: 12px; }
+  .logo { height: 44px; margin-bottom: 10px; }
+  .doc-type { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #55585c; margin: 0 0 2px; }
+  .from { margin-top: 22px; font-size: 12px; color: #55585c; }
+  .from strong { display: block; color: #142647; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; margin-bottom: 4px; }
+  .from p { margin: 1px 0; }
   @media print { body { padding: 24px; } }
 </style>
 </head>
 <body>
   <div class="brand">
     <div>
-      <h1>Harmonious</h1>
-      <p>Fund administration, onboarding and payment facilitation</p>
-      <p>harmonious.co</p>
+      <img class="logo" src="${escape(companyLogoUrl())}" alt="${escape(COMPANY.name)}" />
+      <p>${escape(COMPANY.tagline)}</p>
     </div>
     <div style="text-align:right">
+      <p class="doc-type">Invoice</p>
       <h1>${escape(invoice?.number ?? "Invoice")}</h1>
       <span class="status">${escape(STATUS[invoice?.status] ?? invoice?.status ?? "")}</span>
     </div>
   </div>
+
 
   <div class="meta">
     <div>
