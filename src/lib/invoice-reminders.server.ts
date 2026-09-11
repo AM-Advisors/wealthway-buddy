@@ -45,6 +45,30 @@ export function reminderStage(dueDate: string, today: string) {
 }
 
 /**
+ * Marks today's reminder run as taken. Returns false when it already ran,
+ * so an untrusted caller can't make the job do work more than once a day.
+ */
+export async function claimReminderRun(today = todayIso()) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("scheduled_job_runs")
+    .upsert(
+      { job_key: "invoice-reminders", last_run_on: today, last_run_at: new Date().toISOString() },
+      { onConflict: "job_key", ignoreDuplicates: false },
+    )
+    .lt("last_run_on", today)
+    .select("job_key");
+  if (error) {
+    // First ever run: no row to compare against yet.
+    const { error: insertError } = await supabaseAdmin
+      .from("scheduled_job_runs")
+      .insert({ job_key: "invoice-reminders", last_run_on: today });
+    return !insertError;
+  }
+  return Boolean(data && data.length);
+}
+
+/**
  * Sends due-date reminders for every issued, unpaid invoice that hits a
  * reminder point today. Idempotency keys mean a repeated run is harmless.
  */
