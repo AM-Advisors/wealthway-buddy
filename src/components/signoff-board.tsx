@@ -129,7 +129,7 @@ export function SignoffBoard({ initial }: { initial: Queue }) {
 
   return (
     <Tabs defaultValue="services" className="w-full">
-      <TabsList className="flex-wrap">
+      <TabsList>
         {lists.map((l) => (
           <TabsTrigger key={l.value} value={l.value}>
             {l.label}

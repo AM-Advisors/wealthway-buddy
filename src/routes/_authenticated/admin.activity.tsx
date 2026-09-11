@@ -187,7 +187,7 @@ function AdminActivityPage() {
                       <Badge variant={kindTone[entry.kind] ?? "outline"}>
                         {kindLabels[entry.kind] ?? entry.kind}
                       </Badge>
-                      <span className="text-sm font-medium">{entry.summary}</span>
+                      <span className="min-w-0 break-words text-sm font-medium">{entry.summary}</span>
                     </div>
                     <p className="text-muted-foreground text-xs">
                       {[

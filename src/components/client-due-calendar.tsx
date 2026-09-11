@@ -86,7 +86,7 @@ export function ClientDueCalendar({ items }: { items: DueItem[] }) {
               Invoice due dates, requests waiting on you and agreement dates in one month view.
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -96,7 +96,7 @@ export function ClientDueCalendar({ items }: { items: DueItem[] }) {
             >
               Previous
             </Button>
-            <span className="min-w-[9rem] text-center text-sm font-medium">
+            <span className="min-w-[8rem] flex-1 text-center sm:flex-none text-sm font-medium">
               {cursor.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </span>
             <Button
@@ -124,7 +124,7 @@ export function ClientDueCalendar({ items }: { items: DueItem[] }) {
         </div>
         <div className="grid grid-cols-7 gap-1">
           {cells.map((key, idx) => {
-            if (!key) return <div key={`pad-${idx}`} className="min-h-16 rounded-md" />;
+            if (!key) return <div key={`pad-${idx}`} className="min-h-12 rounded-md sm:min-h-16" />;
             const dayItems = byDay.get(key) ?? [];
             const isToday = key === todayKey;
             const isSelected = key === selected;
@@ -134,7 +134,7 @@ export function ClientDueCalendar({ items }: { items: DueItem[] }) {
                 key={key}
                 type="button"
                 onClick={() => setSelected(isSelected ? null : key)}
-                className={`min-h-16 rounded-md border p-1 text-left transition-colors hover:bg-muted/60 ${
+                className={`min-h-12 rounded-md border p-1 sm:min-h-16 text-left transition-colors hover:bg-muted/60 ${
                   isSelected ? "border-primary bg-muted/60" : ""
                 } ${isToday ? "border-primary" : ""} ${isLate ? "bg-destructive/10" : ""}`}
               >
@@ -151,7 +151,7 @@ export function ClientDueCalendar({ items }: { items: DueItem[] }) {
                   ))}
                 </span>
                 {dayItems.length > 0 && (
-                  <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
+                  <span className="mt-0.5 hidden truncate text-[10px] text-muted-foreground sm:block">
                     {dayItems.length === 1 ? dayItems[0]!.label : `${dayItems.length} items`}
                   </span>
                 )}

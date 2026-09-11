@@ -97,7 +97,7 @@ function AdminQueue() {
               : "Investors in the funds you manage, with their onboarding progress."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {isAdmin && (
             <>
               <Button asChild size="sm">

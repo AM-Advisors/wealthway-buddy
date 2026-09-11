@@ -159,7 +159,7 @@ function ClientPortal() {
       </div>
 
       <Tabs defaultValue="overview" className="mt-8">
-        <TabsList className="flex flex-wrap">
+        <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="funds">Funds</TabsTrigger>
           <TabsTrigger value="agreement">Agreement &amp; scope</TabsTrigger>

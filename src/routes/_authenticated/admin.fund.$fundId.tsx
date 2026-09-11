@@ -242,7 +242,7 @@ function FundPage() {
       </div>
 
       <Tabs defaultValue="overview" className="mt-8">
-        <TabsList className="flex flex-wrap">
+        <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="banking">Banking</TabsTrigger>

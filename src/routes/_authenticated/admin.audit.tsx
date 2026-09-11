@@ -65,7 +65,7 @@ function AuditLogPage() {
       </header>
 
       <Tabs defaultValue="money">
-        <TabsList className="flex flex-wrap">
+        <TabsList>
           <TabsTrigger value="money">Money movement</TabsTrigger>
           <TabsTrigger value="distributions">Distributions</TabsTrigger>
           <TabsTrigger value="checks">Investor checks</TabsTrigger>

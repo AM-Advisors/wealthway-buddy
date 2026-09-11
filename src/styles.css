@@ -201,6 +201,15 @@
   font-family: var(--font-heading);
 }
 
+/* Horizontal scrollers (tab strips, toolbars) without a visible scrollbar. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Subtle engraved grid used behind quiet, document-like pages. */
 @utility paper-grid {
   background-image:
