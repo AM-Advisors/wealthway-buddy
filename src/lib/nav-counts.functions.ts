@@ -66,7 +66,7 @@ export const getNavCounts = createServerFn({ method: "GET" })
         const { count } = await supabase
           .from("client_assignments")
           .select("id", { count: "exact", head: true })
-          .eq("user_id", userId);
+          .eq("staff_user_id", userId);
         return count ?? 0;
       }),
     ]);

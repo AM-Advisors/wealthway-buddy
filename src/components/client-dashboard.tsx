@@ -189,7 +189,7 @@ export function ClientDashboard({
           : `Approve invoice ${inv.number ?? ""}`.trim(),
         detail: `${money(inv.total_cents)}${due ? ` · due ${when(due)}` : ""}`,
         to: "/client/invoices",
-        urgency: (overdue ? "overdue" : due ? "soon" : "open") as NeedsYouItem["urgency"],
+        urgency: overdue ? ("overdue" as const) : due ? ("soon" as const) : ("open" as const),
         actionLabel: "Open invoice",
       };
     }),
@@ -198,7 +198,7 @@ export function ClientDashboard({
       .map((r: any) => ({
         id: `needs-req-${r.id}`,
         title: `Sign the fee proposal for ${r.serviceName ?? r.service_key}`,
-        detail: r.fundName ?? undefined,
+        ...(r.fundName ? { detail: String(r.fundName) } : {}),
         to: "/client",
         urgency: "soon" as const,
         actionLabel: "Review",
