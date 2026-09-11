@@ -289,7 +289,42 @@ export function ClientDashboard({
             ))}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Signed agreements</CardTitle>
+            <CardDescription>
+              The statements of work you have signed, and where each one stands.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {signedSows.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nothing is signed yet. Agreements appear here once you sign them.
+              </p>
+            )}
+            {signedSows.map((s: any) => (
+              <div key={s.id} className="rounded-md border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{s.title ?? "Statement of work"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Signed {when(s.client_signed_at ?? s.signed_on)}
+                      {s.effective_date ? ` · starts ${when(s.effective_date)}` : ""}
+                      {s.termination_date ? ` · ends ${when(s.termination_date)}` : ""}
+                    </p>
+                  </div>
+                  <Badge variant={s.approval_status === "approved" ? "default" : "secondary"}>
+                    {s.approval_status === "approved" ? "Approved" : "Awaiting approval"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
+
+      <ClientDueCalendar items={dueItems} />
     </div>
   );
 }
