@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { getClientPortal } from "@/lib/client-portal.functions";
+import { getClientPortal, maybeSendClientWelcome } from "@/lib/client-portal.functions";
 
 type ClientPortalContextValue = {
   data: any;
@@ -15,6 +15,7 @@ const ClientPortalContext = createContext<ClientPortalContextValue | null>(null)
 
 export function ClientPortalProvider({ children }: { children: ReactNode }) {
   const load = useServerFn(getClientPortal);
+  const sendWelcome = useServerFn(maybeSendClientWelcome);
   const [clientId, setClientId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -22,6 +23,14 @@ export function ClientPortalProvider({ children }: { children: ReactNode }) {
     queryFn: () => load({ data: { clientId } }),
     retry: false,
   });
+
+  // First time a signed-up contact opens the portal, send their welcome email
+  // (portal link + next steps). The server sends it once per person per client.
+  useEffect(() => {
+    if (data?.client) {
+      sendWelcome({}).catch(() => undefined);
+    }
+  }, [data?.client, sendWelcome]);
 
   return (
     <ClientPortalContext.Provider value={{ data, isLoading, clientId, setClientId }}>
