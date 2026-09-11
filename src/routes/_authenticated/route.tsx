@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PolicyGate } from "@/components/policy-gate";
 import { PortalGate } from "@/components/portal-gate";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { PortalTopbar } from "@/components/portal-topbar";
+import { PortalFooter } from "@/components/portal-footer";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
