@@ -599,6 +599,113 @@ export const requestService = createServerFn({ method: "POST" })
     return { id: created.id as string };
   });
 
+/**
+ * Staff-raised rate proposal: Harmonious puts a fee in front of the client
+ * before any work is invoiced. It lands straight in the client's portal as a
+ * quoted item, so the client signs it exactly like a quote on their own
+ * request. Nothing is billable until they sign and it is activated.
+ */
+export const proposeRateToClient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        clientId: z.string().uuid(),
+        offeringId: z.string().uuid().nullable().optional(),
+        serviceKey: z.string().min(2).max(80),
+        feeCents: z.number().int().min(0),
+        pricingModel: z.string().max(40).optional().or(z.literal("")),
+        sowId: z.string().uuid().nullable().optional(),
+        effectiveDate: z.string().optional().or(z.literal("")),
+        amendmentTerms: z.string().trim().max(8000).optional().or(z.literal("")),
+        feeSource: z.enum(["client_rate", "standard", "custom"]).default("custom"),
+        feeRateId: z.string().uuid().nullable().optional(),
+        feeOverrideReason: z.string().trim().max(500).optional().or(z.literal("")),
+        note: z.string().trim().max(2000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    if (data.feeSource === "custom" && !(data.feeOverrideReason && data.feeOverrideReason.length >= 3)) {
+      throw new Error("Say why this proposal uses a fee that isn't on the rate card.");
+    }
+
+    const { data: openRow } = await context.supabase
+      .from("service_requests")
+      .select("id, status")
+      .eq("client_id", data.clientId)
+      .eq("service_key", data.serviceKey)
+      .in("status", ["requested", "in_review", "quoted", "signed"])
+      .maybeSingle();
+    if (openRow) {
+      throw new Error(
+        "There is already an open item with this client for that service. Finish or withdraw it before proposing a new fee.",
+      );
+    }
+
+    const { data: created, error } = await context.supabase
+      .from("service_requests")
+      .insert({
+        client_id: data.clientId,
+        offering_id: data.offeringId ?? null,
+        service_key: data.serviceKey,
+        status: "quoted",
+        requested_by: who.userId,
+        reviewer_id: who.userId,
+        requester_note: "Fee proposed by Harmonious",
+        review_note: data.note || null,
+        proposed_fee_cents: data.feeCents,
+        proposed_pricing_model: data.pricingModel || null,
+        effective_date: data.effectiveDate || null,
+        amendment_terms: data.amendmentTerms || null,
+        sow_id: data.sowId ?? null,
+        fee_source: data.feeSource,
+        fee_rate_id: data.feeSource === "client_rate" ? (data.feeRateId ?? null) : null,
+        fee_override_reason: data.feeSource === "custom" ? data.feeOverrideReason || null : null,
+      } as any)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    await audit(context, who, {
+      area: "rate proposal",
+      action: "proposed",
+      clientId: data.clientId,
+      offeringId: data.offeringId ?? null,
+      target: data.serviceKey,
+      next: {
+        status: "quoted",
+        fee_cents: data.feeCents,
+        pricing_model: data.pricingModel || null,
+        effective_date: data.effectiveDate || null,
+        fee_source: data.feeSource,
+      },
+    });
+
+    const serviceName = await serviceLabel(context, data.serviceKey);
+    const { notifyClientAdmins, money } = await import("@/lib/client-notify.server");
+    await notifyClientAdmins(data.clientId, {
+      eventKey: `rate-proposal:${created.id}`,
+      headline: `Fee proposal for your approval — ${serviceName}`,
+      intro:
+        "Harmonious has put a written fee in front of you for approval. Nothing is added to your scope and nothing is invoiced until you sign it.",
+      details: [
+        { label: "Service", value: serviceName },
+        { label: "Proposed fee", value: money(data.feeCents) },
+        ...(data.pricingModel ? [{ label: "Billing basis", value: String(data.pricingModel) }] : []),
+        ...(data.effectiveDate ? [{ label: "Effective", value: String(data.effectiveDate) }] : []),
+        { label: "Status", value: "Pending your approval" },
+      ],
+      actionLabel: "Review and approve",
+      actionPath: "/client",
+    });
+
+    return { id: created.id as string };
+  });
+
+
+
 type RequestRow = Record<string, any>;
 
 async function decorateRequests(context: any, requests: RequestRow[]) {
