@@ -303,6 +303,9 @@ export const getMyDesk = createServerFn({ method: "GET" })
         .filter((r: any) => ["quoted", "signed"].includes(String(r.status)))
         .map(decorate),
       holds: ((holdRes.data ?? []) as any[]).map(decorate),
+      signOffs,
+      invoices: openInvoices,
+      declaredPayments,
       funds: funds.map((f: any) => ({ ...f, clientName: clientName(f.client_id) })),
     };
   });
