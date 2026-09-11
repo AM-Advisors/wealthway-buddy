@@ -33,9 +33,7 @@ function AuthenticatedLayout() {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar onSignOut={signOut} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-12 items-center gap-2 border-b px-2">
-            <SidebarTrigger />
-          </header>
+          <PortalTopbar onSignOut={signOut} />
           <main className="min-w-0 flex-1">
             <PolicyGate onSignOut={signOut}>
               <PortalGate onSignOut={signOut}>
@@ -43,6 +41,7 @@ function AuthenticatedLayout() {
               </PortalGate>
             </PolicyGate>
           </main>
+          <PortalFooter />
         </div>
       </div>
     </SidebarProvider>
