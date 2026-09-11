@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClientDueCalendar, type DueItem } from "@/components/client-due-calendar";
 
 function money(cents: number | null | undefined) {
   if (cents === null || cents === undefined) return "—";
