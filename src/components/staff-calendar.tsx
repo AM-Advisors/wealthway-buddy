@@ -226,6 +226,69 @@ export function StaffCalendar() {
       });
     }
 
+    for (const s of ((data as any).signOffs ?? []) as any[]) {
+      const raised = dayKey(s.since ?? new Date());
+      const due = dueKey(s.since ?? new Date().toISOString(), TARGET_DAYS.signoff);
+      out.push({
+        id: `signoff-${s.id}`,
+        kind: "signoff",
+        day: due || raised,
+        raised,
+        dueLabel: "Chase the signature by",
+        title: `${s.personName} to sign`,
+        clientId: String(s.client_id),
+        clientName: s.clientName ?? "—",
+        fundName: null,
+        detail: s.outstanding
+          .map((o: any) => `${o.title} (v${o.version})`)
+          .join(", "),
+        status: `${s.outstanding.length} document${s.outstanding.length === 1 ? "" : "s"}`,
+        overdue: isPast(due || raised),
+      });
+    }
+
+    for (const i of ((data as any).invoices ?? []) as any[]) {
+      const raised = plainDayKey(i.issue_date) || dayKey(i.created_at);
+      const due = plainDayKey(i.due_date) || raised;
+      out.push({
+        id: `invoice-${i.id}`,
+        kind: "payment",
+        day: due,
+        raised,
+        dueLabel: "Payment due by",
+        title: `${i.number ?? "Invoice"} ${money(i.total_cents) ?? ""}`.trim(),
+        clientId: String(i.client_id),
+        clientName: i.clientName ?? "—",
+        fundName: i.fundName ?? null,
+        detail: `${String(i.status).replace(/_/g, " ")}${
+          i.approval_status ? ` · client approval ${String(i.approval_status).replace(/_/g, " ")}` : ""
+        }`,
+        status: "Unpaid",
+        overdue: isPast(due),
+      });
+    }
+
+    for (const p of ((data as any).declaredPayments ?? []) as any[]) {
+      const raised = plainDayKey(p.client_paid_on) || dayKey(p.client_payment_declared_at);
+      const due = dueKey(p.client_payment_declared_at, TARGET_DAYS.match) || raised;
+      out.push({
+        id: `declared-${p.id}`,
+        kind: "payment",
+        day: due,
+        raised,
+        dueLabel: "Match against the bank by",
+        title: `${p.number ?? "Invoice"} reported paid`,
+        clientId: String(p.client_id),
+        clientName: p.clientName ?? "—",
+        fundName: p.fundName ?? null,
+        detail: `${(p.client_payment_method ?? "payment").toString().toUpperCase()} · reference ${
+          p.client_payment_reference ?? "none given"
+        }`,
+        status: "Awaiting matching",
+        overdue: isPast(due),
+      });
+    }
+
     return out.filter((i) => i.day);
   }, [data]);
 
