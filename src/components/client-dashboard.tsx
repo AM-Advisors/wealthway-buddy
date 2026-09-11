@@ -159,6 +159,8 @@ export function ClientDashboard({
                   </div>
                   {r.proposed_fee_cents ? (
                     <Badge variant="outline">{money(r.proposed_fee_cents)}</Badge>
+                  ) : r.proposed_pricing_model === "per_request" ? (
+                    <Badge variant="outline">Quoted per request</Badge>
                   ) : null}
                 </div>
               </div>
