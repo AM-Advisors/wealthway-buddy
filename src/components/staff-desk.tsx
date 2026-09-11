@@ -146,6 +146,8 @@ export function StaffDesk() {
             <TabsTrigger value="requests">Requests ({data.requests.length})</TabsTrigger>
             <TabsTrigger value="quotes">Quotes ({data.quotes.length})</TabsTrigger>
             <TabsTrigger value="holds">Holds ({data.holds.length})</TabsTrigger>
+            <TabsTrigger value="signoffs">Sign-offs ({signOffs.length})</TabsTrigger>
+            <TabsTrigger value="payments">Payments ({invoices.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="clients" className="mt-4 space-y-3">
