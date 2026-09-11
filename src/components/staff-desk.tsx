@@ -288,6 +288,113 @@ export function StaffDesk() {
               ))
             )}
           </TabsContent>
+
+          <TabsContent value="signoffs" className="mt-4 space-y-3">
+            {signOffs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Everyone at your clients has signed the current documents.
+              </p>
+            ) : (
+              signOffs.map((s: any) => (
+                <Card key={s.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <CardTitle className="text-base">{s.personName}</CardTitle>
+                      <Badge variant="secondary">
+                        {s.outstanding.length} to sign
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      {s.clientName}
+                      {s.personEmail ? ` · ${s.personEmail}` : ""}
+                      {s.clientRole ? ` · ${String(s.clientRole).replace(/_/g, " ")}` : ""}
+                      {s.since ? ` · added ${days(s.since)} ago` : ""}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <p>{s.outstanding.map((o: any) => `${o.title} (v${o.version})`).join(", ")}</p>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/admin/onboarding">Follow up in Client onboarding</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-4 space-y-4">
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Invoices not yet paid</h3>
+              {invoices.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No invoices outstanding for your clients.
+                </p>
+              ) : (
+                invoices.map((i: any) => (
+                  <Card key={i.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <CardTitle className="text-base">
+                          {i.number ?? "Draft invoice"} · {money(i.total_cents) ?? "—"}
+                        </CardTitle>
+                        <Badge variant={i.due_date && i.due_date < new Date().toISOString().slice(0, 10) ? "destructive" : "secondary"}>
+                          {String(i.status).replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                      <CardDescription>
+                        {i.clientName}
+                        {i.fundName ? ` · ${i.fundName}` : ""}
+                        {i.due_date ? ` · due ${i.due_date}` : " · no due date"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      {i.approval_status ? (
+                        <p>Client approval: {String(i.approval_status).replace(/_/g, " ")}</p>
+                      ) : null}
+                      <Button asChild size="sm" variant="outline">
+                        <Link to="/admin/pricing">Open in Pricing and agreements</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Payments clients say they have sent</h3>
+              {declaredPayments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nothing reported by a client and waiting to be matched.
+                </p>
+              ) : (
+                declaredPayments.map((p: any) => (
+                  <Card key={`declared-${p.id}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <CardTitle className="text-base">
+                          {p.number ?? "Invoice"} · {money(p.total_cents) ?? "—"}
+                        </CardTitle>
+                        <Badge variant="outline">Awaiting matching</Badge>
+                      </div>
+                      <CardDescription>
+                        {p.clientName}
+                        {p.client_payment_method
+                          ? ` · ${String(p.client_payment_method).toUpperCase()}`
+                          : ""}
+                        {p.client_paid_on ? ` · sent ${p.client_paid_on}` : ""}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <p>Reference: {p.client_payment_reference ?? "none given"}</p>
+                      <Button asChild size="sm" variant="outline">
+                        <Link to="/admin/pricing">Match it in Pricing and agreements</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       )}
 
