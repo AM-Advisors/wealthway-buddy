@@ -599,6 +599,9 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          invite_note: string | null
+          invite_sent_at: string | null
+          invite_status: string | null
           invited_by: string | null
           invited_name: string | null
           note: string | null
@@ -615,6 +618,9 @@ export type Database = {
           email: string
           expires_at?: string
           id?: string
+          invite_note?: string | null
+          invite_sent_at?: string | null
+          invite_status?: string | null
           invited_by?: string | null
           invited_name?: string | null
           note?: string | null
@@ -631,6 +637,9 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          invite_note?: string | null
+          invite_sent_at?: string | null
+          invite_status?: string | null
           invited_by?: string | null
           invited_name?: string | null
           note?: string | null
