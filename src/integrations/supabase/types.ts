@@ -3516,6 +3516,10 @@ export type Database = {
           created_by: string | null
           currency: string
           dispute_reason: string | null
+          dispute_resolution: string | null
+          dispute_resolution_note: string | null
+          dispute_resolved_at: string | null
+          dispute_resolved_by: string | null
           due_date: string | null
           id: string
           issue_date: string | null
@@ -3557,6 +3561,10 @@ export type Database = {
           created_by?: string | null
           currency?: string
           dispute_reason?: string | null
+          dispute_resolution?: string | null
+          dispute_resolution_note?: string | null
+          dispute_resolved_at?: string | null
+          dispute_resolved_by?: string | null
           due_date?: string | null
           id?: string
           issue_date?: string | null
@@ -3598,6 +3606,10 @@ export type Database = {
           created_by?: string | null
           currency?: string
           dispute_reason?: string | null
+          dispute_resolution?: string | null
+          dispute_resolution_note?: string | null
+          dispute_resolved_at?: string | null
+          dispute_resolved_by?: string | null
           due_date?: string | null
           id?: string
           issue_date?: string | null
