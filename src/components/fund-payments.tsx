@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FundBankStatement } from "@/components/fund-bank-statement";
 
 function money(cents?: number | null) {
   return ((Number(cents ?? 0)) / 100).toLocaleString("en-US", {
@@ -341,6 +342,8 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
           )}
         </CardContent>
       </Card>
+
+      <FundBankStatement fundId={fundId} />
 
       <Card>
         <CardHeader>
