@@ -416,6 +416,7 @@ export const getMyClosing = createServerFn({ method: "GET" })
 
     return {
       closing: {
+        applicationId: app.id as string,
         closingDate: closing.closing_date as string,
         fundedAmountCents: Number(closing.funded_amount_cents ?? 0),
         note: (closing.note as string | null) ?? null,
