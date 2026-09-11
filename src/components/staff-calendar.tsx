@@ -44,18 +44,24 @@ const TARGET_DAYS = {
   quote: 10,
   activate: 2,
   hold: 3,
+  signoff: 7,
+  match: 2,
 } as const;
 
 const KIND_LABEL: Record<Kind, string> = {
   request: "Request",
   quote: "Quote",
   hold: "Hold",
+  signoff: "Sign-off",
+  payment: "Payment",
 };
 
 const KIND_DOT: Record<Kind, string> = {
   request: "bg-primary",
   quote: "bg-accent",
   hold: "bg-destructive",
+  signoff: "bg-amber-500",
+  payment: "bg-emerald-500",
 };
 
 function serviceLabel(key?: string | null) {
