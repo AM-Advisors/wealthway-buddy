@@ -412,9 +412,20 @@ function Dashboard() {
         </CardContent>
       </Card>
 
+      <div className="mt-8 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Your capital</h2>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/capital">Capital summary</Link>
+          </Button>
+        </div>
+        <InvestorCapitalSummary compact />
+      </div>
+
       <div className="mt-8">
         <OwnershipCard />
       </div>
+
 
       <div className="mt-10">
         <OnboardingStepper current={(app.current_step as "kyc") ?? "kyc"} />
