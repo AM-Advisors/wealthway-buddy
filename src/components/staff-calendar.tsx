@@ -506,6 +506,7 @@ export function StaffCalendar() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{KIND_LABEL[item.kind]}</Badge>
+                  <Badge variant="destructive">{dueWording(item.day)}</Badge>
                   <Button
                     size="sm"
                     variant="ghost"
