@@ -91,6 +91,7 @@ async function buildEvents(context: any, offeringId: string) {
   for (const a of ((apps ?? []) as any[])) {
     if (!SETTLED.includes(String(a.funding_status ?? ""))) continue;
     const cents = Number(a.wire_fee_cents ?? fundWire ?? 0);
+    const rateMissing = cents <= 0;
     events.push({
       ref: `wire_fee:${a.id}`,
       kind: "wire_fee",
@@ -100,6 +101,7 @@ async function buildEvents(context: any, offeringId: string) {
       occurredOn: String(a.updated_at ?? a.created_at ?? "").slice(0, 10),
       cents,
       custom: a.wire_fee_cents != null && Number(a.wire_fee_cents) !== fundWire,
+      rateMissing,
     });
   }
 
@@ -156,7 +158,7 @@ export const getFundBilling = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
-    const { offering, events, fundWire, fundClosing } = await buildEvents(
+    const { offering, events, fundWire, fundClosing, sharePrice } = await buildEvents(
       context,
       data.offeringId,
     );
@@ -248,6 +250,7 @@ export const getFundBilling = createServerFn({ method: "POST" })
         name: (offering as any).name,
         wireFeeCents: fundWire,
         closingCostCents: fundClosing,
+        sharePriceCents: sharePrice,
         wireFeeSource: String((offering as any).wire_fee_source ?? "custom"),
         closingCostSource: String((offering as any).closing_cost_source ?? "custom"),
       },
@@ -296,9 +299,11 @@ export const billFundFees = createServerFn({ method: "POST" })
 
     const chosen = events.filter((e) => data.refs.includes(e.ref));
     if (!chosen.length) throw new Error("Nothing selected to bill.");
-    if (chosen.some((e) => Number(e.cents ?? 0) <= 0)) {
+    const missing = chosen.filter((e) => Number(e.cents ?? 0) <= 0);
+    if (missing.length) {
+      const what = Array.from(new Set(missing.map((e) => e.kindLabel.toLowerCase()))).join(" and ");
       throw new Error(
-        "One of these fees is set to zero. Set the fund's wire fee and closing cost from the agreed rates first.",
+        `${(offering as any).name} has no ${what} rate on file, so it would bill as zero. Set it on the fund's fee settings first.`,
       );
     }
 
@@ -358,8 +363,8 @@ export const billFundFees = createServerFn({ method: "POST" })
         pricing_id: (clientRates as any)[e.kind]?.id ?? null,
         label: e.label,
         description: e.description,
-        quantity: 1,
-        unit_cents: e.cents,
+        quantity: e.units && e.units > 0 ? e.units : 1,
+        unit_cents: e.unitCents ?? e.cents,
         amount_cents: e.cents,
         offering_id: data.offeringId,
         sort_order: index,
