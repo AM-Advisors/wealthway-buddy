@@ -154,6 +154,8 @@ function ClientPortal() {
           <TabsTrigger value="agreement">Agreement &amp; scope</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="wires">Wire requests</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="funds" className="mt-6">
