@@ -100,6 +100,60 @@ export const getClientPortal = createServerFn({ method: "GET" })
 
     const fundNameById = new Map((funds ?? []).map((f: any) => [f.id, f.name]));
     const today = new Date().toISOString().slice(0, 10);
+    const fundIds = (funds ?? []).map((f: any) => String(f.id));
+
+    // Wire requests raised on this client's funds, plus who approved each payment.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const paymentIds = (payments ?? []).map((p: any) => String(p.id));
+
+    const [{ data: wireRows }, { data: approvalRows }] = await Promise.all([
+      fundIds.length
+        ? context.supabase
+            .from("wire_requests")
+            .select(
+              "id, offering_id, amount_cents, purpose, note, expected_date, status, review_note, reviewed_at, requested_by, created_at",
+            )
+            .in("offering_id", fundIds)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [] as any[] }),
+      paymentIds.length
+        ? supabaseAdmin
+            .from("payment_approvals")
+            .select("instruction_id, approver_id, approver_role, decision, created_at")
+            .in("instruction_id", paymentIds)
+            .order("created_at")
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const peopleIds = [
+      ...new Set([
+        ...((approvalRows ?? []) as any[]).map((a) => String(a.approver_id)),
+        ...((wireRows ?? []) as any[]).map((w) => String(w.requested_by)),
+      ]),
+    ];
+    const { data: people } = peopleIds.length
+      ? await supabaseAdmin.from("profiles").select("user_id, legal_name, email").in("user_id", peopleIds)
+      : { data: [] as any[] };
+    const personName = new Map(
+      ((people ?? []) as any[]).map((p) => [
+        String(p.user_id),
+        (p.legal_name as string) || (p.email as string) || "Harmonious",
+      ]),
+    );
+
+    const approvalsByPayment = new Map<string, any[]>();
+    for (const a of (approvalRows ?? []) as any[]) {
+      const key = String(a.instruction_id);
+      const list = approvalsByPayment.get(key) ?? [];
+      list.push({
+        approverName: personName.get(String(a.approver_id)) ?? "Harmonious",
+        approverRole: a.approver_role as string | null,
+        decision: a.decision as string,
+        at: a.created_at as string,
+      });
+      approvalsByPayment.set(key, list);
+    }
 
     return {
       clients,
@@ -108,14 +162,24 @@ export const getClientPortal = createServerFn({ method: "GET" })
       funds: funds ?? [],
       sows: sows ?? [],
       services: included,
+      canRequestWire: included.some((s) => s.key === "wire_instructions"),
       invoices: (invoices ?? []).map((inv: any) => ({
         ...inv,
         overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
       })),
+      wireRequests: ((wireRows ?? []) as any[]).map((w) => ({
+        ...w,
+        fundName: fundNameById.get(w.offering_id) ?? null,
+        requestedByName: personName.get(String(w.requested_by)) ?? "Harmonious",
+      })),
       payments: (payments ?? []).map((p: any) => ({
         ...p,
         fundName: p.offering_id ? fundNameById.get(p.offering_id) ?? null : null,
+        approvals: (approvalsByPayment.get(String(p.id)) ?? []).filter(
+          (a) => a.decision === "approved",
+        ),
       })),
+
     };
   });
 
@@ -197,3 +261,34 @@ export const getSowDocumentUrl = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { url: signed?.signedUrl ?? null };
   });
+
+/** A client contact asks Harmonious to send a wire. This only creates a request:
+ *  the database checks the person is a contact on that fund's client, that wire
+ *  facilitation is in their active scope and that no compliance hold is open.
+ *  Harmonious still runs its checks and records two separate approvals before
+ *  any money moves. */
+export const createClientWireRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        offeringId: z.string().uuid(),
+        amountCents: z.number().int().positive().max(100_000_000_000),
+        purpose: z.enum(["investor_wire", "capital_call", "expense", "distribution", "other"]),
+        expectedDate: z.string().trim().max(20).optional().nullable(),
+        note: z.string().trim().max(2000).optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.rpc("client_create_wire_request", {
+      _offering_id: data.offeringId,
+      _amount_cents: data.amountCents,
+      _purpose: data.purpose,
+      _expected_date: data.expectedDate || null,
+      _note: data.note || null,
+    } as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+

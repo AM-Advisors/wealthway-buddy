@@ -6,6 +6,8 @@ import { useState } from "react";
 import { ClientSowPanel } from "@/components/client-sow-panel";
 import { getClientPortal } from "@/lib/client-portal.functions";
 import { ClientInvoicesPanel } from "@/components/client-invoices-panel";
+import { ClientPaymentsPanel } from "@/components/client-payments-panel";
+import { ClientWireRequestsPanel } from "@/components/client-wire-requests-panel";
 import { MyServiceRequests } from "@/components/service-request-signing";
 import { ClientOffboardingPanel } from "@/components/client-offboarding-panel";
 
@@ -94,6 +96,9 @@ function ClientPortal() {
   const services = (data.services ?? []) as any[];
   const payments = (data.payments ?? []) as any[];
   const openInvoices = (data.invoices ?? []).filter((i: any) => i.status === "issued");
+  const paymentsInProgress = payments.filter(
+    (p: any) => !["settled", "completed", "cancelled", "canceled", "rejected"].includes(String(p.status)),
+  ).length;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
@@ -136,10 +141,11 @@ function ClientPortal() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Approved payments</CardDescription>
-            <CardTitle className="text-2xl">{payments.length}</CardTitle>
+            <CardDescription>Payments in progress</CardDescription>
+            <CardTitle className="text-2xl">{paymentsInProgress}</CardTitle>
           </CardHeader>
         </Card>
+
       </div>
 
       <Tabs defaultValue="funds" className="mt-8">
@@ -148,6 +154,8 @@ function ClientPortal() {
           <TabsTrigger value="agreement">Agreement &amp; scope</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="wires">Wire requests</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="funds" className="mt-6">
@@ -239,46 +247,18 @@ function ClientPortal() {
         </TabsContent>
 
         <TabsContent value="payments" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Approved payments</CardTitle>
-              <CardDescription>
-                Payments that have cleared Harmonious approval. Harmonious facilitates payments and
-                keeps the records; it does not hold your funds as a bank, custodian or escrow agent.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {payments.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No approved payments yet. Anything awaiting approval stays with the Harmonious
-                  team until both approvals are recorded.
-                </p>
-              )}
-              {payments.map((p) => (
-                <div key={p.id} className="rounded-md border p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium">{money(Number(p.amount_cents))}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {String(p.purpose ?? "payment").replace(/_/g, " ")}
-                        {p.fundName ? ` · ${p.fundName}` : ""}
-                        {p.beneficiary_name ? ` · to ${p.beneficiary_name}` : ""}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Last updated {date(p.updated_at)}
-                        {p.authorization_reference ? ` · ref ${p.authorization_reference}` : ""}
-                      </p>
-                    </div>
-                    <Badge variant="secondary">
-                      {PAYMENT_LABEL[p.status as string] ?? String(p.status).replace(/_/g, " ")}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <ClientPaymentsPanel payments={payments} />
+        </TabsContent>
+
+        <TabsContent value="wires" className="mt-6">
+          <ClientWireRequestsPanel
+            requests={(data.wireRequests ?? []) as any[]}
+            funds={funds}
+            canRequest={!!(data as any).canRequestWire}
+          />
         </TabsContent>
       </Tabs>
+
 
       <p className="mt-8 text-xs text-muted-foreground">
         Harmonious provides administrative, technology, onboarding, reporting, payment-facilitation,
