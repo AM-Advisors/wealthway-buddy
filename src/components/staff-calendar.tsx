@@ -400,7 +400,7 @@ export function StaffCalendar() {
                   cell.inMonth ? "" : "bg-muted/30 text-muted-foreground",
                   isSelected ? "ring-2 ring-inset ring-primary" : "hover:bg-muted/40",
                 ].join(" ")}
-                aria-label={`${longDay(cell.key)} — ${dayItems.length} item${dayItems.length === 1 ? "" : "s"}`}
+                aria-label={`${longDay(cell.key)} — ${dayItems.length} item${dayItems.length === 1 ? "" : "s"} due`}
               >
                 <span
                   className={[
