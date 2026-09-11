@@ -100,6 +100,13 @@ export function buildInvoiceHtml(invoice: any) {
   </div>
 
 
+  <div class="from">
+    <strong>From</strong>
+    <p>${escape(COMPANY.legalName)}</p>
+    ${addressLines}
+    ${contactLines}
+  </div>
+
   <div class="meta">
     <div>
       <strong>Billed to</strong>
