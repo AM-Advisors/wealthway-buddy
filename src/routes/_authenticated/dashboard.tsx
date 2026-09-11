@@ -13,6 +13,7 @@ import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { OwnershipCard } from "@/components/ownership-card";
+import { CapitalStatementPanel } from "@/components/capital-statement-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
