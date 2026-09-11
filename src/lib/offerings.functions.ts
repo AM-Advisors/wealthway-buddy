@@ -84,21 +84,23 @@ const offeringSchema = z.object({
   reg_type: z.enum(REG_TYPE_VALUES),
   min_investment_cents: z.number().int().min(0),
   target_raise_cents: z.number().int().min(0).nullable().default(null),
-  wire_fee_cents: z.number().int().min(0).default(0),
-  closing_cost_cents: z.number().int().min(0).default(0),
-  share_price_cents: z.number().int().min(0).default(0),
+  // Fields a screen may leave out. Anything omitted is left exactly as it is
+  // on the fund rather than being reset, so one editor never wipes another's work.
+  wire_fee_cents: z.number().int().min(0).optional(),
+  closing_cost_cents: z.number().int().min(0).optional(),
+  share_price_cents: z.number().int().min(0).optional(),
 
-  legal_entity_name: z.string().trim().max(200).default(""),
-  fund_type: z.enum(FUND_TYPES).nullable().default(null),
-  fund_type_other: z.string().trim().max(120).default(""),
-  entity_type: z.enum(ENTITY_TYPES).nullable().default(null),
-  state_formed: z.string().trim().max(60).default(""),
+  legal_entity_name: z.string().trim().max(200).optional(),
+  fund_type: z.enum(FUND_TYPES).nullable().optional(),
+  fund_type_other: z.string().trim().max(120).optional(),
+  entity_type: z.enum(ENTITY_TYPES).nullable().optional(),
+  state_formed: z.string().trim().max(60).optional(),
   date_formed: z
     .string()
     .trim()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-01-31")
     .nullable()
-    .default(null),
+    .optional(),
 
   is_open: z.boolean().default(true),
   wire_instructions: wireSchema,
