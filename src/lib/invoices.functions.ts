@@ -513,20 +513,42 @@ export const issueInvoice = createServerFn({ method: "POST" })
       next: { status: "issued", number, total_cents: total, due_date: dueDate },
     });
 
-    const { notifyClientAdmins, money } = await import("@/lib/client-notify.server");
-    await notifyClientAdmins((invoice as any).client_id, {
-      eventKey: `invoice-issued:${data.id}`,
-      headline: `Invoice ${number} is ready`,
-      intro: "a fee invoice has been issued on your Harmonious account.",
-      details: [
-        { label: "Invoice", value: number },
-        { label: "Amount", value: money(total) },
-        { label: "Issued", value: data.issueDate },
-        { label: "Payment due", value: dueDate },
-      ],
-      actionLabel: "View the invoice",
-      actionPath: "/client/invoices",
-    });
+    const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import(
+      "@/lib/client-notify.server"
+    );
+    const { data: billed } = await context.supabase
+      .from("invoice_lines")
+      .select("label, amount_cents, sort_order")
+      .eq("invoice_id", data.id)
+      .order("sort_order", { ascending: true });
+    const { data: clientRow } = await context.supabase
+      .from("clients")
+      .select("legal_name, name")
+      .eq("id", (invoice as any).client_id)
+      .maybeSingle();
+
+    await notifyClientAdminsWith(
+      (invoice as any).client_id,
+      "invoice-issued",
+      `invoice-issued:${data.id}`,
+      (person) => ({
+        contactName: person.name,
+        clientName:
+          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organisation",
+        invoiceNumber: number,
+        amount: money(total),
+        issueDate: data.issueDate,
+        dueDate,
+        periodLabel: `${(invoice as any).period_start} to ${(invoice as any).period_end}`,
+        lines: (billed ?? []).map((l: any) => ({
+          label: String(l.label ?? "Service fee"),
+          amount: money(Number(l.amount_cents ?? 0)),
+        })),
+        payUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${data.id}`,
+        note: (invoice as any).note || "",
+      }),
+    );
+
 
     return { ok: true, number, dueDate };
   });
