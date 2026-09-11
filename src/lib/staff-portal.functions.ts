@@ -156,11 +156,59 @@ export const getMyDesk = createServerFn({ method: "GET" })
         .from("client_sows")
         .select("id, client_id, title, status, effective_date, termination_date")
         .in("client_id", ids),
-    ]);
+      context.supabase
+        .from("client_users")
+        .select("id, client_id, user_id, client_role, created_at")
+        .in("client_id", ids),
+      context.supabase
+        .from("policy_documents")
+        .select("id, kind, title, version, published, effective_date")
+        .eq("published", true),
+      context.supabase
+        .from("invoices")
+        .select(
+          "id, client_id, offering_id, number, status, total_cents, issue_date, due_date, paid_on, approval_status, client_payment_method, client_payment_reference, client_paid_on, client_payment_declared_at, created_at, updated_at",
+        )
+        .in("client_id", ids)
+        .order("due_date", { ascending: true }),
+      ]);
 
     const requests = (reqRes.data ?? []) as any[];
     const funds = (fundRes.data ?? []) as any[];
     const sows = (sowRes.data ?? []) as any[];
+    const contacts = (contactRes.data ?? []) as any[];
+    const policies = ((policyRes.data ?? []) as any[]).filter((p: any) => p.published);
+    const invoicesAll = (invoiceRes.data ?? []) as any[];
+
+    // Latest published version of each policy document — that is what people must sign.
+    const latestPolicies = Array.from(
+      policies
+        .reduce((map: Map<string, any>, p: any) => {
+          const current = map.get(String(p.kind));
+          if (!current || Number(p.version) > Number(current.version)) map.set(String(p.kind), p);
+          return map;
+        }, new Map<string, any>())
+        .values(),
+    );
+
+    const contactUserIds = Array.from(new Set(contacts.map((c: any) => String(c.user_id))));
+    let acceptances: any[] = [];
+    let profiles: any[] = [];
+    if (contactUserIds.length > 0) {
+      const [accRes, profRes] = await Promise.all([
+        context.supabase
+          .from("policy_acceptances")
+          .select("user_id, kind, version, accepted_at")
+          .in("user_id", contactUserIds),
+        context.supabase
+          .from("profiles")
+          .select("user_id, legal_name, email")
+          .in("user_id", contactUserIds),
+      ]);
+      acceptances = (accRes.data ?? []) as any[];
+      profiles = (profRes.data ?? []) as any[];
+    }
+
 
     const fundName = (id: string | null) =>
       id ? (funds.find((f: any) => String(f.id) === String(id))?.name ?? null) : null;
