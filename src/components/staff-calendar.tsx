@@ -453,13 +453,18 @@ export function StaffCalendar() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline">{KIND_LABEL[item.kind]}</Badge>
                     <Badge variant={item.overdue ? "destructive" : "secondary"}>
-                      {item.overdue ? "Needs attention" : item.status}
+                      {dueWording(item.day)}
                     </Badge>
+                    <Badge variant="secondary">{item.status}</Badge>
                   </div>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {item.fundName ? `${item.fundName} · ` : ""}
                   {item.detail}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {item.dueLabel} {longDay(item.day)}
+                  {item.raised ? ` · raised ${longDay(item.raised)}` : ""}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
