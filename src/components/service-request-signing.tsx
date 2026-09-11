@@ -141,7 +141,10 @@ export function MyServiceRequests() {
           <div className="space-y-3 rounded-md border border-primary p-4">
             <p className="text-sm font-medium">Sign the amendment — {signing.serviceName}</p>
             <p className="text-sm">
-              Fee: <span className="font-medium">{money(signing.proposed_fee_cents) ?? "—"}</span>
+              Fee:{" "}
+              <span className="font-medium">
+                {feeText(signing.proposed_fee_cents, signing.proposed_pricing_model)}
+              </span>
               {signing.effective_date ? ` · starts ${signing.effective_date}` : ""}
             </p>
             {signing.amendment_terms ? (
