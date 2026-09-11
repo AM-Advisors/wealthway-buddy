@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { ActivityPanel } from "@/components/activity-panel";
+import { InvoiceEmailStatus } from "@/components/invoice-email-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -465,6 +466,11 @@ export function InvoicesBoard() {
                       {inv.clientName} · {inv.period_start} to {inv.period_end}
                       {inv.due_date ? ` · due ${inv.due_date}` : ""}
                     </p>
+                    {inv.status !== "draft" ? (
+                      <div className="mt-2">
+                        <InvoiceEmailStatus invoiceId={inv.id} canResend={canManage} />
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-medium tabular-nums">{money(Number(inv.total_cents))}</span>
