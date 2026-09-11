@@ -50,22 +50,20 @@ export function reminderStage(dueDate: string, today: string) {
  */
 export async function claimReminderRun(today = todayIso()) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
+
+  const { data: existing } = await supabaseAdmin
     .from("scheduled_job_runs")
-    .upsert(
-      { job_key: "invoice-reminders", last_run_on: today, last_run_at: new Date().toISOString() },
-      { onConflict: "job_key", ignoreDuplicates: false },
-    )
-    .lt("last_run_on", today)
-    .select("job_key");
-  if (error) {
-    // First ever run: no row to compare against yet.
-    const { error: insertError } = await supabaseAdmin
-      .from("scheduled_job_runs")
-      .insert({ job_key: "invoice-reminders", last_run_on: today });
-    return !insertError;
-  }
-  return Boolean(data && data.length);
+    .select("last_run_on")
+    .eq("job_key", "invoice-reminders")
+    .maybeSingle();
+
+  if (existing && String((existing as any).last_run_on) >= today) return false;
+
+  const { error } = await supabaseAdmin.from("scheduled_job_runs").upsert(
+    { job_key: "invoice-reminders", last_run_on: today, last_run_at: new Date().toISOString() },
+    { onConflict: "job_key" },
+  );
+  return !error;
 }
 
 /**
