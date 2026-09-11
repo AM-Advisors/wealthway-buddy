@@ -146,8 +146,7 @@ async function matchDeclaredPayments(supabase: any, userId: string, offeringId: 
 
   return matched;
 }
-
-
+/** The fund's bank lines alongside the fee invoices they can settle. */
 export const getFundBankStatement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
@@ -155,6 +154,11 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const roles = await assertFundAccess(supabase, userId, data.offeringId);
     const { plaidConfigured } = await import("@/lib/plaid.server");
+
+    const autoMatched = roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r))
+      ? await matchDeclaredPayments(supabase, userId, data.offeringId)
+      : 0;
+
 
     const [{ data: account }, { data: lines }, { data: invoices }] = await Promise.all([
       supabase
