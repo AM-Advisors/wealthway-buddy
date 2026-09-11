@@ -414,7 +414,7 @@ export function StaffCalendar() {
                   {dayItems.slice(0, 3).map((item) => (
                     <div key={item.id} className="flex items-center gap-1 text-[11px] leading-tight">
                       <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${KIND_DOT[item.kind]}`} />
-                      <span className="truncate">
+                      <span className={`truncate ${item.overdue ? "text-destructive" : ""}`}>
                         {item.clientName}: {item.title}
                       </span>
                     </div>
