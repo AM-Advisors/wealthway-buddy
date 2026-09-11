@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
 import { Route as PlatformRouteImport } from './routes/platform'
@@ -141,6 +142,11 @@ const AboutRoute = AboutRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientLoginRoute = ClientLoginRouteImport.update({
+  id: '/client-login',
+  path: '/client-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FundAdministrationRoute = FundAdministrationRouteImport.update({
@@ -767,6 +773,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
@@ -881,6 +888,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
@@ -998,6 +1006,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
@@ -1115,6 +1124,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/client-login'
     | '/fund-administration'
     | '/manager-login'
     | '/platform'
@@ -1229,6 +1239,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/client-login'
     | '/fund-administration'
     | '/manager-login'
     | '/platform'
@@ -1345,6 +1356,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/client-login'
     | '/fund-administration'
     | '/manager-login'
     | '/platform'
@@ -1462,6 +1474,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
+  ClientLoginRoute: typeof ClientLoginRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
   PlatformRoute: typeof PlatformRoute
@@ -1508,6 +1521,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client-login': {
+      id: '/client-login'
+      path: '/client-login'
+      fullPath: '/client-login'
+      preLoaderRoute: typeof ClientLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fund-administration': {
@@ -2505,6 +2525,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
+  ClientLoginRoute: ClientLoginRoute,
   FundAdministrationRoute: FundAdministrationRoute,
   ManagerLoginRoute: ManagerLoginRoute,
   PlatformRoute: PlatformRoute,
