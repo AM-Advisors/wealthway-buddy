@@ -336,11 +336,19 @@ export const saveOffering = createServerFn({ method: "POST" })
       // A fee typed in by hand stops following a rate card until it is pointed
       // back at one on the fund's fee panel.
       const feePatch: Record<string, unknown> = {};
-      if (previousOffering && previousOffering["wire_fee_cents"] !== data.wire_fee_cents) {
+      if (
+        previousOffering &&
+        data.wire_fee_cents !== undefined &&
+        previousOffering["wire_fee_cents"] !== data.wire_fee_cents
+      ) {
         feePatch["wire_fee_source"] = "custom";
         feePatch["wire_fee_rate_id"] = null;
       }
-      if (previousOffering && previousOffering["closing_cost_cents"] !== data.closing_cost_cents) {
+      if (
+        previousOffering &&
+        data.closing_cost_cents !== undefined &&
+        previousOffering["closing_cost_cents"] !== data.closing_cost_cents
+      ) {
         feePatch["closing_cost_source"] = "custom";
         feePatch["closing_cost_rate_id"] = null;
       }
