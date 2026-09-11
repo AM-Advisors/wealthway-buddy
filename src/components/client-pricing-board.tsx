@@ -29,12 +29,14 @@ export function ClientPricingBoard({
   clientPricing,
   sows,
   versions,
+  catalog = [],
   canManage,
 }: {
   clients: any[];
   clientPricing: any[];
   sows: any[];
   versions: any[];
+  catalog?: any[];
   canManage: boolean;
 }) {
   const queryClient = useQueryClient();
@@ -44,6 +46,7 @@ export function ClientPricingBoard({
   const [clientId, setClientId] = useState<string>(clients[0]?.id ?? "");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [label, setLabel] = useState("");
+  const [serviceKey, setServiceKey] = useState("none");
   const [standard, setStandard] = useState("");
   const [contracted, setContracted] = useState("");
   const [note, setNote] = useState("");
@@ -59,6 +62,7 @@ export function ClientPricingBoard({
   const reset = () => {
     setEditingId(null);
     setLabel("");
+    setServiceKey("none");
     setStandard("");
     setContracted("");
     setNote("");
@@ -75,6 +79,7 @@ export function ClientPricingBoard({
           ...(editingId ? { id: editingId } : {}),
           client_id: clientId,
           sow_id: sowId === "none" ? null : sowId,
+          service_key: serviceKey === "none" ? "" : serviceKey,
           label: label.trim(),
           standard_cents: toCents(standard),
           contracted_cents: toCents(contracted),
@@ -145,6 +150,13 @@ export function ClientPricingBoard({
                       row.pricing_model}
                     {row.effective_date ? ` · from ${row.effective_date}` : ""}
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    {row.service_key
+                      ? `Bills the service: ${
+                          catalog.find((s: any) => s.key === row.service_key)?.name ?? row.service_key
+                        }`
+                      : "Not linked to a service — it won't appear on a prepared invoice."}
+                  </p>
                   {row.discount_note ? (
                     <p className="text-xs text-muted-foreground">{row.discount_note}</p>
                   ) : null}
@@ -163,6 +175,7 @@ export function ClientPricingBoard({
                       onClick={() => {
                         setEditingId(row.id);
                         setLabel(row.label);
+                        setServiceKey(row.service_key ?? "none");
                         setStandard(row.standard_cents === null ? "" : String(row.standard_cents / 100));
                         setContracted(
                           row.contracted_cents === null ? "" : String(row.contracted_cents / 100),
@@ -205,6 +218,26 @@ export function ClientPricingBoard({
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="SPV formation and administration"
               />
+            </div>
+            <div className="md:col-span-2">
+              <Label>Service it bills</Label>
+              <Select value={serviceKey} onValueChange={setServiceKey}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not linked to a service</SelectItem>
+                  {catalog.map((s: any) => (
+                    <SelectItem key={s.key} value={s.key}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="pt-1 text-xs text-muted-foreground">
+                A rate only lands on a prepared invoice when it bills a service that is in the
+                client's active scope.
+              </p>
             </div>
             <div>
               <Label htmlFor="cp-standard">Standard amount (USD)</Label>

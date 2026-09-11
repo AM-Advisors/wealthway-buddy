@@ -105,6 +105,7 @@ function PricingConsole() {
             clientPricing={data.clientPricing}
             sows={data.sows}
             versions={data.versions}
+            catalog={data.catalog}
             canManage={data.canManage}
           />
         </TabsContent>
