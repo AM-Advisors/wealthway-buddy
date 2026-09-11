@@ -194,6 +194,29 @@ export const confirmClosing = createServerFn({ method: "POST" })
       metadata: { funded_amount_cents: data.funded_amount_cents },
     });
 
+    // The investor's capital account statement is produced as soon as they
+    // close. A problem here must never undo the closing itself.
+    try {
+      const statements = await import("@/lib/capital-statements.server");
+      await statements.assertStatementsInScope(supabase, app.offering_id);
+      const made = await statements.generateStatement(supabase, app.id, userId);
+      if (made) {
+        await activity.logReviewerActivity(supabase, {
+          actorId: userId,
+          applicationId: app.id,
+          offeringId: app.offering_id,
+          action: "capital_statement_generated",
+          area: "reporting",
+          outcome: "completed",
+          summary: `Capital account statement v${made.version} produced at closing`,
+          note: null,
+          metadata: { statement_id: made.id, version: made.version },
+        });
+      }
+    } catch (e) {
+      console.error("[closing] capital account statement not produced", e);
+    }
+
     if (data.notify_investor !== false) {
       try {
         const [{ data: profile }, { data: offering }] = await Promise.all([
