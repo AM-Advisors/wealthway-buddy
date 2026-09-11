@@ -108,8 +108,8 @@ export function MyServiceRequests() {
             {r.status === "quoted" ? (
               <div className="space-y-2 rounded-md bg-muted p-3 text-sm">
                 <p>
-                  Proposed fee: <span className="font-medium">{money(r.proposed_fee_cents) ?? "—"}</span>
-                  {r.proposed_pricing_model ? ` (${r.proposed_pricing_model.replace(/_/g, " ")})` : ""}
+                  Proposed fee:{" "}
+                  <span className="font-medium">{feeText(r.proposed_fee_cents, r.proposed_pricing_model)}</span>
                   {r.effective_date ? ` · starts ${r.effective_date}` : ""}
                 </p>
                 {r.amendment_terms ? <p className="whitespace-pre-wrap">{r.amendment_terms}</p> : null}
