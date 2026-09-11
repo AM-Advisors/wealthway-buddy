@@ -26,7 +26,9 @@ type Kind = "request" | "quote" | "hold";
 interface CalendarItem {
   id: string;
   kind: Kind;
-  day: string; // yyyy-mm-dd
+  day: string; // yyyy-mm-dd — the day it is due
+  raised: string; // yyyy-mm-dd — the day it arrived
+  dueLabel: string;
   title: string;
   clientId: string;
   clientName: string;
@@ -35,6 +37,14 @@ interface CalendarItem {
   status: string;
   overdue: boolean;
 }
+
+/** Working targets, in days, from the day an item arrives to the day it is due. */
+const TARGET_DAYS = {
+  request: 5,
+  quote: 10,
+  activate: 2,
+  hold: 3,
+} as const;
 
 const KIND_LABEL: Record<Kind, string> = {
   request: "Request",
