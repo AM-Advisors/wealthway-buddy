@@ -64,11 +64,19 @@ export function StaffDesk() {
   }
   if (!data) return null;
 
-  const waiting = data.requests.length + data.quotes.length + data.holds.length;
+  const signOffs = (data as any).signOffs ?? [];
+  const invoices = (data as any).invoices ?? [];
+  const declaredPayments = (data as any).declaredPayments ?? [];
+  const waiting =
+    data.requests.length +
+    data.quotes.length +
+    data.holds.length +
+    signOffs.length +
+    invoices.length;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Your clients</CardDescription>
