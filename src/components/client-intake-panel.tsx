@@ -36,7 +36,7 @@ export function ClientIntakePanel({ clientId }: { clientId: string }) {
       ) : (
         <ul className="mt-2 space-y-3">
           {intakes.map((row) => {
-            const d = (row.details ?? {}) as Record<string, any>;
+            const d = (row.details ?? {}) as any;
             return (
               <li key={row.id} className="rounded-md border p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
