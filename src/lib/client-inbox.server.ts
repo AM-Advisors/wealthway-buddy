@@ -10,8 +10,8 @@ export async function recordClientInboxCopy(input: {
   template: string;
   subject: string;
   html: string;
-  text?: string;
-  dedupeKey?: string;
+  text?: string | undefined;
+  dedupeKey?: string | undefined;
 }) {
   try {
     const email = String(input.recipientEmail ?? "").trim().toLowerCase();
