@@ -319,44 +319,161 @@ export const inviteClientContact = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    const invitationId = String((created as any).id);
 
-    // If they already have an account, attach them now rather than waiting for
-    // a first sign-in that has already happened.
-    let attached = false;
+    // Create (or reuse) the account, attach them to this client, then send the
+    // welcome email with a one-time link where they choose their own password.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: found } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    const match = (found?.users ?? []).find(
-      (u: any) => String(u.email ?? "").toLowerCase() === email && u.email_confirmed_at,
-    );
-    if (match) {
-      await supabaseAdmin
-        .from("client_users")
-        .upsert(
-          {
-            client_id: data.clientId,
-            user_id: match.id,
-            client_role: data.role,
-            can_approve: data.canApprove,
-          },
-          { onConflict: "client_id,user_id" },
-        );
-      await supabaseAdmin
-        .from("user_roles")
-        .upsert({ user_id: match.id, role: data.role as never }, { onConflict: "user_id,role" });
-      await supabaseAdmin
-        .from("client_invitations")
-        .update({ status: "accepted", accepted_at: new Date().toISOString(), accepted_by: match.id })
-        .eq("id", (created as any).id);
-      attached = true;
-    }
+    const { ensureAccount } = await import("@/lib/account-invite.server");
+    const { targetUserId } = await ensureAccount(supabaseAdmin, email, data.name || "");
+
+    await supabaseAdmin
+      .from("client_users")
+      .upsert(
+        {
+          client_id: data.clientId,
+          user_id: targetUserId,
+          client_role: data.role,
+          can_approve: data.canApprove,
+        },
+        { onConflict: "client_id,user_id" },
+      );
+    await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: targetUserId, role: data.role as never }, { onConflict: "user_id,role" });
+    await supabaseAdmin
+      .from("client_invitations")
+      .update({ status: "accepted", accepted_at: new Date().toISOString(), accepted_by: targetUserId })
+      .eq("id", invitationId);
+
+    const delivery = await sendClientWelcome({
+      supabaseAdmin,
+      invitationId,
+      clientId: data.clientId,
+      email,
+      name: data.name || "",
+      role: data.role,
+      canApprove: data.canApprove,
+      note: data.note || "",
+      invitedByName: who.email || "The Harmonious team",
+    });
 
     await audit(context, who, {
-      action: attached ? "contact added" : "contact invited",
+      action: "contact invited",
       clientId: data.clientId,
       target: email,
-      next: { role: data.role, can_approve: data.canApprove, attached },
+      next: { role: data.role, can_approve: data.canApprove, email: delivery.status },
     });
-    return { ok: true, attached };
+    return { ok: true, attached: true, delivery };
+  });
+
+/** Sends (or re-sends) the branded welcome email with a one-time password link,
+ *  and records the outcome on the invitation. Never throws — a failed email
+ *  must not undo the access that was just granted. */
+async function sendClientWelcome(input: {
+  supabaseAdmin: any;
+  invitationId: string;
+  clientId: string;
+  email: string;
+  name: string;
+  role: string;
+  canApprove: boolean;
+  note: string;
+  invitedByName: string;
+  resend?: boolean;
+}): Promise<{ status: "sent" | "suppressed" | "failed"; message: string }> {
+  let result: { status: "sent" | "suppressed" | "failed"; message: string };
+  try {
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const { setPasswordLink, PORTAL_ORIGIN } = await import("@/lib/account-invite.server");
+    const { data: client } = await input.supabaseAdmin
+      .from("clients")
+      .select("name")
+      .eq("id", input.clientId)
+      .maybeSingle();
+
+    const passwordUrl = await setPasswordLink(input.supabaseAdmin, input.email);
+    const roleEntry = CLIENT_CONTACT_ROLES.find((r) => r.value === input.role);
+
+    const sent = await sendTemplateEmail("client-invitation", input.email, {
+      idempotencyKey: input.resend
+        ? `client-invite-${input.invitationId}-${Date.now()}`
+        : `client-invite-${input.invitationId}`,
+      templateData: {
+        contactName: input.name || input.email,
+        clientName: (client as any)?.name || "your organisation",
+        roleLabel: roleEntry?.label ?? "Client contact",
+        invitedByName: input.invitedByName,
+        note: input.note,
+        canApprove: input.canApprove,
+        passwordUrl,
+        signInUrl: `${PORTAL_ORIGIN}/client-login`,
+      },
+    });
+
+    result = sent.sent
+      ? { status: "sent", message: "Welcome email sent." }
+      : {
+          status: "suppressed",
+          message:
+            "That address is blocked from receiving our email (it bounced or was unsubscribed). Send them a sign-in link another way.",
+        };
+  } catch (err) {
+    result = {
+      status: "failed",
+      message: err instanceof Error ? err.message : "The welcome email could not be sent.",
+    };
+  }
+
+  await input.supabaseAdmin
+    .from("client_invitations")
+    .update({
+      invite_sent_at: result.status === "sent" ? new Date().toISOString() : null,
+      invite_status: result.status,
+      invite_note: result.status === "sent" ? null : result.message,
+    })
+    .eq("id", input.invitationId);
+
+  return result;
+}
+
+/** Sends the welcome email again with a fresh one-time password link. */
+export const resendClientInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireManage(context);
+    const { data: row } = await context.supabase
+      .from("client_invitations")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("That invitation is no longer there.");
+    if ((row as any).status === "cancelled") {
+      throw new Error("That invitation was withdrawn. Invite them again instead.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const delivery = await sendClientWelcome({
+      supabaseAdmin,
+      invitationId: data.id,
+      clientId: (row as any).client_id,
+      email: String((row as any).email),
+      name: String((row as any).invited_name ?? ""),
+      role: String((row as any).client_role ?? ""),
+      canApprove: (row as any).can_approve === true,
+      note: String((row as any).note ?? ""),
+      invitedByName: who.email || "The Harmonious team",
+      resend: true,
+    });
+
+    await audit(context, who, {
+      action: "welcome email resent",
+      clientId: (row as any).client_id,
+      target: String((row as any).email),
+      next: { email: delivery.status },
+    });
+    return { ok: true, delivery };
   });
 
 export const cancelClientInvitation = createServerFn({ method: "POST" })
