@@ -177,6 +177,13 @@ export function StaffDesk() {
                   <span>{c.openRequests} request{c.openRequests === 1 ? "" : "s"} to review</span>
                   <span>{c.openQuotes} quote{c.openQuotes === 1 ? "" : "s"} in play</span>
                   <span>{c.openHolds} open hold{c.openHolds === 1 ? "" : "s"}</span>
+                  <span>
+                    {c.pendingSignOffs ?? 0} sign-off{(c.pendingSignOffs ?? 0) === 1 ? "" : "s"}{" "}
+                    pending
+                  </span>
+                  <span>
+                    {c.openInvoices ?? 0} unpaid invoice{(c.openInvoices ?? 0) === 1 ? "" : "s"}
+                  </span>
                   <Button asChild size="sm" variant="outline">
                     <Link to="/admin/contracts/$clientId" params={{ clientId: String(c.id) }}>
                       Open client
