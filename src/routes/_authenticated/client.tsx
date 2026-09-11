@@ -138,10 +138,11 @@ function ClientPortal() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Approved payments</CardDescription>
-            <CardTitle className="text-2xl">{payments.length}</CardTitle>
+            <CardDescription>Payments in progress</CardDescription>
+            <CardTitle className="text-2xl">{paymentsInProgress}</CardTitle>
           </CardHeader>
         </Card>
+
       </div>
 
       <Tabs defaultValue="funds" className="mt-8">
