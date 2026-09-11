@@ -54,6 +54,7 @@ export function ClientDashboard({
   wireRequests,
   serviceRequests,
   services,
+  sows = [],
 }: Props) {
   const openInvoices = (invoices ?? []).filter((i: any) => OPEN_INVOICES.includes(i.status));
   const approvedInvoices = (invoices ?? []).filter(
