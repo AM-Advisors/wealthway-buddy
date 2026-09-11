@@ -392,9 +392,17 @@ export const saveOffering = createServerFn({ method: "POST" })
         throw new Error("That statement of work belongs to a different client.");
       }
 
+      // A new fund starts on the client's agreed rates, falling back to the
+      // published standard card, so its fees are never silently zero.
+      const { seedFundFeeColumns } = await import("@/lib/fee-rates.server");
+      const seeded = await seedFundFeeColumns(context.supabase, row.client_id);
+      const seedPatch = Object.fromEntries(
+        Object.entries(seeded).filter(([k]) => !(k in payload) || !payload[k]),
+      );
+
       const { data: inserted, error } = await context.supabase
         .from("offerings")
-        .insert({ ...payload, client_id: row.client_id } as any)
+        .insert({ ...payload, ...seedPatch, client_id: row.client_id } as any)
         .select("id")
         .single();
       if (error) throw new Error(error.message);
