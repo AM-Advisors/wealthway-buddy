@@ -151,30 +151,43 @@ export function StaffCalendar() {
 
     for (const r of data.requests as any[]) {
       const age = ageInDays(r.created_at);
+      const raised = dayKey(r.created_at);
+      const due = dueKey(r.created_at, TARGET_DAYS.request);
       out.push({
         id: `request-${r.id}`,
         kind: "request",
-        day: dayKey(r.created_at),
+        day: due || raised,
+        raised,
+        dueLabel: "Reply to the client by",
         title: serviceLabel(r.service_key),
         clientId: String(r.client_id),
         clientName: r.clientName ?? "—",
         fundName: r.fundName ?? null,
         detail:
-          r.status === "requested"
-            ? `Waiting for a first look · ${age} day${age === 1 ? "" : "s"} old`
-            : `In review · ${age} day${age === 1 ? "" : "s"} old`,
+          (r.status === "requested" ? "Waiting for a first look" : "In review") +
+          ` · raised ${age} day${age === 1 ? "" : "s"} ago`,
         status: r.status === "requested" ? "New" : "In review",
-        overdue: age >= 5,
+        overdue: isPast(due || raised),
       });
     }
 
     for (const q of data.quotes as any[]) {
-      const day = plainDayKey(q.effective_date) || dayKey(q.updated_at ?? q.created_at);
+      const raised = dayKey(q.updated_at ?? q.created_at);
+      const signed = q.status !== "quoted";
+      const start = plainDayKey(q.effective_date);
+      // A signed proposal is due to be switched on quickly, or by its own start date.
+      const due = signed
+        ? start && !isPast(start)
+          ? start
+          : dueKey(q.updated_at ?? q.created_at, TARGET_DAYS.activate)
+        : dueKey(q.updated_at ?? q.created_at, TARGET_DAYS.quote);
       const fee = money(q.proposed_fee_cents);
       out.push({
         id: `quote-${q.id}`,
         kind: "quote",
-        day,
+        day: due || raised,
+        raised,
+        dueLabel: signed ? "Switch the service on by" : "Client signature due by",
         title: serviceLabel(q.service_key),
         clientId: String(q.client_id),
         clientName: q.clientName ?? "—",
@@ -182,24 +195,28 @@ export function StaffCalendar() {
         detail:
           (fee ? `${fee} proposed` : "No fee set") +
           (q.effective_date ? ` · starts ${q.effective_date}` : " · no start date yet"),
-        status: q.status === "quoted" ? "With the client" : "Signed — activate",
-        overdue: q.status === "quoted" && ageInDays(q.updated_at) >= 10,
+        status: signed ? "Signed — activate" : "With the client",
+        overdue: isPast(due || raised),
       });
     }
 
     for (const h of data.holds as any[]) {
       const age = ageInDays(h.placed_at);
+      const raised = dayKey(h.placed_at);
+      const due = dueKey(h.placed_at, TARGET_DAYS.hold);
       out.push({
         id: `hold-${h.id}`,
         kind: "hold",
-        day: dayKey(h.placed_at),
+        day: due || raised,
+        raised,
+        dueLabel: "Clear or escalate by",
         title: h.service_key ? serviceLabel(h.service_key) : `${h.scope ?? "Client"} hold`,
         clientId: String(h.client_id),
         clientName: h.clientName ?? "—",
         fundName: h.fundName ?? null,
         detail: `${h.reason ?? "On hold"} · open ${age} day${age === 1 ? "" : "s"}`,
         status: "Open hold",
-        overdue: age >= 3,
+        overdue: isPast(due || raised),
       });
     }
 
