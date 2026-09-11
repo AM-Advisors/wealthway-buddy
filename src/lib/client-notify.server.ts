@@ -91,3 +91,33 @@ export function money(cents: number | null | undefined) {
   const n = Number(cents ?? 0) / 100;
   return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
+
+/**
+ * Emails each client administrator using a specific branded template.
+ * Same guarantees as notifyClientAdmins: never throws, one send per person,
+ * idempotency keyed on the event so retries do not duplicate.
+ */
+export async function notifyClientAdminsWith(
+  clientId: string | null,
+  templateName: string,
+  eventKey: string,
+  build: (person: { email: string; name: string }) => Record<string, unknown>,
+) {
+  try {
+    const recipients = await clientAdmins(clientId);
+    for (const person of recipients) {
+      try {
+        await sendTemplateEmail(templateName, person.email, {
+          idempotencyKey: `${eventKey}:${person.email.toLowerCase()}`,
+          templateData: build(person),
+        });
+      } catch (err) {
+        console.error("[client-notify] send failed", eventKey, err);
+      }
+    }
+  } catch (err) {
+    console.error("[client-notify] lookup failed", eventKey, err);
+  }
+}
+
+export const CLIENT_PORTAL_BASE = PORTAL_BASE;
