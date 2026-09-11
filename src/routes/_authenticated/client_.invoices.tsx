@@ -214,6 +214,25 @@ function ClientInvoicesPage() {
                     ))}
                   </ul>
 
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => downloadInvoice(inv)}>
+                      Download invoice
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (!printInvoice(inv)) {
+                          toast.error("Your browser blocked the print window — allow pop-ups and try again.");
+                        }
+                      }}
+                    >
+                      Print or save as PDF
+                    </Button>
+                  </div>
+
+
+
                   {inv.status === "issued" && inv.approval_status === "pending" ? (
                     <div className="space-y-2 rounded-md border p-3">
                       <p className="text-sm font-medium">Step 1 — approve this invoice</p>
