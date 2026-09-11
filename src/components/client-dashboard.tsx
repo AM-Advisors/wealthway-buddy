@@ -175,8 +175,41 @@ export function ClientDashboard({
     }
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const needsYou: NeedsYouItem[] = [
+    ...openInvoices.map((inv: any) => {
+      const due = inv.due_date ? String(inv.due_date).slice(0, 10) : null;
+      const overdue = Boolean(due && due < today);
+      const approved = Boolean(inv.client_approved_at || inv.status === "approved");
+      return {
+        id: `needs-inv-${inv.id}`,
+        title: approved
+          ? `Pay invoice ${inv.number ?? ""}`.trim()
+          : `Approve invoice ${inv.number ?? ""}`.trim(),
+        detail: `${money(inv.total_cents)}${due ? ` · due ${when(due)}` : ""}`,
+        to: "/client/invoices",
+        urgency: (overdue ? "overdue" : due ? "soon" : "open") as NeedsYouItem["urgency"],
+        actionLabel: "Open invoice",
+      };
+    }),
+    ...openRequests
+      .filter((r: any) => r.status === "quoted")
+      .map((r: any) => ({
+        id: `needs-req-${r.id}`,
+        title: `Sign the fee proposal for ${r.serviceName ?? r.service_key}`,
+        detail: r.fundName ?? undefined,
+        to: "/client",
+        urgency: "soon" as const,
+        actionLabel: "Review",
+      })),
+  ];
+
   return (
     <div className="space-y-6">
+      <NeedsYou
+        items={needsYou}
+        emptyMessage="Nothing needs your approval or signature right now."
+      />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
