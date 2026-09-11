@@ -142,7 +142,12 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.url}>
-              <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive(item.url)}
+                tooltip={item.title}
+                className="data-[active=true]:border-l-2 data-[active=true]:border-sidebar-primary data-[active=true]:font-medium"
+              >
                 <Link to={item.url as never} className="flex items-center gap-2">
                   <item.icon className="h-4 w-4" />
                   {!collapsed && <span>{item.title}</span>}
