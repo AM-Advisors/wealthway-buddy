@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 
 export const Route = createFileRoute("/_authenticated/client_/invoices")({
@@ -30,8 +31,16 @@ export const Route = createFileRoute("/_authenticated/client_/invoices")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ClientInvoicesPage,
+  component: ClientInvoicesRoute,
 });
+
+function ClientInvoicesRoute() {
+  return (
+    <ClientIntakeGate>
+      <ClientInvoicesPage />
+    </ClientIntakeGate>
+  );
+}
 
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
