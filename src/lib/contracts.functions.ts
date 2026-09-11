@@ -790,6 +790,25 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
         effective_date: data.effectiveDate || null,
       },
     });
+
+    const quotedService = await serviceLabel(context, request.service_key);
+    const { notifyClientAdmins, money } = await import("@/lib/client-notify.server");
+    await notifyClientAdmins(request.client_id, {
+      eventKey: `service-request-quoted:${data.id}:${data.feeCents}`,
+      headline: `Fee proposal ready — ${quotedService}`,
+      intro:
+        "your service request now has a written fee proposal and is pending your signature. Nothing is added to your scope until you sign it.",
+      details: [
+        { label: "Service", value: quotedService },
+        { label: "Proposed fee", value: money(data.feeCents) },
+        ...(data.pricingModel ? [{ label: "Billing basis", value: String(data.pricingModel) }] : []),
+        ...(data.effectiveDate ? [{ label: "Effective", value: String(data.effectiveDate) }] : []),
+        { label: "Status", value: "Pending your signature" },
+      ],
+      actionLabel: "Review and sign",
+      actionPath: "/client",
+    });
+
     return { ok: true };
   });
 
