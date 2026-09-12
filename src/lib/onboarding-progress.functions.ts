@@ -66,6 +66,8 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       { data: intakes },
       { data: offerings },
       { data: invoices },
+      { data: signIns },
+      { data: profiles },
     ] = await Promise.all([
       supabaseAdmin
         .from("clients")
@@ -82,11 +84,48 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("invoices")
         .select("id, client_id, number, status, total_cents, due_date, issued_at, paid_on, created_at"),
+      supabaseAdmin
+        .from("login_attempts")
+        .select("user_id, email, created_at")
+        .eq("success", true)
+        .order("created_at", { ascending: false })
+        .limit(5000),
+      supabaseAdmin.from("profiles").select("user_id, email, legal_name"),
     ]);
 
     const requiredKinds = Array.from(
       new Set(((policies ?? []) as any[]).map((p) => String(p.kind))),
     );
+    const documents = ((policies ?? []) as any[]).map((p) => ({
+      kind: String(p.kind),
+      title: String(p.title ?? p.kind),
+    }));
+
+    // Successful sign-ins, by user id and by email (older rows may lack a user id).
+    const profileByUser = new Map<string, any>();
+    for (const p of (profiles ?? []) as any[]) profileByUser.set(String(p.user_id), p);
+    const signInByUser = new Map<string, { count: number; last: string }>();
+    const signInByEmail = new Map<string, { count: number; last: string }>();
+    for (const row of (signIns ?? []) as any[]) {
+      const at = String(row.created_at);
+      const bump = (map: Map<string, { count: number; last: string }>, key: string | null) => {
+        if (!key) return;
+        const prev = map.get(key);
+        map.set(key, { count: (prev?.count ?? 0) + 1, last: prev && prev.last > at ? prev.last : at });
+      };
+      bump(signInByUser, row.user_id ? String(row.user_id) : null);
+      bump(signInByEmail, row.email ? String(row.email).toLowerCase() : null);
+    }
+    const signInFor = (userId: string, email: string | null) => {
+      const byUser = signInByUser.get(userId);
+      const byEmail = email ? signInByEmail.get(email.toLowerCase()) : undefined;
+      if (!byUser) return byEmail ?? null;
+      if (!byEmail) return byUser;
+      return {
+        count: Math.max(byUser.count, byEmail.count),
+        last: byUser.last > byEmail.last ? byUser.last : byEmail.last,
+      };
+    };
     const acceptedByUser = new Map<string, Set<string>>();
     const acceptanceAt = new Map<string, string>();
     for (const row of (acceptances ?? []) as any[]) {
