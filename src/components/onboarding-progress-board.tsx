@@ -148,6 +148,15 @@ export function OnboardingProgressBoard() {
                   <p className="mt-1 break-words text-sm text-muted-foreground">
                     {row.contactEmail ?? "No contact recorded"} · {row.contactCount} contact
                     {row.contactCount === 1 ? "" : "s"} · last movement {when(row.lastActivity)}
+                    {row.signInCount > 0 ? (
+                      <>
+                        {" "}
+                        · {row.signInCount} sign-in{row.signInCount === 1 ? "" : "s"}, last{" "}
+                        {when(row.lastSignIn)}
+                      </>
+                    ) : (
+                      <> · no sign-ins yet</>
+                    )}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -193,6 +202,50 @@ export function OnboardingProgressBoard() {
                 <p className="mt-3 text-sm">
                   Next: <span className="font-medium">{row.nextStage}</span>
                 </p>
+              ) : null}
+
+              {(row.contacts ?? []).length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Contacts — sign-ins and document sign-off
+                  </p>
+                  {(row.contacts as any[]).map((contact) => (
+                    <div
+                      key={contact.userId}
+                      className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border px-3 py-2 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">
+                          {contact.name ?? contact.email ?? "Portal contact"}
+                        </p>
+                        {contact.name && contact.email ? (
+                          <p className="truncate text-xs text-muted-foreground">{contact.email}</p>
+                        ) : null}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {contact.signInCount > 0
+                          ? `${contact.signInCount} sign-in${contact.signInCount === 1 ? "" : "s"} · last ${when(contact.lastSignInAt)}`
+                          : "Never signed in"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {contact.docsAccepted}/{contact.docsTotal} documents
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {(contact.documents as any[]).map((doc) => (
+                          <Badge
+                            key={doc.kind}
+                            variant={doc.accepted ? "secondary" : "outline"}
+                            className="gap-1 text-xs"
+                            title={doc.title}
+                          >
+                            {doc.accepted ? <Check className="h-3 w-3" /> : null}
+                            {doc.title}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : null}
             </div>
           ))}
