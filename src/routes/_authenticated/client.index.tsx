@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import { ClientDashboard } from "@/components/client-dashboard";
 import { useClientPortal } from "@/components/client-portal-context";
+import { getClientRecords } from "@/lib/client-records.functions";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authenticated/client/")({
@@ -26,7 +29,14 @@ export const Route = createFileRoute("/_authenticated/client/")({
 });
 
 function ClientOverviewPage() {
-  const { data } = useClientPortal();
+  const { data, clientId } = useClientPortal();
+  const loadRecords = useServerFn(getClientRecords);
+  const activeClientId = clientId ?? ((data?.client as any)?.id as string | undefined) ?? null;
+  const { data: records } = useQuery({
+    queryKey: ["client-records", activeClientId],
+    queryFn: () => loadRecords({ data: { clientId: activeClientId } }),
+    retry: false,
+  });
 
   const funds = (data?.funds ?? []) as any[];
   const invoices = (data?.invoices ?? []) as any[];
@@ -69,6 +79,8 @@ function ClientOverviewPage() {
           serviceRequests={((data as any)?.serviceRequests ?? []) as any[]}
           services={(data?.services ?? []) as any[]}
           sows={(data?.sows ?? []) as any[]}
+          signedDocuments={(records?.signedDocuments ?? []) as any[]}
+          statements={(records?.statements ?? []) as any[]}
         />
       </div>
     </div>
