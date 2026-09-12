@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientDueCalendar, type DueItem } from "@/components/client-due-calendar";
+import { downloadStatement, openStatement } from "@/components/capital-statement-panel";
 import { NeedsYou, type NeedsYouItem } from "@/components/dashboard-primitives";
 
 function money(cents: number | null | undefined) {
