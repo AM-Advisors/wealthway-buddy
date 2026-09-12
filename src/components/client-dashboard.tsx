@@ -38,6 +38,8 @@ type Props = {
   serviceRequests: any[];
   services: any[];
   sows?: any[];
+  signedDocuments?: any[];
+  statements?: any[];
 };
 
 function addDays(value: string, days: number) {
