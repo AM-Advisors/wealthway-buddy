@@ -438,6 +438,83 @@ export function ClientDashboard({
             ))}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Signed documents</CardTitle>
+            <CardDescription>
+              Everything you have signed or accepted, with the date it was recorded.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {signedDocuments.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nothing has been signed yet. Signed items appear here automatically.
+              </p>
+            )}
+            {signedDocuments.slice(0, 8).map((d: any) => (
+              <div key={d.id} className="rounded-md border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium capitalize">{d.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {d.signedBy ? `${d.signedBy} · ` : ""}
+                      {d.signedAt ? when(d.signedAt) : "Date not recorded"}
+                    </p>
+                  </div>
+                  <Badge variant={d.kind === "agreement" ? "default" : "secondary"}>
+                    {d.state}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+            {signedDocuments.length > 0 && (
+              <Button asChild size="sm" variant="outline">
+                <Link to="/client/sign-offs">Open sign-offs</Link>
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Capital account statements</CardTitle>
+            <CardDescription>
+              Produced from each fund's records at a closing. Administrative records only — not a
+              valuation, audit or tax document.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {statements.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No statements yet. They appear here once a closing is confirmed.
+              </p>
+            )}
+            {statements.slice(0, 8).map((s: any) => (
+              <div
+                key={s.id}
+                className="flex flex-wrap items-start justify-between gap-2 rounded-md border p-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{s.investorName ?? "Investor"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.fundName ? `${s.fundName} · ` : ""}
+                    {s.statement_date ? when(`${s.statement_date}T00:00:00`) : ""} ·{" "}
+                    {money(s.snapshot?.contributedCents)} contributed
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => openStatement(s)}>
+                    View
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => downloadStatement(s)}>
+                    Download
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
 
       <ClientDueCalendar items={dueItems} />
