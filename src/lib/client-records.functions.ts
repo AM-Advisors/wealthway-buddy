@@ -40,7 +40,7 @@ export const getClientRecords = createServerFn({ method: "GET" })
       context.supabase.from("offerings").select("id, name").eq("client_id", clientId),
       context.supabase
         .from("policy_acceptances")
-        .select("id, kind, version, accepted_at, accepted_name")
+        .select("id, kind, version, accepted_at, signer_name")
         .eq("user_id", context.userId)
         .order("accepted_at", { ascending: false }),
     ]);
@@ -67,7 +67,7 @@ export const getClientRecords = createServerFn({ method: "GET" })
         kind: "policy" as const,
         title: `${String(a.kind).replace(/_/g, " ")} (version ${a.version})`,
         signedAt: (a.accepted_at as string) ?? null,
-        signedBy: (a.accepted_name as string) ?? null,
+        signedBy: (a.signer_name as string) ?? null,
         state: "Accepted",
         hasFile: false,
       })),
