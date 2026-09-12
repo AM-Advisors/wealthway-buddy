@@ -148,7 +148,29 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         .filter((i) => String(i.client_id) === cid)
         .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
 
-      const signedInUsers = clientContacts.filter((c) => acceptanceAt.has(String(c.user_id)));
+      const contactDetails = clientContacts.map((c) => {
+        const uid = String(c.user_id);
+        const profile = profileByUser.get(uid);
+        const email = profile?.email ? String(profile.email) : null;
+        const si = signInFor(uid, email);
+        const accepted = acceptedByUser.get(uid) ?? new Set<string>();
+        return {
+          userId: uid,
+          name: profile?.legal_name ? String(profile.legal_name) : null,
+          email,
+          lastSignInAt: si?.last ?? null,
+          signInCount: si?.count ?? 0,
+          docsAccepted: requiredKinds.filter((k) => accepted.has(k)).length,
+          docsTotal: requiredKinds.length,
+          documents: documents.map((d) => ({ ...d, accepted: accepted.has(d.kind) })),
+        };
+      });
+
+      const signedInUsers = clientContacts.filter(
+        (c) =>
+          acceptanceAt.has(String(c.user_id)) ||
+          contactDetails.some((d) => d.userId === String(c.user_id) && d.signInCount > 0),
+      );
       const fullySignedOff = clientContacts.filter((c) => {
         const set = acceptedByUser.get(String(c.user_id));
         return requiredKinds.length > 0 && set && requiredKinds.every((k) => set.has(k));
@@ -165,7 +187,10 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       const overdue = unpaid.filter((i) => i.due_date && String(i.due_date) < today);
 
       const invitedAt = latest(clientInvites.map((i) => i.invite_sent_at ?? i.created_at));
-      const signedInAt = latest(signedInUsers.map((c) => acceptanceAt.get(String(c.user_id))));
+      const signedInAt = latest([
+        ...signedInUsers.map((c) => acceptanceAt.get(String(c.user_id))),
+        ...contactDetails.map((d) => d.lastSignInAt),
+      ]);
       const signedOffAt = latest(fullySignedOff.map((c) => acceptanceAt.get(String(c.user_id))));
       const fundAt =
         latest([
@@ -248,7 +273,10 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
           ...stages.map((s) => s.at),
           client.created_at as string,
           ...clientIntakes.map((i) => i.updated_at as string),
+          ...contactDetails.map((d) => d.lastSignInAt),
         ]) ?? null;
+      const lastSignIn = latest(contactDetails.map((d) => d.lastSignInAt));
+      const signInCount = contactDetails.reduce((sum, d) => sum + d.signInCount, 0);
       const quietFor = days(lastActivity);
       const complete = stages.filter((s) => s.done).length;
       const stalled =
@@ -272,11 +300,15 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         stalled,
         overdueInvoices: overdue.length,
         unpaidCents: unpaid.reduce((sum, i) => sum + Number(i.total_cents ?? 0), 0),
+        lastSignIn,
+        signInCount,
+        contacts: contactDetails,
       };
     });
 
     return {
       stallDays: data.stallDays,
+      documents,
       clients: rows,
       summary: {
         total: rows.length,
