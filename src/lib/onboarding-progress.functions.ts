@@ -66,6 +66,8 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       { data: intakes },
       { data: offerings },
       { data: invoices },
+      { data: signIns },
+      { data: profiles },
     ] = await Promise.all([
       supabaseAdmin
         .from("clients")
@@ -76,17 +78,54 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         .select("id, client_id, email, invited_name, status, invite_status, invite_sent_at, accepted_at, created_at"),
       supabaseAdmin.from("client_users").select("id, client_id, user_id, created_at"),
       supabaseAdmin.from("policy_acceptances").select("user_id, kind, version, accepted_at"),
-      supabaseAdmin.from("policy_documents").select("kind, version, published").eq("published", true),
+      supabaseAdmin.from("policy_documents").select("kind, title, version, published").eq("published", true),
       supabaseAdmin.from("client_fund_intakes").select("id, client_id, status, submitted_at, created_at, updated_at"),
       supabaseAdmin.from("offerings").select("id, name, client_id, created_at"),
       supabaseAdmin
         .from("invoices")
         .select("id, client_id, number, status, total_cents, due_date, issued_at, paid_on, created_at"),
+      supabaseAdmin
+        .from("login_attempts")
+        .select("user_id, email, created_at")
+        .eq("success", true)
+        .order("created_at", { ascending: false })
+        .limit(5000),
+      supabaseAdmin.from("profiles").select("user_id, email, legal_name"),
     ]);
 
     const requiredKinds = Array.from(
       new Set(((policies ?? []) as any[]).map((p) => String(p.kind))),
     );
+    const documents = ((policies ?? []) as any[]).map((p) => ({
+      kind: String(p.kind),
+      title: String(p.title ?? p.kind),
+    }));
+
+    // Successful sign-ins, by user id and by email (older rows may lack a user id).
+    const profileByUser = new Map<string, any>();
+    for (const p of (profiles ?? []) as any[]) profileByUser.set(String(p.user_id), p);
+    const signInByUser = new Map<string, { count: number; last: string }>();
+    const signInByEmail = new Map<string, { count: number; last: string }>();
+    for (const row of (signIns ?? []) as any[]) {
+      const at = String(row.created_at);
+      const bump = (map: Map<string, { count: number; last: string }>, key: string | null) => {
+        if (!key) return;
+        const prev = map.get(key);
+        map.set(key, { count: (prev?.count ?? 0) + 1, last: prev && prev.last > at ? prev.last : at });
+      };
+      bump(signInByUser, row.user_id ? String(row.user_id) : null);
+      bump(signInByEmail, row.email ? String(row.email).toLowerCase() : null);
+    }
+    const signInFor = (userId: string, email: string | null) => {
+      const byUser = signInByUser.get(userId);
+      const byEmail = email ? signInByEmail.get(email.toLowerCase()) : undefined;
+      if (!byUser) return byEmail ?? null;
+      if (!byEmail) return byUser;
+      return {
+        count: Math.max(byUser.count, byEmail.count),
+        last: byUser.last > byEmail.last ? byUser.last : byEmail.last,
+      };
+    };
     const acceptedByUser = new Map<string, Set<string>>();
     const acceptanceAt = new Map<string, string>();
     for (const row of (acceptances ?? []) as any[]) {
@@ -109,7 +148,29 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         .filter((i) => String(i.client_id) === cid)
         .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
 
-      const signedInUsers = clientContacts.filter((c) => acceptanceAt.has(String(c.user_id)));
+      const contactDetails = clientContacts.map((c) => {
+        const uid = String(c.user_id);
+        const profile = profileByUser.get(uid);
+        const email = profile?.email ? String(profile.email) : null;
+        const si = signInFor(uid, email);
+        const accepted = acceptedByUser.get(uid) ?? new Set<string>();
+        return {
+          userId: uid,
+          name: profile?.legal_name ? String(profile.legal_name) : null,
+          email,
+          lastSignInAt: si?.last ?? null,
+          signInCount: si?.count ?? 0,
+          docsAccepted: requiredKinds.filter((k) => accepted.has(k)).length,
+          docsTotal: requiredKinds.length,
+          documents: documents.map((d) => ({ ...d, accepted: accepted.has(d.kind) })),
+        };
+      });
+
+      const signedInUsers = clientContacts.filter(
+        (c) =>
+          acceptanceAt.has(String(c.user_id)) ||
+          contactDetails.some((d) => d.userId === String(c.user_id) && d.signInCount > 0),
+      );
       const fullySignedOff = clientContacts.filter((c) => {
         const set = acceptedByUser.get(String(c.user_id));
         return requiredKinds.length > 0 && set && requiredKinds.every((k) => set.has(k));
@@ -126,7 +187,10 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       const overdue = unpaid.filter((i) => i.due_date && String(i.due_date) < today);
 
       const invitedAt = latest(clientInvites.map((i) => i.invite_sent_at ?? i.created_at));
-      const signedInAt = latest(signedInUsers.map((c) => acceptanceAt.get(String(c.user_id))));
+      const signedInAt = latest([
+        ...signedInUsers.map((c) => acceptanceAt.get(String(c.user_id))),
+        ...contactDetails.map((d) => d.lastSignInAt),
+      ]);
       const signedOffAt = latest(fullySignedOff.map((c) => acceptanceAt.get(String(c.user_id))));
       const fundAt =
         latest([
@@ -209,7 +273,10 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
           ...stages.map((s) => s.at),
           client.created_at as string,
           ...clientIntakes.map((i) => i.updated_at as string),
+          ...contactDetails.map((d) => d.lastSignInAt),
         ]) ?? null;
+      const lastSignIn = latest(contactDetails.map((d) => d.lastSignInAt));
+      const signInCount = contactDetails.reduce((sum, d) => sum + d.signInCount, 0);
       const quietFor = days(lastActivity);
       const complete = stages.filter((s) => s.done).length;
       const stalled =
@@ -233,11 +300,15 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         stalled,
         overdueInvoices: overdue.length,
         unpaidCents: unpaid.reduce((sum, i) => sum + Number(i.total_cents ?? 0), 0),
+        lastSignIn,
+        signInCount,
+        contacts: contactDetails,
       };
     });
 
     return {
       stallDays: data.stallDays,
+      documents,
       clients: rows,
       summary: {
         total: rows.length,

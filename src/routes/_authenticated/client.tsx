@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { listMyMessages } from "@/lib/client-inbox.functions";
+import { recordPortalSignIn } from "@/lib/sign-in-log.functions";
 
 import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
@@ -44,6 +46,16 @@ export const Route = createFileRoute("/_authenticated/client")({
 });
 
 function ClientPortalLayout() {
+  const logSignIn = useServerFn(recordPortalSignIn);
+  useEffect(() => {
+    // Once per browser session — covers Google sign-ins, which the password
+    // form's own attempt logging never sees.
+    if (sessionStorage.getItem("harmonious-sign-in-logged")) return;
+    sessionStorage.setItem("harmonious-sign-in-logged", "1");
+    void logSignIn().catch(() => {
+      /* logging must never block the portal */
+    });
+  }, [logSignIn]);
   return (
     <ClientPortalProvider>
       <ClientIntakeGate>
