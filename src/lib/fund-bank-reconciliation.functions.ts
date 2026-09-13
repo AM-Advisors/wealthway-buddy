@@ -149,6 +149,7 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
       openInvoices,
       canMatch: roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r)),
       autoMatched,
+      autoMatchedWires,
       awaitingArrival: openInvoices.filter((i) => i.declaredAt),
       unreconciledCount: rows.filter((r) => !r.matchedInvoiceId && !r.matchedApplicationId).length,
     };
