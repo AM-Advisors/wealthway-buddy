@@ -61,11 +61,13 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
     const roles = await assertFundAccess(supabase, userId, data.offeringId);
     const { plaidConfigured } = await import("@/lib/plaid.server");
 
-    const autoMatched = roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r))
+    const autoResult = roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r))
       ? await (
           await import("@/lib/bank-auto-match.server")
-        ).matchDeclaredPayments(supabase, userId, data.offeringId)
-      : 0;
+        ).runAutoMatch(supabase, userId, data.offeringId)
+      : { invoices: 0, investors: 0, wireRequests: 0, total: 0 };
+    const autoMatched = autoResult.invoices;
+    const autoMatchedWires = autoResult.investors + autoResult.wireRequests;
 
 
     const [{ data: account }, { data: lines }, { data: invoices }] = await Promise.all([
@@ -147,6 +149,7 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
       openInvoices,
       canMatch: roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r)),
       autoMatched,
+      autoMatchedWires,
       awaitingArrival: openInvoices.filter((i) => i.declaredAt),
       unreconciledCount: rows.filter((r) => !r.matchedInvoiceId && !r.matchedApplicationId).length,
     };

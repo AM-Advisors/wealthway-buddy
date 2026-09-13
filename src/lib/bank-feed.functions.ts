@@ -32,6 +32,13 @@ export const getBankFeed = createServerFn({ method: "GET" })
 
     const { plaidConfigured } = await import("@/lib/plaid.server");
 
+    // Settle whatever the rules can settle before the page is drawn, so staff
+    // only see the deposits that genuinely need a person to look at them.
+    const auto = await (
+      await import("@/lib/bank-auto-match.server")
+    ).runAutoMatch(supabase, userId, data.fundId, "fund bank feed");
+
+
     const [{ data: account }, { data: transactions }, { data: applications }] = await Promise.all([
       supabase
         .from("bank_accounts")
@@ -113,6 +120,7 @@ export const getBankFeed = createServerFn({ method: "GET" })
       transactions: rows,
       investors: investors.filter((i) => i.fundingStatus !== "settled"),
       unmatchedCount: rows.filter((r) => !r.matchedApplicationId).length,
+      autoMatched: auto.total,
     };
   });
 
@@ -238,13 +246,19 @@ export const syncBankTransactions = createServerFn({ method: "POST" })
       .update({ last_synced_at: new Date().toISOString() })
       .eq("offering_id", data.fundId);
 
+    const { runAutoMatch } = await import("@/lib/bank-auto-match.server");
+    const auto = await runAutoMatch(supabase, userId, data.fundId, "fund bank feed");
+
+    const settled = auto.total;
     return {
       ok: true,
       added,
+      matched: settled,
       message:
-        added === 0
-          ? "No new deposits since the last refresh."
-          : `${added} new deposit${added === 1 ? "" : "s"} pulled in.`,
+        `${added === 0 ? "No new deposits since the last refresh." : `${added} new deposit${added === 1 ? "" : "s"} pulled in.`}` +
+        (settled > 0
+          ? ` ${settled} wire${settled === 1 ? " was" : "s were"} matched automatically.`
+          : ""),
     };
   });
 

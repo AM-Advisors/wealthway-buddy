@@ -216,6 +216,9 @@ export function FundBankStatement({ fundId }: { fundId: string }) {
           {data && data.autoMatched > 0
             ? ` ${data.autoMatched} payment${data.autoMatched === 1 ? " was" : "s were"} matched just now.`
             : ""}
+          {data && (data.autoMatchedWires ?? 0) > 0
+            ? ` ${data.autoMatchedWires} wire${data.autoMatchedWires === 1 ? " was" : "s were"} settled automatically.`
+            : ""}
           {data && data.awaitingArrival.length > 0
             ? ` ${data.awaitingArrival.length} reported payment${data.awaitingArrival.length === 1 ? " has" : "s have"} not landed yet.`
             : ""}
