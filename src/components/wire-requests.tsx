@@ -257,8 +257,16 @@ export function WireRequestQueue({ compact = false }: { compact?: boolean }) {
                   {r.expected_date ? ` · expected ${r.expected_date}` : ""}
                 </p>
               </div>
-              <Badge className={STATUS_TONE[r.status] ?? ""}>{statusLabel(r.status)}</Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className={STATUS_TONE[r.status] ?? ""}>{statusLabel(r.status)}</Badge>
+                {(r as any).settled_at ? (
+                  <Badge variant="outline">
+                    Seen on the bank statement {String((r as any).settled_at).slice(0, 10)}
+                  </Badge>
+                ) : null}
+              </div>
             </div>
+
 
             {r.note ? <p className="mt-2 text-sm">{r.note}</p> : null}
             {r.review_note ? (
