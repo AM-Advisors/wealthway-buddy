@@ -120,6 +120,7 @@ export const getBankFeed = createServerFn({ method: "GET" })
       transactions: rows,
       investors: investors.filter((i) => i.fundingStatus !== "settled"),
       unmatchedCount: rows.filter((r) => !r.matchedApplicationId).length,
+      autoMatched: auto.total,
     };
   });
 

@@ -250,13 +250,10 @@ export const refreshClientBankMatches = createServerFn({ method: "POST" })
       .update({ last_synced_at: new Date().toISOString() })
       .eq("offering_id", data.fundId);
 
-    const { matchDeclaredPayments } = await import("@/lib/bank-auto-match.server");
-    const matched = await matchDeclaredPayments(
-      supabaseAdmin,
-      userId,
-      data.fundId,
-      "client linked bank account",
-    );
+    const { runAutoMatch } = await import("@/lib/bank-auto-match.server");
+    const matched = (
+      await runAutoMatch(supabaseAdmin, userId, data.fundId, "client linked bank account")
+    ).total;
 
     return {
       ok: true,
