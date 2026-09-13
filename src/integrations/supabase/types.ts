@@ -423,6 +423,7 @@ export type Database = {
       bank_transactions: {
         Row: {
           amount_cents: number
+          auto_matched: boolean
           created_at: string
           description: string | null
           id: string
@@ -432,14 +433,18 @@ export type Database = {
           matched_at: string | null
           matched_by: string | null
           matched_invoice_id: string | null
+          matched_wire_request_id: string | null
           name: string
           offering_id: string
           plaid_transaction_id: string
           posted_on: string
           updated_at: string
+          wire_matched_at: string | null
+          wire_matched_by: string | null
         }
         Insert: {
           amount_cents: number
+          auto_matched?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -449,14 +454,18 @@ export type Database = {
           matched_at?: string | null
           matched_by?: string | null
           matched_invoice_id?: string | null
+          matched_wire_request_id?: string | null
           name: string
           offering_id: string
           plaid_transaction_id: string
           posted_on: string
           updated_at?: string
+          wire_matched_at?: string | null
+          wire_matched_by?: string | null
         }
         Update: {
           amount_cents?: number
+          auto_matched?: boolean
           created_at?: string
           description?: string | null
           id?: string
@@ -466,11 +475,14 @@ export type Database = {
           matched_at?: string | null
           matched_by?: string | null
           matched_invoice_id?: string | null
+          matched_wire_request_id?: string | null
           name?: string
           offering_id?: string
           plaid_transaction_id?: string
           posted_on?: string
           updated_at?: string
+          wire_matched_at?: string | null
+          wire_matched_by?: string | null
         }
         Relationships: [
           {
@@ -485,6 +497,13 @@ export type Database = {
             columns: ["matched_invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_matched_wire_request_id_fkey"
+            columns: ["matched_wire_request_id"]
+            isOneToOne: false
+            referencedRelation: "wire_requests"
             referencedColumns: ["id"]
           },
           {
@@ -6830,6 +6849,9 @@ export type Database = {
           review_note: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          settled_amount_cents: number | null
+          settled_at: string | null
+          settled_transaction_id: string | null
           status: string
           updated_at: string
         }
@@ -6846,6 +6868,9 @@ export type Database = {
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          settled_amount_cents?: number | null
+          settled_at?: string | null
+          settled_transaction_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -6862,6 +6887,9 @@ export type Database = {
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          settled_amount_cents?: number | null
+          settled_at?: string | null
+          settled_transaction_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -6878,6 +6906,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wire_requests_settled_transaction_id_fkey"
+            columns: ["settled_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
             referencedColumns: ["id"]
           },
         ]
