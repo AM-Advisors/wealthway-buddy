@@ -33,7 +33,7 @@ export const listWireRequests = createServerFn({ method: "GET" })
     let query = supabase
       .from("wire_requests")
       .select(
-        "id, offering_id, application_id, requested_by, amount_cents, purpose, note, expected_date, status, reviewed_at, review_note, created_at",
+        "id, offering_id, application_id, requested_by, amount_cents, purpose, note, expected_date, status, reviewed_at, review_note, created_at, settled_at, settled_amount_cents",
       )
       .order("created_at", { ascending: false })
       .limit(200);
