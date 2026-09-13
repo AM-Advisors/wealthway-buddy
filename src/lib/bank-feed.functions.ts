@@ -238,13 +238,19 @@ export const syncBankTransactions = createServerFn({ method: "POST" })
       .update({ last_synced_at: new Date().toISOString() })
       .eq("offering_id", data.fundId);
 
+    const { runAutoMatch } = await import("@/lib/bank-auto-match.server");
+    const auto = await runAutoMatch(supabase, userId, data.fundId, "fund bank feed");
+
+    const settled = auto.total;
     return {
       ok: true,
       added,
+      matched: settled,
       message:
-        added === 0
-          ? "No new deposits since the last refresh."
-          : `${added} new deposit${added === 1 ? "" : "s"} pulled in.`,
+        `${added === 0 ? "No new deposits since the last refresh." : `${added} new deposit${added === 1 ? "" : "s"} pulled in.`}` +
+        (settled > 0
+          ? ` ${settled} wire${settled === 1 ? " was" : "s were"} matched automatically.`
+          : ""),
     };
   });
 
