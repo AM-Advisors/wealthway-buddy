@@ -32,6 +32,13 @@ export const getBankFeed = createServerFn({ method: "GET" })
 
     const { plaidConfigured } = await import("@/lib/plaid.server");
 
+    // Settle whatever the rules can settle before the page is drawn, so staff
+    // only see the deposits that genuinely need a person to look at them.
+    const auto = await (
+      await import("@/lib/bank-auto-match.server")
+    ).runAutoMatch(supabase, userId, data.fundId, "fund bank feed");
+
+
     const [{ data: account }, { data: transactions }, { data: applications }] = await Promise.all([
       supabase
         .from("bank_accounts")
