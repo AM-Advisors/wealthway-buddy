@@ -83,7 +83,16 @@ export const listClosingBoard = createServerFn({ method: "GET" })
           .from("application_closings")
           .select("id, application_id, closing_date, funded_amount_cents, note, closed_at")
           .in("application_id", appIds),
+        supabase
+          .from("investor_signoffs")
+          .select("application_id, signer_name, signed_at, commitment_cents, version")
+          .in("application_id", appIds)
+          .order("version", { ascending: true }),
       ]);
+
+    // Latest sign-off per investor (the ordered list leaves the newest last).
+    const signoffOf = new Map<string, any>();
+    for (const s of ((signoffs ?? []) as any[])) signoffOf.set(s.application_id, s);
 
     const closingIds = ((closings ?? []) as any[]).map((c) => c.id as string);
     const docCounts = new Map<string, number>();
