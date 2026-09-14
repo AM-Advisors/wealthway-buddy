@@ -12,6 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PRIVACY_POLICY, TERMS_OF_SERVICE, legalPlainText } from "@/lib/legal-content";
+
+/** Privacy and terms are authored in code, so the gate shows exactly what /privacy and /terms show. */
+const FULL_TEXT: Record<string, string> = {
+  privacy: legalPlainText(PRIVACY_POLICY),
+  terms: legalPlainText(TERMS_OF_SERVICE),
+};
+
+const LEGAL_LINKS: Record<string, string> = { privacy: "/privacy", terms: "/terms" };
 
 /** Nobody reaches the platform until the current policies are accepted. */
 export function PolicyGate({
@@ -91,8 +100,18 @@ export function PolicyGate({
               {opened[doc.id] && (
                 <ScrollArea className="max-h-64 border-t px-4 py-3">
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                    {doc.body}
+                    {FULL_TEXT[doc.kind as string] ?? doc.body}
                   </p>
+                  {LEGAL_LINKS[doc.kind as string] ? (
+                    <a
+                      href={LEGAL_LINKS[doc.kind as string]}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-block text-xs underline underline-offset-4"
+                    >
+                      Open this document in a new tab
+                    </a>
+                  ) : null}
                 </ScrollArea>
               )}
             </div>
