@@ -20,6 +20,12 @@ export type ClosingCandidate = {
   commitmentCents: number;
   receivedCents: number;
   fundingStatus: string;
+  signoff: {
+    signedAt: string;
+    signerName: string;
+    commitmentCents: number;
+    matchesCommitment: boolean;
+  } | null;
   closing: {
     id: string;
     closingDate: string;
@@ -65,7 +71,7 @@ export const listClosingBoard = createServerFn({ method: "GET" })
     const userIds = Array.from(new Set(applications.map((a) => a.user_id as string)));
     const fundIds = Array.from(new Set(applications.map((a) => a.offering_id as string)));
 
-    const [{ data: payments }, { data: profiles }, { data: offerings }, { data: closings }] =
+    const [{ data: payments }, { data: profiles }, { data: offerings }, { data: closings }, { data: signoffs }] =
       await Promise.all([
         supabase
           .from("payments")
@@ -77,7 +83,16 @@ export const listClosingBoard = createServerFn({ method: "GET" })
           .from("application_closings")
           .select("id, application_id, closing_date, funded_amount_cents, note, closed_at")
           .in("application_id", appIds),
+        supabase
+          .from("investor_signoffs")
+          .select("application_id, signer_name, signed_at, commitment_cents, version")
+          .in("application_id", appIds)
+          .order("version", { ascending: true }),
       ]);
+
+    // Latest sign-off per investor (the ordered list leaves the newest last).
+    const signoffOf = new Map<string, any>();
+    for (const s of ((signoffs ?? []) as any[])) signoffOf.set(s.application_id, s);
 
     const closingIds = ((closings ?? []) as any[]).map((c) => c.id as string);
     const docCounts = new Map<string, number>();
@@ -104,6 +119,7 @@ export const listClosingBoard = createServerFn({ method: "GET" })
     const rows: ClosingCandidate[] = applications.map((a) => {
       const profile = profileOf.get(a.user_id);
       const closing = closingOf.get(a.id);
+      const signoff = signoffOf.get(a.id);
       return {
         applicationId: a.id,
         offeringId: a.offering_id,
@@ -113,6 +129,15 @@ export const listClosingBoard = createServerFn({ method: "GET" })
         commitmentCents: Number(a.commitment_cents ?? 0),
         receivedCents: received.get(a.id) ?? 0,
         fundingStatus: a.funding_status as string,
+        signoff: signoff
+          ? {
+              signedAt: signoff.signed_at as string,
+              signerName: signoff.signer_name as string,
+              commitmentCents: Number(signoff.commitment_cents ?? 0),
+              matchesCommitment:
+                Number(signoff.commitment_cents ?? 0) === Number(a.commitment_cents ?? 0),
+            }
+          : null,
         closing: closing
           ? {
               id: closing.id,
@@ -154,6 +179,26 @@ export const confirmClosing = createServerFn({ method: "POST" })
     if (!app) throw new Error("That investor was not found.");
     if (!(await canManage(supabase, app.offering_id))) {
       throw new Error("You do not have permission to close this investor.");
+    }
+
+    // Capital is only recorded after the investor has approved their fund and
+    // the commitment amount in the portal.
+    const { data: signoff } = await supabase
+      .from("investor_signoffs")
+      .select("commitment_cents, signer_name, signed_at")
+      .eq("application_id", app.id)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!signoff) {
+      throw new Error(
+        "This investor has not signed off on their fund and commitment yet. Ask them to approve it in their portal before capital is recorded.",
+      );
+    }
+    if (Number(signoff.commitment_cents ?? 0) !== Number(app.commitment_cents ?? 0)) {
+      throw new Error(
+        "The commitment changed after the investor signed off. Ask them to approve the new amount in their portal before closing.",
+      );
     }
 
     const note = data.note?.trim() ? data.note.trim() : null;
