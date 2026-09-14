@@ -181,6 +181,26 @@ export const confirmClosing = createServerFn({ method: "POST" })
       throw new Error("You do not have permission to close this investor.");
     }
 
+    // Capital is only recorded after the investor has approved their fund and
+    // the commitment amount in the portal.
+    const { data: signoff } = await supabase
+      .from("investor_signoffs")
+      .select("commitment_cents, signer_name, signed_at")
+      .eq("application_id", app.id)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!signoff) {
+      throw new Error(
+        "This investor has not signed off on their fund and commitment yet. Ask them to approve it in their portal before capital is recorded.",
+      );
+    }
+    if (Number(signoff.commitment_cents ?? 0) !== Number(app.commitment_cents ?? 0)) {
+      throw new Error(
+        "The commitment changed after the investor signed off. Ask them to approve the new amount in their portal before closing.",
+      );
+    }
+
     const note = data.note?.trim() ? data.note.trim() : null;
     const { data: saved, error } = await supabase
       .from("application_closings")
