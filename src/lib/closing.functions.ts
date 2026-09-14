@@ -20,6 +20,12 @@ export type ClosingCandidate = {
   commitmentCents: number;
   receivedCents: number;
   fundingStatus: string;
+  signoff: {
+    signedAt: string;
+    signerName: string;
+    commitmentCents: number;
+    matchesCommitment: boolean;
+  } | null;
   closing: {
     id: string;
     closingDate: string;
