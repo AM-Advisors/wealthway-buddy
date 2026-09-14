@@ -71,7 +71,7 @@ export const listClosingBoard = createServerFn({ method: "GET" })
     const userIds = Array.from(new Set(applications.map((a) => a.user_id as string)));
     const fundIds = Array.from(new Set(applications.map((a) => a.offering_id as string)));
 
-    const [{ data: payments }, { data: profiles }, { data: offerings }, { data: closings }] =
+    const [{ data: payments }, { data: profiles }, { data: offerings }, { data: closings }, { data: signoffs }] =
       await Promise.all([
         supabase
           .from("payments")
