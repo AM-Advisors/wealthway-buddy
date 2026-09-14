@@ -80,13 +80,16 @@ export function ClientBankLinking() {
     },
   });
 
+  // Plaid only becomes `ready` a moment after the token arrives, so open the
+  // bank sign-in from an effect rather than inside the mutation callback.
+  useEffect(() => {
+    if (linkToken && ready) open();
+  }, [linkToken, ready, open]);
+
   const beginLink = useMutation({
     mutationFn: (fundId: string) => start({ data: { fundId } }),
     onSuccess: (result) => {
       setLinkToken(result.linkToken);
-      setTimeout(() => {
-        if (ready) open();
-      }, 300);
     },
     onError: (error) => {
       setPendingFund(null);
