@@ -214,6 +214,23 @@ function InvestorClosing({ row }: { row: any }) {
             <Badge variant={row.closing ? "default" : shortfall <= 0 ? "secondary" : "outline"}>
               {row.closing ? "Closed" : shortfall <= 0 ? "Ready to close" : "Awaiting funds"}
             </Badge>
+            {row.closing ? null : (
+              <Badge
+                variant={
+                  row.signoff?.matchesCommitment
+                    ? "secondary"
+                    : row.signoff
+                      ? "destructive"
+                      : "outline"
+                }
+              >
+                {row.signoff?.matchesCommitment
+                  ? "Investor approved"
+                  : row.signoff
+                    ? "Approval out of date"
+                    : "Awaiting investor approval"}
+              </Badge>
+            )}
             <Button asChild size="sm" variant="outline">
               <Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }}>
                 Investor file
