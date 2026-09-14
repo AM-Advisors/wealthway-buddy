@@ -130,7 +130,7 @@ export const getClientOnboarding = createServerFn({ method: "POST" })
         .order("created_at", { ascending: false }),
       context.supabase
         .from("service_requests")
-        .select("id, client_id, status, created_at, service_id")
+        .select("id, client_id, status, created_at, service_key")
         .order("created_at", { ascending: false }),
       context.supabase
         .from("contract_audit_events")

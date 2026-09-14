@@ -715,7 +715,7 @@ async function decorateRequests(context: any, requests: RequestRow[]) {
       context.supabase.from("offerings").select("id, name"),
       context.supabase.from("service_catalog").select("key, name, material, description, category"),
       context.supabase.from("client_sows").select("id, client_id, offering_id, title, status"),
-      context.supabase.from("profiles").select("id, full_name, email"),
+      context.supabase.from("profiles").select("user_id, legal_name, email"),
       context.supabase.from("pricing_versions").select("id").eq("status", "published").limit(1).maybeSingle(),
     ]);
   let rateCard: Record<string, { amount_cents: number | null; pricing_model: string | null }> = {};
@@ -743,8 +743,8 @@ async function decorateRequests(context: any, requests: RequestRow[]) {
       (catalog ?? []).find((c: any) => c.key === r.service_key)?.description ?? null,
     material: (catalog ?? []).find((c: any) => c.key === r.service_key)?.material ?? false,
     requesterName:
-      (people ?? []).find((p: any) => p.id === r.requested_by)?.full_name ??
-      (people ?? []).find((p: any) => p.id === r.requested_by)?.email ??
+      (people ?? []).find((p: any) => p.user_id === r.requested_by)?.legal_name ??
+      (people ?? []).find((p: any) => p.user_id === r.requested_by)?.email ??
       null,
     sowTitle: (sows ?? []).find((s: any) => s.id === (r as any).sow_id)?.title ?? null,
     suggested: rateCard[r.service_key] ?? null,

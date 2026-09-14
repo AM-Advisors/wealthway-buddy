@@ -29,8 +29,8 @@ export async function invoiceRecipients(clientId: string) {
   const ids = Array.from(new Set(wanted.map((m: any) => String(m.user_id))));
   const { data: people } = await supabaseAdmin
     .from("profiles")
-    .select("id, full_name, email")
-    .in("id", ids);
+    .select("user_id, legal_name, email")
+    .in("user_id", ids);
 
   const seen = new Set<string>();
   const out: { email: string; name: string }[] = [];
@@ -38,7 +38,7 @@ export async function invoiceRecipients(clientId: string) {
     const email = String(p.email ?? "").trim();
     if (!email || seen.has(email.toLowerCase())) continue;
     seen.add(email.toLowerCase());
-    out.push({ email, name: String(p.full_name ?? "").trim() || email });
+    out.push({ email, name: String(p.legal_name ?? "").trim() || email });
   }
   return out;
 }

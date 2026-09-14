@@ -273,6 +273,10 @@ export async function drainManagerAlerts(limit = 25): Promise<{ processed: numbe
 
   let sent = 0;
 
+  // Each drain attempt gets its own idempotency suffix: the email provider
+  // permanently rejects a key that already failed, so a retry needs a new one.
+  const attemptTag = now.replace(/[^0-9]/g, "");
+
   for (const row of rows) {
     try {
       const [{ data: offering }, { data: investor }] = await Promise.all([
@@ -304,7 +308,7 @@ export async function drainManagerAlerts(limit = 25): Promise<{ processed: numbe
             details: content.details,
             portalUrl,
           },
-          idempotencyKey: `fund-alert-${row.id}-${recipient.email}`,
+          idempotencyKey: `fund-alert-${row.id}-${recipient.email}-${attemptTag}`,
         });
         sent += 1;
       }
