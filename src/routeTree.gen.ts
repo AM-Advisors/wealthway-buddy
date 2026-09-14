@@ -17,9 +17,11 @@ import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
 import { Route as PlatformRouteImport } from './routes/platform'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SpvRouteImport } from './routes/spv'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
 import { Route as AuthenticatedCapitalRouteImport } from './routes/_authenticated/capital'
@@ -181,6 +183,11 @@ const PlatformRoute = PlatformRouteImport.update({
   path: '/platform',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -194,6 +201,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SpvRoute = SpvRouteImport.update({
   id: '/spv',
   path: '/spv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
@@ -895,9 +907,11 @@ export interface FileRoutesByFullPath {
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
+  '/terms': typeof TermsRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
   '/capital': typeof AuthenticatedCapitalRoute
@@ -1027,9 +1041,11 @@ export interface FileRoutesByTo {
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
+  '/terms': typeof TermsRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
   '/capital': typeof AuthenticatedCapitalRoute
@@ -1161,9 +1177,11 @@ export interface FileRoutesById {
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRoute
   '/_authenticated/capital': typeof AuthenticatedCapitalRoute
@@ -1296,9 +1314,11 @@ export interface FileRouteTypes {
     | '/fund-administration'
     | '/manager-login'
     | '/platform'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
+    | '/terms'
     | '/accounts'
     | '/apply'
     | '/capital'
@@ -1428,9 +1448,11 @@ export interface FileRouteTypes {
     | '/fund-administration'
     | '/manager-login'
     | '/platform'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
+    | '/terms'
     | '/accounts'
     | '/apply'
     | '/capital'
@@ -1561,9 +1583,11 @@ export interface FileRouteTypes {
     | '/fund-administration'
     | '/manager-login'
     | '/platform'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
+    | '/terms'
     | '/_authenticated/accounts'
     | '/_authenticated/apply'
     | '/_authenticated/capital'
@@ -1696,9 +1720,11 @@ export interface RootRouteChildren {
   FundAdministrationRoute: typeof FundAdministrationRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
   PlatformRoute: typeof PlatformRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SpvRoute: typeof SpvRoute
+  TermsRoute: typeof TermsRoute
   FundSlugRoute: typeof FundSlugRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
@@ -1770,6 +1796,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -1789,6 +1822,13 @@ declare module '@tanstack/react-router' {
       path: '/spv'
       fullPath: '/spv'
       preLoaderRoute: typeof SpvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/accounts': {
@@ -2910,9 +2950,11 @@ const rootRouteChildren: RootRouteChildren = {
   FundAdministrationRoute: FundAdministrationRoute,
   ManagerLoginRoute: ManagerLoginRoute,
   PlatformRoute: PlatformRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SpvRoute: SpvRoute,
+  TermsRoute: TermsRoute,
   FundSlugRoute: FundSlugRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,

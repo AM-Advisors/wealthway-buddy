@@ -5,20 +5,19 @@ import { LogoIcon } from "@/components/Logo";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
+const DESCRIPTION =
+  "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs — formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
+
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About Harmonious Capital Administration" },
-      {
-        name: "description",
-        content:
-          "Harmonious Capital Administration exists to foster financial prosperity and harmony for its clients through an innovative platform for fund formation, administration and investor onboarding.",
-      },
+      { name: "description", content: DESCRIPTION },
       { property: "og:title", content: "About Harmonious Capital Administration" },
       {
         property: "og:description",
         content:
-          "Our mission, our values and the way we work with sponsors, fund managers and investors.",
+          "Who we are, how every engagement is scoped, the work we take on and the roles we deliberately do not take on.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -40,6 +39,33 @@ const VALUES = [
   "Easy",
 ] as const;
 
+const WHAT_WE_DO: readonly [string, string][] = [
+  [
+    "Formation and administration support",
+    "Entity set-up support, fund and SPV administration, capital account records, closings and the day-to-day operational work that keeps a vehicle in good order.",
+  ],
+  [
+    "Investor onboarding",
+    "Identity verification, anti-money-laundering screening, accreditation checks for 506(b) and 506(c), subscription documents and electronic signing — all tracked in one place.",
+  ],
+  [
+    "Reporting and recordkeeping",
+    "Capital account statements, distributions, valuations and a durable record of every document signed, every approval given and every dollar moved.",
+  ],
+  [
+    "Payment facilitation",
+    "Wire and ACH instructions raised against verified beneficiaries, checked, approved by two authorised people, then matched back to invoices and investor deposits.",
+  ],
+  [
+    "Compliance and regulatory support",
+    "Filing calendars, document retention, holds where something needs to stop, and the evidence trail your counsel, auditor and regulators expect.",
+  ],
+  [
+    "One workspace for everyone",
+    "Sponsors, fund managers, investors, providers and our own team work from the same records, with access scoped to the role each person actually holds.",
+  ],
+];
+
 function AboutPage() {
   return (
     <div className="min-h-screen bg-background">
@@ -47,22 +73,80 @@ function AboutPage() {
 
       <main>
         <section className="bg-brand-gradient text-primary-foreground">
-          <div className="mx-auto max-w-6xl px-4 py-20">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
             <LogoIcon variant="teal" className="h-12 w-auto" />
-            <h1 className="mt-8 max-w-3xl text-4xl leading-[1.1] sm:text-5xl">Our Mission</h1>
+            <h1 className="mt-8 max-w-3xl text-4xl leading-[1.1] sm:text-5xl">
+              The administration partner behind private funds.
+            </h1>
             <p className="mt-6 max-w-3xl text-lg text-primary-foreground/75">
-              To use our platform to foster financial prosperity and harmony for our clients. We
-              are dedicated to optimising their financial resources, protecting their assets and
-              enabling them to achieve their long-term financial goals, all on a strong foundation
-              of trust and integrity — a seamless and secure experience, driven by continuous
-              innovation and a steadfast commitment to ethical practices.
+              Harmonious Capital Administration gives sponsors and fund managers a single, secure
+              workspace for forming a vehicle, onboarding investors, moving money carefully and
+              keeping records that stand up years later. Our mission is to use that platform to
+              foster financial prosperity and harmony for our clients — built on trust, integrity
+              and a steadfast commitment to ethical practice.
             </p>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-20">
-          <h2 className="text-3xl leading-tight sm:text-4xl">How We Show Up</h2>
-          <ul className="mt-10 flex flex-wrap gap-3">
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+          <h2 className="text-3xl leading-tight sm:text-4xl">What we do</h2>
+          <p className="mt-4 max-w-3xl text-muted-foreground">
+            Every engagement is governed by a Master Service Agreement together with one or more
+            Statements of Work. The Statement of Work decides exactly which services apply, at what
+            fees and on what timing — so what you see in the portal is always what you have agreed
+            to, and anything outside it has to be requested, quoted and signed before it starts.
+          </p>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {WHAT_WE_DO.map(([title, body]) => (
+              <article key={title} className="rounded-xl border bg-card p-7">
+                <h3 className="text-lg">{title}</h3>
+                <p className="mt-3 text-sm text-muted-foreground">{body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-t bg-secondary/40">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+            <h2 className="text-3xl leading-tight sm:text-4xl">What we are not</h2>
+            <p className="mt-4 max-w-3xl text-muted-foreground">
+              Being clear about this protects everyone. Harmonious is an administrative, technology,
+              onboarding, reporting, payment-facilitation, recordkeeping, compliance-support and
+              regulatory-support provider. We do not act as an investment adviser, broker-dealer,
+              placement agent, custodian, transfer agent, escrow agent, trustee, general partner,
+              fund manager, fiduciary, compliance officer, valuation agent, auditor, accountant, tax
+              preparer or legal counsel, unless that role is expressly included in a specific signed
+              Statement of Work.
+            </p>
+
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {[
+                [
+                  "Decisions stay with you",
+                  "Investment decisions, valuations, distributions and filings belong to the client and its own advisers. We run the process and keep the record.",
+                ],
+                [
+                  "Documents belong to you",
+                  "Templates are a starting point for your counsel to tailor. Every version, signature and approval is retained.",
+                ],
+                [
+                  "Privacy by default",
+                  "Bank details, signed documents and investor files sit in restricted storage, reachable only by the people granted access.",
+                ],
+              ].map(([title, body]) => (
+                <article key={title} className="rounded-xl border bg-card p-7">
+                  <h3 className="text-lg">{title}</h3>
+                  <p className="mt-3 text-sm text-muted-foreground">{body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+          <h2 className="text-3xl leading-tight sm:text-4xl">How we show up</h2>
+          <ul className="mt-8 flex flex-wrap gap-3">
             {VALUES.map((v) => (
               <li
                 key={v}
@@ -73,26 +157,26 @@ function AboutPage() {
             ))}
           </ul>
 
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {[
-              [
-                "Administrators, not advisers",
-                "Harmonious administers funds and runs onboarding. We are not an investment adviser or a broker-dealer, and nothing we publish is an offer of securities.",
-              ],
-              [
-                "Documents belong to you",
-                "Templates are a starting point. Your counsel tailors the offering documents, and every version is kept.",
-              ],
-              [
-                "Privacy by default",
-                "Bank details, signed documents and investor files sit in restricted storage, reachable only by the people granted access.",
-              ],
-            ].map(([title, body]) => (
-              <article key={title} className="rounded-xl border bg-card p-7">
-                <h3 className="text-lg">{title}</h3>
-                <p className="mt-3 text-sm text-muted-foreground">{body}</p>
-              </article>
-            ))}
+          <div className="mt-12 rounded-xl border bg-card p-7">
+            <h3 className="text-lg">Harmonious Capital Administration LLC</h3>
+            <p className="mt-3 text-sm text-muted-foreground">
+              400 N Ervay Street, Dallas, Texas 75202, United States of America
+              <br />
+              <a className="underline underline-offset-4" href="mailto:support@harmonious.co">
+                support@harmonious.co
+              </a>
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Read our{" "}
+              <Link to="/privacy" className="underline underline-offset-4">
+                Privacy Policy
+              </Link>{" "}
+              and{" "}
+              <Link to="/terms" className="underline underline-offset-4">
+                Terms of Service
+              </Link>
+              .
+            </p>
           </div>
         </section>
 
