@@ -425,6 +425,10 @@ function Dashboard() {
       </div>
 
       <div className="mt-8">
+        <InvestorSignoffCard />
+      </div>
+
+      <div className="mt-8">
         <OwnershipCard />
       </div>
 
