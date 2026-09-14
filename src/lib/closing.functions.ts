@@ -119,6 +119,7 @@ export const listClosingBoard = createServerFn({ method: "GET" })
     const rows: ClosingCandidate[] = applications.map((a) => {
       const profile = profileOf.get(a.user_id);
       const closing = closingOf.get(a.id);
+      const signoff = signoffOf.get(a.id);
       return {
         applicationId: a.id,
         offeringId: a.offering_id,
