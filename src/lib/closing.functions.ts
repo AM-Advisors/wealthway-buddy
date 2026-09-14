@@ -129,6 +129,15 @@ export const listClosingBoard = createServerFn({ method: "GET" })
         commitmentCents: Number(a.commitment_cents ?? 0),
         receivedCents: received.get(a.id) ?? 0,
         fundingStatus: a.funding_status as string,
+        signoff: signoff
+          ? {
+              signedAt: signoff.signed_at as string,
+              signerName: signoff.signer_name as string,
+              commitmentCents: Number(signoff.commitment_cents ?? 0),
+              matchesCommitment:
+                Number(signoff.commitment_cents ?? 0) === Number(a.commitment_cents ?? 0),
+            }
+          : null,
         closing: closing
           ? {
               id: closing.id,
