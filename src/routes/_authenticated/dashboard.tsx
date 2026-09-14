@@ -14,6 +14,7 @@ import { savePdf } from "@/lib/download-pdf";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { OwnershipCard } from "@/components/ownership-card";
 import { InvestorCapitalSummary } from "@/components/investor-capital-summary";
+import { InvestorSignoffCard } from "@/components/investor-signoff-card";
 import { CapitalStatementPanel } from "@/components/capital-statement-panel";
 
 import { Badge } from "@/components/ui/badge";
