@@ -185,7 +185,7 @@ export const signInvestorCommitment = createServerFn({ method: "POST" })
       fund_name: offering?.name ?? "Fund",
       commitment_cents: commitmentCents,
       share_price_cents: offering?.share_price_cents ?? null,
-      acknowledgements: SIGNOFF_ACKNOWLEDGEMENTS,
+      acknowledgements: [...SIGNOFF_ACKNOWLEDGEMENTS],
       signer_name: data.signer_name.trim(),
       signer_title: data.signer_title?.trim() ? data.signer_title.trim() : null,
       ip_address: ip,
