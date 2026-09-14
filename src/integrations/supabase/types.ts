@@ -3546,6 +3546,78 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_signoffs: {
+        Row: {
+          acknowledgements: Json
+          application_id: string
+          commitment_cents: number
+          created_at: string
+          fund_name: string
+          id: string
+          ip_address: string | null
+          offering_id: string
+          share_price_cents: number | null
+          signed_at: string
+          signer_name: string
+          signer_title: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+          version: number
+        }
+        Insert: {
+          acknowledgements?: Json
+          application_id: string
+          commitment_cents: number
+          created_at?: string
+          fund_name: string
+          id?: string
+          ip_address?: string | null
+          offering_id: string
+          share_price_cents?: number | null
+          signed_at?: string
+          signer_name: string
+          signer_title?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+          version?: number
+        }
+        Update: {
+          acknowledgements?: Json
+          application_id?: string
+          commitment_cents?: number
+          created_at?: string
+          fund_name?: string
+          id?: string
+          ip_address?: string | null
+          offering_id?: string
+          share_price_cents?: number | null
+          signed_at?: string
+          signer_name?: string
+          signer_title?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_signoffs_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_signoffs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_lines: {
         Row: {
           amount_cents: number
