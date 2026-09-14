@@ -193,7 +193,7 @@ export const decideWireRequest = createServerFn({ method: "POST" })
 
     const { data: before } = await supabase
       .from("wire_requests")
-      .select("status, amount_cents, offering_id, application_id")
+      .select("status, amount_cents, offering_id, application_id, purpose, expected_date")
       .eq("id", data.id)
       .maybeSingle();
 
@@ -225,5 +225,91 @@ export const decideWireRequest = createServerFn({ method: "POST" })
         amount_cents: (before as any)?.amount_cents ?? null,
       },
     });
+
+    if (data.status === "approved" && (before as any)?.status !== "approved") {
+      await notifyApprovedWireRequest(supabase, data.id, before, data.review_note ?? null);
+    }
+
     return { ok: true };
   });
+
+const PURPOSE_LABEL: Record<string, string> = {
+  investor_wire: "Investor wire",
+  capital_call: "Capital call",
+  expense: "Expense payment",
+  distribution: "Distribution",
+  other: "Other",
+};
+
+/** Tells the client's contacts a wire request is approved, with the fund's
+ *  recorded wire fee, closing cost and share price already filled in.
+ *  Never throws: the decision must stand even if the email cannot go out. */
+async function notifyApprovedWireRequest(
+  supabase: any,
+  requestId: string,
+  before: any,
+  reviewNote: string | null,
+) {
+  try {
+    const offeringId = before?.offering_id as string | undefined;
+    if (!offeringId) return;
+
+    const { data: offering } = await supabase
+      .from("offerings")
+      .select("id, name, client_id, wire_fee_cents, closing_cost_cents, share_price_cents")
+      .eq("id", offeringId)
+      .maybeSingle();
+    if (!offering?.client_id) return;
+
+    const { data: clientRow } = await supabase
+      .from("clients")
+      .select("legal_name, name")
+      .eq("id", offering.client_id)
+      .maybeSingle();
+
+    let investorName: string | null = null;
+    if (before?.application_id) {
+      const { data: app } = await supabase
+        .from("investor_applications")
+        .select("user_id")
+        .eq("id", before.application_id)
+        .maybeSingle();
+      if (app?.user_id) {
+        const { data: person } = await supabase
+          .from("profiles")
+          .select("legal_name, email")
+          .eq("user_id", app.user_id)
+          .maybeSingle();
+        investorName = (person?.legal_name as string) || (person?.email as string) || null;
+      }
+    }
+
+    const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import(
+      "@/lib/client-notify.server"
+    );
+    const amountOrNotSet = (cents: unknown) =>
+      cents === null || cents === undefined ? "Not set" : money(Number(cents));
+
+    await notifyClientAdminsWith(
+      String(offering.client_id),
+      "wire-request-approved",
+      `wire-request-approved:${requestId}`,
+      (person) => ({
+        contactName: person.name,
+        clientName: clientRow?.legal_name || clientRow?.name || "your organisation",
+        fundName: offering.name || "your fund",
+        amount: money(Number(before?.amount_cents ?? 0)),
+        purpose: PURPOSE_LABEL[String(before?.purpose ?? "other")] ?? "Wire",
+        expectedDate: before?.expected_date ? String(before.expected_date) : "",
+        investorName: investorName ?? "",
+        reviewNote: reviewNote ?? "",
+        wireFee: amountOrNotSet(offering.wire_fee_cents),
+        closingCost: amountOrNotSet(offering.closing_cost_cents),
+        sharePrice: amountOrNotSet(offering.share_price_cents),
+        portalUrl: `${CLIENT_PORTAL_BASE}/client/wires`,
+      }),
+    );
+  } catch (err) {
+    console.error("[wire-request] approval email failed", err);
+  }
+}
