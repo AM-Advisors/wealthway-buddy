@@ -294,11 +294,20 @@ function InvestorClosing({ row }: { row: any }) {
             </div>
             <div className="sm:col-span-3">
               <Button
-                disabled={!amountValid || confirmMutation.isPending}
+                disabled={
+                  !amountValid || confirmMutation.isPending || !row.signoff?.matchesCommitment
+                }
                 onClick={() => confirmMutation.mutate()}
               >
                 {confirmMutation.isPending ? "Confirming…" : "Confirm fully funded and close"}
               </Button>
+              {row.signoff?.matchesCommitment ? null : (
+                <p className="mt-2 text-xs text-destructive">
+                  {row.signoff
+                    ? `The investor approved ${money(row.signoff.commitmentCents)}, which no longer matches their commitment. Ask them to approve the new amount in their portal.`
+                    : "The investor has not approved their fund and commitment in the portal yet. Capital cannot be recorded until they do."}
+                </p>
+              )}
               {shortfall > 0 ? (
                 <p className="mt-2 text-xs text-muted-foreground">
                   Our records show {money(shortfall)} still outstanding. Close only if the full
