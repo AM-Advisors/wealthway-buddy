@@ -83,6 +83,7 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       { data: invoices },
       { data: signIns },
       { data: profiles },
+      { data: entitlements },
     ] = await Promise.all([
       supabaseAdmin
         .from("clients")
@@ -108,15 +109,15 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
       supabaseAdmin.from("profiles").select("user_id, email, legal_name"),
       supabaseAdmin
         .from("service_entitlements")
-        .select("client_id, service_key, included, status")
+        .select("client_id, service_key, status")
         .like("service_key", "cap_table%"),
     ]);
 
-    // Cap table plan per client — active, included entitlements, highest plan first.
+    // Cap table plan per client — included entitlements, highest plan first.
     const capPlanByClient = new Map<string, string>();
     const keysByClient = new Map<string, string[]>();
     for (const row of ((entitlements ?? []) as any[]).filter(
-      (e) => e.included !== false && String(e.status ?? "active") === "active",
+      (e) => String(e.status) === "included",
     )) {
       const cid = String(row.client_id);
       if (!keysByClient.has(cid)) keysByClient.set(cid, []);
