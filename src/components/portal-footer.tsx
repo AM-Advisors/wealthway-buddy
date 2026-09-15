@@ -30,9 +30,22 @@ export function PortalFooter() {
           <Link to="/terms" className="hover:text-primary-foreground text-primary-foreground/80">
             Terms of Service
           </Link>
+          <Link
+            to="/cap-table-privacy"
+            className="hover:text-primary-foreground text-primary-foreground/80"
+          >
+            CapTable Privacy
+          </Link>
+          <Link
+            to="/cap-table-terms"
+            className="hover:text-primary-foreground text-primary-foreground/80"
+          >
+            CapTable Terms
+          </Link>
           <Link to="/about" className="hover:text-primary-foreground text-primary-foreground/80">
             About
           </Link>
+
           <a
             href="mailto:support@harmonious.co"
             className="hover:text-primary-foreground text-primary-foreground/80"
