@@ -23,6 +23,12 @@ async function isSuperAdmin(context: any) {
   return ((data ?? []) as any[]).some((r) => ["super_admin", "admin"].includes(String(r.role)));
 }
 
+/** CapTable has its own privacy notice and terms, accepted separately by founders. */
+export const CAP_POLICY_KINDS = [
+  { key: "cap_privacy", label: "CapTable privacy notice" },
+  { key: "cap_terms", label: "CapTable terms of service" },
+] as const;
+
 /** Current published version of each policy, plus whatever this person still owes. */
 export const getPolicyStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -31,7 +37,12 @@ export const getPolicyStatus = createServerFn({ method: "GET" })
       .from("policy_documents")
       .select("id, kind, title, body, version, effective_date")
       .eq("published", true)
+      .in(
+        "kind",
+        POLICY_KINDS.map((k) => k.key),
+      )
       .order("version", { ascending: false });
+
 
     const current = new Map<string, any>();
     for (const doc of (docs ?? []) as any[]) {
