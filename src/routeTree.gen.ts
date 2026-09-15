@@ -34,6 +34,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
+import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated/shares'
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
@@ -43,6 +44,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
+import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
@@ -272,6 +274,11 @@ const AuthenticatedProviderRoute = AuthenticatedProviderRouteImport.update({
   path: '/provider',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSharesRoute = AuthenticatedSharesRouteImport.update({
+  id: '/shares',
+  path: '/shares',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSignOffRoute = AuthenticatedSignOffRouteImport.update({
   id: '/sign-off',
   path: '/sign-off',
@@ -317,6 +324,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const FundSlugRoute = FundSlugRouteImport.update({
   id: '/fund/$slug',
   path: '/fund/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharesTokenRoute = SharesTokenRouteImport.update({
+  id: '/shares/$token',
+  path: '/shares/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -938,6 +950,7 @@ export interface FileRoutesByFullPath {
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
+  '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -946,6 +959,7 @@ export interface FileRoutesByFullPath {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -1073,6 +1087,7 @@ export interface FileRoutesByTo {
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
+  '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -1081,6 +1096,7 @@ export interface FileRoutesByTo {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -1212,6 +1228,7 @@ export interface FileRoutesById {
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
+  '/_authenticated/shares': typeof AuthenticatedSharesRoute
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
@@ -1220,6 +1237,7 @@ export interface FileRoutesById {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -1351,6 +1369,7 @@ export interface FileRouteTypes {
     | '/my-portfolio'
     | '/portal'
     | '/provider'
+    | '/shares'
     | '/sign-off'
     | '/staff'
     | '/subscription'
@@ -1359,6 +1378,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/fund/$slug'
+    | '/shares/$token'
     | '/auth/'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -1486,6 +1506,7 @@ export interface FileRouteTypes {
     | '/my-portfolio'
     | '/portal'
     | '/provider'
+    | '/shares'
     | '/sign-off'
     | '/staff'
     | '/subscription'
@@ -1494,6 +1515,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/fund/$slug'
+    | '/shares/$token'
     | '/auth'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -1624,6 +1646,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
     | '/_authenticated/provider'
+    | '/_authenticated/shares'
     | '/_authenticated/sign-off'
     | '/_authenticated/staff'
     | '/_authenticated/subscription'
@@ -1632,6 +1655,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/fund/$slug'
+    | '/shares/$token'
     | '/auth/'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
@@ -1752,6 +1776,7 @@ export interface RootRouteChildren {
   SpvRoute: typeof SpvRoute
   TermsRoute: typeof TermsRoute
   FundSlugRoute: typeof FundSlugRoute
+  SharesTokenRoute: typeof SharesTokenRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -1941,6 +1966,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProviderRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/shares': {
+      id: '/_authenticated/shares'
+      path: '/shares'
+      fullPath: '/shares'
+      preLoaderRoute: typeof AuthenticatedSharesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sign-off': {
       id: '/_authenticated/sign-off'
       path: '/sign-off'
@@ -2002,6 +2034,13 @@ declare module '@tanstack/react-router' {
       path: '/fund/$slug'
       fullPath: '/fund/$slug'
       preLoaderRoute: typeof FundSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shares/$token': {
+      id: '/shares/$token'
+      path: '/shares/$token'
+      fullPath: '/shares/$token'
+      preLoaderRoute: typeof SharesTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -2763,6 +2802,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
+  AuthenticatedSharesRoute: typeof AuthenticatedSharesRoute
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
@@ -2865,6 +2905,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,
+  AuthenticatedSharesRoute: AuthenticatedSharesRoute,
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
@@ -3000,6 +3041,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpvRoute: SpvRoute,
   TermsRoute: TermsRoute,
   FundSlugRoute: FundSlugRoute,
+  SharesTokenRoute: SharesTokenRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,

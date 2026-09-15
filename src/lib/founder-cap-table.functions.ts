@@ -294,6 +294,16 @@ export const saveHolding = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    // Every new share record gets its own numbered certificate, in draft until
+    // a company signatory signs it.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createDraftCertificate } = await import("@/lib/cap-certificates.server");
+    await createDraftCertificate(supabaseAdmin, {
+      holdingId: String((created as any).id),
+      createdBy: context.userId,
+    });
+
     await audit(context, {
       clientId: who.clientId,
       action: "holding_added",
@@ -302,6 +312,7 @@ export const saveHolding = createServerFn({ method: "POST" })
     });
     return { id: String((created as any).id) };
   });
+
 
 /** Bulk upload: each line carries a holder plus the shares they hold. */
 const importInput = z.object({
@@ -332,6 +343,11 @@ export const importCapTable = createServerFn({ method: "POST" })
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
       throw new Error("You do not have permission to change this cap table.");
     }
+
+    const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+    const { createDraftCertificate } = await import("@/lib/cap-certificates.server");
+
+
 
     const { data: existing } = await context.supabase
       .from("cap_stakeholders")
@@ -374,21 +390,30 @@ export const importCapTable = createServerFn({ method: "POST" })
         byKey.set(key, stakeholderId);
         holders += 1;
       }
-      const { error: hErr } = await context.supabase.from("cap_holdings").insert({
-        client_id: who.clientId,
-        stakeholder_id: stakeholderId,
-        security_type: r.security_type || "common",
-        share_class: r.share_class || null,
-        quantity: r.quantity,
-        price_per_share_cents: r.price_per_share_cents ?? null,
-        issued_on: r.issued_on || null,
-        certificate_no: r.certificate_no || null,
-        source: "upload",
-        created_by: context.userId,
-      });
+      const { data: newHolding, error: hErr } = await context.supabase
+        .from("cap_holdings")
+        .insert({
+          client_id: who.clientId,
+          stakeholder_id: stakeholderId,
+          security_type: r.security_type || "common",
+          share_class: r.share_class || null,
+          quantity: r.quantity,
+          price_per_share_cents: r.price_per_share_cents ?? null,
+          issued_on: r.issued_on || null,
+          certificate_no: r.certificate_no || null,
+          source: "upload",
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
       if (hErr) throw new Error(hErr.message);
+      await createDraftCertificate(admin, {
+        holdingId: String((newHolding as any).id),
+        createdBy: context.userId,
+      });
       holdings += 1;
     }
+
 
     await audit(context, {
       clientId: who.clientId,
@@ -521,29 +546,64 @@ export const decideTransfer = createServerFn({ method: "POST" })
         toId = String((created as any).id);
       }
 
+      const { createDraftCertificate, closeCertificatesForHolding } = await import(
+        "@/lib/cap-certificates.server"
+      );
+
+      // The old certificate stops here: it is replaced when shares remain with
+      // the seller, cancelled when the whole holding moves on.
+      await closeCertificatesForHolding(
+        supabaseAdmin,
+        String((holding as any).id),
+        remaining === 0 ? "cancelled" : "replaced",
+        `Transfer ${data.id} approved`,
+      );
+
       await supabaseAdmin
         .from("cap_holdings")
         .update({
           quantity: remaining,
           status: remaining === 0 ? "transferred" : "outstanding",
+          certificate_no: null,
         })
         .eq("id", (holding as any).id);
 
-      const { error: insErr } = await supabaseAdmin.from("cap_holdings").insert({
-        client_id: who.clientId,
-        stakeholder_id: toId,
-        security_type: (holding as any).security_type,
-        share_class: (holding as any).share_class,
-        quantity: moving,
-        price_per_share_cents: (holding as any).price_per_share_cents,
-        issued_on: new Date().toISOString().slice(0, 10),
-        certificate_no: null,
-        source: "transfer",
-        notes: `Transferred from holding ${(holding as any).id}`,
-        created_by: context.userId,
-      });
+      if (remaining > 0) {
+        await createDraftCertificate(supabaseAdmin, {
+          holdingId: String((holding as any).id),
+          createdBy: context.userId,
+          transferId: data.id,
+        });
+      }
+
+      const { data: newHolding, error: insErr } = await supabaseAdmin
+        .from("cap_holdings")
+        .insert({
+          client_id: who.clientId,
+          stakeholder_id: toId,
+          security_type: (holding as any).security_type,
+          share_class: (holding as any).share_class,
+          quantity: moving,
+          price_per_share_cents: (holding as any).price_per_share_cents,
+          issued_on: new Date().toISOString().slice(0, 10),
+          certificate_no: null,
+          source: "transfer",
+          parent_holding_id: (holding as any).id,
+          transfer_id: data.id,
+          notes: `Transferred from holding ${(holding as any).id}`,
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
       if (insErr) throw new Error(insErr.message);
+
+      await createDraftCertificate(supabaseAdmin, {
+        holdingId: String((newHolding as any).id),
+        createdBy: context.userId,
+        transferId: data.id,
+      });
     }
+
 
     const { error: updErr } = await supabaseAdmin
       .from("cap_transfers")
@@ -579,17 +639,27 @@ export const getCapTablePlanUsage = createServerFn({ method: "GET" })
       throw new Error("Forbidden: this area is for the Harmonious team.");
     }
 
-    const [{ data: clients }, { data: ents }, { data: stakeholders }, { data: holdings }, { data: transfers }] =
-      await Promise.all([
-        context.supabase.from("clients").select("id, name, status").order("name"),
-        context.supabase
-          .from("service_entitlements")
-          .select("client_id, service_key, status, effective_date")
-          .like("service_key", "cap_table%"),
-        context.supabase.from("cap_stakeholders").select("client_id"),
-        context.supabase.from("cap_holdings").select("client_id, quantity, status, updated_at"),
-        context.supabase.from("cap_transfers").select("client_id, status, updated_at"),
-      ]);
+    const [
+      { data: clients },
+      { data: ents },
+      { data: stakeholders },
+      { data: holdings },
+      { data: transfers },
+      { data: certificates },
+      { data: holderAccess },
+    ] = await Promise.all([
+      context.supabase.from("clients").select("id, name, status").order("name"),
+      context.supabase
+        .from("service_entitlements")
+        .select("client_id, service_key, status, effective_date")
+        .like("service_key", "cap_table%"),
+      context.supabase.from("cap_stakeholders").select("client_id"),
+      context.supabase.from("cap_holdings").select("client_id, quantity, status, updated_at"),
+      context.supabase.from("cap_transfers").select("client_id, status, updated_at"),
+      context.supabase.from("cap_certificates").select("client_id, status"),
+      context.supabase.from("cap_holder_access").select("client_id, kind, revoked_at"),
+    ]);
+
 
     const included = new Map<string, string[]>();
     for (const e of (ents ?? []) as any[]) {
@@ -627,7 +697,20 @@ export const getCapTablePlanUsage = createServerFn({ method: "GET" })
             .filter((h) => h.status === "outstanding")
             .reduce((sum, h) => sum + Number(h.quantity ?? 0), 0),
           pendingTransfers: clientTransfers.filter((t) => t.status === "pending").length,
+          certificatesIssued: ((certificates ?? []) as any[]).filter(
+            (c) => String(c.client_id) === clientId && c.status === "issued",
+          ).length,
+          certificatesDraft: ((certificates ?? []) as any[]).filter(
+            (c) => String(c.client_id) === clientId && c.status === "draft",
+          ).length,
+          holderLogins: ((holderAccess ?? []) as any[]).filter(
+            (a) => String(a.client_id) === clientId && a.kind === "login" && !a.revoked_at,
+          ).length,
+          holderLinks: ((holderAccess ?? []) as any[]).filter(
+            (a) => String(a.client_id) === clientId && a.kind === "link" && !a.revoked_at,
+          ).length,
           lastActivity: lastActivity || null,
+
           overLimit:
             plan?.stakeholders != null && holders > plan.stakeholders
               ? holders - plan.stakeholders

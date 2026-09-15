@@ -14,6 +14,7 @@ import {
   saveStakeholder,
 } from "@/lib/founder-cap-table.functions";
 
+import { CapCertificatesPanel } from "@/components/cap-certificates-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -295,7 +296,9 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
           <TabsTrigger value="transfers">
             Transfers{pending.length ? ` (${pending.length})` : ""}
           </TabsTrigger>
+          <TabsTrigger value="certificates">Certificates &amp; access</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="ownership" className="mt-4">
           <Card>
@@ -785,7 +788,12 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="certificates" className="mt-4">
+          <CapCertificatesPanel clientId={activeClientId} stakeholders={stakeholders} />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }

@@ -515,6 +515,189 @@ export type Database = {
           },
         ]
       }
+      cap_certificates: {
+        Row: {
+          cancelled_at: string | null
+          cancelled_reason: string | null
+          certificate_no: string
+          client_id: string
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          file_path: string | null
+          holding_id: string
+          id: string
+          replaced_by: string | null
+          signature_ip: string | null
+          signature_user_agent: string | null
+          signed_at: string | null
+          signed_by: string | null
+          signer_name: string | null
+          signer_title: string | null
+          snapshot: Json
+          stakeholder_id: string
+          status: string
+          transfer_id: string | null
+          updated_at: string
+          uploaded_at: string | null
+          verification_code: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          certificate_no: string
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          holding_id: string
+          id?: string
+          replaced_by?: string | null
+          signature_ip?: string | null
+          signature_user_agent?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          snapshot?: Json
+          stakeholder_id: string
+          status?: string
+          transfer_id?: string | null
+          updated_at?: string
+          uploaded_at?: string | null
+          verification_code: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          certificate_no?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          holding_id?: string
+          id?: string
+          replaced_by?: string | null
+          signature_ip?: string | null
+          signature_user_agent?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          snapshot?: Json
+          stakeholder_id?: string
+          status?: string
+          transfer_id?: string | null
+          updated_at?: string
+          uploaded_at?: string | null
+          verification_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_certificates_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_certificates_holding_id_fkey"
+            columns: ["holding_id"]
+            isOneToOne: false
+            referencedRelation: "cap_holdings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_certificates_replaced_by_fkey"
+            columns: ["replaced_by"]
+            isOneToOne: false
+            referencedRelation: "cap_certificates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_certificates_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "cap_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_certificates_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "cap_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cap_holder_access: {
+        Row: {
+          client_id: string
+          created_at: string
+          email: string | null
+          expires_at: string | null
+          id: string
+          invited_by: string | null
+          kind: string
+          last_seen_at: string | null
+          revoked_at: string | null
+          stakeholder_id: string
+          token_hash: string | null
+          updated_at: string
+          user_id: string | null
+          view_count: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          invited_by?: string | null
+          kind: string
+          last_seen_at?: string | null
+          revoked_at?: string | null
+          stakeholder_id: string
+          token_hash?: string | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          invited_by?: string | null
+          kind?: string
+          last_seen_at?: string | null
+          revoked_at?: string | null
+          stakeholder_id?: string
+          token_hash?: string | null
+          updated_at?: string
+          user_id?: string | null
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_holder_access_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_holder_access_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "cap_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cap_holdings: {
         Row: {
           certificate_no: string | null
@@ -524,6 +707,7 @@ export type Database = {
           id: string
           issued_on: string | null
           notes: string | null
+          parent_holding_id: string | null
           price_per_share_cents: number | null
           quantity: number
           security_type: string
@@ -531,6 +715,7 @@ export type Database = {
           source: string
           stakeholder_id: string
           status: string
+          transfer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -541,6 +726,7 @@ export type Database = {
           id?: string
           issued_on?: string | null
           notes?: string | null
+          parent_holding_id?: string | null
           price_per_share_cents?: number | null
           quantity?: number
           security_type?: string
@@ -548,6 +734,7 @@ export type Database = {
           source?: string
           stakeholder_id: string
           status?: string
+          transfer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -558,6 +745,7 @@ export type Database = {
           id?: string
           issued_on?: string | null
           notes?: string | null
+          parent_holding_id?: string | null
           price_per_share_cents?: number | null
           quantity?: number
           security_type?: string
@@ -565,6 +753,7 @@ export type Database = {
           source?: string
           stakeholder_id?: string
           status?: string
+          transfer_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -576,10 +765,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cap_holdings_parent_holding_id_fkey"
+            columns: ["parent_holding_id"]
+            isOneToOne: false
+            referencedRelation: "cap_holdings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cap_holdings_stakeholder_id_fkey"
             columns: ["stakeholder_id"]
             isOneToOne: false
             referencedRelation: "cap_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_holdings_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "cap_transfers"
             referencedColumns: ["id"]
           },
         ]
@@ -7208,6 +7411,10 @@ export type Database = {
       }
       can_review_operations: { Args: never; Returns: boolean }
       can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
+      cap_holder_can_view: {
+        Args: { _stakeholder_id: string }
+        Returns: boolean
+      }
       client_create_wire_request: {
         Args: {
           _amount_cents: number

@@ -91,6 +91,8 @@ export function CapTablePlanUsage() {
                   <th className="py-2 pr-3 font-medium">Holdings</th>
                   <th className="py-2 pr-3 font-medium">Shares outstanding</th>
                   <th className="py-2 pr-3 font-medium">Pending transfers</th>
+                  <th className="py-2 pr-3 font-medium">Certificates</th>
+                  <th className="py-2 pr-3 font-medium">Holder access</th>
                   <th className="py-2 pr-3 font-medium">Last activity</th>
                 </tr>
               </thead>
@@ -117,6 +119,13 @@ export function CapTablePlanUsage() {
                     <td className="py-2 pr-3">{r.holdings}</td>
                     <td className="py-2 pr-3">{num(Number(r.shares ?? 0))}</td>
                     <td className="py-2 pr-3">{r.pendingTransfers || "—"}</td>
+                    <td className="py-2 pr-3">
+                      {r.certificatesIssued || 0} issued
+                      {r.certificatesDraft ? ` · ${r.certificatesDraft} draft` : ""}
+                    </td>
+                    <td className="py-2 pr-3">
+                      {(r.holderLogins || 0) + (r.holderLinks || 0) || "—"}
+                    </td>
                     <td className="py-2 pr-3">
                       {r.lastActivity ? new Date(r.lastActivity).toLocaleDateString() : "—"}
                     </td>
