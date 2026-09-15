@@ -34,6 +34,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
+import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated/shares'
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
@@ -271,6 +272,11 @@ const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
 const AuthenticatedProviderRoute = AuthenticatedProviderRouteImport.update({
   id: '/provider',
   path: '/provider',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSharesRoute = AuthenticatedSharesRouteImport.update({
+  id: '/shares',
+  path: '/shares',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSignOffRoute = AuthenticatedSignOffRouteImport.update({
@@ -944,6 +950,7 @@ export interface FileRoutesByFullPath {
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
+  '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -1080,6 +1087,7 @@ export interface FileRoutesByTo {
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/provider': typeof AuthenticatedProviderRoute
+  '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
@@ -1220,6 +1228,7 @@ export interface FileRoutesById {
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
+  '/_authenticated/shares': typeof AuthenticatedSharesRoute
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
@@ -1360,6 +1369,7 @@ export interface FileRouteTypes {
     | '/my-portfolio'
     | '/portal'
     | '/provider'
+    | '/shares'
     | '/sign-off'
     | '/staff'
     | '/subscription'
@@ -1496,6 +1506,7 @@ export interface FileRouteTypes {
     | '/my-portfolio'
     | '/portal'
     | '/provider'
+    | '/shares'
     | '/sign-off'
     | '/staff'
     | '/subscription'
@@ -1635,6 +1646,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
     | '/_authenticated/provider'
+    | '/_authenticated/shares'
     | '/_authenticated/sign-off'
     | '/_authenticated/staff'
     | '/_authenticated/subscription'
@@ -1952,6 +1964,13 @@ declare module '@tanstack/react-router' {
       path: '/provider'
       fullPath: '/provider'
       preLoaderRoute: typeof AuthenticatedProviderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/shares': {
+      id: '/_authenticated/shares'
+      path: '/shares'
+      fullPath: '/shares'
+      preLoaderRoute: typeof AuthenticatedSharesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/sign-off': {
@@ -2783,6 +2802,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
+  AuthenticatedSharesRoute: typeof AuthenticatedSharesRoute
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
@@ -2885,6 +2905,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,
+  AuthenticatedSharesRoute: AuthenticatedSharesRoute,
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
