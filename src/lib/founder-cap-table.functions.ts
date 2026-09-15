@@ -697,7 +697,20 @@ export const getCapTablePlanUsage = createServerFn({ method: "GET" })
             .filter((h) => h.status === "outstanding")
             .reduce((sum, h) => sum + Number(h.quantity ?? 0), 0),
           pendingTransfers: clientTransfers.filter((t) => t.status === "pending").length,
+          certificatesIssued: ((certificates ?? []) as any[]).filter(
+            (c) => String(c.client_id) === clientId && c.status === "issued",
+          ).length,
+          certificatesDraft: ((certificates ?? []) as any[]).filter(
+            (c) => String(c.client_id) === clientId && c.status === "draft",
+          ).length,
+          holderLogins: ((holderAccess ?? []) as any[]).filter(
+            (a) => String(a.client_id) === clientId && a.kind === "login" && !a.revoked_at,
+          ).length,
+          holderLinks: ((holderAccess ?? []) as any[]).filter(
+            (a) => String(a.client_id) === clientId && a.kind === "link" && !a.revoked_at,
+          ).length,
           lastActivity: lastActivity || null,
+
           overLimit:
             plan?.stakeholders != null && holders > plan.stakeholders
               ? holders - plan.stakeholders
