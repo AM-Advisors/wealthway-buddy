@@ -112,17 +112,8 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         .like("service_key", "cap_table%"),
     ]);
 
-    // Cap table plan per client — any included, active entitlement wins (highest plan first).
+    // Cap table plan per client — active, included entitlements, highest plan first.
     const capPlanByClient = new Map<string, string>();
-    for (const row of ((entitlements ?? []) as any[]).filter(
-      (e) => e.included !== false && String(e.status ?? "active") === "active",
-    )) {
-      const cid = String(row.client_id);
-      if (capPlanByClient.has(cid)) continue; // keep the highest plan seen (query order aside)
-      const plan = capPlanFor([String(row.service_key)]);
-      if (plan && !capPlanByClient.has(cid)) capPlanByClient.set(cid, plan);
-    }
-    // Highest-plan precedence regardless of row order.
     const keysByClient = new Map<string, string[]>();
     for (const row of ((entitlements ?? []) as any[]).filter(
       (e) => e.included !== false && String(e.status ?? "active") === "active",
