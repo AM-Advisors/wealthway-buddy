@@ -787,6 +787,80 @@ export type Database = {
           },
         ]
       }
+      cap_onboarding: {
+        Row: {
+          acknowledged: boolean
+          authorized_shares: number | null
+          client_id: string
+          company_legal_name: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          date_formed: string | null
+          entity_type: string | null
+          fiscal_year_end: string | null
+          id: string
+          par_value_cents: number | null
+          records_source: string | null
+          signatory_email: string | null
+          signatory_name: string | null
+          signatory_title: string | null
+          state_formed: string | null
+          updated_at: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          authorized_shares?: number | null
+          client_id: string
+          company_legal_name?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_formed?: string | null
+          entity_type?: string | null
+          fiscal_year_end?: string | null
+          id?: string
+          par_value_cents?: number | null
+          records_source?: string | null
+          signatory_email?: string | null
+          signatory_name?: string | null
+          signatory_title?: string | null
+          state_formed?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acknowledged?: boolean
+          authorized_shares?: number | null
+          client_id?: string
+          company_legal_name?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_formed?: string | null
+          entity_type?: string | null
+          fiscal_year_end?: string | null
+          id?: string
+          par_value_cents?: number | null
+          records_source?: string | null
+          signatory_email?: string | null
+          signatory_name?: string | null
+          signatory_title?: string | null
+          state_formed?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_onboarding_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cap_stakeholders: {
         Row: {
           client_id: string
