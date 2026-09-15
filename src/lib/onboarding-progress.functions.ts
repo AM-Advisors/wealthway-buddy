@@ -48,6 +48,21 @@ export const STAGE_LABELS = [
 ] as const;
 
 /** Every client, stage by stage, with the ones that have gone quiet flagged. */
+const CAP_PLAN_ORDER = [
+  { key: "cap_table_enterprise", label: "Enterprise" },
+  { key: "cap_table_scale", label: "Scale" },
+  { key: "cap_table_growth", label: "Growth" },
+  { key: "cap_table_starter", label: "Starter" },
+  { key: "cap_table_free", label: "Free" },
+] as const;
+
+function capPlanFor(serviceKeys: string[]): string | null {
+  for (const plan of CAP_PLAN_ORDER) {
+    if (serviceKeys.includes(plan.key)) return plan.label;
+  }
+  return null;
+}
+
 export const getOnboardingProgress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -91,7 +106,35 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         .order("created_at", { ascending: false })
         .limit(5000),
       supabaseAdmin.from("profiles").select("user_id, email, legal_name"),
+      supabaseAdmin
+        .from("service_entitlements")
+        .select("client_id, service_key, included, status")
+        .like("service_key", "cap_table%"),
     ]);
+
+    // Cap table plan per client — any included, active entitlement wins (highest plan first).
+    const capPlanByClient = new Map<string, string>();
+    for (const row of ((entitlements ?? []) as any[]).filter(
+      (e) => e.included !== false && String(e.status ?? "active") === "active",
+    )) {
+      const cid = String(row.client_id);
+      if (capPlanByClient.has(cid)) continue; // keep the highest plan seen (query order aside)
+      const plan = capPlanFor([String(row.service_key)]);
+      if (plan && !capPlanByClient.has(cid)) capPlanByClient.set(cid, plan);
+    }
+    // Highest-plan precedence regardless of row order.
+    const keysByClient = new Map<string, string[]>();
+    for (const row of ((entitlements ?? []) as any[]).filter(
+      (e) => e.included !== false && String(e.status ?? "active") === "active",
+    )) {
+      const cid = String(row.client_id);
+      if (!keysByClient.has(cid)) keysByClient.set(cid, []);
+      keysByClient.get(cid)!.push(String(row.service_key));
+    }
+    for (const [cid, keys] of keysByClient) {
+      const plan = capPlanFor(keys);
+      if (plan) capPlanByClient.set(cid, plan);
+    }
 
     const requiredKinds = Array.from(
       new Set(((policies ?? []) as any[]).map((p) => String(p.kind))),
