@@ -546,29 +546,64 @@ export const decideTransfer = createServerFn({ method: "POST" })
         toId = String((created as any).id);
       }
 
+      const { createDraftCertificate, closeCertificatesForHolding } = await import(
+        "@/lib/cap-certificates.server"
+      );
+
+      // The old certificate stops here: it is replaced when shares remain with
+      // the seller, cancelled when the whole holding moves on.
+      await closeCertificatesForHolding(
+        supabaseAdmin,
+        String((holding as any).id),
+        remaining === 0 ? "cancelled" : "replaced",
+        `Transfer ${data.id} approved`,
+      );
+
       await supabaseAdmin
         .from("cap_holdings")
         .update({
           quantity: remaining,
           status: remaining === 0 ? "transferred" : "outstanding",
+          certificate_no: null,
         })
         .eq("id", (holding as any).id);
 
-      const { error: insErr } = await supabaseAdmin.from("cap_holdings").insert({
-        client_id: who.clientId,
-        stakeholder_id: toId,
-        security_type: (holding as any).security_type,
-        share_class: (holding as any).share_class,
-        quantity: moving,
-        price_per_share_cents: (holding as any).price_per_share_cents,
-        issued_on: new Date().toISOString().slice(0, 10),
-        certificate_no: null,
-        source: "transfer",
-        notes: `Transferred from holding ${(holding as any).id}`,
-        created_by: context.userId,
-      });
+      if (remaining > 0) {
+        await createDraftCertificate(supabaseAdmin, {
+          holdingId: String((holding as any).id),
+          createdBy: context.userId,
+          transferId: data.id,
+        });
+      }
+
+      const { data: newHolding, error: insErr } = await supabaseAdmin
+        .from("cap_holdings")
+        .insert({
+          client_id: who.clientId,
+          stakeholder_id: toId,
+          security_type: (holding as any).security_type,
+          share_class: (holding as any).share_class,
+          quantity: moving,
+          price_per_share_cents: (holding as any).price_per_share_cents,
+          issued_on: new Date().toISOString().slice(0, 10),
+          certificate_no: null,
+          source: "transfer",
+          parent_holding_id: (holding as any).id,
+          transfer_id: data.id,
+          notes: `Transferred from holding ${(holding as any).id}`,
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
       if (insErr) throw new Error(insErr.message);
+
+      await createDraftCertificate(supabaseAdmin, {
+        holdingId: String((newHolding as any).id),
+        createdBy: context.userId,
+        transferId: data.id,
+      });
     }
+
 
     const { error: updErr } = await supabaseAdmin
       .from("cap_transfers")
