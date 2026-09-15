@@ -80,6 +80,7 @@ import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authentica
 import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
 import { Route as AuthenticatedClientAgreementsRouteImport } from './routes/_authenticated/client.agreements'
 import { Route as AuthenticatedClientBankingRouteImport } from './routes/_authenticated/client.banking'
+import { Route as AuthenticatedClientCapTableRouteImport } from './routes/_authenticated/client.cap-table'
 import { Route as AuthenticatedClientFundsRouteImport } from './routes/_authenticated/client.funds'
 import { Route as AuthenticatedClientInboxRouteImport } from './routes/_authenticated/client.inbox'
 import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client.invoices'
@@ -532,6 +533,12 @@ const AuthenticatedClientBankingRoute =
     path: '/banking',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
+const AuthenticatedClientCapTableRoute =
+  AuthenticatedClientCapTableRouteImport.update({
+    id: '/cap-table',
+    path: '/cap-table',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedClientFundsRoute =
   AuthenticatedClientFundsRouteImport.update({
     id: '/funds',
@@ -968,6 +975,7 @@ export interface FileRoutesByFullPath {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/client/agreements': typeof AuthenticatedClientAgreementsRoute
   '/client/banking': typeof AuthenticatedClientBankingRoute
+  '/client/cap-table': typeof AuthenticatedClientCapTableRoute
   '/client/funds': typeof AuthenticatedClientFundsRoute
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1101,6 +1109,7 @@ export interface FileRoutesByTo {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/client/agreements': typeof AuthenticatedClientAgreementsRoute
   '/client/banking': typeof AuthenticatedClientBankingRoute
+  '/client/cap-table': typeof AuthenticatedClientCapTableRoute
   '/client/funds': typeof AuthenticatedClientFundsRoute
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1238,6 +1247,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
   '/_authenticated/client/agreements': typeof AuthenticatedClientAgreementsRoute
   '/_authenticated/client/banking': typeof AuthenticatedClientBankingRoute
+  '/_authenticated/client/cap-table': typeof AuthenticatedClientCapTableRoute
   '/_authenticated/client/funds': typeof AuthenticatedClientFundsRoute
   '/_authenticated/client/inbox': typeof AuthenticatedClientInboxRoute
   '/_authenticated/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1375,6 +1385,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/client/agreements'
     | '/client/banking'
+    | '/client/cap-table'
     | '/client/funds'
     | '/client/inbox'
     | '/client/invoices'
@@ -1508,6 +1519,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/client/agreements'
     | '/client/banking'
+    | '/client/cap-table'
     | '/client/funds'
     | '/client/inbox'
     | '/client/invoices'
@@ -1644,6 +1656,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/wire'
     | '/_authenticated/client/agreements'
     | '/_authenticated/client/banking'
+    | '/_authenticated/client/cap-table'
     | '/_authenticated/client/funds'
     | '/_authenticated/client/inbox'
     | '/_authenticated/client/invoices'
@@ -2237,6 +2250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientBankingRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
+    '/_authenticated/client/cap-table': {
+      id: '/_authenticated/client/cap-table'
+      path: '/cap-table'
+      fullPath: '/client/cap-table'
+      preLoaderRoute: typeof AuthenticatedClientCapTableRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/client/funds': {
       id: '/_authenticated/client/funds'
       path: '/funds'
@@ -2684,6 +2704,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedClientRouteChildren {
   AuthenticatedClientAgreementsRoute: typeof AuthenticatedClientAgreementsRoute
   AuthenticatedClientBankingRoute: typeof AuthenticatedClientBankingRoute
+  AuthenticatedClientCapTableRoute: typeof AuthenticatedClientCapTableRoute
   AuthenticatedClientFundsRoute: typeof AuthenticatedClientFundsRoute
   AuthenticatedClientInboxRoute: typeof AuthenticatedClientInboxRoute
   AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
@@ -2696,6 +2717,7 @@ interface AuthenticatedClientRouteChildren {
 const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientAgreementsRoute: AuthenticatedClientAgreementsRoute,
   AuthenticatedClientBankingRoute: AuthenticatedClientBankingRoute,
+  AuthenticatedClientCapTableRoute: AuthenticatedClientCapTableRoute,
   AuthenticatedClientFundsRoute: AuthenticatedClientFundsRoute,
   AuthenticatedClientInboxRoute: AuthenticatedClientInboxRoute,
   AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
