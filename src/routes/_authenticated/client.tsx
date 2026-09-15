@@ -145,7 +145,9 @@ function ClientShell() {
       badge: paymentsInProgress || undefined,
     },
     { to: "/client/wires", label: "Wire requests", icon: Send },
+    { to: "/client/cap-table", label: "Cap table", icon: PieChart },
     { to: "/client/banking", label: "Bank accounts", icon: Banknote },
+
     {
       to: "/client/agreements",
       label: "Agreements & scope",
