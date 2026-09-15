@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   Mail,
   PenLine,
+  PieChart,
+
   ScrollText,
   Send,
 } from "lucide-react";
