@@ -36,9 +36,12 @@ function ClientCapTablePage() {
           account approves them.
         </p>
       </div>
-      <CapOnboardingGate clientId={clientId}>
-        <FounderCapTable clientId={clientId} />
-      </CapOnboardingGate>
+      <CapPolicyGate>
+        <CapOnboardingGate clientId={clientId}>
+          <FounderCapTable clientId={clientId} />
+        </CapOnboardingGate>
+      </CapPolicyGate>
+
     </div>
   );
 }
