@@ -65,27 +65,39 @@ export function DemoBadge() {
 export function PhasePlaceholder({
   title,
   body,
-  items,
+  description,
+  phase,
+  items = [],
 }: {
   title: string;
-  body: string;
-  items: string[];
+  body?: string;
+  description?: string;
+  phase?: string;
+  items?: string[];
 }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
-        <CardDescription>{body}</CardDescription>
+        <CardDescription>{description ?? body}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-          {items.map((item) => (
-            <li key={item} className="rounded-md border bg-muted/30 px-3 py-2">
-              {item}
-            </li>
-          ))}
-        </ul>
+      <CardContent className="space-y-3">
+        {items.length > 0 ? (
+          <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+            {items.map((item) => (
+              <li key={item} className="rounded-md border bg-muted/30 px-3 py-2">
+                {item}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {phase ? (
+          <p className="text-sm text-muted-foreground">
+            Coming in {phase} of the Harmonious CapTable rollout.
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
+
 }
