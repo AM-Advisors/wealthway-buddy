@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { STAFF_ROLES } from "@/lib/contracts.functions";
+import { assertCapOnboarding } from "@/lib/cap-onboarding.functions";
 
 /** Cap table management for founder clients: their own stakeholders, share
  *  holdings and transfers between holders. Harmonious keeps the record and the
@@ -260,6 +261,7 @@ export const saveHolding = createServerFn({ method: "POST" })
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
       throw new Error("You do not have permission to change this cap table.");
     }
+    await assertCapOnboarding(context, who.clientId);
     const row = {
       client_id: who.clientId,
       stakeholder_id: data.stakeholder_id,

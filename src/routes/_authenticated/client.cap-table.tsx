@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { CapOnboardingGate } from "@/components/cap-onboarding-gate";
 import { FounderCapTable } from "@/components/founder-cap-table";
 import { useClientPortal } from "@/components/client-portal-context";
 
@@ -35,7 +36,9 @@ function ClientCapTablePage() {
           account approves them.
         </p>
       </div>
-      <FounderCapTable clientId={clientId} />
+      <CapOnboardingGate clientId={clientId}>
+        <FounderCapTable clientId={clientId} />
+      </CapOnboardingGate>
     </div>
   );
 }
