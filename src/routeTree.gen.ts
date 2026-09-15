@@ -141,6 +141,7 @@ import { Route as AuthenticatedAdminOffboardingCaseIdRouteImport } from './route
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
 import { Route as AuthenticatedClientCapTableIndexRouteImport } from './routes/_authenticated/client.cap-table.index'
 import { Route as AuthenticatedClientCapTableComplianceRouteImport } from './routes/_authenticated/client.cap-table.compliance'
+import { Route as AuthenticatedClientCapTableDocumentsRouteImport } from './routes/_authenticated/client.cap-table.documents'
 import { Route as AuthenticatedClientCapTableEmployeesRouteImport } from './routes/_authenticated/client.cap-table.employees'
 import { Route as AuthenticatedClientCapTableFundraisingRouteImport } from './routes/_authenticated/client.cap-table.fundraising'
 import { Route as AuthenticatedClientCapTableInvestorsRouteImport } from './routes/_authenticated/client.cap-table.investors'
@@ -902,6 +903,12 @@ const AuthenticatedClientCapTableComplianceRoute =
     path: '/compliance',
     getParentRoute: () => AuthenticatedClientCapTableRoute,
   } as any)
+const AuthenticatedClientCapTableDocumentsRoute =
+  AuthenticatedClientCapTableDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AuthenticatedClientCapTableRoute,
+  } as any)
 const AuthenticatedClientCapTableEmployeesRoute =
   AuthenticatedClientCapTableEmployeesRouteImport.update({
     id: '/employees',
@@ -1130,6 +1137,7 @@ export interface FileRoutesByFullPath {
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
+  '/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
   '/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
@@ -1277,6 +1285,7 @@ export interface FileRoutesByTo {
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
+  '/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
   '/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
@@ -1429,6 +1438,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/_authenticated/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
+  '/_authenticated/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/_authenticated/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
   '/_authenticated/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/_authenticated/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
@@ -1581,6 +1591,7 @@ export interface FileRouteTypes {
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
     | '/client/cap-table/compliance'
+    | '/client/cap-table/documents'
     | '/client/cap-table/employees'
     | '/client/cap-table/fundraising'
     | '/client/cap-table/investors'
@@ -1728,6 +1739,7 @@ export interface FileRouteTypes {
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
     | '/client/cap-table/compliance'
+    | '/client/cap-table/documents'
     | '/client/cap-table/employees'
     | '/client/cap-table/fundraising'
     | '/client/cap-table/investors'
@@ -1879,6 +1891,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/offboarding/$caseId'
     | '/_authenticated/admin/packet/$fundId'
     | '/_authenticated/client/cap-table/compliance'
+    | '/_authenticated/client/cap-table/documents'
     | '/_authenticated/client/cap-table/employees'
     | '/_authenticated/client/cap-table/fundraising'
     | '/_authenticated/client/cap-table/investors'
@@ -2856,6 +2869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientCapTableComplianceRouteImport
       parentRoute: typeof AuthenticatedClientCapTableRoute
     }
+    '/_authenticated/client/cap-table/documents': {
+      id: '/_authenticated/client/cap-table/documents'
+      path: '/documents'
+      fullPath: '/client/cap-table/documents'
+      preLoaderRoute: typeof AuthenticatedClientCapTableDocumentsRouteImport
+      parentRoute: typeof AuthenticatedClientCapTableRoute
+    }
     '/_authenticated/client/cap-table/employees': {
       id: '/_authenticated/client/cap-table/employees'
       path: '/employees'
@@ -2980,6 +3000,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedClientCapTableRouteChildren {
   AuthenticatedClientCapTableComplianceRoute: typeof AuthenticatedClientCapTableComplianceRoute
+  AuthenticatedClientCapTableDocumentsRoute: typeof AuthenticatedClientCapTableDocumentsRoute
   AuthenticatedClientCapTableEmployeesRoute: typeof AuthenticatedClientCapTableEmployeesRoute
   AuthenticatedClientCapTableFundraisingRoute: typeof AuthenticatedClientCapTableFundraisingRoute
   AuthenticatedClientCapTableInvestorsRoute: typeof AuthenticatedClientCapTableInvestorsRoute
@@ -2993,6 +3014,8 @@ const AuthenticatedClientCapTableRouteChildren: AuthenticatedClientCapTableRoute
   {
     AuthenticatedClientCapTableComplianceRoute:
       AuthenticatedClientCapTableComplianceRoute,
+    AuthenticatedClientCapTableDocumentsRoute:
+      AuthenticatedClientCapTableDocumentsRoute,
     AuthenticatedClientCapTableEmployeesRoute:
       AuthenticatedClientCapTableEmployeesRoute,
     AuthenticatedClientCapTableFundraisingRoute:
