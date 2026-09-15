@@ -1865,6 +1865,607 @@ export type Database = {
           },
         ]
       }
+      ct_companies: {
+        Row: {
+          authorized_shares: number
+          client_id: string | null
+          created_at: string
+          currency: string
+          entity_type: string | null
+          fiscal_year_end: string | null
+          id: string
+          incorporation_date: string | null
+          is_demo: boolean
+          jurisdiction: string | null
+          legal_name: string | null
+          name: string
+          par_value: number | null
+          updated_at: string
+        }
+        Insert: {
+          authorized_shares?: number
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          entity_type?: string | null
+          fiscal_year_end?: string | null
+          id?: string
+          incorporation_date?: string | null
+          is_demo?: boolean
+          jurisdiction?: string | null
+          legal_name?: string | null
+          name: string
+          par_value?: number | null
+          updated_at?: string
+        }
+        Update: {
+          authorized_shares?: number
+          client_id?: string | null
+          created_at?: string
+          currency?: string
+          entity_type?: string | null
+          fiscal_year_end?: string | null
+          id?: string
+          incorporation_date?: string | null
+          is_demo?: boolean
+          jurisdiction?: string | null
+          legal_name?: string | null
+          name?: string
+          par_value?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_companies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          doc_type: string
+          id: string
+          linked_id: string | null
+          linked_type: string | null
+          status: string
+          storage_path: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          doc_type?: string
+          id?: string
+          linked_id?: string | null
+          linked_type?: string | null
+          status?: string
+          storage_path?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          doc_type?: string
+          id?: string
+          linked_id?: string | null
+          linked_type?: string | null
+          status?: string
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          company_id: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          new_state: Json | null
+          occurred_at: string
+          previous_state: Json | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          company_id: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          new_state?: Json | null
+          occurred_at?: string
+          previous_state?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          company_id?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          new_state?: Json | null
+          occurred_at?: string
+          previous_state?: Json | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_notifications: {
+        Row: {
+          body: string | null
+          company_id: string
+          created_at: string
+          id: string
+          kind: string
+          link: string | null
+          read_at: string | null
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          kind?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_notifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_rounds: {
+        Row: {
+          amount_raised: number | null
+          close_date: string | null
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+          pre_money: number | null
+          price_per_share: number | null
+          round_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_raised?: number | null
+          close_date?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          name: string
+          pre_money?: number | null
+          price_per_share?: number | null
+          round_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_raised?: number | null
+          close_date?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          pre_money?: number | null
+          price_per_share?: number | null
+          round_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_rounds_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_securities: {
+        Row: {
+          class_id: string | null
+          company_id: string
+          created_at: string
+          discount_rate: number | null
+          exercise_price: number | null
+          id: string
+          issue_date: string | null
+          label: string | null
+          notes: string | null
+          principal: number | null
+          purchase_price: number | null
+          quantity: number
+          round_id: string | null
+          security_type: string
+          stakeholder_id: string
+          status: string
+          transfer_restrictions: string | null
+          updated_at: string
+          valuation_cap: number | null
+          verification_status: string
+          vesting_schedule_id: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          company_id: string
+          created_at?: string
+          discount_rate?: number | null
+          exercise_price?: number | null
+          id?: string
+          issue_date?: string | null
+          label?: string | null
+          notes?: string | null
+          principal?: number | null
+          purchase_price?: number | null
+          quantity?: number
+          round_id?: string | null
+          security_type?: string
+          stakeholder_id: string
+          status?: string
+          transfer_restrictions?: string | null
+          updated_at?: string
+          valuation_cap?: number | null
+          verification_status?: string
+          vesting_schedule_id?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          company_id?: string
+          created_at?: string
+          discount_rate?: number | null
+          exercise_price?: number | null
+          id?: string
+          issue_date?: string | null
+          label?: string | null
+          notes?: string | null
+          principal?: number | null
+          purchase_price?: number | null
+          quantity?: number
+          round_id?: string | null
+          security_type?: string
+          stakeholder_id?: string
+          status?: string
+          transfer_restrictions?: string | null
+          updated_at?: string
+          valuation_cap?: number | null
+          verification_status?: string
+          vesting_schedule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_securities_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "ct_security_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_securities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_securities_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "ct_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_securities_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_securities_vesting_schedule_id_fkey"
+            columns: ["vesting_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "ct_vesting_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_security_classes: {
+        Row: {
+          authorized: number | null
+          company_id: string
+          conversion_ratio: number
+          created_at: string
+          id: string
+          kind: string
+          liquidation_preference: number | null
+          name: string
+          notes: string | null
+          price_per_share: number | null
+          seniority: number
+          updated_at: string
+        }
+        Insert: {
+          authorized?: number | null
+          company_id: string
+          conversion_ratio?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          liquidation_preference?: number | null
+          name: string
+          notes?: string | null
+          price_per_share?: number | null
+          seniority?: number
+          updated_at?: string
+        }
+        Update: {
+          authorized?: number | null
+          company_id?: string
+          conversion_ratio?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          liquidation_preference?: number | null
+          name?: string
+          notes?: string | null
+          price_per_share?: number | null
+          seniority?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_security_classes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_stakeholders: {
+        Row: {
+          company_id: string
+          created_at: string
+          email: string | null
+          entity_name: string | null
+          id: string
+          name: string
+          notes: string | null
+          stakeholder_type: string
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          email?: string | null
+          entity_name?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          stakeholder_type?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          email?: string | null
+          entity_name?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          stakeholder_type?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_stakeholders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_transactions: {
+        Row: {
+          amount: number | null
+          company_id: string
+          counterparty_stakeholder_id: string | null
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          id: string
+          kind: string
+          metadata: Json
+          quantity: number
+          reason: string | null
+          round_id: string | null
+          security_id: string | null
+          stakeholder_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          company_id: string
+          counterparty_stakeholder_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          kind: string
+          metadata?: Json
+          quantity?: number
+          reason?: string | null
+          round_id?: string | null
+          security_id?: string | null
+          stakeholder_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          company_id?: string
+          counterparty_stakeholder_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          quantity?: number
+          reason?: string | null
+          round_id?: string | null
+          security_id?: string | null
+          stakeholder_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_transactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_transactions_counterparty_stakeholder_id_fkey"
+            columns: ["counterparty_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_transactions_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "ct_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_transactions_security_id_fkey"
+            columns: ["security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_transactions_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_vesting_schedules: {
+        Row: {
+          cliff_months: number
+          company_id: string
+          created_at: string
+          duration_months: number
+          frequency: string
+          id: string
+          name: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          cliff_months?: number
+          company_id: string
+          created_at?: string
+          duration_months?: number
+          frequency?: string
+          id?: string
+          name: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cliff_months?: number
+          company_id?: string
+          created_at?: string
+          duration_months?: number
+          frequency?: string
+          id?: string
+          name?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_vesting_schedules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       didit_webhook_events: {
         Row: {
           application_id: string | null
@@ -7523,6 +8124,9 @@ export type Database = {
         }
         Returns: undefined
       }
+      ct_can_manage: { Args: { _company_id: string }; Returns: boolean }
+      ct_can_view: { Args: { _company_id: string }; Returns: boolean }
+      ct_is_staff: { Args: never; Returns: boolean }
       diligence_access_open: {
         Args: { _offering_id: string }
         Returns: boolean

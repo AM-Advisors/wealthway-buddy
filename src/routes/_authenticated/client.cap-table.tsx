@@ -1,49 +1,52 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 
-import { CapOnboardingGate } from "@/components/cap-onboarding-gate";
 import { CapPolicyGate } from "@/components/cap-policy-gate";
-
-import { FounderCapTable } from "@/components/founder-cap-table";
-import { useClientPortal } from "@/components/client-portal-context";
+import { CapTableNav } from "@/components/captable/captable-nav";
+import { CapTableProvider } from "@/components/captable/captable-context";
+import { DemoBadge } from "@/components/captable/captable-states";
 
 export const Route = createFileRoute("/_authenticated/client/cap-table")({
   head: () => ({
     meta: [
-      { title: "Cap Table — Harmonious Client Portal" },
+      { title: "Harmonious CapTable — Know exactly who owns your company" },
       {
         name: "description",
         content:
-          "Upload your shares, see who owns what and approve transfers on your company's cap table, kept on record by Harmonious.",
+          "Cap table, employee equity, investor records, fundraising, secondary controls and ownership verification in one private-market platform.",
       },
-      { property: "og:title", content: "Cap Table — Harmonious Client Portal" },
+      { property: "og:title", content: "Harmonious CapTable" },
       {
         property: "og:description",
-        content: "Stakeholders, shares, ownership percentages and transfer approvals in one place.",
+        content:
+          "The ownership operating system for private companies: shares, securities, stakeholders, transfers and the record behind every change.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ClientCapTablePage,
+  component: CapTableLayout,
 });
 
-function ClientCapTablePage() {
-  const { clientId } = useClientPortal();
+function CapTableLayout() {
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Cap table</h2>
-        <p className="text-sm text-muted-foreground">
-          Your stakeholders, shares and ownership. Transfers move only once a signatory on your
-          account approves them.
-        </p>
-      </div>
-      <CapPolicyGate>
-        <CapOnboardingGate clientId={clientId}>
-          <FounderCapTable clientId={clientId} />
-        </CapOnboardingGate>
-      </CapPolicyGate>
-
-    </div>
+    <CapPolicyGate>
+      <CapTableProvider>
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
+                Harmonious CapTable <DemoBadge />
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Know exactly who owns your company. Verify ownership, document exposure, maintain the
+                record.
+              </p>
+            </div>
+          </div>
+          <CapTableNav />
+          <Outlet />
+        </div>
+      </CapTableProvider>
+    </CapPolicyGate>
   );
 }
