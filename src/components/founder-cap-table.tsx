@@ -787,7 +787,12 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="certificates" className="mt-4">
+          <CapCertificatesPanel clientId={activeClientId} stakeholders={stakeholders} />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
