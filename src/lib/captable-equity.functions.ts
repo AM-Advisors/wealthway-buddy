@@ -96,7 +96,7 @@ export const getMyEquity = createServerFn({ method: "GET" })
       .eq("user_id", userId);
 
     const holders = (stakeholders ?? []) as any[];
-    if (holders.length === 0) return { holdings: [] as any[] };
+    if (holders.length === 0) return { holdings: [] };
 
     const ids = holders.map((h) => h.id);
     const companyIds = [...new Set(holders.map((h) => h.company_id))];
