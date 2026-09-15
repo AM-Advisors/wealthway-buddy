@@ -295,7 +295,9 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
           <TabsTrigger value="transfers">
             Transfers{pending.length ? ` (${pending.length})` : ""}
           </TabsTrigger>
+          <TabsTrigger value="certificates">Certificates &amp; access</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="ownership" className="mt-4">
           <Card>
