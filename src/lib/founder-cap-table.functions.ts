@@ -61,7 +61,7 @@ async function access(context: any, wanted?: string | null): Promise<Access> {
     clientId,
     role,
     canEdit: Boolean(role) && role !== "client_readonly",
-    canApprove: Boolean(role) && APPROVER_ROLES.includes(role),
+    canApprove: Boolean(role) && APPROVER_ROLES.includes(role ?? ""),
   };
 }
 
