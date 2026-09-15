@@ -143,6 +143,11 @@ export function OnboardingProgressBoard() {
                     {row.overdueInvoices > 0 ? (
                       <Badge variant="destructive">{row.overdueInvoices} overdue</Badge>
                     ) : null}
+                    {row.capTablePlan ? (
+                      <Badge variant="outline" className="gap-1">
+                        Cap table: {row.capTablePlan}
+                      </Badge>
+                    ) : null}
                     {row.status !== "active" ? <Badge variant="outline">{row.status}</Badge> : null}
                   </div>
                   <p className="mt-1 break-words text-sm text-muted-foreground">
