@@ -30,7 +30,10 @@ async function who(context: any, clientId: string): Promise<Who> {
   };
 }
 
-async function audit(context: any, entry: Record<string, any>) {
+async function audit(
+  context: any,
+  entry: { clientId: string; action: string; target?: string | null; next?: any },
+) {
   try {
     await context.supabase.from("contract_audit_events").insert({
       client_id: entry.clientId,

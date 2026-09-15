@@ -113,7 +113,7 @@ function ShareholderInvitation({
 
 export const template: TemplateEntry = {
   component: ShareholderInvitation,
-  subject: (data) => `Your shareholding in ${data?.companyName ?? 'the company'}`,
+  subject: (data) => `Your shareholding in ${data?.['companyName'] ?? 'the company'}`,
   displayName: 'Shareholder invitation',
   previewData: {
     holderName: 'Jordan Vale',
