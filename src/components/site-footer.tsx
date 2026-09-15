@@ -64,6 +64,17 @@ export function SiteFooter() {
                 Terms of Service
               </Link>
             </li>
+            <li>
+              <Link to="/cap-table-privacy" className="hover:text-primary-foreground">
+                CapTable Privacy Notice
+              </Link>
+            </li>
+            <li>
+              <Link to="/cap-table-terms" className="hover:text-primary-foreground">
+                CapTable Terms of Service
+              </Link>
+            </li>
+
           </ul>
         </div>
 

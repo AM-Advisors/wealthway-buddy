@@ -23,6 +23,12 @@ async function isSuperAdmin(context: any) {
   return ((data ?? []) as any[]).some((r) => ["super_admin", "admin"].includes(String(r.role)));
 }
 
+/** CapTable has its own privacy notice and terms, accepted separately by founders. */
+export const CAP_POLICY_KINDS = [
+  { key: "cap_privacy", label: "CapTable privacy notice" },
+  { key: "cap_terms", label: "CapTable terms of service" },
+] as const;
+
 /** Current published version of each policy, plus whatever this person still owes. */
 export const getPolicyStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -31,7 +37,12 @@ export const getPolicyStatus = createServerFn({ method: "GET" })
       .from("policy_documents")
       .select("id, kind, title, body, version, effective_date")
       .eq("published", true)
+      .in(
+        "kind",
+        POLICY_KINDS.map((k) => k.key),
+      )
       .order("version", { ascending: false });
+
 
     const current = new Map<string, any>();
     for (const doc of (docs ?? []) as any[]) {
@@ -56,6 +67,50 @@ export const getPolicyStatus = createServerFn({ method: "GET" })
       email: (context.claims?.email as string | undefined) ?? "",
     };
   });
+
+/** The CapTable notice and terms, and whichever of them this person still owes. */
+export const getCapTablePolicyStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: docs } = await context.supabase
+      .from("policy_documents")
+      .select("id, kind, title, body, version, effective_date")
+      .eq("published", true)
+      .in(
+        "kind",
+        CAP_POLICY_KINDS.map((k) => k.key),
+      )
+      .order("version", { ascending: false });
+
+    const current = new Map<string, any>();
+    for (const doc of (docs ?? []) as any[]) {
+      if (!current.has(doc.kind)) current.set(doc.kind, doc);
+    }
+
+    const { data: accepted } = await context.supabase
+      .from("policy_acceptances")
+      .select("document_id, kind, version, accepted_at")
+      .eq("user_id", context.userId)
+      .in(
+        "kind",
+        CAP_POLICY_KINDS.map((k) => k.key),
+      );
+
+    const acceptedIds = new Set(((accepted ?? []) as any[]).map((a) => a.document_id));
+    const documents = [...current.values()].sort(
+      (a, b) =>
+        CAP_POLICY_KINDS.findIndex((k) => k.key === a.kind) -
+        CAP_POLICY_KINDS.findIndex((k) => k.key === b.kind),
+    );
+
+    return {
+      documents,
+      outstanding: documents.filter((d) => !acceptedIds.has(d.id)),
+      accepted: (accepted ?? []) as any[],
+    };
+  });
+
+
 
 export const acceptPolicies = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
