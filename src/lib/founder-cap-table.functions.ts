@@ -344,6 +344,11 @@ export const importCapTable = createServerFn({ method: "POST" })
       throw new Error("You do not have permission to change this cap table.");
     }
 
+    const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+    const { createDraftCertificate } = await import("@/lib/cap-certificates.server");
+
+
+
     const { data: existing } = await context.supabase
       .from("cap_stakeholders")
       .select("id, name, email")
