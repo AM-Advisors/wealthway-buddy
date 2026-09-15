@@ -51,6 +51,7 @@ import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminBankAccountsRouteImport } from './routes/_authenticated/admin.bank-accounts'
 import { Route as AuthenticatedAdminCapTableRouteImport } from './routes/_authenticated/admin.cap-table'
 import { Route as AuthenticatedAdminCapTableBoardRouteImport } from './routes/_authenticated/admin.cap-table-board'
+import { Route as AuthenticatedAdminCapTablePlansRouteImport } from './routes/_authenticated/admin.cap-table-plans'
 import { Route as AuthenticatedAdminClientActivityRouteImport } from './routes/_authenticated/admin.client-activity'
 import { Route as AuthenticatedAdminClientBankAccountsRouteImport } from './routes/_authenticated/admin.client-bank-accounts'
 import { Route as AuthenticatedAdminDocumentLogRouteImport } from './routes/_authenticated/admin.document-log'
@@ -80,6 +81,7 @@ import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authentica
 import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
 import { Route as AuthenticatedClientAgreementsRouteImport } from './routes/_authenticated/client.agreements'
 import { Route as AuthenticatedClientBankingRouteImport } from './routes/_authenticated/client.banking'
+import { Route as AuthenticatedClientCapTableRouteImport } from './routes/_authenticated/client.cap-table'
 import { Route as AuthenticatedClientFundsRouteImport } from './routes/_authenticated/client.funds'
 import { Route as AuthenticatedClientInboxRouteImport } from './routes/_authenticated/client.inbox'
 import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client.invoices'
@@ -363,6 +365,12 @@ const AuthenticatedAdminCapTableBoardRoute =
     path: '/admin/cap-table-board',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminCapTablePlansRoute =
+  AuthenticatedAdminCapTablePlansRouteImport.update({
+    id: '/admin/cap-table-plans',
+    path: '/admin/cap-table-plans',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminClientActivityRoute =
   AuthenticatedAdminClientActivityRouteImport.update({
     id: '/admin/client-activity',
@@ -530,6 +538,12 @@ const AuthenticatedClientBankingRoute =
   AuthenticatedClientBankingRouteImport.update({
     id: '/banking',
     path: '/banking',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientCapTableRoute =
+  AuthenticatedClientCapTableRouteImport.update({
+    id: '/cap-table',
+    path: '/cap-table',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedClientFundsRoute =
@@ -940,6 +954,7 @@ export interface FileRoutesByFullPath {
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
+  '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
@@ -968,6 +983,7 @@ export interface FileRoutesByFullPath {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/client/agreements': typeof AuthenticatedClientAgreementsRoute
   '/client/banking': typeof AuthenticatedClientBankingRoute
+  '/client/cap-table': typeof AuthenticatedClientCapTableRoute
   '/client/funds': typeof AuthenticatedClientFundsRoute
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1073,6 +1089,7 @@ export interface FileRoutesByTo {
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
+  '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
@@ -1101,6 +1118,7 @@ export interface FileRoutesByTo {
   '/admin/wire': typeof AuthenticatedAdminWireRoute
   '/client/agreements': typeof AuthenticatedClientAgreementsRoute
   '/client/banking': typeof AuthenticatedClientBankingRoute
+  '/client/cap-table': typeof AuthenticatedClientCapTableRoute
   '/client/funds': typeof AuthenticatedClientFundsRoute
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1210,6 +1228,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
   '/_authenticated/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/_authenticated/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
+  '/_authenticated/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
   '/_authenticated/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/_authenticated/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/_authenticated/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
@@ -1238,6 +1257,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
   '/_authenticated/client/agreements': typeof AuthenticatedClientAgreementsRoute
   '/_authenticated/client/banking': typeof AuthenticatedClientBankingRoute
+  '/_authenticated/client/cap-table': typeof AuthenticatedClientCapTableRoute
   '/_authenticated/client/funds': typeof AuthenticatedClientFundsRoute
   '/_authenticated/client/inbox': typeof AuthenticatedClientInboxRoute
   '/_authenticated/client/invoices': typeof AuthenticatedClientInvoicesRoute
@@ -1347,6 +1367,7 @@ export interface FileRouteTypes {
     | '/admin/bank-accounts'
     | '/admin/cap-table'
     | '/admin/cap-table-board'
+    | '/admin/cap-table-plans'
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/document-log'
@@ -1375,6 +1396,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/client/agreements'
     | '/client/banking'
+    | '/client/cap-table'
     | '/client/funds'
     | '/client/inbox'
     | '/client/invoices'
@@ -1480,6 +1502,7 @@ export interface FileRouteTypes {
     | '/admin/bank-accounts'
     | '/admin/cap-table'
     | '/admin/cap-table-board'
+    | '/admin/cap-table-plans'
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/document-log'
@@ -1508,6 +1531,7 @@ export interface FileRouteTypes {
     | '/admin/wire'
     | '/client/agreements'
     | '/client/banking'
+    | '/client/cap-table'
     | '/client/funds'
     | '/client/inbox'
     | '/client/invoices'
@@ -1616,6 +1640,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/bank-accounts'
     | '/_authenticated/admin/cap-table'
     | '/_authenticated/admin/cap-table-board'
+    | '/_authenticated/admin/cap-table-plans'
     | '/_authenticated/admin/client-activity'
     | '/_authenticated/admin/client-bank-accounts'
     | '/_authenticated/admin/document-log'
@@ -1644,6 +1669,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/wire'
     | '/_authenticated/client/agreements'
     | '/_authenticated/client/banking'
+    | '/_authenticated/client/cap-table'
     | '/_authenticated/client/funds'
     | '/_authenticated/client/inbox'
     | '/_authenticated/client/invoices'
@@ -2034,6 +2060,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCapTableBoardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/cap-table-plans': {
+      id: '/_authenticated/admin/cap-table-plans'
+      path: '/admin/cap-table-plans'
+      fullPath: '/admin/cap-table-plans'
+      preLoaderRoute: typeof AuthenticatedAdminCapTablePlansRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/client-activity': {
       id: '/_authenticated/admin/client-activity'
       path: '/admin/client-activity'
@@ -2235,6 +2268,13 @@ declare module '@tanstack/react-router' {
       path: '/banking'
       fullPath: '/client/banking'
       preLoaderRoute: typeof AuthenticatedClientBankingRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/cap-table': {
+      id: '/_authenticated/client/cap-table'
+      path: '/cap-table'
+      fullPath: '/client/cap-table'
+      preLoaderRoute: typeof AuthenticatedClientCapTableRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/client/funds': {
@@ -2684,6 +2724,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedClientRouteChildren {
   AuthenticatedClientAgreementsRoute: typeof AuthenticatedClientAgreementsRoute
   AuthenticatedClientBankingRoute: typeof AuthenticatedClientBankingRoute
+  AuthenticatedClientCapTableRoute: typeof AuthenticatedClientCapTableRoute
   AuthenticatedClientFundsRoute: typeof AuthenticatedClientFundsRoute
   AuthenticatedClientInboxRoute: typeof AuthenticatedClientInboxRoute
   AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
@@ -2696,6 +2737,7 @@ interface AuthenticatedClientRouteChildren {
 const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientAgreementsRoute: AuthenticatedClientAgreementsRoute,
   AuthenticatedClientBankingRoute: AuthenticatedClientBankingRoute,
+  AuthenticatedClientCapTableRoute: AuthenticatedClientCapTableRoute,
   AuthenticatedClientFundsRoute: AuthenticatedClientFundsRoute,
   AuthenticatedClientInboxRoute: AuthenticatedClientInboxRoute,
   AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
@@ -2733,6 +2775,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminBankAccountsRoute: typeof AuthenticatedAdminBankAccountsRoute
   AuthenticatedAdminCapTableRoute: typeof AuthenticatedAdminCapTableRoute
   AuthenticatedAdminCapTableBoardRoute: typeof AuthenticatedAdminCapTableBoardRoute
+  AuthenticatedAdminCapTablePlansRoute: typeof AuthenticatedAdminCapTablePlansRoute
   AuthenticatedAdminClientActivityRoute: typeof AuthenticatedAdminClientActivityRoute
   AuthenticatedAdminClientBankAccountsRoute: typeof AuthenticatedAdminClientBankAccountsRoute
   AuthenticatedAdminDocumentLogRoute: typeof AuthenticatedAdminDocumentLogRoute
@@ -2834,6 +2877,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminBankAccountsRoute: AuthenticatedAdminBankAccountsRoute,
   AuthenticatedAdminCapTableRoute: AuthenticatedAdminCapTableRoute,
   AuthenticatedAdminCapTableBoardRoute: AuthenticatedAdminCapTableBoardRoute,
+  AuthenticatedAdminCapTablePlansRoute: AuthenticatedAdminCapTablePlansRoute,
   AuthenticatedAdminClientActivityRoute: AuthenticatedAdminClientActivityRoute,
   AuthenticatedAdminClientBankAccountsRoute:
     AuthenticatedAdminClientBankAccountsRoute,

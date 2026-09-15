@@ -515,6 +515,119 @@ export type Database = {
           },
         ]
       }
+      cap_holdings: {
+        Row: {
+          certificate_no: string | null
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          issued_on: string | null
+          notes: string | null
+          price_per_share_cents: number | null
+          quantity: number
+          security_type: string
+          share_class: string | null
+          source: string
+          stakeholder_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          certificate_no?: string | null
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_on?: string | null
+          notes?: string | null
+          price_per_share_cents?: number | null
+          quantity?: number
+          security_type?: string
+          share_class?: string | null
+          source?: string
+          stakeholder_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          certificate_no?: string | null
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issued_on?: string | null
+          notes?: string | null
+          price_per_share_cents?: number | null
+          quantity?: number
+          security_type?: string
+          share_class?: string | null
+          source?: string
+          stakeholder_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_holdings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_holdings_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "cap_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cap_stakeholders: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          holder_type: string
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          holder_type?: string
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          holder_type?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_stakeholders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cap_table_changes: {
         Row: {
           application_id: string
@@ -562,6 +675,92 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cap_transfers: {
+        Row: {
+          client_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          from_stakeholder_id: string | null
+          holding_id: string
+          id: string
+          quantity: number
+          reason: string | null
+          requested_by: string | null
+          status: string
+          to_email: string | null
+          to_name: string | null
+          to_stakeholder_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          from_stakeholder_id?: string | null
+          holding_id: string
+          id?: string
+          quantity: number
+          reason?: string | null
+          requested_by?: string | null
+          status?: string
+          to_email?: string | null
+          to_name?: string | null
+          to_stakeholder_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          from_stakeholder_id?: string | null
+          holding_id?: string
+          id?: string
+          quantity?: number
+          reason?: string | null
+          requested_by?: string | null
+          status?: string
+          to_email?: string | null
+          to_name?: string | null
+          to_stakeholder_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_transfers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_transfers_from_stakeholder_id_fkey"
+            columns: ["from_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "cap_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_transfers_holding_id_fkey"
+            columns: ["holding_id"]
+            isOneToOne: false
+            referencedRelation: "cap_holdings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_transfers_to_stakeholder_id_fkey"
+            columns: ["to_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "cap_stakeholders"
             referencedColumns: ["id"]
           },
         ]
