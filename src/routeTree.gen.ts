@@ -43,6 +43,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
+import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
@@ -317,6 +318,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const FundSlugRoute = FundSlugRouteImport.update({
   id: '/fund/$slug',
   path: '/fund/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharesTokenRoute = SharesTokenRouteImport.update({
+  id: '/shares/$token',
+  path: '/shares/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -946,6 +952,7 @@ export interface FileRoutesByFullPath {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -1081,6 +1088,7 @@ export interface FileRoutesByTo {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -1220,6 +1228,7 @@ export interface FileRoutesById {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -1359,6 +1368,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/fund/$slug'
+    | '/shares/$token'
     | '/auth/'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -1494,6 +1504,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/fund/$slug'
+    | '/shares/$token'
     | '/auth'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -1632,6 +1643,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/fund/$slug'
+    | '/shares/$token'
     | '/auth/'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
@@ -1752,6 +1764,7 @@ export interface RootRouteChildren {
   SpvRoute: typeof SpvRoute
   TermsRoute: typeof TermsRoute
   FundSlugRoute: typeof FundSlugRoute
+  SharesTokenRoute: typeof SharesTokenRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -2002,6 +2015,13 @@ declare module '@tanstack/react-router' {
       path: '/fund/$slug'
       fullPath: '/fund/$slug'
       preLoaderRoute: typeof FundSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shares/$token': {
+      id: '/shares/$token'
+      path: '/shares/$token'
+      fullPath: '/shares/$token'
+      preLoaderRoute: typeof SharesTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -3000,6 +3020,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpvRoute: SpvRoute,
   TermsRoute: TermsRoute,
   FundSlugRoute: FundSlugRoute,
+  SharesTokenRoute: SharesTokenRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
