@@ -2021,6 +2021,154 @@ export type Database = {
           },
         ]
       }
+      ct_exercise_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          exercise_price: number | null
+          id: string
+          method: string
+          note: string | null
+          quantity: number
+          requested_by: string | null
+          security_id: string
+          stakeholder_id: string
+          status: string
+          total_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          exercise_price?: number | null
+          id?: string
+          method?: string
+          note?: string | null
+          quantity: number
+          requested_by?: string | null
+          security_id: string
+          stakeholder_id: string
+          status?: string
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          exercise_price?: number | null
+          id?: string
+          method?: string
+          note?: string | null
+          quantity?: number
+          requested_by?: string | null
+          security_id?: string
+          stakeholder_id?: string
+          status?: string
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_exercise_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_exercise_requests_security_id_fkey"
+            columns: ["security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_exercise_requests_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_holder_permissions: {
+        Row: {
+          can_request_exercise: boolean
+          can_view_company_summary: boolean
+          can_view_documents: boolean
+          can_view_holdings: boolean
+          can_view_tax_documents: boolean
+          can_view_transactions: boolean
+          can_view_valuations: boolean
+          can_view_vesting: boolean
+          company_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          stakeholder_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          can_request_exercise?: boolean
+          can_view_company_summary?: boolean
+          can_view_documents?: boolean
+          can_view_holdings?: boolean
+          can_view_tax_documents?: boolean
+          can_view_transactions?: boolean
+          can_view_valuations?: boolean
+          can_view_vesting?: boolean
+          company_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          stakeholder_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          can_request_exercise?: boolean
+          can_view_company_summary?: boolean
+          can_view_documents?: boolean
+          can_view_holdings?: boolean
+          can_view_tax_documents?: boolean
+          can_view_transactions?: boolean
+          can_view_valuations?: boolean
+          can_view_vesting?: boolean
+          company_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          stakeholder_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_holder_permissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_holder_permissions_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: true
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_notifications: {
         Row: {
           body: string | null
@@ -2120,6 +2268,9 @@ export type Database = {
       }
       ct_securities: {
         Row: {
+          acceptance_name: string | null
+          accepted_at: string | null
+          accepted_by: string | null
           class_id: string | null
           company_id: string
           created_at: string
@@ -2143,6 +2294,9 @@ export type Database = {
           vesting_schedule_id: string | null
         }
         Insert: {
+          acceptance_name?: string | null
+          accepted_at?: string | null
+          accepted_by?: string | null
           class_id?: string | null
           company_id: string
           created_at?: string
@@ -2166,6 +2320,9 @@ export type Database = {
           vesting_schedule_id?: string | null
         }
         Update: {
+          acceptance_name?: string | null
+          accepted_at?: string | null
+          accepted_by?: string | null
           class_id?: string | null
           company_id?: string
           created_at?: string
@@ -8126,6 +8283,7 @@ export type Database = {
       }
       ct_can_manage: { Args: { _company_id: string }; Returns: boolean }
       ct_can_view: { Args: { _company_id: string }; Returns: boolean }
+      ct_is_holder: { Args: { _stakeholder_id: string }; Returns: boolean }
       ct_is_staff: { Args: never; Returns: boolean }
       diligence_access_open: {
         Args: { _offering_id: string }
