@@ -36,6 +36,7 @@ export const SERVICE_CATEGORIES = [
   { key: "filings", label: "Regulatory filings" },
   { key: "tax", label: "Tax coordination" },
   { key: "reporting", label: "Financial reporting" },
+  { key: "cap_table", label: "Cap table management" },
 ] as const;
 
 export const ENTITLEMENT_STATUSES = [
