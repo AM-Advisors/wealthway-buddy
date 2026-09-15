@@ -14,6 +14,7 @@ import {
   saveStakeholder,
 } from "@/lib/founder-cap-table.functions";
 
+import { CapCertificatesPanel } from "@/components/cap-certificates-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
