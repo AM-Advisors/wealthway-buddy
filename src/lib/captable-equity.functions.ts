@@ -413,7 +413,7 @@ export const getCapHolderDesk = createServerFn({ method: "GET" })
             exercisePrice: s.exercise_price === null ? null : n(s.exercise_price),
             purchasePrice: s.purchase_price === null ? null : n(s.purchase_price),
             principal: s.principal === null ? null : n(s.principal),
-            roundName: s.round_id ? (roundById.get(s.round_id) ?? null) : null,
+            roundName: s.round_id ? ((roundById.get(s.round_id)?.name as string) ?? null) : null,
             status: s.status as string,
             verificationStatus: s.verification_status as string,
             acceptedAt: s.accepted_at as string | null,
