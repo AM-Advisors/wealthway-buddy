@@ -140,6 +140,7 @@ import { Route as AuthenticatedAdminFundFundIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminOffboardingCaseIdRouteImport } from './routes/_authenticated/admin.offboarding.$caseId'
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
 import { Route as AuthenticatedClientCapTableIndexRouteImport } from './routes/_authenticated/client.cap-table.index'
+import { Route as AuthenticatedClientCapTableTableRouteImport } from './routes/_authenticated/client.cap-table.table'
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
@@ -889,6 +890,12 @@ const AuthenticatedClientCapTableIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedClientCapTableRoute,
   } as any)
+const AuthenticatedClientCapTableTableRoute =
+  AuthenticatedClientCapTableTableRouteImport.update({
+    id: '/table',
+    path: '/table',
+    getParentRoute: () => AuthenticatedClientCapTableRoute,
+  } as any)
 const AuthenticatedManagerFundBankingFundIdRoute =
   AuthenticatedManagerFundBankingFundIdRouteImport.update({
     id: '/manager/fund-banking/$fundId',
@@ -1080,6 +1087,7 @@ export interface FileRoutesByFullPath {
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -1220,6 +1228,7 @@ export interface FileRoutesByTo {
   '/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -1365,6 +1374,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/fund/$fundId': typeof AuthenticatedAdminFundFundIdRoute
   '/_authenticated/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
+  '/_authenticated/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -1510,6 +1520,7 @@ export interface FileRouteTypes {
     | '/admin/fund/$fundId'
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
+    | '/client/cap-table/table'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -1650,6 +1661,7 @@ export interface FileRouteTypes {
     | '/admin/fund/$fundId'
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
+    | '/client/cap-table/table'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -1794,6 +1806,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/fund/$fundId'
     | '/_authenticated/admin/offboarding/$caseId'
     | '/_authenticated/admin/packet/$fundId'
+    | '/_authenticated/client/cap-table/table'
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
@@ -2758,6 +2771,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientCapTableIndexRouteImport
       parentRoute: typeof AuthenticatedClientCapTableRoute
     }
+    '/_authenticated/client/cap-table/table': {
+      id: '/_authenticated/client/cap-table/table'
+      path: '/table'
+      fullPath: '/client/cap-table/table'
+      preLoaderRoute: typeof AuthenticatedClientCapTableTableRouteImport
+      parentRoute: typeof AuthenticatedClientCapTableRoute
+    }
     '/_authenticated/manager/fund-banking/$fundId': {
       id: '/_authenticated/manager/fund-banking/$fundId'
       path: '/manager/fund-banking/$fundId'
@@ -2839,11 +2859,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedClientCapTableRouteChildren {
+  AuthenticatedClientCapTableTableRoute: typeof AuthenticatedClientCapTableTableRoute
   AuthenticatedClientCapTableIndexRoute: typeof AuthenticatedClientCapTableIndexRoute
 }
 
 const AuthenticatedClientCapTableRouteChildren: AuthenticatedClientCapTableRouteChildren =
   {
+    AuthenticatedClientCapTableTableRoute:
+      AuthenticatedClientCapTableTableRoute,
     AuthenticatedClientCapTableIndexRoute:
       AuthenticatedClientCapTableIndexRoute,
   }
