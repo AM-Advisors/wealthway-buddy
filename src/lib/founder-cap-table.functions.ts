@@ -639,17 +639,27 @@ export const getCapTablePlanUsage = createServerFn({ method: "GET" })
       throw new Error("Forbidden: this area is for the Harmonious team.");
     }
 
-    const [{ data: clients }, { data: ents }, { data: stakeholders }, { data: holdings }, { data: transfers }] =
-      await Promise.all([
-        context.supabase.from("clients").select("id, name, status").order("name"),
-        context.supabase
-          .from("service_entitlements")
-          .select("client_id, service_key, status, effective_date")
-          .like("service_key", "cap_table%"),
-        context.supabase.from("cap_stakeholders").select("client_id"),
-        context.supabase.from("cap_holdings").select("client_id, quantity, status, updated_at"),
-        context.supabase.from("cap_transfers").select("client_id, status, updated_at"),
-      ]);
+    const [
+      { data: clients },
+      { data: ents },
+      { data: stakeholders },
+      { data: holdings },
+      { data: transfers },
+      { data: certificates },
+      { data: holderAccess },
+    ] = await Promise.all([
+      context.supabase.from("clients").select("id, name, status").order("name"),
+      context.supabase
+        .from("service_entitlements")
+        .select("client_id, service_key, status, effective_date")
+        .like("service_key", "cap_table%"),
+      context.supabase.from("cap_stakeholders").select("client_id"),
+      context.supabase.from("cap_holdings").select("client_id, quantity, status, updated_at"),
+      context.supabase.from("cap_transfers").select("client_id, status, updated_at"),
+      context.supabase.from("cap_certificates").select("client_id, status"),
+      context.supabase.from("cap_holder_access").select("client_id, kind, revoked_at"),
+    ]);
+
 
     const included = new Map<string, string[]>();
     for (const e of (ents ?? []) as any[]) {
