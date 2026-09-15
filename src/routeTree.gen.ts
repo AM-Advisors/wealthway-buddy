@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
+import { Route as CapTableTermsRouteImport } from './routes/cap-table-terms'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
@@ -171,6 +172,11 @@ const AuthRoute = AuthRouteImport.update({
 const CapTablePrivacyRoute = CapTablePrivacyRouteImport.update({
   id: '/cap-table-privacy',
   path: '/cap-table-privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CapTableTermsRoute = CapTableTermsRouteImport.update({
+  id: '/cap-table-terms',
+  path: '/cap-table-terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientLoginRoute = ClientLoginRouteImport.update({
@@ -936,6 +942,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
   '/cap-table-privacy': typeof CapTablePrivacyRoute
+  '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
@@ -1075,6 +1082,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
+  '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
@@ -1216,6 +1224,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
   '/cap-table-privacy': typeof CapTablePrivacyRoute
+  '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
@@ -1358,6 +1367,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/cap-table-privacy'
+    | '/cap-table-terms'
     | '/client-login'
     | '/fund-administration'
     | '/manager-login'
@@ -1497,6 +1507,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/cap-table-privacy'
+    | '/cap-table-terms'
     | '/client-login'
     | '/fund-administration'
     | '/manager-login'
@@ -1637,6 +1648,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/cap-table-privacy'
+    | '/cap-table-terms'
     | '/client-login'
     | '/fund-administration'
     | '/manager-login'
@@ -1779,6 +1791,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
   CapTablePrivacyRoute: typeof CapTablePrivacyRoute
+  CapTableTermsRoute: typeof CapTableTermsRoute
   ClientLoginRoute: typeof ClientLoginRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
@@ -1837,6 +1850,13 @@ declare module '@tanstack/react-router' {
       path: '/cap-table-privacy'
       fullPath: '/cap-table-privacy'
       preLoaderRoute: typeof CapTablePrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cap-table-terms': {
+      id: '/cap-table-terms'
+      path: '/cap-table-terms'
+      fullPath: '/cap-table-terms'
+      preLoaderRoute: typeof CapTableTermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client-login': {
@@ -3052,6 +3072,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
   CapTablePrivacyRoute: CapTablePrivacyRoute,
+  CapTableTermsRoute: CapTableTermsRoute,
   ClientLoginRoute: ClientLoginRoute,
   FundAdministrationRoute: FundAdministrationRoute,
   ManagerLoginRoute: ManagerLoginRoute,
