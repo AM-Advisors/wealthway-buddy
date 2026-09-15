@@ -78,6 +78,7 @@ const investorItems: NavItem[] = [
   { title: "Confirm your wire", url: "/wire-confirmation", icon: Send },
   { title: "Due diligence", url: "/diligence", icon: FolderLock },
   { title: "Portal", url: "/portal", icon: Building2 },
+  { title: "My equity", url: "/my-equity", icon: Briefcase },
 ];
 
 const managerItems: NavItem[] = [
