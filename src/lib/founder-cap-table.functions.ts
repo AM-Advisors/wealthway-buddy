@@ -294,6 +294,16 @@ export const saveHolding = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    // Every new share record gets its own numbered certificate, in draft until
+    // a company signatory signs it.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createDraftCertificate } = await import("@/lib/cap-certificates.server");
+    await createDraftCertificate(supabaseAdmin, {
+      holdingId: String((created as any).id),
+      createdBy: context.userId,
+    });
+
     await audit(context, {
       clientId: who.clientId,
       action: "holding_added",
@@ -302,6 +312,7 @@ export const saveHolding = createServerFn({ method: "POST" })
     });
     return { id: String((created as any).id) };
   });
+
 
 /** Bulk upload: each line carries a holder plus the shares they hold. */
 const importInput = z.object({
