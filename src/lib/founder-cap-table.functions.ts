@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { STAFF_ROLES } from "@/lib/contracts.functions";
+import { assertCapOnboarding } from "@/lib/cap-onboarding.functions";
 
 /** Cap table management for founder clients: their own stakeholders, share
  *  holdings and transfers between holders. Harmonious keeps the record and the
@@ -171,6 +172,7 @@ export const saveStakeholder = createServerFn({ method: "POST" })
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
       throw new Error("You do not have permission to change this cap table.");
     }
+    await assertCapOnboarding(context, who.clientId);
     await assertStakeholderRoom(context, who.clientId, data.id ? 0 : 1);
 
     const row = {
@@ -260,6 +262,7 @@ export const saveHolding = createServerFn({ method: "POST" })
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
       throw new Error("You do not have permission to change this cap table.");
     }
+    await assertCapOnboarding(context, who.clientId);
     const row = {
       client_id: who.clientId,
       stakeholder_id: data.stakeholder_id,
@@ -343,6 +346,7 @@ export const importCapTable = createServerFn({ method: "POST" })
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
       throw new Error("You do not have permission to change this cap table.");
     }
+    await assertCapOnboarding(context, who.clientId);
 
     const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
     const { createDraftCertificate } = await import("@/lib/cap-certificates.server");
