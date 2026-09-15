@@ -334,6 +334,7 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         quietFor,
         stalled,
         overdueInvoices: overdue.length,
+        capTablePlan: capPlanByClient.get(cid) ?? null,
         unpaidCents: unpaid.reduce((sum, i) => sum + Number(i.total_cents ?? 0), 0),
         lastSignIn,
         signInCount,
