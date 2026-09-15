@@ -385,21 +385,30 @@ export const importCapTable = createServerFn({ method: "POST" })
         byKey.set(key, stakeholderId);
         holders += 1;
       }
-      const { error: hErr } = await context.supabase.from("cap_holdings").insert({
-        client_id: who.clientId,
-        stakeholder_id: stakeholderId,
-        security_type: r.security_type || "common",
-        share_class: r.share_class || null,
-        quantity: r.quantity,
-        price_per_share_cents: r.price_per_share_cents ?? null,
-        issued_on: r.issued_on || null,
-        certificate_no: r.certificate_no || null,
-        source: "upload",
-        created_by: context.userId,
-      });
+      const { data: newHolding, error: hErr } = await context.supabase
+        .from("cap_holdings")
+        .insert({
+          client_id: who.clientId,
+          stakeholder_id: stakeholderId,
+          security_type: r.security_type || "common",
+          share_class: r.share_class || null,
+          quantity: r.quantity,
+          price_per_share_cents: r.price_per_share_cents ?? null,
+          issued_on: r.issued_on || null,
+          certificate_no: r.certificate_no || null,
+          source: "upload",
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
       if (hErr) throw new Error(hErr.message);
+      await createDraftCertificate(admin, {
+        holdingId: String((newHolding as any).id),
+        createdBy: context.userId,
+      });
       holdings += 1;
     }
+
 
     await audit(context, {
       clientId: who.clientId,
