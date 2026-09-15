@@ -31,7 +31,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { fmtDate, fmtMoney, fmtNumber, useCapTable } from "./captable-context";
@@ -560,4 +559,3 @@ function ExerciseQueue({
   );
 }
 
-export { Progress };
