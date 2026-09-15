@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
@@ -165,6 +166,11 @@ const AboutRoute = AboutRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CapTablePrivacyRoute = CapTablePrivacyRouteImport.update({
+  id: '/cap-table-privacy',
+  path: '/cap-table-privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientLoginRoute = ClientLoginRouteImport.update({
@@ -929,6 +935,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
@@ -1067,6 +1074,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
@@ -1207,6 +1215,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/client-login': typeof ClientLoginRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/manager-login': typeof ManagerLoginRoute
@@ -1348,6 +1357,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/cap-table-privacy'
     | '/client-login'
     | '/fund-administration'
     | '/manager-login'
@@ -1486,6 +1496,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/cap-table-privacy'
     | '/client-login'
     | '/fund-administration'
     | '/manager-login'
@@ -1625,6 +1636,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/cap-table-privacy'
     | '/client-login'
     | '/fund-administration'
     | '/manager-login'
@@ -1766,6 +1778,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
+  CapTablePrivacyRoute: typeof CapTablePrivacyRoute
   ClientLoginRoute: typeof ClientLoginRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
@@ -1817,6 +1830,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cap-table-privacy': {
+      id: '/cap-table-privacy'
+      path: '/cap-table-privacy'
+      fullPath: '/cap-table-privacy'
+      preLoaderRoute: typeof CapTablePrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client-login': {
@@ -3031,6 +3051,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
+  CapTablePrivacyRoute: CapTablePrivacyRoute,
   ClientLoginRoute: ClientLoginRoute,
   FundAdministrationRoute: FundAdministrationRoute,
   ManagerLoginRoute: ManagerLoginRoute,
