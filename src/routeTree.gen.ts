@@ -145,6 +145,7 @@ import { Route as AuthenticatedClientCapTableDocumentsRouteImport } from './rout
 import { Route as AuthenticatedClientCapTableEmployeesRouteImport } from './routes/_authenticated/client.cap-table.employees'
 import { Route as AuthenticatedClientCapTableFundraisingRouteImport } from './routes/_authenticated/client.cap-table.fundraising'
 import { Route as AuthenticatedClientCapTableInvestorsRouteImport } from './routes/_authenticated/client.cap-table.investors'
+import { Route as AuthenticatedClientCapTableReportsRouteImport } from './routes/_authenticated/client.cap-table.reports'
 import { Route as AuthenticatedClientCapTableSecondariesRouteImport } from './routes/_authenticated/client.cap-table.secondaries'
 import { Route as AuthenticatedClientCapTableSecuritiesRouteImport } from './routes/_authenticated/client.cap-table.securities'
 import { Route as AuthenticatedClientCapTableTableRouteImport } from './routes/_authenticated/client.cap-table.table'
@@ -927,6 +928,12 @@ const AuthenticatedClientCapTableInvestorsRoute =
     path: '/investors',
     getParentRoute: () => AuthenticatedClientCapTableRoute,
   } as any)
+const AuthenticatedClientCapTableReportsRoute =
+  AuthenticatedClientCapTableReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedClientCapTableRoute,
+  } as any)
 const AuthenticatedClientCapTableSecondariesRoute =
   AuthenticatedClientCapTableSecondariesRouteImport.update({
     id: '/secondaries',
@@ -1141,6 +1148,7 @@ export interface FileRoutesByFullPath {
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
   '/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
+  '/client/cap-table/reports': typeof AuthenticatedClientCapTableReportsRoute
   '/client/cap-table/secondaries': typeof AuthenticatedClientCapTableSecondariesRoute
   '/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
@@ -1289,6 +1297,7 @@ export interface FileRoutesByTo {
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
   '/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
+  '/client/cap-table/reports': typeof AuthenticatedClientCapTableReportsRoute
   '/client/cap-table/secondaries': typeof AuthenticatedClientCapTableSecondariesRoute
   '/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
@@ -1442,6 +1451,7 @@ export interface FileRoutesById {
   '/_authenticated/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
   '/_authenticated/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/_authenticated/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
+  '/_authenticated/client/cap-table/reports': typeof AuthenticatedClientCapTableReportsRoute
   '/_authenticated/client/cap-table/secondaries': typeof AuthenticatedClientCapTableSecondariesRoute
   '/_authenticated/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/_authenticated/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
@@ -1595,6 +1605,7 @@ export interface FileRouteTypes {
     | '/client/cap-table/employees'
     | '/client/cap-table/fundraising'
     | '/client/cap-table/investors'
+    | '/client/cap-table/reports'
     | '/client/cap-table/secondaries'
     | '/client/cap-table/securities'
     | '/client/cap-table/table'
@@ -1743,6 +1754,7 @@ export interface FileRouteTypes {
     | '/client/cap-table/employees'
     | '/client/cap-table/fundraising'
     | '/client/cap-table/investors'
+    | '/client/cap-table/reports'
     | '/client/cap-table/secondaries'
     | '/client/cap-table/securities'
     | '/client/cap-table/table'
@@ -1895,6 +1907,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/cap-table/employees'
     | '/_authenticated/client/cap-table/fundraising'
     | '/_authenticated/client/cap-table/investors'
+    | '/_authenticated/client/cap-table/reports'
     | '/_authenticated/client/cap-table/secondaries'
     | '/_authenticated/client/cap-table/securities'
     | '/_authenticated/client/cap-table/table'
@@ -2897,6 +2910,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientCapTableInvestorsRouteImport
       parentRoute: typeof AuthenticatedClientCapTableRoute
     }
+    '/_authenticated/client/cap-table/reports': {
+      id: '/_authenticated/client/cap-table/reports'
+      path: '/reports'
+      fullPath: '/client/cap-table/reports'
+      preLoaderRoute: typeof AuthenticatedClientCapTableReportsRouteImport
+      parentRoute: typeof AuthenticatedClientCapTableRoute
+    }
     '/_authenticated/client/cap-table/secondaries': {
       id: '/_authenticated/client/cap-table/secondaries'
       path: '/secondaries'
@@ -3004,6 +3024,7 @@ interface AuthenticatedClientCapTableRouteChildren {
   AuthenticatedClientCapTableEmployeesRoute: typeof AuthenticatedClientCapTableEmployeesRoute
   AuthenticatedClientCapTableFundraisingRoute: typeof AuthenticatedClientCapTableFundraisingRoute
   AuthenticatedClientCapTableInvestorsRoute: typeof AuthenticatedClientCapTableInvestorsRoute
+  AuthenticatedClientCapTableReportsRoute: typeof AuthenticatedClientCapTableReportsRoute
   AuthenticatedClientCapTableSecondariesRoute: typeof AuthenticatedClientCapTableSecondariesRoute
   AuthenticatedClientCapTableSecuritiesRoute: typeof AuthenticatedClientCapTableSecuritiesRoute
   AuthenticatedClientCapTableTableRoute: typeof AuthenticatedClientCapTableTableRoute
@@ -3022,6 +3043,8 @@ const AuthenticatedClientCapTableRouteChildren: AuthenticatedClientCapTableRoute
       AuthenticatedClientCapTableFundraisingRoute,
     AuthenticatedClientCapTableInvestorsRoute:
       AuthenticatedClientCapTableInvestorsRoute,
+    AuthenticatedClientCapTableReportsRoute:
+      AuthenticatedClientCapTableReportsRoute,
     AuthenticatedClientCapTableSecondariesRoute:
       AuthenticatedClientCapTableSecondariesRoute,
     AuthenticatedClientCapTableSecuritiesRoute:
