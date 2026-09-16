@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { computeVesting } from "@/lib/vesting";
 
 /**
  * Harmonious CapTable — ownership records.
@@ -154,6 +155,19 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
       const round = s.round_id ? roundById.get(s.round_id) : null;
       const sched = s.vesting_schedule_id ? vestById.get(s.vesting_schedule_id) : null;
       const outstanding = balances.has(s.id) ? balances.get(s.id)! : n(s.quantity);
+      // Same vesting maths the holder sees in My Equity, so the two agree.
+      const vest = computeVesting(
+        outstanding,
+        sched
+          ? {
+              name: sched.name as string,
+              startDate: (sched.start_date as string | null) ?? null,
+              cliffMonths: Number(sched.cliff_months ?? 0),
+              durationMonths: Number(sched.duration_months ?? 0),
+              frequency: (sched.frequency as string) ?? "monthly",
+            }
+          : null,
+      );
       return {
         id: s.id as string,
         stakeholderId: s.stakeholder_id as string,
@@ -166,6 +180,14 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
         securityLabel: kindMeta(s.security_type).label,
         label: s.label as string | null,
         quantity: outstanding,
+        originalQuantity: n(s.quantity),
+        vested: vest.vested,
+        unvested: vest.unvested,
+        vestedPercent: vest.percent,
+        nextVestDate: vest.nextVestDate,
+        nextVestQuantity: vest.nextVestQuantity,
+        fullyVestedDate: vest.fullyVestedDate,
+        accepted: Boolean(s.accepted_at),
         issueDate: s.issue_date as string | null,
         purchasePrice: s.purchase_price === null ? null : n(s.purchase_price),
         exercisePrice: s.exercise_price === null ? null : n(s.exercise_price),
@@ -196,7 +218,18 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
     const poolAvailable = Math.max(poolSize - granted, 0);
     const fullyDiluted = dilutedIssued + poolAvailable;
 
-    const byStakeholder = new Map<string, { id: string; name: string; type: string; outstanding: number; diluted: number }>();
+    const byStakeholder = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        type: string;
+        outstanding: number;
+        diluted: number;
+        vested: number;
+        unvested: number;
+      }
+    >();
     for (const row of rows) {
       const entry = byStakeholder.get(row.stakeholderId) ?? {
         id: row.stakeholderId,
@@ -204,11 +237,25 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
         type: row.stakeholderType,
         outstanding: 0,
         diluted: 0,
+        vested: 0,
+        unvested: 0,
       };
       if (kindMeta(row.securityType).outstanding) entry.outstanding += row.quantity;
-      if (kindMeta(row.securityType).diluted) entry.diluted += row.quantity;
+      if (kindMeta(row.securityType).diluted) {
+        entry.diluted += row.quantity;
+        entry.vested += row.vested;
+        entry.unvested += row.unvested;
+      }
       byStakeholder.set(row.stakeholderId, entry);
     }
+
+    const equityRows = rows.filter((r) => r.securityType === "option" || r.securityType === "rsu");
+    const vestedShares = rows
+      .filter((r) => kindMeta(r.securityType).diluted)
+      .reduce((sum, r) => sum + r.vested, 0);
+    const unvestedShares = rows
+      .filter((r) => kindMeta(r.securityType).diluted)
+      .reduce((sum, r) => sum + r.unvested, 0);
 
     const metrics = {
       authorizedShares: n(company.authorized_shares),
@@ -239,6 +286,12 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
       ).length,
       missingDocuments: rows.filter((r) => !r.label).length,
       rounds: (rounds ?? []).length,
+      vestedShares,
+      unvestedShares,
+      grantsOutstanding: equityRows.reduce((sum, r) => sum + r.quantity, 0),
+      grantsVested: equityRows.reduce((sum, r) => sum + r.vested, 0),
+      grantsUnvested: equityRows.reduce((sum, r) => sum + r.unvested, 0),
+      grantsAwaitingAcceptance: equityRows.filter((r) => !r.accepted).length,
     };
 
     const ownership = [...byStakeholder.values()]

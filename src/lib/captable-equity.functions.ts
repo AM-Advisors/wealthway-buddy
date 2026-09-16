@@ -141,6 +141,15 @@ export const getMyEquity = createServerFn({ method: "GET" })
     const scheduleById = new Map(((schedules ?? []) as any[]).map((s) => [s.id, s]));
     const permByStakeholder = new Map(((permissions ?? []) as any[]).map((p) => [p.stakeholder_id, p]));
 
+    // Balances come from the same event history the company cap table is built
+    // from, so what a holder sees here always ties back to the official record.
+    const balances = new Map<string, number>();
+    for (const tx of ((transactions ?? []) as any[])) {
+      if (!tx.security_id) continue;
+      if (tx.status === "rejected" || tx.status === "pending") continue;
+      balances.set(tx.security_id, (balances.get(tx.security_id) ?? 0) + n(tx.quantity));
+    }
+
     const holdings = holders.map((holder) => {
       const perms = mapPermissions(permByStakeholder.get(holder.id));
       const company = companyById.get(holder.company_id);
@@ -148,11 +157,13 @@ export const getMyEquity = createServerFn({ method: "GET" })
 
       const grants = mine.map((s) => {
         const sched = s.vesting_schedule_id ? scheduleById.get(s.vesting_schedule_id) : null;
+        const outstanding = balances.has(s.id) ? balances.get(s.id)! : n(s.quantity);
         return {
           id: s.id as string,
           securityType: s.security_type as string,
           label: s.label as string | null,
-          quantity: n(s.quantity),
+          quantity: outstanding,
+          originalQuantity: n(s.quantity),
           issueDate: s.issue_date as string | null,
           exercisePrice: s.exercise_price === null ? null : n(s.exercise_price),
           purchasePrice: s.purchase_price === null ? null : n(s.purchase_price),
