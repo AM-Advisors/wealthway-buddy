@@ -114,7 +114,7 @@ export function InvestorUploads({ fundId }: { fundId?: string | null } = {}) {
   return (
     <Card className="mt-8">
       <CardHeader>
-        <CardTitle>Your uploads</CardTitle>
+        <CardTitle>{fundId ? "Your uploads for this fund" : "Your uploads"}</CardTitle>
         <CardDescription>
           Add any supporting paperwork your fund team asked for. Only you, the fund administrators and your fund's
           managers can see these files.
@@ -122,6 +122,23 @@ export function InvestorUploads({ fundId }: { fundId?: string | null } = {}) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-3">
+          {!fundId && funds.length > 1 ? (
+            <div className="space-y-2">
+              <Label htmlFor="upload-fund">Fund</Label>
+              <select
+                id="upload-fund"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={targetFund ?? ""}
+                onChange={(e) => setChosenFund(e.target.value)}
+              >
+                {funds.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           <div className="space-y-2">
             <Label htmlFor="upload-kind">Document type</Label>
             <select
