@@ -10,7 +10,6 @@ import {
   getCapMigrations,
   importCapMigration,
   remapCapMigration,
-  requestCapConcierge,
   setCapMigrationRow,
 } from "@/lib/captable-migration.functions";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +47,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 
+import { ConciergeHandoverDialog, ConciergePanel } from "./concierge-panel";
 import { fmtDate, fmtNumber, useCapTable } from "./captable-context";
 import { CapTableSection } from "./captable-states";
 
@@ -283,7 +283,7 @@ function BatchPanel({
                 Change column mapping
               </Button>
               <Button size="sm" variant="outline" onClick={() => setConcierge(true)}>
-                Ask us to review it
+                Have Harmonious do it for me
               </Button>
               <Button
                 size="sm"
@@ -323,12 +323,7 @@ function BatchPanel({
           </p>
         </div>
 
-        {batch.conciergeRequestedAt ? (
-          <p className="text-sm text-muted-foreground">
-            Concierge review requested {fmtDate(batch.conciergeRequestedAt)}
-            {batch.conciergeNote ? ` — “${batch.conciergeNote}”` : ""}
-          </p>
-        ) : null}
+        <ConciergePanel migrationId={batch.id} onChanged={onChanged} />
 
         <div className="overflow-x-auto">
           <Table>
@@ -371,7 +366,7 @@ function BatchPanel({
         batch={batch}
         onDone={onChanged}
       />
-      <ConciergeDialog
+      <ConciergeHandoverDialog
         open={concierge}
         onOpenChange={setConcierge}
         migrationId={batch.id}
@@ -565,59 +560,3 @@ function MappingDialog({
   );
 }
 
-function ConciergeDialog({
-  open,
-  onOpenChange,
-  migrationId,
-  onDone,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  migrationId: string;
-  onDone: () => void;
-}) {
-  const request = useServerFn(requestCapConcierge);
-  const [note, setNote] = useState("");
-
-  const mutation = useMutation({
-    mutationFn: () => request({ data: { migrationId, note: note || null } }),
-    onSuccess: () => {
-      toast.success("Sent. Our team will review the file with you.");
-      onOpenChange(false);
-      onDone();
-    },
-    onError: (err: unknown) =>
-      toast.error(err instanceof Error ? err.message : "We could not send that request."),
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Ask us to review the file</DialogTitle>
-          <DialogDescription>
-            We check the mapping, the totals and anything flagged, then come back to you before
-            anything is recorded.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-1.5">
-          <Label htmlFor="concierge-note">Anything we should know? (optional)</Label>
-          <Textarea
-            id="concierge-note"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder="For example: the option grants are on a second tab"
-          />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            Request review
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
