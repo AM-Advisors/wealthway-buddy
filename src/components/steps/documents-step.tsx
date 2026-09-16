@@ -178,8 +178,13 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <ScopeNotice offeringId={data?.offering?.id ?? null} section="documents" label="Fund documents" />
-      <OnboardingStepper current="documents" />
-      <h1 className="mt-8 text-3xl">Fund documents</h1>
+      <p className="mt-6 text-xs uppercase tracking-wide text-muted-foreground">
+        <Link to="/portal" className="underline-offset-4 hover:underline">
+          Your funds
+        </Link>{" "}
+        · {data?.offering?.name ?? "Fund"}
+      </p>
+      <h1 className="mt-2 text-3xl">Fund documents</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Read each document in full, complete your subscription particulars, then sign
         electronically. Signed copies are stored with a tamper-evident hash and audit trail.
