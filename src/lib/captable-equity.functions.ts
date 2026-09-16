@@ -128,6 +128,15 @@ export const getMyEquity = createServerFn({ method: "GET" })
       supabase.from("ct_documents").select("id, title, doc_type, linked_id, linked_type, status, created_at"),
     ]);
 
+    // Secondary transfers where this person is the seller or the named buyer.
+    // Row level security keeps every other transfer out of reach.
+    const { data: transfers } = await supabase
+      .from("ct_secondary_transfers")
+      .select(
+        "id, company_id, seller_stakeholder_id, buyer_stakeholder_id, buyer_name, quantity, price_per_share, total_amount, status, restriction_status, rofr_status, consent_status, proposed_date, closed_date, created_at",
+      )
+      .order("created_at", { ascending: false });
+
     const companyById = new Map(((companies ?? []) as any[]).map((c) => [c.id, c]));
     const scheduleById = new Map(((schedules ?? []) as any[]).map((s) => [s.id, s]));
     const permByStakeholder = new Map(((permissions ?? []) as any[]).map((p) => [p.stakeholder_id, p]));
@@ -203,6 +212,30 @@ export const getMyEquity = createServerFn({ method: "GET" })
                 effectiveDate: t.effective_date as string,
                 status: t.status as string,
                 reason: t.reason as string | null,
+              }))
+          : [],
+        transfers: perms.canViewTransactions
+          ? ((transfers ?? []) as any[])
+              .filter(
+                (t) =>
+                  t.seller_stakeholder_id === holder.id || t.buyer_stakeholder_id === holder.id,
+              )
+              .map((t) => ({
+                id: t.id as string,
+                side: t.seller_stakeholder_id === holder.id ? "selling" : "buying",
+                counterparty:
+                  t.seller_stakeholder_id === holder.id
+                    ? ((t.buyer_name as string | null) ?? "Buyer to be named")
+                    : "The selling shareholder",
+                quantity: n(t.quantity),
+                pricePerShare: t.price_per_share === null ? null : n(t.price_per_share),
+                totalAmount: t.total_amount === null ? null : n(t.total_amount),
+                status: t.status as string,
+                restrictionStatus: t.restriction_status as string,
+                rofrStatus: t.rofr_status as string,
+                consentStatus: t.consent_status as string,
+                proposedDate: t.proposed_date as string | null,
+                closedDate: t.closed_date as string | null,
               }))
           : [],
         exerciseRequests: ((requests ?? []) as any[])

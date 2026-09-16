@@ -154,6 +154,11 @@ function HoldingPanel({ holding, onChanged }: { holding: Holding; onChanged: () 
           {holding.permissions.canViewTransactions ? (
             <TabsTrigger value="history">History</TabsTrigger>
           ) : null}
+          {holding.permissions.canViewTransactions ? (
+            <TabsTrigger value="transfers">
+              Transfers{holding.transfers.length ? ` (${holding.transfers.length})` : ""}
+            </TabsTrigger>
+          ) : null}
           <TabsTrigger value="requests">
             Requests{holding.exerciseRequests.length ? ` (${holding.exerciseRequests.length})` : ""}
           </TabsTrigger>
@@ -201,6 +206,55 @@ function HoldingPanel({ holding, onChanged }: { holding: Holding; onChanged: () 
                         <span className="text-muted-foreground">
                           {fmtNumber(tx.quantity)} · {fmtDate(tx.effectiveDate)} · {tx.status}
                         </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ) : null}
+
+        {holding.permissions.canViewTransactions ? (
+          <TabsContent value="transfers" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Transfers of your own shares</CardTitle>
+                <CardDescription>
+                  Only transfers where you are the seller or the named buyer. You never see anyone
+                  else's.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {holding.transfers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No transfers recorded for you.</p>
+                ) : (
+                  <ul className="space-y-3 text-sm">
+                    {holding.transfers.map((transfer) => (
+                      <li key={transfer.id} className="space-y-1 border-b pb-3 last:border-0 last:pb-0">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium">
+                            {transfer.side === "selling" ? "You are selling" : "You are buying"}{" "}
+                            {fmtNumber(transfer.quantity)} shares
+                          </span>
+                          <Badge variant="outline" className="capitalize">
+                            {transfer.status.replace(/_/g, " ")}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground">
+                          {transfer.counterparty}
+                          {transfer.pricePerShare !== null
+                            ? ` · ${fmtMoney(transfer.pricePerShare, 4)} per share`
+                            : ""}
+                          {transfer.totalAmount !== null ? ` · ${fmtMoney(transfer.totalAmount)}` : ""}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {transfer.proposedDate ? `Proposed ${fmtDate(transfer.proposedDate)}` : null}
+                          {transfer.closedDate ? ` · Completed ${fmtDate(transfer.closedDate)}` : null}
+                          {` · Restrictions: ${transfer.restrictionStatus.replace(/_/g, " ")}`}
+                          {` · Right of first refusal: ${transfer.rofrStatus.replace(/_/g, " ")}`}
+                          {` · Company consent: ${transfer.consentStatus.replace(/_/g, " ")}`}
+                        </p>
                       </li>
                     ))}
                   </ul>
