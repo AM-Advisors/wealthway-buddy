@@ -176,6 +176,10 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
   const { data, isLoading, error } = useQuery({
     queryKey: ["cap-concierge-case", caseId],
     queryFn: () => load({ data: { caseId } }),
+    // The founder may be answering questions while the specialist works, so
+    // keep the wizard honest without anyone reaching for refresh.
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
 
   const [question, setQuestion] = useState("");
