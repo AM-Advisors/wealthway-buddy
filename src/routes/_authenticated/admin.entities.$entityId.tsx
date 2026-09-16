@@ -37,10 +37,14 @@ const typeLabel = (v: string) => ENTITY_TYPES.find((t) => t.value === v)?.label 
 function EntityPage() {
   const { entityId } = Route.useParams();
   const load = useServerFn(getEntity);
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["entity", entityId],
     queryFn: () => load({ data: { entityId } }),
   });
+
+  const canManage = Boolean((data as any)?.access?.canManage);
 
   if (isLoading || !data) {
     return (
