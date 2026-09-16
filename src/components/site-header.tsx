@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const NAV = [
   { to: "/platform", label: "Platform" },
+  { to: "/cap-table", label: "CapTable" },
   { to: "/spv", label: "Same-Day SPV" },
   { to: "/fund-administration", label: "Fund Administration" },
   { to: "/about", label: "About" },
