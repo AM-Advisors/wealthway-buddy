@@ -902,8 +902,8 @@ export const startStaffMigration = createServerFn({ method: "POST" })
       headline: "We have started your cap table migration",
       intro: `We have read your ${provider.label} export and started preparing it. Nothing is recorded until you approve it.`,
       details: [
-        ["File", data.fileName || "Cap table export"],
-        ["Lines read", String(data.rows.length)],
+        { label: "File", value: data.fileName || "Cap table export" },
+        { label: "Lines read", value: String(data.rows.length) },
       ],
       eventKey: `cap-concierge-staff-start:${created.id}`,
     });
