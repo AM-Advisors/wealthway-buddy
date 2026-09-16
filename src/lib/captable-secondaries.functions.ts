@@ -567,6 +567,13 @@ export const closeSecondaryTransfer = createServerFn({ method: "POST" })
     if (!transfer) throw new Error("That transfer request no longer exists.");
     const t = transfer as any;
     if (t.status === "closed") throw new Error("This transfer is already on the ledger.");
+    const { data: posted } = await context.supabase
+      .from("ct_transactions")
+      .select("id")
+      .eq("company_id", data.companyId)
+      .eq("metadata->>transferId", data.id)
+      .limit(1);
+    if (posted?.length) throw new Error("This transfer has already been posted to the cap table.");
     if (t.status !== "approved" || t.consent_status !== "granted") {
       throw new Error("Company consent must be granted before a transfer can close.");
     }
