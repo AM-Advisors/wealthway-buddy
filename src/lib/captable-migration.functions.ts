@@ -137,7 +137,16 @@ type MappedRow = {
   cliffMonths: number | null;
   durationMonths: number | null;
   frequency: string;
+  authorizedShares: number | null;
+  roundName: string | null;
+  roundDate: string | null;
+  roundPricePerShare: number | null;
+  investmentAmount: number | null;
 };
+
+/** Options, RSUs and warrants are reserved against the pool, not issued shares. */
+const RESERVED_TYPES = new Set(["option", "iso_option", "nso_option", "rsu", "warrant"]);
+const CONVERTIBLE_TYPES = new Set(["safe", "convertible_note"]);
 
 function mapRow(raw: Record<string, unknown>, mapping: Record<string, string | null>) {
   const pick = (key: FieldKey) => {
