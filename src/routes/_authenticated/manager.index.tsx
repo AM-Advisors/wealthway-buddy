@@ -1,312 +1,86 @@
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { ArrowUpRight, Search } from "lucide-react";
 
 import { getManagerPanelSummary } from "@/lib/manager.functions";
 import { getManagerFundProgress } from "@/lib/manager-fund.functions";
-import { money } from "@/lib/status";
+import { money, prettyStatus } from "@/lib/status";
+import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
+import { FundInvitations } from "@/components/fund-invitations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FundInvitations } from "@/components/fund-invitations";
-import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
-import { WireTrackingPanel } from "@/components/wire-tracking-panel";
-import { DiligenceRoomsPanel } from "@/components/diligence-rooms-panel";
-import { WireRequestForm, WireRequestQueue } from "@/components/wire-requests";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/manager/")({
   head: () => ({
     meta: [
-      { title: "Fund Manager Panel — Harmonious" },
-      {
-        name: "description",
-        content:
-          "The Harmonious fund manager panel: investors in review, documents awaiting signature, wire approvals and fund settings for the funds you manage.",
-      },
-      { property: "og:title", content: "Fund Manager Panel — Harmonious" },
-      {
-        property: "og:description",
-        content: "One control panel for every fund you manage at Harmonious.",
-      },
+      { title: "My Funds — Harmonious" },
+      { name: "description", content: "Portfolio status, capital, investor activity, approvals, and exceptions across the funds you manage." },
+      { property: "og:title", content: "My Funds — Harmonious" },
+      { property: "og:description", content: "Portfolio status, capital, investor activity, approvals, and exceptions across managed funds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ManagerPanel,
+  component: ManagerPortfolio,
 });
 
-const TOOLS = [
-  { to: "/manager/investors", title: "Investors", blurb: "Review every applicant, stage by stage." },
-  {
-    to: "/manager/approvals",
-    title: "Investor approvals",
-    blurb: "Approve each completed file before the investor can send money.",
-  },
-  {
-    to: "/manager/inbox",
-    title: "Document inbox",
-    blurb: "Every investor upload lands here, ready to review.",
-  },
-  {
-    to: "/manager/wires",
-    title: "Wire review board",
-    blurb: "Approve or send back each wire confirmation, with funding status.",
-  },
-  {
-    to: "/manager/messages",
-    title: "Investor messages",
-    blurb: "Answer investor questions privately, without leaving the portal.",
-  },
-  {
-    to: "/manager/timeline",
-    title: "Application timeline",
-    blurb: "Follow each investor from invitation to funding, with full history.",
-  },
-  {
-    to: "/manager/activity",
-    title: "Reviewer activity",
-    blurb: "Who approved, delayed or declined what, and when.",
-  },
-  { to: "/manager/documents", title: "Fund documents", blurb: "Add and edit what investors sign." },
-  {
-    to: "/manager/memo",
-    title: "Offering memo",
-    blurb: "Write the fund's story that investors read.",
-  },
-  {
-    to: "/manager/profile",
-    title: "Your profile",
-    blurb: "Update your contact details and see the funds you're assigned to.",
-  },
-  {
-    to: "/manager/closing",
-    title: "Closing desk",
-    blurb: "Confirm funds landed in full, set the closing date and share final documents.",
-  },
-  { to: "/admin/wire", title: "Wire instructions", blurb: "Keep bank details current." },
-  { to: "/admin/funds", title: "Fund pages", blurb: "Fund detail, packets and change history." },
-  {
-    to: "/manager/diligence",
-    title: "Diligence rooms",
-    blurb: "Upload fund materials and sort them into the sections investors expect.",
-  },
-  {
-    to: "/manager/permissions",
-    title: "Document permissions",
-    blurb: "Choose which documents each investor can open in the room.",
-  },
-  { to: "/manager/cap-table", title: "Cap table", blurb: "Shares, ownership and committed capital." },
-  {
-    to: "/manager/cap-table-board",
-    title: "Cap table board",
-    blurb: "Every fund side by side, with one-click edits.",
-  },
-  {
-    to: "/manager/portfolio-value",
-    title: "Portfolio value",
-    blurb: "Equity value and value per share, live as wires land.",
-  },
-  {
-    to: "/manager/public-page",
-    title: "Public fund page",
-    blurb: "Show the deck, documents and cap table to visitors.",
-  },
-  {
-    to: "/manager/requests",
-    title: "Access requests",
-    blurb: "People who asked for the full materials.",
-  },
-  {
-    to: "/manager/performance",
-    title: "Fund performance",
-    blurb: "Return, IRR and cash flow over time.",
-  },
-
-
-  { to: "/diligence", title: "Investor view of diligence", blurb: "Materials, checklist and investor Q&A." },
-] as const;
-
-function ManagerPanel() {
+function ManagerPortfolio() {
   const load = useServerFn(getManagerPanelSummary);
   const loadProgress = useServerFn(getManagerFundProgress);
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["manager-panel-summary"],
-    queryFn: () => load(),
-    retry: false,
-    refetchInterval: 60_000,
-  });
-  const progressQuery = useQuery({
-    queryKey: ["manager-fund-progress"],
-    queryFn: () => loadProgress(),
-    retry: false,
-  });
+  const summary = useQuery({ queryKey: ["manager-panel-summary"], queryFn: () => load(), refetchInterval: 60_000 });
+  const progress = useQuery({ queryKey: ["manager-fund-progress"], queryFn: () => loadProgress() });
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
 
-  const progressOf = (fundId: string) => {
-    const row = (progressQuery.data?.funds ?? []).find((f: any) => f.id === fundId);
-    return row ? (row.percent as number) : null;
-  };
-
-  const complianceOf = (fundId: string) => {
-    const row = (progressQuery.data?.funds ?? []).find((f: any) => f.id === fundId) as any;
-    return row && row.compliancePercent !== null && row.compliancePercent !== undefined
-      ? (row.compliancePercent as number)
-      : null;
-  };
-
-
-  if (isLoading) {
-    return (
-      <main className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Loading…</main>
+  const funds = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return (summary.data?.funds ?? []).filter((fund: any) =>
+      (status === "all" || (status === "open" ? fund.isOpen : !fund.isOpen)) &&
+      (!term || String(fund.name).toLowerCase().includes(term) || String(fund.fundType ?? "").toLowerCase().includes(term)),
     );
-  }
+  }, [search, status, summary.data]);
 
-  if (isError || !data) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 py-16">
-        <h1 className="text-3xl">Restricted</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          This panel is limited to Harmonious fund managers and administrators.
-        </p>
-        <Button asChild variant="outline" className="mt-6">
-          <Link to="/dashboard">Back to your dashboard</Link>
-        </Button>
-      </main>
-    );
-  }
+  if (summary.isLoading) return <main className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Loading funds…</main>;
+  if (summary.isError || !summary.data) return <main className="mx-auto max-w-3xl px-4 py-16"><h1 className="text-2xl">Fund management is unavailable</h1><p className="mt-2 text-sm text-muted-foreground">This workspace is limited to assigned fund managers and administrators.</p></main>;
 
-  const funds = (data.funds ?? []) as any[];
-  const roleLabel = data.isAdmin ? "Administrator" : "Fund manager";
+  const all = summary.data.funds as any[];
+  const progressOf = (id: string) => (progress.data?.funds ?? []).find((row: any) => row.id === id);
+  const totals = {
+    active: all.filter((fund) => fund.isOpen).length,
+    committed: all.reduce((sum, fund) => sum + Number(fund.committedCents ?? 0), 0),
+    received: all.reduce((sum, fund) => sum + Number(fund.receivedCents ?? 0), 0),
+    approvals: all.reduce((sum, fund) => sum + fund.identity + fund.accreditation + fund.documents, 0),
+    exceptions: all.reduce((sum, fund) => sum + fund.openFlags + fund.pendingWires, 0),
+  };
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-3xl">Fund manager panel</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {data.email ? `Signed in as ${data.email}. ` : ""}
-            {roleLabel} · {funds.length} {funds.length === 1 ? "fund" : "funds"}
-          </p>
-        </div>
-        <Badge variant="secondary">{roleLabel}</Badge>
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div><p className="text-xs font-medium uppercase text-muted-foreground">Fund management</p><h1 className="mt-1 text-3xl">My funds</h1><p className="mt-2 text-sm text-muted-foreground">Capital, investors, readiness, and outstanding work across your portfolio.</p></div>
+        <div className="flex gap-2"><Button asChild size="sm" variant="outline"><Link to="/manager/approvals">Review approvals</Link></Button>{summary.data.isAdmin ? <Button asChild size="sm"><Link to="/admin/setup">Add fund</Link></Button> : null}</div>
       </div>
 
-      {funds.length === 0 ? (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>No funds assigned yet</CardTitle>
-            <CardDescription>
-              You have manager access, but no fund has been assigned to you. Ask a Harmonious
-              administrator to add you to a fund.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      ) : (
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {funds.map((fund) => (
-            <Card key={fund.id}>
-              <CardHeader className="pb-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">{fund.name}</CardTitle>
-                    <CardDescription>
-                      Reg D {fund.regType} · {fund.isOpen ? "Open" : "Closed"} ·{" "}
-                      {money(fund.committedCents)} committed
-                    </CardDescription>
-                  </div>
-                  <Button asChild size="sm" variant="outline">
-                    <Link to="/manager/fund/$fundId" params={{ fundId: fund.id }}>
-                      Open fund
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-0">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <Metric label="Investors" value={fund.total} />
-                  <Metric label="In review" value={fund.identity + fund.accreditation} />
-                  <Metric label="Docs pending" value={fund.documents} />
-                  <Metric label="Complete" value={fund.complete} />
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {progressOf(fund.id) !== null ? (
-                    <Badge variant={progressOf(fund.id) === 100 ? "default" : "secondary"}>
-                      Setup {progressOf(fund.id)}% complete
-                    </Badge>
-                  ) : null}
-                  {complianceOf(fund.id) !== null ? (
-                    <Badge variant={complianceOf(fund.id) === 100 ? "default" : "secondary"}>
-                      Compliance {complianceOf(fund.id)}% filed
-                    </Badge>
-                  ) : null}
-                  <Badge variant={fund.pendingWires > 0 ? "default" : "outline"}>
-                    {fund.pendingWires} wire{fund.pendingWires === 1 ? "" : "s"} awaiting approval
-                  </Badge>
-                  <Badge variant={fund.openFlags > 0 ? "destructive" : "outline"}>
-                    {fund.openFlags} open issue{fund.openFlags === 1 ? "" : "s"}
-                  </Badge>
-                  <Badge variant="outline">
-                    {fund.signableDocuments} document{fund.signableDocuments === 1 ? "" : "s"} to
-                    sign
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <section className="mt-10">
-        <h2 className="mb-1 text-xl">Diligence rooms</h2>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Your funds, their rooms, and the investors who have looked inside.
-        </p>
-        <DiligenceRoomsPanel />
-      </section>
-
-      <section className="mt-10">
-        <h2 className="mb-3 text-xl">Wire tracking</h2>
-        <WireTrackingPanel />
-      </section>
-
-      <section className="mt-10 space-y-6">
-        <h2 className="text-xl">Wire requests</h2>
-        <WireRequestForm />
-        <WireRequestQueue />
-      </section>
-
-      <section className="mt-10">
-        <h2 className="text-xl">Your tools</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.map((tool) => (
-            <Link
-              key={tool.to}
-              to={tool.to}
-              className="rounded-lg border p-4 transition-colors hover:bg-muted"
-            >
-              <p className="text-sm font-medium">{tool.title}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{tool.blurb}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <div className="mt-10">
-        <FundInvitations title="Invite people to your funds" />
+      <div className="mt-6 grid gap-px overflow-hidden rounded-md border bg-border sm:grid-cols-2 xl:grid-cols-5">
+        <Metric label="Active funds" value={String(totals.active)} />
+        <Metric label="Committed capital" value={money(totals.committed)} />
+        <Metric label="Capital received" value={money(totals.received)} />
+        <Metric label="Pending reviews" value={String(totals.approvals)} />
+        <Metric label="Open exceptions" value={String(totals.exceptions)} alert={totals.exceptions > 0} />
       </div>
 
-      <section className="mt-10">
-        <h2 className="mb-3 text-xl">Email alerts</h2>
-        <AlertPreferenceToggle />
-      </section>
+      <Card className="mt-6">
+        <CardHeader className="border-b"><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle className="text-base">Portfolio</CardTitle><CardDescription>{all.length} {all.length === 1 ? "fund" : "funds"} available to your account</CardDescription></div><div className="flex w-full gap-2 sm:w-auto"><div className="relative min-w-0 flex-1 sm:w-64"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search funds" /></div><Select value={status} onValueChange={setStatus}><SelectTrigger className="w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="open">Open</SelectItem><SelectItem value="closed">Closed</SelectItem></SelectContent></Select></div></div></CardHeader>
+        <CardContent className="p-0"><div className="overflow-x-auto"><table className="w-full min-w-[960px] text-left text-sm"><thead className="border-b bg-muted/50 text-xs text-muted-foreground"><tr><th className="px-4 py-3 font-medium">Fund</th><th className="px-4 py-3 font-medium">Status</th><th className="px-4 py-3 font-medium">Investors</th><th className="px-4 py-3 font-medium">Committed</th><th className="px-4 py-3 font-medium">Received</th><th className="px-4 py-3 font-medium">Readiness</th><th className="px-4 py-3 font-medium">Next action</th><th className="px-4 py-3" /></tr></thead><tbody className="divide-y">{funds.map((fund: any) => { const setup = progressOf(fund.id); const next = fund.openFlags > 0 ? `${fund.openFlags} exceptions` : fund.pendingWires > 0 ? `${fund.pendingWires} wires to review` : fund.identity + fund.accreditation > 0 ? `${fund.identity + fund.accreditation} checks pending` : "No urgent action"; return <tr key={fund.id} className="hover:bg-muted/30"><td className="px-4 py-4"><p className="font-medium">{fund.name}</p><p className="text-xs text-muted-foreground">{fund.fundType ? prettyStatus(fund.fundType) : `Reg D ${fund.regType}`}</p></td><td className="px-4 py-4"><Badge variant={fund.isOpen ? "default" : "outline"}>{fund.isOpen ? "Open" : "Closed"}</Badge></td><td className="px-4 py-4">{fund.total}</td><td className="px-4 py-4">{money(fund.committedCents)}</td><td className="px-4 py-4">{money(fund.receivedCents)}</td><td className="px-4 py-4"><div className="flex items-center gap-2"><div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${setup?.percent ?? 0}%` }} /></div><span className="text-xs">{setup?.percent ?? 0}%</span></div></td><td className="px-4 py-4"><span className={fund.openFlags > 0 ? "text-destructive" : "text-muted-foreground"}>{next}</span></td><td className="px-4 py-4 text-right"><Button asChild size="sm" variant="ghost"><Link to="/manager/fund/$fundId" params={{ fundId: fund.id }}>Open <ArrowUpRight className="ml-1 h-4 w-4" /></Link></Button></td></tr>; })}{funds.length === 0 ? <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No funds match these filters.</td></tr> : null}</tbody></table></div></CardContent>
+      </Card>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2"><FundInvitations title="Invite people to a fund" /><Card><CardHeader><CardTitle className="text-base">Email alerts</CardTitle><CardDescription>Choose which fund activity reaches your inbox.</CardDescription></CardHeader><CardContent><AlertPreferenceToggle /></CardContent></Card></div>
     </main>
   );
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md border p-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl">{value}</p>
-    </div>
-  );
-}
+function Metric({ label, value, alert = false }: { label: string; value: string; alert?: boolean }) { return <div className="bg-card px-4 py-4"><p className="text-xs text-muted-foreground">{label}</p><p className={alert ? "mt-1 text-2xl font-medium text-destructive" : "mt-1 text-2xl font-medium"}>{value}</p></div>; }
