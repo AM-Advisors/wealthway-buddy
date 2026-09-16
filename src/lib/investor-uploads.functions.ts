@@ -22,6 +22,7 @@ export type InvestorUploadRow = {
   doc_kind: string;
   note: string | null;
   uploaded_at: string;
+  offering_id: string | null;
   box_file_id: string | null;
   box_uploaded_at: string | null;
   box_error: string | null;
@@ -37,17 +38,50 @@ async function currentApplication(supabase: any, userId: string) {
   return data as { id: string; offering_id: string } | null;
 }
 
-export const listMyUploads = createServerFn({ method: "GET" })
+/** The funds this person can file paperwork against. */
+async function myFunds(supabase: any, userId: string) {
+  const { data: apps } = await supabase
+    .from("investor_applications")
+    .select("id, offering_id")
+    .eq("user_id", userId);
+  const ids = Array.from(
+    new Set(((apps ?? []) as any[]).map((a) => a.offering_id as string).filter(Boolean)),
+  );
+  if (ids.length === 0) return [] as { id: string; name: string; applicationId: string }[];
+
+  const { data: offerings } = await supabase.from("offerings").select("id, name").in("id", ids);
+  const nameBy = new Map(((offerings ?? []) as any[]).map((o) => [String(o.id), o.name as string]));
+  return ((apps ?? []) as any[])
+    .filter((a) => a.offering_id)
+    .map((a) => ({
+      id: String(a.offering_id),
+      name: nameBy.get(String(a.offering_id)) ?? "Fund",
+      applicationId: String(a.id),
+    }));
+}
+
+export const listMyUploads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((data: unknown) =>
+    z
+      .object({ fundId: z.string().uuid().nullish() })
+      .partial()
+      .parse(data ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data, error } = await supabase
+    let query = supabase
       .from("investor_documents")
-      .select("id, file_name, doc_kind, note, uploaded_at, box_file_id, box_uploaded_at, box_error")
+      .select(
+        "id, file_name, doc_kind, note, uploaded_at, offering_id, box_file_id, box_uploaded_at, box_error",
+      )
       .eq("user_id", userId)
       .order("uploaded_at", { ascending: false });
+    if (data?.fundId) query = query.eq("offering_id", data.fundId);
+
+    const [{ data: rows, error }, funds] = await Promise.all([query, myFunds(supabase, userId)]);
     if (error) throw new Error(error.message);
-    return { uploads: (data ?? []) as InvestorUploadRow[] };
+    return { uploads: (rows ?? []) as InvestorUploadRow[], funds };
   });
 
 export const recordMyUpload = createServerFn({ method: "POST" })
@@ -59,6 +93,7 @@ export const recordMyUpload = createServerFn({ method: "POST" })
         file_name: z.string().min(1).max(255),
         doc_kind: z.enum(kindValues),
         note: z.string().max(500).optional().nullable(),
+        offering_id: z.string().uuid().nullish(),
       })
       .parse(data),
   )
@@ -66,7 +101,20 @@ export const recordMyUpload = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     if (!data.storage_path.startsWith(`${userId}/`)) throw new Error("Invalid upload path.");
 
-    const application = await currentApplication(supabase, userId);
+    // A file can be filed against any fund this person has an application for.
+    let application: { id: string; offering_id: string } | null = null;
+    if (data.offering_id) {
+      const { data: row } = await supabase
+        .from("investor_applications")
+        .select("id, offering_id")
+        .eq("user_id", userId)
+        .eq("offering_id", data.offering_id)
+        .maybeSingle();
+      application = (row as any) ?? null;
+      if (!application) throw new Error("That fund is not on your account.");
+    } else {
+      application = await currentApplication(supabase, userId);
+    }
     if (!application) throw new Error("No application found for your account.");
 
     const { data: inserted, error } = await supabase

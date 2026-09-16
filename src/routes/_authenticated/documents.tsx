@@ -11,7 +11,6 @@ import {
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
-import { InvestorUploads } from "@/components/investor-uploads";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -236,7 +235,23 @@ function DocumentsPage() {
         </Card>
       ) : null}
 
-      <InvestorUploads />
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Your files</CardTitle>
+          <CardDescription>
+            Paperwork you send us now lives with the fund it belongs to, and everything on your
+            record is in one place in your vault.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link to="/fund-documents">Fund documents and uploads</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/vault">Open your vault</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
 
 
