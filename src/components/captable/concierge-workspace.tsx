@@ -16,6 +16,7 @@ import {
   setConciergeStage,
 } from "@/lib/captable-concierge.functions";
 import { importCapMigration } from "@/lib/captable-migration.functions";
+import { MigrationWizard } from "./migration-wizard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,6 +177,10 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
   const { data, isLoading, error } = useQuery({
     queryKey: ["cap-concierge-case", caseId],
     queryFn: () => load({ data: { caseId } }),
+    // The founder may be answering questions while the specialist works, so
+    // keep the wizard honest without anyone reaching for refresh.
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
   });
 
   const [question, setQuestion] = useState("");
@@ -253,6 +258,22 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
         <Tally label="Matched holders" value={numFmt(loaded.counts.matched)} />
         <Tally label="Shares in file" value={numFmt(loaded.counts.shares)} />
       </div>
+
+      <MigrationWizard
+        live
+        title="Migration progress"
+        description="Import, map, reconcile, then go live. This refreshes on its own as the founder and the file move along."
+        facts={{
+          total: loaded.counts.total,
+          ready: loaded.counts.ready,
+          error: loaded.counts.error,
+          status: loaded.migration.status,
+          reconciliation: loaded.migration.reconciliation,
+          importedAt: loaded.migration.importedAt,
+          openQuestions: loaded.exceptions.filter((e) => e.status === "open").length,
+        }}
+      />
+
 
       <Card>
         <CardHeader>
