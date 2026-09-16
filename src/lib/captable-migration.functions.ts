@@ -222,7 +222,19 @@ async function recordEvent(
 const UNCLASSIFIED = "__unclassified__";
 
 type Override = { authorized?: number | null; issued?: number | null; outstanding?: number | null };
-type Reconciliation = { overrides?: Record<string, Override>; note?: string | null };
+/** A founder-raised query on one share class: something that needs looking into. */
+type Exception = {
+  status: "open" | "resolved";
+  reason: string;
+  raisedAt: string;
+  resolvedAt?: string | null;
+  resolution?: string | null;
+};
+type Reconciliation = {
+  overrides?: Record<string, Override>;
+  note?: string | null;
+  exceptions?: Record<string, Exception>;
+};
 
 type ExistingWorld = {
   classes: Array<{ id: string; name: string; authorized: number | null }>;
