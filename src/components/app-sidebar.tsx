@@ -106,6 +106,7 @@ const clientsAndMoneyItems: NavItem[] = [
   { title: "Clients and scope", url: "/admin/contracts", icon: Handshake },
   { title: "Pricing and agreements", url: "/admin/pricing", icon: ScrollText },
   { title: "Rate proposals", url: "/admin/rate-proposals", icon: Handshake },
+  { title: "Cap table requests", url: "/admin/cap-table-requests", icon: UserPlus },
   { title: "Cap table plans", url: "/admin/cap-table-plans", icon: Gauge },
   { title: "Client cap tables", url: "/admin/client-cap-tables", icon: Users },
 
