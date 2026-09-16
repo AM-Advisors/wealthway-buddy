@@ -60,7 +60,7 @@ function day(value?: string | null) {
   return new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" });
 }
 
-export function ManagerFundHome({ offeringId }: { offeringId: string }) {
+export function ManagerFundHome({ offeringId, embedded = false }: { offeringId: string; embedded?: boolean }) {
   const load = useServerFn(getManagerFundHome);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -148,8 +148,8 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
   ];
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className={embedded ? "" : "mx-auto max-w-6xl px-4 py-10"}>
+      {!embedded && <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Fund</p>
           <h1 className="mt-1 text-3xl">{fund.name}</h1>
@@ -163,7 +163,7 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         <Button asChild variant="outline" size="sm">
           <Link to="/manager">Back to your panel</Link>
         </Button>
-      </div>
+      </div>}
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Committed" value={money(totals.committedCents)} />
@@ -523,7 +523,7 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         <FundAgreementCard offeringId={offeringId} />
       </div>
 
-    </main>
+    </div>
   );
 }
 
