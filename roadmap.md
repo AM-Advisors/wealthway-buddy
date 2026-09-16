@@ -23,3 +23,18 @@
 
 - [x] Bank feed: connect the fund's real bank account so incoming wires are detected automatically and matched to investors
 - [x] Fund page button: email the offering packet link (with wire details) to a selected investor
+
+## Universal engagement architecture
+- [x] Entities + engagements data model, backfilled from existing funds and agreements
+- [ ] Entity register, entity page, engagement workspace (staff)
+- [ ] Configurable service catalogue (codes, categories, pricing model, entity types, scope, deliverables, exclusions, required info/docs, dependencies, workflows, owner, status)
+- [ ] Service packages (e.g. Fund Launch) that add/remove individual services
+- [ ] Commercial terms snapshot per engagement with pricing version; executed terms never change
+- [ ] Add / change / cancel a service via change orders, not new MSAs
+- [ ] Agreement types: MSA, service order/SOW, amendment, change order
+- [ ] Client review summary (what, cost, what changed, what to approve) + per-section approve / request change
+- [ ] Ready-to-approve signature screen with acknowledgements and locking
+- [ ] Client home: "Your Harmonious services" by entity + Add a service or entity
+- [ ] Universal request router (launch fund/SPV, add service, add entity, move to Harmonious, filing, transaction support, other)
+- [ ] Service delivery workflows instantiated automatically on execution
+- [ ] Harmonious services administration console (catalogue, packages, pricing versions, templates, change orders, approvals)
