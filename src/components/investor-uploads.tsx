@@ -91,7 +91,15 @@ export function InvestorUploads({ fundId }: { fundId?: string | null } = {}) {
       const path = `${uid}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
       const { error } = await supabase.storage.from("investor-uploads").upload(path, file);
       if (error) throw new Error(error.message);
-      await record({ data: { storage_path: path, file_name: file.name, doc_kind: kind as never, note } });
+      await record({
+        data: {
+          storage_path: path,
+          file_name: file.name,
+          doc_kind: kind as never,
+          note,
+          offering_id: targetFund,
+        },
+      });
       setNote("");
       toast.success("Document uploaded.");
       queryClient.invalidateQueries({ queryKey: ["investor-uploads"] });
