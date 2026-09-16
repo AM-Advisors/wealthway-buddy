@@ -164,7 +164,8 @@ function UploadCard({ companyId, onDone }: { companyId: string; onDone: () => vo
       const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const book = XLSX.read(buffer, { type: "array", cellDates: true });
-      const sheet = book.Sheets[book.SheetNames[0]];
+      const firstSheet = book.SheetNames[0];
+      const sheet = firstSheet ? book.Sheets[firstSheet] : undefined;
       if (!sheet) throw new Error("That file has no readable sheet.");
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: null, raw: false });
       if (rows.length === 0) throw new Error("That file has no rows under the headings.");

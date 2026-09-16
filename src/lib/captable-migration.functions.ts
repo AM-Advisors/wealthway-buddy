@@ -561,7 +561,6 @@ export const importCapMigration = createServerFn({ method: "POST" })
             name: mapped.holderName ?? "Unnamed shareholder",
             email: mapped.holderEmail,
             stakeholder_type: mapped.holderType,
-            created_by: userId,
           })
           .select("id")
           .single();
@@ -592,7 +591,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
         .insert({
           company_id: companyId,
           stakeholder_id: stakeholderId,
-          security_class_id: mapped.securityClass ? (classByName.get(norm(mapped.securityClass)) ?? null) : null,
+          class_id: mapped.securityClass ? (classByName.get(norm(mapped.securityClass)) ?? null) : null,
           security_type: mapped.securityType ?? "common_stock",
           label: mapped.label,
           quantity: mapped.quantity ?? 0,
@@ -602,7 +601,6 @@ export const importCapMigration = createServerFn({ method: "POST" })
           vesting_schedule_id: scheduleId,
           status: "outstanding",
           verification_status: "migrated",
-          created_by: userId,
         })
         .select("id")
         .single();
@@ -619,7 +617,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
         effective_date: mapped.issueDate ?? new Date().toISOString().slice(0, 10),
         status: "recorded",
         reason: "Imported from a prior cap table record",
-        metadata: { migration_id: data.migrationId, row_number: row.row_number } as any,
+        metadata: { migration_id: data.migrationId, row_number: row.row_number } as unknown as Record<string, never>,
         created_by: userId,
       });
 
