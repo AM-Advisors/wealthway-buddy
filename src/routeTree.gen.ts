@@ -144,6 +144,7 @@ import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/l
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
+import { Route as AuthenticatedAdminEngagementsEngagementIdRouteImport } from './routes/_authenticated/admin.engagements.$engagementId'
 import { Route as AuthenticatedAdminEntitiesIndexRouteImport } from './routes/_authenticated/admin.entities.index'
 import { Route as AuthenticatedAdminEntitiesEntityIdRouteImport } from './routes/_authenticated/admin.entities.$entityId'
 import { Route as AuthenticatedAdminFundBankingFundIdRouteImport } from './routes/_authenticated/admin.fund-banking.$fundId'
@@ -947,6 +948,12 @@ const AuthenticatedAdminContractsClientIdRoute =
     path: '/admin/contracts/$clientId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminEngagementsEngagementIdRoute =
+  AuthenticatedAdminEngagementsEngagementIdRouteImport.update({
+    id: '/admin/engagements/$engagementId',
+    path: '/admin/engagements/$engagementId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminEntitiesIndexRoute =
   AuthenticatedAdminEntitiesIndexRouteImport.update({
     id: '/admin/entities/',
@@ -1359,6 +1366,7 @@ export interface FileRoutesByFullPath {
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/admin/engagements/$engagementId': typeof AuthenticatedAdminEngagementsEngagementIdRoute
   '/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
   '/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
@@ -1538,6 +1546,7 @@ export interface FileRoutesByTo {
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/admin/engagements/$engagementId': typeof AuthenticatedAdminEngagementsEngagementIdRoute
   '/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
   '/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
@@ -1722,6 +1731,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/_authenticated/admin/engagements/$engagementId': typeof AuthenticatedAdminEngagementsEngagementIdRoute
   '/_authenticated/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
   '/_authenticated/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/_authenticated/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
@@ -1907,6 +1917,7 @@ export interface FileRouteTypes {
     | '/manager/'
     | '/ops/'
     | '/admin/contracts/$clientId'
+    | '/admin/engagements/$engagementId'
     | '/admin/entities/$entityId'
     | '/admin/fund-banking/$fundId'
     | '/admin/fund-migration/$fundId'
@@ -2086,6 +2097,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/ops'
     | '/admin/contracts/$clientId'
+    | '/admin/engagements/$engagementId'
     | '/admin/entities/$entityId'
     | '/admin/fund-banking/$fundId'
     | '/admin/fund-migration/$fundId'
@@ -2269,6 +2281,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/'
     | '/_authenticated/ops/'
     | '/_authenticated/admin/contracts/$clientId'
+    | '/_authenticated/admin/engagements/$engagementId'
     | '/_authenticated/admin/entities/$entityId'
     | '/_authenticated/admin/fund-banking/$fundId'
     | '/_authenticated/admin/fund-migration/$fundId'
@@ -3300,6 +3313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminContractsClientIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/engagements/$engagementId': {
+      id: '/_authenticated/admin/engagements/$engagementId'
+      path: '/admin/engagements/$engagementId'
+      fullPath: '/admin/engagements/$engagementId'
+      preLoaderRoute: typeof AuthenticatedAdminEngagementsEngagementIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/entities/': {
       id: '/_authenticated/admin/entities/'
       path: '/admin/entities'
@@ -3873,6 +3893,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedAdminContractsClientIdRoute: typeof AuthenticatedAdminContractsClientIdRoute
+  AuthenticatedAdminEngagementsEngagementIdRoute: typeof AuthenticatedAdminEngagementsEngagementIdRoute
   AuthenticatedAdminEntitiesEntityIdRoute: typeof AuthenticatedAdminEntitiesEntityIdRoute
   AuthenticatedAdminFundBankingFundIdRoute: typeof AuthenticatedAdminFundBankingFundIdRoute
   AuthenticatedAdminFundMigrationFundIdRoute: typeof AuthenticatedAdminFundMigrationFundIdRoute
@@ -4002,6 +4023,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
   AuthenticatedAdminContractsClientIdRoute:
     AuthenticatedAdminContractsClientIdRoute,
+  AuthenticatedAdminEngagementsEngagementIdRoute:
+    AuthenticatedAdminEngagementsEngagementIdRoute,
   AuthenticatedAdminEntitiesEntityIdRoute:
     AuthenticatedAdminEntitiesEntityIdRoute,
   AuthenticatedAdminFundBankingFundIdRoute:
