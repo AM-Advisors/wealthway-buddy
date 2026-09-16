@@ -295,6 +295,7 @@ function GrantCard({
                 : ""}
               {` · vests ${grant.schedule.frequency} over ${grant.schedule.durationMonths} months`}
             </p>
+            <VestingTable quantity={grant.quantity} schedule={grant.schedule} />
           </div>
         ) : null}
 
