@@ -15,6 +15,7 @@ export const CAP_TABLE_SECTIONS = [
   { to: "/client/cap-table/documents", label: "Documents" },
   { to: "/client/cap-table/reports", label: "Reports" },
   { to: "/client/cap-table/migration", label: "Migration" },
+  { to: "/client/cap-table/reconciliation", label: "Reconciliation" },
   { to: "/client/cap-table/settings", label: "Settings" },
 ] as const;
 
