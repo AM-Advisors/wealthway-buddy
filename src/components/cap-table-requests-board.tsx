@@ -57,7 +57,13 @@ export function CapTableRequestsBoard() {
   const query = useQuery({ queryKey: ["cap-table-leads"], queryFn: () => load() });
 
   const mutation = useMutation({
-    mutationFn: (input: Parameters<typeof updateCapTableLead>[0]["data"]) => save({ data: input }),
+    mutationFn: (input: {
+      id: string;
+      status?: "new" | "contacted" | "converted" | "declined";
+      internalNote?: string | null;
+      assignToMe?: boolean;
+      unassign?: boolean;
+    }) => save({ data: input }),
     onSuccess: () => {
       toast.success("Request updated.");
       void queryClient.invalidateQueries({ queryKey: ["cap-table-leads"] });
