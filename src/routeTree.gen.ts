@@ -33,6 +33,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticated/my-claims'
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
@@ -46,6 +47,7 @@ import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_aut
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
+import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -130,6 +132,7 @@ import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
+import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
@@ -144,6 +147,7 @@ import { Route as AuthenticatedClientCapTableIndexRouteImport } from './routes/_
 import { Route as AuthenticatedClientCapTableComplianceRouteImport } from './routes/_authenticated/client.cap-table.compliance'
 import { Route as AuthenticatedClientCapTableDocumentsRouteImport } from './routes/_authenticated/client.cap-table.documents'
 import { Route as AuthenticatedClientCapTableEmployeesRouteImport } from './routes/_authenticated/client.cap-table.employees'
+import { Route as AuthenticatedClientCapTableExposureRouteImport } from './routes/_authenticated/client.cap-table.exposure'
 import { Route as AuthenticatedClientCapTableFundraisingRouteImport } from './routes/_authenticated/client.cap-table.fundraising'
 import { Route as AuthenticatedClientCapTableInvestorsRouteImport } from './routes/_authenticated/client.cap-table.investors'
 import { Route as AuthenticatedClientCapTableMigrationRouteImport } from './routes/_authenticated/client.cap-table.migration'
@@ -284,6 +288,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMyClaimsRoute = AuthenticatedMyClaimsRouteImport.update({
+  id: '/my-claims',
+  path: '/my-claims',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMyEquityRoute = AuthenticatedMyEquityRouteImport.update({
   id: '/my-equity',
   path: '/my-equity',
@@ -351,6 +360,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
   path: '/register',
   getParentRoute: () => AuthRoute,
+} as any)
+const CapClaimTokenRoute = CapClaimTokenRouteImport.update({
+  id: '/cap-claim/$token',
+  path: '/cap-claim/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FundSlugRoute = FundSlugRouteImport.update({
   id: '/fund/$slug',
@@ -842,6 +856,11 @@ const AuthenticatedOpsTeamRoute = AuthenticatedOpsTeamRouteImport.update({
   path: '/ops/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
+  id: '/api/public/cap-claim',
+  path: '/api/public/cap-claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLoginAttemptRoute = ApiPublicLoginAttemptRouteImport.update({
   id: '/api/public/login-attempt',
   path: '/api/public/login-attempt',
@@ -922,6 +941,12 @@ const AuthenticatedClientCapTableEmployeesRoute =
   AuthenticatedClientCapTableEmployeesRouteImport.update({
     id: '/employees',
     path: '/employees',
+    getParentRoute: () => AuthenticatedClientCapTableRoute,
+  } as any)
+const AuthenticatedClientCapTableExposureRoute =
+  AuthenticatedClientCapTableExposureRouteImport.update({
+    id: '/exposure',
+    path: '/exposure',
     getParentRoute: () => AuthenticatedClientCapTableRoute,
   } as any)
 const AuthenticatedClientCapTableFundraisingRoute =
@@ -1058,6 +1083,7 @@ export interface FileRoutesByFullPath {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -1070,6 +1096,7 @@ export interface FileRoutesByFullPath {
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
@@ -1150,6 +1177,7 @@ export interface FileRoutesByFullPath {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1167,6 +1195,7 @@ export interface FileRoutesByFullPath {
   '/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
   '/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
+  '/client/cap-table/exposure': typeof AuthenticatedClientCapTableExposureRoute
   '/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
   '/client/cap-table/migration': typeof AuthenticatedClientCapTableMigrationRoute
@@ -1211,6 +1240,7 @@ export interface FileRoutesByTo {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
@@ -1223,6 +1253,7 @@ export interface FileRoutesByTo {
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
@@ -1302,6 +1333,7 @@ export interface FileRoutesByTo {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -1319,6 +1351,7 @@ export interface FileRoutesByTo {
   '/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
   '/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
+  '/client/cap-table/exposure': typeof AuthenticatedClientCapTableExposureRoute
   '/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
   '/client/cap-table/migration': typeof AuthenticatedClientCapTableMigrationRoute
@@ -1367,6 +1400,7 @@ export interface FileRoutesById {
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/my-claims': typeof AuthenticatedMyClaimsRoute
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
@@ -1379,6 +1413,7 @@ export interface FileRoutesById {
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
@@ -1459,6 +1494,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1476,6 +1512,7 @@ export interface FileRoutesById {
   '/_authenticated/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
   '/_authenticated/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/_authenticated/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
+  '/_authenticated/client/cap-table/exposure': typeof AuthenticatedClientCapTableExposureRoute
   '/_authenticated/client/cap-table/fundraising': typeof AuthenticatedClientCapTableFundraisingRoute
   '/_authenticated/client/cap-table/investors': typeof AuthenticatedClientCapTableInvestorsRoute
   '/_authenticated/client/cap-table/migration': typeof AuthenticatedClientCapTableMigrationRoute
@@ -1524,6 +1561,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
     | '/portal'
@@ -1536,6 +1574,7 @@ export interface FileRouteTypes {
     | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/cap-claim/$token'
     | '/fund/$slug'
     | '/shares/$token'
     | '/auth/'
@@ -1616,6 +1655,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/api/public/cap-claim'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin/'
@@ -1633,6 +1673,7 @@ export interface FileRouteTypes {
     | '/client/cap-table/compliance'
     | '/client/cap-table/documents'
     | '/client/cap-table/employees'
+    | '/client/cap-table/exposure'
     | '/client/cap-table/fundraising'
     | '/client/cap-table/investors'
     | '/client/cap-table/migration'
@@ -1677,6 +1718,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
     | '/portal'
@@ -1689,6 +1731,7 @@ export interface FileRouteTypes {
     | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/cap-claim/$token'
     | '/fund/$slug'
     | '/shares/$token'
     | '/auth'
@@ -1768,6 +1811,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/api/public/cap-claim'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin'
@@ -1785,6 +1829,7 @@ export interface FileRouteTypes {
     | '/client/cap-table/compliance'
     | '/client/cap-table/documents'
     | '/client/cap-table/employees'
+    | '/client/cap-table/exposure'
     | '/client/cap-table/fundraising'
     | '/client/cap-table/investors'
     | '/client/cap-table/migration'
@@ -1832,6 +1877,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fund-documents'
     | '/_authenticated/fund-memo'
     | '/_authenticated/home'
+    | '/_authenticated/my-claims'
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
@@ -1844,6 +1890,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/cap-claim/$token'
     | '/fund/$slug'
     | '/shares/$token'
     | '/auth/'
@@ -1924,6 +1971,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
+    | '/api/public/cap-claim'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
@@ -1941,6 +1989,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/cap-table/compliance'
     | '/_authenticated/client/cap-table/documents'
     | '/_authenticated/client/cap-table/employees'
+    | '/_authenticated/client/cap-table/exposure'
     | '/_authenticated/client/cap-table/fundraising'
     | '/_authenticated/client/cap-table/investors'
     | '/_authenticated/client/cap-table/migration'
@@ -1980,8 +2029,10 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SpvRoute: typeof SpvRoute
   TermsRoute: typeof TermsRoute
+  CapClaimTokenRoute: typeof CapClaimTokenRoute
   FundSlugRoute: typeof FundSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -2164,6 +2215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-claims': {
+      id: '/_authenticated/my-claims'
+      path: '/my-claims'
+      fullPath: '/my-claims'
+      preLoaderRoute: typeof AuthenticatedMyClaimsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/my-equity': {
       id: '/_authenticated/my-equity'
       path: '/my-equity'
@@ -2254,6 +2312,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/register'
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/cap-claim/$token': {
+      id: '/cap-claim/$token'
+      path: '/cap-claim/$token'
+      fullPath: '/cap-claim/$token'
+      preLoaderRoute: typeof CapClaimTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/fund/$slug': {
       id: '/fund/$slug'
@@ -2843,6 +2908,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cap-claim': {
+      id: '/api/public/cap-claim'
+      path: '/api/public/cap-claim'
+      fullPath: '/api/public/cap-claim'
+      preLoaderRoute: typeof ApiPublicCapClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/login-attempt': {
       id: '/api/public/login-attempt'
       path: '/api/public/login-attempt'
@@ -2939,6 +3011,13 @@ declare module '@tanstack/react-router' {
       path: '/employees'
       fullPath: '/client/cap-table/employees'
       preLoaderRoute: typeof AuthenticatedClientCapTableEmployeesRouteImport
+      parentRoute: typeof AuthenticatedClientCapTableRoute
+    }
+    '/_authenticated/client/cap-table/exposure': {
+      id: '/_authenticated/client/cap-table/exposure'
+      path: '/exposure'
+      fullPath: '/client/cap-table/exposure'
+      preLoaderRoute: typeof AuthenticatedClientCapTableExposureRouteImport
       parentRoute: typeof AuthenticatedClientCapTableRoute
     }
     '/_authenticated/client/cap-table/fundraising': {
@@ -3081,6 +3160,7 @@ interface AuthenticatedClientCapTableRouteChildren {
   AuthenticatedClientCapTableComplianceRoute: typeof AuthenticatedClientCapTableComplianceRoute
   AuthenticatedClientCapTableDocumentsRoute: typeof AuthenticatedClientCapTableDocumentsRoute
   AuthenticatedClientCapTableEmployeesRoute: typeof AuthenticatedClientCapTableEmployeesRoute
+  AuthenticatedClientCapTableExposureRoute: typeof AuthenticatedClientCapTableExposureRoute
   AuthenticatedClientCapTableFundraisingRoute: typeof AuthenticatedClientCapTableFundraisingRoute
   AuthenticatedClientCapTableInvestorsRoute: typeof AuthenticatedClientCapTableInvestorsRoute
   AuthenticatedClientCapTableMigrationRoute: typeof AuthenticatedClientCapTableMigrationRoute
@@ -3100,6 +3180,8 @@ const AuthenticatedClientCapTableRouteChildren: AuthenticatedClientCapTableRoute
       AuthenticatedClientCapTableDocumentsRoute,
     AuthenticatedClientCapTableEmployeesRoute:
       AuthenticatedClientCapTableEmployeesRoute,
+    AuthenticatedClientCapTableExposureRoute:
+      AuthenticatedClientCapTableExposureRoute,
     AuthenticatedClientCapTableFundraisingRoute:
       AuthenticatedClientCapTableFundraisingRoute,
     AuthenticatedClientCapTableInvestorsRoute:
@@ -3165,6 +3247,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedMyClaimsRoute: typeof AuthenticatedMyClaimsRoute
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
@@ -3270,6 +3353,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedMyClaimsRoute: AuthenticatedMyClaimsRoute,
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
@@ -3413,8 +3497,10 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SpvRoute: SpvRoute,
   TermsRoute: TermsRoute,
+  CapClaimTokenRoute: CapClaimTokenRoute,
   FundSlugRoute: FundSlugRoute,
   SharesTokenRoute: SharesTokenRoute,
+  ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,

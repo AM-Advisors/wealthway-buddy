@@ -10,6 +10,7 @@ export const CAP_TABLE_SECTIONS = [
   { to: "/client/cap-table/investors", label: "Investors" },
   { to: "/client/cap-table/fundraising", label: "Fundraising" },
   { to: "/client/cap-table/secondaries", label: "Secondaries" },
+  { to: "/client/cap-table/exposure", label: "Exposure" },
   { to: "/client/cap-table/compliance", label: "Compliance" },
   { to: "/client/cap-table/documents", label: "Documents" },
   { to: "/client/cap-table/reports", label: "Reports" },
