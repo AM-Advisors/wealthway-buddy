@@ -134,6 +134,9 @@ export function ApplicationChecklist({ taxClassification }: { taxClassification:
             <Button asChild size="sm" variant="outline">
               <Link to="/onboarding/accreditation">Accreditation</Link>
             </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/onboarding/compliance">KYC &amp; AML status</Link>
+            </Button>
           </div>
         </section>
 

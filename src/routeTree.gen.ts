@@ -128,6 +128,7 @@ import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_auth
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
+import { Route as AuthenticatedOnboardingComplianceRouteImport } from './routes/_authenticated/onboarding.compliance'
 import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_authenticated/onboarding.documents'
 import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_authenticated/onboarding.funding'
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
@@ -840,6 +841,12 @@ const AuthenticatedOnboardingAmlRoute =
     path: '/onboarding/aml',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOnboardingComplianceRoute =
+  AuthenticatedOnboardingComplianceRouteImport.update({
+    id: '/onboarding/compliance',
+    path: '/onboarding/compliance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingDocumentsRoute =
   AuthenticatedOnboardingDocumentsRouteImport.update({
     id: '/onboarding/documents',
@@ -1214,6 +1221,7 @@ export interface FileRoutesByFullPath {
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
+  '/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
@@ -1376,6 +1384,7 @@ export interface FileRoutesByTo {
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
+  '/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
@@ -1543,6 +1552,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
+  '/_authenticated/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/_authenticated/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
@@ -1710,6 +1720,7 @@ export interface FileRouteTypes {
     | '/manager/wires'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
+    | '/onboarding/compliance'
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
@@ -1872,6 +1883,7 @@ export interface FileRouteTypes {
     | '/manager/wires'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
+    | '/onboarding/compliance'
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
@@ -2038,6 +2050,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/wires'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
+    | '/_authenticated/onboarding/compliance'
     | '/_authenticated/onboarding/documents'
     | '/_authenticated/onboarding/funding'
     | '/_authenticated/onboarding/kyc'
@@ -2958,6 +2971,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingAmlRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/onboarding/compliance': {
+      id: '/_authenticated/onboarding/compliance'
+      path: '/onboarding/compliance'
+      fullPath: '/onboarding/compliance'
+      preLoaderRoute: typeof AuthenticatedOnboardingComplianceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/documents': {
       id: '/_authenticated/onboarding/documents'
       path: '/onboarding/documents'
@@ -3445,6 +3465,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
+  AuthenticatedOnboardingComplianceRoute: typeof AuthenticatedOnboardingComplianceRoute
   AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
   AuthenticatedOnboardingFundingRoute: typeof AuthenticatedOnboardingFundingRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
@@ -3565,6 +3586,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,
+  AuthenticatedOnboardingComplianceRoute:
+    AuthenticatedOnboardingComplianceRoute,
   AuthenticatedOnboardingDocumentsRoute: AuthenticatedOnboardingDocumentsRoute,
   AuthenticatedOnboardingFundingRoute: AuthenticatedOnboardingFundingRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
