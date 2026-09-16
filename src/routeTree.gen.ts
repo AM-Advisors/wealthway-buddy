@@ -60,6 +60,7 @@ import { Route as AuthenticatedAdminBankAccountsRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminCapTableRouteImport } from './routes/_authenticated/admin.cap-table'
 import { Route as AuthenticatedAdminCapTableBoardRouteImport } from './routes/_authenticated/admin.cap-table-board'
 import { Route as AuthenticatedAdminCapTablePlansRouteImport } from './routes/_authenticated/admin.cap-table-plans'
+import { Route as AuthenticatedAdminCapTableRequestsRouteImport } from './routes/_authenticated/admin.cap-table-requests'
 import { Route as AuthenticatedAdminClientActivityRouteImport } from './routes/_authenticated/admin.client-activity'
 import { Route as AuthenticatedAdminClientBankAccountsRouteImport } from './routes/_authenticated/admin.client-bank-accounts'
 import { Route as AuthenticatedAdminClientCapTablesRouteImport } from './routes/_authenticated/admin.client-cap-tables'
@@ -433,6 +434,12 @@ const AuthenticatedAdminCapTablePlansRoute =
   AuthenticatedAdminCapTablePlansRouteImport.update({
     id: '/admin/cap-table-plans',
     path: '/admin/cap-table-plans',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminCapTableRequestsRoute =
+  AuthenticatedAdminCapTableRequestsRouteImport.update({
+    id: '/admin/cap-table-requests',
+    path: '/admin/cap-table-requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminClientActivityRoute =
@@ -1122,6 +1129,7 @@ export interface FileRoutesByFullPath {
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
+  '/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
@@ -1281,6 +1289,7 @@ export interface FileRoutesByTo {
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
+  '/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
@@ -1443,6 +1452,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/_authenticated/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/_authenticated/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
+  '/_authenticated/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/_authenticated/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/_authenticated/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/_authenticated/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
@@ -1606,6 +1616,7 @@ export interface FileRouteTypes {
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/cap-table-plans'
+    | '/admin/cap-table-requests'
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
@@ -1765,6 +1776,7 @@ export interface FileRouteTypes {
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/cap-table-plans'
+    | '/admin/cap-table-requests'
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
@@ -1926,6 +1938,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cap-table'
     | '/_authenticated/admin/cap-table-board'
     | '/_authenticated/admin/cap-table-plans'
+    | '/_authenticated/admin/cap-table-requests'
     | '/_authenticated/admin/client-activity'
     | '/_authenticated/admin/client-bank-accounts'
     | '/_authenticated/admin/client-cap-tables'
@@ -2429,6 +2442,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/cap-table-plans'
       fullPath: '/admin/cap-table-plans'
       preLoaderRoute: typeof AuthenticatedAdminCapTablePlansRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/cap-table-requests': {
+      id: '/_authenticated/admin/cap-table-requests'
+      path: '/admin/cap-table-requests'
+      fullPath: '/admin/cap-table-requests'
+      preLoaderRoute: typeof AuthenticatedAdminCapTableRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/client-activity': {
@@ -3307,6 +3327,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminCapTableRoute: typeof AuthenticatedAdminCapTableRoute
   AuthenticatedAdminCapTableBoardRoute: typeof AuthenticatedAdminCapTableBoardRoute
   AuthenticatedAdminCapTablePlansRoute: typeof AuthenticatedAdminCapTablePlansRoute
+  AuthenticatedAdminCapTableRequestsRoute: typeof AuthenticatedAdminCapTableRequestsRoute
   AuthenticatedAdminClientActivityRoute: typeof AuthenticatedAdminClientActivityRoute
   AuthenticatedAdminClientBankAccountsRoute: typeof AuthenticatedAdminClientBankAccountsRoute
   AuthenticatedAdminClientCapTablesRoute: typeof AuthenticatedAdminClientCapTablesRoute
@@ -3413,6 +3434,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminCapTableRoute: AuthenticatedAdminCapTableRoute,
   AuthenticatedAdminCapTableBoardRoute: AuthenticatedAdminCapTableBoardRoute,
   AuthenticatedAdminCapTablePlansRoute: AuthenticatedAdminCapTablePlansRoute,
+  AuthenticatedAdminCapTableRequestsRoute:
+    AuthenticatedAdminCapTableRequestsRoute,
   AuthenticatedAdminClientActivityRoute: AuthenticatedAdminClientActivityRoute,
   AuthenticatedAdminClientBankAccountsRoute:
     AuthenticatedAdminClientBankAccountsRoute,
