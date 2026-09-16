@@ -29,7 +29,7 @@ export const SOW_SECTION_ORDER: { key: SowSectionKey; no: string; title: string 
 export type FundFacts = {
   clientName: string;
   fundName: string;
-  entityType?: string | null;
+  entityType?: string | null | undefined;
   jurisdiction?: string | null;
   fundType?: string | null;
   targetRaiseCents?: number | null;
