@@ -419,6 +419,13 @@ export const getCapMigrations = createServerFn({ method: "GET" })
           notes: (b.notes as string | null) ?? null,
           conciergeRequestedAt: (b.concierge_requested_at as string | null) ?? null,
           conciergeNote: (b.concierge_note as string | null) ?? null,
+          overageReason: (b.overage_reason as string | null) ?? null,
+          reconciliation: (b.reconciliation ?? null) as Reconciliation | null,
+          summary: buildSummary(
+            mine.map((r) => ({ mapped: (r.mapped ?? {}) as MappedRow, status: r.status as string })),
+            world,
+            (b.reconciliation ?? null) as Reconciliation | null,
+          ),
           importedAt: (b.imported_at as string | null) ?? null,
           createdAt: b.created_at as string,
           counts: {
