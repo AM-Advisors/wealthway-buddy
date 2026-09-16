@@ -18,7 +18,7 @@ import {
 import { importCapMigration } from "@/lib/captable-migration.functions";
 import { MigrationWizard } from "./migration-wizard";
 import { InvestorOnboarding } from "./investor-onboarding";
-import { StaffMigrationIntake } from "./staff-migration-intake";
+import { MigrationAssistant } from "./migration-assistant";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,7 +100,7 @@ function Queue({ onOpen }: { onOpen: (id: string) => void }) {
         <Tally label="With the founder" value={numFmt(waiting.length)} />
       </div>
 
-      <StaffMigrationIntake onStarted={onOpen} />
+      <MigrationAssistant onStarted={onOpen} />
 
       {cases.length === 0 ? (
         <Card>
