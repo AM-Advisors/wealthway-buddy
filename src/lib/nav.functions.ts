@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { activeApplicationId } from "@/lib/active-application";
 
 export type NavStep = {
-  key: "kyc" | "aml" | "accreditation" | "documents" | "funding";
+  key: "compliance" | "accreditation";
   label: string;
   state: "done" | "current" | "todo";
 };
@@ -33,21 +33,30 @@ export const getNavState = createServerFn({ method: "GET" })
 
     const done = (value: string | null) => value === "approved" || value === "settled";
     const raw: { key: NavStep["key"]; label: string; finished: boolean }[] = [
-      { key: "kyc", label: "Identity", finished: done(application.kyc_status) },
-      { key: "aml", label: "Screening", finished: done(application.aml_status) },
+      {
+        key: "compliance",
+        label: "KYC / AML",
+        finished: done(application.kyc_status) && done(application.aml_status),
+      },
       {
         key: "accreditation",
         label: "Accreditation",
         finished: done(application.accreditation_status),
       },
-      { key: "documents", label: "Documents", finished: done(application.documents_status) },
-      { key: "funding", label: "Funding", finished: done(application.funding_status) },
     ];
 
     const steps: NavStep[] = raw.map((s) => ({
       key: s.key,
       label: s.label,
-      state: s.finished ? "done" : application.current_step === s.key ? "current" : "todo",
+      state: s.finished
+        ? "done"
+        : s.key === "compliance"
+          ? application.current_step === "kyc" || application.current_step === "aml"
+            ? "current"
+            : "todo"
+          : application.current_step === s.key
+            ? "current"
+            : "todo",
     }));
 
     return {

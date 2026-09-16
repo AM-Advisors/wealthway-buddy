@@ -74,7 +74,6 @@ type NavGroup = { id: string; label: string; items: NavItem[] };
 const investorItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Documents", url: "/documents", icon: FileText },
-  { title: "KYC & AML", url: "/onboarding/compliance", icon: BadgeCheck },
   { title: "Fund documents", url: "/fund-documents", icon: FolderLock },
   { title: "Document vault", url: "/vault", icon: FileSignature },
   { title: "Wire instructions", url: "/wire", icon: Landmark },
@@ -148,6 +147,11 @@ const capTableStaffItems: NavItem[] = [
   { title: "Migration concierge", url: "/admin/cap-table-migrations", icon: ScrollText },
 ];
 
+const onboardingItems: NavItem[] = [
+  { title: "KYC / AML", url: "/onboarding/compliance", icon: BadgeCheck },
+  { title: "Accreditation", url: "/onboarding/accreditation", icon: FileSignature },
+];
+
 const applicationsAndFundsItems: NavItem[] = [
   { title: "Applications", url: "/admin", icon: ClipboardList, badge: "applications" },
   { title: "New application", url: "/admin/new-application", icon: UserPlus },
@@ -166,16 +170,6 @@ const recordsItems: NavItem[] = [
   { title: "Security", url: "/admin/security", icon: ShieldCheck },
   { title: "Email preview", url: "/admin/email-preview", icon: Mail },
 ];
-
-/**
- * Onboarding is identity and eligibility only. Signing and funding now belong
- * to the fund the person chooses to invest in, so they are not listed here.
- */
-const stepRoutes: Record<string, string> = {
-  kyc: "/onboarding/kyc",
-  aml: "/onboarding/aml",
-  accreditation: "/onboarding/accreditation",
-};
 
 const OPEN_GROUPS_KEY = "harmonious.sidebar.openGroups";
 
@@ -247,14 +241,19 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const groups: NavGroup[] = useMemo(() => {
     const list: NavGroup[] = [{ id: "application", label: "Your application", items: investorItems }];
-    list.push({ id: "cap-table", label: "Cap table", items: capTableFounderItems });
+    list.push({
+      id: "cap-table",
+      label: "CapTable",
+      items: adminAccess?.isAdmin
+        ? [...capTableFounderItems, ...capTableStaffItems]
+        : capTableFounderItems,
+    });
     if (adminAccess?.isReviewer)
       list.push({ id: "funds", label: "Fund management", items: managerItems });
     if (operations?.allowed)
       list.push({ id: "operations", label: "Operations", items: operationsItems });
     if (adminAccess?.isAdmin) {
       list.push(
-        { id: "cap-table-staff", label: "Cap table (clients)", items: capTableStaffItems },
         { id: "clients-money", label: "Clients and money", items: clientsAndMoneyItems },
         { id: "applications-funds", label: "Applications and funds", items: applicationsAndFundsItems },
         { id: "records", label: "Records and oversight", items: recordsItems },
@@ -397,47 +396,73 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         )}
 
         {showOnboarding && !search && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Onboarding</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {(nav?.steps ?? [])
-                  .filter((step) => stepRoutes[step.key])
-                  .map((step, index) => {
-                  const url = stepRoutes[step.key];
-                  return (
-                    <SidebarMenuItem key={step.key}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === url}
-                        tooltip={`${index + 1}. ${step.label}`}
-                      >
-                        <Link to={url as never} className="flex items-center gap-2">
-                          {step.state === "done" ? (
-                            <Check className="h-4 w-4 text-primary" />
-                          ) : step.state === "current" ? (
-                            <FileSignature className="h-4 w-4 text-primary" />
-                          ) : (
-                            <CircleDashed className="h-4 w-4 text-muted-foreground" />
-                          )}
-                          {!collapsed && (
-                            <span
-                              className={cn(
-                                step.state === "todo" && "text-muted-foreground",
-                                step.state === "current" && "font-medium",
+          <Collapsible
+            open={
+              collapsed ||
+              pathname.startsWith("/onboarding/") ||
+              (hydrated ? (openGroups["onboarding"] ?? true) : true)
+            }
+            onOpenChange={(next) => setGroupOpen("onboarding", next)}
+            className="group/collapsible"
+          >
+            <SidebarGroup>
+              {!collapsed && (
+                <CollapsibleTrigger asChild>
+                  <SidebarGroupLabel className="flex w-full cursor-pointer items-center justify-between hover:text-sidebar-foreground">
+                    <span>Onboarding</span>
+                    <ChevronRight
+                      className={cn(
+                        "h-4 w-4 transition-transform",
+                        (pathname.startsWith("/onboarding/") ||
+                          (hydrated ? (openGroups["onboarding"] ?? true) : true)) &&
+                          "rotate-90",
+                      )}
+                      aria-hidden
+                    />
+                  </SidebarGroupLabel>
+                </CollapsibleTrigger>
+              )}
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {onboardingItems.map((item, index) => {
+                      const step = nav?.steps[index];
+                      const count = index + 1;
+                      return (
+                        <SidebarMenuItem key={item.url}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive(item.url)}
+                            tooltip={`${count}. ${item.title}`}
+                          >
+                            <Link to={item.url as never} className="flex items-center gap-2">
+                              {step?.state === "done" ? (
+                                <Check className="h-4 w-4 text-primary" />
+                              ) : step?.state === "current" ? (
+                                <item.icon className="h-4 w-4 text-primary" />
+                              ) : (
+                                <CircleDashed className="h-4 w-4 text-muted-foreground" />
                               )}
-                            >
-                              {index + 1}. {step.label}
-                            </span>
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                              {!collapsed && (
+                                <span
+                                  className={cn(
+                                    step?.state === "todo" && "text-muted-foreground",
+                                    step?.state === "current" && "font-medium",
+                                  )}
+                                >
+                                  {count}. {item.title}
+                                </span>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
         )}
 
         {groups.map(renderGroup)}
