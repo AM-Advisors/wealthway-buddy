@@ -18,6 +18,7 @@ import {
 import { importCapMigration } from "@/lib/captable-migration.functions";
 import { MigrationWizard } from "./migration-wizard";
 import { InvestorOnboarding } from "./investor-onboarding";
+import { StaffMigrationIntake } from "./staff-migration-intake";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,12 +100,15 @@ function Queue({ onOpen }: { onOpen: (id: string) => void }) {
         <Tally label="With the founder" value={numFmt(waiting.length)} />
       </div>
 
+      <StaffMigrationIntake onStarted={onOpen} />
+
       {cases.length === 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Nothing in the queue</CardTitle>
             <CardDescription>
-              Cases appear here as soon as a founder asks us to prepare their cap table file.
+              Cases appear as soon as a founder hands us a file, or as soon as you upload a
+              client's export above.
             </CardDescription>
           </CardHeader>
         </Card>

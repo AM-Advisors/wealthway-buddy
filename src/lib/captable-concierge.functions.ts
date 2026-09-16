@@ -761,3 +761,152 @@ export const sendForFounderReview = createServerFn({ method: "POST" })
     });
     return { ok: true, summary };
   });
+
+/* --------------------------------------------- staff-run migrations (real files) */
+
+/**
+ * Companies a specialist can start a real migration for. The demo company is
+ * excluded deliberately: sample data never mixes with a client's own record.
+ */
+export const getConciergeCompanies = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSpecialist(context);
+    const { supabase } = context;
+    const { data: companies } = await supabase
+      .from("ct_companies")
+      .select("id, name, legal_name, client_id, is_demo")
+      .eq("is_demo", false)
+      .order("name");
+
+    const list = (companies ?? []) as any[];
+    const clientIds = Array.from(
+      new Set(list.map((c) => c.client_id).filter(Boolean) as string[]),
+    );
+    const { data: clients } = clientIds.length
+      ? await supabase.from("clients").select("id, legal_name").in("id", clientIds)
+      : { data: [] as any[] };
+    const clientName = new Map(
+      ((clients ?? []) as any[]).map((c) => [String(c.id), (c.legal_name as string) ?? ""]),
+    );
+
+    return {
+      companies: list.map((c) => ({
+        id: c.id as string,
+        name: (c.name as string) ?? "Company",
+        legalName: (c.legal_name as string | null) ?? null,
+        client: c.client_id ? (clientName.get(String(c.client_id)) || null) : null,
+      })),
+    };
+  });
+
+/**
+ * A specialist brings a client's actual Carta, Pulley, AngelList or spreadsheet
+ * export in on their behalf. It creates the same reviewable batch a founder
+ * upload creates — real rows, real column mapping, real reconciliation — and
+ * opens a concierge case against it, assigned to whoever uploaded it.
+ *
+ * Nothing is recorded on the cap table here: the founder still approves the
+ * prepared batch before it goes live.
+ */
+export const startStaffMigration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        companyId: z.string().uuid(),
+        fileName: z.string().trim().max(240).optional().nullable(),
+        headers: z.array(z.string()).min(1),
+        rows: z.array(z.record(z.string(), z.any())).min(1).max(5000),
+        note: z.string().trim().max(2000).optional().nullable(),
+        contactName: z.string().trim().max(160).optional().nullable(),
+        contactEmail: z.string().trim().email().max(255).optional().nullable(),
+        priority: z.enum(["standard", "urgent"]).default("standard"),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSpecialist(context);
+    const { supabase, userId } = context;
+
+    const { data: company } = await supabase
+      .from("ct_companies")
+      .select("id, name, is_demo")
+      .eq("id", data.companyId)
+      .maybeSingle();
+    if (!company) throw new Error("That company could not be found.");
+    if (company.is_demo) {
+      throw new Error("The demo company is read-only. Choose a real client company.");
+    }
+
+    const { detectProvider, autoMap, writeRows } = await import("./captable-migration.functions");
+    const provider = detectProvider(data.headers);
+    const mapping = autoMap(data.headers);
+
+    const { data: batch, error } = await supabase
+      .from("ct_migrations")
+      .insert({
+        company_id: data.companyId,
+        file_name: data.fileName || null,
+        detected_provider: provider.label,
+        source_provider: provider.id,
+        status: "in_review",
+        mapping,
+        headers: data.headers,
+        row_count: data.rows.length,
+        concierge_requested_at: new Date().toISOString(),
+        concierge_note: data.note || null,
+        created_by: userId,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    const migrationId = batch.id as string;
+    try {
+      await writeRows(context, data.companyId, migrationId, data.rows, mapping);
+    } catch (err) {
+      await supabase.from("ct_migration_rows").delete().eq("migration_id", migrationId);
+      await supabase.from("ct_migrations").delete().eq("id", migrationId);
+      throw err;
+    }
+
+    const now = new Date().toISOString();
+    const { data: created, error: caseError } = await supabase
+      .from("ct_concierge_cases")
+      .insert({
+        migration_id: migrationId,
+        company_id: data.companyId,
+        stage: "preparing",
+        priority: data.priority,
+        founder_note: data.note || null,
+        contact_name: data.contactName || null,
+        contact_email: data.contactEmail || null,
+        assigned_to: userId,
+        assigned_at: now,
+        created_by: userId,
+      })
+      .select("id")
+      .single();
+    if (caseError) throw new Error(caseError.message);
+
+    await recordEvent(context, {
+      companyId: data.companyId,
+      action: "migration.uploaded_by_harmonious",
+      entityId: migrationId,
+      next: { file: data.fileName, provider: provider.label, rows: data.rows.length },
+      reason: data.note || "Harmonious brought the client's export in on their behalf",
+    });
+
+    await notifyFounder(context, data.companyId, {
+      headline: "We have started your cap table migration",
+      intro: `We have read your ${provider.label} export and started preparing it. Nothing is recorded until you approve it.`,
+      details: [
+        { label: "File", value: data.fileName || "Cap table export" },
+        { label: "Lines read", value: String(data.rows.length) },
+      ],
+      eventKey: `cap-concierge-staff-start:${created.id}`,
+    });
+
+    return { caseId: created.id as string, migrationId, provider: provider.label };
+  });
