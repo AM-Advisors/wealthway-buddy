@@ -11,7 +11,21 @@ export const ENTITY_TYPES = [
   { value: "series", label: "Series" },
   { value: "gp", label: "GP" },
   { value: "management_company", label: "Management company" },
+  { value: "issuer", label: "Issuer" },
+  { value: "investment_vehicle", label: "Investment vehicle" },
   { value: "other", label: "Other entity" },
+] as const;
+
+export const ENTITY_TYPE_VALUES = [
+  "company",
+  "fund",
+  "spv",
+  "series",
+  "gp",
+  "management_company",
+  "issuer",
+  "investment_vehicle",
+  "other",
 ] as const;
 
 export const ENTITY_STATUSES = [
