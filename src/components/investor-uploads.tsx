@@ -24,7 +24,11 @@ function kindLabel(value: string) {
   return UPLOAD_KINDS.find((k) => k.value === value)?.label ?? value.replace(/_/g, " ");
 }
 
-export function InvestorUploads() {
+/**
+ * When `fundId` is given the card only shows — and only files — paperwork for
+ * that fund. Without it the person picks the fund themselves.
+ */
+export function InvestorUploads({ fundId }: { fundId?: string | null } = {}) {
   const queryClient = useQueryClient();
   const list = useServerFn(listMyUploads);
   const record = useServerFn(recordMyUpload);
@@ -35,13 +39,17 @@ export function InvestorUploads() {
   const [kind, setKind] = useState<string>(UPLOAD_KINDS[0].value);
   const [note, setNote] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [chosenFund, setChosenFund] = useState<string>("");
 
+  const queryKey = ["investor-uploads", fundId ?? "all"];
   const { data, isLoading } = useQuery({
-    queryKey: ["investor-uploads"],
-    queryFn: () => list(),
+    queryKey,
+    queryFn: () => list({ data: { fundId: fundId ?? null } }),
   });
 
   const uploads: InvestorUploadRow[] = (data as any)?.uploads ?? [];
+  const funds: { id: string; name: string }[] = (data as any)?.funds ?? [];
+  const targetFund = fundId ?? (chosenFund || funds[0]?.id) ?? null;
 
   const openMutation = useMutation({
     mutationFn: (id: string) => openUrl({ data: { id } }),
