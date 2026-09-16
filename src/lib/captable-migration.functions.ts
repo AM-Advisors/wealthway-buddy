@@ -530,6 +530,19 @@ export const importCapMigration = createServerFn({ method: "POST" })
     const companyId = batch.company_id as string;
     await assertManage(context, companyId);
 
+    // When Harmonious prepared this batch for the founder, nothing is recorded
+    // until the founder has approved what we prepared.
+    const { data: conciergeCase } = await supabase
+      .from("ct_concierge_cases")
+      .select("id, review_status, stage")
+      .eq("migration_id", data.migrationId)
+      .maybeSingle();
+    if (conciergeCase && conciergeCase.review_status !== "approved") {
+      throw new Error(
+        "Harmonious is preparing this batch. It can only be recorded once the founder has approved it.",
+      );
+    }
+
     const { data: rows } = await supabase
       .from("ct_migration_rows")
       .select("*")
