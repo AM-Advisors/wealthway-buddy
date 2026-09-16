@@ -462,8 +462,8 @@ export const getConciergeCase = createServerFn({ method: "POST" })
           (migration?.source_provider as string | null) ??
           "Spreadsheet",
         status: (migration?.status as string) ?? "mapped",
-        headers: ((migration?.headers ?? []) as string[]) ?? [],
-        mapping: ((migration?.mapping ?? {}) as Record<string, string | null>) ?? {},
+        headers: (migration?.headers ?? []) as string[],
+        mapping: (migration?.mapping ?? {}) as Record<string, string | null>,
       },
       stakeholders: ((stakeholders ?? []) as any[]).map((s) => ({
         id: s.id as string,
@@ -474,7 +474,7 @@ export const getConciergeCase = createServerFn({ method: "POST" })
         id: r.id as string,
         rowNumber: Number(r.row_number ?? 0),
         raw: (r.raw ?? {}) as Record<string, string | null>,
-        mapped: (r.mapped ?? {}) as Record<string, unknown>,
+        mapped: (r.mapped ?? {}) as Record<string, string | number | null>,
         issues: (r.issues ?? []) as string[],
         matchStakeholderId: (r.match_stakeholder_id as string | null) ?? null,
         status: r.status as string,
@@ -517,7 +517,7 @@ export const assignConciergeCase = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const row = await loadCase(context, data.caseId);
 
-    const patch: Record<string, unknown> = {};
+    const patch: Record<string, string | null> = {};
     if (data.assignToMe) {
       patch['assigned_to'] = userId;
       patch['assigned_at'] = new Date().toISOString();

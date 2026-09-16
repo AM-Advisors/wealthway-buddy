@@ -199,8 +199,10 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
   const sender = run(send, "Sent to the founder for review.");
   const recorder = run(record, "Recorded onto the company's cap table.");
 
+  const loaded = data as Awaited<ReturnType<typeof getConciergeCase>> | undefined;
+
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading the case…</p>;
-  if (error || !data) {
+  if (error || !loaded) {
     return (
       <Card role="alert" className="border-destructive/40">
         <CardHeader>
@@ -213,8 +215,8 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
     );
   }
 
-  const kase = data.case;
-  const mine = kase.assignedTo === data.userId;
+  const kase = loaded.case;
+  const mine = kase.assignedTo === loaded.userId;
   const approved = kase.reviewStatus === "approved";
 
   return (
@@ -224,10 +226,10 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
           <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 mb-1">
             ← Back to the queue
           </Button>
-          <h2 className="text-xl font-semibold tracking-tight">{data.company.name}</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{loaded.company.name}</h2>
           <p className="text-sm text-muted-foreground">
-            {data.migration.fileName ?? "Uploaded file"} · {data.migration.provider} ·{" "}
-            {numFmt(data.counts.total)} lines · handed over {dateFmt(kase.createdAt)}
+            {loaded.migration.fileName ?? "Uploaded file"} · {loaded.migration.provider} ·{" "}
+            {numFmt(loaded.counts.total)} lines · handed over {dateFmt(kase.createdAt)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -246,10 +248,10 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Tally label="Ready" value={numFmt(data.counts.ready)} />
-        <Tally label="Need attention" value={numFmt(data.counts.error)} />
-        <Tally label="Matched holders" value={numFmt(data.counts.matched)} />
-        <Tally label="Shares in file" value={numFmt(data.counts.shares)} />
+        <Tally label="Ready" value={numFmt(loaded.counts.ready)} />
+        <Tally label="Need attention" value={numFmt(loaded.counts.error)} />
+        <Tally label="Matched holders" value={numFmt(loaded.counts.matched)} />
+        <Tally label="Shares in file" value={numFmt(loaded.counts.shares)} />
       </div>
 
       <Card>
@@ -302,7 +304,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
           <div className="flex flex-wrap gap-2 border-t pt-4">
             <Button
               onClick={() => sender.mutate({ caseId })}
-              disabled={kase.stage === "recorded" || data.counts.ready === 0}
+              disabled={kase.stage === "recorded" || loaded.counts.ready === 0}
             >
               Send for founder review
             </Button>
@@ -365,11 +367,11 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
             </Button>
           </div>
 
-          {data.exceptions.length === 0 ? (
+          {loaded.exceptions.length === 0 ? (
             <p className="text-sm text-muted-foreground">No questions raised yet.</p>
           ) : (
             <ul className="space-y-2">
-              {data.exceptions.map((item) => (
+              {loaded.exceptions.map((item) => (
                 <li key={item.id} className="rounded-lg border p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-medium">{item.question}</p>
@@ -427,7 +429,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
             Save note
           </Button>
           <ul className="space-y-2">
-            {data.notes.map((item) => (
+            {loaded.notes.map((item) => (
               <li key={item.id} className="rounded-lg border p-3 text-sm">
                 <p>{item.body}</p>
                 <p className="text-xs text-muted-foreground">
@@ -457,9 +459,9 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.rows.slice(0, 100).map((row) => {
+              {loaded.rows.slice(0, 100).map((row) => {
                 const mapped = row.mapped as Record<string, unknown>;
-                const match = data.stakeholders.find((s) => s.id === row.matchStakeholderId);
+                const match = loaded.stakeholders.find((s) => s.id === row.matchStakeholderId);
                 return (
                   <TableRow key={row.id}>
                     <TableCell>{row.rowNumber}</TableCell>

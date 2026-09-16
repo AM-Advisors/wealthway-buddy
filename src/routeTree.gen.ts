@@ -59,6 +59,7 @@ import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminBankAccountsRouteImport } from './routes/_authenticated/admin.bank-accounts'
 import { Route as AuthenticatedAdminCapTableRouteImport } from './routes/_authenticated/admin.cap-table'
 import { Route as AuthenticatedAdminCapTableBoardRouteImport } from './routes/_authenticated/admin.cap-table-board'
+import { Route as AuthenticatedAdminCapTableMigrationsRouteImport } from './routes/_authenticated/admin.cap-table-migrations'
 import { Route as AuthenticatedAdminCapTablePlansRouteImport } from './routes/_authenticated/admin.cap-table-plans'
 import { Route as AuthenticatedAdminCapTableRequestsRouteImport } from './routes/_authenticated/admin.cap-table-requests'
 import { Route as AuthenticatedAdminClientActivityRouteImport } from './routes/_authenticated/admin.client-activity'
@@ -428,6 +429,12 @@ const AuthenticatedAdminCapTableBoardRoute =
   AuthenticatedAdminCapTableBoardRouteImport.update({
     id: '/admin/cap-table-board',
     path: '/admin/cap-table-board',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminCapTableMigrationsRoute =
+  AuthenticatedAdminCapTableMigrationsRouteImport.update({
+    id: '/admin/cap-table-migrations',
+    path: '/admin/cap-table-migrations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminCapTablePlansRoute =
@@ -1128,6 +1135,7 @@ export interface FileRoutesByFullPath {
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
+  '/admin/cap-table-migrations': typeof AuthenticatedAdminCapTableMigrationsRoute
   '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
   '/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
@@ -1288,6 +1296,7 @@ export interface FileRoutesByTo {
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
+  '/admin/cap-table-migrations': typeof AuthenticatedAdminCapTableMigrationsRoute
   '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
   '/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
@@ -1451,6 +1460,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
   '/_authenticated/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/_authenticated/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
+  '/_authenticated/admin/cap-table-migrations': typeof AuthenticatedAdminCapTableMigrationsRoute
   '/_authenticated/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
   '/_authenticated/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/_authenticated/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
@@ -1615,6 +1625,7 @@ export interface FileRouteTypes {
     | '/admin/bank-accounts'
     | '/admin/cap-table'
     | '/admin/cap-table-board'
+    | '/admin/cap-table-migrations'
     | '/admin/cap-table-plans'
     | '/admin/cap-table-requests'
     | '/admin/client-activity'
@@ -1775,6 +1786,7 @@ export interface FileRouteTypes {
     | '/admin/bank-accounts'
     | '/admin/cap-table'
     | '/admin/cap-table-board'
+    | '/admin/cap-table-migrations'
     | '/admin/cap-table-plans'
     | '/admin/cap-table-requests'
     | '/admin/client-activity'
@@ -1937,6 +1949,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/bank-accounts'
     | '/_authenticated/admin/cap-table'
     | '/_authenticated/admin/cap-table-board'
+    | '/_authenticated/admin/cap-table-migrations'
     | '/_authenticated/admin/cap-table-plans'
     | '/_authenticated/admin/cap-table-requests'
     | '/_authenticated/admin/client-activity'
@@ -2435,6 +2448,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/cap-table-board'
       fullPath: '/admin/cap-table-board'
       preLoaderRoute: typeof AuthenticatedAdminCapTableBoardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/cap-table-migrations': {
+      id: '/_authenticated/admin/cap-table-migrations'
+      path: '/admin/cap-table-migrations'
+      fullPath: '/admin/cap-table-migrations'
+      preLoaderRoute: typeof AuthenticatedAdminCapTableMigrationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/cap-table-plans': {
@@ -3326,6 +3346,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminBankAccountsRoute: typeof AuthenticatedAdminBankAccountsRoute
   AuthenticatedAdminCapTableRoute: typeof AuthenticatedAdminCapTableRoute
   AuthenticatedAdminCapTableBoardRoute: typeof AuthenticatedAdminCapTableBoardRoute
+  AuthenticatedAdminCapTableMigrationsRoute: typeof AuthenticatedAdminCapTableMigrationsRoute
   AuthenticatedAdminCapTablePlansRoute: typeof AuthenticatedAdminCapTablePlansRoute
   AuthenticatedAdminCapTableRequestsRoute: typeof AuthenticatedAdminCapTableRequestsRoute
   AuthenticatedAdminClientActivityRoute: typeof AuthenticatedAdminClientActivityRoute
@@ -3433,6 +3454,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminBankAccountsRoute: AuthenticatedAdminBankAccountsRoute,
   AuthenticatedAdminCapTableRoute: AuthenticatedAdminCapTableRoute,
   AuthenticatedAdminCapTableBoardRoute: AuthenticatedAdminCapTableBoardRoute,
+  AuthenticatedAdminCapTableMigrationsRoute:
+    AuthenticatedAdminCapTableMigrationsRoute,
   AuthenticatedAdminCapTablePlansRoute: AuthenticatedAdminCapTablePlansRoute,
   AuthenticatedAdminCapTableRequestsRoute:
     AuthenticatedAdminCapTableRequestsRoute,
