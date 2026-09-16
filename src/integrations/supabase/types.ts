@@ -2389,6 +2389,150 @@ export type Database = {
           },
         ]
       }
+      ct_secondary_transfers: {
+        Row: {
+          amount: number | null
+          buyer_email: string | null
+          buyer_name: string | null
+          buyer_security_id: string | null
+          buyer_stakeholder_id: string | null
+          buyer_type: string | null
+          closed_at: string | null
+          closing_date: string | null
+          company_id: string
+          consent_decided_at: string | null
+          consent_decided_by: string | null
+          consent_note: string | null
+          consent_status: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          price_per_share: number | null
+          quantity: number
+          requested_on: string | null
+          restriction_note: string | null
+          restriction_reviewed_at: string | null
+          restriction_reviewed_by: string | null
+          restriction_status: string
+          rofr_deadline: string | null
+          rofr_decided_at: string | null
+          rofr_decided_by: string | null
+          rofr_note: string | null
+          rofr_status: string
+          security_id: string | null
+          seller_stakeholder_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_security_id?: string | null
+          buyer_stakeholder_id?: string | null
+          buyer_type?: string | null
+          closed_at?: string | null
+          closing_date?: string | null
+          company_id: string
+          consent_decided_at?: string | null
+          consent_decided_by?: string | null
+          consent_note?: string | null
+          consent_status?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          price_per_share?: number | null
+          quantity?: number
+          requested_on?: string | null
+          restriction_note?: string | null
+          restriction_reviewed_at?: string | null
+          restriction_reviewed_by?: string | null
+          restriction_status?: string
+          rofr_deadline?: string | null
+          rofr_decided_at?: string | null
+          rofr_decided_by?: string | null
+          rofr_note?: string | null
+          rofr_status?: string
+          security_id?: string | null
+          seller_stakeholder_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          buyer_email?: string | null
+          buyer_name?: string | null
+          buyer_security_id?: string | null
+          buyer_stakeholder_id?: string | null
+          buyer_type?: string | null
+          closed_at?: string | null
+          closing_date?: string | null
+          company_id?: string
+          consent_decided_at?: string | null
+          consent_decided_by?: string | null
+          consent_note?: string | null
+          consent_status?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          price_per_share?: number | null
+          quantity?: number
+          requested_on?: string | null
+          restriction_note?: string | null
+          restriction_reviewed_at?: string | null
+          restriction_reviewed_by?: string | null
+          restriction_status?: string
+          rofr_deadline?: string | null
+          rofr_decided_at?: string | null
+          rofr_decided_by?: string | null
+          rofr_note?: string | null
+          rofr_status?: string
+          security_id?: string | null
+          seller_stakeholder_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_secondary_transfers_buyer_security_id_fkey"
+            columns: ["buyer_security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_secondary_transfers_buyer_stakeholder_id_fkey"
+            columns: ["buyer_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_secondary_transfers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_secondary_transfers_security_id_fkey"
+            columns: ["security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_secondary_transfers_seller_stakeholder_id_fkey"
+            columns: ["seller_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_securities: {
         Row: {
           acceptance_name: string | null
