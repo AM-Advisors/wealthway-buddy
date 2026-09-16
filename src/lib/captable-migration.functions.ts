@@ -46,7 +46,7 @@ function norm(value: string) {
   return String(value ?? "").trim().toLowerCase().replace(/[_\-.]+/g, " ").replace(/\s+/g, " ");
 }
 
-function detectProvider(headers: string[]) {
+export function detectProvider(headers: string[]) {
   const set = new Set(headers.map(norm));
   let best: { id: string; label: string; hits: number } | null = null;
   for (const provider of PROVIDER_SIGNATURES) {
@@ -57,7 +57,7 @@ function detectProvider(headers: string[]) {
 }
 
 /** Best-guess column for each field: exact synonym first, then a contains match. */
-function autoMap(headers: string[]) {
+export function autoMap(headers: string[]) {
   const mapping: Record<string, string | null> = {};
   const used = new Set<string>();
   for (const field of MIGRATION_FIELDS) {
@@ -517,7 +517,7 @@ export const createCapMigration = createServerFn({ method: "POST" })
     return { id: batch.id as string, provider: provider.label };
   });
 
-async function writeRows(
+export async function writeRows(
   context: any,
   companyId: string,
   migrationId: string,
