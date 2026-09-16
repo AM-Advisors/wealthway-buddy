@@ -2873,12 +2873,14 @@ export type Database = {
       }
       ct_migrations: {
         Row: {
+          bundle_id: string | null
           company_id: string
           concierge_note: string | null
           concierge_requested_at: string | null
           created_at: string
           created_by: string | null
           detected_provider: string | null
+          file_kind: string
           file_name: string | null
           headers: Json
           id: string
@@ -2894,12 +2896,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bundle_id?: string | null
           company_id: string
           concierge_note?: string | null
           concierge_requested_at?: string | null
           created_at?: string
           created_by?: string | null
           detected_provider?: string | null
+          file_kind?: string
           file_name?: string | null
           headers?: Json
           id?: string
@@ -2915,12 +2919,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bundle_id?: string | null
           company_id?: string
           concierge_note?: string | null
           concierge_requested_at?: string | null
           created_at?: string
           created_by?: string | null
           detected_provider?: string | null
+          file_kind?: string
           file_name?: string | null
           headers?: Json
           id?: string
