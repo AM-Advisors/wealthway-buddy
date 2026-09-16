@@ -395,6 +395,8 @@ export const getCapMigrations = createServerFn({ method: "GET" })
           .order("row_number")
       : { data: [] as any[] };
 
+    const world = await loadWorld(supabase, data.companyId);
+
     return {
       canManage: Boolean(canManage) && !company?.is_demo,
       isDemo: Boolean(company?.is_demo),
