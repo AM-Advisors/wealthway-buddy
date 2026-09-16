@@ -10,6 +10,7 @@ import {
   getCapMigrations,
   importCapMigration,
   remapCapMigration,
+  setCapMigrationReconciliation,
   setCapMigrationRow,
 } from "@/lib/captable-migration.functions";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -219,6 +221,9 @@ function BatchPanel({
 }) {
   const [showMapping, setShowMapping] = useState(false);
   const [concierge, setConcierge] = useState(false);
+  const [acceptOpen, setAcceptOpen] = useState(false);
+  const [overageReason, setOverageReason] = useState("");
+  const overAuthorized = batch.summary?.totals?.overAuthorized ?? 0;
 
   const totals = useMemo(() => {
     const shares = batch.rows.reduce(
@@ -237,11 +242,13 @@ function BatchPanel({
   const cancelBatch = useServerFn(cancelCapMigration);
 
   const importer = useMutation({
-    mutationFn: () => importBatch({ data: { migrationId: batch.id } }),
+    mutationFn: (reason?: string | null) =>
+      importBatch({ data: { migrationId: batch.id, overageReason: reason ?? null } }),
     onSuccess: (result) => {
       toast.success(
         `${result.lines} lines accepted · ${result.stakeholdersCreated} new shareholders, ${result.securitiesCreated} holdings recorded.`,
       );
+      setAcceptOpen(false);
       onChanged();
     },
     onError: (err: unknown) =>
@@ -287,7 +294,7 @@ function BatchPanel({
               </Button>
               <Button
                 size="sm"
-                onClick={() => importer.mutate()}
+                onClick={() => (overAuthorized > 0 ? setAcceptOpen(true) : importer.mutate(null))}
                 disabled={importer.isPending || batch.counts.ready === 0}
               >
                 Accept {fmtNumber(batch.counts.ready)} lines
@@ -322,6 +329,9 @@ function BatchPanel({
             {batch.status === "imported" ? " (already included)" : ""}.
           </p>
         </div>
+
+        <ComingAcross batch={batch} />
+        <ReconcilePanel batch={batch} editable={canManage && !done} onChanged={onChanged} />
 
         <ConciergePanel migrationId={batch.id} onChanged={onChanged} />
 
@@ -372,7 +382,224 @@ function BatchPanel({
         migrationId={batch.id}
         onDone={onChanged}
       />
+
+      <Dialog open={acceptOpen} onOpenChange={setAcceptOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>More shares issued than authorised</DialogTitle>
+            <DialogDescription>
+              This file leaves {fmtNumber(overAuthorized)} shares issued beyond what those share
+              classes are authorised to have. You can still record it, but please say why. Your
+              reason is kept with the batch in the history.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={overageReason}
+            onChange={(event) => setOverageReason(event.target.value)}
+            placeholder="For example: the board approved an increase in authorised shares on 3 March; the filing is being updated."
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAcceptOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={importer.isPending || overageReason.trim().length < 5}
+              onClick={() => importer.mutate(overageReason.trim())}
+            >
+              Record anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
+  );
+}
+
+/* ----------------------------------------------- classes, rounds, totals */
+
+function ComingAcross({ batch }: { batch: Batch }) {
+  const summary = batch.summary;
+  if (!summary) return null;
+  const classes = summary.classes.filter((c) => c.name !== "No share class given" || c.issued > 0);
+  if (classes.length === 0 && summary.rounds.length === 0) return null;
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      <div className="rounded-lg border p-3">
+        <p className="text-sm font-medium">Share classes in this file</p>
+        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+          {classes.length === 0 ? <li>No share class named.</li> : null}
+          {classes.map((c) => (
+            <li key={c.key} className="flex flex-wrap items-center gap-2">
+              <span className="text-foreground">{c.name}</span>
+              {c.isNew ? <Badge variant="outline">New</Badge> : null}
+              <span>
+                {fmtNumber(c.fileIssued)} shares
+                {c.reserved ? ` · ${fmtNumber(c.reserved)} reserved` : ""}
+                {c.authorized ? ` · ${fmtNumber(c.authorized)} authorised` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="rounded-lg border p-3">
+        <p className="text-sm font-medium">Funding rounds in this file</p>
+        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+          {summary.rounds.length === 0 ? <li>No round named in this file.</li> : null}
+          {summary.rounds.map((r) => (
+            <li key={r.key} className="flex flex-wrap items-center gap-2">
+              <span className="text-foreground">{r.name}</span>
+              {r.isNew ? <Badge variant="outline">New</Badge> : null}
+              <span>
+                {r.date ? `${fmtDate(r.date)} · ` : ""}
+                {fmtNumber(r.lines)} lines
+                {r.pricePerShare ? ` · ${r.pricePerShare} per share` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function ReconcilePanel({
+  batch,
+  editable,
+  onChanged,
+}: {
+  batch: Batch;
+  editable: boolean;
+  onChanged: () => void;
+}) {
+  const summary = batch.summary;
+  const save = useServerFn(setCapMigrationReconciliation);
+  const [draft, setDraft] = useState<Record<string, { authorized: string; issued: string; outstanding: string }>>(
+    () => {
+      const overrides = (batch.reconciliation?.overrides ?? {}) as Record<string, any>;
+      const seed: Record<string, { authorized: string; issued: string; outstanding: string }> = {};
+      for (const row of summary?.classes ?? []) {
+        const o = overrides[row.key] ?? {};
+        seed[row.key] = {
+          authorized: o.authorized != null ? String(o.authorized) : row.authorized != null ? String(row.authorized) : "",
+          issued: o.issued != null ? String(o.issued) : String(row.fileIssued),
+          outstanding: o.outstanding != null ? String(o.outstanding) : String(row.alreadyRecorded + row.fileIssued),
+        };
+      }
+      return seed;
+    },
+  );
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      const overrides: Record<string, { authorized: number | null; issued: number | null; outstanding: number | null }> = {};
+      for (const [key, value] of Object.entries(draft)) {
+        const parse = (v: string) => (v.trim() === "" ? null : Number(v.replace(/[,\s]/g, "")));
+        overrides[key] = {
+          authorized: parse(value.authorized),
+          issued: parse(value.issued),
+          outstanding: parse(value.outstanding),
+        };
+      }
+      return save({ data: { migrationId: batch.id, overrides } });
+    },
+    onSuccess: () => {
+      toast.success("Your totals are saved against this batch.");
+      onChanged();
+    },
+    onError: (err: unknown) =>
+      toast.error(err instanceof Error ? err.message : "We could not save those totals."),
+  });
+
+  if (!summary || summary.classes.length === 0) return null;
+
+  return (
+    <div className="space-y-3 rounded-lg border p-3">
+      <div>
+        <p className="text-sm font-medium">Authorised, issued and outstanding</p>
+        <p className="text-sm text-muted-foreground">
+          We read what we can from your file. Correct any number to match your current provider —
+          we show the difference so nothing goes across unnoticed.
+        </p>
+      </div>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Share class</TableHead>
+              <TableHead className="text-right">In the file</TableHead>
+              <TableHead className="text-right">Authorised</TableHead>
+              <TableHead className="text-right">Issued</TableHead>
+              <TableHead className="text-right">Outstanding</TableHead>
+              <TableHead className="text-right">Difference</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {summary.classes.map((row) => {
+              const value = draft[row.key] ?? { authorized: "", issued: "", outstanding: "" };
+              const set = (field: "authorized" | "issued" | "outstanding", v: string) =>
+                setDraft((prev) => ({ ...prev, [row.key]: { ...value, [field]: v } }));
+              return (
+                <TableRow key={row.key}>
+                  <TableCell>
+                    <span className="font-medium">{row.name}</span>
+                    {row.reserved ? (
+                      <span className="block text-xs text-muted-foreground">
+                        {fmtNumber(row.reserved)} reserved for options, RSUs or warrants
+                      </span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-right">{fmtNumber(row.fileIssued)}</TableCell>
+                  {(["authorized", "issued", "outstanding"] as const).map((field) => (
+                    <TableCell key={field} className="text-right">
+                      {editable ? (
+                        <Input
+                          inputMode="numeric"
+                          className="h-8 w-32 text-right"
+                          value={value[field]}
+                          onChange={(event) => set(field, event.target.value)}
+                        />
+                      ) : (
+                        fmtNumber(Number(value[field]) || 0)
+                      )}
+                    </TableCell>
+                  ))}
+                  <TableCell className="text-right">
+                    {row.overAuthorizedBy > 0 ? (
+                      <span className="text-destructive">
+                        over by {fmtNumber(row.overAuthorizedBy)}
+                      </span>
+                    ) : row.issuedDifference !== 0 ? (
+                      <span className="text-muted-foreground">
+                        {row.issuedDifference > 0 ? "+" : ""}
+                        {fmtNumber(row.issuedDifference)} vs file
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">0</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Fully diluted after this batch: {fmtNumber(summary.totals.fullyDiluted)} shares
+        ({fmtNumber(summary.totals.outstanding)} outstanding plus {fmtNumber(summary.totals.reserved)} reserved).
+      </p>
+      {batch.overageReason ? (
+        <p className="text-sm text-muted-foreground">
+          Recorded over authorised shares. Reason given: {batch.overageReason}
+        </p>
+      ) : null}
+      {editable ? (
+        <Button size="sm" variant="outline" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          Save these totals
+        </Button>
+      ) : null}
+    </div>
   );
 }
 

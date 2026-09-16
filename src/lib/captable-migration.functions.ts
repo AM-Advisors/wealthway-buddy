@@ -29,6 +29,11 @@ const SYNONYMS: Record<FieldKey, string[]> = {
   cliffMonths: ["cliff", "cliff months", "vesting cliff", "cliff (months)"],
   durationMonths: ["vesting period", "vesting months", "vesting duration", "duration", "vesting length", "vesting term"],
   frequency: ["vesting frequency", "frequency", "vesting interval", "vests"],
+  authorizedShares: ["authorized", "authorised", "authorized shares", "authorised shares", "shares authorized", "class authorized", "authorized amount"],
+  roundName: ["round", "round name", "financing", "financing round", "funding round", "series name", "transaction name", "deal"],
+  roundDate: ["round date", "closing date", "close date", "financing date", "transaction date"],
+  roundPricePerShare: ["round price per share", "round pps", "financing price", "round price"],
+  investmentAmount: ["investment amount", "amount invested", "invested", "amount", "total investment", "purchase amount", "consideration"],
 };
 
 const PROVIDER_SIGNATURES: Array<{ id: string; label: string; markers: string[] }> = [
@@ -132,7 +137,16 @@ type MappedRow = {
   cliffMonths: number | null;
   durationMonths: number | null;
   frequency: string;
+  authorizedShares: number | null;
+  roundName: string | null;
+  roundDate: string | null;
+  roundPricePerShare: number | null;
+  investmentAmount: number | null;
 };
+
+/** Options, RSUs and warrants are reserved against the pool, not issued shares. */
+const RESERVED_TYPES = new Set(["option", "iso_option", "nso_option", "rsu", "warrant"]);
+const CONVERTIBLE_TYPES = new Set(["safe", "convertible_note"]);
 
 function mapRow(raw: Record<string, unknown>, mapping: Record<string, string | null>) {
   const pick = (key: FieldKey) => {
@@ -156,6 +170,11 @@ function mapRow(raw: Record<string, unknown>, mapping: Record<string, string | n
     cliffMonths: num(pick("cliffMonths")),
     durationMonths: num(pick("durationMonths")),
     frequency: frequency(pick("frequency")),
+    authorizedShares: num(pick("authorizedShares")),
+    roundName: pick("roundName") ? String(pick("roundName")).trim() : null,
+    roundDate: isoDate(pick("roundDate")),
+    roundPricePerShare: num(pick("roundPricePerShare")),
+    investmentAmount: num(pick("investmentAmount")),
   };
 
   const issues: string[] = [];
@@ -198,6 +217,153 @@ async function recordEvent(
   });
 }
 
+/* ---------------------------------------------------- classes, rounds, sums */
+
+const UNCLASSIFIED = "__unclassified__";
+
+type Override = { authorized?: number | null; issued?: number | null; outstanding?: number | null };
+type Reconciliation = { overrides?: Record<string, Override>; note?: string | null };
+
+type ExistingWorld = {
+  classes: Array<{ id: string; name: string; authorized: number | null }>;
+  rounds: Array<{ id: string; name: string }>;
+  securities: Array<{ class_id: string | null; security_type: string; quantity: number; status: string }>;
+};
+
+/**
+ * Everything the founder needs to sign off on: which share classes and rounds
+ * come across, and whether authorised, issued and outstanding shares agree.
+ */
+function buildSummary(
+  rows: Array<{ mapped: MappedRow; status: string }>,
+  world: ExistingWorld,
+  reconciliation: Reconciliation | null,
+) {
+  const counted = rows.filter((r) => r.status === "ready" || r.status === "imported");
+  const overrides = reconciliation?.overrides ?? {};
+  const classByName = new Map(world.classes.map((c) => [norm(c.name), c]));
+  const roundByName = new Map(world.rounds.map((r) => [norm(r.name), r]));
+
+  const classes = new Map<
+    string,
+    { key: string; name: string; isNew: boolean; fileAuthorized: number | null; issued: number; reserved: number; convertible: number }
+  >();
+
+  for (const row of counted) {
+    const name = row.mapped.securityClass?.trim() || null;
+    const key = name ? norm(name) : UNCLASSIFIED;
+    const existing = name ? classByName.get(key) : undefined;
+    const entry =
+      classes.get(key) ??
+      {
+        key,
+        name: name ?? "No share class given",
+        isNew: Boolean(name) && !existing,
+        fileAuthorized: existing?.authorized ?? null,
+        issued: 0,
+        reserved: 0,
+        convertible: 0,
+      };
+    const qty = Number(row.mapped.quantity) || 0;
+    const type = row.mapped.securityType ?? "common_stock";
+    if (RESERVED_TYPES.has(type)) entry.reserved += qty;
+    else if (CONVERTIBLE_TYPES.has(type)) entry.convertible += qty;
+    else entry.issued += qty;
+    if (row.mapped.authorizedShares && row.mapped.authorizedShares > (entry.fileAuthorized ?? 0)) {
+      entry.fileAuthorized = row.mapped.authorizedShares;
+    }
+    classes.set(key, entry);
+  }
+
+  const recordedByClass = new Map<string, number>();
+  for (const sec of world.securities) {
+    if (sec.status !== "outstanding") continue;
+    if (RESERVED_TYPES.has(sec.security_type) || CONVERTIBLE_TYPES.has(sec.security_type)) continue;
+    const cls = world.classes.find((c) => c.id === sec.class_id);
+    const key = cls ? norm(cls.name) : UNCLASSIFIED;
+    recordedByClass.set(key, (recordedByClass.get(key) ?? 0) + (Number(sec.quantity) || 0));
+  }
+
+  const classRows = [...classes.values()].map((entry) => {
+    const override = overrides[entry.key] ?? {};
+    const authorized = override.authorized ?? entry.fileAuthorized;
+    const issued = override.issued ?? entry.issued;
+    const alreadyRecorded = recordedByClass.get(entry.key) ?? 0;
+    const outstanding = override.outstanding ?? alreadyRecorded + entry.issued;
+    return {
+      key: entry.key,
+      name: entry.name,
+      isNew: entry.isNew,
+      authorized,
+      fileAuthorized: entry.fileAuthorized,
+      fileIssued: entry.issued,
+      issued,
+      reserved: entry.reserved,
+      convertible: entry.convertible,
+      alreadyRecorded,
+      outstanding,
+      issuedDifference: issued - entry.issued,
+      outstandingDifference: outstanding - (alreadyRecorded + entry.issued),
+      overAuthorizedBy: authorized !== null && authorized > 0 && outstanding > authorized ? outstanding - authorized : 0,
+    };
+  });
+
+  const rounds = new Map<string, { key: string; name: string; isNew: boolean; date: string | null; pricePerShare: number | null; amount: number; lines: number }>();
+  for (const row of counted) {
+    const name = row.mapped.roundName?.trim();
+    if (!name) continue;
+    const key = norm(name);
+    const entry =
+      rounds.get(key) ??
+      { key, name, isNew: !roundByName.has(key), date: null as string | null, pricePerShare: null as number | null, amount: 0, lines: 0 };
+    entry.lines += 1;
+    entry.amount +=
+      row.mapped.investmentAmount ??
+      (row.mapped.pricePerShare && row.mapped.quantity ? row.mapped.pricePerShare * row.mapped.quantity : 0);
+    if (!entry.date && row.mapped.roundDate) entry.date = row.mapped.roundDate;
+    if (entry.pricePerShare === null) entry.pricePerShare = row.mapped.roundPricePerShare ?? row.mapped.pricePerShare;
+    rounds.set(key, entry);
+  }
+
+  const totals = classRows.reduce(
+    (acc, c) => ({
+      issued: acc.issued + c.issued,
+      reserved: acc.reserved + c.reserved,
+      outstanding: acc.outstanding + c.outstanding,
+      overAuthorized: acc.overAuthorized + c.overAuthorizedBy,
+    }),
+    { issued: 0, reserved: 0, outstanding: 0, overAuthorized: 0 },
+  );
+
+  return {
+    classes: classRows,
+    rounds: [...rounds.values()],
+    totals: { ...totals, fullyDiluted: totals.outstanding + totals.reserved },
+    note: reconciliation?.note ?? null,
+  };
+}
+
+async function loadWorld(supabase: any, companyId: string): Promise<ExistingWorld> {
+  const [{ data: classes }, { data: rounds }, { data: securities }] = await Promise.all([
+    supabase.from("ct_security_classes").select("id, name, authorized").eq("company_id", companyId),
+    supabase.from("ct_rounds").select("id, name").eq("company_id", companyId),
+    supabase
+      .from("ct_securities")
+      .select("class_id, security_type, quantity, status")
+      .eq("company_id", companyId),
+  ]);
+  return {
+    classes: ((classes ?? []) as any[]).map((c) => ({ id: c.id, name: c.name, authorized: c.authorized ?? null })),
+    rounds: ((rounds ?? []) as any[]).map((r) => ({ id: r.id, name: r.name })),
+    securities: ((securities ?? []) as any[]).map((s) => ({
+      class_id: s.class_id ?? null,
+      security_type: s.security_type,
+      quantity: Number(s.quantity) || 0,
+      status: s.status,
+    })),
+  };
+}
+
 /* ------------------------------------------------------------------ reading */
 
 export const getCapMigrations = createServerFn({ method: "GET" })
@@ -229,6 +395,8 @@ export const getCapMigrations = createServerFn({ method: "GET" })
           .order("row_number")
       : { data: [] as any[] };
 
+    const world = await loadWorld(supabase, data.companyId);
+
     return {
       canManage: Boolean(canManage) && !company?.is_demo,
       isDemo: Boolean(company?.is_demo),
@@ -251,6 +419,13 @@ export const getCapMigrations = createServerFn({ method: "GET" })
           notes: (b.notes as string | null) ?? null,
           conciergeRequestedAt: (b.concierge_requested_at as string | null) ?? null,
           conciergeNote: (b.concierge_note as string | null) ?? null,
+          overageReason: (b.overage_reason as string | null) ?? null,
+          reconciliation: (b.reconciliation ?? null) as Reconciliation | null,
+          summary: buildSummary(
+            mine.map((r) => ({ mapped: (r.mapped ?? {}) as MappedRow, status: r.status as string })),
+            world,
+            (b.reconciliation ?? null) as Reconciliation | null,
+          ),
           importedAt: (b.imported_at as string | null) ?? null,
           createdAt: b.created_at as string,
           counts: {
@@ -509,6 +684,56 @@ export const cancelCapMigration = createServerFn({ method: "POST" })
   });
 
 /**
+ * The founder's own authorised / issued / outstanding numbers, kept alongside
+ * the batch so the difference against the file is part of what they sign off.
+ */
+export const setCapMigrationReconciliation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        migrationId: z.string().uuid(),
+        overrides: z.record(
+          z.string(),
+          z.object({
+            authorized: z.number().nonnegative().nullable().optional(),
+            issued: z.number().nonnegative().nullable().optional(),
+            outstanding: z.number().nonnegative().nullable().optional(),
+          }),
+        ),
+        note: z.string().trim().max(2000).nullable().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: batch } = await supabase
+      .from("ct_migrations")
+      .select("id, company_id, status")
+      .eq("id", data.migrationId)
+      .maybeSingle();
+    if (!batch) throw new Error("Migration not found.");
+    if (batch.status === "imported") throw new Error("This batch has already been accepted.");
+    await assertManage(context, batch.company_id as string);
+
+    const reconciliation = { overrides: data.overrides, note: data.note ?? null };
+    const { error } = await supabase
+      .from("ct_migrations")
+      .update({ reconciliation: reconciliation as any })
+      .eq("id", data.migrationId);
+    if (error) throw new Error(error.message);
+
+    await recordEvent(context, {
+      companyId: batch.company_id as string,
+      action: "migration.reconciled",
+      entityId: data.migrationId,
+      next: reconciliation,
+      reason: data.note || "Share totals confirmed against the file",
+    });
+    return { ok: true };
+  });
+
+/**
  * Accept the batch. Every ready line becomes a stakeholder (matched or new),
  * a security and an opening issuance transaction, so ownership is derived the
  * same way as everything else. Lines already imported are left alone, so a
@@ -516,12 +741,19 @@ export const cancelCapMigration = createServerFn({ method: "POST" })
  */
 export const importCapMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ migrationId: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        migrationId: z.string().uuid(),
+        overageReason: z.string().trim().max(2000).optional().nullable(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: batch } = await supabase
       .from("ct_migrations")
-      .select("id, company_id, status")
+      .select("id, company_id, status, reconciliation")
       .eq("id", data.migrationId)
       .maybeSingle();
     if (!batch) throw new Error("Migration not found.");
@@ -553,11 +785,77 @@ export const importCapMigration = createServerFn({ method: "POST" })
     const ready = (rows ?? []) as any[];
     if (ready.length === 0) throw new Error("There are no ready lines to accept.");
 
-    const { data: classes } = await supabase
-      .from("ct_security_classes")
-      .select("id, name")
-      .eq("company_id", companyId);
-    const classByName = new Map(((classes ?? []) as any[]).map((c) => [norm(c.name), c.id]));
+    const reconciliation = (batch.reconciliation ?? null) as Reconciliation | null;
+    const world = await loadWorld(supabase, companyId);
+    const summary = buildSummary(
+      ready.map((r) => ({ mapped: (r.mapped ?? {}) as MappedRow, status: "ready" })),
+      world,
+      reconciliation,
+    );
+
+    const over = summary.classes.filter((c) => c.overAuthorizedBy > 0);
+    const overageReason = data.overageReason?.trim() || null;
+    if (over.length && !overageReason) {
+      throw new Error(
+        `More shares are issued than authorised in ${over
+          .map((c) => c.name)
+          .join(", ")}. Give a reason to record this batch anyway.`,
+      );
+    }
+
+    // Share classes and rounds named in the file are created as we go.
+    const classByName = new Map(world.classes.map((c) => [norm(c.name), c.id]));
+    let classesCreated = 0;
+    for (const entry of summary.classes) {
+      if (entry.key === UNCLASSIFIED) continue;
+      const existingId = classByName.get(entry.key);
+      if (existingId) {
+        if (entry.authorized) {
+          await supabase
+            .from("ct_security_classes")
+            .update({ authorized: entry.authorized })
+            .eq("id", existingId);
+        }
+        continue;
+      }
+      const { data: created, error: clsErr } = await supabase
+        .from("ct_security_classes")
+        .insert({
+          company_id: companyId,
+          name: entry.name,
+          kind: /pref|series/i.test(entry.name) ? "preferred" : "common",
+          authorized: entry.authorized,
+          notes: "Created from an imported cap table file",
+        })
+        .select("id")
+        .single();
+      if (clsErr) throw new Error(clsErr.message);
+      classByName.set(entry.key, created.id as string);
+      classesCreated += 1;
+    }
+
+    const roundByName = new Map(world.rounds.map((r) => [norm(r.name), r.id]));
+    let roundsCreated = 0;
+    for (const entry of summary.rounds) {
+      if (roundByName.has(entry.key)) continue;
+      const { data: created, error: rErr } = await supabase
+        .from("ct_rounds")
+        .insert({
+          company_id: companyId,
+          name: entry.name,
+          round_type: /safe|note/i.test(entry.name) ? "convertible" : "priced",
+          status: "closed",
+          close_date: entry.date,
+          price_per_share: entry.pricePerShare,
+          amount_raised: entry.amount || null,
+          notes: "Created from an imported cap table file",
+        })
+        .select("id")
+        .single();
+      if (rErr) throw new Error(rErr.message);
+      roundByName.set(entry.key, created.id as string);
+      roundsCreated += 1;
+    }
 
     let stakeholdersCreated = 0;
     let securitiesCreated = 0;
@@ -605,6 +903,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
           company_id: companyId,
           stakeholder_id: stakeholderId,
           class_id: mapped.securityClass ? (classByName.get(norm(mapped.securityClass)) ?? null) : null,
+          round_id: mapped.roundName ? (roundByName.get(norm(mapped.roundName)) ?? null) : null,
           security_type: mapped.securityType ?? "common_stock",
           label: mapped.label,
           quantity: mapped.quantity ?? 0,
@@ -642,15 +941,30 @@ export const importCapMigration = createServerFn({ method: "POST" })
 
     await supabase
       .from("ct_migrations")
-      .update({ status: "imported", imported_at: new Date().toISOString(), imported_by: userId })
+      .update({
+        status: "imported",
+        imported_at: new Date().toISOString(),
+        imported_by: userId,
+        overage_reason: overageReason,
+      })
       .eq("id", data.migrationId);
 
     await recordEvent(context, {
       companyId,
       action: "migration.accepted",
       entityId: data.migrationId,
-      next: { stakeholdersCreated, securitiesCreated, lines: ready.length },
-      reason: "Migration accepted onto the cap table",
+      next: {
+        stakeholdersCreated,
+        securitiesCreated,
+        classesCreated,
+        roundsCreated,
+        lines: ready.length,
+        reconciliation: summary,
+        overageReason,
+      },
+      reason: overageReason
+        ? `Migration accepted with more shares issued than authorised: ${overageReason}`
+        : "Migration accepted onto the cap table",
     });
 
     if (conciergeCase) {

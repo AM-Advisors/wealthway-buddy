@@ -2886,6 +2886,8 @@ export type Database = {
           imported_by: string | null
           mapping: Json
           notes: string | null
+          overage_reason: string | null
+          reconciliation: Json | null
           row_count: number
           source_provider: string
           status: string
@@ -2905,6 +2907,8 @@ export type Database = {
           imported_by?: string | null
           mapping?: Json
           notes?: string | null
+          overage_reason?: string | null
+          reconciliation?: Json | null
           row_count?: number
           source_provider?: string
           status?: string
@@ -2924,6 +2928,8 @@ export type Database = {
           imported_by?: string | null
           mapping?: Json
           notes?: string | null
+          overage_reason?: string | null
+          reconciliation?: Json | null
           row_count?: number
           source_provider?: string
           status?: string
