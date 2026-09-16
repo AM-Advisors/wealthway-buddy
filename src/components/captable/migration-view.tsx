@@ -50,6 +50,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { ConciergeHandoverDialog, ConciergePanel } from "./concierge-panel";
+import { MigrationWizard } from "./migration-wizard";
 import { fmtDate, fmtNumber, useCapTable } from "./captable-context";
 import { CapTableSection } from "./captable-states";
 
