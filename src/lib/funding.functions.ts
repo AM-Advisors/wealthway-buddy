@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { activeApplicationId } from "@/lib/active-application";
+import { applicationIdForOffering } from "@/lib/active-application";
+
+/** Funding happens inside a fund, so every call may name the fund it is for. */
+const fundScope = (data: unknown) =>
+  z.object({ offering_id: z.string().uuid().optional() }).parse(data ?? {});
 import { assertFundConditions } from "@/lib/fund-conditions.functions";
 
 export const wireSentSchema = z.object({
@@ -116,14 +120,14 @@ async function assertAcknowledged(
   return ack;
 }
 
-async function loadFundingApplication(supabase: any, userId: string) {
+async function loadFundingApplication(supabase: any, userId: string, offeringId?: string) {
   const { data, error } = await supabase
     .from("investor_applications")
     .select(
       "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, manager_review_status, manager_review_notes",
     )
     .eq("user_id", userId)
-    .eq("id", await activeApplicationId(supabase, userId))
+    .eq("id", await applicationIdForOffering(supabase, userId, offeringId))
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found.");
@@ -170,7 +174,8 @@ async function assertFundable(
 
 export const getFunding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator(fundScope)
+  .handler(async ({ data: scope, context }) => {
     const { supabase, userId } = context;
 
     const { data: application } = await supabase
@@ -179,7 +184,7 @@ export const getFunding = createServerFn({ method: "GET" })
         "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, manager_review_status, manager_review_notes",
       )
       .eq("user_id", userId)
-      .eq("id", await activeApplicationId(supabase, userId))
+      .eq("id", await applicationIdForOffering(supabase, userId, scope.offering_id))
       .maybeSingle();
 
     if (!application)
@@ -303,10 +308,12 @@ async function fundProgress(offeringId: string, targetCents: number | null) {
 
 export const acknowledgeFunding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => acknowledgeSchema.parse(data))
+  .inputValidator((data: unknown) =>
+    acknowledgeSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadFundingApplication(supabase, userId);
+    const application = await loadFundingApplication(supabase, userId, data.offering_id);
     await assertFundable(supabase, application as any);
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
 
@@ -331,9 +338,10 @@ export const acknowledgeFunding = createServerFn({ method: "POST" })
 
 export const chooseWire = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator(fundScope)
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadFundingApplication(supabase, userId);
+    const application = await loadFundingApplication(supabase, userId, data.offering_id);
     await assertFundable(supabase, application as any);
     await assertAcknowledged(supabase, application as any, "wire");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
@@ -380,7 +388,7 @@ export const markWireSent = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => wireSentSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadFundingApplication(supabase, userId);
+    const application = await loadFundingApplication(supabase, userId, data.offering_id);
     await assertFundable(supabase, application as any);
 
     const now = new Date().toISOString();
@@ -411,10 +419,12 @@ export const markWireSent = createServerFn({ method: "POST" })
  */
 export const submitWireConfirmation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => wireConfirmationSchema.parse(data))
+  .inputValidator((data: unknown) =>
+    wireConfirmationSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadFundingApplication(supabase, userId);
+    const application = await loadFundingApplication(supabase, userId, data.offering_id);
     await assertFundable(supabase, application as any);
     await assertAcknowledged(supabase, application as any, "wire");
 
@@ -486,10 +496,12 @@ export const submitWireConfirmation = createServerFn({ method: "POST" })
 
 export const startAchDebit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => achSchema.parse(data))
+  .inputValidator((data: unknown) =>
+    achSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadFundingApplication(supabase, userId);
+    const application = await loadFundingApplication(supabase, userId, data.offering_id);
     await assertFundable(supabase, application as any);
     await assertAcknowledged(supabase, application as any, "ach");
     if (!application.commitment_cents) throw new Error("Set your commitment amount first.");
