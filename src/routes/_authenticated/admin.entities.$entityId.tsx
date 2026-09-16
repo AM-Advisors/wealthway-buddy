@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 
+import { EngagementForm } from "@/components/engagement-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,10 +37,14 @@ const typeLabel = (v: string) => ENTITY_TYPES.find((t) => t.value === v)?.label 
 function EntityPage() {
   const { entityId } = Route.useParams();
   const load = useServerFn(getEntity);
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["entity", entityId],
     queryFn: () => load({ data: { entityId } }),
   });
+
+  const canManage = Boolean((data as any)?.access?.canManage);
 
   if (isLoading || !data) {
     return (
@@ -152,7 +158,12 @@ function EntityPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           {data.engagements.length === 0 && (
-            <p className="text-sm text-muted-foreground">No engagement covers this entity yet.</p>
+            <p className="text-sm text-muted-foreground">
+              No engagement covers this entity yet.
+              {canManage
+                ? " Start one below to set what Harmonious delivers, how it's billed and which statement of work it sits under."
+                : " Ask someone with contracting authority to start one."}
+            </p>
           )}
           {data.engagements.map((g) => (
             <div
@@ -172,6 +183,32 @@ function EntityPage() {
               </Button>
             </div>
           ))}
+
+          {canManage && data.client && (
+            <div className="pt-1">
+              {creating ? (
+                <div className="space-y-3 rounded-md border p-3">
+                  <EngagementForm
+                    clientId={data.client.id}
+                    entityId={e.id}
+                    defaultTitle={`${e.legalName} services`}
+                    defaultFrequency="annual"
+                    onDone={() => {
+                      setCreating(false);
+                      queryClient.invalidateQueries({ queryKey: ["entity", entityId] });
+                    }}
+                  />
+                  <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button size="sm" onClick={() => setCreating(true)}>
+                  {data.engagements.length === 0 ? "Create engagement" : "Add another engagement"}
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </main>

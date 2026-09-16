@@ -46,6 +46,13 @@ function AgreementsHome() {
             appear here.
           </CardDescription>
         </CardHeader>
+        <CardContent>
+          <Button asChild size="sm">
+            <a href="mailto:info@harmonious.co?subject=Getting%20started%20with%20Harmonious">
+              Ask Harmonious to get started
+            </a>
+          </Button>
+        </CardContent>
       </Card>
     );
   }

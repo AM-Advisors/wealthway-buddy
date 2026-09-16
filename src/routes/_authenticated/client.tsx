@@ -24,7 +24,8 @@ import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAdminAccess } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/client")({
@@ -81,6 +82,12 @@ function ClientShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const listMessages = useServerFn(listMyMessages);
   const inboxQuery = useQuery({ queryKey: ["client-inbox"], queryFn: () => listMessages() });
+  const adminAccessFn = useServerFn(getAdminAccess);
+  const { data: adminAccess } = useQuery({
+    queryKey: ["admin-access"],
+    queryFn: () => adminAccessFn(),
+  });
+  const isStaff = Boolean((adminAccess as any)?.isReviewer || (adminAccess as any)?.isAdmin);
   const unreadMessages = ((inboxQuery.data?.messages ?? []) as any[]).filter(
     (m) => !m.read_at,
   ).length;
@@ -102,10 +109,30 @@ function ClientShell() {
             <CardTitle className="text-base">No client engagement linked yet</CardTitle>
             <CardDescription>
               This portal shows the funds, agreement, invoices and approved payments for a
-              Harmonious client. Your sign-in isn't attached to one yet — ask your Harmonious
-              contact to add you.
+              Harmonious client. Your sign-in isn't attached to one yet.
             </CardDescription>
           </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {isStaff ? (
+              <>
+                <Button asChild size="sm">
+                  <Link to="/admin/contracts">Set up the organisation and engagement</Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/admin/entities">Entities and engagements</Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/admin/onboarding">Invite a client contact</Link>
+                </Button>
+              </>
+            ) : (
+              <Button asChild size="sm">
+                <a href="mailto:info@harmonious.co?subject=Portal%20access">
+                  Ask Harmonious to link my account
+                </a>
+              </Button>
+            )}
+          </CardContent>
         </Card>
       </main>
     );
