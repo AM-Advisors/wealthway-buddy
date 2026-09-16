@@ -171,6 +171,7 @@ import { Route as AuthenticatedClientCapTableSecuritiesRouteImport } from './rou
 import { Route as AuthenticatedClientCapTableSettingsRouteImport } from './routes/_authenticated/client.cap-table.settings'
 import { Route as AuthenticatedClientCapTableTableRouteImport } from './routes/_authenticated/client.cap-table.table'
 import { Route as AuthenticatedClientServicesIndexRouteImport } from './routes/_authenticated/client.services.index'
+import { Route as AuthenticatedClientServicesRequestRouteImport } from './routes/_authenticated/client.services.request'
 import { Route as AuthenticatedFundOfferingIdDocumentsRouteImport } from './routes/_authenticated/fund.$offeringId.documents'
 import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes/_authenticated/fund.$offeringId.funding'
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
@@ -1111,6 +1112,12 @@ const AuthenticatedClientServicesIndexRoute =
     path: '/services/',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
+const AuthenticatedClientServicesRequestRoute =
+  AuthenticatedClientServicesRequestRouteImport.update({
+    id: '/services/request',
+    path: '/services/request',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedFundOfferingIdDocumentsRoute =
   AuthenticatedFundOfferingIdDocumentsRouteImport.update({
     id: '/fund/$offeringId/documents',
@@ -1396,6 +1403,7 @@ export interface FileRoutesByFullPath {
   '/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/client/cap-table/settings': typeof AuthenticatedClientCapTableSettingsRoute
   '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
+  '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
@@ -1577,6 +1585,7 @@ export interface FileRoutesByTo {
   '/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/client/cap-table/settings': typeof AuthenticatedClientCapTableSettingsRoute
   '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
+  '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
@@ -1763,6 +1772,7 @@ export interface FileRoutesById {
   '/_authenticated/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/_authenticated/client/cap-table/settings': typeof AuthenticatedClientCapTableSettingsRoute
   '/_authenticated/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
+  '/_authenticated/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/_authenticated/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/_authenticated/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
@@ -1950,6 +1960,7 @@ export interface FileRouteTypes {
     | '/client/cap-table/securities'
     | '/client/cap-table/settings'
     | '/client/cap-table/table'
+    | '/client/services/request'
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
@@ -2131,6 +2142,7 @@ export interface FileRouteTypes {
     | '/client/cap-table/securities'
     | '/client/cap-table/settings'
     | '/client/cap-table/table'
+    | '/client/services/request'
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
@@ -2316,6 +2328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/cap-table/securities'
     | '/_authenticated/client/cap-table/settings'
     | '/_authenticated/client/cap-table/table'
+    | '/_authenticated/client/services/request'
     | '/_authenticated/fund/$offeringId/documents'
     | '/_authenticated/fund/$offeringId/funding'
     | '/_authenticated/manager/fund-banking/$fundId'
@@ -3515,6 +3528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientServicesIndexRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
+    '/_authenticated/client/services/request': {
+      id: '/_authenticated/client/services/request'
+      path: '/services/request'
+      fullPath: '/client/services/request'
+      preLoaderRoute: typeof AuthenticatedClientServicesRequestRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/fund/$offeringId/documents': {
       id: '/_authenticated/fund/$offeringId/documents'
       path: '/fund/$offeringId/documents'
@@ -3761,6 +3781,7 @@ interface AuthenticatedClientRouteChildren {
   AuthenticatedClientSignOffsRoute: typeof AuthenticatedClientSignOffsRoute
   AuthenticatedClientWiresRoute: typeof AuthenticatedClientWiresRoute
   AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
+  AuthenticatedClientServicesRequestRoute: typeof AuthenticatedClientServicesRequestRoute
   AuthenticatedClientServicesIndexRoute: typeof AuthenticatedClientServicesIndexRoute
 }
 
@@ -3777,6 +3798,8 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientSignOffsRoute: AuthenticatedClientSignOffsRoute,
   AuthenticatedClientWiresRoute: AuthenticatedClientWiresRoute,
   AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
+  AuthenticatedClientServicesRequestRoute:
+    AuthenticatedClientServicesRequestRoute,
   AuthenticatedClientServicesIndexRoute: AuthenticatedClientServicesIndexRoute,
 }
 
