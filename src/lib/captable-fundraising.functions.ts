@@ -415,6 +415,7 @@ export const closeRoundInvestment = createServerFn({ method: "POST" })
     }
 
     const classId = data.classId || (inv.class_id as string | null);
+    const quantity = equity ? (shares as number) : 0;
 
     const { data: security, error: secError } = await context.supabase
       .from("ct_securities")
