@@ -108,6 +108,7 @@ function EngagementPage() {
         </TabsList>
 
         <TabsContent value="services" className="mt-4 space-y-3">
+          <EngagementServicesPanel engagementId={engagementId} />
           {g.serviceTerms && (
             <Card>
               <CardHeader>
