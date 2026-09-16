@@ -46,6 +46,7 @@ import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_aut
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
+import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -130,6 +131,7 @@ import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
+import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
@@ -351,6 +353,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
   path: '/register',
   getParentRoute: () => AuthRoute,
+} as any)
+const CapClaimTokenRoute = CapClaimTokenRouteImport.update({
+  id: '/cap-claim/$token',
+  path: '/cap-claim/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FundSlugRoute = FundSlugRouteImport.update({
   id: '/fund/$slug',
@@ -842,6 +849,11 @@ const AuthenticatedOpsTeamRoute = AuthenticatedOpsTeamRouteImport.update({
   path: '/ops/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
+  id: '/api/public/cap-claim',
+  path: '/api/public/cap-claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLoginAttemptRoute = ApiPublicLoginAttemptRouteImport.update({
   id: '/api/public/login-attempt',
   path: '/api/public/login-attempt',
@@ -1070,6 +1082,7 @@ export interface FileRoutesByFullPath {
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
@@ -1150,6 +1163,7 @@ export interface FileRoutesByFullPath {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1223,6 +1237,7 @@ export interface FileRoutesByTo {
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
@@ -1302,6 +1317,7 @@ export interface FileRoutesByTo {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -1379,6 +1395,7 @@ export interface FileRoutesById {
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
@@ -1459,6 +1476,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1536,6 +1554,7 @@ export interface FileRouteTypes {
     | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/cap-claim/$token'
     | '/fund/$slug'
     | '/shares/$token'
     | '/auth/'
@@ -1616,6 +1635,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/api/public/cap-claim'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin/'
@@ -1689,6 +1709,7 @@ export interface FileRouteTypes {
     | '/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/cap-claim/$token'
     | '/fund/$slug'
     | '/shares/$token'
     | '/auth'
@@ -1768,6 +1789,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/api/public/cap-claim'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin'
@@ -1844,6 +1866,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wire-confirmation'
     | '/auth/forgot'
     | '/auth/register'
+    | '/cap-claim/$token'
     | '/fund/$slug'
     | '/shares/$token'
     | '/auth/'
@@ -1924,6 +1947,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
+    | '/api/public/cap-claim'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
@@ -1980,8 +2004,10 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SpvRoute: typeof SpvRoute
   TermsRoute: typeof TermsRoute
+  CapClaimTokenRoute: typeof CapClaimTokenRoute
   FundSlugRoute: typeof FundSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -2254,6 +2280,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/register'
       preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/cap-claim/$token': {
+      id: '/cap-claim/$token'
+      path: '/cap-claim/$token'
+      fullPath: '/cap-claim/$token'
+      preLoaderRoute: typeof CapClaimTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/fund/$slug': {
       id: '/fund/$slug'
@@ -2843,6 +2876,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cap-claim': {
+      id: '/api/public/cap-claim'
+      path: '/api/public/cap-claim'
+      fullPath: '/api/public/cap-claim'
+      preLoaderRoute: typeof ApiPublicCapClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/login-attempt': {
       id: '/api/public/login-attempt'
       path: '/api/public/login-attempt'
@@ -3413,8 +3453,10 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SpvRoute: SpvRoute,
   TermsRoute: TermsRoute,
+  CapClaimTokenRoute: CapClaimTokenRoute,
   FundSlugRoute: FundSlugRoute,
   SharesTokenRoute: SharesTokenRoute,
+  ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
