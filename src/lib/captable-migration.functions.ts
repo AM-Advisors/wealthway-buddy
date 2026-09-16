@@ -882,6 +882,15 @@ export const importCapMigration = createServerFn({ method: "POST" })
       reconciliation,
     );
 
+    const openExceptions = Object.entries(reconciliation?.exceptions ?? {}).filter(
+      ([, e]) => e.status === "open",
+    );
+    if (openExceptions.length) {
+      throw new Error(
+        "There are open reconciliation exceptions on this batch. Settle them before recording it.",
+      );
+    }
+
     const over = summary.classes.filter((c) => c.overAuthorizedBy > 0);
     const overageReason = data.overageReason?.trim() || null;
     if (over.length && !overageReason) {
