@@ -170,6 +170,11 @@ function mapRow(raw: Record<string, unknown>, mapping: Record<string, string | n
     cliffMonths: num(pick("cliffMonths")),
     durationMonths: num(pick("durationMonths")),
     frequency: frequency(pick("frequency")),
+    authorizedShares: num(pick("authorizedShares")),
+    roundName: pick("roundName") ? String(pick("roundName")).trim() : null,
+    roundDate: isoDate(pick("roundDate")),
+    roundPricePerShare: num(pick("roundPricePerShare")),
+    investmentAmount: num(pick("investmentAmount")),
   };
 
   const issues: string[] = [];
