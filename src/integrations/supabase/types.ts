@@ -1544,6 +1544,167 @@ export type Database = {
           },
         ]
       }
+      client_engagements: {
+        Row: {
+          billing_frequency: string
+          client_id: string
+          created_at: string
+          created_by: string | null
+          delivery_status: string
+          discount_kind: string | null
+          discount_reason: string | null
+          discount_value: number | null
+          effective_date: string | null
+          entity_id: string | null
+          first_invoice_date: string | null
+          id: string
+          notes: string | null
+          service_terms: string | null
+          sow_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          billing_frequency?: string
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          delivery_status?: string
+          discount_kind?: string | null
+          discount_reason?: string | null
+          discount_value?: number | null
+          effective_date?: string | null
+          entity_id?: string | null
+          first_invoice_date?: string | null
+          id?: string
+          notes?: string | null
+          service_terms?: string | null
+          sow_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          billing_frequency?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          delivery_status?: string
+          discount_kind?: string | null
+          discount_reason?: string | null
+          discount_value?: number | null
+          effective_date?: string | null
+          entity_id?: string | null
+          first_invoice_date?: string | null
+          id?: string
+          notes?: string | null
+          service_terms?: string | null
+          sow_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_engagements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_engagements_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_engagements_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_entities: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          entity_type: string
+          formation_date: string | null
+          id: string
+          jurisdiction: string | null
+          legal_name: string
+          notes: string | null
+          offering_id: string | null
+          parent_entity_id: string | null
+          short_name: string | null
+          status: string
+          tax_id_masked: string | null
+          tax_id_status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          entity_type?: string
+          formation_date?: string | null
+          id?: string
+          jurisdiction?: string | null
+          legal_name: string
+          notes?: string | null
+          offering_id?: string | null
+          parent_entity_id?: string | null
+          short_name?: string | null
+          status?: string
+          tax_id_masked?: string | null
+          tax_id_status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          entity_type?: string
+          formation_date?: string | null
+          id?: string
+          jurisdiction?: string | null
+          legal_name?: string
+          notes?: string | null
+          offering_id?: string | null
+          parent_entity_id?: string | null
+          short_name?: string | null
+          status?: string
+          tax_id_masked?: string | null
+          tax_id_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_entities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_entities_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_entities_parent_entity_id_fkey"
+            columns: ["parent_entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_fund_intakes: {
         Row: {
           client_id: string
@@ -2035,8 +2196,13 @@ export type Database = {
       }
       clients: {
         Row: {
+          billing_contact_email: string | null
+          billing_contact_name: string | null
           created_at: string
           created_by: string | null
+          default_billing_frequency: string
+          default_discount_kind: string | null
+          default_discount_value: number | null
           id: string
           legal_name: string | null
           msa_document_path: string | null
@@ -2044,14 +2210,20 @@ export type Database = {
           msa_version: string | null
           name: string
           notes: string | null
+          payment_terms_days: number
           primary_contact_email: string | null
           primary_contact_name: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          billing_contact_email?: string | null
+          billing_contact_name?: string | null
           created_at?: string
           created_by?: string | null
+          default_billing_frequency?: string
+          default_discount_kind?: string | null
+          default_discount_value?: number | null
           id?: string
           legal_name?: string | null
           msa_document_path?: string | null
@@ -2059,14 +2231,20 @@ export type Database = {
           msa_version?: string | null
           name: string
           notes?: string | null
+          payment_terms_days?: number
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          billing_contact_email?: string | null
+          billing_contact_name?: string | null
           created_at?: string
           created_by?: string | null
+          default_billing_frequency?: string
+          default_discount_kind?: string | null
+          default_discount_value?: number | null
           id?: string
           legal_name?: string | null
           msa_document_path?: string | null
@@ -2074,6 +2252,7 @@ export type Database = {
           msa_version?: string | null
           name?: string
           notes?: string | null
+          payment_terms_days?: number
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           status?: string
@@ -5728,6 +5907,7 @@ export type Database = {
           contact_name: string | null
           created_at: string
           created_by: string | null
+          entity_id: string | null
           entity_type: string | null
           expected_investments: string | null
           expected_investors: number | null
@@ -5750,6 +5930,7 @@ export type Database = {
           contact_name?: string | null
           created_at?: string
           created_by?: string | null
+          entity_id?: string | null
           entity_type?: string | null
           expected_investments?: string | null
           expected_investors?: number | null
@@ -5772,6 +5953,7 @@ export type Database = {
           contact_name?: string | null
           created_at?: string
           created_by?: string | null
+          entity_id?: string | null
           entity_type?: string | null
           expected_investments?: string | null
           expected_investors?: number | null
@@ -5794,6 +5976,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_requests_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
             referencedColumns: ["id"]
           },
           {
@@ -10242,6 +10431,9 @@ export type Database = {
         Args: { p_offering_id: string }
         Returns: Json
       }
+      is_any_staff: { Args: never; Returns: boolean }
+      is_client_member: { Args: { _client_id: string }; Returns: boolean }
+      is_contract_staff: { Args: never; Returns: boolean }
       list_entity_reviews: {
         Args: never
         Returns: {

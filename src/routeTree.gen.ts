@@ -144,6 +144,7 @@ import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/l
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
+import { Route as AuthenticatedAdminEntitiesIndexRouteImport } from './routes/_authenticated/admin.entities.index'
 import { Route as AuthenticatedAdminFundBankingFundIdRouteImport } from './routes/_authenticated/admin.fund-banking.$fundId'
 import { Route as AuthenticatedAdminFundMigrationFundIdRouteImport } from './routes/_authenticated/admin.fund-migration.$fundId'
 import { Route as AuthenticatedAdminFundPaymentsFundIdRouteImport } from './routes/_authenticated/admin.fund-payments.$fundId'
@@ -180,6 +181,7 @@ import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/pa
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as AuthenticatedAdminClientsClientIdEntitiesRouteImport } from './routes/_authenticated/admin.clients.$clientId.entities'
 import { Route as AuthenticatedClientAgreementsSowSowIdRouteImport } from './routes/_authenticated/client.agreements.sow.$sowId'
 import { Route as AuthenticatedManagerFundFundIdIndexRouteImport } from './routes/_authenticated/manager.fund.$fundId.index'
 import { Route as AuthenticatedManagerFundFundIdAssetsRouteImport } from './routes/_authenticated/manager.fund.$fundId.assets'
@@ -944,6 +946,12 @@ const AuthenticatedAdminContractsClientIdRoute =
     path: '/admin/contracts/$clientId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminEntitiesIndexRoute =
+  AuthenticatedAdminEntitiesIndexRouteImport.update({
+    id: '/admin/entities/',
+    path: '/admin/entities/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminFundBankingFundIdRoute =
   AuthenticatedAdminFundBankingFundIdRouteImport.update({
     id: '/admin/fund-banking/$fundId',
@@ -1154,6 +1162,12 @@ const LovableEmailTransactionalPreviewRoute =
     id: '/lovable/email/transactional/preview',
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAdminClientsClientIdEntitiesRoute =
+  AuthenticatedAdminClientsClientIdEntitiesRouteImport.update({
+    id: '/admin/clients/$clientId/entities',
+    path: '/admin/clients/$clientId/entities',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedClientAgreementsSowSowIdRoute =
   AuthenticatedClientAgreementsSowSowIdRouteImport.update({
@@ -1373,8 +1387,10 @@ export interface FileRoutesByFullPath {
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin/contracts/': typeof AuthenticatedAdminContractsIndexRoute
+  '/admin/entities/': typeof AuthenticatedAdminEntitiesIndexRoute
   '/client/agreements/': typeof AuthenticatedClientAgreementsIndexRoute
   '/client/cap-table/': typeof AuthenticatedClientCapTableIndexRoute
+  '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -1548,8 +1564,10 @@ export interface FileRoutesByTo {
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin/contracts': typeof AuthenticatedAdminContractsIndexRoute
+  '/admin/entities': typeof AuthenticatedAdminEntitiesIndexRoute
   '/client/agreements': typeof AuthenticatedClientAgreementsIndexRoute
   '/client/cap-table': typeof AuthenticatedClientCapTableIndexRoute
+  '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -1730,8 +1748,10 @@ export interface FileRoutesById {
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/admin/contracts/': typeof AuthenticatedAdminContractsIndexRoute
+  '/_authenticated/admin/entities/': typeof AuthenticatedAdminEntitiesIndexRoute
   '/_authenticated/client/agreements/': typeof AuthenticatedClientAgreementsIndexRoute
   '/_authenticated/client/cap-table/': typeof AuthenticatedClientCapTableIndexRoute
+  '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/_authenticated/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/_authenticated/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -1912,8 +1932,10 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
     | '/admin/contracts/'
+    | '/admin/entities/'
     | '/client/agreements/'
     | '/client/cap-table/'
+    | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/manager/fund/$fundId/assets'
     | '/manager/fund/$fundId/compliance'
@@ -2087,8 +2109,10 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
     | '/admin/contracts'
+    | '/admin/entities'
     | '/client/agreements'
     | '/client/cap-table'
+    | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/manager/fund/$fundId/assets'
     | '/manager/fund/$fundId/compliance'
@@ -2268,8 +2292,10 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
     | '/_authenticated/admin/contracts/'
+    | '/_authenticated/admin/entities/'
     | '/_authenticated/client/agreements/'
     | '/_authenticated/client/cap-table/'
+    | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
     | '/_authenticated/manager/fund/$fundId/assets'
     | '/_authenticated/manager/fund/$fundId/compliance'
@@ -3261,6 +3287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminContractsClientIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/entities/': {
+      id: '/_authenticated/admin/entities/'
+      path: '/admin/entities'
+      fullPath: '/admin/entities/'
+      preLoaderRoute: typeof AuthenticatedAdminEntitiesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/fund-banking/$fundId': {
       id: '/_authenticated/admin/fund-banking/$fundId'
       path: '/admin/fund-banking/$fundId'
@@ -3512,6 +3545,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lovable/email/transactional/preview'
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/clients/$clientId/entities': {
+      id: '/_authenticated/admin/clients/$clientId/entities'
+      path: '/admin/clients/$clientId/entities'
+      fullPath: '/admin/clients/$clientId/entities'
+      preLoaderRoute: typeof AuthenticatedAdminClientsClientIdEntitiesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/client/agreements/sow/$sowId': {
       id: '/_authenticated/client/agreements/sow/$sowId'
@@ -3825,6 +3865,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedAdminContractsIndexRoute: typeof AuthenticatedAdminContractsIndexRoute
+  AuthenticatedAdminEntitiesIndexRoute: typeof AuthenticatedAdminEntitiesIndexRoute
+  AuthenticatedAdminClientsClientIdEntitiesRoute: typeof AuthenticatedAdminClientsClientIdEntitiesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -3959,6 +4001,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundFundIdRouteWithChildren,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
   AuthenticatedAdminContractsIndexRoute: AuthenticatedAdminContractsIndexRoute,
+  AuthenticatedAdminEntitiesIndexRoute: AuthenticatedAdminEntitiesIndexRoute,
+  AuthenticatedAdminClientsClientIdEntitiesRoute:
+    AuthenticatedAdminClientsClientIdEntitiesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
