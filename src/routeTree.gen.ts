@@ -151,6 +151,7 @@ import { Route as AuthenticatedAdminOffboardingCaseIdRouteImport } from './route
 import { Route as AuthenticatedAdminPacketFundIdRouteImport } from './routes/_authenticated/admin.packet.$fundId'
 import { Route as AuthenticatedClientAgreementsIndexRouteImport } from './routes/_authenticated/client.agreements.index'
 import { Route as AuthenticatedClientAgreementsMsaRouteImport } from './routes/_authenticated/client.agreements.msa'
+import { Route as AuthenticatedClientAgreementsRequestFundRouteImport } from './routes/_authenticated/client.agreements.request-fund'
 import { Route as AuthenticatedClientCapTableIndexRouteImport } from './routes/_authenticated/client.cap-table.index'
 import { Route as AuthenticatedClientCapTableComplianceRouteImport } from './routes/_authenticated/client.cap-table.compliance'
 import { Route as AuthenticatedClientCapTableDocumentsRouteImport } from './routes/_authenticated/client.cap-table.documents'
@@ -983,6 +984,12 @@ const AuthenticatedClientAgreementsMsaRoute =
     path: '/msa',
     getParentRoute: () => AuthenticatedClientAgreementsRoute,
   } as any)
+const AuthenticatedClientAgreementsRequestFundRoute =
+  AuthenticatedClientAgreementsRequestFundRouteImport.update({
+    id: '/request-fund',
+    path: '/request-fund',
+    getParentRoute: () => AuthenticatedClientAgreementsRoute,
+  } as any)
 const AuthenticatedClientCapTableIndexRoute =
   AuthenticatedClientCapTableIndexRouteImport.update({
     id: '/',
@@ -1323,6 +1330,7 @@ export interface FileRoutesByFullPath {
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/client/agreements/msa': typeof AuthenticatedClientAgreementsMsaRoute
+  '/client/agreements/request-fund': typeof AuthenticatedClientAgreementsRequestFundRoute
   '/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
   '/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
@@ -1496,6 +1504,7 @@ export interface FileRoutesByTo {
   '/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/client/agreements/msa': typeof AuthenticatedClientAgreementsMsaRoute
+  '/client/agreements/request-fund': typeof AuthenticatedClientAgreementsRequestFundRoute
   '/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
   '/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
@@ -1674,6 +1683,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/offboarding/$caseId': typeof AuthenticatedAdminOffboardingCaseIdRoute
   '/_authenticated/admin/packet/$fundId': typeof AuthenticatedAdminPacketFundIdRoute
   '/_authenticated/client/agreements/msa': typeof AuthenticatedClientAgreementsMsaRoute
+  '/_authenticated/client/agreements/request-fund': typeof AuthenticatedClientAgreementsRequestFundRoute
   '/_authenticated/client/cap-table/compliance': typeof AuthenticatedClientCapTableComplianceRoute
   '/_authenticated/client/cap-table/documents': typeof AuthenticatedClientCapTableDocumentsRoute
   '/_authenticated/client/cap-table/employees': typeof AuthenticatedClientCapTableEmployeesRoute
@@ -1853,6 +1863,7 @@ export interface FileRouteTypes {
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
     | '/client/agreements/msa'
+    | '/client/agreements/request-fund'
     | '/client/cap-table/compliance'
     | '/client/cap-table/documents'
     | '/client/cap-table/employees'
@@ -2026,6 +2037,7 @@ export interface FileRouteTypes {
     | '/admin/offboarding/$caseId'
     | '/admin/packet/$fundId'
     | '/client/agreements/msa'
+    | '/client/agreements/request-fund'
     | '/client/cap-table/compliance'
     | '/client/cap-table/documents'
     | '/client/cap-table/employees'
@@ -2203,6 +2215,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/offboarding/$caseId'
     | '/_authenticated/admin/packet/$fundId'
     | '/_authenticated/client/agreements/msa'
+    | '/_authenticated/client/agreements/request-fund'
     | '/_authenticated/client/cap-table/compliance'
     | '/_authenticated/client/cap-table/documents'
     | '/_authenticated/client/cap-table/employees'
@@ -3271,6 +3284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientAgreementsMsaRouteImport
       parentRoute: typeof AuthenticatedClientAgreementsRoute
     }
+    '/_authenticated/client/agreements/request-fund': {
+      id: '/_authenticated/client/agreements/request-fund'
+      path: '/request-fund'
+      fullPath: '/client/agreements/request-fund'
+      preLoaderRoute: typeof AuthenticatedClientAgreementsRequestFundRouteImport
+      parentRoute: typeof AuthenticatedClientAgreementsRoute
+    }
     '/_authenticated/client/cap-table/': {
       id: '/_authenticated/client/cap-table/'
       path: '/'
@@ -3514,6 +3534,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedClientAgreementsRouteChildren {
   AuthenticatedClientAgreementsMsaRoute: typeof AuthenticatedClientAgreementsMsaRoute
+  AuthenticatedClientAgreementsRequestFundRoute: typeof AuthenticatedClientAgreementsRequestFundRoute
   AuthenticatedClientAgreementsIndexRoute: typeof AuthenticatedClientAgreementsIndexRoute
 }
 
@@ -3521,6 +3542,8 @@ const AuthenticatedClientAgreementsRouteChildren: AuthenticatedClientAgreementsR
   {
     AuthenticatedClientAgreementsMsaRoute:
       AuthenticatedClientAgreementsMsaRoute,
+    AuthenticatedClientAgreementsRequestFundRoute:
+      AuthenticatedClientAgreementsRequestFundRoute,
     AuthenticatedClientAgreementsIndexRoute:
       AuthenticatedClientAgreementsIndexRoute,
   }
