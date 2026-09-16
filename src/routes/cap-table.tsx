@@ -150,6 +150,31 @@ function CapTableLanding() {
           </div>
         </section>
 
+        {/* Worked example */}
+        <section className="border-y bg-secondary/40">
+          <div className="mx-auto max-w-6xl px-4 py-20">
+            <h2 className="max-w-2xl text-3xl leading-tight sm:text-4xl">
+              See A Migration, Before You Start One
+            </h2>
+            <p className="mt-4 max-w-2xl text-muted-foreground">
+              This is a full sample migration for an invented company, Acme Labs — the file read,
+              the columns matched, the share totals reconciled and the exceptions raised. Switch
+              between a Carta and a Pulley export to see how each is handled.
+            </p>
+            <div className="mt-10">
+              <DemoMigration />
+            </div>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Button onClick={() => ask("carta")}>Move my Carta cap table</Button>
+              <Button variant="outline" onClick={() => ask("pulley")}>
+                Move my Pulley cap table
+              </Button>
+            </div>
+          </div>
+        </section>
+
+
+
         {/* Coverage */}
         <section className="border-y bg-secondary/50">
           <div className="mx-auto max-w-6xl px-4 py-20">
