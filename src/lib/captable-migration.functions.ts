@@ -29,6 +29,11 @@ const SYNONYMS: Record<FieldKey, string[]> = {
   cliffMonths: ["cliff", "cliff months", "vesting cliff", "cliff (months)"],
   durationMonths: ["vesting period", "vesting months", "vesting duration", "duration", "vesting length", "vesting term"],
   frequency: ["vesting frequency", "frequency", "vesting interval", "vests"],
+  authorizedShares: ["authorized", "authorised", "authorized shares", "authorised shares", "shares authorized", "class authorized", "authorized amount"],
+  roundName: ["round", "round name", "financing", "financing round", "funding round", "series name", "transaction name", "deal"],
+  roundDate: ["round date", "closing date", "close date", "financing date", "transaction date"],
+  roundPricePerShare: ["round price per share", "round pps", "financing price", "round price"],
+  investmentAmount: ["investment amount", "amount invested", "invested", "amount", "total investment", "purchase amount", "consideration"],
 };
 
 const PROVIDER_SIGNATURES: Array<{ id: string; label: string; markers: string[] }> = [
