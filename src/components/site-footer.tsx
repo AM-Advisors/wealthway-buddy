@@ -24,6 +24,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link to="/cap-table" className="hover:text-primary-foreground">
+                Harmonious CapTable
+              </Link>
+            </li>
+            <li>
               <Link to="/spv" className="hover:text-primary-foreground">
                 Same-Day SPV
               </Link>

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CapTableRouteImport } from './routes/cap-table'
 import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
 import { Route as CapTableTermsRouteImport } from './routes/cap-table-terms'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
@@ -59,6 +60,7 @@ import { Route as AuthenticatedAdminBankAccountsRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminCapTableRouteImport } from './routes/_authenticated/admin.cap-table'
 import { Route as AuthenticatedAdminCapTableBoardRouteImport } from './routes/_authenticated/admin.cap-table-board'
 import { Route as AuthenticatedAdminCapTablePlansRouteImport } from './routes/_authenticated/admin.cap-table-plans'
+import { Route as AuthenticatedAdminCapTableRequestsRouteImport } from './routes/_authenticated/admin.cap-table-requests'
 import { Route as AuthenticatedAdminClientActivityRouteImport } from './routes/_authenticated/admin.client-activity'
 import { Route as AuthenticatedAdminClientBankAccountsRouteImport } from './routes/_authenticated/admin.client-bank-accounts'
 import { Route as AuthenticatedAdminClientCapTablesRouteImport } from './routes/_authenticated/admin.client-cap-tables'
@@ -133,6 +135,7 @@ import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
+import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
@@ -185,6 +188,11 @@ const AboutRoute = AboutRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CapTableRoute = CapTableRouteImport.update({
+  id: '/cap-table',
+  path: '/cap-table',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CapTablePrivacyRoute = CapTablePrivacyRouteImport.update({
@@ -426,6 +434,12 @@ const AuthenticatedAdminCapTablePlansRoute =
   AuthenticatedAdminCapTablePlansRouteImport.update({
     id: '/admin/cap-table-plans',
     path: '/admin/cap-table-plans',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminCapTableRequestsRoute =
+  AuthenticatedAdminCapTableRequestsRouteImport.update({
+    id: '/admin/cap-table-requests',
+    path: '/admin/cap-table-requests',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminClientActivityRoute =
@@ -861,6 +875,12 @@ const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   path: '/api/public/cap-claim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCapTableRequestRoute =
+  ApiPublicCapTableRequestRouteImport.update({
+    id: '/api/public/cap-table-request',
+    path: '/api/public/cap-table-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLoginAttemptRoute = ApiPublicLoginAttemptRouteImport.update({
   id: '/api/public/login-attempt',
   path: '/api/public/login-attempt',
@@ -1063,6 +1083,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cap-table': typeof CapTableRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
@@ -1108,6 +1129,7 @@ export interface FileRoutesByFullPath {
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
+  '/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
@@ -1178,6 +1200,7 @@ export interface FileRoutesByFullPath {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
+  '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1221,6 +1244,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cap-table': typeof CapTableRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
@@ -1265,6 +1289,7 @@ export interface FileRoutesByTo {
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
+  '/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
@@ -1334,6 +1359,7 @@ export interface FileRoutesByTo {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
+  '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -1380,6 +1406,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cap-table': typeof CapTableRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
@@ -1425,6 +1452,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/_authenticated/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/_authenticated/admin/cap-table-plans': typeof AuthenticatedAdminCapTablePlansRoute
+  '/_authenticated/admin/cap-table-requests': typeof AuthenticatedAdminCapTableRequestsRoute
   '/_authenticated/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/_authenticated/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/_authenticated/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
@@ -1495,6 +1523,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
+  '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1541,6 +1570,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/cap-table'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
@@ -1586,6 +1616,7 @@ export interface FileRouteTypes {
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/cap-table-plans'
+    | '/admin/cap-table-requests'
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
@@ -1656,6 +1687,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/team'
     | '/api/public/cap-claim'
+    | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin/'
@@ -1699,6 +1731,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/cap-table'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
@@ -1743,6 +1776,7 @@ export interface FileRouteTypes {
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/cap-table-plans'
+    | '/admin/cap-table-requests'
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
@@ -1812,6 +1846,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/team'
     | '/api/public/cap-claim'
+    | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin'
@@ -1857,6 +1892,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/cap-table'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
@@ -1902,6 +1938,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cap-table'
     | '/_authenticated/admin/cap-table-board'
     | '/_authenticated/admin/cap-table-plans'
+    | '/_authenticated/admin/cap-table-requests'
     | '/_authenticated/admin/client-activity'
     | '/_authenticated/admin/client-bank-accounts'
     | '/_authenticated/admin/client-cap-tables'
@@ -1972,6 +2009,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
     | '/api/public/cap-claim'
+    | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
@@ -2018,6 +2056,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
+  CapTableRoute: typeof CapTableRoute
   CapTablePrivacyRoute: typeof CapTablePrivacyRoute
   CapTableTermsRoute: typeof CapTableTermsRoute
   ClientLoginRoute: typeof ClientLoginRoute
@@ -2033,6 +2072,7 @@ export interface RootRouteChildren {
   FundSlugRoute: typeof FundSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
+  ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -2073,6 +2113,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cap-table': {
+      id: '/cap-table'
+      path: '/cap-table'
+      fullPath: '/cap-table'
+      preLoaderRoute: typeof CapTableRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cap-table-privacy': {
@@ -2395,6 +2442,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/cap-table-plans'
       fullPath: '/admin/cap-table-plans'
       preLoaderRoute: typeof AuthenticatedAdminCapTablePlansRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/cap-table-requests': {
+      id: '/_authenticated/admin/cap-table-requests'
+      path: '/admin/cap-table-requests'
+      fullPath: '/admin/cap-table-requests'
+      preLoaderRoute: typeof AuthenticatedAdminCapTableRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/client-activity': {
@@ -2915,6 +2969,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCapClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cap-table-request': {
+      id: '/api/public/cap-table-request'
+      path: '/api/public/cap-table-request'
+      fullPath: '/api/public/cap-table-request'
+      preLoaderRoute: typeof ApiPublicCapTableRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/login-attempt': {
       id: '/api/public/login-attempt'
       path: '/api/public/login-attempt'
@@ -3266,6 +3327,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminCapTableRoute: typeof AuthenticatedAdminCapTableRoute
   AuthenticatedAdminCapTableBoardRoute: typeof AuthenticatedAdminCapTableBoardRoute
   AuthenticatedAdminCapTablePlansRoute: typeof AuthenticatedAdminCapTablePlansRoute
+  AuthenticatedAdminCapTableRequestsRoute: typeof AuthenticatedAdminCapTableRequestsRoute
   AuthenticatedAdminClientActivityRoute: typeof AuthenticatedAdminClientActivityRoute
   AuthenticatedAdminClientBankAccountsRoute: typeof AuthenticatedAdminClientBankAccountsRoute
   AuthenticatedAdminClientCapTablesRoute: typeof AuthenticatedAdminClientCapTablesRoute
@@ -3372,6 +3434,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminCapTableRoute: AuthenticatedAdminCapTableRoute,
   AuthenticatedAdminCapTableBoardRoute: AuthenticatedAdminCapTableBoardRoute,
   AuthenticatedAdminCapTablePlansRoute: AuthenticatedAdminCapTablePlansRoute,
+  AuthenticatedAdminCapTableRequestsRoute:
+    AuthenticatedAdminCapTableRequestsRoute,
   AuthenticatedAdminClientActivityRoute: AuthenticatedAdminClientActivityRoute,
   AuthenticatedAdminClientBankAccountsRoute:
     AuthenticatedAdminClientBankAccountsRoute,
@@ -3486,6 +3550,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
+  CapTableRoute: CapTableRoute,
   CapTablePrivacyRoute: CapTablePrivacyRoute,
   CapTableTermsRoute: CapTableTermsRoute,
   ClientLoginRoute: ClientLoginRoute,
@@ -3501,6 +3566,7 @@ const rootRouteChildren: RootRouteChildren = {
   FundSlugRoute: FundSlugRoute,
   SharesTokenRoute: SharesTokenRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
+  ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
