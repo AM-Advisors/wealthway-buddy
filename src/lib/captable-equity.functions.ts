@@ -214,6 +214,30 @@ export const getMyEquity = createServerFn({ method: "GET" })
                 reason: t.reason as string | null,
               }))
           : [],
+        transfers: perms.canViewTransactions
+          ? ((transfers ?? []) as any[])
+              .filter(
+                (t) =>
+                  t.seller_stakeholder_id === holder.id || t.buyer_stakeholder_id === holder.id,
+              )
+              .map((t) => ({
+                id: t.id as string,
+                side: t.seller_stakeholder_id === holder.id ? "selling" : "buying",
+                counterparty:
+                  t.seller_stakeholder_id === holder.id
+                    ? ((t.buyer_name as string | null) ?? "Buyer to be named")
+                    : "The selling shareholder",
+                quantity: n(t.quantity),
+                pricePerShare: t.price_per_share === null ? null : n(t.price_per_share),
+                totalAmount: t.total_amount === null ? null : n(t.total_amount),
+                status: t.status as string,
+                restrictionStatus: t.restriction_status as string,
+                rofrStatus: t.rofr_status as string,
+                consentStatus: t.consent_status as string,
+                proposedDate: t.proposed_date as string | null,
+                closedDate: t.closed_date as string | null,
+              }))
+          : [],
         exerciseRequests: ((requests ?? []) as any[])
           .filter((r) => r.stakeholder_id === holder.id)
           .map((r) => ({
