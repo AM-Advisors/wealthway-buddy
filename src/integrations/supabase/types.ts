@@ -2169,6 +2169,148 @@ export type Database = {
           },
         ]
       }
+      ct_migration_rows: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_security_id: string | null
+          id: string
+          issues: Json
+          mapped: Json
+          match_stakeholder_id: string | null
+          migration_id: string
+          raw: Json
+          row_number: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_security_id?: string | null
+          id?: string
+          issues?: Json
+          mapped?: Json
+          match_stakeholder_id?: string | null
+          migration_id: string
+          raw?: Json
+          row_number?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_security_id?: string | null
+          id?: string
+          issues?: Json
+          mapped?: Json
+          match_stakeholder_id?: string | null
+          migration_id?: string
+          raw?: Json
+          row_number?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_migration_rows_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_migration_rows_created_security_id_fkey"
+            columns: ["created_security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_migration_rows_match_stakeholder_id_fkey"
+            columns: ["match_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_migration_rows_migration_id_fkey"
+            columns: ["migration_id"]
+            isOneToOne: false
+            referencedRelation: "ct_migrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_migrations: {
+        Row: {
+          company_id: string
+          concierge_note: string | null
+          concierge_requested_at: string | null
+          created_at: string
+          created_by: string | null
+          detected_provider: string | null
+          file_name: string | null
+          headers: Json
+          id: string
+          imported_at: string | null
+          imported_by: string | null
+          mapping: Json
+          notes: string | null
+          row_count: number
+          source_provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          concierge_note?: string | null
+          concierge_requested_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          detected_provider?: string | null
+          file_name?: string | null
+          headers?: Json
+          id?: string
+          imported_at?: string | null
+          imported_by?: string | null
+          mapping?: Json
+          notes?: string | null
+          row_count?: number
+          source_provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          concierge_note?: string | null
+          concierge_requested_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          detected_provider?: string | null
+          file_name?: string | null
+          headers?: Json
+          id?: string
+          imported_at?: string | null
+          imported_by?: string | null
+          mapping?: Json
+          notes?: string | null
+          row_count?: number
+          source_provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_migrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_notifications: {
         Row: {
           body: string | null

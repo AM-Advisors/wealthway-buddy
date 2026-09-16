@@ -9,7 +9,7 @@ import {
   requestCapExercise,
   withdrawCapExercise,
 } from "@/lib/captable-equity.functions";
-import { computeVesting } from "@/lib/vesting";
+import { computeVesting, vestingTranches, type VestingSchedule } from "@/lib/vesting";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -231,6 +231,50 @@ function HoldingPanel({ holding, onChanged }: { holding: Holding; onChanged: () 
   );
 }
 
+function VestingTable({
+  quantity,
+  schedule,
+}: {
+  quantity: number;
+  schedule: VestingSchedule;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const tranches = vestingTranches(quantity, schedule);
+  if (tranches.length === 0) return null;
+  const firstUpcoming = tranches.findIndex((t) => !t.vested);
+  const visible = showAll
+    ? tranches
+    : tranches.slice(Math.max(firstUpcoming, 0), Math.max(firstUpcoming, 0) + 4);
+
+  return (
+    <div className="rounded-lg border">
+      <div className="flex items-center justify-between border-b px-3 py-2">
+        <p className="text-sm font-medium">
+          {showAll ? "Every vesting date" : "What vests next"}
+        </p>
+        <Button size="sm" variant="ghost" onClick={() => setShowAll((v) => !v)}>
+          {showAll ? "Show next few" : `Show all ${tranches.length}`}
+        </Button>
+      </div>
+      <ul className="divide-y text-sm">
+        {visible.map((tranche) => (
+          <li key={tranche.date} className="flex items-center justify-between gap-3 px-3 py-1.5">
+            <span className={tranche.vested ? "text-muted-foreground" : ""}>
+              {fmtDate(tranche.date)}
+            </span>
+            <span className="tabular-nums">
+              +{fmtNumber(tranche.quantity)}
+              <span className="ml-2 text-xs text-muted-foreground">
+                {tranche.vested ? "vested" : "to come"} · {fmtNumber(tranche.cumulative)} total
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border bg-muted/30 px-3 py-2">
@@ -295,6 +339,7 @@ function GrantCard({
                 : ""}
               {` · vests ${grant.schedule.frequency} over ${grant.schedule.durationMonths} months`}
             </p>
+            <VestingTable quantity={grant.quantity} schedule={grant.schedule} />
           </div>
         ) : null}
 

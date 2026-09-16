@@ -51,6 +51,45 @@ function addMonths(date: Date, months: number) {
   return next;
 }
 
+export type VestingTranche = { date: string; quantity: number; cumulative: number; vested: boolean };
+
+/**
+ * The dated tranches a grant vests in, so a holder can see what lands and when
+ * rather than a single percentage. Derived from the schedule, never stored.
+ */
+export function vestingTranches(
+  quantity: number,
+  schedule: VestingSchedule | null | undefined,
+  asOf: Date = new Date(),
+): VestingTranche[] {
+  if (!schedule?.startDate || !schedule.durationMonths) return [];
+  const start = new Date(schedule.startDate);
+  const duration = schedule.durationMonths;
+  const cliff = schedule.cliffMonths ?? 0;
+  const step = periodMonths(schedule.frequency) || 1;
+
+  const points: number[] = [];
+  if (cliff > 0) points.push(Math.min(cliff, duration));
+  for (let m = Math.max(step, cliff > 0 ? cliff + step : step); m <= duration; m += step) {
+    points.push(m);
+  }
+  if (points[points.length - 1] !== duration) points.push(duration);
+
+  let previous = 0;
+  return points.map((months) => {
+    const cumulative = Math.min(Math.floor((quantity * months) / duration), quantity);
+    const amount = Math.max(cumulative - previous, 0);
+    previous = cumulative;
+    const date = addMonths(start, months);
+    return {
+      date: date.toISOString().slice(0, 10),
+      quantity: amount,
+      cumulative,
+      vested: date <= asOf,
+    };
+  });
+}
+
 export function computeVesting(
   quantity: number,
   schedule: VestingSchedule | null | undefined,
