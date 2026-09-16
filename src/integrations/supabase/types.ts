@@ -2216,6 +2216,120 @@ export type Database = {
           },
         ]
       }
+      ct_round_investments: {
+        Row: {
+          amount: number
+          class_id: string | null
+          closed_at: string | null
+          commitment_date: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          discount_rate: number | null
+          funded_at: string | null
+          id: string
+          instrument: string
+          interest_rate: number | null
+          maturity_date: string | null
+          notes: string | null
+          price_per_share: number | null
+          round_id: string | null
+          security_id: string | null
+          shares: number | null
+          signed_at: string | null
+          stakeholder_id: string
+          status: string
+          updated_at: string
+          valuation_cap: number | null
+        }
+        Insert: {
+          amount?: number
+          class_id?: string | null
+          closed_at?: string | null
+          commitment_date?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          discount_rate?: number | null
+          funded_at?: string | null
+          id?: string
+          instrument?: string
+          interest_rate?: number | null
+          maturity_date?: string | null
+          notes?: string | null
+          price_per_share?: number | null
+          round_id?: string | null
+          security_id?: string | null
+          shares?: number | null
+          signed_at?: string | null
+          stakeholder_id: string
+          status?: string
+          updated_at?: string
+          valuation_cap?: number | null
+        }
+        Update: {
+          amount?: number
+          class_id?: string | null
+          closed_at?: string | null
+          commitment_date?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          discount_rate?: number | null
+          funded_at?: string | null
+          id?: string
+          instrument?: string
+          interest_rate?: number | null
+          maturity_date?: string | null
+          notes?: string | null
+          price_per_share?: number | null
+          round_id?: string | null
+          security_id?: string | null
+          shares?: number | null
+          signed_at?: string | null
+          stakeholder_id?: string
+          status?: string
+          updated_at?: string
+          valuation_cap?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_round_investments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "ct_security_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_round_investments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_round_investments_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "ct_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_round_investments_security_id_fkey"
+            columns: ["security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_round_investments_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_rounds: {
         Row: {
           amount_raised: number | null
@@ -2223,11 +2337,14 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          lead_investor: string | null
           name: string
+          notes: string | null
           pre_money: number | null
           price_per_share: number | null
           round_type: string
           status: string
+          target_amount: number | null
           updated_at: string
         }
         Insert: {
@@ -2236,11 +2353,14 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          lead_investor?: string | null
           name: string
+          notes?: string | null
           pre_money?: number | null
           price_per_share?: number | null
           round_type?: string
           status?: string
+          target_amount?: number | null
           updated_at?: string
         }
         Update: {
@@ -2249,11 +2369,14 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          lead_investor?: string | null
           name?: string
+          notes?: string | null
           pre_money?: number | null
           price_per_share?: number | null
           round_type?: string
           status?: string
+          target_amount?: number | null
           updated_at?: string
         }
         Relationships: [
