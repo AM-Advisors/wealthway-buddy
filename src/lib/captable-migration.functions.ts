@@ -741,12 +741,19 @@ export const setCapMigrationReconciliation = createServerFn({ method: "POST" })
  */
 export const importCapMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ migrationId: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        migrationId: z.string().uuid(),
+        overageReason: z.string().trim().max(2000).optional().nullable(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: batch } = await supabase
       .from("ct_migrations")
-      .select("id, company_id, status")
+      .select("id, company_id, status, reconciliation")
       .eq("id", data.migrationId)
       .maybeSingle();
     if (!batch) throw new Error("Migration not found.");
