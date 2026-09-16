@@ -531,7 +531,7 @@ export const assignConciergeCase = createServerFn({ method: "POST" })
     if (data.targetDate !== undefined) patch['target_date'] = data.targetDate || null;
     if (!Object.keys(patch).length) return { ok: true };
 
-    const { error } = await supabase.from("ct_concierge_cases").update(patch).eq("id", data.caseId);
+    const { error } = await supabase.from("ct_concierge_cases").update(patch as never).eq("id", data.caseId);
     if (error) throw new Error(error.message);
 
     await recordEvent(context, {

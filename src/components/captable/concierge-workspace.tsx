@@ -188,8 +188,8 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
     void queryClient.invalidateQueries({ queryKey: ["cap-concierge-queue"] });
   };
 
-  const run = <T,>(fn: (input: unknown) => Promise<unknown>, success: string) =>
-    useMutationLike<T>(fn, success, refresh);
+  const run = <T,>(fn: unknown, success: string) =>
+    useMutationLike<T>(fn as (input: unknown) => Promise<unknown>, success, refresh);
 
   const assigner = run(assign, "Case updated.");
   const stager = run(stage, "Stage updated.");
