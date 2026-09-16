@@ -310,7 +310,7 @@ export const previewInvestorPortal = createServerFn({ method: "POST" })
         permissions.canViewTransactions
           ? supabase
               .from("ct_transactions")
-              .select("id, transaction_type, quantity, effective_date, security_id")
+              .select("id, kind, quantity, effective_date, security_id")
               .eq("company_id", data.companyId)
               .in(
                 "security_id",
@@ -322,9 +322,9 @@ export const previewInvestorPortal = createServerFn({ method: "POST" })
         permissions.canViewValuations
           ? supabase
               .from("ct_rounds")
-              .select("id, name, closed_on, pre_money, price_per_share")
+              .select("id, name, close_date, pre_money, price_per_share")
               .eq("company_id", data.companyId)
-              .order("closed_on", { ascending: false })
+              .order("close_date", { ascending: false })
               .limit(10)
           : Promise.resolve({ data: [] as any[] }),
         permissions.canViewCompanySummary
@@ -374,14 +374,14 @@ export const previewInvestorPortal = createServerFn({ method: "POST" })
       })),
       transactions: ((transactions ?? []) as any[]).map((t) => ({
         id: t.id as string,
-        type: t.transaction_type as string,
+        type: t.kind as string,
         quantity: n(t.quantity),
         effectiveDate: (t.effective_date as string | null) ?? null,
       })),
       valuations: ((valuations ?? []) as any[]).map((r) => ({
         id: r.id as string,
         name: (r.name as string | null) ?? "Round",
-        closedOn: (r.closed_on as string | null) ?? null,
+        closedOn: (r.close_date as string | null) ?? null,
         pricePerShare: r.price_per_share === null ? null : n(r.price_per_share),
         preMoney: r.pre_money === null ? null : n(r.pre_money),
       })),
