@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CapTableRouteImport } from './routes/cap-table'
 import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
 import { Route as CapTableTermsRouteImport } from './routes/cap-table-terms'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
@@ -186,6 +187,11 @@ const AboutRoute = AboutRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CapTableRoute = CapTableRouteImport.update({
+  id: '/cap-table',
+  path: '/cap-table',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CapTablePrivacyRoute = CapTablePrivacyRouteImport.update({
@@ -1070,6 +1076,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cap-table': typeof CapTableRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
@@ -1229,6 +1236,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/cap-table': typeof CapTableRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
@@ -1389,6 +1397,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cap-table': typeof CapTableRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
@@ -1551,6 +1560,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/cap-table'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
@@ -1710,6 +1720,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/cap-table'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
@@ -1869,6 +1880,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/cap-table'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
@@ -2031,6 +2043,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
+  CapTableRoute: typeof CapTableRoute
   CapTablePrivacyRoute: typeof CapTablePrivacyRoute
   CapTableTermsRoute: typeof CapTableTermsRoute
   ClientLoginRoute: typeof ClientLoginRoute
@@ -2087,6 +2100,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cap-table': {
+      id: '/cap-table'
+      path: '/cap-table'
+      fullPath: '/cap-table'
+      preLoaderRoute: typeof CapTableRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cap-table-privacy': {
@@ -3507,6 +3527,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
+  CapTableRoute: CapTableRoute,
   CapTablePrivacyRoute: CapTablePrivacyRoute,
   CapTableTermsRoute: CapTableTermsRoute,
   ClientLoginRoute: ClientLoginRoute,
