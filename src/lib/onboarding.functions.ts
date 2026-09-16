@@ -188,7 +188,7 @@ export const submitKyc = createServerFn({ method: "POST" })
 
     const { data: application, error: appError } = await supabase
       .from("investor_applications")
-      .select("id, persona_id")
+      .select("id, persona_id, offering_id")
       .eq("user_id", userId)
       .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
@@ -280,6 +280,22 @@ export const submitKyc = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (statusError) throw new Error(statusError.message);
 
+    await (await import("@/lib/kyc-aml.server")).logComplianceEvent(supabase, {
+      applicationId: String(application.id),
+      offeringId: (application as any).offering_id ?? null,
+      userId,
+      actorId: userId,
+      actorRole: "investor",
+      checkKind: "kyc",
+      action: "submitted",
+      payload: {
+        investor_type: data.investor_type,
+        legal_name: data.legal_name,
+        id_document_type: data.id_document_type,
+        id_document_last4: identity.id_document_number_last4,
+      },
+    });
+
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, applicationId: application.id };
   });
@@ -292,7 +308,7 @@ export const submitAml = createServerFn({ method: "POST" })
 
     const { data: application, error: appError } = await supabase
       .from("investor_applications")
-      .select("id, kyc_status")
+      .select("id, kyc_status, offering_id")
       .eq("user_id", userId)
       .eq("id", await activeApplicationId(supabase, userId))
       .maybeSingle();
@@ -346,6 +362,17 @@ export const submitAml = createServerFn({ method: "POST" })
       })
       .eq("id", application.id);
     if (statusError) throw new Error(statusError.message);
+
+    await (await import("@/lib/kyc-aml.server")).logComplianceEvent(supabase, {
+      applicationId: String(application.id),
+      offeringId: (application as any).offering_id ?? null,
+      userId,
+      actorId: userId,
+      actorRole: "investor",
+      checkKind: "aml",
+      action: "submitted",
+      payload: { source_of_funds: data.source_of_funds, flagged },
+    });
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     return { ok: true, flagged };

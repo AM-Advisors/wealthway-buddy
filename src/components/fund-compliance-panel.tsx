@@ -1,17 +1,27 @@
 import { useMemo, useState } from "react";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { supabase } from "@/integrations/supabase/client";
 import {
   getComplianceEvidenceUrl,
   getFundInvestorCompliance,
 } from "@/lib/fund-compliance.functions";
+import {
+  COMPLIANCE_DOC_KINDS,
+  decideComplianceCheck,
+  getInvestorComplianceDetail,
+  recordFundUploadForInvestor,
+} from "@/lib/kyc-aml.functions";
+import { ComplianceTrail } from "@/components/compliance-trail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type Filter = "all" | "outstanding" | "clear" | "expiring";
 
@@ -234,10 +244,207 @@ export function FundCompliancePanel({ offeringId }: { offeringId: string }) {
                   </ul>
                 )}
               </div>
+
+              <InvestorComplianceReview
+                offeringId={offeringId}
+                applicationId={inv.applicationId}
+              />
             </CardContent>
           </Card>
         ))
       )}
+    </div>
+  );
+}
+
+const CHECKS = [
+  { value: "kyc", label: "Identity" },
+  { value: "aml", label: "Screening" },
+  { value: "accreditation", label: "Accreditation" },
+] as const;
+
+function InvestorComplianceReview({
+  offeringId,
+  applicationId,
+}: {
+  offeringId: string;
+  applicationId: string;
+}) {
+  const queryClient = useQueryClient();
+  const loadDetail = useServerFn(getInvestorComplianceDetail);
+  const decide = useServerFn(decideComplianceCheck);
+  const recordUpload = useServerFn(recordFundUploadForInvestor);
+
+  const [open, setOpen] = useState(false);
+  const [checkKind, setCheckKind] = useState<string>("kyc");
+  const [note, setNote] = useState("");
+  const [docKind, setDocKind] = useState<string>(COMPLIANCE_DOC_KINDS[0].value);
+  const [uploading, setUploading] = useState(false);
+
+  const detailKey = ["fund-compliance-detail", offeringId, applicationId];
+  const { data, isLoading } = useQuery({
+    queryKey: detailKey,
+    queryFn: () => loadDetail({ data: { offeringId, applicationId } }),
+    enabled: open,
+  });
+
+  const decideMutation = useMutation({
+    mutationFn: (decision: "approved" | "declined" | "info_requested") =>
+      decide({ data: { offeringId, applicationId, checkKind: checkKind as never, decision, note } }),
+    onSuccess: () => {
+      setNote("");
+      toast.success("Decision recorded.");
+      queryClient.invalidateQueries({ queryKey: detailKey });
+      queryClient.invalidateQueries({ queryKey: ["fund-compliance", offeringId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not record that decision."),
+  });
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error("Files must be 25 MB or smaller.");
+      e.target.value = "";
+      return;
+    }
+    const investorId = (data as any)?.application?.user_id as string | undefined;
+    if (!investorId) {
+      toast.error("Open the review panel again and retry.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const path = `${investorId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+      const { error } = await supabase.storage.from("investor-uploads").upload(path, file);
+      if (error) throw new Error(error.message);
+      await recordUpload({
+        data: {
+          offeringId,
+          applicationId,
+          storage_path: path,
+          file_name: file.name,
+          doc_kind: docKind as never,
+          note: note || null,
+        },
+      });
+      setNote("");
+      toast.success("Document filed for this investor.");
+      queryClient.invalidateQueries({ queryKey: detailKey });
+      queryClient.invalidateQueries({ queryKey: ["fund-compliance", offeringId] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+        Review and record a decision
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-4 rounded-md border p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium">Review</p>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
+          Close
+        </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor={`check-${applicationId}`}>Which check</Label>
+          <select
+            id={`check-${applicationId}`}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={checkKind}
+            onChange={(e) => setCheckKind(e.target.value)}
+          >
+            {CHECKS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`doc-kind-${applicationId}`}>Document type (for uploads)</Label>
+          <select
+            id={`doc-kind-${applicationId}`}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            value={docKind}
+            onChange={(e) => setDocKind(e.target.value)}
+          >
+            {COMPLIANCE_DOC_KINDS.map((k) => (
+              <option key={k.value} value={k.value}>
+                {k.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`note-${applicationId}`}>Note to the investor</Label>
+        <Textarea
+          id={`note-${applicationId}`}
+          value={note}
+          maxLength={1000}
+          placeholder="Required when declining or asking for more information"
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          disabled={decideMutation.isPending}
+          onClick={() => decideMutation.mutate("approved")}
+        >
+          Approve
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={decideMutation.isPending}
+          onClick={() => decideMutation.mutate("info_requested")}
+        >
+          Request more information
+        </Button>
+        <Button
+          size="sm"
+          variant="destructive"
+          disabled={decideMutation.isPending}
+          onClick={() => decideMutation.mutate("declined")}
+        >
+          Decline
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`file-${applicationId}`}>Upload a document on their behalf</Label>
+        <Input id={`file-${applicationId}`} type="file" disabled={uploading} onChange={onFile} />
+        <p className="text-xs text-muted-foreground">
+          Use this for paperwork the investor sent you directly. Up to 25 MB.
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs uppercase text-muted-foreground">Submission history</p>
+        <div className="mt-2">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading history…</p>
+          ) : (
+            <ComplianceTrail rows={((data as any)?.trail ?? []) as any} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -132,6 +132,19 @@ export const recordMyUpload = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
+    await (await import("@/lib/kyc-aml.server")).logComplianceEvent(supabase, {
+      applicationId: application.id,
+      offeringId: application.offering_id ?? null,
+      userId,
+      actorId: userId,
+      actorRole: "investor",
+      checkKind: "documents",
+      action: "document_added",
+      payload: { file_name: data.file_name, doc_kind: data.doc_kind },
+      note: data.note ?? null,
+    });
+
+
     // File the copy in the shared Box folder, exactly like signed documents.
     let filedToBox = false;
     try {

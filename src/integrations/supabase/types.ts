@@ -1847,6 +1847,63 @@ export type Database = {
           },
         ]
       }
+      compliance_submissions: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string
+          application_id: string
+          check_kind: string
+          created_at: string
+          id: string
+          note: string | null
+          offering_id: string | null
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string
+          application_id: string
+          check_kind: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id?: string | null
+          payload?: Json
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string
+          application_id?: string
+          check_kind?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id?: string | null
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_submissions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_submissions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_audit_events: {
         Row: {
           action: string
