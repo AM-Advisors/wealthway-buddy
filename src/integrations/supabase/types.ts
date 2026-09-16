@@ -956,6 +956,57 @@ export type Database = {
           },
         ]
       }
+      cap_table_leads: {
+        Row: {
+          assigned_to: string | null
+          company_name: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          internal_note: string | null
+          note: string | null
+          shareholder_count: number | null
+          source_provider: string
+          status: string
+          submitted_ip: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          company_name: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          internal_note?: string | null
+          note?: string | null
+          shareholder_count?: number | null
+          source_provider?: string
+          status?: string
+          submitted_ip?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          internal_note?: string | null
+          note?: string | null
+          shareholder_count?: number | null
+          source_provider?: string
+          status?: string
+          submitted_ip?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       cap_transfers: {
         Row: {
           client_id: string
