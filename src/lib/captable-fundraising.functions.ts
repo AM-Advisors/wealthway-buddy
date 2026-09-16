@@ -345,7 +345,9 @@ export const setInvestmentStatus = createServerFn({ method: "POST" })
     }
 
     const now = new Date().toISOString();
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: { status: string; signed_at?: string; funded_at?: string } = {
+      status: data.status,
+    };
     if (data.status === "signed") patch['signed_at'] = now;
     if (data.status === "funded") patch['funded_at'] = now;
 
