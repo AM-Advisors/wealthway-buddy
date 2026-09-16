@@ -2,7 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { activeApplicationId } from "@/lib/active-application";
+import { applicationIdForOffering } from "@/lib/active-application";
+
+/** Signing happens inside a fund, so every call may name the fund it is for. */
+const fundScope = (data: unknown) =>
+  z.object({ offering_id: z.string().uuid().optional() }).parse(data ?? {});
 
 export const subscriptionSchema = z.object({
   commitment_cents: z.number().int().min(100000, "Enter your commitment amount"),
@@ -39,7 +43,8 @@ async function sha256Hex(text: string) {
 
 export const getDocumentsStep = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator(fundScope)
+  .handler(async ({ data: scope, context }) => {
     const { supabase, userId } = context;
 
     const { data: application } = await supabase
@@ -48,7 +53,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
         "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
       )
       .eq("user_id", userId)
-      .eq("id", await activeApplicationId(supabase, userId))
+      .eq("id", await applicationIdForOffering(supabase, userId, scope.offering_id))
       .maybeSingle();
 
     if (!application) {
@@ -91,7 +96,9 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
 
 export const saveSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => subscriptionSchema.parse(data))
+  .inputValidator((data: unknown) =>
+    subscriptionSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -99,7 +106,7 @@ export const saveSubscription = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, offering_id")
       .eq("user_id", userId)
-      .eq("id", await activeApplicationId(supabase, userId))
+      .eq("id", await applicationIdForOffering(supabase, userId, data.offering_id))
       .maybeSingle();
     if (!application) throw new Error("No application found.");
 
@@ -150,7 +157,9 @@ export const saveSubscription = createServerFn({ method: "POST" })
 
 export const signDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => signatureSchema.parse(data))
+  .inputValidator((data: unknown) =>
+    signatureSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -158,7 +167,7 @@ export const signDocument = createServerFn({ method: "POST" })
       .from("investor_applications")
       .select("id, offering_id, accreditation_status")
       .eq("user_id", userId)
-      .eq("id", await activeApplicationId(supabase, userId))
+      .eq("id", await applicationIdForOffering(supabase, userId, data.offering_id))
       .maybeSingle();
     if (!application) throw new Error("No application found.");
 

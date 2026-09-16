@@ -109,12 +109,6 @@ const clientsAndMoneyItems: NavItem[] = [
   { title: "Clients and scope", url: "/admin/contracts", icon: Handshake },
   { title: "Pricing and agreements", url: "/admin/pricing", icon: ScrollText },
   { title: "Rate proposals", url: "/admin/rate-proposals", icon: Handshake },
-  { title: "Cap table requests", url: "/admin/cap-table-requests", icon: UserPlus },
-  { title: "Cap table plans", url: "/admin/cap-table-plans", icon: Gauge },
-  { title: "Migration concierge", url: "/admin/cap-table-migrations", icon: ScrollText },
-  { title: "Client cap tables", url: "/admin/client-cap-tables", icon: Users },
-
-
   {
     title: "Unpaid invoices",
     url: "/admin/invoices",
@@ -126,6 +120,32 @@ const clientsAndMoneyItems: NavItem[] = [
   { title: "Bank accounts", url: "/admin/bank-accounts", icon: Landmark },
   { title: "Client bank accounts", url: "/admin/client-bank-accounts", icon: Landmark },
 
+];
+
+/** Cap table for founders — their own company ownership records. */
+const capTableFounderItems: NavItem[] = [
+  { title: "Overview", url: "/client/cap-table", icon: Gauge },
+  { title: "Cap table", url: "/client/cap-table/table", icon: FileSpreadsheet },
+  { title: "Securities", url: "/client/cap-table/securities", icon: ScrollText },
+  { title: "Employees", url: "/client/cap-table/employees", icon: Users },
+  { title: "Investors", url: "/client/cap-table/investors", icon: Briefcase },
+  { title: "Fundraising", url: "/client/cap-table/fundraising", icon: Handshake },
+  { title: "Secondaries", url: "/client/cap-table/secondaries", icon: Banknote },
+  { title: "Exposure and claims", url: "/client/cap-table/exposure", icon: ShieldCheck },
+  { title: "Migration", url: "/client/cap-table/migration", icon: History },
+  { title: "Reconciliation", url: "/client/cap-table/reconciliation", icon: ClipboardList },
+  { title: "Documents", url: "/client/cap-table/documents", icon: FileText },
+  { title: "Compliance", url: "/client/cap-table/compliance", icon: BookLock },
+  { title: "Reports", url: "/client/cap-table/reports", icon: FileSpreadsheet },
+  { title: "Settings", url: "/client/cap-table/settings", icon: ScrollText },
+];
+
+/** Cap table for Harmonious staff — the clients they administer. */
+const capTableStaffItems: NavItem[] = [
+  { title: "Client cap tables", url: "/admin/client-cap-tables", icon: Users },
+  { title: "Cap table requests", url: "/admin/cap-table-requests", icon: UserPlus },
+  { title: "Cap table plans", url: "/admin/cap-table-plans", icon: Gauge },
+  { title: "Migration concierge", url: "/admin/cap-table-migrations", icon: ScrollText },
 ];
 
 const applicationsAndFundsItems: NavItem[] = [
@@ -147,12 +167,14 @@ const recordsItems: NavItem[] = [
   { title: "Email preview", url: "/admin/email-preview", icon: Mail },
 ];
 
+/**
+ * Onboarding is identity and eligibility only. Signing and funding now belong
+ * to the fund the person chooses to invest in, so they are not listed here.
+ */
 const stepRoutes: Record<string, string> = {
   kyc: "/onboarding/kyc",
   aml: "/onboarding/aml",
   accreditation: "/onboarding/accreditation",
-  documents: "/onboarding/documents",
-  funding: "/onboarding/funding",
 };
 
 const OPEN_GROUPS_KEY = "harmonious.sidebar.openGroups";
@@ -225,12 +247,14 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const groups: NavGroup[] = useMemo(() => {
     const list: NavGroup[] = [{ id: "application", label: "Your application", items: investorItems }];
+    list.push({ id: "cap-table", label: "Cap table", items: capTableFounderItems });
     if (adminAccess?.isReviewer)
       list.push({ id: "funds", label: "Fund management", items: managerItems });
     if (operations?.allowed)
       list.push({ id: "operations", label: "Operations", items: operationsItems });
     if (adminAccess?.isAdmin) {
       list.push(
+        { id: "cap-table-staff", label: "Cap table (clients)", items: capTableStaffItems },
         { id: "clients-money", label: "Clients and money", items: clientsAndMoneyItems },
         { id: "applications-funds", label: "Applications and funds", items: applicationsAndFundsItems },
         { id: "records", label: "Records and oversight", items: recordsItems },
@@ -377,7 +401,9 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
             <SidebarGroupLabel>Onboarding</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {(nav?.steps ?? []).map((step, index) => {
+                {(nav?.steps ?? [])
+                  .filter((step) => stepRoutes[step.key])
+                  .map((step, index) => {
                   const url = stepRoutes[step.key];
                   return (
                     <SidebarMenuItem key={step.key}>

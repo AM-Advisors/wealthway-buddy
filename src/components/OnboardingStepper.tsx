@@ -9,8 +9,6 @@ const STEPS = [
   { key: "kyc", label: "Identity", to: "/onboarding/kyc" },
   { key: "aml", label: "Screening", to: "/onboarding/aml" },
   { key: "accreditation", label: "Accreditation", to: "/onboarding/accreditation" },
-  { key: "documents", label: "Documents", to: "/onboarding/documents" },
-  { key: "funding", label: "Funding", to: "/onboarding/funding" },
 ] as const;
 
 export type StepKey = (typeof STEPS)[number]["key"];
@@ -38,7 +36,7 @@ export function OnboardingStepper({ current }: { current: StepKey }) {
   const byKey = new Map<string, RailStep>((data?.steps ?? []).map((s) => [s.key, s]));
 
   return (
-    <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <ol className="grid gap-3 sm:grid-cols-3">
       {STEPS.map((step, i) => {
         const live = byKey.get(step.key);
         const status: RailStatus = live?.status ?? "not_started";
