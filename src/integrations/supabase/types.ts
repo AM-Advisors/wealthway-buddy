@@ -1441,6 +1441,88 @@ export type Database = {
           },
         ]
       }
+      change_order_lines: {
+        Row: {
+          action: string
+          agreed_price_cents: number
+          billing_frequency: string
+          change_order_id: string
+          created_at: string
+          discount_cents: number
+          effective_date: string | null
+          engagement_service_id: string | null
+          id: string
+          note: string | null
+          pass_through: boolean
+          pricing_model: string
+          scope: string | null
+          service_id: string | null
+          service_key: string
+          service_name: string
+          standard_price_cents: number
+        }
+        Insert: {
+          action?: string
+          agreed_price_cents?: number
+          billing_frequency?: string
+          change_order_id: string
+          created_at?: string
+          discount_cents?: number
+          effective_date?: string | null
+          engagement_service_id?: string | null
+          id?: string
+          note?: string | null
+          pass_through?: boolean
+          pricing_model?: string
+          scope?: string | null
+          service_id?: string | null
+          service_key: string
+          service_name: string
+          standard_price_cents?: number
+        }
+        Update: {
+          action?: string
+          agreed_price_cents?: number
+          billing_frequency?: string
+          change_order_id?: string
+          created_at?: string
+          discount_cents?: number
+          effective_date?: string | null
+          engagement_service_id?: string | null
+          id?: string
+          note?: string | null
+          pass_through?: boolean
+          pricing_model?: string
+          scope?: string | null
+          service_id?: string | null
+          service_key?: string
+          service_name?: string
+          standard_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "change_order_lines_change_order_id_fkey"
+            columns: ["change_order_id"]
+            isOneToOne: false
+            referencedRelation: "engagement_change_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "change_order_lines_engagement_service_id_fkey"
+            columns: ["engagement_service_id"]
+            isOneToOne: false
+            referencedRelation: "engagement_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "change_order_lines_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_assignments: {
         Row: {
           assigned_by: string | null
@@ -1755,6 +1837,89 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_intake_requests: {
+        Row: {
+          answers: Json
+          assigned_to: string | null
+          client_id: string
+          created_at: string
+          engagement_id: string | null
+          entity_id: string | null
+          id: string
+          intent: string
+          requested_by: string | null
+          requested_service_keys: string[]
+          resulting_engagement_id: string | null
+          staff_note: string | null
+          status: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          assigned_to?: string | null
+          client_id: string
+          created_at?: string
+          engagement_id?: string | null
+          entity_id?: string | null
+          id?: string
+          intent: string
+          requested_by?: string | null
+          requested_service_keys?: string[]
+          resulting_engagement_id?: string | null
+          staff_note?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          assigned_to?: string | null
+          client_id?: string
+          created_at?: string
+          engagement_id?: string | null
+          entity_id?: string | null
+          id?: string
+          intent?: string
+          requested_by?: string | null
+          requested_service_keys?: string[]
+          resulting_engagement_id?: string | null
+          staff_note?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_intake_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_intake_requests_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "client_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_intake_requests_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_intake_requests_resulting_engagement_id_fkey"
+            columns: ["resulting_engagement_id"]
+            isOneToOne: false
+            referencedRelation: "client_engagements"
             referencedColumns: ["id"]
           },
         ]
@@ -5461,6 +5626,366 @@ export type Database = {
             columns: ["investor_email_id"]
             isOneToOne: false
             referencedRelation: "investor_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_change_orders: {
+        Row: {
+          change_no: number
+          change_type: string
+          client_id: string
+          client_reason: string | null
+          client_signed_at: string | null
+          client_signed_by: string | null
+          client_signer_name: string | null
+          client_signer_title: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          document_type: string
+          effective_date: string | null
+          engagement_id: string
+          executed_at: string | null
+          harmonious_signed_at: string | null
+          harmonious_signer_name: string | null
+          harmonious_signer_title: string | null
+          id: string
+          requested_by: string | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          change_no?: number
+          change_type?: string
+          client_id: string
+          client_reason?: string | null
+          client_signed_at?: string | null
+          client_signed_by?: string | null
+          client_signer_name?: string | null
+          client_signer_title?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          document_type?: string
+          effective_date?: string | null
+          engagement_id: string
+          executed_at?: string | null
+          harmonious_signed_at?: string | null
+          harmonious_signer_name?: string | null
+          harmonious_signer_title?: string | null
+          id?: string
+          requested_by?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          change_no?: number
+          change_type?: string
+          client_id?: string
+          client_reason?: string | null
+          client_signed_at?: string | null
+          client_signed_by?: string | null
+          client_signer_name?: string | null
+          client_signer_title?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          document_type?: string
+          effective_date?: string | null
+          engagement_id?: string
+          executed_at?: string | null
+          harmonious_signed_at?: string | null
+          harmonious_signer_name?: string | null
+          harmonious_signer_title?: string | null
+          id?: string
+          requested_by?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_change_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_change_orders_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "client_engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_entities: {
+        Row: {
+          created_at: string
+          engagement_id: string
+          entity_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          engagement_id: string
+          entity_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          engagement_id?: string
+          entity_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_entities_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "client_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_entities_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_services: {
+        Row: {
+          added_by_change_order_id: string | null
+          agreed_price_cents: number
+          billing_frequency: string
+          category: string | null
+          client_id: string
+          created_at: string
+          created_by: string | null
+          deliverables: string[]
+          discount_cents: number
+          discount_reason: string | null
+          effective_date: string | null
+          end_date: string | null
+          engagement_id: string
+          exclusions: string[]
+          id: string
+          locked_at: string | null
+          pass_through: boolean
+          pricing_model: string
+          pricing_version_id: string | null
+          pricing_version_label: string | null
+          removed_by_change_order_id: string | null
+          renewal_rule: string | null
+          scope: string | null
+          service_id: string | null
+          service_key: string
+          service_name: string
+          standard_price_cents: number
+          status: string
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_by_change_order_id?: string | null
+          agreed_price_cents?: number
+          billing_frequency?: string
+          category?: string | null
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          deliverables?: string[]
+          discount_cents?: number
+          discount_reason?: string | null
+          effective_date?: string | null
+          end_date?: string | null
+          engagement_id: string
+          exclusions?: string[]
+          id?: string
+          locked_at?: string | null
+          pass_through?: boolean
+          pricing_model?: string
+          pricing_version_id?: string | null
+          pricing_version_label?: string | null
+          removed_by_change_order_id?: string | null
+          renewal_rule?: string | null
+          scope?: string | null
+          service_id?: string | null
+          service_key: string
+          service_name: string
+          standard_price_cents?: number
+          status?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_by_change_order_id?: string | null
+          agreed_price_cents?: number
+          billing_frequency?: string
+          category?: string | null
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          deliverables?: string[]
+          discount_cents?: number
+          discount_reason?: string | null
+          effective_date?: string | null
+          end_date?: string | null
+          engagement_id?: string
+          exclusions?: string[]
+          id?: string
+          locked_at?: string | null
+          pass_through?: boolean
+          pricing_model?: string
+          pricing_version_id?: string | null
+          pricing_version_label?: string | null
+          removed_by_change_order_id?: string | null
+          renewal_rule?: string | null
+          scope?: string | null
+          service_id?: string | null
+          service_key?: string
+          service_name?: string
+          standard_price_cents?: number
+          status?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_services_added_by_change_order_id_fkey"
+            columns: ["added_by_change_order_id"]
+            isOneToOne: false
+            referencedRelation: "engagement_change_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_services_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_services_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "client_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_services_pricing_version_id_fkey"
+            columns: ["pricing_version_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_services_removed_by_change_order_id_fkey"
+            columns: ["removed_by_change_order_id"]
+            isOneToOne: false
+            referencedRelation: "engagement_change_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_workflows: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          engagement_id: string
+          engagement_service_id: string | null
+          entity_id: string | null
+          id: string
+          notes: string | null
+          owner_user_id: string | null
+          started_at: string | null
+          status: string
+          target_path: string | null
+          updated_at: string
+          workflow_key: string
+          workflow_name: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          engagement_id: string
+          engagement_service_id?: string | null
+          entity_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_user_id?: string | null
+          started_at?: string | null
+          status?: string
+          target_path?: string | null
+          updated_at?: string
+          workflow_key: string
+          workflow_name: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          engagement_id?: string
+          engagement_service_id?: string | null
+          entity_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_user_id?: string | null
+          started_at?: string | null
+          status?: string
+          target_path?: string | null
+          updated_at?: string
+          workflow_key?: string
+          workflow_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_workflows_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_workflows_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "client_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_workflows_engagement_service_id_fkey"
+            columns: ["engagement_service_id"]
+            isOneToOne: false
+            referencedRelation: "engagement_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "engagement_workflows_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
             referencedColumns: ["id"]
           },
         ]
@@ -9388,60 +9913,105 @@ export type Database = {
       service_catalog: {
         Row: {
           active: boolean
+          applicable_entity_types: string[]
+          billing_frequency: string
           category: string
           client_handles: string | null
+          contract_terms: string | null
           created_at: string
           default_pricing_model: string
+          delivery_workflow: string | null
+          dependencies: string[]
           description: string | null
           harmonious_handles: string | null
           id: string
+          internal_owner: string | null
           key: string
           material: boolean
           name: string
+          onboarding_workflow: string | null
+          renewal_rule: string | null
           required_approvals: string[]
           required_checks: string[]
           required_documents: string[]
+          required_information: string[]
+          service_code: string | null
           sort_order: number
+          standard_deliverables: string[]
+          standard_exclusions: string[]
+          standard_price_cents: number
+          standard_scope: string | null
+          status: string
           third_party_dependency: string | null
           third_party_handles: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          applicable_entity_types?: string[]
+          billing_frequency?: string
           category: string
           client_handles?: string | null
+          contract_terms?: string | null
           created_at?: string
           default_pricing_model?: string
+          delivery_workflow?: string | null
+          dependencies?: string[]
           description?: string | null
           harmonious_handles?: string | null
           id?: string
+          internal_owner?: string | null
           key: string
           material?: boolean
           name: string
+          onboarding_workflow?: string | null
+          renewal_rule?: string | null
           required_approvals?: string[]
           required_checks?: string[]
           required_documents?: string[]
+          required_information?: string[]
+          service_code?: string | null
           sort_order?: number
+          standard_deliverables?: string[]
+          standard_exclusions?: string[]
+          standard_price_cents?: number
+          standard_scope?: string | null
+          status?: string
           third_party_dependency?: string | null
           third_party_handles?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          applicable_entity_types?: string[]
+          billing_frequency?: string
           category?: string
           client_handles?: string | null
+          contract_terms?: string | null
           created_at?: string
           default_pricing_model?: string
+          delivery_workflow?: string | null
+          dependencies?: string[]
           description?: string | null
           harmonious_handles?: string | null
           id?: string
+          internal_owner?: string | null
           key?: string
           material?: boolean
           name?: string
+          onboarding_workflow?: string | null
+          renewal_rule?: string | null
           required_approvals?: string[]
           required_checks?: string[]
           required_documents?: string[]
+          required_information?: string[]
+          service_code?: string | null
           sort_order?: number
+          standard_deliverables?: string[]
+          standard_exclusions?: string[]
+          standard_price_cents?: number
+          standard_scope?: string | null
+          status?: string
           third_party_dependency?: string | null
           third_party_handles?: string | null
           updated_at?: string
@@ -9551,6 +10121,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_package_items: {
+        Row: {
+          created_at: string
+          id: string
+          optional: boolean
+          package_id: string
+          service_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          optional?: boolean
+          package_id: string
+          service_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          optional?: boolean
+          package_id?: string
+          service_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_package_items_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_package_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_packages: {
+        Row: {
+          applicable_entity_types: string[]
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicable_entity_types?: string[]
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicable_entity_types?: string[]
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       service_requests: {
         Row: {
