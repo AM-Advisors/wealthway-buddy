@@ -354,13 +354,15 @@ export const reviewTransferRestrictions = createServerFn({ method: "POST" })
       restriction_reviewed_by: context.userId,
       status: data.outcome === "blocked" ? "rejected" : "rofr",
     };
-    const { error } = await context.supabase
+    const { data: rows, error } = await context.supabase
       .from("ct_secondary_transfers")
       .update(patch)
       .eq("id", data.id)
       .eq("company_id", data.companyId)
-      .neq("status", "closed");
+      .in("status", ["draft", "submitted", "restriction_review", "rofr", "consent"])
+      .select("id");
     if (error) throw new Error(error.message);
+    if (!rows?.length) throw new Error("This transfer can no longer be reviewed.");
 
     await recordEvent(context, {
       companyId: data.companyId,
@@ -398,13 +400,19 @@ export const recordRofrDecision = createServerFn({ method: "POST" })
       rofr_decided_by: context.userId,
       status: nextStatus,
     };
-    const { error } = await context.supabase
+    const { data: rows, error } = await context.supabase
       .from("ct_secondary_transfers")
       .update(patch)
       .eq("id", data.id)
       .eq("company_id", data.companyId)
-      .neq("status", "closed");
+      .in("status", ["submitted", "restriction_review", "rofr"])
+      .neq("restriction_status", "not_started")
+      .neq("restriction_status", "blocked")
+      .select("id");
     if (error) throw new Error(error.message);
+    if (!rows?.length) {
+      throw new Error("Record the transfer restriction review before the right of first refusal.");
+    }
 
     await recordEvent(context, {
       companyId: data.companyId,
@@ -438,13 +446,18 @@ export const recordTransferConsent = createServerFn({ method: "POST" })
       consent_decided_by: context.userId,
       status: data.decision === "granted" ? "approved" : "rejected",
     };
-    const { error } = await context.supabase
+    const { data: rows, error } = await context.supabase
       .from("ct_secondary_transfers")
       .update(patch)
       .eq("id", data.id)
       .eq("company_id", data.companyId)
-      .neq("status", "closed");
+      .in("status", ["consent", "rofr", "restriction_review", "submitted"])
+      .neq("restriction_status", "blocked")
+      .select("id");
     if (error) throw new Error(error.message);
+    if (!rows?.length) {
+      throw new Error("This transfer is not at the consent stage, or a restriction blocks it.");
+    }
 
     await recordEvent(context, {
       companyId: data.companyId,
