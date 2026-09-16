@@ -29,15 +29,15 @@ export const SOW_SECTION_ORDER: { key: SowSectionKey; no: string; title: string 
 export type FundFacts = {
   clientName: string;
   fundName: string;
-  entityType?: string | null;
-  jurisdiction?: string | null;
-  fundType?: string | null;
-  targetRaiseCents?: number | null;
-  expectedInvestors?: number | null;
-  expectedInvestments?: string | null;
-  expectedLaunchDate?: string | null;
-  contactName?: string | null;
-  contactEmail?: string | null;
+  entityType?: string | null | undefined;
+  jurisdiction?: string | null | undefined;
+  fundType?: string | null | undefined;
+  targetRaiseCents?: number | null | undefined;
+  expectedInvestors?: number | null | undefined;
+  expectedInvestments?: string | null | undefined;
+  expectedLaunchDate?: string | null | undefined;
+  contactName?: string | null | undefined;
+  contactEmail?: string | null | undefined;
   effectiveDate: string;
   msaVersion: string;
   pricingVersion: string;

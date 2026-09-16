@@ -33,7 +33,7 @@ function AgreementsHome() {
     queryFn: () => load({ data: {} }),
   });
   const portal = useClientPortal();
-  const services = ((portal.data?.services ?? []) as any[]) ?? [];
+  const services = (portal.data?.services ?? []) as any[];
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
   if (!data?.clientId) {
