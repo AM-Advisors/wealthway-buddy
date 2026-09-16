@@ -127,6 +127,7 @@ function ClientShell() {
 
   const items: NavItem[] = [
     { to: "/client", label: "Overview", icon: LayoutDashboard, exact: true },
+    { to: "/client/services", label: "Your services", icon: Layers },
     {
       to: "/client/inbox",
       label: "Inbox",
