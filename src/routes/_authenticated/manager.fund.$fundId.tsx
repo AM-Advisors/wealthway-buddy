@@ -1,7 +1,6 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-import { ManagerFundHome } from "@/components/manager-fund-home";
-import { Button } from "@/components/ui/button";
+import { FundWorkspaceLayout } from "@/components/fund-workspace-layout";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId")({
   head: () => ({
@@ -22,26 +21,10 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  errorComponent: FundError,
-  notFoundComponent: FundError,
-  component: FundHomeRoute,
+  component: FundWorkspaceRoute,
 });
 
-function FundHomeRoute() {
+function FundWorkspaceRoute() {
   const { fundId } = Route.useParams();
-  return <ManagerFundHome offeringId={fundId} />;
-}
-
-function FundError() {
-  return (
-    <main className="mx-auto max-w-3xl px-4 py-16 text-center">
-      <h1 className="text-2xl">This fund isn't available</h1>
-      <p className="mt-3 text-sm text-muted-foreground">
-        It may have been removed, or you may not be assigned to it.
-      </p>
-      <Button asChild variant="outline" className="mt-6">
-        <Link to="/manager">Back to your panel</Link>
-      </Button>
-    </main>
-  );
+  return <FundWorkspaceLayout fundId={fundId} />;
 }
