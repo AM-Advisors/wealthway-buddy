@@ -24,7 +24,8 @@ import { ClientIntakeGate } from "@/components/client-intake-gate";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAdminAccess } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/client")({
