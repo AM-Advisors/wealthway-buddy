@@ -721,14 +721,19 @@ export const setCapMigrationReconciliation = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: batch } = await supabase
       .from("ct_migrations")
-      .select("id, company_id, status")
+      .select("id, company_id, status, reconciliation")
       .eq("id", data.migrationId)
       .maybeSingle();
     if (!batch) throw new Error("Migration not found.");
     if (batch.status === "imported") throw new Error("This batch has already been accepted.");
     await assertManage(context, batch.company_id as string);
 
-    const reconciliation = { overrides: data.overrides, note: data.note ?? null };
+    const current = (batch.reconciliation ?? null) as Reconciliation | null;
+    const reconciliation: Reconciliation = {
+      overrides: data.overrides,
+      note: data.note ?? null,
+      exceptions: current?.exceptions ?? {},
+    };
     const { error } = await supabase
       .from("ct_migrations")
       .update({ reconciliation: reconciliation as any })
@@ -741,6 +746,78 @@ export const setCapMigrationReconciliation = createServerFn({ method: "POST" })
       entityId: data.migrationId,
       next: reconciliation,
       reason: data.note || "Share totals confirmed against the file",
+    });
+    return { ok: true };
+  });
+
+/**
+ * Founders flag a share class they are not happy with, and clear it once the
+ * numbers are explained. Both sides of that are kept on the batch and in the
+ * history, so nothing is recorded quietly.
+ */
+export const setCapMigrationException = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        migrationId: z.string().uuid(),
+        classKey: z.string().min(1).max(200),
+        className: z.string().max(200).optional().nullable(),
+        action: z.enum(["raise", "resolve", "clear"]),
+        reason: z.string().trim().max(2000).optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: batch } = await supabase
+      .from("ct_migrations")
+      .select("id, company_id, reconciliation")
+      .eq("id", data.migrationId)
+      .maybeSingle();
+    if (!batch) throw new Error("Migration not found.");
+    await assertManage(context, batch.company_id as string);
+
+    const current = (batch.reconciliation ?? null) as Reconciliation | null;
+    const exceptions: Record<string, Exception> = { ...(current?.exceptions ?? {}) };
+    const now = new Date().toISOString();
+    const reason = data.reason?.trim() || "";
+
+    if (data.action === "raise") {
+      if (reason.length < 5) throw new Error("Please say what does not look right.");
+      exceptions[data.classKey] = { status: "open", reason, raisedAt: now };
+    } else if (data.action === "resolve") {
+      const existing = exceptions[data.classKey];
+      if (!existing) throw new Error("There is no open exception on this share class.");
+      if (reason.length < 5) throw new Error("Please say how this was settled.");
+      exceptions[data.classKey] = {
+        ...existing,
+        status: "resolved",
+        resolvedAt: now,
+        resolution: reason,
+      };
+    } else {
+      delete exceptions[data.classKey];
+    }
+
+    const reconciliation: Reconciliation = { ...(current ?? {}), exceptions };
+    const { error } = await supabase
+      .from("ct_migrations")
+      .update({ reconciliation: reconciliation as any })
+      .eq("id", data.migrationId);
+    if (error) throw new Error(error.message);
+
+    await recordEvent(context, {
+      companyId: batch.company_id as string,
+      action:
+        data.action === "raise"
+          ? "migration.exception_raised"
+          : data.action === "resolve"
+            ? "migration.exception_resolved"
+            : "migration.exception_cleared",
+      entityId: data.migrationId,
+      next: { classKey: data.classKey, className: data.className ?? null, reason: reason || null },
+      reason: reason || `Exception ${data.action}d on ${data.className ?? data.classKey}`,
     });
     return { ok: true };
   });
