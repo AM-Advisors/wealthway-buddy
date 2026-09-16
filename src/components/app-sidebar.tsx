@@ -398,8 +398,9 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         {showOnboarding && !search && (
           <Collapsible
             open={
+              collapsed ||
               pathname.startsWith("/onboarding/") ||
-              (hydrated ? (openGroups.onboarding ?? true) : true)
+              (hydrated ? (openGroups["onboarding"] ?? true) : true)
             }
             onOpenChange={(next) => setGroupOpen("onboarding", next)}
             className="group/collapsible"
@@ -413,7 +414,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
                       className={cn(
                         "h-4 w-4 transition-transform",
                         (pathname.startsWith("/onboarding/") ||
-                          (hydrated ? (openGroups.onboarding ?? true) : true)) &&
+                          (hydrated ? (openGroups["onboarding"] ?? true) : true)) &&
                           "rotate-90",
                       )}
                       aria-hidden
@@ -421,7 +422,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
                   </SidebarGroupLabel>
                 </CollapsibleTrigger>
               )}
-              <CollapsibleContent forceMount={collapsed ? true : undefined}>
+              <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {onboardingItems.map((item, index) => {
