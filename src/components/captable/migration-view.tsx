@@ -292,7 +292,7 @@ function BatchPanel({
               </Button>
               <Button
                 size="sm"
-                onClick={() => importer.mutate()}
+                onClick={() => (overAuthorized > 0 ? setAcceptOpen(true) : importer.mutate(null))}
                 disabled={importer.isPending || batch.counts.ready === 0}
               >
                 Accept {fmtNumber(batch.counts.ready)} lines
