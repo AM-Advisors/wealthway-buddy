@@ -310,7 +310,7 @@ export const respondToChange = createServerFn({ method: "POST" })
     if (status === "resolved" && (change as any).sow_id && (change as any).section_key) {
       await context.supabase
         .from("sow_sections")
-        .update({ body: finalText })
+        .update({ body: finalText as string })
         .eq("sow_id", (change as any).sow_id)
         .eq("key", (change as any).section_key);
     }
