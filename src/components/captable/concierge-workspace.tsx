@@ -16,6 +16,7 @@ import {
   setConciergeStage,
 } from "@/lib/captable-concierge.functions";
 import { importCapMigration } from "@/lib/captable-migration.functions";
+import { MigrationWizard } from "./migration-wizard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
