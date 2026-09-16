@@ -665,7 +665,10 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       }
     }
 
-    let fundQuery = supabase.from("offerings").select("id, name, reg_type, is_open").order("name");
+    let fundQuery = supabase
+      .from("offerings")
+      .select("id, name, reg_type, fund_type, is_open, target_raise_cents")
+      .order("name");
     if (offeringIds) fundQuery = fundQuery.in("id", offeringIds);
     const { data: funds, error: fundsError } = await fundQuery;
     if (fundsError) throw new Error(fundsError.message);
@@ -701,14 +704,22 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
     const applications = (appsRes.data ?? []) as any[];
     const appIds = applications.map((a) => a.id as string);
 
-    const { data: wires } = appIds.length
-      ? await supabase
+    const [{ data: wires }, { data: payments }] = appIds.length
+      ? await Promise.all([
+          supabase
           .from("wire_confirmations")
           .select("id, application_id, status")
           .in("application_id", appIds)
           .eq("status", "pending")
-          .limit(2000)
-      : { data: [] as any[] };
+          .limit(2000),
+          supabase
+            .from("payments")
+            .select("application_id, amount_cents, status")
+            .in("application_id", appIds)
+            .eq("status", "settled")
+            .limit(3000),
+        ])
+      : [{ data: [] as any[] }, { data: [] as any[] }];
 
     const appOffering = new Map(applications.map((a) => [a.id as string, a.offering_id as string]));
 
@@ -720,6 +731,10 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       let funding = 0;
       let complete = 0;
       let committedCents = 0;
+      const ownIds = new Set(own.map((app) => app.id as string));
+      const receivedCents = ((payments ?? []) as any[])
+        .filter((payment) => ownIds.has(payment.application_id as string))
+        .reduce((sum, payment) => sum + Number(payment.amount_cents ?? 0), 0);
       for (const app of own) {
         committedCents += app.commitment_cents ?? 0;
         if (app.funding_status === "settled") complete += 1;
@@ -732,7 +747,9 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
         id: fund.id as string,
         name: fund.name as string,
         regType: fund.reg_type as string,
+        fundType: (fund.fund_type as string | null) ?? null,
         isOpen: Boolean(fund.is_open),
+        targetRaiseCents: Number(fund.target_raise_cents ?? 0),
         total: own.length,
         identity,
         accreditation,
@@ -740,6 +757,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
         funding,
         complete,
         committedCents,
+        receivedCents,
         signableDocuments: ((docsRes.data ?? []) as any[]).filter(
           (d) => d.offering_id === fund.id,
         ).length,

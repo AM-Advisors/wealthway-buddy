@@ -85,13 +85,19 @@ const investorItems: NavItem[] = [
 
 const managerItems: NavItem[] = [
   { title: "My funds", url: "/manager", icon: Briefcase },
-  { title: "Investors", url: "/manager/investors", icon: Users },
   { title: "Document inbox", url: "/manager/inbox", icon: Mail },
-  { title: "Application timeline", url: "/manager/timeline", icon: History },
+  { title: "Investor approvals", url: "/manager/approvals", icon: BadgeCheck },
   { title: "Reviewer activity", url: "/manager/activity", icon: ClipboardList },
-  { title: "Fund documents", url: "/manager/documents", icon: FileText },
-  { title: "My onboarding documents", url: "/manager/onboarding", icon: FileSignature },
-  { title: "Fund tax profile", url: "/manager/tax", icon: FileSpreadsheet },
+];
+
+const selectedFundItems = (fundId: string): NavItem[] => [
+  { title: "Overview", url: `/manager/fund/${fundId}`, icon: Building2 },
+  { title: "Investors", url: `/manager/fund/${fundId}/investors`, icon: Users },
+  { title: "Assets & performance", url: `/manager/fund/${fundId}/assets`, icon: Gauge },
+  { title: "Transactions", url: `/manager/fund/${fundId}/transactions`, icon: Banknote },
+  { title: "Documents", url: `/manager/fund/${fundId}/documents`, icon: FileText },
+  { title: "Compliance", url: `/manager/fund/${fundId}/compliance`, icon: ShieldCheck },
+  { title: "Settings", url: `/manager/fund/${fundId}/settings`, icon: ScrollText },
 ];
 
 const operationsItems: NavItem[] = [
@@ -248,8 +254,13 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         ? [...capTableFounderItems, ...capTableStaffItems]
         : capTableFounderItems,
     });
-    if (adminAccess?.isReviewer)
+    if (adminAccess?.isReviewer) {
       list.push({ id: "funds", label: "Fund management", items: managerItems });
+      const selectedFundId = pathname.match(/^\/manager\/fund\/([^/]+)/)?.[1];
+      if (selectedFundId) {
+        list.push({ id: "selected-fund", label: "Selected fund", items: selectedFundItems(selectedFundId) });
+      }
+    }
     if (operations?.allowed)
       list.push({ id: "operations", label: "Operations", items: operationsItems });
     if (adminAccess?.isAdmin) {
@@ -260,7 +271,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       );
     }
     return list;
-  }, [adminAccess?.isAdmin, adminAccess?.isReviewer, operations?.allowed]);
+  }, [adminAccess?.isAdmin, adminAccess?.isReviewer, operations?.allowed, pathname]);
 
   const search = query.trim().toLowerCase();
   const matches = (item: NavItem) => !search || item.title.toLowerCase().includes(search);
