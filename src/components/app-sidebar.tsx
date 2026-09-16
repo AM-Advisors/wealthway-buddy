@@ -22,6 +22,7 @@ import {
   Home,
   Landmark,
   LayoutDashboard,
+  Layers,
   LogOut,
   Mail,
   Receipt,
