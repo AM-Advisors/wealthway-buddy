@@ -7,6 +7,7 @@ import {
   Briefcase,
   FileText,
   HandCoins,
+  Layers,
   LayoutDashboard,
   Mail,
   PenLine,
