@@ -903,6 +903,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
           company_id: companyId,
           stakeholder_id: stakeholderId,
           class_id: mapped.securityClass ? (classByName.get(norm(mapped.securityClass)) ?? null) : null,
+          round_id: mapped.roundName ? (roundByName.get(norm(mapped.roundName)) ?? null) : null,
           security_type: mapped.securityType ?? "common_stock",
           label: mapped.label,
           quantity: mapped.quantity ?? 0,
