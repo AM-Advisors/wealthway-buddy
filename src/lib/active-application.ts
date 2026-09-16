@@ -51,6 +51,47 @@ export async function activeApplicationId(supabase: any, userId: string): Promis
 }
 
 /**
+ * The application the signing and funding pages should read and write. When a
+ * fund is named in the address, the person's application in that fund is used
+ * so they always act on the fund they opened. Otherwise the active account's
+ * application is used, exactly as before.
+ */
+export async function applicationIdForOffering(
+  supabase: any,
+  userId: string,
+  offeringId?: string | null,
+): Promise<string> {
+  if (!offeringId) return activeApplicationId(supabase, userId);
+
+  const personaId = await activePersonaId(supabase, userId);
+  const base = supabase
+    .from("investor_applications")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("offering_id", offeringId)
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  // Prefer the account the person is acting as; fall back to any of their
+  // applications in that fund so an older record is still reachable.
+  if (personaId) {
+    const { data: scoped } = await base.eq("persona_id", personaId).maybeSingle();
+    if (scoped?.id) return scoped.id as string;
+  }
+
+  const { data } = await supabase
+    .from("investor_applications")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("offering_id", offeringId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  return (data?.id as string | undefined) ?? NO_APPLICATION;
+}
+
+/**
  * Makes sure the person has at least one investing account and that one of
  * them is selected. Older investors are carried over from their profile.
  */
