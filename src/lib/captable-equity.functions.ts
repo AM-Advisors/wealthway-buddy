@@ -128,6 +128,15 @@ export const getMyEquity = createServerFn({ method: "GET" })
       supabase.from("ct_documents").select("id, title, doc_type, linked_id, linked_type, status, created_at"),
     ]);
 
+    // Secondary transfers where this person is the seller or the named buyer.
+    // Row level security keeps every other transfer out of reach.
+    const { data: transfers } = await supabase
+      .from("ct_secondary_transfers")
+      .select(
+        "id, company_id, seller_stakeholder_id, buyer_stakeholder_id, buyer_name, quantity, price_per_share, total_amount, status, restriction_status, rofr_status, consent_status, proposed_date, closed_date, created_at",
+      )
+      .order("created_at", { ascending: false });
+
     const companyById = new Map(((companies ?? []) as any[]).map((c) => [c.id, c]));
     const scheduleById = new Map(((schedules ?? []) as any[]).map((s) => [s.id, s]));
     const permByStakeholder = new Map(((permissions ?? []) as any[]).map((p) => [p.stakeholder_id, p]));
