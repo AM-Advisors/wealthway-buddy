@@ -84,7 +84,7 @@ async function audit(context: any, row: Record<string, unknown>) {
 const entityInput = z.object({
   id: z.string().uuid().optional(),
   clientId: z.string().uuid(),
-  entityType: z.enum(["company", "fund", "spv", "series", "gp", "management_company", "other"]),
+  entityType: z.enum(ENTITY_TYPE_VALUES),
   legalName: z.string().min(2),
   shortName: z.string().optional().nullable(),
   jurisdiction: z.string().optional().nullable(),
