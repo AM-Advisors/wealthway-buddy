@@ -243,6 +243,7 @@ function BatchPanel({
       toast.success(
         `${result.lines} lines accepted · ${result.stakeholdersCreated} new shareholders, ${result.securitiesCreated} holdings recorded.`,
       );
+      setAcceptOpen(false);
       onChanged();
     },
     onError: (err: unknown) =>
