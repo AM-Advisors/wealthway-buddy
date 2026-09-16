@@ -34,6 +34,12 @@ export const Route = createFileRoute("/cap-table")({
       { name: "twitter:image", content: "https://onboard.harmonious.co/og-harmonious.jpg" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { move?: CapRequestProvider } => {
+    const move = String(search["move"] ?? "");
+    return ["carta", "pulley", "angellist", "spreadsheet", "none", "other"].includes(move)
+      ? { move: move as CapRequestProvider }
+      : {};
+  },
   component: CapTableLanding,
 });
 
