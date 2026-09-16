@@ -264,7 +264,7 @@ export const getCapMigrations = createServerFn({ method: "GET" })
           rows: mine.map((r) => ({
             id: r.id as string,
             rowNumber: Number(r.row_number ?? 0),
-            raw: (r.raw ?? {}) as Record<string, unknown>,
+            raw: (r.raw ?? {}) as Record<string, string | null>,
             mapped: (r.mapped ?? {}) as MappedRow,
             issues: (r.issues ?? []) as string[],
             matchStakeholderId: (r.match_stakeholder_id as string | null) ?? null,
@@ -441,10 +441,10 @@ export const setCapMigrationRow = createServerFn({ method: "POST" })
       if (data.status === "ready" && ((row.issues ?? []) as string[]).length) {
         throw new Error("Fix the problems on this line before marking it ready.");
       }
-      patch.status = data.status;
+      patch['status'] = data.status;
     }
-    if (data.matchStakeholderId !== undefined) patch.match_stakeholder_id = data.matchStakeholderId;
-    const { error } = await supabase.from("ct_migration_rows").update(patch).eq("id", data.rowId);
+    if (data.matchStakeholderId !== undefined) patch['match_stakeholder_id'] = data.matchStakeholderId;
+    const { error } = await supabase.from("ct_migration_rows").update(patch as any).eq("id", data.rowId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -558,7 +558,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
           .from("ct_stakeholders")
           .insert({
             company_id: companyId,
-            name: mapped.holderName,
+            name: mapped.holderName ?? "Unnamed shareholder",
             email: mapped.holderEmail,
             stakeholder_type: mapped.holderType,
             created_by: userId,
@@ -579,7 +579,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
             name: `${mapped.holderName ?? "Grant"} — imported schedule`,
             start_date: mapped.vestingStart,
             cliff_months: mapped.cliffMonths ?? 0,
-            duration_months: mapped.durationMonths,
+            duration_months: mapped.durationMonths ?? 0,
             frequency: mapped.frequency,
           })
           .select("id")
@@ -593,9 +593,9 @@ export const importCapMigration = createServerFn({ method: "POST" })
           company_id: companyId,
           stakeholder_id: stakeholderId,
           security_class_id: mapped.securityClass ? (classByName.get(norm(mapped.securityClass)) ?? null) : null,
-          security_type: mapped.securityType,
+          security_type: mapped.securityType ?? "common_stock",
           label: mapped.label,
-          quantity: mapped.quantity,
+          quantity: mapped.quantity ?? 0,
           issue_date: mapped.issueDate,
           purchase_price: mapped.pricePerShare,
           exercise_price: mapped.exercisePrice,
@@ -614,7 +614,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
         security_id: security.id,
         stakeholder_id: stakeholderId,
         kind: "issuance",
-        quantity: mapped.quantity,
+        quantity: mapped.quantity ?? 0,
         amount: mapped.pricePerShare && mapped.quantity ? mapped.pricePerShare * mapped.quantity : null,
         effective_date: mapped.issueDate ?? new Date().toISOString().slice(0, 10),
         status: "recorded",

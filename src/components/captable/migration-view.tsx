@@ -443,7 +443,7 @@ function RowLine({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NONE}>Create a new shareholder</SelectItem>
-              {stakeholders.map((s) => (
+              {stakeholders.map((s: Data["stakeholders"][number]) => (
                 <SelectItem key={s.id} value={s.id}>
                   {s.name}
                 </SelectItem>
@@ -452,7 +452,7 @@ function RowLine({
           </Select>
         ) : (
           <span className="text-sm text-muted-foreground">
-            {stakeholders.find((s) => s.id === row.matchStakeholderId)?.name ?? "New shareholder"}
+            {stakeholders.find((s: Data["stakeholders"][number]) => s.id === row.matchStakeholderId)?.name ?? "New shareholder"}
           </span>
         )}
       </TableCell>
@@ -541,7 +541,7 @@ function MappingDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>Not in my file</SelectItem>
-                  {batch.headers.map((header) => (
+                  {batch.headers.map((header: string) => (
                     <SelectItem key={header} value={header}>
                       {header}
                     </SelectItem>
