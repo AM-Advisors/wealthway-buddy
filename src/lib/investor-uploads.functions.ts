@@ -93,6 +93,7 @@ export const recordMyUpload = createServerFn({ method: "POST" })
         file_name: z.string().min(1).max(255),
         doc_kind: z.enum(kindValues),
         note: z.string().max(500).optional().nullable(),
+        offering_id: z.string().uuid().nullish(),
       })
       .parse(data),
   )
@@ -100,7 +101,20 @@ export const recordMyUpload = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     if (!data.storage_path.startsWith(`${userId}/`)) throw new Error("Invalid upload path.");
 
-    const application = await currentApplication(supabase, userId);
+    // A file can be filed against any fund this person has an application for.
+    let application: { id: string; offering_id: string } | null = null;
+    if (data.offering_id) {
+      const { data: row } = await supabase
+        .from("investor_applications")
+        .select("id, offering_id")
+        .eq("user_id", userId)
+        .eq("offering_id", data.offering_id)
+        .maybeSingle();
+      application = (row as any) ?? null;
+      if (!application) throw new Error("That fund is not on your account.");
+    } else {
+      application = await currentApplication(supabase, userId);
+    }
     if (!application) throw new Error("No application found for your account.");
 
     const { data: inserted, error } = await supabase
