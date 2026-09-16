@@ -800,24 +800,54 @@ export const getConciergeCompanies = createServerFn({ method: "GET" })
     };
   });
 
+/** The kinds of file the assistant knows how to read. */
+const FILE_KINDS = ["shareholders", "grants", "rounds", "documents"] as const;
+type FileKind = (typeof FILE_KINDS)[number];
+
+const KIND_LABEL: Record<FileKind, string> = {
+  shareholders: "Shareholders",
+  grants: "Grants and options",
+  rounds: "Funding rounds",
+  documents: "Documents",
+};
+
+function pick(row: Record<string, any>, keys: string[]): string {
+  for (const k of Object.keys(row)) {
+    const norm = k.toLowerCase().replace(/[^a-z]/g, "");
+    if (keys.some((want) => norm.includes(want))) {
+      const v = row[k];
+      if (v !== null && v !== undefined && String(v).trim()) return String(v).trim();
+    }
+  }
+  return "";
+}
+
 /**
- * A specialist brings a client's actual Carta, Pulley, AngelList or spreadsheet
- * export in on their behalf. It creates the same reviewable batch a founder
- * upload creates — real rows, real column mapping, real reconciliation — and
- * opens a concierge case against it, assigned to whoever uploaded it.
+ * The migration assistant. A specialist (or a founder's own export handed to
+ * us) drops in several files at once — shareholders, grants, rounds and a
+ * document list — and each one becomes its own reviewable batch, all grouped
+ * under a single concierge case.
  *
- * Nothing is recorded on the cap table here: the founder still approves the
- * prepared batch before it goes live.
+ * Nothing reaches the live cap table here: the founder still approves the
+ * prepared work before it is recorded.
  */
-export const startStaffMigration = createServerFn({ method: "POST" })
+export const startMigrationAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
-        fileName: z.string().trim().max(240).optional().nullable(),
-        headers: z.array(z.string()).min(1),
-        rows: z.array(z.record(z.string(), z.any())).min(1).max(5000),
+        files: z
+          .array(
+            z.object({
+              kind: z.enum(FILE_KINDS),
+              fileName: z.string().trim().max(240).optional().nullable(),
+              headers: z.array(z.string()).min(1),
+              rows: z.array(z.record(z.string(), z.any())).min(1).max(5000),
+            }),
+          )
+          .min(1)
+          .max(8),
         note: z.string().trim().max(2000).optional().nullable(),
         contactName: z.string().trim().max(160).optional().nullable(),
         contactEmail: z.string().trim().email().max(255).optional().nullable(),
@@ -840,42 +870,92 @@ export const startStaffMigration = createServerFn({ method: "POST" })
     }
 
     const { detectProvider, autoMap, writeRows } = await import("./captable-migration.functions");
-    const provider = detectProvider(data.headers);
-    const mapping = autoMap(data.headers);
+    const bundleId = crypto.randomUUID();
+    const now = new Date().toISOString();
 
-    const { data: batch, error } = await supabase
-      .from("ct_migrations")
-      .insert({
-        company_id: data.companyId,
-        file_name: data.fileName || null,
-        detected_provider: provider.label,
-        source_provider: provider.id,
-        status: "in_review",
-        mapping,
-        headers: data.headers,
-        row_count: data.rows.length,
-        concierge_requested_at: new Date().toISOString(),
-        concierge_note: data.note || null,
-        created_by: userId,
-      })
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
+    const created: { id: string; kind: FileKind; provider: string; rows: number; file: string }[] = [];
+    let documentsRecorded = 0;
 
-    const migrationId = batch.id as string;
+    const rollback = async () => {
+      for (const b of created) {
+        await supabase.from("ct_migration_rows").delete().eq("migration_id", b.id);
+        await supabase.from("ct_migrations").delete().eq("id", b.id);
+      }
+    };
+
     try {
-      await writeRows(context, data.companyId, migrationId, data.rows, mapping);
+      for (const file of data.files) {
+        if (file.kind === "documents") {
+          // A document list is a manifest, not cap table maths: we log what the
+          // client says exists so the specialist can chase the actual files.
+          const rows = file.rows.map((r) => ({
+            company_id: data.companyId,
+            title:
+              pick(r, ["title", "documentname", "document", "filename", "name"]) ||
+              "Untitled document",
+            doc_type: pick(r, ["doctype", "type", "category"]) || "migrated",
+            status: "pending",
+            linked_type: "migration",
+            uploaded_by: userId,
+          }));
+          const { error: docError } = await supabase.from("ct_documents").insert(rows);
+          if (docError) throw new Error(docError.message);
+          documentsRecorded += rows.length;
+          continue;
+        }
+
+        const provider = detectProvider(file.headers);
+        const mapping = autoMap(file.headers);
+        const { data: batch, error } = await supabase
+          .from("ct_migrations")
+          .insert({
+            company_id: data.companyId,
+            file_name: file.fileName || null,
+            file_kind: file.kind,
+            bundle_id: bundleId,
+            detected_provider: provider.label,
+            source_provider: provider.id,
+            status: "in_review",
+            mapping,
+            headers: file.headers,
+            row_count: file.rows.length,
+            concierge_requested_at: now,
+            concierge_note: data.note || null,
+            created_by: userId,
+          })
+          .select("id")
+          .single();
+        if (error) throw new Error(error.message);
+
+        const migrationId = batch.id as string;
+        created.push({
+          id: migrationId,
+          kind: file.kind,
+          provider: provider.label,
+          rows: file.rows.length,
+          file: file.fileName || KIND_LABEL[file.kind],
+        });
+        await writeRows(context, data.companyId, migrationId, file.rows, mapping);
+      }
     } catch (err) {
-      await supabase.from("ct_migration_rows").delete().eq("migration_id", migrationId);
-      await supabase.from("ct_migrations").delete().eq("id", migrationId);
+      await rollback();
       throw err;
     }
 
-    const now = new Date().toISOString();
-    const { data: created, error: caseError } = await supabase
+    if (!created.length) {
+      throw new Error(
+        "Add at least one shareholders, grants or rounds file — a document list on its own has nothing to reconcile.",
+      );
+    }
+
+    const order: FileKind[] = ["shareholders", "grants", "rounds"];
+    const primary =
+      order.map((k) => created.find((b) => b.kind === k)).find(Boolean) ?? created[0]!;
+
+    const { data: caseRow, error: caseError } = await supabase
       .from("ct_concierge_cases")
       .insert({
-        migration_id: migrationId,
+        migration_id: primary.id,
         company_id: data.companyId,
         stage: "preparing",
         priority: data.priority,
@@ -888,25 +968,46 @@ export const startStaffMigration = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (caseError) throw new Error(caseError.message);
+    if (caseError) {
+      await rollback();
+      throw new Error(caseError.message);
+    }
 
     await recordEvent(context, {
       companyId: data.companyId,
-      action: "migration.uploaded_by_harmonious",
-      entityId: migrationId,
-      next: { file: data.fileName, provider: provider.label, rows: data.rows.length },
-      reason: data.note || "Harmonious brought the client's export in on their behalf",
+      action: "migration.assistant_started",
+      entityId: primary.id,
+      next: {
+        files: created.map((b) => ({ kind: b.kind, file: b.file, rows: b.rows })),
+        documents: documentsRecorded,
+        bundle: bundleId,
+      },
+      reason: data.note || "Migration assistant read the client's export files",
     });
 
     await notifyFounder(context, data.companyId, {
       headline: "We have started your cap table migration",
-      intro: `We have read your ${provider.label} export and started preparing it. Nothing is recorded until you approve it.`,
+      intro: `We have read your ${primary.provider} export and started preparing it. Nothing is recorded until you approve it.`,
       details: [
-        { label: "File", value: data.fileName || "Cap table export" },
-        { label: "Lines read", value: String(data.rows.length) },
+        ...created.map((b) => ({ label: KIND_LABEL[b.kind], value: `${b.rows} lines` })),
+        ...(documentsRecorded
+          ? [{ label: "Documents listed", value: String(documentsRecorded) }]
+          : []),
       ],
-      eventKey: `cap-concierge-staff-start:${created.id}`,
+      eventKey: `cap-concierge-assistant:${caseRow.id}`,
     });
 
-    return { caseId: created.id as string, migrationId, provider: provider.label };
+    return {
+      caseId: caseRow.id as string,
+      migrationId: primary.id,
+      bundleId,
+      documentsRecorded,
+      batches: created.map((b) => ({
+        kind: b.kind,
+        label: KIND_LABEL[b.kind],
+        provider: b.provider,
+        rows: b.rows,
+        file: b.file,
+      })),
+    };
   });
