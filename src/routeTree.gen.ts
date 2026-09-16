@@ -133,6 +133,7 @@ import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
+import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
@@ -861,6 +862,12 @@ const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   path: '/api/public/cap-claim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCapTableRequestRoute =
+  ApiPublicCapTableRequestRouteImport.update({
+    id: '/api/public/cap-table-request',
+    path: '/api/public/cap-table-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLoginAttemptRoute = ApiPublicLoginAttemptRouteImport.update({
   id: '/api/public/login-attempt',
   path: '/api/public/login-attempt',
@@ -1178,6 +1185,7 @@ export interface FileRoutesByFullPath {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
+  '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1334,6 +1342,7 @@ export interface FileRoutesByTo {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
+  '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -1495,6 +1504,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
+  '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1656,6 +1666,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/team'
     | '/api/public/cap-claim'
+    | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin/'
@@ -1812,6 +1823,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/team'
     | '/api/public/cap-claim'
+    | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/admin'
@@ -1972,6 +1984,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
     | '/api/public/cap-claim'
+    | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
@@ -2033,6 +2046,7 @@ export interface RootRouteChildren {
   FundSlugRoute: typeof FundSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
+  ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -2915,6 +2929,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCapClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cap-table-request': {
+      id: '/api/public/cap-table-request'
+      path: '/api/public/cap-table-request'
+      fullPath: '/api/public/cap-table-request'
+      preLoaderRoute: typeof ApiPublicCapTableRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/login-attempt': {
       id: '/api/public/login-attempt'
       path: '/api/public/login-attempt'
@@ -3501,6 +3522,7 @@ const rootRouteChildren: RootRouteChildren = {
   FundSlugRoute: FundSlugRoute,
   SharesTokenRoute: SharesTokenRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
+  ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
