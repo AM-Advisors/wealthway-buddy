@@ -145,6 +145,7 @@ import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/e
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
 import { Route as AuthenticatedAdminEntitiesIndexRouteImport } from './routes/_authenticated/admin.entities.index'
+import { Route as AuthenticatedAdminEntitiesEntityIdRouteImport } from './routes/_authenticated/admin.entities.$entityId'
 import { Route as AuthenticatedAdminFundBankingFundIdRouteImport } from './routes/_authenticated/admin.fund-banking.$fundId'
 import { Route as AuthenticatedAdminFundMigrationFundIdRouteImport } from './routes/_authenticated/admin.fund-migration.$fundId'
 import { Route as AuthenticatedAdminFundPaymentsFundIdRouteImport } from './routes/_authenticated/admin.fund-payments.$fundId'
@@ -952,6 +953,12 @@ const AuthenticatedAdminEntitiesIndexRoute =
     path: '/admin/entities/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminEntitiesEntityIdRoute =
+  AuthenticatedAdminEntitiesEntityIdRouteImport.update({
+    id: '/admin/entities/$entityId',
+    path: '/admin/entities/$entityId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminFundBankingFundIdRoute =
   AuthenticatedAdminFundBankingFundIdRouteImport.update({
     id: '/admin/fund-banking/$fundId',
@@ -1352,6 +1359,7 @@ export interface FileRoutesByFullPath {
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
   '/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
   '/admin/fund-payments/$fundId': typeof AuthenticatedAdminFundPaymentsFundIdRoute
@@ -1530,6 +1538,7 @@ export interface FileRoutesByTo {
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
   '/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
   '/admin/fund-payments/$fundId': typeof AuthenticatedAdminFundPaymentsFundIdRoute
@@ -1713,6 +1722,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
+  '/_authenticated/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
   '/_authenticated/admin/fund-banking/$fundId': typeof AuthenticatedAdminFundBankingFundIdRoute
   '/_authenticated/admin/fund-migration/$fundId': typeof AuthenticatedAdminFundMigrationFundIdRoute
   '/_authenticated/admin/fund-payments/$fundId': typeof AuthenticatedAdminFundPaymentsFundIdRoute
@@ -1897,6 +1907,7 @@ export interface FileRouteTypes {
     | '/manager/'
     | '/ops/'
     | '/admin/contracts/$clientId'
+    | '/admin/entities/$entityId'
     | '/admin/fund-banking/$fundId'
     | '/admin/fund-migration/$fundId'
     | '/admin/fund-payments/$fundId'
@@ -2075,6 +2086,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/ops'
     | '/admin/contracts/$clientId'
+    | '/admin/entities/$entityId'
     | '/admin/fund-banking/$fundId'
     | '/admin/fund-migration/$fundId'
     | '/admin/fund-payments/$fundId'
@@ -2257,6 +2269,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/'
     | '/_authenticated/ops/'
     | '/_authenticated/admin/contracts/$clientId'
+    | '/_authenticated/admin/entities/$entityId'
     | '/_authenticated/admin/fund-banking/$fundId'
     | '/_authenticated/admin/fund-migration/$fundId'
     | '/_authenticated/admin/fund-payments/$fundId'
@@ -3294,6 +3307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEntitiesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/entities/$entityId': {
+      id: '/_authenticated/admin/entities/$entityId'
+      path: '/admin/entities/$entityId'
+      fullPath: '/admin/entities/$entityId'
+      preLoaderRoute: typeof AuthenticatedAdminEntitiesEntityIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/fund-banking/$fundId': {
       id: '/_authenticated/admin/fund-banking/$fundId'
       path: '/admin/fund-banking/$fundId'
@@ -3853,6 +3873,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedAdminContractsClientIdRoute: typeof AuthenticatedAdminContractsClientIdRoute
+  AuthenticatedAdminEntitiesEntityIdRoute: typeof AuthenticatedAdminEntitiesEntityIdRoute
   AuthenticatedAdminFundBankingFundIdRoute: typeof AuthenticatedAdminFundBankingFundIdRoute
   AuthenticatedAdminFundMigrationFundIdRoute: typeof AuthenticatedAdminFundMigrationFundIdRoute
   AuthenticatedAdminFundPaymentsFundIdRoute: typeof AuthenticatedAdminFundPaymentsFundIdRoute
@@ -3981,6 +4002,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
   AuthenticatedAdminContractsClientIdRoute:
     AuthenticatedAdminContractsClientIdRoute,
+  AuthenticatedAdminEntitiesEntityIdRoute:
+    AuthenticatedAdminEntitiesEntityIdRoute,
   AuthenticatedAdminFundBankingFundIdRoute:
     AuthenticatedAdminFundBankingFundIdRoute,
   AuthenticatedAdminFundMigrationFundIdRoute:
