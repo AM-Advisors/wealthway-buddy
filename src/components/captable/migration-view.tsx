@@ -323,6 +323,9 @@ function BatchPanel({
           </p>
         </div>
 
+        <ComingAcross batch={batch} />
+        <ReconcilePanel batch={batch} editable={canManage && !done} onChanged={onChanged} />
+
         <ConciergePanel migrationId={batch.id} onChanged={onChanged} />
 
         <div className="overflow-x-auto">
