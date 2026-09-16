@@ -941,15 +941,30 @@ export const importCapMigration = createServerFn({ method: "POST" })
 
     await supabase
       .from("ct_migrations")
-      .update({ status: "imported", imported_at: new Date().toISOString(), imported_by: userId })
+      .update({
+        status: "imported",
+        imported_at: new Date().toISOString(),
+        imported_by: userId,
+        overage_reason: overageReason,
+      })
       .eq("id", data.migrationId);
 
     await recordEvent(context, {
       companyId,
       action: "migration.accepted",
       entityId: data.migrationId,
-      next: { stakeholdersCreated, securitiesCreated, lines: ready.length },
-      reason: "Migration accepted onto the cap table",
+      next: {
+        stakeholdersCreated,
+        securitiesCreated,
+        classesCreated,
+        roundsCreated,
+        lines: ready.length,
+        reconciliation: summary,
+        overageReason,
+      },
+      reason: overageReason
+        ? `Migration accepted with more shares issued than authorised: ${overageReason}`
+        : "Migration accepted onto the cap table",
     });
 
     if (conciergeCase) {
