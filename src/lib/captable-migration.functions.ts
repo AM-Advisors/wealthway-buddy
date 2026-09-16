@@ -221,7 +221,11 @@ async function recordEvent(
 
 const UNCLASSIFIED = "__unclassified__";
 
-type Override = { authorized?: number | null; issued?: number | null; outstanding?: number | null };
+type Override = {
+  authorized?: number | null | undefined;
+  issued?: number | null | undefined;
+  outstanding?: number | null | undefined;
+};
 /** A founder-raised query on one share class: something that needs looking into. */
 type Exception = {
   status: "open" | "resolved";
