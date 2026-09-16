@@ -10,6 +10,7 @@ import {
   getCapMigrations,
   importCapMigration,
   remapCapMigration,
+  setCapMigrationReconciliation,
   setCapMigrationRow,
 } from "@/lib/captable-migration.functions";
 import { Badge } from "@/components/ui/badge";
