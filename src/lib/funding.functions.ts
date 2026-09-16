@@ -385,7 +385,9 @@ export const chooseWire = createServerFn({ method: "POST" })
 
 export const markWireSent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => wireSentSchema.parse(data))
+  .inputValidator((data: unknown) =>
+    wireSentSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId, data.offering_id);
