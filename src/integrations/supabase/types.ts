@@ -1865,6 +1865,231 @@ export type Database = {
           },
         ]
       }
+      ct_activity_cases: {
+        Row: {
+          case_type: string
+          claim_id: string | null
+          claimed_quantity: number | null
+          closed_at: string | null
+          closed_by: string | null
+          company_id: string
+          created_at: string
+          id: string
+          opened_at: string
+          opened_by: string | null
+          record_quantity: number | null
+          resolution: string | null
+          severity: string
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          case_type?: string
+          claim_id?: string | null
+          claimed_quantity?: number | null
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          opened_at?: string
+          opened_by?: string | null
+          record_quantity?: number | null
+          resolution?: string | null
+          severity?: string
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          case_type?: string
+          claim_id?: string | null
+          claimed_quantity?: number | null
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          opened_at?: string
+          opened_by?: string | null
+          record_quantity?: number | null
+          resolution?: string | null
+          severity?: string
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_activity_cases_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "ct_exposure_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_activity_cases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_case_notes: {
+        Row: {
+          author_id: string | null
+          case_id: string
+          company_id: string
+          created_at: string
+          id: string
+          note: string
+        }
+        Insert: {
+          author_id?: string | null
+          case_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          note: string
+        }
+        Update: {
+          author_id?: string | null
+          case_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_case_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "ct_activity_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_case_notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_claim_documents: {
+        Row: {
+          claim_id: string
+          company_id: string
+          created_at: string
+          id: string
+          storage_path: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          claim_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          storage_path: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          claim_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          storage_path?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_claim_documents_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "ct_exposure_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_claim_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_claim_invites: {
+        Row: {
+          claimant_email: string
+          claimant_name: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          issuer_id: string | null
+          revoked_at: string | null
+          token_hash: string
+          updated_at: string
+          used_at: string | null
+        }
+        Insert: {
+          claimant_email: string
+          claimant_name: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          issuer_id?: string | null
+          revoked_at?: string | null
+          token_hash: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          claimant_email?: string
+          claimant_name?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          issuer_id?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+          updated_at?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_claim_invites_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_claim_invites_issuer_id_fkey"
+            columns: ["issuer_id"]
+            isOneToOne: false
+            referencedRelation: "ct_issuers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_companies: {
         Row: {
           authorized_shares: number
@@ -2100,6 +2325,119 @@ export type Database = {
           },
         ]
       }
+      ct_exposure_claims: {
+        Row: {
+          as_of_date: string | null
+          claimant_email: string | null
+          claimant_name: string
+          claimant_note: string | null
+          claimant_stakeholder_id: string | null
+          claimant_type: string
+          claimant_user_id: string | null
+          claimed_quantity: number
+          company_id: string
+          created_at: string
+          holding_route: string
+          id: string
+          info_request: string | null
+          invite_id: string | null
+          issuer_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          security_label: string | null
+          security_type: string
+          status: string
+          submitted_at: string
+          through_entity: string | null
+          updated_at: string
+          verified_quantity: number | null
+        }
+        Insert: {
+          as_of_date?: string | null
+          claimant_email?: string | null
+          claimant_name: string
+          claimant_note?: string | null
+          claimant_stakeholder_id?: string | null
+          claimant_type?: string
+          claimant_user_id?: string | null
+          claimed_quantity?: number
+          company_id: string
+          created_at?: string
+          holding_route?: string
+          id?: string
+          info_request?: string | null
+          invite_id?: string | null
+          issuer_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          security_label?: string | null
+          security_type?: string
+          status?: string
+          submitted_at?: string
+          through_entity?: string | null
+          updated_at?: string
+          verified_quantity?: number | null
+        }
+        Update: {
+          as_of_date?: string | null
+          claimant_email?: string | null
+          claimant_name?: string
+          claimant_note?: string | null
+          claimant_stakeholder_id?: string | null
+          claimant_type?: string
+          claimant_user_id?: string | null
+          claimed_quantity?: number
+          company_id?: string
+          created_at?: string
+          holding_route?: string
+          id?: string
+          info_request?: string | null
+          invite_id?: string | null
+          issuer_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          security_label?: string | null
+          security_type?: string
+          status?: string
+          submitted_at?: string
+          through_entity?: string | null
+          updated_at?: string
+          verified_quantity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_exposure_claims_claimant_stakeholder_id_fkey"
+            columns: ["claimant_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_exposure_claims_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_exposure_claims_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "ct_claim_invites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_exposure_claims_issuer_id_fkey"
+            columns: ["issuer_id"]
+            isOneToOne: false
+            referencedRelation: "ct_issuers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_holder_permissions: {
         Row: {
           can_request_exercise: boolean
@@ -2165,6 +2503,50 @@ export type Database = {
             columns: ["stakeholder_id"]
             isOneToOne: true
             referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_issuers: {
+        Row: {
+          company_id: string
+          contact_email: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          issuer_type: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issuer_type?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          issuer_type?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_issuers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
             referencedColumns: ["id"]
           },
         ]
