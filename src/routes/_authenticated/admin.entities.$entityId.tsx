@@ -152,7 +152,12 @@ function EntityPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           {data.engagements.length === 0 && (
-            <p className="text-sm text-muted-foreground">No engagement covers this entity yet.</p>
+            <p className="text-sm text-muted-foreground">
+              No engagement covers this entity yet.
+              {canManage
+                ? " Start one below to set what Harmonious delivers, how it's billed and which statement of work it sits under."
+                : " Ask someone with contracting authority to start one."}
+            </p>
           )}
           {data.engagements.map((g) => (
             <div
