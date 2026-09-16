@@ -313,6 +313,19 @@ function BatchPanel({
       </CardHeader>
 
       <CardContent className="space-y-4">
+        <MigrationWizard
+          title="Import, map, reconcile, go live"
+          description="Nothing is recorded on your cap table until the last step."
+          facts={{
+            total: batch.counts.total,
+            ready: batch.counts.ready,
+            error: batch.counts.error,
+            status: batch.status,
+            reconciliation: batch.reconciliation as never,
+            importedAt: batch.importedAt,
+          }}
+        />
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Tally label="Ready to accept" value={fmtNumber(batch.counts.ready)} />
           <Tally label="Need attention" value={fmtNumber(batch.counts.error)} />
