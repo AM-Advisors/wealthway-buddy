@@ -31,9 +31,9 @@
 - [x] Service packages (e.g. Fund Launch) that add/remove individual services
 - [x] Commercial terms snapshot per engagement with pricing version; executed terms never change
 - [x] Add / change / cancel a service via change orders, not new MSAs
-- [ ] Agreement types: MSA, service order/SOW, amendment, change order
-- [ ] Client review summary (what, cost, what changed, what to approve) + per-section approve / request change
-- [ ] Ready-to-approve signature screen with acknowledgements and locking
+- [x] Agreement types: MSA, service order/SOW, amendment, change order
+- [x] Client review summary (what, cost, what changed, what to approve) + per-section approve / request change
+- [x] Ready-to-approve signature screen with acknowledgements and locking
 - [x] Client home: "Your Harmonious services" by entity + Add a service or entity
 - [x] Universal request router (launch fund/SPV, add service, add entity, move to Harmonious, filing, transaction support, other)
 - [x] Service delivery workflows instantiated automatically on execution
