@@ -785,11 +785,77 @@ export const importCapMigration = createServerFn({ method: "POST" })
     const ready = (rows ?? []) as any[];
     if (ready.length === 0) throw new Error("There are no ready lines to accept.");
 
-    const { data: classes } = await supabase
-      .from("ct_security_classes")
-      .select("id, name")
-      .eq("company_id", companyId);
-    const classByName = new Map(((classes ?? []) as any[]).map((c) => [norm(c.name), c.id]));
+    const reconciliation = (batch.reconciliation ?? null) as Reconciliation | null;
+    const world = await loadWorld(supabase, companyId);
+    const summary = buildSummary(
+      ready.map((r) => ({ mapped: (r.mapped ?? {}) as MappedRow, status: "ready" })),
+      world,
+      reconciliation,
+    );
+
+    const over = summary.classes.filter((c) => c.overAuthorizedBy > 0);
+    const overageReason = data.overageReason?.trim() || null;
+    if (over.length && !overageReason) {
+      throw new Error(
+        `More shares are issued than authorised in ${over
+          .map((c) => c.name)
+          .join(", ")}. Give a reason to record this batch anyway.`,
+      );
+    }
+
+    // Share classes and rounds named in the file are created as we go.
+    const classByName = new Map(world.classes.map((c) => [norm(c.name), c.id]));
+    let classesCreated = 0;
+    for (const entry of summary.classes) {
+      if (entry.key === UNCLASSIFIED) continue;
+      const existingId = classByName.get(entry.key);
+      if (existingId) {
+        if (entry.authorized) {
+          await supabase
+            .from("ct_security_classes")
+            .update({ authorized: entry.authorized })
+            .eq("id", existingId);
+        }
+        continue;
+      }
+      const { data: created, error: clsErr } = await supabase
+        .from("ct_security_classes")
+        .insert({
+          company_id: companyId,
+          name: entry.name,
+          kind: /pref|series/i.test(entry.name) ? "preferred" : "common",
+          authorized: entry.authorized,
+          notes: "Created from an imported cap table file",
+        })
+        .select("id")
+        .single();
+      if (clsErr) throw new Error(clsErr.message);
+      classByName.set(entry.key, created.id as string);
+      classesCreated += 1;
+    }
+
+    const roundByName = new Map(world.rounds.map((r) => [norm(r.name), r.id]));
+    let roundsCreated = 0;
+    for (const entry of summary.rounds) {
+      if (roundByName.has(entry.key)) continue;
+      const { data: created, error: rErr } = await supabase
+        .from("ct_rounds")
+        .insert({
+          company_id: companyId,
+          name: entry.name,
+          round_type: /safe|note/i.test(entry.name) ? "convertible" : "priced",
+          status: "closed",
+          close_date: entry.date,
+          price_per_share: entry.pricePerShare,
+          amount_raised: entry.amount || null,
+          notes: "Created from an imported cap table file",
+        })
+        .select("id")
+        .single();
+      if (rErr) throw new Error(rErr.message);
+      roundByName.set(entry.key, created.id as string);
+      roundsCreated += 1;
+    }
 
     let stakeholdersCreated = 0;
     let securitiesCreated = 0;
