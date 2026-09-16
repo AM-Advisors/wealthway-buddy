@@ -653,5 +653,12 @@ export const importCapMigration = createServerFn({ method: "POST" })
       reason: "Migration accepted onto the cap table",
     });
 
+    if (conciergeCase) {
+      await supabase
+        .from("ct_concierge_cases")
+        .update({ stage: "recorded", recorded_at: new Date().toISOString() })
+        .eq("id", conciergeCase.id);
+    }
+
     return { stakeholdersCreated, securitiesCreated, lines: ready.length };
   });
