@@ -12,6 +12,8 @@ import {
   CapTableRequestDialog,
   type CapRequestProvider,
 } from "@/components/cap-table-request-dialog";
+import { DemoMigration } from "@/components/captable/demo-migration";
+
 
 export const Route = createFileRoute("/cap-table")({
   head: () => ({
