@@ -3,8 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { MIGRATION_FIELDS } from "@/lib/captable-migration-fields";
 import {
-  MIGRATION_FIELDS,
   cancelCapMigration,
   createCapMigration,
   getCapMigrations,

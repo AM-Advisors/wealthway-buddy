@@ -12,24 +12,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * authority deliberately accepts the batch.
  */
 
-export const MIGRATION_FIELDS = [
-  { key: "holderName", label: "Shareholder name", required: true },
-  { key: "holderEmail", label: "Email" },
-  { key: "holderType", label: "Holder type" },
-  { key: "securityType", label: "Security type", required: true },
-  { key: "securityClass", label: "Share class" },
-  { key: "label", label: "Certificate / label" },
-  { key: "quantity", label: "Quantity", required: true },
-  { key: "issueDate", label: "Issue date" },
-  { key: "pricePerShare", label: "Price per share" },
-  { key: "exercisePrice", label: "Exercise price" },
-  { key: "vestingStart", label: "Vesting start" },
-  { key: "cliffMonths", label: "Cliff (months)" },
-  { key: "durationMonths", label: "Vesting length (months)" },
-  { key: "frequency", label: "Vesting frequency" },
-] as const;
-
-type FieldKey = (typeof MIGRATION_FIELDS)[number]["key"];
+import { MIGRATION_FIELDS, type MigrationFieldKey as FieldKey } from "./captable-migration-fields";
 
 const SYNONYMS: Record<FieldKey, string[]> = {
   holderName: ["stakeholder", "stakeholder name", "holder", "holder name", "name", "shareholder", "shareholder name", "investor", "investor name", "full name"],
