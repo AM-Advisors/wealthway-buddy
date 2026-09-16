@@ -464,6 +464,11 @@ export const getConciergeCase = createServerFn({ method: "POST" })
         status: (migration?.status as string) ?? "mapped",
         headers: (migration?.headers ?? []) as string[],
         mapping: (migration?.mapping ?? {}) as Record<string, string | null>,
+        reconciliation: (migration?.reconciliation ?? null) as {
+          note?: string | null;
+          exceptions?: Record<string, { status: string }>;
+        } | null,
+        importedAt: (migration?.imported_at as string | null) ?? null,
       },
       stakeholders: ((stakeholders ?? []) as any[]).map((s) => ({
         id: s.id as string,
