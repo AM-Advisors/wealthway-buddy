@@ -154,6 +154,11 @@ function HoldingPanel({ holding, onChanged }: { holding: Holding; onChanged: () 
           {holding.permissions.canViewTransactions ? (
             <TabsTrigger value="history">History</TabsTrigger>
           ) : null}
+          {holding.permissions.canViewTransactions ? (
+            <TabsTrigger value="transfers">
+              Transfers{holding.transfers.length ? ` (${holding.transfers.length})` : ""}
+            </TabsTrigger>
+          ) : null}
           <TabsTrigger value="requests">
             Requests{holding.exerciseRequests.length ? ` (${holding.exerciseRequests.length})` : ""}
           </TabsTrigger>
