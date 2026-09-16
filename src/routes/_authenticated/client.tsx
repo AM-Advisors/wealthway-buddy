@@ -82,6 +82,12 @@ function ClientShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const listMessages = useServerFn(listMyMessages);
   const inboxQuery = useQuery({ queryKey: ["client-inbox"], queryFn: () => listMessages() });
+  const adminAccessFn = useServerFn(getAdminAccess);
+  const { data: adminAccess } = useQuery({
+    queryKey: ["admin-access"],
+    queryFn: () => adminAccessFn(),
+  });
+  const isStaff = Boolean((adminAccess as any)?.isReviewer || (adminAccess as any)?.isAdmin);
   const unreadMessages = ((inboxQuery.data?.messages ?? []) as any[]).filter(
     (m) => !m.read_at,
   ).length;
