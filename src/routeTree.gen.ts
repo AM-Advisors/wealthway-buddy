@@ -43,6 +43,7 @@ import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
+import { Route as AuthenticatedVaultRouteImport } from './routes/_authenticated/vault'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
 import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_authenticated/wire-confirmation'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
@@ -345,6 +346,11 @@ const AuthenticatedSubscriptionRoute =
     path: '/subscription',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedVaultRoute = AuthenticatedVaultRouteImport.update({
+  id: '/vault',
+  path: '/vault',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWireRoute = AuthenticatedWireRouteImport.update({
   id: '/wire',
   path: '/wire',
@@ -1127,6 +1133,7 @@ export interface FileRoutesByFullPath {
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/vault': typeof AuthenticatedVaultRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
@@ -1289,6 +1296,7 @@ export interface FileRoutesByTo {
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
+  '/vault': typeof AuthenticatedVaultRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
@@ -1454,6 +1462,7 @@ export interface FileRoutesById {
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
+  '/_authenticated/vault': typeof AuthenticatedVaultRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
@@ -1620,6 +1629,7 @@ export interface FileRouteTypes {
     | '/sign-off'
     | '/staff'
     | '/subscription'
+    | '/vault'
     | '/wire'
     | '/wire-confirmation'
     | '/auth/forgot'
@@ -1782,6 +1792,7 @@ export interface FileRouteTypes {
     | '/sign-off'
     | '/staff'
     | '/subscription'
+    | '/vault'
     | '/wire'
     | '/wire-confirmation'
     | '/auth/forgot'
@@ -1946,6 +1957,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sign-off'
     | '/_authenticated/staff'
     | '/_authenticated/subscription'
+    | '/_authenticated/vault'
     | '/_authenticated/wire'
     | '/_authenticated/wire-confirmation'
     | '/auth/forgot'
@@ -2349,6 +2361,13 @@ declare module '@tanstack/react-router' {
       path: '/subscription'
       fullPath: '/subscription'
       preLoaderRoute: typeof AuthenticatedSubscriptionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vault': {
+      id: '/_authenticated/vault'
+      path: '/vault'
+      fullPath: '/vault'
+      preLoaderRoute: typeof AuthenticatedVaultRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wire': {
@@ -3360,6 +3379,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
+  AuthenticatedVaultRoute: typeof AuthenticatedVaultRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
   AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
@@ -3468,6 +3488,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
+  AuthenticatedVaultRoute: AuthenticatedVaultRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
   AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
