@@ -219,6 +219,9 @@ function BatchPanel({
 }) {
   const [showMapping, setShowMapping] = useState(false);
   const [concierge, setConcierge] = useState(false);
+  const [acceptOpen, setAcceptOpen] = useState(false);
+  const [overageReason, setOverageReason] = useState("");
+  const overAuthorized = batch.summary?.totals?.overAuthorized ?? 0;
 
   const totals = useMemo(() => {
     const shares = batch.rows.reduce(
