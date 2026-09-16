@@ -237,7 +237,8 @@ function BatchPanel({
   const cancelBatch = useServerFn(cancelCapMigration);
 
   const importer = useMutation({
-    mutationFn: () => importBatch({ data: { migrationId: batch.id } }),
+    mutationFn: (reason?: string | null) =>
+      importBatch({ data: { migrationId: batch.id, overageReason: reason ?? null } }),
     onSuccess: (result) => {
       toast.success(
         `${result.lines} lines accepted · ${result.stakeholdersCreated} new shareholders, ${result.securitiesCreated} holdings recorded.`,
