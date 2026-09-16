@@ -177,6 +177,32 @@ function EntityPage() {
               </Button>
             </div>
           ))}
+
+          {canManage && data.client && (
+            <div className="pt-1">
+              {creating ? (
+                <div className="space-y-3 rounded-md border p-3">
+                  <EngagementForm
+                    clientId={data.client.id}
+                    entityId={e.id}
+                    defaultTitle={`${e.legalName} services`}
+                    defaultFrequency="annual"
+                    onDone={() => {
+                      setCreating(false);
+                      queryClient.invalidateQueries({ queryKey: ["entity", entityId] });
+                    }}
+                  />
+                  <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button size="sm" onClick={() => setCreating(true)}>
+                  {data.engagements.length === 0 ? "Create engagement" : "Add another engagement"}
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </main>
