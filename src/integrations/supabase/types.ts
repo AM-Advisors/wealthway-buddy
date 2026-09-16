@@ -146,6 +146,284 @@ export type Database = {
           },
         ]
       }
+      agreement_change_messages: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          author_side: string
+          body: string | null
+          change_request_id: string
+          created_at: string
+          id: string
+          proposed_text: string | null
+          status_after: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          author_side: string
+          body?: string | null
+          change_request_id: string
+          created_at?: string
+          id?: string
+          proposed_text?: string | null
+          status_after?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          author_side?: string
+          body?: string | null
+          change_request_id?: string
+          created_at?: string
+          id?: string
+          proposed_text?: string | null
+          status_after?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_change_messages_change_request_id_fkey"
+            columns: ["change_request_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_change_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_change_requests: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          final_text: string | null
+          harmonious_response: string | null
+          id: string
+          msa_agreement_id: string | null
+          original_text: string
+          reason: string | null
+          requested_text: string
+          resolved_at: string | null
+          responded_at: string | null
+          responded_by: string | null
+          scope: string
+          section_key: string | null
+          section_no: string | null
+          section_title: string
+          sow_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          final_text?: string | null
+          harmonious_response?: string | null
+          id?: string
+          msa_agreement_id?: string | null
+          original_text: string
+          reason?: string | null
+          requested_text: string
+          resolved_at?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          scope: string
+          section_key?: string | null
+          section_no?: string | null
+          section_title: string
+          sow_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          final_text?: string | null
+          harmonious_response?: string | null
+          id?: string
+          msa_agreement_id?: string | null
+          original_text?: string
+          reason?: string | null
+          requested_text?: string
+          resolved_at?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          scope?: string
+          section_key?: string | null
+          section_no?: string | null
+          section_title?: string
+          sow_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_change_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_change_requests_msa_agreement_id_fkey"
+            columns: ["msa_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "client_msa_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_change_requests_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_executions: {
+        Row: {
+          amendment_id: string | null
+          client_id: string
+          created_at: string
+          document_path: string | null
+          executed_at: string
+          id: string
+          msa_agreement_id: string | null
+          scope: string
+          snapshot: Json
+          sow_id: string | null
+        }
+        Insert: {
+          amendment_id?: string | null
+          client_id: string
+          created_at?: string
+          document_path?: string | null
+          executed_at?: string
+          id?: string
+          msa_agreement_id?: string | null
+          scope: string
+          snapshot: Json
+          sow_id?: string | null
+        }
+        Update: {
+          amendment_id?: string | null
+          client_id?: string
+          created_at?: string
+          document_path?: string | null
+          executed_at?: string
+          id?: string
+          msa_agreement_id?: string | null
+          scope?: string
+          snapshot?: Json
+          sow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_executions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_executions_msa_agreement_id_fkey"
+            columns: ["msa_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "client_msa_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_executions_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_signatures: {
+        Row: {
+          amendment_id: string | null
+          client_id: string
+          company: string | null
+          id: string
+          ip_address: string | null
+          msa_agreement_id: string | null
+          scope: string
+          side: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          signer_title: string | null
+          signer_user_id: string | null
+          sow_id: string | null
+          typed_signature: string
+          user_agent: string | null
+          version_label: string | null
+        }
+        Insert: {
+          amendment_id?: string | null
+          client_id: string
+          company?: string | null
+          id?: string
+          ip_address?: string | null
+          msa_agreement_id?: string | null
+          scope: string
+          side: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          signer_title?: string | null
+          signer_user_id?: string | null
+          sow_id?: string | null
+          typed_signature: string
+          user_agent?: string | null
+          version_label?: string | null
+        }
+        Update: {
+          amendment_id?: string | null
+          client_id?: string
+          company?: string | null
+          id?: string
+          ip_address?: string | null
+          msa_agreement_id?: string | null
+          scope?: string
+          side?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          signer_title?: string | null
+          signer_user_id?: string | null
+          sow_id?: string | null
+          typed_signature?: string
+          user_agent?: string | null
+          version_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_signatures_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_signatures_msa_agreement_id_fkey"
+            columns: ["msa_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "client_msa_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_signatures_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_action_log: {
         Row: {
           action: string
@@ -1438,6 +1716,57 @@ export type Database = {
           },
         ]
       }
+      client_msa_agreements: {
+        Row: {
+          client_approved_at: string | null
+          client_id: string
+          created_at: string
+          document_path: string | null
+          executed_at: string | null
+          id: string
+          msa_version_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_approved_at?: string | null
+          client_id: string
+          created_at?: string
+          document_path?: string | null
+          executed_at?: string | null
+          id?: string
+          msa_version_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_approved_at?: string | null
+          client_id?: string
+          created_at?: string
+          document_path?: string | null
+          executed_at?: string | null
+          id?: string
+          msa_version_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_msa_agreements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_msa_agreements_msa_version_id_fkey"
+            columns: ["msa_version_id"]
+            isOneToOne: false
+            referencedRelation: "msa_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_pricing: {
         Row: {
           approved_at: string | null
@@ -1520,6 +1849,8 @@ export type Database = {
           approval_status: string
           approved_at: string | null
           approved_by: string | null
+          assigned_reviewer: string | null
+          client_final_approved_at: string | null
           client_id: string
           client_sent_back_at: string | null
           client_sent_back_reason: string | null
@@ -1535,13 +1866,20 @@ export type Database = {
           document_path: string | null
           effective_date: string | null
           eligibility: Json
+          executed_at: string | null
+          fund_request_id: string | null
           id: string
+          locked: boolean
+          msa_version_id: string | null
           notes: string | null
           notice_days: number
           offering_id: string | null
           signed_by: string | null
           signed_on: string | null
           sow_type: string
+          sow_version: number
+          special_terms: string | null
+          stage: string
           status: string
           termination_date: string | null
           title: string
@@ -1552,6 +1890,8 @@ export type Database = {
           approval_status?: string
           approved_at?: string | null
           approved_by?: string | null
+          assigned_reviewer?: string | null
+          client_final_approved_at?: string | null
           client_id: string
           client_sent_back_at?: string | null
           client_sent_back_reason?: string | null
@@ -1567,13 +1907,20 @@ export type Database = {
           document_path?: string | null
           effective_date?: string | null
           eligibility?: Json
+          executed_at?: string | null
+          fund_request_id?: string | null
           id?: string
+          locked?: boolean
+          msa_version_id?: string | null
           notes?: string | null
           notice_days?: number
           offering_id?: string | null
           signed_by?: string | null
           signed_on?: string | null
           sow_type?: string
+          sow_version?: number
+          special_terms?: string | null
+          stage?: string
           status?: string
           termination_date?: string | null
           title: string
@@ -1584,6 +1931,8 @@ export type Database = {
           approval_status?: string
           approved_at?: string | null
           approved_by?: string | null
+          assigned_reviewer?: string | null
+          client_final_approved_at?: string | null
           client_id?: string
           client_sent_back_at?: string | null
           client_sent_back_reason?: string | null
@@ -1599,13 +1948,20 @@ export type Database = {
           document_path?: string | null
           effective_date?: string | null
           eligibility?: Json
+          executed_at?: string | null
+          fund_request_id?: string | null
           id?: string
+          locked?: boolean
+          msa_version_id?: string | null
           notes?: string | null
           notice_days?: number
           offering_id?: string | null
           signed_by?: string | null
           signed_on?: string | null
           sow_type?: string
+          sow_version?: number
+          special_terms?: string | null
+          stage?: string
           status?: string
           termination_date?: string | null
           title?: string
@@ -1617,6 +1973,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sows_fund_request_id_fkey"
+            columns: ["fund_request_id"]
+            isOneToOne: false
+            referencedRelation: "fund_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sows_msa_version_id_fkey"
+            columns: ["msa_version_id"]
+            isOneToOne: false
+            referencedRelation: "msa_versions"
             referencedColumns: ["id"]
           },
           {
@@ -5351,6 +5721,97 @@ export type Database = {
           },
         ]
       }
+      fund_requests: {
+        Row: {
+          client_id: string
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          created_by: string | null
+          entity_type: string | null
+          expected_investments: string | null
+          expected_investors: number | null
+          expected_launch_date: string | null
+          fund_name: string
+          fund_type: string | null
+          id: string
+          jurisdiction: string | null
+          notes: string | null
+          offering_id: string | null
+          services: string[]
+          sow_id: string | null
+          status: string
+          target_raise_cents: number | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          entity_type?: string | null
+          expected_investments?: string | null
+          expected_investors?: number | null
+          expected_launch_date?: string | null
+          fund_name: string
+          fund_type?: string | null
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          offering_id?: string | null
+          services?: string[]
+          sow_id?: string | null
+          status?: string
+          target_raise_cents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          entity_type?: string | null
+          expected_investments?: string | null
+          expected_investors?: number | null
+          expected_launch_date?: string | null
+          fund_name?: string
+          fund_type?: string | null
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          offering_id?: string | null
+          services?: string[]
+          sow_id?: string | null
+          status?: string
+          target_raise_cents?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_requests_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_tax_documents: {
         Row: {
           created_at: string
@@ -6426,6 +6887,80 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      msa_sections: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          msa_version_id: string
+          section_no: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          msa_version_id: string
+          section_no: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          msa_version_id?: string
+          section_no?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "msa_sections_msa_version_id_fkey"
+            columns: ["msa_version_id"]
+            isOneToOne: false
+            referencedRelation: "msa_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      msa_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          id: string
+          status: string
+          summary: string | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          status?: string
+          summary?: string | null
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          status?: string
+          summary?: string | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
       }
       notification_events: {
         Row: {
@@ -9007,6 +9542,277 @@ export type Database = {
             columns: ["signature_id"]
             isOneToOne: false
             referencedRelation: "document_signatures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sow_amendments: {
+        Row: {
+          amendment_no: number
+          client_id: string
+          created_at: string
+          created_by: string | null
+          effective_date: string | null
+          executed_at: string | null
+          existing_terms: string
+          id: string
+          new_terms: string
+          requested_change: string
+          sow_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amendment_no?: number
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string | null
+          executed_at?: string | null
+          existing_terms: string
+          id?: string
+          new_terms: string
+          requested_change: string
+          sow_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amendment_no?: number
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string | null
+          executed_at?: string | null
+          existing_terms?: string
+          id?: string
+          new_terms?: string
+          requested_change?: string
+          sow_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sow_amendments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sow_amendments_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sow_pricing_lines: {
+        Row: {
+          adjustment_reason: string | null
+          created_at: string
+          final_cents: number
+          id: string
+          included: boolean
+          label: string
+          optional: boolean
+          pass_through: boolean
+          pricing_model: string
+          service_key: string
+          snapshot_id: string
+          sort_order: number
+          standard_cents: number
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          adjustment_reason?: string | null
+          created_at?: string
+          final_cents?: number
+          id?: string
+          included?: boolean
+          label: string
+          optional?: boolean
+          pass_through?: boolean
+          pricing_model?: string
+          service_key: string
+          snapshot_id: string
+          sort_order?: number
+          standard_cents?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adjustment_reason?: string | null
+          created_at?: string
+          final_cents?: number
+          id?: string
+          included?: boolean
+          label?: string
+          optional?: boolean
+          pass_through?: boolean
+          pricing_model?: string
+          service_key?: string
+          snapshot_id?: string
+          sort_order?: number
+          standard_cents?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sow_pricing_lines_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "sow_pricing_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sow_pricing_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_date: string | null
+          id: string
+          locked: boolean
+          sow_id: string
+          updated_at: string
+          version_id: string | null
+          version_label: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string | null
+          id?: string
+          locked?: boolean
+          sow_id: string
+          updated_at?: string
+          version_id?: string | null
+          version_label: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string | null
+          id?: string
+          locked?: boolean
+          sow_id?: string
+          updated_at?: string
+          version_id?: string | null
+          version_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sow_pricing_snapshots_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: true
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sow_pricing_snapshots_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sow_section_approvals: {
+        Row: {
+          created_at: string
+          decided_at: string
+          decided_by: string | null
+          id: string
+          section_id: string
+          sow_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string
+          decided_by?: string | null
+          id?: string
+          section_id: string
+          sow_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string
+          decided_by?: string | null
+          id?: string
+          section_id?: string
+          sow_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sow_section_approvals_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: true
+            referencedRelation: "sow_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sow_section_approvals_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sow_sections: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          key: string
+          section_no: string
+          sort_order: number
+          sow_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          key: string
+          section_no: string
+          sort_order?: number
+          sow_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          key?: string
+          section_no?: string
+          sort_order?: number
+          sow_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sow_sections_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
             referencedColumns: ["id"]
           },
         ]
