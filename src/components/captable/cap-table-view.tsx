@@ -63,6 +63,14 @@ function Body() {
     [workspace],
   );
 
+  const vestingRows = useMemo(
+    () =>
+      securities
+        .filter((s) => s.securityType === "option" || s.securityType === "rsu")
+        .sort((a, b) => b.quantity - a.quantity),
+    [securities],
+  );
+
   if (securities.length === 0) {
     return (
       <Card>
@@ -99,9 +107,112 @@ function Body() {
           <TabsTrigger value="security">By security</TabsTrigger>
           <TabsTrigger value="round">By round</TabsTrigger>
           <TabsTrigger value="diluted">Fully diluted</TabsTrigger>
+          <TabsTrigger value="vesting">Grants and vesting</TabsTrigger>
           <TabsTrigger value="converted">As converted</TabsTrigger>
           <TabsTrigger value="history">Historical</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="vesting" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Employee grants and vesting</CardTitle>
+              <CardDescription>
+                The same figures each holder sees in My Equity. Vesting is worked out from the
+                schedule on the grant, and fully diluted ownership counts the whole grant — vested
+                and unvested — so the two views always agree.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 pt-0 sm:grid-cols-4">
+              <Figure label="Granted and outstanding" value={fmtNumber(metrics.grantsOutstanding)} />
+              <Figure label="Vested today" value={fmtNumber(metrics.grantsVested)} />
+              <Figure label="Still to vest" value={fmtNumber(metrics.grantsUnvested)} />
+              <Figure
+                label="Awaiting acceptance"
+                value={fmtNumber(metrics.grantsAwaitingAcceptance)}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Holder</TableHead>
+                  <TableHead>Grant</TableHead>
+                  <TableHead>Schedule</TableHead>
+                  <TableHead className="text-right">Outstanding</TableHead>
+                  <TableHead className="text-right">Vested</TableHead>
+                  <TableHead className="text-right">Unvested</TableHead>
+                  <TableHead>Next vest</TableHead>
+                  <TableHead className="text-right">Fully diluted</TableHead>
+                  <TableHead>Accepted</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vestingRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-muted-foreground">
+                      No option or RSU grants recorded yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  vestingRows.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium">{s.stakeholder}</TableCell>
+                      <TableCell>
+                        {s.securityLabel}
+                        {s.label ? <span className="text-muted-foreground"> · {s.label}</span> : null}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{s.vesting ?? "No schedule"}</TableCell>
+                      <TableCell className="text-right">{fmtNumber(s.quantity)}</TableCell>
+                      <TableCell className="text-right">{fmtNumber(s.vested)}</TableCell>
+                      <TableCell className="text-right">{fmtNumber(s.unvested)}</TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {s.nextVestDate
+                          ? `${fmtDate(s.nextVestDate)} · +${fmtNumber(s.nextVestQuantity)}`
+                          : "Fully vested"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {fmtPercent(metrics.fullyDiluted ? (s.quantity / metrics.fullyDiluted) * 100 : 0)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={s.accepted ? "secondary" : "outline"}>
+                          {s.accepted ? "Accepted" : "Pending"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Holder</TableHead>
+                  <TableHead className="text-right">Fully diluted shares</TableHead>
+                  <TableHead className="text-right">Vested</TableHead>
+                  <TableHead className="text-right">Unvested</TableHead>
+                  <TableHead className="text-right">Ownership</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ownership.map((holder) => (
+                  <TableRow key={holder.id}>
+                    <TableCell className="font-medium">{holder.name}</TableCell>
+                    <TableCell className="text-right">{fmtNumber(holder.diluted)}</TableCell>
+                    <TableCell className="text-right">{fmtNumber(holder.vested)}</TableCell>
+                    <TableCell className="text-right">{fmtNumber(holder.unvested)}</TableCell>
+                    <TableCell className="text-right">{fmtPercent(holder.dilutedPct)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
 
         <TabsContent value="stakeholder" className="mt-4">
           <div className="overflow-x-auto rounded-lg border">
@@ -337,6 +448,15 @@ function Body() {
           </div>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function Figure({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
 }
