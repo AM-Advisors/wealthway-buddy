@@ -77,8 +77,9 @@ const RECORD = [
 ] as const;
 
 function CapTableLanding() {
-  const [open, setOpen] = useState(false);
-  const [provider, setProvider] = useState<CapRequestProvider>("carta");
+  const { move } = Route.useSearch();
+  const [open, setOpen] = useState(Boolean(move));
+  const [provider, setProvider] = useState<CapRequestProvider>(move ?? "carta");
   const plans = useQuery({ queryKey: ["public-cap-plans"], queryFn: () => getPublicCapPlans() });
 
   function ask(next: CapRequestProvider) {
