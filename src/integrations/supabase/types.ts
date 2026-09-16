@@ -2200,6 +2200,201 @@ export type Database = {
           },
         ]
       }
+      ct_concierge_cases: {
+        Row: {
+          assigned_at: string | null
+          assigned_to: string | null
+          company_id: string
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          created_by: string | null
+          founder_note: string | null
+          id: string
+          migration_id: string
+          prepared_summary: Json | null
+          priority: string
+          recorded_at: string | null
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sent_for_review_at: string | null
+          stage: string
+          target_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          company_id: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          founder_note?: string | null
+          id?: string
+          migration_id: string
+          prepared_summary?: Json | null
+          priority?: string
+          recorded_at?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sent_for_review_at?: string | null
+          stage?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          company_id?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          founder_note?: string | null
+          id?: string
+          migration_id?: string
+          prepared_summary?: Json | null
+          priority?: string
+          recorded_at?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sent_for_review_at?: string | null
+          stage?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_concierge_cases_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_concierge_cases_migration_id_fkey"
+            columns: ["migration_id"]
+            isOneToOne: true
+            referencedRelation: "ct_migrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_concierge_exceptions: {
+        Row: {
+          case_id: string
+          company_id: string
+          created_at: string
+          detail: string | null
+          founder_response: string | null
+          id: string
+          migration_row_id: string | null
+          question: string
+          raised_by: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          responded_at: string | null
+          responded_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          company_id: string
+          created_at?: string
+          detail?: string | null
+          founder_response?: string | null
+          id?: string
+          migration_row_id?: string | null
+          question: string
+          raised_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          company_id?: string
+          created_at?: string
+          detail?: string | null
+          founder_response?: string | null
+          id?: string
+          migration_row_id?: string | null
+          question?: string
+          raised_by?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_concierge_exceptions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "ct_concierge_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_concierge_exceptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_concierge_exceptions_migration_row_id_fkey"
+            columns: ["migration_row_id"]
+            isOneToOne: false
+            referencedRelation: "ct_migration_rows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ct_concierge_notes: {
+        Row: {
+          author_id: string | null
+          body: string
+          case_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          case_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ct_concierge_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "ct_concierge_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_documents: {
         Row: {
           company_id: string
