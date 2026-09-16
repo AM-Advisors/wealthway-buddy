@@ -536,7 +536,7 @@ export const reviewExposureClaim = createServerFn({ method: "POST" })
               ? "disputed"
               : "under_review";
 
-    const patch: Record<string, unknown> = {
+    const patch = {
       status,
       reviewer_note: data.decision === "info" ? existing.reviewer_note : (data.note ?? existing.reviewer_note),
       info_request: data.decision === "info" ? data.note : null,
@@ -552,7 +552,7 @@ export const reviewExposureClaim = createServerFn({ method: "POST" })
 
     const { error } = await context.supabase
       .from("ct_exposure_claims")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.claimId)
       .eq("company_id", data.companyId);
     if (error) throw new Error(error.message);
@@ -562,7 +562,7 @@ export const reviewExposureClaim = createServerFn({ method: "POST" })
       action: `exposure_claim_${status}`,
       entityId: data.claimId,
       previous: { status: existing.status, verified_quantity: existing.verified_quantity },
-      next: { status, verified_quantity: patch['verified_quantity'] },
+      next: { status, verified_quantity: patch.verified_quantity },
       reason: data.note ?? null,
     });
 
