@@ -143,6 +143,41 @@ function Index() {
           </div>
         </section>
 
+        {/* CapTable */}
+        <section className="border-t bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-20">
+            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+              Harmonious CapTable
+            </p>
+            <h2 className="mt-4 max-w-2xl text-3xl leading-tight sm:text-4xl">
+              Know Exactly Who Owns Your Company
+            </h2>
+            <p className="mt-4 max-w-2xl text-muted-foreground">
+              Control how your private shares move. Verify ownership, document exposure and maintain
+              the record. Already on Carta or Pulley? Your history comes with you — export the file,
+              we recognise the format, and you approve every row before it is recorded.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button asChild>
+                <Link to="/cap-table" search={{ move: "carta" }}>
+                  Move from Carta
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/cap-table" search={{ move: "pulley" }}>
+                  Move from Pulley
+                </Link>
+              </Button>
+              <Link
+                to="/cap-table"
+                className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                See Harmonious CapTable →
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Investor journey */}
         <section className="border-y bg-secondary/50">
           <div className="mx-auto max-w-6xl px-4 py-20">
