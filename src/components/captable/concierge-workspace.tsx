@@ -17,6 +17,7 @@ import {
 } from "@/lib/captable-concierge.functions";
 import { importCapMigration } from "@/lib/captable-migration.functions";
 import { MigrationWizard } from "./migration-wizard";
+import { InvestorOnboarding } from "./investor-onboarding";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -274,6 +275,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
         }}
       />
 
+      <InvestorOnboarding companyId={loaded.company.id} />
 
       <Card>
         <CardHeader>
