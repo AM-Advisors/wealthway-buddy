@@ -188,8 +188,8 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
     void queryClient.invalidateQueries({ queryKey: ["cap-concierge-queue"] });
   };
 
-  const run = <T,>(fn: (input: T) => Promise<unknown>, success: string) =>
-    useMutationLike(fn, success, refresh);
+  const run = <T,>(fn: (input: unknown) => Promise<unknown>, success: string) =>
+    useMutationLike<T>(fn, success, refresh);
 
   const assigner = run(assign, "Case updated.");
   const stager = run(stage, "Stage updated.");
@@ -498,9 +498,13 @@ function Tally({ label, value }: { label: string; value: string }) {
 }
 
 /** One shared mutation shape: run it, tell the user, refresh the case. */
-function useMutationLike<T>(fn: (input: T) => Promise<unknown>, success: string, refresh: () => void) {
+function useMutationLike<T>(
+  fn: (input: unknown) => Promise<unknown>,
+  success: string,
+  refresh: () => void,
+) {
   return useMutation({
-    mutationFn: (input: T) => fn(input as never),
+    mutationFn: (input: T) => fn({ data: input } as never),
     onSuccess: () => {
       toast.success(success);
       refresh();
