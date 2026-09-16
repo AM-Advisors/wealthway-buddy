@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { EngagementServicesPanel } from "@/components/engagement-services-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,6 +109,7 @@ function EngagementPage() {
         </TabsList>
 
         <TabsContent value="services" className="mt-4 space-y-3">
+          <EngagementServicesPanel engagementId={engagementId} />
           {g.serviceTerms && (
             <Card>
               <CardHeader>
