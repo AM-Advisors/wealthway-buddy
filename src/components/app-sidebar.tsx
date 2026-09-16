@@ -74,6 +74,8 @@ type NavGroup = { id: string; label: string; items: NavItem[] };
 const investorItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Documents", url: "/documents", icon: FileText },
+  { title: "Fund documents", url: "/fund-documents", icon: FolderLock },
+  { title: "Document vault", url: "/vault", icon: FileSignature },
   { title: "Wire instructions", url: "/wire", icon: Landmark },
   { title: "Confirm your wire", url: "/wire-confirmation", icon: Send },
   { title: "Due diligence", url: "/diligence", icon: FolderLock },

@@ -218,7 +218,7 @@ function FundDocumentsPage() {
             </CardContent>
           </Card>
 
-          <InvestorUploads />
+          <InvestorUploads fundId={fundId} />
         </>
       )}
     </main>

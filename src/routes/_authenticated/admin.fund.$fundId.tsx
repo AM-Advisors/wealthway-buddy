@@ -17,6 +17,7 @@ import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
 import { FundComplianceCard } from "@/components/fund-compliance-card";
+import { FundCompliancePanel } from "@/components/fund-compliance-panel";
 import {
   ScopeSection,
   ScopeServicesPanel,
@@ -467,6 +468,7 @@ function FundPage() {
 
         <TabsContent value="compliance" className="mt-6 space-y-6">
           <FundReadinessPanel offeringId={offering.id} />
+          <FundCompliancePanel offeringId={offering.id} />
           <FundComplianceCard offeringId={offering.id} />
           <FundEntityCard fundId={offering.id} />
         </TabsContent>

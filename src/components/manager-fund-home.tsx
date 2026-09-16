@@ -20,6 +20,7 @@ import {
 import { FundReadinessPanel } from "@/components/fund-readiness-panel";
 import { SETUP_STEP_SECTIONS, sectionState, useFundScope } from "@/lib/fund-scope";
 
+import { FundCompliancePanel } from "@/components/fund-compliance-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -510,6 +511,10 @@ export function ManagerFundHome({ offeringId }: { offeringId: string }) {
         </CardContent>
       </Card>
       </ScopeSection>
+      </div>
+
+      <div className="mt-8">
+        <FundCompliancePanel offeringId={offeringId} />
       </div>
 
       <FundComplianceCard offeringId={offeringId} />
