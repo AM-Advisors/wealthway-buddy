@@ -11149,6 +11149,19 @@ export type Database = {
       is_any_staff: { Args: never; Returns: boolean }
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
+      list_admin_review: {
+        Args: never
+        Returns: {
+          company_domain: boolean
+          created_at: string
+          email: string
+          last_sign_in_at: string
+          legal_name: string
+          role_granted_at: string
+          roles: string[]
+          user_id: string
+        }[]
+      }
       list_entity_reviews: {
         Args: never
         Returns: {
