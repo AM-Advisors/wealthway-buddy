@@ -4,7 +4,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { consumeOAuthReturnError, startGoogleOAuth } from "@/lib/google-oauth";
 
 import { useAuth } from "@/hooks/useAuth";
 import { AuthShell } from "@/components/auth-shell";
