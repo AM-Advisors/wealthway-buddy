@@ -119,9 +119,10 @@ export async function logAccessChange(input: {
   action: "granted" | "removed";
   detail?: string | null;
 }) {
-  await supabaseAdmin.from("reviewer_activity").insert({
-    actor_id: input.actorId,
-    offering_id: input.offeringId,
+  const { logReviewerActivity } = await import("@/lib/reviewer-activity.server");
+  await logReviewerActivity(supabaseAdmin, {
+    actorId: input.actorId,
+    offeringId: input.offeringId,
     action: input.action === "granted" ? "fund_access_granted" : "fund_access_removed",
     area: "access",
     outcome: input.action === "granted" ? "approved" : "declined",
