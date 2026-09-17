@@ -594,10 +594,15 @@ export function canSubmitForReview(checks: NavCheck[]) {
 
 export type NavOverride = { code: NavCheckCode; reason: string; by: string; at: string };
 
+/** An override is only an override when someone actually explains it. */
+export const MIN_OVERRIDE_REASON_LENGTH = 20;
+
 /** Publication is allowed only when every blocker is either gone or documented. */
 export function publicationBlockers(checks: NavCheck[], overrides: NavOverride[]) {
   const documented = new Set(
-    overrides.filter((o) => o.reason.trim().length >= 8).map((o) => o.code),
+    overrides
+      .filter((o) => o.reason.trim().length >= MIN_OVERRIDE_REASON_LENGTH)
+      .map((o) => o.code),
   );
   return blockingChecks(checks).filter(
     (c) => !c.overridable || !documented.has(c.code),
