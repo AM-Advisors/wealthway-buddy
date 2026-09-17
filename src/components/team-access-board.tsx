@@ -255,3 +255,70 @@ export function TeamAccessBoard() {
     </div>
   );
 }
+
+/**
+ * Administrator access is never granted automatically. This list exists so an
+ * administrator can review who holds it today and remove anyone who should not.
+ */
+function AdminReviewPanel() {
+  const load = useServerFn(listAdminReview);
+  const { data, error, isLoading } = useQuery({
+    queryKey: ["admin-review"],
+    queryFn: () => load(),
+    retry: false,
+  });
+
+  if (error) return null;
+
+  const admins = ((data as any)?.admins ?? []) as any[];
+  const me = (data as any)?.me as string | undefined;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Administrator review</CardTitle>
+        <CardDescription>
+          Everyone who holds administrator access right now. Signing in with a Harmonious Google
+          account no longer grants it — access is given by an administrator below and recorded in
+          the audit trail. Review this list and remove anyone who no longer needs it.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+        {!isLoading && admins.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No one holds administrator access.</p>
+        ) : null}
+        {admins.map((person) => (
+          <div
+            key={person.user_id}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
+          >
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{person.legal_name || person.email}</span>
+                {person.user_id === me ? <Badge variant="secondary">You</Badge> : null}
+                {person.company_domain ? <Badge variant="outline">Harmonious email</Badge> : null}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {person.email}
+                {person.role_granted_at
+                  ? ` · access since ${String(person.role_granted_at).slice(0, 10)}`
+                  : ""}
+                {person.last_sign_in_at
+                  ? ` · last signed in ${String(person.last_sign_in_at).slice(0, 10)}`
+                  : " · has not signed in yet"}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {(person.roles ?? []).map((r: string) => (
+                <Badge key={r} variant="secondary">
+                  {r}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
