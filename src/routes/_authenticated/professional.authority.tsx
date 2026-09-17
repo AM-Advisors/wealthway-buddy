@@ -38,10 +38,11 @@ function AuthorityDocuments() {
   const submit = useServerFn(submitAuthorityDoc);
   const qc = useQueryClient();
 
+  const startUpload = useServerFn(startAuthorityUpload);
+
   const [delegationId, setDelegationId] = useState("");
   const [docType, setDocType] = useState<AuthorityDocumentType>("power_of_attorney");
-  const [fileName, setFileName] = useState("");
-  const [storagePath, setStoragePath] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [expires, setExpires] = useState("");
   const [covered, setCovered] = useState<SignableDocumentType[]>([]);
 
@@ -73,21 +74,38 @@ function AuthorityDocuments() {
   ].filter((o, i, all) => all.findIndex((x) => x.id === o.id) === i);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      submit({
+    mutationFn: async () => {
+      if (!file) throw new Error("Choose the authority document first.");
+      const ticket = await startUpload({
+        data: { delegation_id: delegationId, file_name: file.name },
+      });
+      if (!ticket.signedUrl || !ticket.token) throw new Error("Could not start that upload.");
+
+      const { error } = await supabase.storage
+        .from("authority-documents")
+        .uploadToSignedUrl(ticket.path, ticket.token, file);
+      if (error) throw new Error(error.message);
+
+      const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+      const hash = Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      return submit({
         data: {
           delegation_id: delegationId,
           document_type: docType,
-          file_name: fileName,
-          storage_path: storagePath || `authority/${delegationId}/${fileName}`,
+          file_name: file.name,
+          storage_path: ticket.path,
+          document_hash: hash,
           covered_document_types: covered,
           expires_at: expires || null,
         },
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success("Submitted for review.");
-      setFileName("");
-      setStoragePath("");
+      setFile(null);
       setCovered([]);
       void qc.invalidateQueries({ queryKey: ["authority-documents", "delegate"] });
     },
