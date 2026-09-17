@@ -206,6 +206,28 @@ export const listAuthorityDocs = createServerFn({ method: "POST" })
     };
   });
 
+/** A one-minute upload slot inside the delegation's own private folder. */
+export const startAuthorityUpload = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ delegation_id: uuid, file_name: z.string().min(1).max(300) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { createAuthorityUploadTicket } = await import("@/lib/signatory-authority.server");
+    return createAuthorityUploadTicket(context.userId, data.delegation_id, data.file_name);
+  });
+
+/** Short-lived, audited read access to one authority document. */
+export const getAuthorityDocumentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ document_id: uuid }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { getAuthorityDocumentUrl } = await import("@/lib/signatory-authority.server");
+    return getAuthorityDocumentUrl(context.userId, data.document_id);
+  });
+
+
+
 export const submitAuthorityDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
