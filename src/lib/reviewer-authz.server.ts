@@ -99,7 +99,7 @@ export async function authorizePayment(userId: string, paymentId: string) {
 export async function authorizeInvitation(userId: string, invitationId: string) {
   const { data: invitation, error } = await supabaseAdmin
     .from("fund_invitations")
-    .select("id, offering_id, email, invited_name, role, status, accepted_by")
+    .select("id, offering_id, email, invited_name, invite_role, status, accepted_by")
     .eq("id", invitationId)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -114,7 +114,7 @@ export async function logAccessChange(input: {
   actorId: string;
   offeringId: string;
   targetUserId: string | null;
-  role: InvitableRole;
+  role: import("@/lib/invitation-role").InvitationRole;
   action: "granted" | "removed";
   detail?: string | null;
 }) {
