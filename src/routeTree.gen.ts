@@ -154,6 +154,7 @@ import { Route as AuthenticatedProfessionalInvestmentsRouteImport } from './rout
 import { Route as AuthenticatedProfessionalOrganizationRouteImport } from './routes/_authenticated/professional.organization'
 import { Route as AuthenticatedProfessionalPrepareRouteImport } from './routes/_authenticated/professional.prepare'
 import { Route as AuthenticatedProfessionalProfilesRouteImport } from './routes/_authenticated/professional.profiles'
+import { Route as AuthenticatedProfessionalSignaturesRouteImport } from './routes/_authenticated/professional.signatures'
 import { Route as AuthenticatedProfessionalTasksRouteImport } from './routes/_authenticated/professional.tasks'
 import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_authenticated/professional.tax'
 import { Route as AuthenticatedProfessionalVerificationRouteImport } from './routes/_authenticated/professional.verification'
@@ -1032,6 +1033,12 @@ const AuthenticatedProfessionalProfilesRoute =
     path: '/profiles',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedProfessionalSignaturesRoute =
+  AuthenticatedProfessionalSignaturesRouteImport.update({
+    id: '/signatures',
+    path: '/signatures',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
 const AuthenticatedProfessionalTasksRoute =
   AuthenticatedProfessionalTasksRouteImport.update({
     id: '/tasks',
@@ -1535,6 +1542,7 @@ export interface FileRoutesByFullPath {
   '/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
   '/professional/prepare': typeof AuthenticatedProfessionalPrepareRoute
   '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
+  '/professional/signatures': typeof AuthenticatedProfessionalSignaturesRoute
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
@@ -1738,6 +1746,7 @@ export interface FileRoutesByTo {
   '/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
   '/professional/prepare': typeof AuthenticatedProfessionalPrepareRoute
   '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
+  '/professional/signatures': typeof AuthenticatedProfessionalSignaturesRoute
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
@@ -1947,6 +1956,7 @@ export interface FileRoutesById {
   '/_authenticated/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
   '/_authenticated/professional/prepare': typeof AuthenticatedProfessionalPrepareRoute
   '/_authenticated/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
+  '/_authenticated/professional/signatures': typeof AuthenticatedProfessionalSignaturesRoute
   '/_authenticated/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/_authenticated/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/_authenticated/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
@@ -2157,6 +2167,7 @@ export interface FileRouteTypes {
     | '/professional/organization'
     | '/professional/prepare'
     | '/professional/profiles'
+    | '/professional/signatures'
     | '/professional/tasks'
     | '/professional/tax'
     | '/professional/verification'
@@ -2360,6 +2371,7 @@ export interface FileRouteTypes {
     | '/professional/organization'
     | '/professional/prepare'
     | '/professional/profiles'
+    | '/professional/signatures'
     | '/professional/tasks'
     | '/professional/tax'
     | '/professional/verification'
@@ -2568,6 +2580,7 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/organization'
     | '/_authenticated/professional/prepare'
     | '/_authenticated/professional/profiles'
+    | '/_authenticated/professional/signatures'
     | '/_authenticated/professional/tasks'
     | '/_authenticated/professional/tax'
     | '/_authenticated/professional/verification'
@@ -3690,6 +3703,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfessionalProfilesRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
     }
+    '/_authenticated/professional/signatures': {
+      id: '/_authenticated/professional/signatures'
+      path: '/signatures'
+      fullPath: '/professional/signatures'
+      preLoaderRoute: typeof AuthenticatedProfessionalSignaturesRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
     '/_authenticated/professional/tasks': {
       id: '/_authenticated/professional/tasks'
       path: '/tasks'
@@ -4255,6 +4275,7 @@ interface AuthenticatedProfessionalRouteChildren {
   AuthenticatedProfessionalOrganizationRoute: typeof AuthenticatedProfessionalOrganizationRoute
   AuthenticatedProfessionalPrepareRoute: typeof AuthenticatedProfessionalPrepareRoute
   AuthenticatedProfessionalProfilesRoute: typeof AuthenticatedProfessionalProfilesRoute
+  AuthenticatedProfessionalSignaturesRoute: typeof AuthenticatedProfessionalSignaturesRoute
   AuthenticatedProfessionalTasksRoute: typeof AuthenticatedProfessionalTasksRoute
   AuthenticatedProfessionalTaxRoute: typeof AuthenticatedProfessionalTaxRoute
   AuthenticatedProfessionalVerificationRoute: typeof AuthenticatedProfessionalVerificationRoute
@@ -4283,6 +4304,8 @@ const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChil
       AuthenticatedProfessionalPrepareRoute,
     AuthenticatedProfessionalProfilesRoute:
       AuthenticatedProfessionalProfilesRoute,
+    AuthenticatedProfessionalSignaturesRoute:
+      AuthenticatedProfessionalSignaturesRoute,
     AuthenticatedProfessionalTasksRoute: AuthenticatedProfessionalTasksRoute,
     AuthenticatedProfessionalTaxRoute: AuthenticatedProfessionalTaxRoute,
     AuthenticatedProfessionalVerificationRoute:
