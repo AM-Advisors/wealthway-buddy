@@ -387,14 +387,14 @@ export async function reviewReconciliation(
     action: HarmoniousAction;
     reason?: string;
     correction?: {
-      transactionType?: CashTransactionType;
-      applicationId?: string | null;
-      investorUserId?: string | null;
-      investmentProfileId?: string | null;
-      invoiceId?: string | null;
-      wireRequestId?: string | null;
-      debitAccountCode?: string;
-      creditAccountCode?: string;
+      transactionType?: CashTransactionType | undefined;
+      applicationId?: string | null | undefined;
+      investorUserId?: string | null | undefined;
+      investmentProfileId?: string | null | undefined;
+      invoiceId?: string | null | undefined;
+      wireRequestId?: string | null | undefined;
+      debitAccountCode?: string | undefined;
+      creditAccountCode?: string | undefined;
     };
     message?: string;
   },

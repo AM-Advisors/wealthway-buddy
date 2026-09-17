@@ -66,13 +66,7 @@ export const decideReconciliation = createServerFn({ method: "POST" })
       action: data.action === "correct" ? "approve" : data.action,
       ...(data.reason ? { reason: data.reason } : {}),
       ...(data.message ? { message: data.message } : {}),
-      ...(data.correction
-        ? {
-            correction: Object.fromEntries(
-              Object.entries(data.correction).filter(([, v]) => v !== undefined),
-            ) as NonNullable<typeof data.correction>,
-          }
-        : {}),
+      ...(data.correction ? { correction: data.correction } : {}),
     });
   });
 
