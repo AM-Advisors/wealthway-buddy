@@ -205,19 +205,21 @@ function ClientInvoicesPage() {
                   </ul>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => downloadInvoice(inv)}>
+                    <Button size="sm" variant="outline" onClick={() => void downloadInvoice(inv)}>
                       Download invoice
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        if (!printInvoice(inv)) {
-                          toast.error("Your browser blocked the print window — allow pop-ups and try again.");
-                        }
+                        void printInvoice(inv).then((opened) => {
+                          if (!opened) {
+                            toast.error("Your browser blocked the new tab — allow pop-ups and try again.");
+                          }
+                        });
                       }}
                     >
-                      Print or save as PDF
+                      View PDF
                     </Button>
                   </div>
 

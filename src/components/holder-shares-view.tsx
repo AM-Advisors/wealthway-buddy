@@ -1,18 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { buildCertificateHtml, certificateFileName } from "@/components/certificate-document";
-
-function downloadHtml(name: string, html: string) {
-  const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
-}
+import { downloadCertificate } from "@/components/certificate-document";
 
 const num = (v: number) => Number(v ?? 0).toLocaleString("en-US", { maximumFractionDigits: 4 });
 
@@ -91,7 +80,7 @@ export function HolderSharesView({ position }: { position: any }) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => downloadHtml(certificateFileName(c), buildCertificateHtml(c))}
+                    onClick={() => void downloadCertificate(c)}
                   >
                     Download
                   </Button>

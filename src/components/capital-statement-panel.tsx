@@ -6,10 +6,8 @@ import {
   generateStatementForApplication,
   listStatementsForApplication,
 } from "@/lib/capital-statements.functions";
-import {
-  buildCapitalStatementHtml,
-  capitalStatementFileName,
-} from "@/components/capital-statement-document";
+import { capitalStatementPdfSpec } from "@/components/capital-statement-document";
+import { downloadPdfDoc, openPdfDoc } from "@/lib/pdf-render";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -18,25 +16,13 @@ const money = (cents: number | null | undefined) =>
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
     : "—";
 
-export function openStatement(statement: any) {
-  const html = buildCapitalStatementHtml(statement);
-  const win = window.open("", "_blank", "noopener");
-  if (!win) {
-    toast.error("Allow pop-ups to view the statement.");
-    return;
-  }
-  win.document.write(html);
-  win.document.close();
+export async function openStatement(statement: any) {
+  const opened = await openPdfDoc(capitalStatementPdfSpec(statement));
+  if (!opened) toast.error("Allow pop-ups to view the statement.");
 }
 
-export function downloadStatement(statement: any) {
-  const blob = new Blob([buildCapitalStatementHtml(statement)], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = capitalStatementFileName(statement);
-  link.click();
-  URL.revokeObjectURL(url);
+export async function downloadStatement(statement: any) {
+  await downloadPdfDoc(capitalStatementPdfSpec(statement));
 }
 
 /** Statement history for one investor, with a view, download and — for staff —
@@ -113,10 +99,10 @@ export function CapitalStatementPanel({
                 ) : (
                   <Badge variant="secondary">Current</Badge>
                 )}
-                <Button size="sm" variant="outline" onClick={() => openStatement(s)}>
+                <Button size="sm" variant="outline" onClick={() => void openStatement(s)}>
                   View
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => downloadStatement(s)}>
+                <Button size="sm" variant="ghost" onClick={() => void downloadStatement(s)}>
                   Download
                 </Button>
               </span>
