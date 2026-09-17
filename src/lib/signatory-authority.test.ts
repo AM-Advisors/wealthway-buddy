@@ -133,8 +133,58 @@ function builder(table: string) {
   return api;
 }
 
+/** Mirrors the database functions the server calls for atomic step-up work. */
+async function rpc(name: string, args: any) {
+  const rows = (tables["stepup_authentications"] ??= []);
+  if (name === "consume_signing_stepup") {
+    const row = rows.find(
+      (r) =>
+        r.id === args.p_id &&
+        r.user_id === args.p_user_id &&
+        r.delegation_id === args.p_delegation_id &&
+        r.action === args.p_action &&
+        r.resource_type === args.p_resource_type &&
+        r.resource_id === args.p_resource_id &&
+        r.status === "verified" &&
+        !r.consumed_at &&
+        new Date(r.expires_at) > new Date(),
+    );
+    if (!row) return { data: [], error: null };
+    row.status = "consumed";
+    row.consumed_at = new Date().toISOString();
+    return { data: [row], error: null };
+  }
+  if (name === "register_stepup_attempt") {
+    const row = rows.find(
+      (r) => r.id === args.p_id && r.user_id === args.p_user_id && r.status === "pending",
+    );
+    if (!row) return { data: -1, error: null };
+    row.attempts = (row.attempts ?? 0) + 1;
+    if (row.attempts >= args.p_max) row.status = "failed";
+    return { data: row.attempts, error: null };
+  }
+  return { data: null, error: null };
+}
+
+const storageCalls: { bucket: string; op: string; path: string }[] = [];
+
+const storage = (bucket: string) => ({
+  createSignedUploadUrl: async (path: string) => {
+    storageCalls.push({ bucket, op: "upload", path });
+    return { data: { signedUrl: `https://storage.test/${path}`, token: "tok" }, error: null };
+  },
+  createSignedUrl: async (path: string, ttl: number) => {
+    storageCalls.push({ bucket, op: `read:${ttl}`, path });
+    return { data: { signedUrl: `https://storage.test/${path}?exp=${ttl}` }, error: null };
+  },
+});
+
 vi.mock("@/integrations/supabase/client.server", () => ({
-  supabaseAdmin: { from: (table: string) => builder(table) },
+  supabaseAdmin: {
+    from: (table: string) => builder(table),
+    rpc: (name: string, args: any) => rpc(name, args),
+    storage: { from: (bucket: string) => storage(bucket) },
+  },
 }));
 
 import {
