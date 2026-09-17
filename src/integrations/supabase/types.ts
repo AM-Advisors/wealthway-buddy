@@ -6171,6 +6171,107 @@ export type Database = {
           },
         ]
       }
+      entity_verifications: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          beneficial_ownership: Json
+          city: string | null
+          country: string | null
+          created_at: string
+          entity_aml_status: Database["public"]["Enums"]["check_status"]
+          entity_type: string | null
+          expires_at: string | null
+          formation_date: string | null
+          formation_documents: Json
+          formation_jurisdiction: string | null
+          id: string
+          kyb_status: Database["public"]["Enums"]["check_status"]
+          legal_name: string | null
+          postal_code: string | null
+          profile_id: string
+          region: string | null
+          review_notes: string | null
+          reviewer_id: string | null
+          screened_at: string | null
+          submitted_at: string | null
+          tax_id_last4: string | null
+          tax_id_reference: string | null
+          trust_date: string | null
+          trust_type: string | null
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          beneficial_ownership?: Json
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          entity_aml_status?: Database["public"]["Enums"]["check_status"]
+          entity_type?: string | null
+          expires_at?: string | null
+          formation_date?: string | null
+          formation_documents?: Json
+          formation_jurisdiction?: string | null
+          id?: string
+          kyb_status?: Database["public"]["Enums"]["check_status"]
+          legal_name?: string | null
+          postal_code?: string | null
+          profile_id: string
+          region?: string | null
+          review_notes?: string | null
+          reviewer_id?: string | null
+          screened_at?: string | null
+          submitted_at?: string | null
+          tax_id_last4?: string | null
+          tax_id_reference?: string | null
+          trust_date?: string | null
+          trust_type?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          beneficial_ownership?: Json
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          entity_aml_status?: Database["public"]["Enums"]["check_status"]
+          entity_type?: string | null
+          expires_at?: string | null
+          formation_date?: string | null
+          formation_documents?: Json
+          formation_jurisdiction?: string | null
+          id?: string
+          kyb_status?: Database["public"]["Enums"]["check_status"]
+          legal_name?: string | null
+          postal_code?: string | null
+          profile_id?: string
+          region?: string | null
+          review_notes?: string | null
+          reviewer_id?: string | null
+          screened_at?: string | null
+          submitted_at?: string | null
+          tax_id_last4?: string | null
+          tax_id_reference?: string | null
+          trust_date?: string | null
+          trust_type?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_verifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_access_requests: {
         Row: {
           created_at: string
@@ -6853,6 +6954,185 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_profile_relationships: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          is_authorized_signer: boolean
+          ownership_percent: number | null
+          person_id: string
+          profile_id: string
+          role: Database["public"]["Enums"]["profile_relationship_role"]
+          status: string
+          verification_status: Database["public"]["Enums"]["check_status"]
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          is_authorized_signer?: boolean
+          ownership_percent?: number | null
+          person_id: string
+          profile_id: string
+          role: Database["public"]["Enums"]["profile_relationship_role"]
+          status?: string
+          verification_status?: Database["public"]["Enums"]["check_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          is_authorized_signer?: boolean
+          ownership_percent?: number | null
+          person_id?: string
+          profile_id?: string
+          role?: Database["public"]["Enums"]["profile_relationship_role"]
+          status?: string
+          verification_status?: Database["public"]["Enums"]["check_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_profile_relationships_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_profile_relationships_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_profile_snapshots: {
+        Row: {
+          application_id: string | null
+          created_by: string | null
+          id: string
+          offering_id: string | null
+          profile_id: string
+          reason: string
+          snapshot: Json
+          subscription_id: string | null
+          taken_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_by?: string | null
+          id?: string
+          offering_id?: string | null
+          profile_id: string
+          reason?: string
+          snapshot: Json
+          subscription_id?: string | null
+          taken_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          created_by?: string | null
+          id?: string
+          offering_id?: string | null
+          profile_id?: string
+          reason?: string
+          snapshot?: Json
+          subscription_id?: string | null
+          taken_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_profile_snapshots_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_profile_snapshots_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_profile_snapshots_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_profile_snapshots_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investment_profiles: {
+        Row: {
+          created_at: string
+          display_label: string
+          id: string
+          legacy_persona_id: string | null
+          legal_name: string | null
+          owner_user_id: string
+          person_id: string | null
+          profile_type: Database["public"]["Enums"]["investment_profile_type"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_label: string
+          id?: string
+          legacy_persona_id?: string | null
+          legal_name?: string | null
+          owner_user_id: string
+          person_id?: string | null
+          profile_type: Database["public"]["Enums"]["investment_profile_type"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_label?: string
+          id?: string
+          legacy_persona_id?: string | null
+          legal_name?: string | null
+          owner_user_id?: string
+          person_id?: string | null
+          profile_type?: Database["public"]["Enums"]["investment_profile_type"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_profiles_legacy_persona_id_fkey"
+            columns: ["legacy_persona_id"]
+            isOneToOne: true
+            referencedRelation: "investor_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_profiles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -8415,6 +8695,56 @@ export type Database = {
           },
         ]
       }
+      offering_requirements: {
+        Row: {
+          accreditation_max_age_days: number | null
+          accreditation_required: boolean
+          accreditation_verification: string
+          created_at: string
+          notes: string | null
+          offering_id: string
+          requires_control_person_kyc: boolean
+          requires_entity_kyb: boolean
+          requires_person_aml: boolean
+          requires_person_kyc: boolean
+          updated_at: string
+        }
+        Insert: {
+          accreditation_max_age_days?: number | null
+          accreditation_required?: boolean
+          accreditation_verification?: string
+          created_at?: string
+          notes?: string | null
+          offering_id: string
+          requires_control_person_kyc?: boolean
+          requires_entity_kyb?: boolean
+          requires_person_aml?: boolean
+          requires_person_kyc?: boolean
+          updated_at?: string
+        }
+        Update: {
+          accreditation_max_age_days?: number | null
+          accreditation_required?: boolean
+          accreditation_verification?: string
+          created_at?: string
+          notes?: string | null
+          offering_id?: string
+          requires_control_person_kyc?: boolean
+          requires_entity_kyb?: boolean
+          requires_person_aml?: boolean
+          requires_person_kyc?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_requirements_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_statements: {
         Row: {
           capital_call_terms: string
@@ -9024,6 +9354,149 @@ export type Database = {
           },
         ]
       }
+      person_onboarding_events: {
+        Row: {
+          actor_kind: string
+          actor_user_id: string | null
+          created_at: string
+          detail: Json | null
+          from_state: Database["public"]["Enums"]["onboarding_state"] | null
+          id: string
+          person_id: string
+          reason: string | null
+          to_state: Database["public"]["Enums"]["onboarding_state"]
+        }
+        Insert: {
+          actor_kind?: string
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          from_state?: Database["public"]["Enums"]["onboarding_state"] | null
+          id?: string
+          person_id: string
+          reason?: string | null
+          to_state: Database["public"]["Enums"]["onboarding_state"]
+        }
+        Update: {
+          actor_kind?: string
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          from_state?: Database["public"]["Enums"]["onboarding_state"] | null
+          id?: string
+          person_id?: string
+          reason?: string | null
+          to_state?: Database["public"]["Enums"]["onboarding_state"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_onboarding_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persons: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          aml_screened_at: string | null
+          aml_status: Database["public"]["Enums"]["check_status"]
+          citizenship_country: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          id: string
+          identity_verified_at: string | null
+          kyc_status: Database["public"]["Enums"]["check_status"]
+          kyc_verified_at: string | null
+          legal_first_name: string | null
+          legal_last_name: string | null
+          legal_middle_name: string | null
+          onboarding_reason: string | null
+          onboarding_state: Database["public"]["Enums"]["onboarding_state"]
+          phone: string | null
+          postal_code: string | null
+          preferred_name: string | null
+          region: string | null
+          residence_country: string | null
+          reverification_due_at: string | null
+          tax_id_last4: string | null
+          tax_id_reference: string | null
+          tax_residency_country: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          aml_screened_at?: string | null
+          aml_status?: Database["public"]["Enums"]["check_status"]
+          citizenship_country?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          id?: string
+          identity_verified_at?: string | null
+          kyc_status?: Database["public"]["Enums"]["check_status"]
+          kyc_verified_at?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          legal_middle_name?: string | null
+          onboarding_reason?: string | null
+          onboarding_state?: Database["public"]["Enums"]["onboarding_state"]
+          phone?: string | null
+          postal_code?: string | null
+          preferred_name?: string | null
+          region?: string | null
+          residence_country?: string | null
+          reverification_due_at?: string | null
+          tax_id_last4?: string | null
+          tax_id_reference?: string | null
+          tax_residency_country?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          aml_screened_at?: string | null
+          aml_status?: Database["public"]["Enums"]["check_status"]
+          citizenship_country?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          id?: string
+          identity_verified_at?: string | null
+          kyc_status?: Database["public"]["Enums"]["check_status"]
+          kyc_verified_at?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          legal_middle_name?: string | null
+          onboarding_reason?: string | null
+          onboarding_state?: Database["public"]["Enums"]["onboarding_state"]
+          phone?: string | null
+          postal_code?: string | null
+          preferred_name?: string | null
+          region?: string | null
+          residence_country?: string | null
+          reverification_due_at?: string | null
+          tax_id_last4?: string | null
+          tax_id_reference?: string | null
+          tax_residency_country?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pitch_deck_slides: {
         Row: {
           caption: string | null
@@ -9504,6 +9977,79 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      profile_accreditations: {
+        Row: {
+          basis: string | null
+          created_at: string
+          evidence: Json
+          expires_at: string | null
+          id: string
+          legacy_record_id: string | null
+          offering_id: string | null
+          profile_id: string
+          status: Database["public"]["Enums"]["check_status"]
+          updated_at: string
+          verification_method: string | null
+          verified_at: string | null
+          verifier_kind: string | null
+          verifier_name: string | null
+        }
+        Insert: {
+          basis?: string | null
+          created_at?: string
+          evidence?: Json
+          expires_at?: string | null
+          id?: string
+          legacy_record_id?: string | null
+          offering_id?: string | null
+          profile_id: string
+          status?: Database["public"]["Enums"]["check_status"]
+          updated_at?: string
+          verification_method?: string | null
+          verified_at?: string | null
+          verifier_kind?: string | null
+          verifier_name?: string | null
+        }
+        Update: {
+          basis?: string | null
+          created_at?: string
+          evidence?: Json
+          expires_at?: string | null
+          id?: string
+          legacy_record_id?: string | null
+          offering_id?: string | null
+          profile_id?: string
+          status?: Database["public"]["Enums"]["check_status"]
+          updated_at?: string
+          verification_method?: string | null
+          verified_at?: string | null
+          verifier_kind?: string | null
+          verifier_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_accreditations_legacy_record_id_fkey"
+            columns: ["legacy_record_id"]
+            isOneToOne: false
+            referencedRelation: "accreditation_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_accreditations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_accreditations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -11606,8 +12152,29 @@ export type Database = {
         | "revoked"
         | "expired"
       funding_method: "wire" | "ach"
+      investment_profile_type:
+        | "individual"
+        | "joint"
+        | "llc"
+        | "corporation"
+        | "partnership"
+        | "trust"
+        | "ira"
+        | "family_office"
+        | "foundation"
+        | "other_entity"
       investor_type: "individual" | "joint" | "entity" | "trust" | "ira"
       invitation_role: "investor" | "fund_manager"
+      onboarding_state:
+        | "account_created"
+        | "profile_required"
+        | "identity_required"
+        | "kyc_pending"
+        | "aml_pending"
+        | "verified"
+        | "review_required"
+        | "failed"
+        | "reverification_required"
       payment_status:
         | "not_started"
         | "awaiting_wire"
@@ -11636,6 +12203,19 @@ export type Database = {
         | "administrator"
         | "placement_agent"
         | "other"
+      profile_relationship_role:
+        | "owner"
+        | "beneficial_owner"
+        | "control_person"
+        | "manager"
+        | "member"
+        | "officer"
+        | "director"
+        | "trustee"
+        | "grantor"
+        | "authorized_signer"
+        | "joint_owner"
+        | "beneficiary"
       reg_type: "506b" | "506c" | "regcf" | "rega" | "regaplus"
     }
     CompositeTypes: {
@@ -11836,8 +12416,31 @@ export const Constants = {
         "expired",
       ],
       funding_method: ["wire", "ach"],
+      investment_profile_type: [
+        "individual",
+        "joint",
+        "llc",
+        "corporation",
+        "partnership",
+        "trust",
+        "ira",
+        "family_office",
+        "foundation",
+        "other_entity",
+      ],
       investor_type: ["individual", "joint", "entity", "trust", "ira"],
       invitation_role: ["investor", "fund_manager"],
+      onboarding_state: [
+        "account_created",
+        "profile_required",
+        "identity_required",
+        "kyc_pending",
+        "aml_pending",
+        "verified",
+        "review_required",
+        "failed",
+        "reverification_required",
+      ],
       payment_status: [
         "not_started",
         "awaiting_wire",
@@ -11868,6 +12471,20 @@ export const Constants = {
         "administrator",
         "placement_agent",
         "other",
+      ],
+      profile_relationship_role: [
+        "owner",
+        "beneficial_owner",
+        "control_person",
+        "manager",
+        "member",
+        "officer",
+        "director",
+        "trustee",
+        "grantor",
+        "authorized_signer",
+        "joint_owner",
+        "beneficiary",
       ],
       reg_type: ["506b", "506c", "regcf", "rega", "regaplus"],
     },
