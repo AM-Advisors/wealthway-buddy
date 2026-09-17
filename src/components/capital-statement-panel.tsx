@@ -99,10 +99,10 @@ export function CapitalStatementPanel({
                 ) : (
                   <Badge variant="secondary">Current</Badge>
                 )}
-                <Button size="sm" variant="outline" onClick={() => openStatement(s)}>
+                <Button size="sm" variant="outline" onClick={() => void openStatement(s)}>
                   View
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => downloadStatement(s)}>
+                <Button size="sm" variant="ghost" onClick={() => void downloadStatement(s)}>
                   Download
                 </Button>
               </span>

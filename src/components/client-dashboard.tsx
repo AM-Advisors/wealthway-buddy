@@ -505,10 +505,10 @@ export function ClientDashboard({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => openStatement(s)}>
+                  <Button size="sm" variant="outline" onClick={() => void openStatement(s)}>
                     View
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => downloadStatement(s)}>
+                  <Button size="sm" variant="ghost" onClick={() => void downloadStatement(s)}>
                     Download
                   </Button>
                 </div>
