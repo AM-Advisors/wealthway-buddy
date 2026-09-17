@@ -461,7 +461,10 @@ function Dashboard() {
             {
               title: "Accreditation",
               status: app.accreditation_status,
-              detail: unlocked ? "Reg D qualification evidence" : "Unlocks after identity and screening",
+              detail:
+                unlocked || app.accreditation_status !== "not_started"
+                  ? "Reg D qualification evidence"
+                  : "Unlocks after identity and screening",
               to: "/onboarding/accreditation" as const,
             },
           ].map((item) => (
