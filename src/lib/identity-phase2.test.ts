@@ -118,7 +118,7 @@ function makeClient() {
           const [, field] = col.split(".");
           filters.push((r) => {
             const person: any = (tables["persons"] ?? []).find((p: any) => p["id"] === r["person_id"]);
-            return !!person && person[field] === val;
+            return !!person && person[field as string] === val;
           });
           return api;
         }
@@ -166,7 +166,7 @@ function makeClient() {
       update(values: Row) {
         return {
           eq(col: string, val: any) {
-            tables[name] = (tables[name] ?? []).map((r) => (r[col] === val ? { ...r, ...values } : r));
+            tables[name] = (tables[name] ?? []).map((r: any) => (r[col] === val ? { ...r, ...values } : r));
             return Promise.resolve({ data: null, error: null });
           },
         };
@@ -271,7 +271,7 @@ describe("canInvest", () => {
   });
 
   it("does not treat a person's KYC as verification of their LLC", async () => {
-    tables["entity_verifications"] = tables["entity_verifications"].map((r) =>
+    tables["entity_verifications"] = tables["entity_verifications"].map((r: any) =>
       r["profile_id"] === PROFILE_A_LLC ? { ...r, kyb_status: "not_started" } : r,
     );
     const r = await canInvest(PERSON_A_USER, PROFILE_A_LLC, OFFERING_506B);
@@ -304,7 +304,7 @@ describe("canInvest", () => {
   });
 
   it("reports expired accreditation rather than a bare false", async () => {
-    tables["profile_accreditations"] = tables["profile_accreditations"].map((a) =>
+    tables["profile_accreditations"] = tables["profile_accreditations"].map((a: any) =>
       a["profile_id"] === PROFILE_A_IND ? { ...a, expires_at: past } : a,
     );
     const r = await canInvest(PERSON_A_USER, PROFILE_A_IND, OFFERING_506B);
@@ -312,7 +312,7 @@ describe("canInvest", () => {
   });
 
   it("reports pending AML review", async () => {
-    tables["persons"] = tables["persons"].map((p) =>
+    tables["persons"] = tables["persons"].map((p: any) =>
       p["id"] === PERSON_A ? { ...p, aml_status: "review" } : p,
     );
     const r = await canInvest(PERSON_A_USER, PROFILE_A_IND, OFFERING_506B);
@@ -344,7 +344,7 @@ describe("historical integrity", () => {
     expect(snap["snapshot"].profile.display_label).toBe("Smith Holdings LLC");
     expect(snap["snapshot"].relationships).toHaveLength(1);
 
-    tables["investment_profiles"] = tables["investment_profiles"].map((p) =>
+    tables["investment_profiles"] = tables["investment_profiles"].map((p: any) =>
       p["id"] === PROFILE_A_LLC ? { ...p, display_label: "Renamed LLC" } : p,
     );
     expect((tables["investment_profile_snapshots"][0] as any)["snapshot"].profile.display_label).toBe(
