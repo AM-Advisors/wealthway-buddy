@@ -123,6 +123,7 @@ import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authent
 import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_authenticated/manager.investors'
 import { Route as AuthenticatedManagerMemoRouteImport } from './routes/_authenticated/manager.memo'
 import { Route as AuthenticatedManagerMessagesRouteImport } from './routes/_authenticated/manager.messages'
+import { Route as AuthenticatedManagerNavRouteImport } from './routes/_authenticated/manager.nav'
 import { Route as AuthenticatedManagerOfferingStatementRouteImport } from './routes/_authenticated/manager.offering-statement'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerPerformanceRouteImport } from './routes/_authenticated/manager.performance'
@@ -144,6 +145,7 @@ import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
+import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
@@ -856,6 +858,11 @@ const AuthenticatedManagerMessagesRoute =
     path: '/manager/messages',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerNavRoute = AuthenticatedManagerNavRouteImport.update({
+  id: '/manager/nav',
+  path: '/manager/nav',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedManagerOfferingStatementRoute =
   AuthenticatedManagerOfferingStatementRouteImport.update({
     id: '/manager/offering-statement',
@@ -977,6 +984,11 @@ const AuthenticatedOpsAccountingRoute =
 const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   id: '/ops/banking',
   path: '/ops/banking',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
+  id: '/ops/nav',
+  path: '/ops/nav',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
@@ -1547,6 +1559,7 @@ export interface FileRoutesByFullPath {
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
+  '/manager/nav': typeof AuthenticatedManagerNavRoute
   '/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/performance': typeof AuthenticatedManagerPerformanceRoute
@@ -1567,6 +1580,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -1756,6 +1770,7 @@ export interface FileRoutesByTo {
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/manager/messages': typeof AuthenticatedManagerMessagesRoute
+  '/manager/nav': typeof AuthenticatedManagerNavRoute
   '/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/performance': typeof AuthenticatedManagerPerformanceRoute
@@ -1776,6 +1791,7 @@ export interface FileRoutesByTo {
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -1971,6 +1987,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/_authenticated/manager/memo': typeof AuthenticatedManagerMemoRoute
   '/_authenticated/manager/messages': typeof AuthenticatedManagerMessagesRoute
+  '/_authenticated/manager/nav': typeof AuthenticatedManagerNavRoute
   '/_authenticated/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/performance': typeof AuthenticatedManagerPerformanceRoute
@@ -1991,6 +2008,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -2187,6 +2205,7 @@ export interface FileRouteTypes {
     | '/manager/investors'
     | '/manager/memo'
     | '/manager/messages'
+    | '/manager/nav'
     | '/manager/offering-statement'
     | '/manager/onboarding'
     | '/manager/performance'
@@ -2207,6 +2226,7 @@ export interface FileRouteTypes {
     | '/onboarding/kyc'
     | '/ops/accounting'
     | '/ops/banking'
+    | '/ops/nav'
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
@@ -2396,6 +2416,7 @@ export interface FileRouteTypes {
     | '/manager/investors'
     | '/manager/memo'
     | '/manager/messages'
+    | '/manager/nav'
     | '/manager/offering-statement'
     | '/manager/onboarding'
     | '/manager/performance'
@@ -2416,6 +2437,7 @@ export interface FileRouteTypes {
     | '/onboarding/kyc'
     | '/ops/accounting'
     | '/ops/banking'
+    | '/ops/nav'
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
@@ -2610,6 +2632,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/investors'
     | '/_authenticated/manager/memo'
     | '/_authenticated/manager/messages'
+    | '/_authenticated/manager/nav'
     | '/_authenticated/manager/offering-statement'
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/performance'
@@ -2630,6 +2653,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding/kyc'
     | '/_authenticated/ops/accounting'
     | '/_authenticated/ops/banking'
+    | '/_authenticated/ops/nav'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
@@ -3550,6 +3574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerMessagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/nav': {
+      id: '/_authenticated/manager/nav'
+      path: '/manager/nav'
+      fullPath: '/manager/nav'
+      preLoaderRoute: typeof AuthenticatedManagerNavRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/offering-statement': {
       id: '/_authenticated/manager/offering-statement'
       path: '/manager/offering-statement'
@@ -3695,6 +3726,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/banking'
       fullPath: '/ops/banking'
       preLoaderRoute: typeof AuthenticatedOpsBankingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/nav': {
+      id: '/_authenticated/ops/nav'
+      path: '/ops/nav'
+      fullPath: '/ops/nav'
+      preLoaderRoute: typeof AuthenticatedOpsNavRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/ss4': {
@@ -4532,6 +4570,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerInvestorsRoute: typeof AuthenticatedManagerInvestorsRoute
   AuthenticatedManagerMemoRoute: typeof AuthenticatedManagerMemoRoute
   AuthenticatedManagerMessagesRoute: typeof AuthenticatedManagerMessagesRoute
+  AuthenticatedManagerNavRoute: typeof AuthenticatedManagerNavRoute
   AuthenticatedManagerOfferingStatementRoute: typeof AuthenticatedManagerOfferingStatementRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerPerformanceRoute: typeof AuthenticatedManagerPerformanceRoute
@@ -4552,6 +4591,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
+  AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
@@ -4668,6 +4708,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerInvestorsRoute: AuthenticatedManagerInvestorsRoute,
   AuthenticatedManagerMemoRoute: AuthenticatedManagerMemoRoute,
   AuthenticatedManagerMessagesRoute: AuthenticatedManagerMessagesRoute,
+  AuthenticatedManagerNavRoute: AuthenticatedManagerNavRoute,
   AuthenticatedManagerOfferingStatementRoute:
     AuthenticatedManagerOfferingStatementRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
@@ -4692,6 +4733,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
+  AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,

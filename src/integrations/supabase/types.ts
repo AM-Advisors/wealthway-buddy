@@ -10109,122 +10109,422 @@ export type Database = {
         }
         Relationships: []
       }
+      nav_checks: {
+        Row: {
+          code: string
+          context: Json
+          created_at: string
+          detail: string | null
+          id: string
+          nav_version_id: string
+          offering_id: string | null
+          overridable: boolean
+          overridden_at: string | null
+          overridden_by: string | null
+          override_reason: string | null
+          severity: string
+        }
+        Insert: {
+          code: string
+          context?: Json
+          created_at?: string
+          detail?: string | null
+          id?: string
+          nav_version_id: string
+          offering_id?: string | null
+          overridable?: boolean
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          severity?: string
+        }
+        Update: {
+          code?: string
+          context?: Json
+          created_at?: string
+          detail?: string | null
+          id?: string
+          nav_version_id?: string
+          offering_id?: string | null
+          overridable?: boolean
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nav_checks_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_checks_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nav_events: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          nav_version_id: string | null
+          offering_id: string | null
+          payload: Json
+          reason: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_role?: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          nav_version_id?: string | null
+          offering_id?: string | null
+          payload?: Json
+          reason?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          nav_version_id?: string | null
+          offering_id?: string | null
+          payload?: Json
+          reason?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nav_events_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nav_policies: {
+        Row: {
+          blocking_checks: Json
+          book_id: string | null
+          created_at: string
+          created_by: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          manager_approval_required: boolean
+          manager_workflow: string
+          methodology_version: string
+          offering_id: string | null
+          open_item_tolerance_cents: number
+          unit_accounting: boolean
+          unposted_journal_tolerance_cents: number
+          unreconciled_cash_tolerance_cents: number
+          updated_at: string
+          valuation_staleness_days: number
+        }
+        Insert: {
+          blocking_checks?: Json
+          book_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          manager_approval_required?: boolean
+          manager_workflow?: string
+          methodology_version?: string
+          offering_id?: string | null
+          open_item_tolerance_cents?: number
+          unit_accounting?: boolean
+          unposted_journal_tolerance_cents?: number
+          unreconciled_cash_tolerance_cents?: number
+          updated_at?: string
+          valuation_staleness_days?: number
+        }
+        Update: {
+          blocking_checks?: Json
+          book_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          manager_approval_required?: boolean
+          manager_workflow?: string
+          methodology_version?: string
+          offering_id?: string | null
+          open_item_tolerance_cents?: number
+          unit_accounting?: boolean
+          unposted_journal_tolerance_cents?: number
+          unreconciled_cash_tolerance_cents?: number
+          updated_at?: string
+          valuation_staleness_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nav_policies_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_policies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nav_versions: {
         Row: {
           accrued_expenses_cents: number
+          accrued_income_cents: number
           approved_at: string | null
           approved_by: string | null
           as_of_date: string
           book_id: string
+          bridge: Json
+          capital_handoff: Json
           carried_interest_cents: number
           cash_cents: number
+          change_cents: number
+          change_pct: number | null
+          checks: Json
           contributions_cents: number
           created_at: string
           distributions_cents: number
+          frequency: string
+          fund_expenses_cents: number
           gross_asset_value_cents: number
           id: string
+          inputs_snapshot: Json
+          investment_income_cents: number
           investments_at_cost_cents: number
           investments_fair_value_cents: number
           ledger_snapshot: Json
           liabilities_cents: number
           management_fee_cents: number
+          manager_acknowledged_at: string | null
+          manager_acknowledged_by: string | null
+          manager_approved_at: string | null
+          manager_approved_by: string | null
+          manager_challenge_note: string | null
           methodology: string
+          methodology_version: string
           nav_per_unit_cents: number | null
+          net_asset_value_cents: number
           offering_id: string | null
+          other_assets_cents: number
+          other_liabilities_cents: number
+          overrides: Json
           partner_capital_cents: number
+          payables_cents: number
           period_id: string | null
+          period_label: string | null
+          period_start: string | null
           prepared_at: string
           prepared_by: string | null
+          prior_nav_cents: number
+          prior_nav_version_id: string | null
           published_at: string | null
           published_by: string | null
           realized_gain_cents: number
+          receivables_cents: number
           reviewed_at: string | null
           reviewed_by: string | null
+          revision_impact_cents: number | null
+          revision_impact_pct: number | null
           revision_reason: string | null
+          source_cutoff_at: string | null
           status: Database["public"]["Enums"]["nav_status"]
+          superseded_by_id: string | null
           supersedes_id: string | null
+          tax_liabilities_cents: number
+          total_liabilities_cents: number
+          unit_accounting: boolean
+          units_issued: number | null
           units_outstanding: number | null
+          units_redeemed: number | null
           unrealized_gain_cents: number
           updated_at: string
           valuation_source: string | null
+          valuation_versions: Json
           version: number
         }
         Insert: {
           accrued_expenses_cents?: number
+          accrued_income_cents?: number
           approved_at?: string | null
           approved_by?: string | null
           as_of_date: string
           book_id: string
+          bridge?: Json
+          capital_handoff?: Json
           carried_interest_cents?: number
           cash_cents?: number
+          change_cents?: number
+          change_pct?: number | null
+          checks?: Json
           contributions_cents?: number
           created_at?: string
           distributions_cents?: number
+          frequency?: string
+          fund_expenses_cents?: number
           gross_asset_value_cents?: number
           id?: string
+          inputs_snapshot?: Json
+          investment_income_cents?: number
           investments_at_cost_cents?: number
           investments_fair_value_cents?: number
           ledger_snapshot?: Json
           liabilities_cents?: number
           management_fee_cents?: number
+          manager_acknowledged_at?: string | null
+          manager_acknowledged_by?: string | null
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          manager_challenge_note?: string | null
           methodology?: string
+          methodology_version?: string
           nav_per_unit_cents?: number | null
+          net_asset_value_cents?: number
           offering_id?: string | null
+          other_assets_cents?: number
+          other_liabilities_cents?: number
+          overrides?: Json
           partner_capital_cents?: number
+          payables_cents?: number
           period_id?: string | null
+          period_label?: string | null
+          period_start?: string | null
           prepared_at?: string
           prepared_by?: string | null
+          prior_nav_cents?: number
+          prior_nav_version_id?: string | null
           published_at?: string | null
           published_by?: string | null
           realized_gain_cents?: number
+          receivables_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          revision_impact_cents?: number | null
+          revision_impact_pct?: number | null
           revision_reason?: string | null
+          source_cutoff_at?: string | null
           status?: Database["public"]["Enums"]["nav_status"]
+          superseded_by_id?: string | null
           supersedes_id?: string | null
+          tax_liabilities_cents?: number
+          total_liabilities_cents?: number
+          unit_accounting?: boolean
+          units_issued?: number | null
           units_outstanding?: number | null
+          units_redeemed?: number | null
           unrealized_gain_cents?: number
           updated_at?: string
           valuation_source?: string | null
+          valuation_versions?: Json
           version?: number
         }
         Update: {
           accrued_expenses_cents?: number
+          accrued_income_cents?: number
           approved_at?: string | null
           approved_by?: string | null
           as_of_date?: string
           book_id?: string
+          bridge?: Json
+          capital_handoff?: Json
           carried_interest_cents?: number
           cash_cents?: number
+          change_cents?: number
+          change_pct?: number | null
+          checks?: Json
           contributions_cents?: number
           created_at?: string
           distributions_cents?: number
+          frequency?: string
+          fund_expenses_cents?: number
           gross_asset_value_cents?: number
           id?: string
+          inputs_snapshot?: Json
+          investment_income_cents?: number
           investments_at_cost_cents?: number
           investments_fair_value_cents?: number
           ledger_snapshot?: Json
           liabilities_cents?: number
           management_fee_cents?: number
+          manager_acknowledged_at?: string | null
+          manager_acknowledged_by?: string | null
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          manager_challenge_note?: string | null
           methodology?: string
+          methodology_version?: string
           nav_per_unit_cents?: number | null
+          net_asset_value_cents?: number
           offering_id?: string | null
+          other_assets_cents?: number
+          other_liabilities_cents?: number
+          overrides?: Json
           partner_capital_cents?: number
+          payables_cents?: number
           period_id?: string | null
+          period_label?: string | null
+          period_start?: string | null
           prepared_at?: string
           prepared_by?: string | null
+          prior_nav_cents?: number
+          prior_nav_version_id?: string | null
           published_at?: string | null
           published_by?: string | null
           realized_gain_cents?: number
+          receivables_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          revision_impact_cents?: number | null
+          revision_impact_pct?: number | null
           revision_reason?: string | null
+          source_cutoff_at?: string | null
           status?: Database["public"]["Enums"]["nav_status"]
+          superseded_by_id?: string | null
           supersedes_id?: string | null
+          tax_liabilities_cents?: number
+          total_liabilities_cents?: number
+          unit_accounting?: boolean
+          units_issued?: number | null
           units_outstanding?: number | null
+          units_redeemed?: number | null
           unrealized_gain_cents?: number
           updated_at?: string
           valuation_source?: string | null
+          valuation_versions?: Json
           version?: number
         }
         Relationships: [
@@ -10247,6 +10547,20 @@ export type Database = {
             columns: ["period_id"]
             isOneToOne: false
             referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_versions_prior_nav_version_id_fkey"
+            columns: ["prior_nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_versions_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
             referencedColumns: ["id"]
           },
           {
@@ -16076,7 +16390,13 @@ export type Database = {
         | "expense"
       ledger_basis: "accrual" | "cash" | "tax"
       match_confidence: "high" | "medium" | "low" | "unmatched"
-      nav_status: "draft" | "review" | "approved" | "published" | "superseded"
+      nav_status:
+        | "draft"
+        | "review"
+        | "approved"
+        | "published"
+        | "superseded"
+        | "calculating"
       onboarding_state:
         | "account_created"
         | "profile_required"
@@ -16529,7 +16849,14 @@ export const Constants = {
       ],
       ledger_basis: ["accrual", "cash", "tax"],
       match_confidence: ["high", "medium", "low", "unmatched"],
-      nav_status: ["draft", "review", "approved", "published", "superseded"],
+      nav_status: [
+        "draft",
+        "review",
+        "approved",
+        "published",
+        "superseded",
+        "calculating",
+      ],
       onboarding_state: [
         "account_created",
         "profile_required",
