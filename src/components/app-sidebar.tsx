@@ -101,6 +101,11 @@ const professionalItems: NavItem[] = [
   { title: "Tasks", url: "/professional/tasks", icon: ClipboardList },
   { title: "Activity", url: "/professional/activity", icon: History },
   { title: "Organization", url: "/professional/organization", icon: Handshake },
+  { title: "Firm verification", url: "/professional/verification", icon: ShieldCheck },
+  { title: "My credentials", url: "/professional/credentials", icon: BadgeCheck },
+  { title: "Awaiting acceptance", url: "/professional/acceptance", icon: Handshake },
+  { title: "Authority documents", url: "/professional/authority", icon: BookLock },
+  { title: "Signatures", url: "/professional/signatures", icon: FileSignature },
 ];
 
 const managerItems: NavItem[] = [
