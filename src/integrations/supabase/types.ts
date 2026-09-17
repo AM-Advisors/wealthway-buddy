@@ -8938,6 +8938,62 @@ export type Database = {
           },
         ]
       }
+      plaid_webhook_deliveries: {
+        Row: {
+          attempts: number
+          body_sha256: string
+          detail: string | null
+          id: string
+          item_id: string
+          key_id: string | null
+          offering_id: string | null
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          status: string
+          webhook_code: string
+          webhook_type: string
+        }
+        Insert: {
+          attempts?: number
+          body_sha256: string
+          detail?: string | null
+          id?: string
+          item_id: string
+          key_id?: string | null
+          offering_id?: string | null
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          webhook_code: string
+          webhook_type: string
+        }
+        Update: {
+          attempts?: number
+          body_sha256?: string
+          detail?: string | null
+          id?: string
+          item_id?: string
+          key_id?: string | null
+          offering_id?: string | null
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          webhook_code?: string
+          webhook_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plaid_webhook_deliveries_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       policy_acceptances: {
         Row: {
           accepted_at: string
@@ -11053,6 +11109,14 @@ export type Database = {
       get_bank_access_token: {
         Args: { p_offering_id: string }
         Returns: string
+      }
+      get_bank_link_by_item: {
+        Args: { p_item_id: string }
+        Returns: {
+          access_token: string
+          created_by: string
+          offering_id: string
+        }[]
       }
       get_offering_entity_details: {
         Args: { p_offering_id: string }
