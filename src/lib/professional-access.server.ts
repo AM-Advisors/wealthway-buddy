@@ -316,11 +316,11 @@ export async function buildDelegatedClientView(
     .eq("user_id", ctx.principalUserId);
 
   const permittedApplicationIds: string[] = [];
-  const fundIds = new Set<string>();
+  const fundByApplication = new Map<string, string>();
   for (const app of (applications ?? []) as any[]) {
     if (!(await allowed(ctx, "view_investments", { type: "investment", id: app.id }))) continue;
     permittedApplicationIds.push(app.id);
-    fundIds.add(app.offering_id);
+    fundByApplication.set(app.id, app.offering_id);
     view.investments.push({
       id: app.id,
       fundId: app.offering_id,
@@ -382,8 +382,10 @@ export async function buildDelegatedClientView(
 
   // ---- tax documents (explicit capability + explicit access record) -----
   if (ctx.capabilities.includes("view_tax_documents")) {
-    for (const fundId of fundIds) {
-      if (!(await allowed(ctx, "view_tax_documents", { type: "fund", id: fundId }))) continue;
+    // Authorized against the client's own investment in the fund, never
+    // against the fund alone: this is the principal's tax paperwork.
+    for (const [appId, fundId] of fundByApplication) {
+      if (!(await allowed(ctx, "view_tax_documents", { type: "investment", id: appId }))) continue;
       const { data: rows } = await db()
         .from("fund_tax_documents")
         .select("id, doc_type, file_name, tax_year, review_status, offering_id")
@@ -441,8 +443,8 @@ export async function buildDelegatedClientView(
 
   // ---- banking (masked, opt-in only, explicit access record) ------------
   if (ctx.capabilities.includes("view_banking_info")) {
-    for (const fundId of fundIds) {
-      if (!(await allowed(ctx, "view_banking_info", { type: "fund", id: fundId }))) continue;
+    for (const [appId, fundId] of fundByApplication) {
+      if (!(await allowed(ctx, "view_banking_info", { type: "investment", id: appId }))) continue;
       const { data: rows } = await db()
         .from("bank_accounts")
         .select("id, institution_name, account_name, account_mask, status, offering_id")
