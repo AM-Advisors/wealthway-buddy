@@ -794,14 +794,12 @@ function Dashboard() {
   );
 }
 
-function Summary({ title, value }: { title: string; value: string }) {
+function Summary({ title, value, accent = false }: { title: string; value: string; accent?: boolean }) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{title}</p>
-        <p className="mt-1 text-lg font-medium">{value}</p>
-      </CardContent>
-    </Card>
+    <div className="min-h-24 border bg-card p-4 shadow-sm">
+      <p className="text-xs text-muted-foreground">{title}</p>
+      <p className={accent ? "mt-2 break-words font-heading text-lg font-semibold text-primary" : "mt-2 break-words font-heading text-lg font-semibold"}>{value}</p>
+    </div>
   );
 }
 

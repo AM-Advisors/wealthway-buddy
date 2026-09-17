@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Restructure the investor dashboard around the selected investment and next required action
+
 - [x] Build the approved fund-first management workspace from the uploaded design guide
 
 - [x] Email template preview page (admin-only, renders Harmonious branding exactly as investors see it)
