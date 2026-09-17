@@ -692,3 +692,258 @@ describe("acceptance and authority review", () => {
     expect((await resolveSignatoryAuthority(PRO_A, d, target)).allowed).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 3C.1 hardening
+// ---------------------------------------------------------------------------
+
+describe("confirmation codes and step-up hardening", () => {
+  it("never writes the code where it can be read back", async () => {
+    const d = delegation();
+    authorityDoc(d);
+    await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    const code = lastCode();
+    const stored = JSON.stringify(tables["stepup_authentications"]!.concat(
+      tables["authority_notifications"]! as any[],
+    ));
+    expect(stored).not.toContain(code);
+    expect(tables["stepup_authentications"]![0]!.challenge_reference).not.toBe(code);
+  });
+
+  it("stops guessing at the attempt limit", async () => {
+    const d = delegation();
+    authorityDoc(d);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    const real = lastCode();
+    for (let i = 0; i < 5; i += 1) {
+      await expect(verifySigningStepUp(PRO_A, challengeId, "000001")).rejects.toThrow();
+    }
+    // Even the correct code is now useless: the challenge is closed.
+    await expect(verifySigningStepUp(PRO_A, challengeId, real)).rejects.toThrow(
+      /no longer valid|Too many/,
+    );
+  });
+
+  it("only one of two concurrent signings can claim the same challenge", async () => {
+    const d = delegation();
+    authorityDoc(d);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
+
+    const attempt = () =>
+      signAsAuthorizedSignatory(PRO_A, {
+        delegationId: d,
+        stepUpId: challengeId,
+        ...target,
+        documentHash: "hash-0123456789",
+      });
+    const results = await Promise.allSettled([attempt(), attempt()]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(tables["delegated_signatures"]!.length).toBe(1);
+  });
+
+  it("a verified challenge cannot be carried to another delegation", async () => {
+    const d1 = delegation();
+    authorityDoc(d1);
+    const d2 = delegation();
+    authorityDoc(d2);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d1,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
+    await expect(
+      signAsAuthorizedSignatory(PRO_A, {
+        delegationId: d2,
+        stepUpId: challengeId,
+        ...target,
+        documentHash: "hash-0123456789",
+      }),
+    ).rejects.toThrow(/Confirm your identity/);
+  });
+
+  it("a verified challenge is useless once authority is revoked", async () => {
+    const d = delegation();
+    authorityDoc(d);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
+    await revokeSignatoryAuthority(PRINCIPAL_A, d, "withdrawn");
+    await expect(
+      signAsAuthorizedSignatory(PRO_A, {
+        delegationId: d,
+        stepUpId: challengeId,
+        ...target,
+        documentHash: "hash-0123456789",
+      }),
+    ).rejects.toThrow(/Forbidden/);
+    expect(tables["delegated_signatures"]!.length).toBe(0);
+  });
+
+  it("a verified challenge is useless once the firm seat is suspended", async () => {
+    const d = delegation();
+    authorityDoc(d);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
+    tables["professional_memberships"]![0]!.status = "suspended";
+    await expect(
+      signAsAuthorizedSignatory(PRO_A, {
+        delegationId: d,
+        stepUpId: challengeId,
+        ...target,
+        documentHash: "hash-0123456789",
+      }),
+    ).rejects.toThrow(/Forbidden/);
+  });
+
+  it("a verified challenge is useless once the licence expires", async () => {
+    const d = delegation();
+    authorityDoc(d);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
+    tables["professional_credentials"]![0]!.expires_at = past;
+    await expect(
+      signAsAuthorizedSignatory(PRO_A, {
+        delegationId: d,
+        stepUpId: challengeId,
+        ...target,
+        documentHash: "hash-0123456789",
+      }),
+    ).rejects.toThrow(/Forbidden/);
+  });
+
+  it("a verified challenge is useless once the firm's verification lapses", async () => {
+    const d = delegation();
+    authorityDoc(d);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
+    tables["professional_organizations"]![0]!.verification_status = "reverification_required";
+    await expect(
+      signAsAuthorizedSignatory(PRO_A, {
+        delegationId: d,
+        stepUpId: challengeId,
+        ...target,
+        documentHash: "hash-0123456789",
+      }),
+    ).rejects.toThrow(/Forbidden/);
+  });
+
+  it("a verified challenge is useless once the authority document is revoked", async () => {
+    const d = delegation();
+    const docId = authorityDoc(d);
+    const { challengeId } = await beginSigningStepUp(PRO_A, {
+      delegationId: d,
+      resourceType: "investment_profile",
+      resourceId: PROFILE_A2,
+    });
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
+    await reviewAuthorityDocument(STAFF, docId, "revoke");
+    await expect(
+      signAsAuthorizedSignatory(PRO_A, {
+        delegationId: d,
+        stepUpId: challengeId,
+        ...target,
+        documentHash: "hash-0123456789",
+      }),
+    ).rejects.toThrow(/Forbidden/);
+  });
+});
+
+describe("authority document storage", () => {
+  it("issues a one-minute link only to the parties", async () => {
+    const d = delegation();
+    const docId = authorityDoc(d, { storage_path: `authority/${"d1"}/poa.pdf` });
+    const forDelegate = await getAuthorityDocumentUrl(PRO_A, docId);
+    expect(forDelegate.expiresInSeconds).toBe(60);
+    await expect(getAuthorityDocumentUrl(PRO_B, docId)).rejects.toThrow(/Forbidden/);
+    await expect(getAuthorityDocumentUrl(PRINCIPAL_B, docId)).rejects.toThrow(/Forbidden/);
+    expect(await getAuthorityDocumentUrl(PRINCIPAL_A, docId)).toBeTruthy();
+    expect(await getAuthorityDocumentUrl(STAFF, docId)).toBeTruthy();
+  });
+
+  it("records every look at an authority document", async () => {
+    const d = delegation();
+    const docId = authorityDoc(d, { storage_path: "authority/d1/poa.pdf" });
+    await getAuthorityDocumentUrl(PRO_A, docId);
+    expect(
+      tables["delegation_audit_events"]!.some((e) => e.action === "authority_document_viewed"),
+    ).toBe(true);
+  });
+
+  it("refuses an upload slot to a stranger", async () => {
+    const d = delegation();
+    await expect(createAuthorityUploadTicket(PRO_B, d, "poa.pdf")).rejects.toThrow(/Forbidden/);
+    const ticket = await createAuthorityUploadTicket(PRO_A, d, "../../escape.pdf");
+    expect(ticket.path.startsWith(`authority/${d}/`)).toBe(true);
+    expect(ticket.path).not.toContain("..");
+  });
+
+  it("refuses a document filed against another delegation's folder", async () => {
+    const d1 = delegation();
+    const d2 = delegation();
+    await expect(
+      submitAuthorityDocument(PRO_A, {
+        delegationId: d1,
+        documentType: "power_of_attorney",
+        fileName: "poa.pdf",
+        storagePath: `authority/${d2}/poa.pdf`,
+        coveredDocumentTypes: ["subscription_agreement"],
+      }),
+    ).rejects.toThrow(/does not belong/);
+  });
+
+  it("a replacement supersedes without erasing the evidence behind a signature", async () => {
+    const d = delegation();
+    const firstId = authorityDoc(d, {
+      storage_path: `authority/${d}/v1.pdf`,
+      document_hash: "original-hash",
+      version: 1,
+    });
+    await fullySign(d);
+    const signature = tables["delegated_signatures"]![0]!;
+    expect(signature.authority_document_id).toBe(firstId);
+
+    await submitAuthorityDocument(PRO_A, {
+      delegationId: d,
+      documentType: "power_of_attorney",
+      fileName: "poa-v2.pdf",
+      storagePath: `authority/${d}/v2.pdf`,
+      documentHash: "second-hash",
+      coveredDocumentTypes: ["subscription_agreement"],
+    });
+
+    const original = tables["authority_documents"]!.find((r) => r.id === firstId)!;
+    expect(original.storage_path).toBe(`authority/${d}/v1.pdf`);
+    expect(original.document_hash).toBe("original-hash");
+    expect(original.review_status).toBe("superseded");
+    expect(tables["delegated_signatures"]![0]!.document_hash).toBe("hash-0123456789");
+  });
+});
