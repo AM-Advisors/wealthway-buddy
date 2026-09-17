@@ -41,19 +41,20 @@ function RegisterPage() {
   const [sent, setSent] = useState(false);
   const checkEligibility = useServerFn(checkInviteEligibility);
 
+  useEffect(() => {
+    const message = consumeOAuthReturnError();
+    if (message) toast.error(message);
+  }, []);
+
   async function signUpWithGoogle() {
     setBusy(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth`,
-      });
-      const error = result.error;
-      if (error) toast.error(error.message ?? "Google sign-up failed");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-up failed");
-    } finally {
+    const errorMessage = await startGoogleOAuth("/auth");
+    if (errorMessage) {
+      toast.error(errorMessage);
       setBusy(false);
     }
+    // Otherwise the browser is redirecting to Google; the session listener
+    // on the sign-in page finishes registration once we're back.
   }
 
   async function submit(e: React.FormEvent) {
