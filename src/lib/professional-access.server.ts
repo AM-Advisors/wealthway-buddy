@@ -194,10 +194,13 @@ async function allowed(
   resource: ResourceRef,
 ): Promise<boolean> {
   if (!ctx.capabilities.includes(capability)) return false;
+  // The decision is made against this delegation alone, so an unrelated grant
+  // the same professional holds can never satisfy this context.
   const res = await canAct(ctx.actorUserId, capability, resource, {
     organizationId: ctx.organizationId ?? null,
+    delegationId: ctx.delegationId,
   });
-  return res.allowed && res.delegationId === ctx.delegationId;
+  return res.allowed;
 }
 
 /** Sensitive sections leave an explicit access record. */
