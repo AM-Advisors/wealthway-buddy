@@ -115,6 +115,7 @@ import { Route as AuthenticatedManagerActivityRouteImport } from './routes/_auth
 import { Route as AuthenticatedManagerApprovalsRouteImport } from './routes/_authenticated/manager.approvals'
 import { Route as AuthenticatedManagerCapTableRouteImport } from './routes/_authenticated/manager.cap-table'
 import { Route as AuthenticatedManagerCapTableBoardRouteImport } from './routes/_authenticated/manager.cap-table-board'
+import { Route as AuthenticatedManagerCashApprovalsRouteImport } from './routes/_authenticated/manager.cash-approvals'
 import { Route as AuthenticatedManagerClosingRouteImport } from './routes/_authenticated/manager.closing'
 import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_authenticated/manager.diligence'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
@@ -140,6 +141,7 @@ import { Route as AuthenticatedOnboardingDocumentsRouteImport } from './routes/_
 import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_authenticated/onboarding.funding'
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
+import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
@@ -804,6 +806,12 @@ const AuthenticatedManagerCapTableBoardRoute =
     path: '/manager/cap-table-board',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerCashApprovalsRoute =
+  AuthenticatedManagerCashApprovalsRouteImport.update({
+    id: '/manager/cash-approvals',
+    path: '/manager/cash-approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerClosingRoute =
   AuthenticatedManagerClosingRouteImport.update({
     id: '/manager/closing',
@@ -952,6 +960,12 @@ const AuthenticatedOpsIndexRoute = AuthenticatedOpsIndexRouteImport.update({
   path: '/ops/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsAccountingRoute =
+  AuthenticatedOpsAccountingRouteImport.update({
+    id: '/ops/accounting',
+    path: '/ops/accounting',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   id: '/ops/banking',
   path: '/ops/banking',
@@ -1511,6 +1525,7 @@ export interface FileRoutesByFullPath {
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
+  '/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -1535,6 +1550,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
@@ -1716,6 +1732,7 @@ export interface FileRoutesByTo {
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
+  '/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -1740,6 +1757,7 @@ export interface FileRoutesByTo {
   '/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
@@ -1927,6 +1945,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/_authenticated/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/_authenticated/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
+  '/_authenticated/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/_authenticated/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/_authenticated/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -1951,6 +1970,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding/documents': typeof AuthenticatedOnboardingDocumentsRoute
   '/_authenticated/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
+  '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
@@ -2139,6 +2159,7 @@ export interface FileRouteTypes {
     | '/manager/approvals'
     | '/manager/cap-table'
     | '/manager/cap-table-board'
+    | '/manager/cash-approvals'
     | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
@@ -2163,6 +2184,7 @@ export interface FileRouteTypes {
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/ops/accounting'
     | '/ops/banking'
     | '/ops/ss4'
     | '/ops/tax-documents'
@@ -2344,6 +2366,7 @@ export interface FileRouteTypes {
     | '/manager/approvals'
     | '/manager/cap-table'
     | '/manager/cap-table-board'
+    | '/manager/cash-approvals'
     | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
@@ -2368,6 +2391,7 @@ export interface FileRouteTypes {
     | '/onboarding/documents'
     | '/onboarding/funding'
     | '/onboarding/kyc'
+    | '/ops/accounting'
     | '/ops/banking'
     | '/ops/ss4'
     | '/ops/tax-documents'
@@ -2554,6 +2578,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/approvals'
     | '/_authenticated/manager/cap-table'
     | '/_authenticated/manager/cap-table-board'
+    | '/_authenticated/manager/cash-approvals'
     | '/_authenticated/manager/closing'
     | '/_authenticated/manager/diligence'
     | '/_authenticated/manager/documents'
@@ -2578,6 +2603,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding/documents'
     | '/_authenticated/onboarding/funding'
     | '/_authenticated/onboarding/kyc'
+    | '/_authenticated/ops/accounting'
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
@@ -3442,6 +3468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerCapTableBoardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/cash-approvals': {
+      id: '/_authenticated/manager/cash-approvals'
+      path: '/manager/cash-approvals'
+      fullPath: '/manager/cash-approvals'
+      preLoaderRoute: typeof AuthenticatedManagerCashApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/closing': {
       id: '/_authenticated/manager/closing'
       path: '/manager/closing'
@@ -3615,6 +3648,13 @@ declare module '@tanstack/react-router' {
       path: '/ops'
       fullPath: '/ops/'
       preLoaderRoute: typeof AuthenticatedOpsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/accounting': {
+      id: '/_authenticated/ops/accounting'
+      path: '/ops/accounting'
+      fullPath: '/ops/accounting'
+      preLoaderRoute: typeof AuthenticatedOpsAccountingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/banking': {
@@ -4444,6 +4484,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerApprovalsRoute: typeof AuthenticatedManagerApprovalsRoute
   AuthenticatedManagerCapTableRoute: typeof AuthenticatedManagerCapTableRoute
   AuthenticatedManagerCapTableBoardRoute: typeof AuthenticatedManagerCapTableBoardRoute
+  AuthenticatedManagerCashApprovalsRoute: typeof AuthenticatedManagerCashApprovalsRoute
   AuthenticatedManagerClosingRoute: typeof AuthenticatedManagerClosingRoute
   AuthenticatedManagerDiligenceRoute: typeof AuthenticatedManagerDiligenceRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
@@ -4468,6 +4509,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingDocumentsRoute: typeof AuthenticatedOnboardingDocumentsRoute
   AuthenticatedOnboardingFundingRoute: typeof AuthenticatedOnboardingFundingRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
+  AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
@@ -4575,6 +4617,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerCapTableRoute: AuthenticatedManagerCapTableRoute,
   AuthenticatedManagerCapTableBoardRoute:
     AuthenticatedManagerCapTableBoardRoute,
+  AuthenticatedManagerCashApprovalsRoute:
+    AuthenticatedManagerCashApprovalsRoute,
   AuthenticatedManagerClosingRoute: AuthenticatedManagerClosingRoute,
   AuthenticatedManagerDiligenceRoute: AuthenticatedManagerDiligenceRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
@@ -4603,6 +4647,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingDocumentsRoute: AuthenticatedOnboardingDocumentsRoute,
   AuthenticatedOnboardingFundingRoute: AuthenticatedOnboardingFundingRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
+  AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,

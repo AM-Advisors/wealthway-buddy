@@ -112,6 +112,7 @@ const managerItems: NavItem[] = [
   { title: "My funds", url: "/manager", icon: Briefcase },
   { title: "Document inbox", url: "/manager/inbox", icon: Mail },
   { title: "Investor approvals", url: "/manager/approvals", icon: BadgeCheck },
+  { title: "Cash to confirm", url: "/manager/cash-approvals", icon: Banknote },
   { title: "Reviewer activity", url: "/manager/activity", icon: ClipboardList },
 ];
 
@@ -127,6 +128,7 @@ const selectedFundItems = (fundId: string): NavItem[] => [
 
 const operationsItems: NavItem[] = [
   { title: "Operations", url: "/ops", icon: ShieldCheck },
+  { title: "Accounting operations", url: "/ops/accounting", icon: ClipboardList },
   { title: "Banking requests", url: "/ops/banking", icon: Landmark },
   { title: "EIN and SS-4", url: "/ops/ss4", icon: FileText },
   { title: "Tax documents", url: "/ops/tax-documents", icon: FileSpreadsheet },
