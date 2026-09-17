@@ -273,8 +273,7 @@ async function fullySign(delegationId: string) {
     resourceType: "investment_profile",
     resourceId: PROFILE_A2,
   });
-  const note = tables["authority_notifications"]!.filter((n) => n.kind === "step_up_challenge").pop();
-  const code = /(\d{6})/.exec(note!.message)![1]!;
+  const code = lastCode();
   await verifySigningStepUp(PRO_A, challengeId, code);
   return signAsAuthorizedSignatory(PRO_A, {
     delegationId,
@@ -525,8 +524,7 @@ describe("step-up authentication", () => {
       resourceType: "investment_profile",
       resourceId: PROFILE_A1,
     });
-    const note = tables["authority_notifications"]!.filter((n) => n.kind === "step_up_challenge").pop();
-    await verifySigningStepUp(PRO_A, challengeId, /(\d{6})/.exec(note!.message)![1]!);
+    await verifySigningStepUp(PRO_A, challengeId, lastCode());
     await expect(
       signAsAuthorizedSignatory(PRO_A, {
         delegationId: d,
