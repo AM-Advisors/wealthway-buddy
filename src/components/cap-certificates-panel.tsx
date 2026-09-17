@@ -15,24 +15,13 @@ import {
   revokeHolderAccess,
   signCertificate,
 } from "@/lib/cap-certificates.functions";
-import { buildCertificateHtml, certificateFileName } from "@/components/certificate-document";
+import { downloadCertificate } from "@/components/certificate-document";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-function downloadHtml(name: string, html: string) {
-  const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
-}
 
 const statusTone: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   issued: "default",
@@ -221,7 +210,7 @@ export function CapCertificatesPanel({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => downloadHtml(certificateFileName(c), buildCertificateHtml(c))}
+                    onClick={() => void downloadCertificate(c)}
                   >
                     Download
                   </Button>
