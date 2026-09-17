@@ -15,6 +15,13 @@
       "when": 1789659888425,
       "tag": "0001_invitation_role_type",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789668340670,
+      "tag": "0002_professional_orgs_delegations_phase1",
+      "breakpoints": true
     }
   ]
 }

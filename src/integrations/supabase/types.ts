@@ -4443,6 +4443,187 @@ export type Database = {
           },
         ]
       }
+      delegation_audit_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          after_state: Json | null
+          authority_level:
+            | Database["public"]["Enums"]["delegation_authority_level"]
+            | null
+          before_state: Json | null
+          capabilities: string[]
+          created_at: string
+          delegate_user_id: string | null
+          delegation_id: string | null
+          detail: string | null
+          id: string
+          membership_id: string | null
+          organization_id: string | null
+          outcome: string
+          principal_user_id: string | null
+          scope_id: string | null
+          scope_type:
+            | Database["public"]["Enums"]["delegation_scope_type"]
+            | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          after_state?: Json | null
+          authority_level?:
+            | Database["public"]["Enums"]["delegation_authority_level"]
+            | null
+          before_state?: Json | null
+          capabilities?: string[]
+          created_at?: string
+          delegate_user_id?: string | null
+          delegation_id?: string | null
+          detail?: string | null
+          id?: string
+          membership_id?: string | null
+          organization_id?: string | null
+          outcome?: string
+          principal_user_id?: string | null
+          scope_id?: string | null
+          scope_type?:
+            | Database["public"]["Enums"]["delegation_scope_type"]
+            | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          after_state?: Json | null
+          authority_level?:
+            | Database["public"]["Enums"]["delegation_authority_level"]
+            | null
+          before_state?: Json | null
+          capabilities?: string[]
+          created_at?: string
+          delegate_user_id?: string | null
+          delegation_id?: string | null
+          detail?: string | null
+          id?: string
+          membership_id?: string | null
+          organization_id?: string | null
+          outcome?: string
+          principal_user_id?: string | null
+          scope_id?: string | null
+          scope_type?:
+            | Database["public"]["Enums"]["delegation_scope_type"]
+            | null
+        }
+        Relationships: []
+      }
+      delegation_permissions: {
+        Row: {
+          capability: Database["public"]["Enums"]["delegation_capability"]
+          delegation_id: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+        }
+        Insert: {
+          capability: Database["public"]["Enums"]["delegation_capability"]
+          delegation_id: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+        }
+        Update: {
+          capability?: Database["public"]["Enums"]["delegation_capability"]
+          delegation_id?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delegation_permissions_delegation_id_fkey"
+            columns: ["delegation_id"]
+            isOneToOne: false
+            referencedRelation: "delegations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delegations: {
+        Row: {
+          authority_document_name: string | null
+          authority_document_path: string | null
+          authority_level: Database["public"]["Enums"]["delegation_authority_level"]
+          created_at: string
+          data_category: string | null
+          delegate_user_id: string
+          effective_at: string
+          expires_at: string | null
+          granted_by: string
+          id: string
+          last_used_at: string | null
+          organization_id: string | null
+          principal_user_id: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          scope_id: string | null
+          scope_type: Database["public"]["Enums"]["delegation_scope_type"]
+          status: Database["public"]["Enums"]["delegation_status"]
+          updated_at: string
+        }
+        Insert: {
+          authority_document_name?: string | null
+          authority_document_path?: string | null
+          authority_level?: Database["public"]["Enums"]["delegation_authority_level"]
+          created_at?: string
+          data_category?: string | null
+          delegate_user_id: string
+          effective_at?: string
+          expires_at?: string | null
+          granted_by: string
+          id?: string
+          last_used_at?: string | null
+          organization_id?: string | null
+          principal_user_id: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope_id?: string | null
+          scope_type: Database["public"]["Enums"]["delegation_scope_type"]
+          status?: Database["public"]["Enums"]["delegation_status"]
+          updated_at?: string
+        }
+        Update: {
+          authority_document_name?: string | null
+          authority_document_path?: string | null
+          authority_level?: Database["public"]["Enums"]["delegation_authority_level"]
+          created_at?: string
+          data_category?: string | null
+          delegate_user_id?: string
+          effective_at?: string
+          expires_at?: string | null
+          granted_by?: string
+          id?: string
+          last_used_at?: string | null
+          organization_id?: string | null
+          principal_user_id?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope_id?: string | null
+          scope_type?: Database["public"]["Enums"]["delegation_scope_type"]
+          status?: Database["public"]["Enums"]["delegation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delegations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       didit_webhook_events: {
         Row: {
           application_id: string | null
@@ -9223,6 +9404,107 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_memberships: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          email: string | null
+          id: string
+          invited_at: string
+          invited_by: string | null
+          organization_id: string
+          removed_at: string | null
+          seat_role: string
+          status: Database["public"]["Enums"]["professional_membership_status"]
+          suspended_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          organization_id: string
+          removed_at?: string | null
+          seat_role?: string
+          status?: Database["public"]["Enums"]["professional_membership_status"]
+          suspended_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          organization_id?: string
+          removed_at?: string | null
+          seat_role?: string
+          status?: Database["public"]["Enums"]["professional_membership_status"]
+          suspended_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_memberships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_organizations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          jurisdiction: string | null
+          legal_name: string | null
+          name: string
+          notes: string | null
+          org_type: Database["public"]["Enums"]["professional_org_type"]
+          registration_number: string | null
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jurisdiction?: string | null
+          legal_name?: string | null
+          name: string
+          notes?: string | null
+          org_type?: Database["public"]["Enums"]["professional_org_type"]
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jurisdiction?: string | null
+          legal_name?: string | null
+          name?: string
+          notes?: string | null
+          org_type?: Database["public"]["Enums"]["professional_org_type"]
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active_persona_id: string | null
@@ -11285,6 +11567,44 @@ export type Database = {
         | "review"
         | "approved"
         | "declined"
+      delegation_authority_level:
+        | "view"
+        | "assist"
+        | "limited_proxy"
+        | "authorized_signatory"
+        | "transaction_authority"
+      delegation_capability:
+        | "view_profile"
+        | "edit_profile_info"
+        | "view_investments"
+        | "prepare_investment"
+        | "initiate_investment"
+        | "view_documents"
+        | "upload_documents"
+        | "view_tax_documents"
+        | "view_financial_statements"
+        | "view_compliance_status"
+        | "assist_kyc"
+        | "assist_kyb"
+        | "assist_accreditation"
+        | "view_capital_calls"
+        | "view_distributions"
+        | "view_banking_info"
+        | "view_wire_instructions"
+        | "sign_specified_documents"
+        | "approve_specified_actions"
+      delegation_scope_type:
+        | "person"
+        | "investment_profile"
+        | "fund"
+        | "investment"
+        | "data_category"
+      delegation_status:
+        | "pending"
+        | "active"
+        | "suspended"
+        | "revoked"
+        | "expired"
       funding_method: "wire" | "ach"
       investor_type: "individual" | "joint" | "entity" | "trust" | "ira"
       invitation_role: "investor" | "fund_manager"
@@ -11296,6 +11616,26 @@ export type Database = {
         | "failed"
         | "returned"
         | "cancelled"
+      professional_membership_status:
+        | "invited"
+        | "active"
+        | "suspended"
+        | "removed"
+      professional_org_type:
+        | "investment_adviser"
+        | "broker_dealer"
+        | "law_firm"
+        | "accounting_firm"
+        | "family_office"
+        | "wealth_manager"
+        | "tax_advisor"
+        | "trustee_fiduciary"
+        | "custodian"
+        | "consultant"
+        | "fund_manager_gp"
+        | "administrator"
+        | "placement_agent"
+        | "other"
       reg_type: "506b" | "506c" | "regcf" | "rega" | "regaplus"
     }
     CompositeTypes: {
@@ -11453,6 +11793,48 @@ export const Constants = {
         "approved",
         "declined",
       ],
+      delegation_authority_level: [
+        "view",
+        "assist",
+        "limited_proxy",
+        "authorized_signatory",
+        "transaction_authority",
+      ],
+      delegation_capability: [
+        "view_profile",
+        "edit_profile_info",
+        "view_investments",
+        "prepare_investment",
+        "initiate_investment",
+        "view_documents",
+        "upload_documents",
+        "view_tax_documents",
+        "view_financial_statements",
+        "view_compliance_status",
+        "assist_kyc",
+        "assist_kyb",
+        "assist_accreditation",
+        "view_capital_calls",
+        "view_distributions",
+        "view_banking_info",
+        "view_wire_instructions",
+        "sign_specified_documents",
+        "approve_specified_actions",
+      ],
+      delegation_scope_type: [
+        "person",
+        "investment_profile",
+        "fund",
+        "investment",
+        "data_category",
+      ],
+      delegation_status: [
+        "pending",
+        "active",
+        "suspended",
+        "revoked",
+        "expired",
+      ],
       funding_method: ["wire", "ach"],
       investor_type: ["individual", "joint", "entity", "trust", "ira"],
       invitation_role: ["investor", "fund_manager"],
@@ -11464,6 +11846,28 @@ export const Constants = {
         "failed",
         "returned",
         "cancelled",
+      ],
+      professional_membership_status: [
+        "invited",
+        "active",
+        "suspended",
+        "removed",
+      ],
+      professional_org_type: [
+        "investment_adviser",
+        "broker_dealer",
+        "law_firm",
+        "accounting_firm",
+        "family_office",
+        "wealth_manager",
+        "tax_advisor",
+        "trustee_fiduciary",
+        "custodian",
+        "consultant",
+        "fund_manager_gp",
+        "administrator",
+        "placement_agent",
+        "other",
       ],
       reg_type: ["506b", "506c", "regcf", "rega", "regaplus"],
     },
