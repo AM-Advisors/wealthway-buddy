@@ -38,6 +38,7 @@ import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
 import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated/shares'
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
@@ -342,6 +343,11 @@ const AuthenticatedMyPortfolioRoute =
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProviderRoute = AuthenticatedProviderRouteImport.update({
@@ -1295,6 +1301,7 @@ export interface FileRoutesByFullPath {
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
@@ -1482,6 +1489,7 @@ export interface FileRoutesByTo {
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
@@ -1670,6 +1678,7 @@ export interface FileRoutesById {
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
   '/_authenticated/shares': typeof AuthenticatedSharesRoute
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
@@ -1861,6 +1870,7 @@ export interface FileRouteTypes {
     | '/my-equity'
     | '/my-portfolio'
     | '/portal'
+    | '/profile'
     | '/provider'
     | '/shares'
     | '/sign-off'
@@ -2048,6 +2058,7 @@ export interface FileRouteTypes {
     | '/my-equity'
     | '/my-portfolio'
     | '/portal'
+    | '/profile'
     | '/provider'
     | '/shares'
     | '/sign-off'
@@ -2235,6 +2246,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
+    | '/_authenticated/profile'
     | '/_authenticated/provider'
     | '/_authenticated/shares'
     | '/_authenticated/sign-off'
@@ -2634,6 +2646,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof AuthenticatedPortalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/provider': {
@@ -3916,6 +3935,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
   AuthenticatedSharesRoute: typeof AuthenticatedSharesRoute
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
@@ -4034,6 +4054,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,
   AuthenticatedSharesRoute: AuthenticatedSharesRoute,
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,

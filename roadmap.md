@@ -40,3 +40,7 @@
 - [x] Universal request router (launch fund/SPV, add service, add entity, move to Harmonious, filing, transaction support, other)
 - [x] Service delivery workflows instantiated automatically on execution
 - [x] Harmonious services administration console (catalogue, packages, pricing versions, templates, change orders, approvals)
+
+- [x] Phase 1: professional organizations, memberships, delegations (deny-by-default)
+- [x] Phase 2: canonical person, onboarding state machine, investment profiles, entity/trust KYB, per-profile accreditation, readiness checks, My profile page
+- [ ] Phase 3: activate professional proxy access (acting on behalf of) — deliberately not enabled
