@@ -82,6 +82,19 @@ const investorItems: NavItem[] = [
   { title: "Due diligence", url: "/diligence", icon: FolderLock },
   { title: "Portal", url: "/portal", icon: Building2 },
   { title: "My equity", url: "/my-equity", icon: Briefcase },
+  { title: "Who can see my information", url: "/access", icon: BookLock },
+];
+
+const professionalItems: NavItem[] = [
+  { title: "My clients", url: "/professional", icon: Users },
+  { title: "Client profiles", url: "/professional/profiles", icon: Briefcase },
+  { title: "Funds", url: "/professional/funds", icon: Building2 },
+  { title: "Investments", url: "/professional/investments", icon: Layers },
+  { title: "Documents", url: "/professional/documents", icon: FileText },
+  { title: "Tax", url: "/professional/tax", icon: FileSpreadsheet },
+  { title: "Tasks", url: "/professional/tasks", icon: ClipboardList },
+  { title: "Activity", url: "/professional/activity", icon: History },
+  { title: "Organization", url: "/professional/organization", icon: Handshake },
 ];
 
 const managerItems: NavItem[] = [
