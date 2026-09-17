@@ -14,18 +14,8 @@ async function assertAdmin(supabase: any, userId: string) {
   if (!data || data.length === 0) throw new Error("Forbidden: reviewer access required.");
 }
 
-const SUPER_ADMIN_DOMAIN = "harmonious.co";
-
-// Anyone signing in with a Google account on the company domain is a super admin.
-function isCompanyGoogleAccount(claims: any): boolean {
-  const email = typeof claims?.email === "string" ? claims.email.toLowerCase() : "";
-  if (!email.endsWith(`@${SUPER_ADMIN_DOMAIN}`)) return false;
-  const meta = claims?.app_metadata ?? {};
-  const providers: string[] = Array.isArray(meta.providers) ? meta.providers : [];
-  const provider = typeof meta.provider === "string" ? meta.provider : "";
-  return provider === "google" || providers.includes("google");
-}
-
+// Administrator access comes only from an explicit role assignment in user_roles.
+// Signing in with a company Google account never grants privileges on its own.
 export const getAdminAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -34,16 +24,10 @@ export const getAdminAccess = createServerFn({ method: "GET" })
       .select("role")
       .eq("user_id", context.userId);
     const roles = (data ?? []).map((r: any) => r.role as string);
-    let isAdmin = roles.includes("admin");
+    const isAdmin = roles.includes("admin");
     const isFundManager = roles.includes("fund_manager");
 
-    if (!isAdmin && isCompanyGoogleAccount(context.claims)) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin
-        .from("user_roles")
-        .upsert({ user_id: context.userId, role: "admin" }, { onConflict: "user_id,role" });
-      isAdmin = true;
-    }
+
 
 
     let offeringIds: string[] = [];
