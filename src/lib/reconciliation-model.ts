@@ -260,7 +260,7 @@ export function classifyTransaction(input: ClassificationInput): Proposal {
           keyword === "capital_call" || keyword === "subscription_receipt"
             ? keyword
             : "investor_contribution",
-        confidence: exact.length > 1 && !byReference && !byName ? "low" : confidence,
+        confidence,
         reasons,
         conflicts,
         matched,
