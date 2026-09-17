@@ -17,7 +17,7 @@ import {
   overrideNavWarning,
   respondToNav,
   submitNav,
-} from "@/lib/nav.functions";
+} from "@/lib/fund-nav.functions";
 import type { NavCheckCode } from "@/lib/nav-model";
 
 const money = (cents: number | null | undefined) =>
