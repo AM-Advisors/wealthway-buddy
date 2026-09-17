@@ -25,6 +25,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SpvRouteImport } from './routes/spv'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAccessRouteImport } from './routes/_authenticated/access'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
 import { Route as AuthenticatedCapitalRouteImport } from './routes/_authenticated/capital'
@@ -38,6 +39,7 @@ import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
+import { Route as AuthenticatedProfessionalRouteImport } from './routes/_authenticated/professional'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
 import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated/shares'
@@ -140,6 +142,15 @@ import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
+import { Route as AuthenticatedProfessionalIndexRouteImport } from './routes/_authenticated/professional.index'
+import { Route as AuthenticatedProfessionalActivityRouteImport } from './routes/_authenticated/professional.activity'
+import { Route as AuthenticatedProfessionalDocumentsRouteImport } from './routes/_authenticated/professional.documents'
+import { Route as AuthenticatedProfessionalFundsRouteImport } from './routes/_authenticated/professional.funds'
+import { Route as AuthenticatedProfessionalInvestmentsRouteImport } from './routes/_authenticated/professional.investments'
+import { Route as AuthenticatedProfessionalOrganizationRouteImport } from './routes/_authenticated/professional.organization'
+import { Route as AuthenticatedProfessionalProfilesRouteImport } from './routes/_authenticated/professional.profiles'
+import { Route as AuthenticatedProfessionalTasksRouteImport } from './routes/_authenticated/professional.tasks'
+import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_authenticated/professional.tax'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
@@ -181,6 +192,7 @@ import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
+import { Route as AuthenticatedProfessionalClientDelegationIdRouteImport } from './routes/_authenticated/professional.client.$delegationId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
@@ -278,6 +290,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccessRoute = AuthenticatedAccessRouteImport.update({
+  id: '/access',
+  path: '/access',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
   id: '/accounts',
   path: '/accounts',
@@ -345,6 +362,12 @@ const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   path: '/portal',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfessionalRoute =
+  AuthenticatedProfessionalRouteImport.update({
+    id: '/professional',
+    path: '/professional',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -932,6 +955,60 @@ const AuthenticatedOpsTeamRoute = AuthenticatedOpsTeamRouteImport.update({
   path: '/ops/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfessionalIndexRoute =
+  AuthenticatedProfessionalIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalActivityRoute =
+  AuthenticatedProfessionalActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalDocumentsRoute =
+  AuthenticatedProfessionalDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalFundsRoute =
+  AuthenticatedProfessionalFundsRouteImport.update({
+    id: '/funds',
+    path: '/funds',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalInvestmentsRoute =
+  AuthenticatedProfessionalInvestmentsRouteImport.update({
+    id: '/investments',
+    path: '/investments',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalOrganizationRoute =
+  AuthenticatedProfessionalOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalProfilesRoute =
+  AuthenticatedProfessionalProfilesRouteImport.update({
+    id: '/profiles',
+    path: '/profiles',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalTasksRoute =
+  AuthenticatedProfessionalTasksRouteImport.update({
+    id: '/tasks',
+    path: '/tasks',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
+const AuthenticatedProfessionalTaxRoute =
+  AuthenticatedProfessionalTaxRouteImport.update({
+    id: '/tax',
+    path: '/tax',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
 const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   id: '/api/public/cap-claim',
   path: '/api/public/cap-claim',
@@ -1174,6 +1251,12 @@ const AuthenticatedOpsFundsFundIdRoute =
     path: '/ops/funds/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProfessionalClientDelegationIdRoute =
+  AuthenticatedProfessionalClientDelegationIdRouteImport.update({
+    id: '/client/$delegationId',
+    path: '/client/$delegationId',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   id: '/api/public/email/click',
   path: '/api/public/email/click',
@@ -1288,6 +1371,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
   '/terms': typeof TermsRoute
+  '/access': typeof AuthenticatedAccessRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
   '/capital': typeof AuthenticatedCapitalRoute
@@ -1301,6 +1385,7 @@ export interface FileRoutesByFullPath {
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/professional': typeof AuthenticatedProfessionalRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/shares': typeof AuthenticatedSharesRoute
@@ -1398,6 +1483,14 @@ export interface FileRoutesByFullPath {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
+  '/professional/documents': typeof AuthenticatedProfessionalDocumentsRoute
+  '/professional/funds': typeof AuthenticatedProfessionalFundsRoute
+  '/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
+  '/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
+  '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
+  '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
+  '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
@@ -1408,6 +1501,7 @@ export interface FileRoutesByFullPath {
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
+  '/professional/': typeof AuthenticatedProfessionalIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
   '/admin/engagements/$engagementId': typeof AuthenticatedAdminEngagementsEngagementIdRoute
   '/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
@@ -1439,6 +1533,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/professional/client/$delegationId': typeof AuthenticatedProfessionalClientDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
@@ -1477,6 +1572,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
   '/terms': typeof TermsRoute
+  '/access': typeof AuthenticatedAccessRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/apply': typeof AuthenticatedApplyRoute
   '/capital': typeof AuthenticatedCapitalRoute
@@ -1584,6 +1680,14 @@ export interface FileRoutesByTo {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
+  '/professional/documents': typeof AuthenticatedProfessionalDocumentsRoute
+  '/professional/funds': typeof AuthenticatedProfessionalFundsRoute
+  '/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
+  '/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
+  '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
+  '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
+  '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
@@ -1594,6 +1698,7 @@ export interface FileRoutesByTo {
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
+  '/professional': typeof AuthenticatedProfessionalIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
   '/admin/engagements/$engagementId': typeof AuthenticatedAdminEngagementsEngagementIdRoute
   '/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
@@ -1624,6 +1729,7 @@ export interface FileRoutesByTo {
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/professional/client/$delegationId': typeof AuthenticatedProfessionalClientDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
@@ -1665,6 +1771,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/access': typeof AuthenticatedAccessRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRoute
   '/_authenticated/capital': typeof AuthenticatedCapitalRoute
@@ -1678,6 +1785,7 @@ export interface FileRoutesById {
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/_authenticated/professional': typeof AuthenticatedProfessionalRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
   '/_authenticated/shares': typeof AuthenticatedSharesRoute
@@ -1775,6 +1883,14 @@ export interface FileRoutesById {
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/_authenticated/professional/activity': typeof AuthenticatedProfessionalActivityRoute
+  '/_authenticated/professional/documents': typeof AuthenticatedProfessionalDocumentsRoute
+  '/_authenticated/professional/funds': typeof AuthenticatedProfessionalFundsRoute
+  '/_authenticated/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
+  '/_authenticated/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
+  '/_authenticated/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
+  '/_authenticated/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
+  '/_authenticated/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
@@ -1785,6 +1901,7 @@ export interface FileRoutesById {
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
+  '/_authenticated/professional/': typeof AuthenticatedProfessionalIndexRoute
   '/_authenticated/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
   '/_authenticated/admin/engagements/$engagementId': typeof AuthenticatedAdminEngagementsEngagementIdRoute
   '/_authenticated/admin/entities/$entityId': typeof AuthenticatedAdminEntitiesEntityIdRoute
@@ -1816,6 +1933,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/_authenticated/professional/client/$delegationId': typeof AuthenticatedProfessionalClientDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
@@ -1857,6 +1975,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/spv'
     | '/terms'
+    | '/access'
     | '/accounts'
     | '/apply'
     | '/capital'
@@ -1870,6 +1989,7 @@ export interface FileRouteTypes {
     | '/my-equity'
     | '/my-portfolio'
     | '/portal'
+    | '/professional'
     | '/profile'
     | '/provider'
     | '/shares'
@@ -1967,6 +2087,14 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/professional/activity'
+    | '/professional/documents'
+    | '/professional/funds'
+    | '/professional/investments'
+    | '/professional/organization'
+    | '/professional/profiles'
+    | '/professional/tasks'
+    | '/professional/tax'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
@@ -1977,6 +2105,7 @@ export interface FileRouteTypes {
     | '/diligence/'
     | '/manager/'
     | '/ops/'
+    | '/professional/'
     | '/admin/contracts/$clientId'
     | '/admin/engagements/$engagementId'
     | '/admin/entities/$entityId'
@@ -2008,6 +2137,7 @@ export interface FileRouteTypes {
     | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
+    | '/professional/client/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/invoice-reminders'
@@ -2046,6 +2176,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/spv'
     | '/terms'
+    | '/access'
     | '/accounts'
     | '/apply'
     | '/capital'
@@ -2153,6 +2284,14 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/professional/activity'
+    | '/professional/documents'
+    | '/professional/funds'
+    | '/professional/investments'
+    | '/professional/organization'
+    | '/professional/profiles'
+    | '/professional/tasks'
+    | '/professional/tax'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
@@ -2163,6 +2302,7 @@ export interface FileRouteTypes {
     | '/diligence'
     | '/manager'
     | '/ops'
+    | '/professional'
     | '/admin/contracts/$clientId'
     | '/admin/engagements/$engagementId'
     | '/admin/entities/$entityId'
@@ -2193,6 +2333,7 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
     | '/ops/funds/$fundId'
+    | '/professional/client/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/invoice-reminders'
@@ -2233,6 +2374,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/spv'
     | '/terms'
+    | '/_authenticated/access'
     | '/_authenticated/accounts'
     | '/_authenticated/apply'
     | '/_authenticated/capital'
@@ -2246,6 +2388,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
+    | '/_authenticated/professional'
     | '/_authenticated/profile'
     | '/_authenticated/provider'
     | '/_authenticated/shares'
@@ -2343,6 +2486,14 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
+    | '/_authenticated/professional/activity'
+    | '/_authenticated/professional/documents'
+    | '/_authenticated/professional/funds'
+    | '/_authenticated/professional/investments'
+    | '/_authenticated/professional/organization'
+    | '/_authenticated/professional/profiles'
+    | '/_authenticated/professional/tasks'
+    | '/_authenticated/professional/tax'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
@@ -2353,6 +2504,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diligence/'
     | '/_authenticated/manager/'
     | '/_authenticated/ops/'
+    | '/_authenticated/professional/'
     | '/_authenticated/admin/contracts/$clientId'
     | '/_authenticated/admin/engagements/$engagementId'
     | '/_authenticated/admin/entities/$entityId'
@@ -2384,6 +2536,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
+    | '/_authenticated/professional/client/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/invoice-reminders'
@@ -2557,6 +2710,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/access': {
+      id: '/_authenticated/access'
+      path: '/access'
+      fullPath: '/access'
+      preLoaderRoute: typeof AuthenticatedAccessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/accounts': {
       id: '/_authenticated/accounts'
       path: '/accounts'
@@ -2646,6 +2806,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof AuthenticatedPortalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/professional': {
+      id: '/_authenticated/professional'
+      path: '/professional'
+      fullPath: '/professional'
+      preLoaderRoute: typeof AuthenticatedProfessionalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -3362,6 +3529,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/professional/': {
+      id: '/_authenticated/professional/'
+      path: '/'
+      fullPath: '/professional/'
+      preLoaderRoute: typeof AuthenticatedProfessionalIndexRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/activity': {
+      id: '/_authenticated/professional/activity'
+      path: '/activity'
+      fullPath: '/professional/activity'
+      preLoaderRoute: typeof AuthenticatedProfessionalActivityRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/documents': {
+      id: '/_authenticated/professional/documents'
+      path: '/documents'
+      fullPath: '/professional/documents'
+      preLoaderRoute: typeof AuthenticatedProfessionalDocumentsRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/funds': {
+      id: '/_authenticated/professional/funds'
+      path: '/funds'
+      fullPath: '/professional/funds'
+      preLoaderRoute: typeof AuthenticatedProfessionalFundsRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/investments': {
+      id: '/_authenticated/professional/investments'
+      path: '/investments'
+      fullPath: '/professional/investments'
+      preLoaderRoute: typeof AuthenticatedProfessionalInvestmentsRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/organization': {
+      id: '/_authenticated/professional/organization'
+      path: '/organization'
+      fullPath: '/professional/organization'
+      preLoaderRoute: typeof AuthenticatedProfessionalOrganizationRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/profiles': {
+      id: '/_authenticated/professional/profiles'
+      path: '/profiles'
+      fullPath: '/professional/profiles'
+      preLoaderRoute: typeof AuthenticatedProfessionalProfilesRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/tasks': {
+      id: '/_authenticated/professional/tasks'
+      path: '/tasks'
+      fullPath: '/professional/tasks'
+      preLoaderRoute: typeof AuthenticatedProfessionalTasksRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/professional/tax': {
+      id: '/_authenticated/professional/tax'
+      path: '/tax'
+      fullPath: '/professional/tax'
+      preLoaderRoute: typeof AuthenticatedProfessionalTaxRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
     '/api/public/cap-claim': {
       id: '/api/public/cap-claim'
       path: '/api/public/cap-claim'
@@ -3649,6 +3879,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFundsFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/professional/client/$delegationId': {
+      id: '/_authenticated/professional/client/$delegationId'
+      path: '/client/$delegationId'
+      fullPath: '/professional/client/$delegationId'
+      preLoaderRoute: typeof AuthenticatedProfessionalClientDelegationIdRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
     '/api/public/email/click': {
       id: '/api/public/email/click'
       path: '/api/public/email/click'
@@ -3888,6 +4125,44 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
 const AuthenticatedClientRouteWithChildren =
   AuthenticatedClientRoute._addFileChildren(AuthenticatedClientRouteChildren)
 
+interface AuthenticatedProfessionalRouteChildren {
+  AuthenticatedProfessionalActivityRoute: typeof AuthenticatedProfessionalActivityRoute
+  AuthenticatedProfessionalDocumentsRoute: typeof AuthenticatedProfessionalDocumentsRoute
+  AuthenticatedProfessionalFundsRoute: typeof AuthenticatedProfessionalFundsRoute
+  AuthenticatedProfessionalInvestmentsRoute: typeof AuthenticatedProfessionalInvestmentsRoute
+  AuthenticatedProfessionalOrganizationRoute: typeof AuthenticatedProfessionalOrganizationRoute
+  AuthenticatedProfessionalProfilesRoute: typeof AuthenticatedProfessionalProfilesRoute
+  AuthenticatedProfessionalTasksRoute: typeof AuthenticatedProfessionalTasksRoute
+  AuthenticatedProfessionalTaxRoute: typeof AuthenticatedProfessionalTaxRoute
+  AuthenticatedProfessionalIndexRoute: typeof AuthenticatedProfessionalIndexRoute
+  AuthenticatedProfessionalClientDelegationIdRoute: typeof AuthenticatedProfessionalClientDelegationIdRoute
+}
+
+const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChildren =
+  {
+    AuthenticatedProfessionalActivityRoute:
+      AuthenticatedProfessionalActivityRoute,
+    AuthenticatedProfessionalDocumentsRoute:
+      AuthenticatedProfessionalDocumentsRoute,
+    AuthenticatedProfessionalFundsRoute: AuthenticatedProfessionalFundsRoute,
+    AuthenticatedProfessionalInvestmentsRoute:
+      AuthenticatedProfessionalInvestmentsRoute,
+    AuthenticatedProfessionalOrganizationRoute:
+      AuthenticatedProfessionalOrganizationRoute,
+    AuthenticatedProfessionalProfilesRoute:
+      AuthenticatedProfessionalProfilesRoute,
+    AuthenticatedProfessionalTasksRoute: AuthenticatedProfessionalTasksRoute,
+    AuthenticatedProfessionalTaxRoute: AuthenticatedProfessionalTaxRoute,
+    AuthenticatedProfessionalIndexRoute: AuthenticatedProfessionalIndexRoute,
+    AuthenticatedProfessionalClientDelegationIdRoute:
+      AuthenticatedProfessionalClientDelegationIdRoute,
+  }
+
+const AuthenticatedProfessionalRouteWithChildren =
+  AuthenticatedProfessionalRoute._addFileChildren(
+    AuthenticatedProfessionalRouteChildren,
+  )
+
 interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdAssetsRoute: typeof AuthenticatedManagerFundFundIdAssetsRoute
   AuthenticatedManagerFundFundIdComplianceRoute: typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -3922,6 +4197,7 @@ const AuthenticatedManagerFundFundIdRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccessRoute: typeof AuthenticatedAccessRoute
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedApplyRoute: typeof AuthenticatedApplyRoute
   AuthenticatedCapitalRoute: typeof AuthenticatedCapitalRoute
@@ -3935,6 +4211,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+  AuthenticatedProfessionalRoute: typeof AuthenticatedProfessionalRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
   AuthenticatedSharesRoute: typeof AuthenticatedSharesRoute
@@ -4041,6 +4318,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccessRoute: AuthenticatedAccessRoute,
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedApplyRoute: AuthenticatedApplyRoute,
   AuthenticatedCapitalRoute: AuthenticatedCapitalRoute,
@@ -4054,6 +4332,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+  AuthenticatedProfessionalRoute: AuthenticatedProfessionalRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,
   AuthenticatedSharesRoute: AuthenticatedSharesRoute,
