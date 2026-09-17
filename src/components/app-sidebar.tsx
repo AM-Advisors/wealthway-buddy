@@ -59,6 +59,7 @@ import { getOperationsAccess } from "@/lib/operations.functions";
 import { getNavState } from "@/lib/nav.functions";
 import { getNavCounts } from "@/lib/nav-counts.functions";
 import { getPolicyStatus } from "@/lib/policies.functions";
+import { getProfessionalStanding } from "@/lib/professional.functions";
 import { cn } from "@/lib/utils";
 
 type BadgeKey = "signOff" | "applications" | "unpaidInvoices" | "serviceRequests" | "myClients";
@@ -219,6 +220,11 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { data: operations } = useQuery({
     queryKey: ["operations-access"],
     queryFn: () => opsAccess(),
+  });
+  const standingFn = useServerFn(getProfessionalStanding);
+  const { data: standing } = useQuery({
+    queryKey: ["professional-standing"],
+    queryFn: () => standingFn(),
   });
   const policyStatus = useServerFn(getPolicyStatus);
   const { data: signOff } = useQuery({ queryKey: ["policy-status"], queryFn: () => policyStatus() });
