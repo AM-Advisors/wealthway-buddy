@@ -14,6 +14,121 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_period_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["accounting_period_status"]
+            | null
+          id: string
+          period_id: string
+          reason: string | null
+          to_status: Database["public"]["Enums"]["accounting_period_status"]
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["accounting_period_status"]
+            | null
+          id?: string
+          period_id: string
+          reason?: string | null
+          to_status: Database["public"]["Enums"]["accounting_period_status"]
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["accounting_period_status"]
+            | null
+          id?: string
+          period_id?: string
+          reason?: string | null
+          to_status?: Database["public"]["Enums"]["accounting_period_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_period_events_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounting_periods: {
+        Row: {
+          book_id: string
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          id: string
+          label: string
+          locked_at: string | null
+          locked_by: string | null
+          period_end: string
+          period_start: string
+          reopen_reason: string | null
+          reopened_at: string | null
+          reopened_by: string | null
+          review_started_at: string | null
+          soft_closed_at: string | null
+          soft_closed_by: string | null
+          status: Database["public"]["Enums"]["accounting_period_status"]
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          locked_at?: string | null
+          locked_by?: string | null
+          period_end: string
+          period_start: string
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          review_started_at?: string | null
+          soft_closed_at?: string | null
+          soft_closed_by?: string | null
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          period_end?: string
+          period_start?: string
+          reopen_reason?: string | null
+          reopened_at?: string | null
+          reopened_by?: string | null
+          review_started_at?: string | null
+          soft_closed_at?: string | null
+          soft_closed_by?: string | null
+          status?: Database["public"]["Enums"]["accounting_period_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_periods_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accreditation_documents: {
         Row: {
           application_id: string
@@ -648,6 +763,129 @@ export type Database = {
           },
         ]
       }
+      asset_valuations: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          asset_class: string
+          asset_name: string
+          book_id: string
+          cost_basis_cents: number
+          created_at: string
+          ct_company_id: string | null
+          ct_security_id: string | null
+          id: string
+          methodology: string
+          note: string | null
+          offering_id: string | null
+          ownership_pct: number | null
+          prepared_by: string | null
+          prior_valuation_id: string | null
+          quantity: number | null
+          realized_change_cents: number
+          reviewed_by: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["valuation_status"]
+          supporting_document_path: string | null
+          unrealized_change_cents: number
+          updated_at: string
+          valuation_date: string
+          value_cents: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          asset_class?: string
+          asset_name: string
+          book_id: string
+          cost_basis_cents?: number
+          created_at?: string
+          ct_company_id?: string | null
+          ct_security_id?: string | null
+          id?: string
+          methodology?: string
+          note?: string | null
+          offering_id?: string | null
+          ownership_pct?: number | null
+          prepared_by?: string | null
+          prior_valuation_id?: string | null
+          quantity?: number | null
+          realized_change_cents?: number
+          reviewed_by?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["valuation_status"]
+          supporting_document_path?: string | null
+          unrealized_change_cents?: number
+          updated_at?: string
+          valuation_date: string
+          value_cents?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          asset_class?: string
+          asset_name?: string
+          book_id?: string
+          cost_basis_cents?: number
+          created_at?: string
+          ct_company_id?: string | null
+          ct_security_id?: string | null
+          id?: string
+          methodology?: string
+          note?: string | null
+          offering_id?: string | null
+          ownership_pct?: number | null
+          prepared_by?: string | null
+          prior_valuation_id?: string | null
+          quantity?: number | null
+          realized_change_cents?: number
+          reviewed_by?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["valuation_status"]
+          supporting_document_path?: string | null
+          unrealized_change_cents?: number
+          updated_at?: string
+          valuation_date?: string
+          value_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_valuations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_valuations_ct_company_id_fkey"
+            columns: ["ct_company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_valuations_ct_security_id_fkey"
+            columns: ["ct_security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_valuations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_valuations_prior_valuation_id_fkey"
+            columns: ["prior_valuation_id"]
+            isOneToOne: false
+            referencedRelation: "asset_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assisted_documents: {
         Row: {
           classification: string
@@ -1087,6 +1325,141 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "bank_accounts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_reconciliations: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          acknowledgement_required: boolean
+          auto_matched: boolean
+          bank_transaction_id: string
+          book_id: string | null
+          created_at: string
+          id: string
+          journal_entry_id: string | null
+          match_confidence: string | null
+          matched_application_id: string | null
+          matched_invoice_id: string | null
+          matched_payment_id: string | null
+          matched_wire_request_id: string | null
+          note: string | null
+          offering_id: string | null
+          posted_at: string | null
+          reconciled_at: string | null
+          reconciled_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          acknowledgement_required?: boolean
+          auto_matched?: boolean
+          bank_transaction_id: string
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          journal_entry_id?: string | null
+          match_confidence?: string | null
+          matched_application_id?: string | null
+          matched_invoice_id?: string | null
+          matched_payment_id?: string | null
+          matched_wire_request_id?: string | null
+          note?: string | null
+          offering_id?: string | null
+          posted_at?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          acknowledgement_required?: boolean
+          auto_matched?: boolean
+          bank_transaction_id?: string
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          journal_entry_id?: string | null
+          match_confidence?: string | null
+          matched_application_id?: string | null
+          matched_invoice_id?: string | null
+          matched_payment_id?: string | null
+          matched_wire_request_id?: string | null
+          note?: string | null
+          offering_id?: string | null
+          posted_at?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliations_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: true
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_matched_application_id_fkey"
+            columns: ["matched_application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_matched_invoice_id_fkey"
+            columns: ["matched_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_matched_payment_id_fkey"
+            columns: ["matched_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_matched_wire_request_id_fkey"
+            columns: ["matched_wire_request_id"]
+            isOneToOne: false
+            referencedRelation: "wire_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
@@ -1837,6 +2210,164 @@ export type Database = {
           },
         ]
       }
+      capital_accounts: {
+        Row: {
+          allocated_income_cents: number
+          allocated_loss_cents: number
+          allocation_inputs: Json
+          allocation_method: string
+          application_id: string | null
+          approved_by: string | null
+          beginning_capital_cents: number
+          book_id: string
+          commitment_cents: number
+          contributions_cents: number
+          created_at: string
+          distributions_cents: number
+          ending_capital_cents: number
+          generated_at: string
+          generated_by: string | null
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          nav_version_id: string | null
+          offering_id: string | null
+          other_adjustments_cents: number
+          ownership_pct: number | null
+          period_end: string
+          period_id: string | null
+          period_start: string
+          published_at: string | null
+          published_by: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          supersedes_id: string | null
+          unfunded_commitment_cents: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allocated_income_cents?: number
+          allocated_loss_cents?: number
+          allocation_inputs?: Json
+          allocation_method?: string
+          application_id?: string | null
+          approved_by?: string | null
+          beginning_capital_cents?: number
+          book_id: string
+          commitment_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          distributions_cents?: number
+          ending_capital_cents?: number
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          nav_version_id?: string | null
+          offering_id?: string | null
+          other_adjustments_cents?: number
+          ownership_pct?: number | null
+          period_end: string
+          period_id?: string | null
+          period_start: string
+          published_at?: string | null
+          published_by?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          supersedes_id?: string | null
+          unfunded_commitment_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allocated_income_cents?: number
+          allocated_loss_cents?: number
+          allocation_inputs?: Json
+          allocation_method?: string
+          application_id?: string | null
+          approved_by?: string | null
+          beginning_capital_cents?: number
+          book_id?: string
+          commitment_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          distributions_cents?: number
+          ending_capital_cents?: number
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          nav_version_id?: string | null
+          offering_id?: string | null
+          other_adjustments_cents?: number
+          ownership_pct?: number | null
+          period_end?: string
+          period_id?: string | null
+          period_start?: string
+          published_at?: string | null
+          published_by?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          supersedes_id?: string | null
+          unfunded_commitment_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_accounts_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_accounts_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_accounts_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_accounts_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_accounts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_accounts_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_accounts_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "capital_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       change_order_lines: {
         Row: {
           action: string
@@ -1915,6 +2446,63 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "service_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chart_of_accounts: {
+        Row: {
+          account_type: Database["public"]["Enums"]["ledger_account_type"]
+          book_id: string
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          normal_balance: string
+          parent_account_id: string | null
+          subtype: string
+          updated_at: string
+        }
+        Insert: {
+          account_type: Database["public"]["Enums"]["ledger_account_type"]
+          book_id: string
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          normal_balance?: string
+          parent_account_id?: string | null
+          subtype?: string
+          updated_at?: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["ledger_account_type"]
+          book_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          normal_balance?: string
+          parent_account_id?: string | null
+          subtype?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chart_of_accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -6856,6 +7444,185 @@ export type Database = {
           },
         ]
       }
+      financial_reports: {
+        Row: {
+          accounting_snapshot: Json
+          approved_at: string | null
+          approved_by: string | null
+          book_id: string | null
+          client_entity_id: string | null
+          created_at: string
+          ct_company_id: string | null
+          ct_stakeholder_id: string | null
+          domain: Database["public"]["Enums"]["report_domain"]
+          generated_at: string
+          generated_by: string | null
+          id: string
+          methodology_version: string
+          nav_version_id: string | null
+          offering_id: string | null
+          payload: Json
+          period_end: string | null
+          period_id: string | null
+          period_start: string | null
+          published_at: string | null
+          published_by: string | null
+          report_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_cutoff_at: string
+          status: Database["public"]["Enums"]["report_status"]
+          storage_path: string | null
+          subject_profile_id: string | null
+          subject_user_id: string | null
+          superseded_by_id: string | null
+          supersedes_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          accounting_snapshot?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id?: string | null
+          client_entity_id?: string | null
+          created_at?: string
+          ct_company_id?: string | null
+          ct_stakeholder_id?: string | null
+          domain?: Database["public"]["Enums"]["report_domain"]
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          methodology_version?: string
+          nav_version_id?: string | null
+          offering_id?: string | null
+          payload?: Json
+          period_end?: string | null
+          period_id?: string | null
+          period_start?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          report_type: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_cutoff_at?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          storage_path?: string | null
+          subject_profile_id?: string | null
+          subject_user_id?: string | null
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          accounting_snapshot?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id?: string | null
+          client_entity_id?: string | null
+          created_at?: string
+          ct_company_id?: string | null
+          ct_stakeholder_id?: string | null
+          domain?: Database["public"]["Enums"]["report_domain"]
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          methodology_version?: string
+          nav_version_id?: string | null
+          offering_id?: string | null
+          payload?: Json
+          period_end?: string | null
+          period_id?: string | null
+          period_start?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          report_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_cutoff_at?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          storage_path?: string | null
+          subject_profile_id?: string | null
+          subject_user_id?: string | null
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_reports_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_client_entity_id_fkey"
+            columns: ["client_entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_ct_company_id_fkey"
+            columns: ["ct_company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_ct_stakeholder_id_fkey"
+            columns: ["ct_stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_subject_profile_id_fkey"
+            columns: ["subject_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_access_requests: {
         Row: {
           created_at: string
@@ -8181,6 +8948,87 @@ export type Database = {
           },
         ]
       }
+      investor_tax_profiles: {
+        Row: {
+          classification: string
+          created_at: string
+          default_withholding_rate_bps: number | null
+          document_id: string | null
+          documentation_effective_on: string | null
+          documentation_expires_on: string | null
+          documentation_form: Database["public"]["Enums"]["tax_documentation_form"]
+          documentation_status: Database["public"]["Enums"]["tax_workflow_status"]
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          tax_residency_country: string | null
+          tin_on_file: boolean
+          treaty_country: string | null
+          treaty_rate_bps: number | null
+          updated_at: string
+        }
+        Insert: {
+          classification?: string
+          created_at?: string
+          default_withholding_rate_bps?: number | null
+          document_id?: string | null
+          documentation_effective_on?: string | null
+          documentation_expires_on?: string | null
+          documentation_form?: Database["public"]["Enums"]["tax_documentation_form"]
+          documentation_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tax_residency_country?: string | null
+          tin_on_file?: boolean
+          treaty_country?: string | null
+          treaty_rate_bps?: number | null
+          updated_at?: string
+        }
+        Update: {
+          classification?: string
+          created_at?: string
+          default_withholding_rate_bps?: number | null
+          document_id?: string | null
+          documentation_effective_on?: string | null
+          documentation_expires_on?: string | null
+          documentation_form?: Database["public"]["Enums"]["tax_documentation_form"]
+          documentation_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tax_residency_country?: string | null
+          tin_on_file?: boolean
+          treaty_country?: string | null
+          treaty_rate_bps?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_tax_profiles_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "fund_tax_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_tax_profiles_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_lines: {
         Row: {
           amount_cents: number
@@ -8431,6 +9279,245 @@ export type Database = {
           },
         ]
       }
+      journal_entries: {
+        Row: {
+          adjusts_entry_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          book_id: string
+          created_at: string
+          entry_date: string
+          entry_no: number
+          id: string
+          memo: string | null
+          period_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          prepared_at: string
+          prepared_by: string | null
+          reverses_entry_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: Database["public"]["Enums"]["journal_source"]
+          source_id: string | null
+          source_table: string | null
+          status: Database["public"]["Enums"]["journal_status"]
+          updated_at: string
+        }
+        Insert: {
+          adjusts_entry_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id: string
+          created_at?: string
+          entry_date: string
+          entry_no?: number
+          id?: string
+          memo?: string | null
+          period_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          prepared_at?: string
+          prepared_by?: string | null
+          reverses_entry_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: Database["public"]["Enums"]["journal_source"]
+          source_id?: string | null
+          source_table?: string | null
+          status?: Database["public"]["Enums"]["journal_status"]
+          updated_at?: string
+        }
+        Update: {
+          adjusts_entry_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id?: string
+          created_at?: string
+          entry_date?: string
+          entry_no?: number
+          id?: string
+          memo?: string | null
+          period_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          prepared_at?: string
+          prepared_by?: string | null
+          reverses_entry_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: Database["public"]["Enums"]["journal_source"]
+          source_id?: string | null
+          source_table?: string | null
+          status?: Database["public"]["Enums"]["journal_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_adjusts_entry_id_fkey"
+            columns: ["adjusts_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reverses_entry_id_fkey"
+            columns: ["reverses_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entry_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          entry_id: string
+          from_status: Database["public"]["Enums"]["journal_status"] | null
+          id: string
+          reason: string | null
+          snapshot: Json | null
+          to_status: Database["public"]["Enums"]["journal_status"]
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          entry_id: string
+          from_status?: Database["public"]["Enums"]["journal_status"] | null
+          id?: string
+          reason?: string | null
+          snapshot?: Json | null
+          to_status: Database["public"]["Enums"]["journal_status"]
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          entry_id?: string
+          from_status?: Database["public"]["Enums"]["journal_status"] | null
+          id?: string
+          reason?: string | null
+          snapshot?: Json | null
+          to_status?: Database["public"]["Enums"]["journal_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entry_events_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_lines: {
+        Row: {
+          account_id: string
+          application_id: string | null
+          client_entity_id: string | null
+          created_at: string
+          credit_cents: number
+          debit_cents: number
+          entry_id: string
+          id: string
+          investment_id: string | null
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          line_no: number
+          memo: string | null
+          offering_id: string | null
+        }
+        Insert: {
+          account_id: string
+          application_id?: string | null
+          client_entity_id?: string | null
+          created_at?: string
+          credit_cents?: number
+          debit_cents?: number
+          entry_id: string
+          id?: string
+          investment_id?: string | null
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          line_no?: number
+          memo?: string | null
+          offering_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          application_id?: string | null
+          client_entity_id?: string | null
+          created_at?: string
+          credit_cents?: number
+          debit_cents?: number
+          entry_id?: string
+          id?: string
+          investment_id?: string | null
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          line_no?: number
+          memo?: string | null
+          offering_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_client_entity_id_fkey"
+            columns: ["client_entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           application_id: string
@@ -8489,6 +9576,89 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ledger_books: {
+        Row: {
+          allocation_policy: Json
+          basis: Database["public"]["Enums"]["ledger_basis"]
+          client_entity_id: string | null
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          ct_company_id: string | null
+          domain: Database["public"]["Enums"]["report_domain"]
+          fiscal_year_end_month: number
+          functional_currency: string
+          id: string
+          is_active: boolean
+          name: string
+          offering_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          allocation_policy?: Json
+          basis?: Database["public"]["Enums"]["ledger_basis"]
+          client_entity_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ct_company_id?: string | null
+          domain?: Database["public"]["Enums"]["report_domain"]
+          fiscal_year_end_month?: number
+          functional_currency?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          offering_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allocation_policy?: Json
+          basis?: Database["public"]["Enums"]["ledger_basis"]
+          client_entity_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ct_company_id?: string | null
+          domain?: Database["public"]["Enums"]["report_domain"]
+          fiscal_year_end_month?: number
+          functional_currency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          offering_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_books_client_entity_id_fkey"
+            columns: ["client_entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_books_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_books_ct_company_id_fkey"
+            columns: ["ct_company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_books_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -8723,6 +9893,155 @@ export type Database = {
           version?: string
         }
         Relationships: []
+      }
+      nav_versions: {
+        Row: {
+          accrued_expenses_cents: number
+          approved_at: string | null
+          approved_by: string | null
+          as_of_date: string
+          book_id: string
+          carried_interest_cents: number
+          cash_cents: number
+          contributions_cents: number
+          created_at: string
+          distributions_cents: number
+          gross_asset_value_cents: number
+          id: string
+          investments_at_cost_cents: number
+          investments_fair_value_cents: number
+          ledger_snapshot: Json
+          liabilities_cents: number
+          management_fee_cents: number
+          methodology: string
+          nav_per_unit_cents: number | null
+          offering_id: string | null
+          partner_capital_cents: number
+          period_id: string | null
+          prepared_at: string
+          prepared_by: string | null
+          published_at: string | null
+          published_by: string | null
+          realized_gain_cents: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revision_reason: string | null
+          status: Database["public"]["Enums"]["nav_status"]
+          supersedes_id: string | null
+          units_outstanding: number | null
+          unrealized_gain_cents: number
+          updated_at: string
+          valuation_source: string | null
+          version: number
+        }
+        Insert: {
+          accrued_expenses_cents?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          as_of_date: string
+          book_id: string
+          carried_interest_cents?: number
+          cash_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          distributions_cents?: number
+          gross_asset_value_cents?: number
+          id?: string
+          investments_at_cost_cents?: number
+          investments_fair_value_cents?: number
+          ledger_snapshot?: Json
+          liabilities_cents?: number
+          management_fee_cents?: number
+          methodology?: string
+          nav_per_unit_cents?: number | null
+          offering_id?: string | null
+          partner_capital_cents?: number
+          period_id?: string | null
+          prepared_at?: string
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          realized_gain_cents?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_reason?: string | null
+          status?: Database["public"]["Enums"]["nav_status"]
+          supersedes_id?: string | null
+          units_outstanding?: number | null
+          unrealized_gain_cents?: number
+          updated_at?: string
+          valuation_source?: string | null
+          version?: number
+        }
+        Update: {
+          accrued_expenses_cents?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          as_of_date?: string
+          book_id?: string
+          carried_interest_cents?: number
+          cash_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          distributions_cents?: number
+          gross_asset_value_cents?: number
+          id?: string
+          investments_at_cost_cents?: number
+          investments_fair_value_cents?: number
+          ledger_snapshot?: Json
+          liabilities_cents?: number
+          management_fee_cents?: number
+          methodology?: string
+          nav_per_unit_cents?: number | null
+          offering_id?: string | null
+          partner_capital_cents?: number
+          period_id?: string | null
+          prepared_at?: string
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          realized_gain_cents?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_reason?: string | null
+          status?: Database["public"]["Enums"]["nav_status"]
+          supersedes_id?: string | null
+          units_outstanding?: number | null
+          unrealized_gain_cents?: number
+          updated_at?: string
+          valuation_source?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nav_versions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_versions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_versions_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nav_versions_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_events: {
         Row: {
@@ -9934,6 +11253,147 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_calculations: {
+        Row: {
+          approved_by: string | null
+          beginning_value_cents: number
+          book_id: string
+          calculated_at: string
+          calculated_by: string | null
+          capital_account_id: string | null
+          contributions_cents: number
+          created_at: string
+          distributions_cents: number
+          dpi: number | null
+          ending_value_cents: number
+          gross_return_bps: number | null
+          id: string
+          inputs: Json
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          irr_bps: number | null
+          methodology_version: string
+          moic: number | null
+          nav_version_id: string | null
+          net_return_bps: number | null
+          offering_id: string | null
+          period_end: string
+          period_start: string
+          published_at: string | null
+          realized_gain_cents: number
+          rvpi: number | null
+          scope: string
+          status: Database["public"]["Enums"]["report_status"]
+          tvpi: number | null
+          twr_bps: number | null
+          unrealized_gain_cents: number
+        }
+        Insert: {
+          approved_by?: string | null
+          beginning_value_cents?: number
+          book_id: string
+          calculated_at?: string
+          calculated_by?: string | null
+          capital_account_id?: string | null
+          contributions_cents?: number
+          created_at?: string
+          distributions_cents?: number
+          dpi?: number | null
+          ending_value_cents?: number
+          gross_return_bps?: number | null
+          id?: string
+          inputs?: Json
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          irr_bps?: number | null
+          methodology_version?: string
+          moic?: number | null
+          nav_version_id?: string | null
+          net_return_bps?: number | null
+          offering_id?: string | null
+          period_end: string
+          period_start: string
+          published_at?: string | null
+          realized_gain_cents?: number
+          rvpi?: number | null
+          scope?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          tvpi?: number | null
+          twr_bps?: number | null
+          unrealized_gain_cents?: number
+        }
+        Update: {
+          approved_by?: string | null
+          beginning_value_cents?: number
+          book_id?: string
+          calculated_at?: string
+          calculated_by?: string | null
+          capital_account_id?: string | null
+          contributions_cents?: number
+          created_at?: string
+          distributions_cents?: number
+          dpi?: number | null
+          ending_value_cents?: number
+          gross_return_bps?: number | null
+          id?: string
+          inputs?: Json
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          irr_bps?: number | null
+          methodology_version?: string
+          moic?: number | null
+          nav_version_id?: string | null
+          net_return_bps?: number | null
+          offering_id?: string | null
+          period_end?: string
+          period_start?: string
+          published_at?: string | null
+          realized_gain_cents?: number
+          rvpi?: number | null
+          scope?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          tvpi?: number | null
+          twr_bps?: number | null
+          unrealized_gain_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_calculations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_calculations_capital_account_id_fkey"
+            columns: ["capital_account_id"]
+            isOneToOne: false
+            referencedRelation: "capital_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_calculations_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_calculations_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_calculations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -12464,6 +13924,342 @@ export type Database = {
           },
         ]
       }
+      tax_allocations: {
+        Row: {
+          allocation_method: string
+          approved_at: string | null
+          approved_by: string | null
+          book_id: string
+          capital_account_id: string | null
+          created_at: string
+          dividend_income_cents: number
+          expenses_cents: number
+          filing_id: string | null
+          id: string
+          interest_income_cents: number
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          long_term_gain_cents: number
+          ordinary_income_cents: number
+          other_items: Json
+          prepared_by: string | null
+          short_term_gain_cents: number
+          status: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_year: number
+          updated_at: string
+          withholding_cents: number
+        }
+        Insert: {
+          allocation_method?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id: string
+          capital_account_id?: string | null
+          created_at?: string
+          dividend_income_cents?: number
+          expenses_cents?: number
+          filing_id?: string | null
+          id?: string
+          interest_income_cents?: number
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          long_term_gain_cents?: number
+          ordinary_income_cents?: number
+          other_items?: Json
+          prepared_by?: string | null
+          short_term_gain_cents?: number
+          status?: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_year: number
+          updated_at?: string
+          withholding_cents?: number
+        }
+        Update: {
+          allocation_method?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id?: string
+          capital_account_id?: string | null
+          created_at?: string
+          dividend_income_cents?: number
+          expenses_cents?: number
+          filing_id?: string | null
+          id?: string
+          interest_income_cents?: number
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          long_term_gain_cents?: number
+          ordinary_income_cents?: number
+          other_items?: Json
+          prepared_by?: string | null
+          short_term_gain_cents?: number
+          status?: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_year?: number
+          updated_at?: string
+          withholding_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_allocations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocations_capital_account_id_fkey"
+            columns: ["capital_account_id"]
+            isOneToOne: false
+            referencedRelation: "capital_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocations_filing_id_fkey"
+            columns: ["filing_id"]
+            isOneToOne: false
+            referencedRelation: "tax_filings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocations_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_filings: {
+        Row: {
+          accounting_closed: boolean
+          allocations_status: Database["public"]["Enums"]["tax_workflow_status"]
+          approved_by: string | null
+          book_id: string
+          client_entity_id: string | null
+          created_at: string
+          delivery_status: Database["public"]["Enums"]["tax_workflow_status"]
+          filed_at: string | null
+          filed_by: string | null
+          filing_status: Database["public"]["Enums"]["tax_workflow_status"]
+          form_type: string
+          id: string
+          note: string | null
+          offering_id: string | null
+          period_id: string | null
+          preparation_status: Database["public"]["Enums"]["tax_workflow_status"]
+          prepared_by: string | null
+          reviewed_by: string | null
+          tax_year: number
+          updated_at: string
+        }
+        Insert: {
+          accounting_closed?: boolean
+          allocations_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          approved_by?: string | null
+          book_id: string
+          client_entity_id?: string | null
+          created_at?: string
+          delivery_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          filed_at?: string | null
+          filed_by?: string | null
+          filing_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          form_type: string
+          id?: string
+          note?: string | null
+          offering_id?: string | null
+          period_id?: string | null
+          preparation_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          prepared_by?: string | null
+          reviewed_by?: string | null
+          tax_year: number
+          updated_at?: string
+        }
+        Update: {
+          accounting_closed?: boolean
+          allocations_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          approved_by?: string | null
+          book_id?: string
+          client_entity_id?: string | null
+          created_at?: string
+          delivery_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          filed_at?: string | null
+          filed_by?: string | null
+          filing_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          form_type?: string
+          id?: string
+          note?: string | null
+          offering_id?: string | null
+          period_id?: string | null
+          preparation_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          prepared_by?: string | null
+          reviewed_by?: string | null
+          tax_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_filings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_filings_client_entity_id_fkey"
+            columns: ["client_entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_filings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_filings_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_forms: {
+        Row: {
+          allocation_id: string | null
+          amends_form_id: string | null
+          approved_by: string | null
+          book_id: string
+          created_at: string
+          delivered_at: string | null
+          delivered_by: string | null
+          delivery_status: Database["public"]["Enums"]["tax_workflow_status"]
+          document_id: string | null
+          filing_id: string | null
+          filing_status: Database["public"]["Enums"]["tax_workflow_status"]
+          form_type: string
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          is_amended: boolean
+          offering_id: string | null
+          payload: Json
+          preparation_status: Database["public"]["Enums"]["tax_workflow_status"]
+          prepared_by: string | null
+          reviewed_by: string | null
+          storage_path: string | null
+          tax_year: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allocation_id?: string | null
+          amends_form_id?: string | null
+          approved_by?: string | null
+          book_id: string
+          created_at?: string
+          delivered_at?: string | null
+          delivered_by?: string | null
+          delivery_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          document_id?: string | null
+          filing_id?: string | null
+          filing_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          form_type: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          is_amended?: boolean
+          offering_id?: string | null
+          payload?: Json
+          preparation_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          prepared_by?: string | null
+          reviewed_by?: string | null
+          storage_path?: string | null
+          tax_year: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allocation_id?: string | null
+          amends_form_id?: string | null
+          approved_by?: string | null
+          book_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          delivered_by?: string | null
+          delivery_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          document_id?: string | null
+          filing_id?: string | null
+          filing_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          form_type?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          is_amended?: boolean
+          offering_id?: string | null
+          payload?: Json
+          preparation_status?: Database["public"]["Enums"]["tax_workflow_status"]
+          prepared_by?: string | null
+          reviewed_by?: string | null
+          storage_path?: string | null
+          tax_year?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_forms_allocation_id_fkey"
+            columns: ["allocation_id"]
+            isOneToOne: false
+            referencedRelation: "tax_allocations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_forms_amends_form_id_fkey"
+            columns: ["amends_form_id"]
+            isOneToOne: false
+            referencedRelation: "tax_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_forms_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_forms_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "fund_tax_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_forms_filing_id_fkey"
+            columns: ["filing_id"]
+            isOneToOne: false
+            referencedRelation: "tax_filings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_forms_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_forms_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       third_party_providers: {
         Row: {
           contract_status: string
@@ -12680,6 +14476,121 @@ export type Database = {
             columns: ["settled_transaction_id"]
             isOneToOne: false
             referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withholding_records: {
+        Row: {
+          amount_withheld_cents: number
+          book_id: string
+          created_at: string
+          deposited_at: string | null
+          documentation_form: Database["public"]["Enums"]["tax_documentation_form"]
+          exemption_code: string | null
+          form_id: string | null
+          gross_amount_cents: number
+          id: string
+          income_code: string | null
+          income_type: string
+          investment_profile_id: string | null
+          journal_entry_id: string | null
+          offering_id: string | null
+          recipient_user_id: string | null
+          status: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_profile_id: string | null
+          tax_residency_country: string | null
+          tax_year: number
+          updated_at: string
+          withholding_rate_bps: number
+        }
+        Insert: {
+          amount_withheld_cents?: number
+          book_id: string
+          created_at?: string
+          deposited_at?: string | null
+          documentation_form?: Database["public"]["Enums"]["tax_documentation_form"]
+          exemption_code?: string | null
+          form_id?: string | null
+          gross_amount_cents?: number
+          id?: string
+          income_code?: string | null
+          income_type?: string
+          investment_profile_id?: string | null
+          journal_entry_id?: string | null
+          offering_id?: string | null
+          recipient_user_id?: string | null
+          status?: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_profile_id?: string | null
+          tax_residency_country?: string | null
+          tax_year: number
+          updated_at?: string
+          withholding_rate_bps?: number
+        }
+        Update: {
+          amount_withheld_cents?: number
+          book_id?: string
+          created_at?: string
+          deposited_at?: string | null
+          documentation_form?: Database["public"]["Enums"]["tax_documentation_form"]
+          exemption_code?: string | null
+          form_id?: string | null
+          gross_amount_cents?: number
+          id?: string
+          income_code?: string | null
+          income_type?: string
+          investment_profile_id?: string | null
+          journal_entry_id?: string | null
+          offering_id?: string | null
+          recipient_user_id?: string | null
+          status?: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_profile_id?: string | null
+          tax_residency_country?: string | null
+          tax_year?: number
+          updated_at?: string
+          withholding_rate_bps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withholding_records_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withholding_records_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "tax_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withholding_records_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withholding_records_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withholding_records_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withholding_records_tax_profile_id_fkey"
+            columns: ["tax_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investor_tax_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -12947,6 +14858,12 @@ export type Database = {
       }
     }
     Enums: {
+      accounting_period_status:
+        | "open"
+        | "soft_closed"
+        | "review"
+        | "closed"
+        | "locked"
       app_role:
         | "admin"
         | "investor"
@@ -13041,6 +14958,28 @@ export type Database = {
         | "other_entity"
       investor_type: "individual" | "joint" | "entity" | "trust" | "ira"
       invitation_role: "investor" | "fund_manager"
+      journal_source:
+        | "manual"
+        | "bank_reconciliation"
+        | "payment"
+        | "capital_call"
+        | "distribution"
+        | "fee_accrual"
+        | "expense"
+        | "valuation"
+        | "allocation"
+        | "adjustment"
+        | "reversal"
+        | "migration"
+      journal_status: "draft" | "reviewed" | "approved" | "posted" | "reversed"
+      ledger_account_type:
+        | "asset"
+        | "liability"
+        | "equity"
+        | "income"
+        | "expense"
+      ledger_basis: "accrual" | "cash" | "tax"
+      nav_status: "draft" | "review" | "approved" | "published" | "superseded"
       onboarding_state:
         | "account_created"
         | "profile_required"
@@ -13093,6 +15032,36 @@ export type Database = {
         | "joint_owner"
         | "beneficiary"
       reg_type: "506b" | "506c" | "regcf" | "rega" | "regaplus"
+      report_domain: "fund_accounting" | "cap_table"
+      report_status:
+        | "draft"
+        | "review"
+        | "approved"
+        | "published"
+        | "superseded"
+      tax_documentation_form:
+        | "w9"
+        | "w8ben"
+        | "w8bene"
+        | "w8imy"
+        | "w8eci"
+        | "w8exp"
+        | "none_on_file"
+        | "other"
+      tax_workflow_status:
+        | "not_started"
+        | "in_progress"
+        | "harmonious_review"
+        | "client_review"
+        | "approved"
+        | "complete"
+        | "not_applicable"
+      valuation_status:
+        | "draft"
+        | "review"
+        | "approved"
+        | "superseded"
+        | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -13220,6 +15189,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      accounting_period_status: [
+        "open",
+        "soft_closed",
+        "review",
+        "closed",
+        "locked",
+      ],
       app_role: [
         "admin",
         "investor",
@@ -13323,6 +15299,30 @@ export const Constants = {
       ],
       investor_type: ["individual", "joint", "entity", "trust", "ira"],
       invitation_role: ["investor", "fund_manager"],
+      journal_source: [
+        "manual",
+        "bank_reconciliation",
+        "payment",
+        "capital_call",
+        "distribution",
+        "fee_accrual",
+        "expense",
+        "valuation",
+        "allocation",
+        "adjustment",
+        "reversal",
+        "migration",
+      ],
+      journal_status: ["draft", "reviewed", "approved", "posted", "reversed"],
+      ledger_account_type: [
+        "asset",
+        "liability",
+        "equity",
+        "income",
+        "expense",
+      ],
+      ledger_basis: ["accrual", "cash", "tax"],
+      nav_status: ["draft", "review", "approved", "published", "superseded"],
       onboarding_state: [
         "account_created",
         "profile_required",
@@ -13380,6 +15380,34 @@ export const Constants = {
         "beneficiary",
       ],
       reg_type: ["506b", "506c", "regcf", "rega", "regaplus"],
+      report_domain: ["fund_accounting", "cap_table"],
+      report_status: ["draft", "review", "approved", "published", "superseded"],
+      tax_documentation_form: [
+        "w9",
+        "w8ben",
+        "w8bene",
+        "w8imy",
+        "w8eci",
+        "w8exp",
+        "none_on_file",
+        "other",
+      ],
+      tax_workflow_status: [
+        "not_started",
+        "in_progress",
+        "harmonious_review",
+        "client_review",
+        "approved",
+        "complete",
+        "not_applicable",
+      ],
+      valuation_status: [
+        "draft",
+        "review",
+        "approved",
+        "superseded",
+        "rejected",
+      ],
     },
   },
 } as const
