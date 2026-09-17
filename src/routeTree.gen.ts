@@ -142,6 +142,7 @@ import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticate
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
+import { Route as ApiPublicPlaidWebhookRouteImport } from './routes/api/public/plaid-webhook'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
@@ -941,6 +942,11 @@ const ApiPublicLoginAttemptRoute = ApiPublicLoginAttemptRouteImport.update({
   path: '/api/public/login-attempt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPlaidWebhookRoute = ApiPublicPlaidWebhookRouteImport.update({
+  id: '/api/public/plaid-webhook',
+  path: '/api/public/plaid-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   id: '/lovable/email/events',
   path: '/lovable/email/events',
@@ -1388,6 +1394,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
+  '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/client/': typeof AuthenticatedClientIndexRoute
@@ -1572,6 +1579,7 @@ export interface FileRoutesByTo {
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
+  '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/client': typeof AuthenticatedClientIndexRoute
@@ -1761,6 +1769,7 @@ export interface FileRoutesById {
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
+  '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
@@ -1951,6 +1960,7 @@ export interface FileRouteTypes {
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
+    | '/api/public/plaid-webhook'
     | '/lovable/email/events'
     | '/admin/'
     | '/client/'
@@ -2135,6 +2145,7 @@ export interface FileRouteTypes {
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
+    | '/api/public/plaid-webhook'
     | '/lovable/email/events'
     | '/admin'
     | '/client'
@@ -2323,6 +2334,7 @@ export interface FileRouteTypes {
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
+    | '/api/public/plaid-webhook'
     | '/lovable/email/events'
     | '/_authenticated/admin/'
     | '/_authenticated/client/'
@@ -2407,6 +2419,7 @@ export interface RootRouteChildren {
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
+  ApiPublicPlaidWebhookRoute: typeof ApiPublicPlaidWebhookRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
@@ -3351,6 +3364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLoginAttemptRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/plaid-webhook': {
+      id: '/api/public/plaid-webhook'
+      path: '/api/public/plaid-webhook'
+      fullPath: '/api/public/plaid-webhook'
+      preLoaderRoute: typeof ApiPublicPlaidWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/events': {
       id: '/lovable/email/events'
       path: '/lovable/email/events'
@@ -4182,6 +4202,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
+  ApiPublicPlaidWebhookRoute: ApiPublicPlaidWebhookRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,

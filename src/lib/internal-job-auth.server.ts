@@ -16,7 +16,7 @@
 
 const CLIENT_KEY_PREFIXES = ["sb_publishable_", "sb_secret_", "eyJ"];
 
-function timingSafeEqual(a: string, b: string): boolean {
+export function timingSafeEqualStrings(a: string, b: string): boolean {
   const aBytes = new TextEncoder().encode(a);
   const bBytes = new TextEncoder().encode(b);
   // Compare full length of both so the loop cost does not reveal the match
@@ -68,7 +68,7 @@ export function isInternalJobRequest(request: Request): boolean {
     process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   if (publishable && provided === publishable) return false;
 
-  return timingSafeEqual(provided, expected);
+  return timingSafeEqualStrings(provided, expected);
 }
 
 /** Generic rejection — reveals nothing about the expected credential. */
