@@ -648,6 +648,261 @@ export type Database = {
           },
         ]
       }
+      assisted_documents: {
+        Row: {
+          classification: string
+          created_at: string
+          delegation_id: string
+          draft_id: string | null
+          id: string
+          investor_document_id: string | null
+          organization_id: string | null
+          original_filename: string
+          principal_user_id: string
+          resource_id: string
+          resource_type: string
+          storage_path: string
+          uploaded_by_user_id: string
+        }
+        Insert: {
+          classification: string
+          created_at?: string
+          delegation_id: string
+          draft_id?: string | null
+          id?: string
+          investor_document_id?: string | null
+          organization_id?: string | null
+          original_filename: string
+          principal_user_id: string
+          resource_id: string
+          resource_type: string
+          storage_path: string
+          uploaded_by_user_id: string
+        }
+        Update: {
+          classification?: string
+          created_at?: string
+          delegation_id?: string
+          draft_id?: string | null
+          id?: string
+          investor_document_id?: string | null
+          organization_id?: string | null
+          original_filename?: string
+          principal_user_id?: string
+          resource_id?: string
+          resource_type?: string
+          storage_path?: string
+          uploaded_by_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assisted_documents_delegation_id_fkey"
+            columns: ["delegation_id"]
+            isOneToOne: false
+            referencedRelation: "delegations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assisted_documents_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "assisted_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assisted_documents_investor_document_id_fkey"
+            columns: ["investor_document_id"]
+            isOneToOne: false
+            referencedRelation: "investor_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assisted_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assisted_draft_events: {
+        Row: {
+          action: string
+          actor_kind: string
+          actor_user_id: string | null
+          created_at: string
+          delegation_id: string | null
+          draft_id: string
+          from_status: string | null
+          id: string
+          organization_id: string | null
+          payload: Json
+          prepared_by_user_id: string
+          principal_user_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_kind: string
+          actor_user_id?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          draft_id: string
+          from_status?: string | null
+          id?: string
+          organization_id?: string | null
+          payload?: Json
+          prepared_by_user_id: string
+          principal_user_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_kind?: string
+          actor_user_id?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          draft_id?: string
+          from_status?: string | null
+          id?: string
+          organization_id?: string | null
+          payload?: Json
+          prepared_by_user_id?: string
+          principal_user_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assisted_draft_events_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "assisted_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assisted_drafts: {
+        Row: {
+          applied_at: string | null
+          before_state: Json
+          client_note: string | null
+          created_at: string
+          delegation_id: string
+          draft_type: Database["public"]["Enums"]["assisted_draft_type"]
+          final_state: Json | null
+          id: string
+          organization_id: string | null
+          prepared_by_user_id: string
+          preparer_note: string | null
+          principal_user_id: string
+          proposed_state: Json
+          reviewed_at: string | null
+          reviewed_by_user_id: string | null
+          status: Database["public"]["Enums"]["assisted_draft_status"]
+          target_id: string | null
+          target_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          before_state?: Json
+          client_note?: string | null
+          created_at?: string
+          delegation_id: string
+          draft_type: Database["public"]["Enums"]["assisted_draft_type"]
+          final_state?: Json | null
+          id?: string
+          organization_id?: string | null
+          prepared_by_user_id: string
+          preparer_note?: string | null
+          principal_user_id: string
+          proposed_state?: Json
+          reviewed_at?: string | null
+          reviewed_by_user_id?: string | null
+          status?: Database["public"]["Enums"]["assisted_draft_status"]
+          target_id?: string | null
+          target_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          before_state?: Json
+          client_note?: string | null
+          created_at?: string
+          delegation_id?: string
+          draft_type?: Database["public"]["Enums"]["assisted_draft_type"]
+          final_state?: Json | null
+          id?: string
+          organization_id?: string | null
+          prepared_by_user_id?: string
+          preparer_note?: string | null
+          principal_user_id?: string
+          proposed_state?: Json
+          reviewed_at?: string | null
+          reviewed_by_user_id?: string | null
+          status?: Database["public"]["Enums"]["assisted_draft_status"]
+          target_id?: string | null
+          target_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assisted_drafts_delegation_id_fkey"
+            columns: ["delegation_id"]
+            isOneToOne: false
+            referencedRelation: "delegations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assisted_drafts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assisted_notifications: {
+        Row: {
+          created_at: string
+          draft_id: string | null
+          id: string
+          kind: string
+          message: string
+          principal_user_id: string
+          read_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          draft_id?: string | null
+          id?: string
+          kind: string
+          message: string
+          principal_user_id: string
+          read_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          draft_id?: string | null
+          id?: string
+          kind?: string
+          message?: string
+          principal_user_id?: string
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assisted_notifications_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "assisted_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_mask: string | null
@@ -12107,6 +12362,21 @@ export type Database = {
         | "client_readonly"
         | "entity_representative"
         | "beneficial_owner"
+      assisted_draft_status:
+        | "awaiting_client_review"
+        | "approved"
+        | "rejected"
+        | "changes_requested"
+        | "withdrawn"
+      assisted_draft_type:
+        | "profile_contact"
+        | "entity_information"
+        | "ownership_information"
+        | "investment_questionnaire"
+        | "kyc_support"
+        | "kyb_support"
+        | "accreditation"
+        | "investment"
       check_status:
         | "not_started"
         | "pending"
@@ -12365,6 +12635,23 @@ export const Constants = {
         "client_readonly",
         "entity_representative",
         "beneficial_owner",
+      ],
+      assisted_draft_status: [
+        "awaiting_client_review",
+        "approved",
+        "rejected",
+        "changes_requested",
+        "withdrawn",
+      ],
+      assisted_draft_type: [
+        "profile_contact",
+        "entity_information",
+        "ownership_information",
+        "investment_questionnaire",
+        "kyc_support",
+        "kyb_support",
+        "accreditation",
+        "investment",
       ],
       check_status: [
         "not_started",

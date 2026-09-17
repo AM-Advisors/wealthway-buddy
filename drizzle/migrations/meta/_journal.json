@@ -29,6 +29,13 @@
       "when": 1789670319115,
       "tag": "0003_person_identity_profiles_phase2",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789676915008,
+      "tag": "0004_assisted_drafts_phase3b",
+      "breakpoints": true
     }
   ]
 }

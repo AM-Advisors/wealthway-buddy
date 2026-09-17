@@ -7,7 +7,9 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/professional", label: "My clients", exact: true },
+  { to: "/professional/prepare", label: "Prepare" },
   { to: "/professional/profiles", label: "Client profiles" },
+
   { to: "/professional/funds", label: "Funds" },
   { to: "/professional/investments", label: "Investments" },
   { to: "/professional/documents", label: "Documents" },

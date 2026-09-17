@@ -21,13 +21,16 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
+  SIGNED_AUTHORITY_REQUIRED,
   capabilityAllowedAtAuthority,
   isDelegationCapability,
   isMutatingCapability,
+  requiresSignedAuthority,
   type AuthorityLevel,
   type DelegationCapability,
   type DelegationScopeType,
 } from "@/lib/delegation-model";
+
 
 export type ResourceType = "person" | "investment_profile" | "fund" | "investment";
 
@@ -80,6 +83,22 @@ async function resolveResource(resource: ResourceRef): Promise<ResolvedResource 
   }
 
   if (resource.type === "investment_profile") {
+    // Investment profiles are the canonical Phase 2 record; the legacy profiles
+    // table is only a fallback. Ownership always comes from the stored row.
+    const { data: investmentProfile } = await db
+      .from("investment_profiles")
+      .select("id, owner_user_id")
+      .eq("id", resource.id)
+      .maybeSingle();
+    if (investmentProfile) {
+      return {
+        type: "investment_profile",
+        id: investmentProfile.id,
+        principalUserId: investmentProfile.owner_user_id,
+        fundId: null,
+        profileId: investmentProfile.id,
+      };
+    }
     const { data } = await db
       .from("profiles")
       .select("id, user_id")
@@ -94,6 +113,7 @@ async function resolveResource(resource: ResourceRef): Promise<ResolvedResource 
       profileId: data.id,
     };
   }
+
 
   if (resource.type === "fund") {
     const { data } = await db.from("offerings").select("id").eq("id", resource.id).maybeSingle();
@@ -196,10 +216,16 @@ export async function canAct(
   if (!isDelegationCapability(capability)) return DENY("Unknown permission.");
   const cap = capability as DelegationCapability;
 
+  // Banking, wire, signing and money movement need the signed-authority
+  // workflow, which is not built. A delegation carrying one of these — however
+  // it was created — still gets nothing here.
+  if (requiresSignedAuthority(cap)) return DENY(SIGNED_AUTHORITY_REQUIRED);
+
   if (options.mutation && !isMutatingCapability(cap)) {
     return DENY("This permission is read-only.");
   }
   if (!resource?.id || !resource?.type) return DENY("Unknown resource.");
+
 
   const target = await resolveResource(resource);
   if (!target) return DENY("Resource not found.");

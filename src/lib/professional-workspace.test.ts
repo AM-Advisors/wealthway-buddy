@@ -244,20 +244,17 @@ describe("professional workspace", () => {
     expect(docsOnly.documents).toHaveLength(0);
   });
 
-  it("only ever shows the last four digits of a bank account, and records the view", async () => {
+  it("shows no banking at all until a signed authorisation exists", async () => {
     delegation({ delegate_user_id: PRO_B, authority_level: "limited_proxy" }, [
       "view_investments",
       "view_banking_info",
     ]);
     const view = await buildDelegatedClientView(PRO_B, "d7");
-    expect(view.banking[0].endingIn).toBe("1234");
+    expect(view.banking).toHaveLength(0);
     expect(JSON.stringify(view)).not.toContain("987654321234");
-    expect(
-      writes.some(
-        (w) => w.table === "delegation_audit_events" && w.payload.action === "delegated_banking_view",
-      ),
-    ).toBe(true);
+    expect(JSON.stringify(view)).not.toContain("1234");
   });
+
 
   it("fails an expired delegation", async () => {
     delegation(

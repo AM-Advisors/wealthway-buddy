@@ -39,6 +39,7 @@ import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
+import { Route as AuthenticatedPreparedRouteImport } from './routes/_authenticated/prepared'
 import { Route as AuthenticatedProfessionalRouteImport } from './routes/_authenticated/professional'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
@@ -148,6 +149,7 @@ import { Route as AuthenticatedProfessionalDocumentsRouteImport } from './routes
 import { Route as AuthenticatedProfessionalFundsRouteImport } from './routes/_authenticated/professional.funds'
 import { Route as AuthenticatedProfessionalInvestmentsRouteImport } from './routes/_authenticated/professional.investments'
 import { Route as AuthenticatedProfessionalOrganizationRouteImport } from './routes/_authenticated/professional.organization'
+import { Route as AuthenticatedProfessionalPrepareRouteImport } from './routes/_authenticated/professional.prepare'
 import { Route as AuthenticatedProfessionalProfilesRouteImport } from './routes/_authenticated/professional.profiles'
 import { Route as AuthenticatedProfessionalTasksRouteImport } from './routes/_authenticated/professional.tasks'
 import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_authenticated/professional.tax'
@@ -360,6 +362,11 @@ const AuthenticatedMyPortfolioRoute =
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPreparedRoute = AuthenticatedPreparedRouteImport.update({
+  id: '/prepared',
+  path: '/prepared',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfessionalRoute =
@@ -991,6 +998,12 @@ const AuthenticatedProfessionalOrganizationRoute =
     path: '/organization',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedProfessionalPrepareRoute =
+  AuthenticatedProfessionalPrepareRouteImport.update({
+    id: '/prepare',
+    path: '/prepare',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
 const AuthenticatedProfessionalProfilesRoute =
   AuthenticatedProfessionalProfilesRouteImport.update({
     id: '/profiles',
@@ -1385,6 +1398,7 @@ export interface FileRoutesByFullPath {
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/prepared': typeof AuthenticatedPreparedRoute
   '/professional': typeof AuthenticatedProfessionalRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/provider': typeof AuthenticatedProviderRoute
@@ -1488,6 +1502,7 @@ export interface FileRoutesByFullPath {
   '/professional/funds': typeof AuthenticatedProfessionalFundsRoute
   '/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
   '/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
+  '/professional/prepare': typeof AuthenticatedProfessionalPrepareRoute
   '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
@@ -1585,6 +1600,7 @@ export interface FileRoutesByTo {
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/prepared': typeof AuthenticatedPreparedRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/shares': typeof AuthenticatedSharesRoute
@@ -1685,6 +1701,7 @@ export interface FileRoutesByTo {
   '/professional/funds': typeof AuthenticatedProfessionalFundsRoute
   '/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
   '/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
+  '/professional/prepare': typeof AuthenticatedProfessionalPrepareRoute
   '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
@@ -1785,6 +1802,7 @@ export interface FileRoutesById {
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/_authenticated/prepared': typeof AuthenticatedPreparedRoute
   '/_authenticated/professional': typeof AuthenticatedProfessionalRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
@@ -1888,6 +1906,7 @@ export interface FileRoutesById {
   '/_authenticated/professional/funds': typeof AuthenticatedProfessionalFundsRoute
   '/_authenticated/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
   '/_authenticated/professional/organization': typeof AuthenticatedProfessionalOrganizationRoute
+  '/_authenticated/professional/prepare': typeof AuthenticatedProfessionalPrepareRoute
   '/_authenticated/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
   '/_authenticated/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/_authenticated/professional/tax': typeof AuthenticatedProfessionalTaxRoute
@@ -1989,6 +2008,7 @@ export interface FileRouteTypes {
     | '/my-equity'
     | '/my-portfolio'
     | '/portal'
+    | '/prepared'
     | '/professional'
     | '/profile'
     | '/provider'
@@ -2092,6 +2112,7 @@ export interface FileRouteTypes {
     | '/professional/funds'
     | '/professional/investments'
     | '/professional/organization'
+    | '/professional/prepare'
     | '/professional/profiles'
     | '/professional/tasks'
     | '/professional/tax'
@@ -2189,6 +2210,7 @@ export interface FileRouteTypes {
     | '/my-equity'
     | '/my-portfolio'
     | '/portal'
+    | '/prepared'
     | '/profile'
     | '/provider'
     | '/shares'
@@ -2289,6 +2311,7 @@ export interface FileRouteTypes {
     | '/professional/funds'
     | '/professional/investments'
     | '/professional/organization'
+    | '/professional/prepare'
     | '/professional/profiles'
     | '/professional/tasks'
     | '/professional/tax'
@@ -2388,6 +2411,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
     | '/_authenticated/portal'
+    | '/_authenticated/prepared'
     | '/_authenticated/professional'
     | '/_authenticated/profile'
     | '/_authenticated/provider'
@@ -2491,6 +2515,7 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/funds'
     | '/_authenticated/professional/investments'
     | '/_authenticated/professional/organization'
+    | '/_authenticated/professional/prepare'
     | '/_authenticated/professional/profiles'
     | '/_authenticated/professional/tasks'
     | '/_authenticated/professional/tax'
@@ -2806,6 +2831,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof AuthenticatedPortalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/prepared': {
+      id: '/_authenticated/prepared'
+      path: '/prepared'
+      fullPath: '/prepared'
+      preLoaderRoute: typeof AuthenticatedPreparedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/professional': {
@@ -3571,6 +3603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfessionalOrganizationRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
     }
+    '/_authenticated/professional/prepare': {
+      id: '/_authenticated/professional/prepare'
+      path: '/prepare'
+      fullPath: '/professional/prepare'
+      preLoaderRoute: typeof AuthenticatedProfessionalPrepareRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
     '/_authenticated/professional/profiles': {
       id: '/_authenticated/professional/profiles'
       path: '/profiles'
@@ -4131,6 +4170,7 @@ interface AuthenticatedProfessionalRouteChildren {
   AuthenticatedProfessionalFundsRoute: typeof AuthenticatedProfessionalFundsRoute
   AuthenticatedProfessionalInvestmentsRoute: typeof AuthenticatedProfessionalInvestmentsRoute
   AuthenticatedProfessionalOrganizationRoute: typeof AuthenticatedProfessionalOrganizationRoute
+  AuthenticatedProfessionalPrepareRoute: typeof AuthenticatedProfessionalPrepareRoute
   AuthenticatedProfessionalProfilesRoute: typeof AuthenticatedProfessionalProfilesRoute
   AuthenticatedProfessionalTasksRoute: typeof AuthenticatedProfessionalTasksRoute
   AuthenticatedProfessionalTaxRoute: typeof AuthenticatedProfessionalTaxRoute
@@ -4149,6 +4189,8 @@ const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChil
       AuthenticatedProfessionalInvestmentsRoute,
     AuthenticatedProfessionalOrganizationRoute:
       AuthenticatedProfessionalOrganizationRoute,
+    AuthenticatedProfessionalPrepareRoute:
+      AuthenticatedProfessionalPrepareRoute,
     AuthenticatedProfessionalProfilesRoute:
       AuthenticatedProfessionalProfilesRoute,
     AuthenticatedProfessionalTasksRoute: AuthenticatedProfessionalTasksRoute,
@@ -4211,6 +4253,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+  AuthenticatedPreparedRoute: typeof AuthenticatedPreparedRoute
   AuthenticatedProfessionalRoute: typeof AuthenticatedProfessionalRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
@@ -4332,6 +4375,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+  AuthenticatedPreparedRoute: AuthenticatedPreparedRoute,
   AuthenticatedProfessionalRoute: AuthenticatedProfessionalRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,

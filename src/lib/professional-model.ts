@@ -19,14 +19,34 @@ export const PHASE_3A_CAPABILITIES: DelegationCapability[] = [
   "view_wire_instructions",
 ];
 
-/** Opt-in only, never on by default, never implied by a broad view grant. */
+/**
+ * Defined, but not grantable: these need the signed-authority workflow that
+ * does not exist yet. The server refuses them even on an old delegation.
+ */
 export const SENSITIVE_CAPABILITIES: DelegationCapability[] = [
   "view_banking_info",
   "view_wire_instructions",
 ];
 
+/** Phase 3B — preparing and assisting. Never deciding, signing or paying. */
+export const PHASE_3B_CAPABILITIES: DelegationCapability[] = [
+  "edit_profile_info",
+  "prepare_investment",
+  "upload_documents",
+  "assist_kyc",
+  "assist_kyb",
+  "assist_accreditation",
+];
+
+/** Everything a client can actually grant today. */
+export const ACTIVATED_CAPABILITIES: DelegationCapability[] = [
+  ...PHASE_3A_CAPABILITIES.filter((c) => !SENSITIVE_CAPABILITIES.includes(c)),
+  ...PHASE_3B_CAPABILITIES,
+];
+
 /** Selected by default in the grant wizard. */
 export const DEFAULT_CAPABILITIES: DelegationCapability[] = ["view_profile", "view_investments"];
+
 
 export const CAPABILITY_LABELS: Record<string, string> = {
   view_profile: "Personal and profile details",
@@ -39,7 +59,14 @@ export const CAPABILITY_LABELS: Record<string, string> = {
   view_distributions: "Distributions",
   view_banking_info: "Banking summary (last four digits only)",
   view_wire_instructions: "Wire instructions",
+  edit_profile_info: "Prepare contact, entity and ownership details",
+  prepare_investment: "Prepare an investment for your review",
+  upload_documents: "Upload supporting documents",
+  assist_kyc: "Help assemble identity-check information",
+  assist_kyb: "Help assemble entity-check information",
+  assist_accreditation: "Prepare accreditation information",
 };
+
 
 export const SCOPE_LABELS: Record<string, string> = {
   person: "Everything for this client",

@@ -83,12 +83,16 @@ const investorItems: NavItem[] = [
   { title: "Due diligence", url: "/diligence", icon: FolderLock },
   { title: "Portal", url: "/portal", icon: Building2 },
   { title: "My equity", url: "/my-equity", icon: Briefcase },
+  { title: "Items prepared for me", url: "/prepared", icon: ClipboardList },
   { title: "Who can see my information", url: "/access", icon: BookLock },
+
 ];
 
 const professionalItems: NavItem[] = [
   { title: "My clients", url: "/professional", icon: Users },
+  { title: "Prepare for a client", url: "/professional/prepare", icon: ClipboardList },
   { title: "Client profiles", url: "/professional/profiles", icon: Briefcase },
+
   { title: "Funds", url: "/professional/funds", icon: Building2 },
   { title: "Investments", url: "/professional/investments", icon: Layers },
   { title: "Documents", url: "/professional/documents", icon: FileText },

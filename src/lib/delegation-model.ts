@@ -114,12 +114,34 @@ export type ProfessionalOrgType = (typeof PROFESSIONAL_ORG_TYPES)[number];
 export const MEMBERSHIP_STATUSES = ["invited", "active", "suspended", "removed"] as const;
 export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
 
+/**
+ * Capabilities that are defined but deliberately not usable yet: they require
+ * the signed-authority workflow, which does not exist. They stay in the
+ * vocabulary (and in the database enum) for that future phase, but every
+ * authorization decision refuses them, even if a delegation carries them.
+ */
+export const SIGNED_AUTHORITY_REQUIRED_CAPABILITIES: ReadonlySet<DelegationCapability> = new Set([
+  "view_banking_info",
+  "view_wire_instructions",
+  "sign_specified_documents",
+  "initiate_investment",
+  "approve_specified_actions",
+]);
+
+/** The machine-readable reason returned when one of those is attempted. */
+export const SIGNED_AUTHORITY_REQUIRED = "signed_authority_required";
+
+export function requiresSignedAuthority(capability: DelegationCapability): boolean {
+  return SIGNED_AUTHORITY_REQUIRED_CAPABILITIES.has(capability);
+}
+
 export function isDelegationCapability(value: unknown): value is DelegationCapability {
   return (
     typeof value === "string" &&
     (DELEGATION_CAPABILITIES as readonly string[]).includes(value)
   );
 }
+
 
 export function isAuthorityLevel(value: unknown): value is AuthorityLevel {
   return typeof value === "string" && (AUTHORITY_LEVELS as readonly string[]).includes(value);

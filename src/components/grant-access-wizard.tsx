@@ -20,9 +20,11 @@ import {
   CAPABILITY_LABELS,
   DEFAULT_CAPABILITIES,
   PHASE_3A_CAPABILITIES,
+  PHASE_3B_CAPABILITIES,
   SCOPE_LABELS,
   SENSITIVE_CAPABILITIES,
 } from "@/lib/professional-model";
+
 
 const STEPS = [
   "Who are you authorising?",
@@ -71,6 +73,8 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
           scope_type: scopeType as any,
           scope_id: scopeType === "person" ? null : scopeId || null,
           capabilities,
+          authority_level: assisting ? ("assist" as const) : ("view" as const),
+
           expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
         },
       }),
@@ -84,6 +88,9 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
 
   const toggle = (cap: string) =>
     setCapabilities((prev) => (prev.includes(cap) ? prev.filter((c) => c !== cap) : [...prev, cap]));
+
+  const assisting = capabilities.some((c) => (PHASE_3B_CAPABILITIES as string[]).includes(c));
+
 
   return (
     <div className="rounded-lg border border-border p-5">
@@ -181,41 +188,63 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
         )}
 
         {step === 3 && (
-          <div className="space-y-2">
-            {PHASE_3A_CAPABILITIES.map((cap) => {
-              const sensitive = SENSITIVE_CAPABILITIES.includes(cap);
-              return (
-                <label
-                  key={cap}
-                  className={cn("flex items-start gap-2", sensitive && "opacity-60")}
-                >
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">What they may see</p>
+              {PHASE_3A_CAPABILITIES.map((cap) => {
+                const sensitive = SENSITIVE_CAPABILITIES.includes(cap);
+                return (
+                  <label key={cap} className={cn("flex items-start gap-2", sensitive && "opacity-60")}>
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      disabled={sensitive}
+                      checked={capabilities.includes(cap)}
+                      onChange={() => toggle(cap)}
+                    />
+                    <span>
+                      {CAPABILITY_LABELS[cap] ?? cap}
+                      {sensitive ? (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          needs a signed authorisation — not available yet
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                What they may prepare for you
+              </p>
+              {PHASE_3B_CAPABILITIES.map((cap) => (
+                <label key={cap} className="flex items-start gap-2">
                   <input
                     type="checkbox"
                     className="mt-1"
-                    disabled={sensitive}
                     checked={capabilities.includes(cap)}
                     onChange={() => toggle(cap)}
                   />
-                  <span>
-                    {CAPABILITY_LABELS[cap] ?? cap}
-                    {sensitive ? (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        needs a signed authorisation — not available yet
-                      </span>
-                    ) : null}
-                  </span>
+                  <span>{CAPABILITY_LABELS[cap] ?? cap}</span>
                 </label>
-              );
-            })}
+              ))}
+              <p className="text-xs text-muted-foreground">
+                Anything they prepare comes to you for approval first. They can never sign, approve
+                a verification, or move money.
+              </p>
+            </div>
           </div>
         )}
 
         {step === 4 && (
           <p className="text-muted-foreground">
-            View only. Assisting, signing and moving money are not available yet, so this
-            authorisation can never do more than look.
+            {assisting
+              ? "View and prepare. Everything prepared waits for your approval — signing and moving money are not available."
+              : "View only. This authorisation can never do more than look."}
           </p>
         )}
+
 
         {step === 5 && (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -254,7 +283,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
             </div>
             <div>
               <dt className="text-muted-foreground">Authority</dt>
-              <dd>View only</dd>
+              <dd>{assisting ? "View and prepare" : "View only"}</dd>
             </div>
             <div className="sm:col-span-2">
               <dt className="text-muted-foreground">May view</dt>
