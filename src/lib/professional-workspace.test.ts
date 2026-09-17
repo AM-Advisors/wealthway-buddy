@@ -280,7 +280,7 @@ describe("professional workspace", () => {
   it("fails immediately once revoked, whatever the browser cached", async () => {
     const id = delegation({ delegate_user_id: PRO_B }, ALL_VIEW);
     expect(await buildDelegatedClientView(PRO_B, id)).not.toBeNull();
-    const row = delegations.find((d) => d.id === id)!;
+    const row = delegations.find((d) => d["id"] === id)!;
     row["status"] = "revoked";
     row["revoked_at"] = new Date().toISOString();
     expect(await buildDelegatedClientView(PRO_B, id)).toBeNull();

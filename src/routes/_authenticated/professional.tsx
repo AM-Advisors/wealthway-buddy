@@ -54,7 +54,8 @@ function ProfessionalLayout() {
 
       <nav className="flex flex-wrap gap-1 border-b border-border pb-2">
         {NAV.map((item) => {
-          const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+          const active =
+            "exact" in item && item.exact ? pathname === item.to : pathname.startsWith(item.to);
           return (
             <Link
               key={item.to}
