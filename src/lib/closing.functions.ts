@@ -221,7 +221,8 @@ export const confirmClosing = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    await supabase
+    const closeDb = (await import("@/lib/reviewer-authz.server")).authorizeApplication(userId, app.id);
+    await (await closeDb).db
       .from("investor_applications")
       .update({ status: "closed", funding_status: "settled", updated_at: new Date().toISOString() })
       .eq("id", app.id);
@@ -314,7 +315,11 @@ export const reopenClosing = createServerFn({ method: "POST" })
     const { error } = await supabase.from("application_closings").delete().eq("id", row.id);
     if (error) throw new Error(error.message);
 
-    await supabase
+    const reopenDb = await (await import("@/lib/reviewer-authz.server")).authorizeApplication(
+      userId,
+      data.application_id,
+    );
+    await reopenDb.db
       .from("investor_applications")
       .update({ status: "in_progress", updated_at: new Date().toISOString() })
       .eq("id", data.application_id);

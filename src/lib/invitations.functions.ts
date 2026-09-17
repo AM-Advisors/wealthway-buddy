@@ -143,26 +143,27 @@ type GrantInput = {
 };
 
 async function grantFundAccess(input: GrantInput) {
-  const { supabase, supabaseAdmin, actorId, targetUserId, offeringIds, role, email, name } = input;
+  const { supabaseAdmin, actorId, targetUserId, offeringIds, role, email, name } = input;
+  const authz = await import("@/lib/reviewer-authz.server");
+  authz.assertInvitableRole(role);
 
   for (const offeringId of offeringIds) {
-    if (role === "fund_manager") {
-      const { error } = await supabase
-        .from("fund_managers")
-        .upsert(
-          { user_id: targetUserId, offering_id: offeringId, granted_by: actorId },
-          { onConflict: "user_id,offering_id" },
-        );
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await supabase
-        .from("investor_fund_access")
-        .upsert(
-          { user_id: targetUserId, offering_id: offeringId, granted_by: actorId },
-          { onConflict: "user_id,offering_id" },
-        );
-      if (error) throw new Error(error.message);
-    }
+    const table = role === "fund_manager" ? "fund_managers" : "investor_fund_access";
+    const { error } = await supabaseAdmin
+      .from(table)
+      .upsert(
+        { user_id: targetUserId, offering_id: offeringId, granted_by: actorId },
+        { onConflict: "user_id,offering_id" },
+      );
+    if (error) throw new Error(error.message);
+    await authz.logAccessChange({
+      actorId,
+      offeringId,
+      targetUserId,
+      role,
+      action: "granted",
+      detail: email,
+    });
   }
 
   const { data: roleRow } = await supabaseAdmin
@@ -179,7 +180,7 @@ async function grantFundAccess(input: GrantInput) {
   }
 
   const now = new Date().toISOString();
-  const { data: invitations, error: inviteError } = await supabase
+  const { data: invitations, error: inviteError } = await supabaseAdmin
     .from("fund_invitations")
     .insert(
       offeringIds.map((offeringId) => ({
@@ -242,6 +243,7 @@ export const inviteToFund = createServerFn({ method: "POST" })
     const { supabase, userId, claims } = context;
     const ctx = await reviewerContext(supabase, userId);
     for (const id of data.offeringIds) assertFundAllowed(ctx, id);
+    (await import("@/lib/reviewer-authz.server")).assertInvitableRole(data.role);
 
     const email = data.email.toLowerCase();
     const { data: offerings, error: offeringError } = await supabase
@@ -329,6 +331,7 @@ export const inviteManyToFunds = createServerFn({ method: "POST" })
     const { supabase, userId, claims } = context;
     const ctx = await reviewerContext(supabase, userId);
     for (const id of data.offeringIds) assertFundAllowed(ctx, id);
+    (await import("@/lib/reviewer-authz.server")).assertInvitableRole(data.role);
 
     const { entries, invalid } = parsePeopleList(data.people);
     if (entries.length === 0) throw new Error("No valid email addresses found.");
@@ -403,16 +406,8 @@ export const resendInvitation = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
-    const ctx = await reviewerContext(supabase, userId);
-
-    const { data: invitation, error } = await supabase
-      .from("fund_invitations")
-      .select("id, offering_id, email, invited_name, role")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!invitation) throw new Error("Invitation not found.");
-    assertFundAllowed(ctx, (invitation as any).offering_id as string);
+    const authz = await import("@/lib/reviewer-authz.server");
+    const { invitation, db } = await authz.authorizeInvitation(userId, data.id);
 
     const { data: offering } = await supabase
       .from("offerings")
@@ -431,7 +426,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
     });
 
 
-    await supabase
+    await db
       .from("fund_invitations")
       .update({ last_sent_at: new Date().toISOString() })
       .eq("id", data.id);
@@ -444,19 +439,11 @@ export const revokeInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const ctx = await reviewerContext(supabase, userId);
+    const { userId } = context;
+    const authz = await import("@/lib/reviewer-authz.server");
+    const { invitation, db } = await authz.authorizeInvitation(userId, data.id);
 
-    const { data: invitation, error } = await supabase
-      .from("fund_invitations")
-      .select("id, offering_id, email, role, accepted_by")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!invitation) throw new Error("Invitation not found.");
-    assertFundAllowed(ctx, (invitation as any).offering_id as string);
-
-    const { error: updateError } = await supabase
+    const { error: updateError } = await db
       .from("fund_invitations")
       .update({ status: "revoked" })
       .eq("id", data.id);
@@ -465,7 +452,7 @@ export const revokeInvitation = createServerFn({ method: "POST" })
     const grantee = (invitation as any).accepted_by as string | null;
     if (grantee) {
       await removeAccessFor(
-        supabase,
+        userId,
         grantee,
         (invitation as any).offering_id as string,
         (invitation as any).role as "investor" | "fund_manager",
@@ -475,38 +462,50 @@ export const revokeInvitation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Removes one person's access to one fund with the privileged client, after the
+ *  caller has already been authorized for that fund. Every removal is audited. */
 async function removeAccessFor(
-  supabase: any,
+  actorId: string,
   targetUserId: string,
   offeringId: string,
   role: "investor" | "fund_manager",
 ) {
+  const authz = await import("@/lib/reviewer-authz.server");
+  authz.assertInvitableRole(role);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
   if (role === "fund_manager") {
-    await supabase
+    await supabaseAdmin
       .from("fund_managers")
       .delete()
       .eq("user_id", targetUserId)
       .eq("offering_id", offeringId);
-    const { count } = await supabase
+    const { count } = await supabaseAdmin
       .from("fund_managers")
       .select("id", { count: "exact", head: true })
       .eq("user_id", targetUserId);
     if ((count ?? 0) === 0) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin
         .from("user_roles")
         .delete()
         .eq("user_id", targetUserId)
         .eq("role", "fund_manager" as any);
     }
-    return;
+  } else {
+    await supabaseAdmin
+      .from("investor_fund_access")
+      .delete()
+      .eq("user_id", targetUserId)
+      .eq("offering_id", offeringId);
   }
 
-  await supabase
-    .from("investor_fund_access")
-    .delete()
-    .eq("user_id", targetUserId)
-    .eq("offering_id", offeringId);
+  await authz.logAccessChange({
+    actorId,
+    offeringId,
+    targetUserId,
+    role,
+    action: "removed",
+  });
 }
 
 const removeSchema = z.object({
@@ -520,13 +519,14 @@ export const removeFundAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => removeSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const ctx = await reviewerContext(supabase, userId);
-    assertFundAllowed(ctx, data.offeringId);
+    const { userId } = context;
+    const authz = await import("@/lib/reviewer-authz.server");
+    authz.assertInvitableRole(data.role);
+    const { db } = await authz.authorizeOffering(userId, data.offeringId);
 
-    await removeAccessFor(supabase, data.userId, data.offeringId, data.role);
+    await removeAccessFor(userId, data.userId, data.offeringId, data.role);
 
-    await supabase
+    await db
       .from("fund_invitations")
       .update({ status: "revoked" })
       .eq("offering_id", data.offeringId)

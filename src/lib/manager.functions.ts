@@ -558,6 +558,12 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
       if (!assignment) throw new Error("Forbidden: you do not manage this fund.");
     }
 
+    // Fund verified above; money and application state move with the privileged
+    // client through an authorized server workflow.
+    const { db: privileged } = await (
+      await import("@/lib/reviewer-authz.server")
+    ).authorizeApplication(userId, data.applicationId);
+
     const { data: confirmation, error: loadError } = await supabase
       .from("wire_confirmations")
       .select("*")
@@ -599,14 +605,14 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
               failure_reason: data.notes || "Wire confirmation rejected",
               updated_at: now,
             };
-      const { error: payError } = await supabase
+      const { error: payError } = await privileged
         .from("payments")
         .update(paymentUpdate)
         .eq("id", confirmation.payment_id);
       if (payError) throw new Error(payError.message);
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await privileged
       .from("investor_applications")
       .update({
         funding_status: data.outcome === "approved" ? "settled" : "awaiting_wire",
