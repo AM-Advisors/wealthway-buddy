@@ -209,30 +209,31 @@ export const decideApplication = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => decisionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    const authz = await import("@/lib/reviewer-authz.server");
+    const { db } = await authz.authorizeApplication(userId, data.applicationId);
     const now = new Date().toISOString();
 
     const column = `${data.area}_status` as const;
-    const { data: before } = await supabase
+    const { data: before } = await db
       .from("investor_applications")
       .select(column)
       .eq("id", data.applicationId)
       .maybeSingle();
     const previousStatus = (before as any)?.[column] ?? null;
-    const { error } = await supabase
+    const { error } = await db
       .from("investor_applications")
       .update({ [column]: data.decision, updated_at: now } as any)
       .eq("id", data.applicationId);
     if (error) throw new Error(error.message);
 
     if (data.area === "accreditation") {
-      const { data: record } = await supabase
+      const { data: record } = await db
         .from("accreditation_records")
         .select("id")
         .eq("application_id", data.applicationId)
         .maybeSingle();
       if (record) {
-        await supabase
+        await db
           .from("accreditation_records")
           .update({
             status: data.decision,
@@ -246,7 +247,7 @@ export const decideApplication = createServerFn({ method: "POST" })
     }
 
     if (data.notes) {
-      await supabase.from("admin_notes").insert({
+      await db.from("admin_notes").insert({
         application_id: data.applicationId,
         author_id: userId,
         body: `[${data.area} → ${data.decision}] ${data.notes}`,
@@ -276,9 +277,11 @@ export const addAdminNote = createServerFn({ method: "POST" })
     z.object({ applicationId: z.string().uuid(), body: z.string().trim().min(1).max(2000) }).parse(data),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-    const { error } = await supabase.from("admin_notes").insert({
+    const { userId } = context;
+    const authz = await import("@/lib/reviewer-authz.server");
+    const { db } = await authz.authorizeApplication(userId, data.applicationId);
+    // author_id and created_at always come from the server, never the browser.
+    const { error } = await db.from("admin_notes").insert({
       application_id: data.applicationId,
       author_id: userId,
       body: data.body,
@@ -318,14 +321,8 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => emailSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-
-    const { data: application } = await supabase
-      .from("investor_applications")
-      .select("id, user_id")
-      .eq("id", data.applicationId)
-      .maybeSingle();
-    if (!application) throw new Error("Application not found.");
+    const authz = await import("@/lib/reviewer-authz.server");
+    const { db, application } = await authz.authorizeApplication(userId, data.applicationId);
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -336,7 +333,7 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
     const to = profile?.email;
     if (!to) throw new Error("This investor has no email address on file.");
 
-    const { data: row, error: insertError } = await supabase
+    const { data: row, error: insertError } = await db
       .from("investor_emails")
       .insert({
         application_id: data.applicationId,
@@ -378,7 +375,7 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
       });
 
       if (!result.sent) {
-        await supabase
+        await db
           .from("investor_emails")
           .update({
             status: "suppressed",
@@ -392,11 +389,11 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
         };
       }
 
-      await supabase.from("investor_emails").update({ status: "sent" }).eq("id", row.id);
+      await db.from("investor_emails").update({ status: "sent" }).eq("id", row.id);
       return { ok: true, status: "sent" as const, message: `Email sent to ${to}.` };
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Unknown error";
-      await supabase
+      await db
         .from("investor_emails")
         .update({ status: "failed", provider_error: detail.slice(0, 500) })
         .eq("id", row.id);
@@ -541,10 +538,16 @@ export const decidePayment = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => paymentDecisionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    const authz = await import("@/lib/reviewer-authz.server");
+    // Resolve the payment server-side; the browser's applicationId is only trusted
+    // once it matches the payment's own application.
+    const { db, application } = await authz.authorizePayment(userId, data.paymentId);
+    if ((application as any).id !== data.applicationId) {
+      throw new Error("That payment does not belong to this application.");
+    }
     const now = new Date().toISOString();
 
-    const { error } = await supabase
+    const { error } = await db
       .from("payments")
       .update({
         status: data.outcome,
@@ -554,7 +557,7 @@ export const decidePayment = createServerFn({ method: "POST" })
       .eq("id", data.paymentId);
     if (error) throw new Error(error.message);
 
-    const { error: appError } = await supabase
+    const { error: appError } = await db
       .from("investor_applications")
       .update({
         funding_status: data.outcome,
@@ -619,7 +622,8 @@ export const decideWireConfirmation = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => wireDecisionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    const authz = await import("@/lib/reviewer-authz.server");
+    const { db } = await authz.authorizeApplication(userId, data.applicationId);
     const now = new Date().toISOString();
 
     if (data.outcome === "rejected" && !data.notes) {
@@ -661,14 +665,14 @@ export const decideWireConfirmation = createServerFn({ method: "POST" })
           };
 
     if (confirmation.payment_id) {
-      const { error: payError } = await supabase
+      const { error: payError } = await db
         .from("payments")
         .update(paymentUpdate)
         .eq("id", confirmation.payment_id);
       if (payError) throw new Error(payError.message);
     }
 
-    const { error: appError } = await supabase
+    const { error: appError } = await db
       .from("investor_applications")
       .update({
         funding_status: data.outcome === "approved" ? "settled" : "awaiting_wire",
