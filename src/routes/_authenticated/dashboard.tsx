@@ -433,6 +433,53 @@ function Dashboard() {
         </div>
       </section>
 
+      <section className="mt-6" aria-labelledby="verification-heading">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="verification-heading" className="text-sm font-semibold uppercase text-muted-foreground">
+            Verification status
+          </h2>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/onboarding/kyc">Manage</Link>
+          </Button>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              title: "Identity (KYC)",
+              status: app.kyc_status,
+              detail: data?.kyc?.completed_at
+                ? `Completed ${when(data.kyc.completed_at)}`
+                : "Photo ID and liveness check",
+              to: "/onboarding/kyc" as const,
+            },
+            {
+              title: "AML screening",
+              status: app.aml_status,
+              detail: "Sanctions, PEP and watchlist checks",
+              to: "/onboarding/aml" as const,
+            },
+            {
+              title: "Accreditation",
+              status: app.accreditation_status,
+              detail: unlocked ? "Reg D qualification evidence" : "Unlocks after identity and screening",
+              to: "/onboarding/accreditation" as const,
+            },
+          ].map((item) => (
+            <Link
+              key={item.title}
+              to={item.to}
+              className="block border bg-card p-3 transition-colors hover:bg-muted/60"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium">{item.title}</p>
+                <Badge variant={tone(item.status)}>{label(item.status)}</Badge>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,0.75fr)]">
         <section className="border bg-card p-4 sm:p-5" aria-labelledby="progress-heading">
           <div className="flex items-start justify-between gap-4">
