@@ -85,6 +85,7 @@ const investorItems: NavItem[] = [
   { title: "My equity", url: "/my-equity", icon: Briefcase },
   { title: "Items prepared for me", url: "/prepared", icon: ClipboardList },
   { title: "Who can see my information", url: "/access", icon: BookLock },
+  { title: "Signing authority", url: "/signatory", icon: FileSignature },
 
 ];
 
