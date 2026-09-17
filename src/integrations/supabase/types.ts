@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_exceptions: {
+        Row: {
+          bank_transaction_id: string | null
+          book_id: string | null
+          context: Json
+          created_at: string
+          detail: string | null
+          id: string
+          is_material: boolean
+          journal_entry_id: string | null
+          kind: Database["public"]["Enums"]["accounting_exception_kind"]
+          offering_id: string | null
+          opened_at: string
+          opened_by: string | null
+          period_id: string | null
+          reconciliation_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["accounting_exception_status"]
+          updated_at: string
+        }
+        Insert: {
+          bank_transaction_id?: string | null
+          book_id?: string | null
+          context?: Json
+          created_at?: string
+          detail?: string | null
+          id?: string
+          is_material?: boolean
+          journal_entry_id?: string | null
+          kind: Database["public"]["Enums"]["accounting_exception_kind"]
+          offering_id?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          period_id?: string | null
+          reconciliation_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["accounting_exception_status"]
+          updated_at?: string
+        }
+        Update: {
+          bank_transaction_id?: string | null
+          book_id?: string | null
+          context?: Json
+          created_at?: string
+          detail?: string | null
+          id?: string
+          is_material?: boolean
+          journal_entry_id?: string | null
+          kind?: Database["public"]["Enums"]["accounting_exception_kind"]
+          offering_id?: string | null
+          opened_at?: string
+          opened_by?: string | null
+          period_id?: string | null
+          reconciliation_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["accounting_exception_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_exceptions_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_exceptions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_exceptions_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_exceptions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_exceptions_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_exceptions_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "bank_reconciliations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounting_period_events: {
         Row: {
           actor_user_id: string | null
@@ -1337,75 +1446,147 @@ export type Database = {
           acknowledged_at: string | null
           acknowledged_by: string | null
           acknowledgement_required: boolean
+          approval_required: Database["public"]["Enums"]["reconciliation_approver"]
+          approved_by_harmonious: string | null
           auto_matched: boolean
           bank_transaction_id: string
           book_id: string | null
+          classified_at: string | null
+          confidence: Database["public"]["Enums"]["match_confidence"]
+          conflicts: Json
+          corrected_at: string | null
+          corrected_by: string | null
+          correction_reason: string | null
           created_at: string
+          external_approved_at: string | null
+          external_approver_id: string | null
+          harmonious_approved_at: string | null
           id: string
+          information_request: string | null
+          information_requested_at: string | null
+          investment_profile_id: string | null
+          investor_user_id: string | null
           journal_entry_id: string | null
           match_confidence: string | null
+          match_reasons: Json
           matched_application_id: string | null
           matched_invoice_id: string | null
           matched_payment_id: string | null
+          matched_records: Json
           matched_wire_request_id: string | null
           note: string | null
           offering_id: string | null
           posted_at: string | null
+          posting_rule_id: string | null
+          posting_rule_version: number | null
           reconciled_at: string | null
           reconciled_by: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
+          suggested_credit_account_id: string | null
+          suggested_debit_account_id: string | null
+          transaction_type:
+            | Database["public"]["Enums"]["cash_transaction_type"]
+            | null
           updated_at: string
         }
         Insert: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           acknowledgement_required?: boolean
+          approval_required?: Database["public"]["Enums"]["reconciliation_approver"]
+          approved_by_harmonious?: string | null
           auto_matched?: boolean
           bank_transaction_id: string
           book_id?: string | null
+          classified_at?: string | null
+          confidence?: Database["public"]["Enums"]["match_confidence"]
+          conflicts?: Json
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
           created_at?: string
+          external_approved_at?: string | null
+          external_approver_id?: string | null
+          harmonious_approved_at?: string | null
           id?: string
+          information_request?: string | null
+          information_requested_at?: string | null
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
           journal_entry_id?: string | null
           match_confidence?: string | null
+          match_reasons?: Json
           matched_application_id?: string | null
           matched_invoice_id?: string | null
           matched_payment_id?: string | null
+          matched_records?: Json
           matched_wire_request_id?: string | null
           note?: string | null
           offering_id?: string | null
           posted_at?: string | null
+          posting_rule_id?: string | null
+          posting_rule_version?: number | null
           reconciled_at?: string | null
           reconciled_by?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          suggested_credit_account_id?: string | null
+          suggested_debit_account_id?: string | null
+          transaction_type?:
+            | Database["public"]["Enums"]["cash_transaction_type"]
+            | null
           updated_at?: string
         }
         Update: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           acknowledgement_required?: boolean
+          approval_required?: Database["public"]["Enums"]["reconciliation_approver"]
+          approved_by_harmonious?: string | null
           auto_matched?: boolean
           bank_transaction_id?: string
           book_id?: string | null
+          classified_at?: string | null
+          confidence?: Database["public"]["Enums"]["match_confidence"]
+          conflicts?: Json
+          corrected_at?: string | null
+          corrected_by?: string | null
+          correction_reason?: string | null
           created_at?: string
+          external_approved_at?: string | null
+          external_approver_id?: string | null
+          harmonious_approved_at?: string | null
           id?: string
+          information_request?: string | null
+          information_requested_at?: string | null
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
           journal_entry_id?: string | null
           match_confidence?: string | null
+          match_reasons?: Json
           matched_application_id?: string | null
           matched_invoice_id?: string | null
           matched_payment_id?: string | null
+          matched_records?: Json
           matched_wire_request_id?: string | null
           note?: string | null
           offering_id?: string | null
           posted_at?: string | null
+          posting_rule_id?: string | null
+          posting_rule_version?: number | null
           reconciled_at?: string | null
           reconciled_by?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
+          suggested_credit_account_id?: string | null
+          suggested_debit_account_id?: string | null
+          transaction_type?:
+            | Database["public"]["Enums"]["cash_transaction_type"]
+            | null
           updated_at?: string
         }
         Relationships: [
@@ -1421,6 +1602,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1465,6 +1653,27 @@ export type Database = {
             referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bank_reconciliations_posting_rule_id_fkey"
+            columns: ["posting_rule_id"]
+            isOneToOne: false
+            referencedRelation: "posting_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_suggested_credit_account_id_fkey"
+            columns: ["suggested_credit_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliations_suggested_debit_account_id_fkey"
+            columns: ["suggested_debit_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bank_transactions: {
@@ -1472,6 +1681,7 @@ export type Database = {
           amount_cents: number
           auto_matched: boolean
           created_at: string
+          dedupe_key: string | null
           description: string | null
           id: string
           invoice_matched_at: string | null
@@ -1493,6 +1703,7 @@ export type Database = {
           amount_cents: number
           auto_matched?: boolean
           created_at?: string
+          dedupe_key?: string | null
           description?: string | null
           id?: string
           invoice_matched_at?: string | null
@@ -1514,6 +1725,7 @@ export type Database = {
           amount_cents?: number
           auto_matched?: boolean
           created_at?: string
+          dedupe_key?: string | null
           description?: string | null
           id?: string
           invoice_matched_at?: string | null
@@ -9586,6 +9798,7 @@ export type Database = {
           basis: Database["public"]["Enums"]["ledger_basis"]
           client_entity_id: string | null
           client_id: string | null
+          close_policy: Json
           created_at: string
           created_by: string | null
           ct_company_id: string | null
@@ -9603,6 +9816,7 @@ export type Database = {
           basis?: Database["public"]["Enums"]["ledger_basis"]
           client_entity_id?: string | null
           client_id?: string | null
+          close_policy?: Json
           created_at?: string
           created_by?: string | null
           ct_company_id?: string | null
@@ -9620,6 +9834,7 @@ export type Database = {
           basis?: Database["public"]["Enums"]["ledger_basis"]
           client_entity_id?: string | null
           client_id?: string | null
+          close_policy?: Json
           created_at?: string
           created_by?: string | null
           ct_company_id?: string | null
@@ -11835,6 +12050,106 @@ export type Database = {
           },
         ]
       }
+      posting_rules: {
+        Row: {
+          approval_required: Database["public"]["Enums"]["reconciliation_approver"]
+          approval_threshold_cents: number | null
+          book_id: string | null
+          counterparty_pattern: string | null
+          created_at: string
+          created_by: string | null
+          credit_account_code: string
+          debit_account_code: string
+          direction: string
+          effective_from: string
+          id: string
+          is_active: boolean
+          materiality_threshold_cents: number
+          max_amount_cents: number | null
+          min_amount_cents: number | null
+          name: string
+          notes: string | null
+          offering_id: string | null
+          priority: number
+          supersedes_id: string | null
+          transaction_type: Database["public"]["Enums"]["cash_transaction_type"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approval_required?: Database["public"]["Enums"]["reconciliation_approver"]
+          approval_threshold_cents?: number | null
+          book_id?: string | null
+          counterparty_pattern?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_account_code: string
+          debit_account_code: string
+          direction?: string
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          materiality_threshold_cents?: number
+          max_amount_cents?: number | null
+          min_amount_cents?: number | null
+          name: string
+          notes?: string | null
+          offering_id?: string | null
+          priority?: number
+          supersedes_id?: string | null
+          transaction_type: Database["public"]["Enums"]["cash_transaction_type"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approval_required?: Database["public"]["Enums"]["reconciliation_approver"]
+          approval_threshold_cents?: number | null
+          book_id?: string | null
+          counterparty_pattern?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_account_code?: string
+          debit_account_code?: string
+          direction?: string
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          materiality_threshold_cents?: number
+          max_amount_cents?: number | null
+          min_amount_cents?: number | null
+          name?: string
+          notes?: string | null
+          offering_id?: string | null
+          priority?: number
+          supersedes_id?: string | null
+          transaction_type?: Database["public"]["Enums"]["cash_transaction_type"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posting_rules_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posting_rules_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posting_rules_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "posting_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_items: {
         Row: {
           amount_cents: number | null
@@ -12754,6 +13069,59 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "third_party_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliation_events: {
+        Row: {
+          action: string
+          actor_role: string | null
+          actor_user_id: string | null
+          bank_transaction_id: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          new_value: Json | null
+          previous_value: Json | null
+          reason: string | null
+          reconciliation_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          bank_transaction_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          reconciliation_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          bank_transaction_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          reconciliation_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_events_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "bank_reconciliations"
             referencedColumns: ["id"]
           },
         ]
@@ -14858,6 +15226,25 @@ export type Database = {
       }
     }
     Enums: {
+      accounting_exception_kind:
+        | "unmatched_cash"
+        | "duplicate_candidate"
+        | "suspected_duplicate"
+        | "amount_mismatch"
+        | "account_mismatch"
+        | "unknown_counterparty"
+        | "missing_investor"
+        | "missing_fund"
+        | "missing_accounting_mapping"
+        | "closed_period_transaction"
+        | "inconsistent_currency"
+        | "reconciliation_conflict"
+        | "posting_failure"
+      accounting_exception_status:
+        | "open"
+        | "investigating"
+        | "resolved"
+        | "waived"
       accounting_period_status:
         | "open"
         | "soft_closed"
@@ -14900,6 +15287,24 @@ export type Database = {
         | "kyb_support"
         | "accreditation"
         | "investment"
+      cash_transaction_type:
+        | "investor_contribution"
+        | "capital_call"
+        | "subscription_receipt"
+        | "distribution"
+        | "management_fee"
+        | "fund_expense"
+        | "organizational_expense"
+        | "portfolio_investment"
+        | "investment_proceeds"
+        | "interest_income"
+        | "dividend_income"
+        | "internal_transfer"
+        | "tax_payment"
+        | "withholding"
+        | "receivable_receipt"
+        | "payable_settlement"
+        | "other"
       check_status:
         | "not_started"
         | "pending"
@@ -14979,6 +15384,7 @@ export type Database = {
         | "income"
         | "expense"
       ledger_basis: "accrual" | "cash" | "tax"
+      match_confidence: "high" | "medium" | "low" | "unmatched"
       nav_status: "draft" | "review" | "approved" | "published" | "superseded"
       onboarding_state:
         | "account_created"
@@ -15031,6 +15437,7 @@ export type Database = {
         | "authorized_signer"
         | "joint_owner"
         | "beneficiary"
+      reconciliation_approver: "none" | "fund_manager" | "client"
       reg_type: "506b" | "506c" | "regcf" | "rega" | "regaplus"
       report_domain: "fund_accounting" | "cap_table"
       report_status:
@@ -15189,6 +15596,27 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      accounting_exception_kind: [
+        "unmatched_cash",
+        "duplicate_candidate",
+        "suspected_duplicate",
+        "amount_mismatch",
+        "account_mismatch",
+        "unknown_counterparty",
+        "missing_investor",
+        "missing_fund",
+        "missing_accounting_mapping",
+        "closed_period_transaction",
+        "inconsistent_currency",
+        "reconciliation_conflict",
+        "posting_failure",
+      ],
+      accounting_exception_status: [
+        "open",
+        "investigating",
+        "resolved",
+        "waived",
+      ],
       accounting_period_status: [
         "open",
         "soft_closed",
@@ -15234,6 +15662,25 @@ export const Constants = {
         "kyb_support",
         "accreditation",
         "investment",
+      ],
+      cash_transaction_type: [
+        "investor_contribution",
+        "capital_call",
+        "subscription_receipt",
+        "distribution",
+        "management_fee",
+        "fund_expense",
+        "organizational_expense",
+        "portfolio_investment",
+        "investment_proceeds",
+        "interest_income",
+        "dividend_income",
+        "internal_transfer",
+        "tax_payment",
+        "withholding",
+        "receivable_receipt",
+        "payable_settlement",
+        "other",
       ],
       check_status: [
         "not_started",
@@ -15322,6 +15769,7 @@ export const Constants = {
         "expense",
       ],
       ledger_basis: ["accrual", "cash", "tax"],
+      match_confidence: ["high", "medium", "low", "unmatched"],
       nav_status: ["draft", "review", "approved", "published", "superseded"],
       onboarding_state: [
         "account_created",
@@ -15379,6 +15827,7 @@ export const Constants = {
         "joint_owner",
         "beneficiary",
       ],
+      reconciliation_approver: ["none", "fund_manager", "client"],
       reg_type: ["506b", "506c", "regcf", "rega", "regaplus"],
       report_domain: ["fund_accounting", "cap_table"],
       report_status: ["draft", "review", "approved", "published", "superseded"],
