@@ -863,7 +863,9 @@ const AUTHORITY_PREFIX = "authority";
 const AUTHORITY_URL_TTL_SECONDS = 60;
 
 function safeFileName(name: string): string {
-  return (name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120) || "document").replace(/^\.+/, "_");
+  return (
+    name.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/\.{2,}/g, "_").slice(-120) || "document"
+  ).replace(/^[._]+/, "");
 }
 
 /** A one-time upload slot inside this delegation's own folder. */
