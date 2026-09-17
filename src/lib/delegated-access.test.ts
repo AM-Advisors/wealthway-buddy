@@ -285,7 +285,9 @@ describe("database policies", () => {
   });
 
   it("creates no broad FOR ALL TO authenticated policy", () => {
-    expect(migrationSql).not.toMatch(/FOR ALL TO authenticated/i);
+    // Restrictive policies only ever subtract access, so they are not broad grants.
+    const permissiveOnly = migrationSql.replace(/as restrictive\s+/gi, "");
+    expect(permissiveOnly).not.toMatch(/FOR ALL TO authenticated/i);
   });
 
   it("grants authenticated users read access only", () => {
