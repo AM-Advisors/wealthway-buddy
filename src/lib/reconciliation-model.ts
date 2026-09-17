@@ -233,26 +233,27 @@ export function classifyTransaction(input: ClassificationInput): Proposal {
       return name.length >= 5 && text.includes(name);
     });
 
-    if (byReference || byName || exact.length === 1) {
+    if (byReference || byName || exact.length >= 1) {
+      const ambiguous = !byReference && !byName && exact.length > 1;
       const hit = byReference ?? byName ?? exact[0]!;
-      matched.applicationId = hit.id;
-      matched.paymentId = hit.paymentId ?? null;
-      matched.investorUserId = hit.userId;
-      matched.investmentProfileId = hit.investmentProfileId ?? null;
       reasons.push(`Amount matches the ${(amount / 100).toLocaleString("en-US")} expected.`);
       if (byReference) reasons.push("The payment reference appears on the deposit.");
       if (!byReference && byName) reasons.push("The investor's name appears on the deposit.");
-      if (!byReference && !byName) reasons.push("Only one investor owes exactly this amount.");
-      if (exact.length > 1 && !byReference && !byName) {
-        conflicts.push(`${exact.length} investors owe this same amount.`);
+      if (!byReference && !byName && !ambiguous) {
+        reasons.push("Only one investor owes exactly this amount.");
       }
-      const confidence: Confidence = byReference
-        ? "high"
-        : byName
-          ? "medium"
-          : exact.length === 1
-            ? "medium"
-            : "low";
+      if (ambiguous) {
+        // Several investors owe the same amount, so no investor is proposed: a
+        // person picks. Guessing here would credit the wrong capital account.
+        conflicts.push(`${exact.length} investors owe this same amount.`);
+        exceptions.push("reconciliation_conflict");
+      } else {
+        matched.applicationId = hit.id;
+        matched.paymentId = hit.paymentId ?? null;
+        matched.investorUserId = hit.userId;
+        matched.investmentProfileId = hit.investmentProfileId ?? null;
+      }
+      const confidence: Confidence = byReference ? "high" : byName ? "medium" : ambiguous ? "low" : "medium";
       const keyword = keywordType(raw, true);
       return {
         transactionType:
