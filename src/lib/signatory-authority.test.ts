@@ -188,8 +188,11 @@ vi.mock("@/integrations/supabase/client.server", () => ({
 }));
 
 import {
+  __setStepUpDelivery,
   acceptDelegation,
   beginSigningStepUp,
+  createAuthorityUploadTicket,
+  getAuthorityDocumentUrl,
   resolveSignatoryAuthority,
   reviewAuthorityDocument,
   revokeSignatoryAuthority,
@@ -197,6 +200,13 @@ import {
   submitAuthorityDocument,
   verifySigningStepUp,
 } from "@/lib/signatory-authority.server";
+
+/** The code is never stored in readable form — it is captured off the wire. */
+const delivered: { userId: string; code: string }[] = [];
+__setStepUpDelivery(async ({ userId, code }) => {
+  delivered.push({ userId, code });
+});
+const lastCode = () => delivered[delivered.length - 1]!.code;
 import { DELEGATION_TERMS_VERSION, DENY_CODES } from "@/lib/signatory-model";
 import { canAct } from "@/lib/delegated-access.server";
 
