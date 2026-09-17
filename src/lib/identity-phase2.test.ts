@@ -29,7 +29,7 @@ const future = new Date(Date.now() + 90 * DAY).toISOString();
 const past = new Date(Date.now() - 90 * DAY).toISOString();
 
 type Row = Record<string, any>;
-let tables: Record<string, Row[]>;
+let tables: Record<string, any[]> & Record<string, any>;
 
 function seed() {
   tables = {
@@ -117,7 +117,7 @@ function makeClient() {
         if (col.includes(".")) {
           const [, field] = col.split(".");
           filters.push((r) => {
-            const person = (tables["persons"] ?? []).find((p) => p.id === r["person_id"]);
+            const person: any = (tables["persons"] ?? []).find((p: any) => p["id"] === r["person_id"]);
             return !!person && person[field] === val;
           });
           return api;
@@ -218,7 +218,7 @@ describe("onboarding state machine", () => {
   it("a user cannot jump their own person record to verified", async () => {
     const result = await setOnboardingState(PERSON_B, "verified", { actorUserId: PERSON_B_USER });
     expect(result.ok).toBe(false);
-    expect(tables["persons"].find((p) => p.id === PERSON_B)!["onboarding_state"]).toBe("profile_required");
+    expect((tables["persons"].find((p: any) => p["id"] === PERSON_B) as any)["onboarding_state"]).toBe("profile_required");
   });
 
   it("records every accepted move in the append-only history", async () => {
@@ -322,39 +322,39 @@ describe("canInvest", () => {
   it("refuses another person's profile even with a real profile id", async () => {
     const r = await canInvest(PERSON_A_USER, PROFILE_B_IND, OFFERING_506B);
     expect(r.ready).toBe(false);
-    expect(r.reasons[0]!.code).toBe("not_your_profile");
+    expect((r.reasons[0] as any).code).toBe("not_your_profile");
   });
 
   it("refuses a substituted profile id that does not exist", async () => {
     const r = await canInvest(PERSON_A_USER, "cccccccc-0000-4000-8000-00000000ffff", OFFERING_506B);
-    expect(r.reasons[0]!.code).toBe("profile_not_found");
+    expect((r.reasons[0] as any).code).toBe("profile_not_found");
   });
 
   it("cannot be bypassed by swapping the offering id", async () => {
     const r = await canInvest(PERSON_A_USER, PROFILE_A_TRUST, "dddddddd-0000-4000-8000-00000000ffff");
     expect(r.ready).toBe(false);
-    expect(r.reasons[0]!.code).toBe("offering_not_found");
+    expect((r.reasons[0] as any).code).toBe("offering_not_found");
   });
 });
 
 describe("historical integrity", () => {
   it("freezes the profile, related people and entity details at execution", async () => {
     await snapshotInvestmentProfile({ profileId: PROFILE_A_LLC, offeringId: OFFERING_506B });
-    const snap = tables["investment_profile_snapshots"][0]!;
+    const snap: any = tables["investment_profile_snapshots"][0];
     expect(snap["snapshot"].profile.display_label).toBe("Smith Holdings LLC");
     expect(snap["snapshot"].relationships).toHaveLength(1);
 
     tables["investment_profiles"] = tables["investment_profiles"].map((p) =>
       p["id"] === PROFILE_A_LLC ? { ...p, display_label: "Renamed LLC" } : p,
     );
-    expect(tables["investment_profile_snapshots"][0]!["snapshot"].profile.display_label).toBe(
+    expect((tables["investment_profile_snapshots"][0] as any)["snapshot"].profile.display_label).toBe(
       "Smith Holdings LLC",
     );
   });
 
   it("keeps restricted person values out of the stored snapshot", async () => {
     await snapshotInvestmentProfile({ profileId: PROFILE_A_IND });
-    const snap = tables["investment_profile_snapshots"][0]!;
+    const snap: any = tables["investment_profile_snapshots"][0];
     expect(snap["snapshot"].person.tax_id_reference).toBeUndefined();
     expect(snap["snapshot"].person.date_of_birth).toBeUndefined();
   });
