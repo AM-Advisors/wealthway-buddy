@@ -348,7 +348,7 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
                 <div>
                   <p className="text-sm font-medium">{inv.invited_name || inv.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    {inv.email} · {inv.role === "fund_manager" ? "Fund manager" : "Investor"} ·{" "}
+                    {inv.email} · {inv.invite_role === "fund_manager" ? "Fund manager" : "Investor"} ·{" "}
                     {new Date(inv.created_at).toLocaleDateString()}
                   </p>
                 </div>

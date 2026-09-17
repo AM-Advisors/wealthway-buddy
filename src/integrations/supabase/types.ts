@@ -6210,6 +6210,7 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          invite_role: Database["public"]["Enums"]["invitation_role"]
           invited_by: string | null
           invited_name: string | null
           last_sent_at: string | null
@@ -6226,6 +6227,7 @@ export type Database = {
           email: string
           expires_at?: string
           id?: string
+          invite_role?: Database["public"]["Enums"]["invitation_role"]
           invited_by?: string | null
           invited_name?: string | null
           last_sent_at?: string | null
@@ -6242,6 +6244,7 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          invite_role?: Database["public"]["Enums"]["invitation_role"]
           invited_by?: string | null
           invited_name?: string | null
           last_sent_at?: string | null
@@ -11284,6 +11287,7 @@ export type Database = {
         | "declined"
       funding_method: "wire" | "ach"
       investor_type: "individual" | "joint" | "entity" | "trust" | "ira"
+      invitation_role: "investor" | "fund_manager"
       payment_status:
         | "not_started"
         | "awaiting_wire"
@@ -11451,6 +11455,7 @@ export const Constants = {
       ],
       funding_method: ["wire", "ach"],
       investor_type: ["individual", "joint", "entity", "trust", "ira"],
+      invitation_role: ["investor", "fund_manager"],
       payment_status: [
         "not_started",
         "awaiting_wire",

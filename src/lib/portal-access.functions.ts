@@ -80,7 +80,7 @@ export const getPortalAccess = createServerFn({ method: "GET" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: invites } = await supabaseAdmin
         .from("fund_invitations")
-        .select("id, role, offering_id, invited_by, status, expires_at")
+        .select("id, invite_role, offering_id, invited_by, status, expires_at")
         .ilike("email", email)
         .eq("status", "pending");
 
@@ -89,7 +89,7 @@ export const getPortalAccess = createServerFn({ method: "GET" })
       );
 
       for (const inv of live) {
-        if (inv.role === "fund_manager") {
+        if (inv.invite_role === "fund_manager") {
           await supabaseAdmin
             .from("fund_managers")
             .upsert(
