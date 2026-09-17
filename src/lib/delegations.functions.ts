@@ -150,9 +150,9 @@ export const setMembershipStatus = createServerFn({ method: "POST" })
 
     const stamp = new Date().toISOString();
     const patch: Record<string, unknown> = { status: data.status };
-    if (data.status === "active") patch.activated_at = stamp;
-    if (data.status === "suspended") patch.suspended_at = stamp;
-    if (data.status === "removed") patch.removed_at = stamp;
+    if (data.status === "active") patch["activated_at"] = stamp;
+    if (data.status === "suspended") patch["suspended_at"] = stamp;
+    if (data.status === "removed") patch["removed_at"] = stamp;
 
     const { error } = await (supabaseAdmin as any)
       .from("professional_memberships")
