@@ -143,5 +143,8 @@ export const saveFundNavPolicy = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { saveNavPolicy } = await import("@/lib/nav.server");
     const { fundId, ...rest } = data;
-    return saveNavPolicy(context.userId, { offeringId: fundId, ...rest });
+    const settings = Object.fromEntries(
+      Object.entries(rest).filter(([, value]) => value !== undefined),
+    );
+    return saveNavPolicy(context.userId, { offeringId: fundId, ...settings });
   });
