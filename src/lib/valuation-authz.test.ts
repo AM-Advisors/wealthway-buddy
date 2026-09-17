@@ -140,7 +140,10 @@ function builder(table: string) {
     select: () => api,
     order: () => api,
     limit: () => api,
-    not: () => api,
+    not: (col: string, _op: string, val: unknown) => {
+      rows = rows.filter((r) => (val === null ? r[col] !== null && r[col] !== undefined : r[col] !== val));
+      return api;
+    },
     is: () => api,
     eq: (col: string, val: unknown) => {
       rows = rows.filter((r) => r[col] === val);

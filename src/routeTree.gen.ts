@@ -133,6 +133,7 @@ import { Route as AuthenticatedManagerPublicPageRouteImport } from './routes/_au
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authenticated/manager.tax'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
+import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
@@ -146,6 +147,7 @@ import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
+import { Route as AuthenticatedOpsValuationsRouteImport } from './routes/_authenticated/ops.valuations'
 import { Route as AuthenticatedProfessionalIndexRouteImport } from './routes/_authenticated/professional.index'
 import { Route as AuthenticatedProfessionalAcceptanceRouteImport } from './routes/_authenticated/professional.acceptance'
 import { Route as AuthenticatedProfessionalActivityRouteImport } from './routes/_authenticated/professional.activity'
@@ -913,6 +915,12 @@ const AuthenticatedManagerTimelineRoute =
     path: '/manager/timeline',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerValuationsRoute =
+  AuthenticatedManagerValuationsRouteImport.update({
+    id: '/manager/valuations',
+    path: '/manager/valuations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerWiresRoute =
   AuthenticatedManagerWiresRouteImport.update({
     id: '/manager/wires',
@@ -987,6 +995,12 @@ const AuthenticatedOpsTeamRoute = AuthenticatedOpsTeamRouteImport.update({
   path: '/ops/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsValuationsRoute =
+  AuthenticatedOpsValuationsRouteImport.update({
+    id: '/ops/valuations',
+    path: '/ops/valuations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfessionalIndexRoute =
   AuthenticatedProfessionalIndexRouteImport.update({
     id: '/',
@@ -1543,6 +1557,7 @@ export interface FileRoutesByFullPath {
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
@@ -1555,6 +1570,7 @@ export interface FileRoutesByFullPath {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -1750,6 +1766,7 @@ export interface FileRoutesByTo {
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
@@ -1762,6 +1779,7 @@ export interface FileRoutesByTo {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -1963,6 +1981,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
@@ -1975,6 +1994,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
+  '/_authenticated/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/_authenticated/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/_authenticated/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/_authenticated/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -2177,6 +2197,7 @@ export interface FileRouteTypes {
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
+    | '/manager/valuations'
     | '/manager/wires'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
@@ -2189,6 +2210,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/ops/valuations'
     | '/professional/acceptance'
     | '/professional/activity'
     | '/professional/authority'
@@ -2384,6 +2406,7 @@ export interface FileRouteTypes {
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
+    | '/manager/valuations'
     | '/manager/wires'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
@@ -2396,6 +2419,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
+    | '/ops/valuations'
     | '/professional/acceptance'
     | '/professional/activity'
     | '/professional/authority'
@@ -2596,6 +2620,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/requests'
     | '/_authenticated/manager/tax'
     | '/_authenticated/manager/timeline'
+    | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
@@ -2608,6 +2633,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
+    | '/_authenticated/ops/valuations'
     | '/_authenticated/professional/acceptance'
     | '/_authenticated/professional/activity'
     | '/_authenticated/professional/authority'
@@ -3594,6 +3620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerTimelineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/valuations': {
+      id: '/_authenticated/manager/valuations'
+      path: '/manager/valuations'
+      fullPath: '/manager/valuations'
+      preLoaderRoute: typeof AuthenticatedManagerValuationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/wires': {
       id: '/_authenticated/manager/wires'
       path: '/manager/wires'
@@ -3683,6 +3716,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/team'
       fullPath: '/ops/team'
       preLoaderRoute: typeof AuthenticatedOpsTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/valuations': {
+      id: '/_authenticated/ops/valuations'
+      path: '/ops/valuations'
+      fullPath: '/ops/valuations'
+      preLoaderRoute: typeof AuthenticatedOpsValuationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/professional/': {
@@ -4502,6 +4542,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTaxRoute: typeof AuthenticatedManagerTaxRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
+  AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
@@ -4514,6 +4555,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
+  AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
@@ -4638,6 +4680,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTaxRoute: AuthenticatedManagerTaxRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
+  AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
@@ -4652,6 +4695,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
+  AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
