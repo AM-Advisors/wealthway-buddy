@@ -184,10 +184,14 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
             {PHASE_3A_CAPABILITIES.map((cap) => {
               const sensitive = SENSITIVE_CAPABILITIES.includes(cap);
               return (
-                <label key={cap} className="flex items-start gap-2">
+                <label
+                  key={cap}
+                  className={cn("flex items-start gap-2", sensitive && "opacity-60")}
+                >
                   <input
                     type="checkbox"
                     className="mt-1"
+                    disabled={sensitive}
                     checked={capabilities.includes(cap)}
                     onChange={() => toggle(cap)}
                   />
@@ -195,7 +199,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
                     {CAPABILITY_LABELS[cap] ?? cap}
                     {sensitive ? (
                       <span className="ml-2 text-xs text-muted-foreground">
-                        off by default — choose deliberately
+                        needs a signed authorisation — not available yet
                       </span>
                     ) : null}
                   </span>
