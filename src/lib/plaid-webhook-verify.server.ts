@@ -100,7 +100,7 @@ async function verifySignature(jwk: PlaidJwk, signingInput: string, signature: U
   return crypto.subtle.verify(
     { name: "ECDSA", hash: "SHA-256" },
     key,
-    signature as unknown as ArrayBufferView,
+    signature.slice().buffer as ArrayBuffer,
     new TextEncoder().encode(signingInput),
   );
 }
