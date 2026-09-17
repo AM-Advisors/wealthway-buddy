@@ -212,7 +212,7 @@ function AuthorityDocuments() {
 
           <Button
             disabled={
-              mutation.isPending || !delegationId || !fileName || covered.length === 0
+              mutation.isPending || !delegationId || !file || covered.length === 0
             }
             onClick={() => mutation.mutate()}
           >
