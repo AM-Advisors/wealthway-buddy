@@ -17,6 +17,11 @@ const NAV = [
   { to: "/professional/tasks", label: "Tasks" },
   { to: "/professional/activity", label: "Activity" },
   { to: "/professional/organization", label: "Organization" },
+  { to: "/professional/verification", label: "Firm verification" },
+  { to: "/professional/credentials", label: "My credentials" },
+  { to: "/professional/acceptance", label: "Awaiting acceptance" },
+  { to: "/professional/authority", label: "Authority documents" },
+  { to: "/professional/signatures", label: "Signatures" },
 ] as const;
 
 function ProfessionalLayout() {
