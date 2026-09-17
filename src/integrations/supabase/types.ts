@@ -12742,6 +12742,41 @@ export type Database = {
         }
         Returns: undefined
       }
+      consume_signing_stepup: {
+        Args: {
+          p_action: string
+          p_delegation_id: string
+          p_id: string
+          p_resource_id: string
+          p_resource_type: string
+          p_user_id: string
+        }
+        Returns: {
+          action: string
+          attempts: number
+          challenge_reference: string | null
+          consumed_at: string | null
+          created_at: string
+          delegation_id: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          method: string
+          resource_id: string | null
+          resource_type: string | null
+          session_reference: string | null
+          status: string
+          user_agent: string | null
+          user_id: string
+          verified_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "stepup_authentications"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       ct_can_manage: { Args: { _company_id: string }; Returns: boolean }
       ct_can_view: { Args: { _company_id: string }; Returns: boolean }
       ct_is_holder: { Args: { _stakeholder_id: string }; Returns: boolean }
@@ -12848,6 +12883,10 @@ export type Database = {
           offering_id: string
           updated_at: string
         }[]
+      }
+      register_stepup_attempt: {
+        Args: { p_id: string; p_max: number; p_user_id: string }
+        Returns: number
       }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
       respond_to_invoice: {

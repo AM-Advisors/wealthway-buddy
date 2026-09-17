@@ -50,6 +50,13 @@
       "when": 1789679604075,
       "tag": "0006_delegation_acceptance_required",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789682968097,
+      "tag": "0007_signing_evidence_hardening_phase3c1",
+      "breakpoints": true
     }
   ]
 }
