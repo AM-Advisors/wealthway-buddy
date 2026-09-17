@@ -186,6 +186,9 @@ type AssetRow = {
   asset_name: string;
   issuer_name: string;
   realized_cost_basis_cents: number;
+  realized_quantity: number | null;
+  realized_proceeds_cents: number | null;
+  realized_gain_cents: number | null;
 };
 
 /** Resolve the asset from the database and authorise against its real fund. */
@@ -823,11 +826,14 @@ export async function recordRealization(
     .update({
       status: result.isFullDisposition ? "realized" : "partially_realized",
       quantity: result.remainingQuantity,
-      realized_quantity: Number(asset.quantity ?? 0) - Number(result.remainingQuantity ?? 0),
+      realized_quantity:
+        Number(asset.realized_quantity ?? 0) +
+        (Number(asset.quantity ?? 0) - Number(result.remainingQuantity ?? 0)),
       realized_cost_basis_cents:
         (asset.realized_cost_basis_cents ?? 0) + result.costBasisRelievedCents,
-      realized_proceeds_cents: input.proceedsCents,
-      realized_gain_cents: result.realizedGainCents,
+      realized_proceeds_cents:
+        Number(asset.realized_proceeds_cents ?? 0) + input.proceedsCents,
+      realized_gain_cents: Number(asset.realized_gain_cents ?? 0) + result.realizedGainCents,
       disposition_date: result.isFullDisposition ? input.dispositionDate : null,
       updated_at: new Date().toISOString(),
     })
