@@ -50,6 +50,20 @@ export const listStaffAccounts = createServerFn({ method: "GET" })
     };
   });
 
+/**
+ * Every account that currently holds administrator access, for periodic review.
+ * Administrator access is only ever granted explicitly; nothing here is automatic.
+ */
+export const listAdminReview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("list_admin_review");
+    if (error) throw new Error(error.message);
+    return { admins: (data ?? []) as any[], me: context.userId as string };
+  });
+
+
+
 /** Grant or remove one Harmonious role for one person. */
 export const setStaffRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
