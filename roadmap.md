@@ -43,4 +43,5 @@
 
 - [x] Phase 1: professional organizations, memberships, delegations (deny-by-default)
 - [x] Phase 2: canonical person, onboarding state machine, investment profiles, entity/trust KYB, per-profile accreditation, readiness checks, My profile page
-- [ ] Phase 3: activate professional proxy access (acting on behalf of) — deliberately not enabled
+- [x] Phase 3A: professional workspace, client access manager, read-only acting on behalf of
+- [ ] Phase 3B: assist, signing and transaction authority — deliberately not enabled
