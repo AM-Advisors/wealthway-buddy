@@ -801,7 +801,7 @@ export async function overrideNavCheck(
 ) {
   await assertHarmonious(userId);
   if (!canOverride(code)) fail("That is an integrity failure and can never be overridden.");
-  if (reason.trim().length < 8) fail("An override needs a documented reason.");
+  if (reason.trim().length < MIN_OVERRIDE_REASON_LENGTH) fail("An override needs a documented reason.");
   const { nav } = await authorizeNav(userId, navVersionId);
   if (nav.status === "published" || nav.status === "superseded") {
     fail("A published NAV cannot be changed.");
