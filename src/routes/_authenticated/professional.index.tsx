@@ -32,7 +32,7 @@ function MyClients() {
                     </p>
                   </div>
                   <Link
-                    to="/professional/client/$delegationId"
+                    to="/professional/acting/$delegationId"
                     params={{ delegationId: c.delegationId }}
                     className="rounded-md border border-border px-3 py-1.5"
                   >
