@@ -11,16 +11,15 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export type ReviewerScope = { isAdmin: boolean; offeringIds: string[] };
 
-/** Roles that may be handed out through the fund invitation workflow. */
-export const INVITABLE_ROLES = ["investor", "fund_manager"] as const;
-export type InvitableRole = (typeof INVITABLE_ROLES)[number];
-
-export function assertInvitableRole(role: unknown): InvitableRole {
-  if (typeof role !== "string" || !INVITABLE_ROLES.includes(role as InvitableRole)) {
-    throw new Error("Only investors and fund managers can be invited to a fund.");
-  }
-  return role as InvitableRole;
-}
+/**
+ * Roles that may be handed out through the fund invitation workflow. These come
+ * from the dedicated invitation role type, not the platform-wide app_role enum.
+ */
+export {
+  INVITABLE_ROLES,
+  assertInvitationRole as assertInvitableRole,
+} from "@/lib/invitation-role";
+export type { InvitationRole, InvitationRole as InvitableRole } from "@/lib/invitation-role";
 
 /** The caller's authoritative reviewer scope, read server-side from user_roles. */
 export async function reviewerScope(userId: string): Promise<ReviewerScope> {
