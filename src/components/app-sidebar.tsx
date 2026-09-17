@@ -284,6 +284,8 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         list.push({ id: "selected-fund", label: "Selected fund", items: selectedFundItems(selectedFundId) });
       }
     }
+    if (standing?.isProfessional)
+      list.push({ id: "professional", label: "Acting for clients", items: professionalItems });
     if (operations?.allowed)
       list.push({ id: "operations", label: "Operations", items: operationsItems });
     if (adminAccess?.isAdmin) {
