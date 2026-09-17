@@ -12050,6 +12050,425 @@ export type Database = {
           },
         ]
       }
+      portfolio_assets: {
+        Row: {
+          acquisition_date: string | null
+          asset_class: Database["public"]["Enums"]["portfolio_asset_class"]
+          asset_name: string
+          book_id: string
+          client_entity_id: string | null
+          cost_basis_cents: number
+          created_at: string
+          created_by: string | null
+          ct_company_id: string | null
+          ct_security_id: string | null
+          currency: string
+          disposition_date: string | null
+          disposition_note: string | null
+          external_reference: string | null
+          id: string
+          instrument: string | null
+          issuer_name: string
+          note: string | null
+          offering_id: string | null
+          original_transaction_id: string | null
+          original_transaction_table: string | null
+          ownership_pct: number | null
+          quantity: number | null
+          realized_cost_basis_cents: number
+          realized_gain_cents: number
+          realized_proceeds_cents: number
+          realized_quantity: number
+          status: Database["public"]["Enums"]["portfolio_asset_status"]
+          updated_at: string
+        }
+        Insert: {
+          acquisition_date?: string | null
+          asset_class?: Database["public"]["Enums"]["portfolio_asset_class"]
+          asset_name: string
+          book_id: string
+          client_entity_id?: string | null
+          cost_basis_cents?: number
+          created_at?: string
+          created_by?: string | null
+          ct_company_id?: string | null
+          ct_security_id?: string | null
+          currency?: string
+          disposition_date?: string | null
+          disposition_note?: string | null
+          external_reference?: string | null
+          id?: string
+          instrument?: string | null
+          issuer_name: string
+          note?: string | null
+          offering_id?: string | null
+          original_transaction_id?: string | null
+          original_transaction_table?: string | null
+          ownership_pct?: number | null
+          quantity?: number | null
+          realized_cost_basis_cents?: number
+          realized_gain_cents?: number
+          realized_proceeds_cents?: number
+          realized_quantity?: number
+          status?: Database["public"]["Enums"]["portfolio_asset_status"]
+          updated_at?: string
+        }
+        Update: {
+          acquisition_date?: string | null
+          asset_class?: Database["public"]["Enums"]["portfolio_asset_class"]
+          asset_name?: string
+          book_id?: string
+          client_entity_id?: string | null
+          cost_basis_cents?: number
+          created_at?: string
+          created_by?: string | null
+          ct_company_id?: string | null
+          ct_security_id?: string | null
+          currency?: string
+          disposition_date?: string | null
+          disposition_note?: string | null
+          external_reference?: string | null
+          id?: string
+          instrument?: string | null
+          issuer_name?: string
+          note?: string | null
+          offering_id?: string | null
+          original_transaction_id?: string | null
+          original_transaction_table?: string | null
+          ownership_pct?: number | null
+          quantity?: number | null
+          realized_cost_basis_cents?: number
+          realized_gain_cents?: number
+          realized_proceeds_cents?: number
+          realized_quantity?: number
+          status?: Database["public"]["Enums"]["portfolio_asset_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_assets_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_assets_client_entity_id_fkey"
+            columns: ["client_entity_id"]
+            isOneToOne: false
+            referencedRelation: "client_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_assets_ct_company_id_fkey"
+            columns: ["ct_company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_assets_ct_security_id_fkey"
+            columns: ["ct_security_id"]
+            isOneToOne: false
+            referencedRelation: "ct_securities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_assets_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_realizations: {
+        Row: {
+          asset_id: string
+          bank_transaction_id: string | null
+          book_id: string
+          cost_basis_relieved_cents: number
+          counterparty: string | null
+          created_at: string
+          disposition_date: string
+          id: string
+          is_full_disposition: boolean
+          journal_entry_id: string | null
+          note: string | null
+          offering_id: string | null
+          proceeds_cents: number
+          quantity_sold: number | null
+          realized_gain_cents: number
+          recorded_by: string | null
+          remaining_cost_basis_cents: number
+          remaining_quantity: number | null
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          bank_transaction_id?: string | null
+          book_id: string
+          cost_basis_relieved_cents?: number
+          counterparty?: string | null
+          created_at?: string
+          disposition_date: string
+          id?: string
+          is_full_disposition?: boolean
+          journal_entry_id?: string | null
+          note?: string | null
+          offering_id?: string | null
+          proceeds_cents?: number
+          quantity_sold?: number | null
+          realized_gain_cents?: number
+          recorded_by?: string | null
+          remaining_cost_basis_cents?: number
+          remaining_quantity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          bank_transaction_id?: string | null
+          book_id?: string
+          cost_basis_relieved_cents?: number
+          counterparty?: string | null
+          created_at?: string
+          disposition_date?: string
+          id?: string
+          is_full_disposition?: boolean
+          journal_entry_id?: string | null
+          note?: string | null
+          offering_id?: string | null
+          proceeds_cents?: number
+          quantity_sold?: number | null
+          realized_gain_cents?: number
+          recorded_by?: string | null
+          remaining_cost_basis_cents?: number
+          remaining_quantity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_realizations_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_realizations_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_realizations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_realizations_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_realizations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_valuations: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          asset_id: string
+          assumptions: string | null
+          book_id: string
+          change_cents: number
+          change_pct: number | null
+          conflicts: Json
+          cost_basis_cents: number
+          created_at: string
+          currency: string
+          decision_reason: string | null
+          effective_at: string | null
+          effective_date: string
+          id: string
+          inputs: Json
+          journal_entry_id: string | null
+          manager_acknowledged_at: string | null
+          manager_acknowledged_by: string | null
+          manager_challenge_note: string | null
+          methodology: Database["public"]["Enums"]["valuation_method"]
+          methodology_note: string | null
+          note: string | null
+          offering_id: string | null
+          prepared_at: string
+          prepared_by: string | null
+          prepared_by_role: string | null
+          price_per_unit_cents: number | null
+          prior_valuation_id: string | null
+          quantity: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string | null
+          source_date: string | null
+          source_type: Database["public"]["Enums"]["valuation_source_type"]
+          status: Database["public"]["Enums"]["portfolio_valuation_status"]
+          superseded_by_id: string | null
+          supersedes_id: string | null
+          updated_at: string
+          valuation_date: string
+          value_cents: number
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          asset_id: string
+          assumptions?: string | null
+          book_id: string
+          change_cents?: number
+          change_pct?: number | null
+          conflicts?: Json
+          cost_basis_cents?: number
+          created_at?: string
+          currency?: string
+          decision_reason?: string | null
+          effective_at?: string | null
+          effective_date: string
+          id?: string
+          inputs?: Json
+          journal_entry_id?: string | null
+          manager_acknowledged_at?: string | null
+          manager_acknowledged_by?: string | null
+          manager_challenge_note?: string | null
+          methodology: Database["public"]["Enums"]["valuation_method"]
+          methodology_note?: string | null
+          note?: string | null
+          offering_id?: string | null
+          prepared_at?: string
+          prepared_by?: string | null
+          prepared_by_role?: string | null
+          price_per_unit_cents?: number | null
+          prior_valuation_id?: string | null
+          quantity?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          source_date?: string | null
+          source_type: Database["public"]["Enums"]["valuation_source_type"]
+          status?: Database["public"]["Enums"]["portfolio_valuation_status"]
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          valuation_date: string
+          value_cents: number
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          asset_id?: string
+          assumptions?: string | null
+          book_id?: string
+          change_cents?: number
+          change_pct?: number | null
+          conflicts?: Json
+          cost_basis_cents?: number
+          created_at?: string
+          currency?: string
+          decision_reason?: string | null
+          effective_at?: string | null
+          effective_date?: string
+          id?: string
+          inputs?: Json
+          journal_entry_id?: string | null
+          manager_acknowledged_at?: string | null
+          manager_acknowledged_by?: string | null
+          manager_challenge_note?: string | null
+          methodology?: Database["public"]["Enums"]["valuation_method"]
+          methodology_note?: string | null
+          note?: string | null
+          offering_id?: string | null
+          prepared_at?: string
+          prepared_by?: string | null
+          prepared_by_role?: string | null
+          price_per_unit_cents?: number | null
+          prior_valuation_id?: string | null
+          quantity?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          source_date?: string | null
+          source_type?: Database["public"]["Enums"]["valuation_source_type"]
+          status?: Database["public"]["Enums"]["portfolio_valuation_status"]
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          valuation_date?: string
+          value_cents?: number
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_valuations_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_valuations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_valuations_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_valuations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_valuations_prior_valuation_id_fkey"
+            columns: ["prior_valuation_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_valuations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_valuations_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_valuations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_valuations_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posting_rules: {
         Row: {
           approval_required: Database["public"]["Enums"]["reconciliation_approver"]
@@ -14697,6 +15116,268 @@ export type Database = {
         }
         Relationships: []
       }
+      valuation_events: {
+        Row: {
+          action: string
+          actor_role: string | null
+          actor_user_id: string | null
+          asset_id: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          new_value: Json | null
+          offering_id: string | null
+          previous_value: Json | null
+          reason: string | null
+          to_status: string | null
+          valuation_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          asset_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          new_value?: Json | null
+          offering_id?: string | null
+          previous_value?: Json | null
+          reason?: string | null
+          to_status?: string | null
+          valuation_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string | null
+          actor_user_id?: string | null
+          asset_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          new_value?: Json | null
+          offering_id?: string | null
+          previous_value?: Json | null
+          reason?: string | null
+          to_status?: string | null
+          valuation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_events_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_events_valuation_id_fkey"
+            columns: ["valuation_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_evidence: {
+        Row: {
+          asset_id: string
+          content_hash: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["valuation_evidence_kind"]
+          offering_id: string | null
+          storage_bucket: string
+          storage_path: string | null
+          structured: Json
+          supersedes_id: string | null
+          title: string
+          uploaded_at: string
+          uploaded_by: string | null
+          valuation_id: string
+          version: number
+        }
+        Insert: {
+          asset_id: string
+          content_hash?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["valuation_evidence_kind"]
+          offering_id?: string | null
+          storage_bucket?: string
+          storage_path?: string | null
+          structured?: Json
+          supersedes_id?: string | null
+          title: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          valuation_id: string
+          version?: number
+        }
+        Update: {
+          asset_id?: string
+          content_hash?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["valuation_evidence_kind"]
+          offering_id?: string | null
+          storage_bucket?: string
+          storage_path?: string | null
+          structured?: Json
+          supersedes_id?: string | null
+          title?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          valuation_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_evidence_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_evidence_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_evidence_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_evidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_evidence_valuation_id_fkey"
+            columns: ["valuation_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_policies: {
+        Row: {
+          asset_class:
+            | Database["public"]["Enums"]["portfolio_asset_class"]
+            | null
+          book_id: string | null
+          cash_account_code: string
+          cost_account_code: string
+          created_at: string
+          created_by: string | null
+          decrease_threshold_pct: number
+          evidence_required: boolean
+          id: string
+          increase_threshold_pct: number
+          investment_account_code: string
+          is_active: boolean
+          manager_may_approve: boolean
+          manager_review_required: boolean
+          material_change_cents: number
+          offering_id: string | null
+          realized_account_code: string
+          source_priority: Json
+          staleness_days: number
+          supersedes_id: string | null
+          unrealized_account_code: string
+          unrealized_policy_enabled: boolean
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          asset_class?:
+            | Database["public"]["Enums"]["portfolio_asset_class"]
+            | null
+          book_id?: string | null
+          cash_account_code?: string
+          cost_account_code?: string
+          created_at?: string
+          created_by?: string | null
+          decrease_threshold_pct?: number
+          evidence_required?: boolean
+          id?: string
+          increase_threshold_pct?: number
+          investment_account_code?: string
+          is_active?: boolean
+          manager_may_approve?: boolean
+          manager_review_required?: boolean
+          material_change_cents?: number
+          offering_id?: string | null
+          realized_account_code?: string
+          source_priority?: Json
+          staleness_days?: number
+          supersedes_id?: string | null
+          unrealized_account_code?: string
+          unrealized_policy_enabled?: boolean
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          asset_class?:
+            | Database["public"]["Enums"]["portfolio_asset_class"]
+            | null
+          book_id?: string | null
+          cash_account_code?: string
+          cost_account_code?: string
+          created_at?: string
+          created_by?: string | null
+          decrease_threshold_pct?: number
+          evidence_required?: boolean
+          id?: string
+          increase_threshold_pct?: number
+          investment_account_code?: string
+          is_active?: boolean
+          manager_may_approve?: boolean
+          manager_review_required?: boolean
+          material_change_cents?: number
+          offering_id?: string | null
+          realized_account_code?: string
+          source_priority?: Json
+          staleness_days?: number
+          supersedes_id?: string | null
+          unrealized_account_code?: string
+          unrealized_policy_enabled?: boolean
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_policies_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_policies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_policies_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wire_confirmations: {
         Row: {
           amount_cents: number
@@ -15240,6 +15921,16 @@ export type Database = {
         | "inconsistent_currency"
         | "reconciliation_conflict"
         | "posting_failure"
+        | "stale_valuation"
+        | "missing_valuation_source"
+        | "missing_valuation_methodology"
+        | "unsupported_valuation_change"
+        | "valuation_change_threshold"
+        | "missing_quantity"
+        | "missing_cost_basis"
+        | "impossible_valuation"
+        | "conflicting_valuation_sources"
+        | "missing_valuation_evidence"
       accounting_exception_status:
         | "open"
         | "investigating"
@@ -15404,6 +16095,31 @@ export type Database = {
         | "failed"
         | "returned"
         | "cancelled"
+      portfolio_asset_class:
+        | "private_common"
+        | "private_preferred"
+        | "safe"
+        | "convertible_note"
+        | "debt"
+        | "fund_interest"
+        | "spv_interest"
+        | "real_estate"
+        | "digital_security"
+        | "cash_equivalent"
+        | "other"
+      portfolio_asset_status:
+        | "active"
+        | "partially_realized"
+        | "realized"
+        | "written_off"
+      portfolio_valuation_status:
+        | "draft"
+        | "review"
+        | "returned"
+        | "rejected"
+        | "approved"
+        | "effective"
+        | "superseded"
       professional_membership_status:
         | "invited"
         | "active"
@@ -15463,6 +16179,39 @@ export type Database = {
         | "approved"
         | "complete"
         | "not_applicable"
+      valuation_evidence_kind:
+        | "cap_table"
+        | "financing_document"
+        | "purchase_agreement"
+        | "board_materials"
+        | "third_party_appraisal"
+        | "brokerage_statement"
+        | "market_price_evidence"
+        | "waterfall_capitalization"
+        | "portfolio_company_financials"
+        | "other"
+      valuation_method:
+        | "recent_financing"
+        | "transaction_price"
+        | "secondary_transaction"
+        | "market_comparable"
+        | "public_market"
+        | "dcf"
+        | "income_approach"
+        | "cost"
+        | "adjusted_cost"
+        | "appraisal"
+        | "manager_mark"
+        | "third_party"
+        | "other"
+      valuation_source_type:
+        | "independent_third_party"
+        | "observable_transaction"
+        | "recent_financing"
+        | "public_market"
+        | "manager_mark"
+        | "internal_model"
+        | "other"
       valuation_status:
         | "draft"
         | "review"
@@ -15610,6 +16359,16 @@ export const Constants = {
         "inconsistent_currency",
         "reconciliation_conflict",
         "posting_failure",
+        "stale_valuation",
+        "missing_valuation_source",
+        "missing_valuation_methodology",
+        "unsupported_valuation_change",
+        "valuation_change_threshold",
+        "missing_quantity",
+        "missing_cost_basis",
+        "impossible_valuation",
+        "conflicting_valuation_sources",
+        "missing_valuation_evidence",
       ],
       accounting_exception_status: [
         "open",
@@ -15791,6 +16550,34 @@ export const Constants = {
         "returned",
         "cancelled",
       ],
+      portfolio_asset_class: [
+        "private_common",
+        "private_preferred",
+        "safe",
+        "convertible_note",
+        "debt",
+        "fund_interest",
+        "spv_interest",
+        "real_estate",
+        "digital_security",
+        "cash_equivalent",
+        "other",
+      ],
+      portfolio_asset_status: [
+        "active",
+        "partially_realized",
+        "realized",
+        "written_off",
+      ],
+      portfolio_valuation_status: [
+        "draft",
+        "review",
+        "returned",
+        "rejected",
+        "approved",
+        "effective",
+        "superseded",
+      ],
       professional_membership_status: [
         "invited",
         "active",
@@ -15849,6 +16636,42 @@ export const Constants = {
         "approved",
         "complete",
         "not_applicable",
+      ],
+      valuation_evidence_kind: [
+        "cap_table",
+        "financing_document",
+        "purchase_agreement",
+        "board_materials",
+        "third_party_appraisal",
+        "brokerage_statement",
+        "market_price_evidence",
+        "waterfall_capitalization",
+        "portfolio_company_financials",
+        "other",
+      ],
+      valuation_method: [
+        "recent_financing",
+        "transaction_price",
+        "secondary_transaction",
+        "market_comparable",
+        "public_market",
+        "dcf",
+        "income_approach",
+        "cost",
+        "adjusted_cost",
+        "appraisal",
+        "manager_mark",
+        "third_party",
+        "other",
+      ],
+      valuation_source_type: [
+        "independent_third_party",
+        "observable_transaction",
+        "recent_financing",
+        "public_market",
+        "manager_mark",
+        "internal_model",
+        "other",
       ],
       valuation_status: [
         "draft",

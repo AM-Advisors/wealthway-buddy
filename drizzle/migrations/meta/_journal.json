@@ -78,6 +78,13 @@
       "when": 1789684709097,
       "tag": "0010_reconciliation_to_ledger_step1",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789687038647,
+      "tag": "0011_portfolio_valuations_step2",
+      "breakpoints": true
     }
   ]
 }
