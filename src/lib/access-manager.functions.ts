@@ -11,7 +11,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { SCOPE_TYPES } from "@/lib/delegation-model";
+import { SCOPE_TYPES, capabilityAllowedAtAuthority } from "@/lib/delegation-model";
 import { PHASE_3A_CAPABILITIES } from "@/lib/professional-model";
 
 const READ_ONLY = PHASE_3A_CAPABILITIES;
