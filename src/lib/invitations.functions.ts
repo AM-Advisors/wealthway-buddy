@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { INVITABLE_ROLES, type InvitationRole } from "@/lib/invitation-role";
+
+const invitationRoleSchema = z.enum(INVITABLE_ROLES);
 
 const PORTAL_ORIGIN = "https://onboard.harmonious.co";
 
@@ -69,7 +72,7 @@ export const listFundInvitations = createServerFn({ method: "GET" })
     const [invitations, managers, investors] = await Promise.all([
       supabase
         .from("fund_invitations")
-        .select("id, offering_id, email, invited_name, role, status, expires_at, last_sent_at, created_at, accepted_at")
+        .select("id, offering_id, email, invited_name, invite_role, status, expires_at, last_sent_at, created_at, accepted_at")
         .in("offering_id", fundIds)
         .order("created_at", { ascending: false })
         .limit(500),
@@ -114,7 +117,7 @@ const inviteSchema = z.object({
   offeringIds: z.array(z.string().uuid()).min(1, "Choose at least one fund").max(25),
   email: z.string().trim().email("Enter a valid email address").max(255),
   name: z.string().trim().max(120).optional().or(z.literal("")),
-  role: z.enum(["investor", "fund_manager"]),
+  role: invitationRoleSchema,
   sendEmail: z.boolean().default(true),
 });
 
@@ -136,7 +139,7 @@ type GrantInput = {
   actorId: string;
   targetUserId: string;
   offeringIds: string[];
-  role: "investor" | "fund_manager";
+  role: InvitationRole;
   email: string;
   name: string;
   sendEmail: boolean;
@@ -187,7 +190,7 @@ async function grantFundAccess(input: GrantInput) {
         offering_id: offeringId,
         email,
         invited_name: name || null,
-        role: role as any,
+        invite_role: role,
         invited_by: actorId,
         status: "accepted",
         accepted_at: now,
@@ -205,7 +208,7 @@ async function sendInvitationEmail(opts: {
   supabaseAdmin: any;
   email: string;
   name: string;
-  role: "investor" | "fund_manager";
+  role: InvitationRole;
   fundNames: string[];
   invitedByName: string;
 }) {
@@ -290,7 +293,7 @@ export const inviteToFund = createServerFn({ method: "POST" })
 const bulkSchema = z.object({
   offeringIds: z.array(z.string().uuid()).min(1, "Choose at least one fund").max(25),
   people: z.string().trim().min(3, "Paste at least one email address").max(20000),
-  role: z.enum(["investor", "fund_manager"]),
+  role: invitationRoleSchema,
   sendEmail: z.boolean().default(true),
 });
 
@@ -420,7 +423,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
       supabaseAdmin,
       email: (invitation as any).email as string,
       name: ((invitation as any).invited_name as string) || "",
-      role: (invitation as any).role as "investor" | "fund_manager",
+      role: (invitation as any).invite_role as InvitationRole,
       fundNames: [((offering as any)?.name as string) ?? "Harmonious"],
       invitedByName: await actorName(supabase, userId, claims),
     });
@@ -455,7 +458,7 @@ export const revokeInvitation = createServerFn({ method: "POST" })
         userId,
         grantee,
         (invitation as any).offering_id as string,
-        (invitation as any).role as "investor" | "fund_manager",
+        (invitation as any).invite_role as InvitationRole,
       );
     }
 
@@ -468,7 +471,7 @@ async function removeAccessFor(
   actorId: string,
   targetUserId: string,
   offeringId: string,
-  role: "investor" | "fund_manager",
+  role: InvitationRole,
 ) {
   const authz = await import("@/lib/reviewer-authz.server");
   authz.assertInvitableRole(role);
@@ -511,7 +514,7 @@ async function removeAccessFor(
 const removeSchema = z.object({
   userId: z.string().uuid(),
   offeringId: z.string().uuid(),
-  role: z.enum(["investor", "fund_manager"]),
+  role: invitationRoleSchema,
 });
 
 /** Remove someone's access to one fund. */
@@ -531,7 +534,7 @@ export const removeFundAccess = createServerFn({ method: "POST" })
       .update({ status: "revoked" })
       .eq("offering_id", data.offeringId)
       .eq("accepted_by", data.userId)
-      .eq("role", data.role as any)
+      .eq("invite_role", data.role)
       .neq("status", "revoked");
 
     return { ok: true };
