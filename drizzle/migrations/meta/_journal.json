@@ -57,6 +57,13 @@
       "when": 1789682968097,
       "tag": "0007_signing_evidence_hardening_phase3c1",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789683441022,
+      "tag": "0008_authority_documents_restrictive_storage_policy",
+      "breakpoints": true
     }
   ]
 }
