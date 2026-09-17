@@ -192,7 +192,7 @@ import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
-import { Route as AuthenticatedProfessionalClientDelegationIdRouteImport } from './routes/_authenticated/professional.client.$delegationId'
+import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from './routes/_authenticated/professional.acting.$delegationId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
@@ -1251,10 +1251,10 @@ const AuthenticatedOpsFundsFundIdRoute =
     path: '/ops/funds/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedProfessionalClientDelegationIdRoute =
-  AuthenticatedProfessionalClientDelegationIdRouteImport.update({
-    id: '/client/$delegationId',
-    path: '/client/$delegationId',
+const AuthenticatedProfessionalActingDelegationIdRoute =
+  AuthenticatedProfessionalActingDelegationIdRouteImport.update({
+    id: '/acting/$delegationId',
+    path: '/acting/$delegationId',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
@@ -1533,7 +1533,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
-  '/professional/client/$delegationId': typeof AuthenticatedProfessionalClientDelegationIdRoute
+  '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
@@ -1729,7 +1729,7 @@ export interface FileRoutesByTo {
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
-  '/professional/client/$delegationId': typeof AuthenticatedProfessionalClientDelegationIdRoute
+  '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
@@ -1933,7 +1933,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
-  '/_authenticated/professional/client/$delegationId': typeof AuthenticatedProfessionalClientDelegationIdRoute
+  '/_authenticated/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
@@ -2137,7 +2137,7 @@ export interface FileRouteTypes {
     | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
     | '/ops/funds/$fundId'
-    | '/professional/client/$delegationId'
+    | '/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/invoice-reminders'
@@ -2333,7 +2333,7 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
     | '/ops/funds/$fundId'
-    | '/professional/client/$delegationId'
+    | '/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/invoice-reminders'
@@ -2536,7 +2536,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
-    | '/_authenticated/professional/client/$delegationId'
+    | '/_authenticated/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/invoice-reminders'
@@ -3879,11 +3879,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFundsFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/professional/client/$delegationId': {
-      id: '/_authenticated/professional/client/$delegationId'
-      path: '/client/$delegationId'
-      fullPath: '/professional/client/$delegationId'
-      preLoaderRoute: typeof AuthenticatedProfessionalClientDelegationIdRouteImport
+    '/_authenticated/professional/acting/$delegationId': {
+      id: '/_authenticated/professional/acting/$delegationId'
+      path: '/acting/$delegationId'
+      fullPath: '/professional/acting/$delegationId'
+      preLoaderRoute: typeof AuthenticatedProfessionalActingDelegationIdRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
     }
     '/api/public/email/click': {
@@ -4135,7 +4135,7 @@ interface AuthenticatedProfessionalRouteChildren {
   AuthenticatedProfessionalTasksRoute: typeof AuthenticatedProfessionalTasksRoute
   AuthenticatedProfessionalTaxRoute: typeof AuthenticatedProfessionalTaxRoute
   AuthenticatedProfessionalIndexRoute: typeof AuthenticatedProfessionalIndexRoute
-  AuthenticatedProfessionalClientDelegationIdRoute: typeof AuthenticatedProfessionalClientDelegationIdRoute
+  AuthenticatedProfessionalActingDelegationIdRoute: typeof AuthenticatedProfessionalActingDelegationIdRoute
 }
 
 const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChildren =
@@ -4154,8 +4154,8 @@ const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChil
     AuthenticatedProfessionalTasksRoute: AuthenticatedProfessionalTasksRoute,
     AuthenticatedProfessionalTaxRoute: AuthenticatedProfessionalTaxRoute,
     AuthenticatedProfessionalIndexRoute: AuthenticatedProfessionalIndexRoute,
-    AuthenticatedProfessionalClientDelegationIdRoute:
-      AuthenticatedProfessionalClientDelegationIdRoute,
+    AuthenticatedProfessionalActingDelegationIdRoute:
+      AuthenticatedProfessionalActingDelegationIdRoute,
   }
 
 const AuthenticatedProfessionalRouteWithChildren =

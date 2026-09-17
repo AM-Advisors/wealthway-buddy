@@ -13,7 +13,7 @@ const money = (cents: number | null) =>
   cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 function DelegatedClient() {
-  const { delegationId } = useParams({ from: "/_authenticated/professional/client/$delegationId" });
+  const { delegationId } = useParams({ from: "/_authenticated/professional/acting/$delegationId" });
   const navigate = useNavigate();
   const qc = useQueryClient();
   const load = useServerFn(getDelegatedClient);
@@ -179,6 +179,6 @@ function DelegatedClient() {
   );
 }
 
-export const Route = createFileRoute("/_authenticated/professional/client/$delegationId")({
+export const Route = createFileRoute("/_authenticated/professional/acting/$delegationId")({
   component: DelegatedClient,
 });
