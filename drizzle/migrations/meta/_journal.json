@@ -36,6 +36,13 @@
       "when": 1789676915008,
       "tag": "0004_assisted_drafts_phase3b",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789678316829,
+      "tag": "0005_signatory_authority_phase3c",
+      "breakpoints": true
     }
   ]
 }
