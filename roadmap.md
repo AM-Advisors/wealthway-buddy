@@ -45,3 +45,8 @@
 - [x] Phase 2: canonical person, onboarding state machine, investment profiles, entity/trust KYB, per-profile accreditation, readiness checks, My profile page
 - [x] Phase 3A: professional workspace, client access manager, read-only acting on behalf of
 - [ ] Phase 3B: assist, signing and transaction authority — deliberately not enabled
+
+## Fund accounting
+- [x] Step 1: bank feed → reconciliation → general ledger (posting rules, exceptions, maker-checker)
+- [x] Step 2: portfolio holdings, versioned valuations, evidence, governance, prepared-only ledger impact, realisations
+- [ ] Step 3: NAV publication and financial statements
