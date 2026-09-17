@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ArrowRight, Check, Circle, FileText, Landmark, Send } from "lucide-react";
 
 import { getPortal } from "@/lib/portal.functions";
 import { getFunding } from "@/lib/funding.functions";
@@ -11,7 +12,6 @@ import { listMyUploads } from "@/lib/investor-uploads.functions";
 import { getClosingDocumentUrl, getMyClosing } from "@/lib/closing.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
 import { savePdf } from "@/lib/download-pdf";
-import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { OwnershipCard } from "@/components/ownership-card";
 import { InvestorCapitalSummary } from "@/components/investor-capital-summary";
 import { InvestorSignoffCard } from "@/components/investor-signoff-card";
@@ -258,6 +258,33 @@ function Dashboard() {
   ];
   const doneSteps = pathSteps.filter((s) => s.done).length;
   const nextStep = pathSteps.find((s) => !s.done) ?? null;
+  const progressPercent = Math.round((doneSteps / pathSteps.length) * 100);
+  const recentUpdates = [
+    ...wireConfirmations.slice(0, 2).map((confirmation) => ({
+      id: `wire-${confirmation.id}`,
+      icon: Send,
+      title:
+        confirmation.status === "approved"
+          ? "Wire confirmation approved"
+          : "Wire confirmation submitted",
+      detail: `${money(confirmation.amount_cents)} · ${when(confirmation.reviewed_at ?? confirmation.created_at) ?? "Recently"}`,
+      to: "/wire-confirmation" as const,
+    })),
+    ...documents.slice(0, 2).map((document) => ({
+      id: `document-${document.signature_id}`,
+      icon: FileText,
+      title: "Signed fund document available",
+      detail: when(document.provider_completed_at ?? document.signed_at) ?? "Recently",
+      to: "/documents" as const,
+    })),
+    ...myUploads.slice(0, 2).map((upload) => ({
+      id: `upload-${upload.id}`,
+      icon: FileText,
+      title: upload.file_name,
+      detail: `Uploaded ${when(upload.uploaded_at) ?? "recently"}`,
+      to: "/documents" as const,
+    })),
+  ].slice(0, 3);
 
   async function openSigned(signatureId: string) {
     setBusy(signatureId);
@@ -326,96 +353,148 @@ function Dashboard() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-3xl">
-            {data?.profile?.legal_name ? `Welcome, ${data.profile.legal_name}` : "Your dashboard"}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {data?.offering?.name ?? "Fund subscription"}
-            {data?.offering?.reg_type ? ` — Reg D ${data.offering.reg_type}` : ""}
-          </p>
-        </div>
-        <AccountSwitcher className="mt-3" />
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link to="/apply">Apply to a fund</Link>
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/portal">Sign documents</Link>
-          </Button>
-        </div>
-      </div>
-
-      <ClosingCard />
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <Summary title="Commitment" value={money(data?.subscription?.commitment_cents)} />
-        <Summary title="Overall status" value={label(app.status)} />
-        <Summary
-          title="Funding"
-          value={
-            data?.payment
-              ? `${data.payment.method === "ach" ? "ACH" : "Wire"} — ${label(data.payment.status)}`
-              : label(app.funding_status)
-          }
-        />
-      </div>
-
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="text-base">Your path to the wire</CardTitle>
-          <CardDescription>
-            {doneSteps === pathSteps.length
-              ? "Every step is complete — your funds are recorded."
-              : `${doneSteps} of ${pathSteps.length} steps complete. Next: ${nextStep?.title ?? "—"}.`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${Math.round((doneSteps / pathSteps.length) * 100)}%` }}
-            />
+    <main className="mx-auto max-w-5xl px-4 py-6 md:py-8">
+      <header className="border-b pb-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-medium uppercase text-muted-foreground">Investor dashboard</p>
+            <h1 className="mt-1 text-2xl sm:text-3xl">
+              {data?.profile?.legal_name ? `Welcome, ${data.profile.legal_name}` : "Your dashboard"}
+            </h1>
           </div>
-          <ol className="mt-5 space-y-3">
-            {pathSteps.map((step, index) => {
+          <AccountSwitcher />
+        </div>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md bg-primary px-4 py-3 text-primary-foreground">
+          <div className="min-w-0">
+            <p className="text-xs uppercase text-primary-foreground/70">Selected investment</p>
+            <p className="truncate font-heading font-semibold">
+              {data?.offering?.name ?? "Fund subscription"}
+            </p>
+            <p className="text-xs text-primary-foreground/70">
+              {data?.offering?.reg_type ? `Reg D ${data.offering.reg_type}` : "Private investment"}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild size="sm" variant="secondary">
+              <Link to="/capital">View investment</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
+              <Link to="/apply">Add investment</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {nextStep ? (
+        <section className="mt-5 border-l-4 border-accent bg-card px-4 py-4 shadow-sm ring-1 ring-border sm:px-5" aria-labelledby="next-action-heading">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent/20 text-primary">
+              <ArrowRight className="size-5" aria-hidden />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium uppercase text-muted-foreground">Next action</p>
+              <h2 id="next-action-heading" className="mt-1 text-base font-semibold">{nextStep.title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{nextStep.detail}</p>
+              <Button asChild className="mt-4 w-full sm:w-auto" size="sm">
+                <Link to={nextStep.to}>
+                  {nextStep.cta} <ArrowRight className="size-4" aria-hidden />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="mt-5 border-l-4 border-accent bg-card px-4 py-4 shadow-sm ring-1 ring-border">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-full bg-accent/20 text-primary">
+              <Check className="size-5" aria-hidden />
+            </span>
+            <div>
+              <p className="text-xs font-medium uppercase text-muted-foreground">All caught up</p>
+              <h2 className="mt-1 text-base font-semibold">Your investment steps are complete</h2>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="mt-7" aria-labelledby="snapshot-heading">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="snapshot-heading" className="text-sm font-semibold uppercase text-muted-foreground">Investment snapshot</h2>
+          <Badge variant={tone(app.status)}>{label(app.status)}</Badge>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Summary title="Commitment" value={money(data?.subscription?.commitment_cents)} />
+          <Summary title="Amount received" value={wireApproved ? money(data?.subscription?.commitment_cents) : "$0"} accent={wireApproved} />
+          <Summary title="Still to fund" value={wireApproved ? "$0" : money(data?.subscription?.commitment_cents)} />
+          <Summary
+            title="Funding status"
+            value={data?.payment ? `${data.payment.method === "ach" ? "ACH" : "Wire"} · ${label(data.payment.status)}` : label(app.funding_status)}
+          />
+        </div>
+      </section>
+
+      <div className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,0.75fr)]">
+        <section className="border bg-card p-4 sm:p-5" aria-labelledby="progress-heading">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 id="progress-heading" className="text-base font-semibold">Investment progress</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{doneSteps} of {pathSteps.length} steps complete</p>
+            </div>
+            <span className="text-sm font-semibold text-primary">{progressPercent}%</span>
+          </div>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <ol className="mt-5 grid gap-3 sm:grid-cols-2">
+            {pathSteps.map((step) => {
               const isNext = step === nextStep;
               return (
-                <li key={step.title} className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span
-                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
-                        step.done
-                          ? "bg-primary text-primary-foreground"
-                          : isNext
-                            ? "border border-primary text-primary"
-                            : "border text-muted-foreground"
-                      }`}
-                    >
-                      {step.done ? "✓" : index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className={`text-sm ${step.done ? "" : isNext ? "font-medium" : "text-muted-foreground"}`}>
-                        {step.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{step.detail}</p>
-                    </div>
+                <li key={step.title} className="flex items-start gap-3">
+                  <span className={step.done ? "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground" : isNext ? "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-accent text-primary" : "mt-0.5 flex size-5 shrink-0 items-center justify-center text-muted-foreground"}>
+                    {step.done ? <Check className="size-3" aria-hidden /> : <Circle className="size-4" aria-hidden />}
+                  </span>
+                  <div className="min-w-0">
+                    <p className={isNext ? "text-sm font-semibold" : "text-sm"}>{step.title}</p>
+                    <p className="text-xs text-muted-foreground">{step.detail}</p>
                   </div>
-                  {!step.done && isNext && step.to ? (
-                    <Button asChild size="sm">
-                      <Link to={step.to}>{step.cta}</Link>
-                    </Button>
-                  ) : null}
                 </li>
               );
             })}
           </ol>
-        </CardContent>
-      </Card>
+        </section>
 
-      <div className="mt-8 space-y-3">
+        <section aria-labelledby="updates-heading">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="updates-heading" className="text-sm font-semibold uppercase text-muted-foreground">Recent updates</h2>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/documents">View records</Link>
+            </Button>
+          </div>
+          <div className="mt-2 divide-y border bg-card">
+            {recentUpdates.length > 0 ? recentUpdates.map((update) => (
+              <Link key={update.id} to={update.to} className="flex items-start gap-3 p-3 transition-colors hover:bg-muted/60">
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  <update.icon className="size-4" aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{update.title}</span>
+                  <span className="block text-xs text-muted-foreground">{update.detail}</span>
+                </span>
+              </Link>
+            )) : (
+              <div className="p-4 text-sm text-muted-foreground">Updates will appear as your investment progresses.</div>
+            )}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Button asChild variant="outline" size="sm"><Link to="/fund-documents"><FileText className="size-4" />Documents</Link></Button>
+            <Button asChild variant="outline" size="sm"><Link to="/wire"><Landmark className="size-4" />Funding</Link></Button>
+          </div>
+        </section>
+      </div>
+
+      <ClosingCard />
+
+      <div className="mt-10 space-y-3 border-t pt-8">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Your capital</h2>
           <Button asChild variant="outline" size="sm">
@@ -432,12 +511,6 @@ function Dashboard() {
       <div className="mt-8">
         <OwnershipCard />
       </div>
-
-
-      <div className="mt-10">
-        <OnboardingStepper current={(app.current_step as "kyc") ?? "kyc"} />
-      </div>
-
 
       <section className="mt-8">
         <h2 className="text-xl">Onboarding status</h2>
@@ -721,14 +794,12 @@ function Dashboard() {
   );
 }
 
-function Summary({ title, value }: { title: string; value: string }) {
+function Summary({ title, value, accent = false }: { title: string; value: string; accent?: boolean }) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{title}</p>
-        <p className="mt-1 text-lg font-medium">{value}</p>
-      </CardContent>
-    </Card>
+    <div className="min-h-24 border bg-card p-4 shadow-sm">
+      <p className="text-xs text-muted-foreground">{title}</p>
+      <p className={accent ? "mt-2 break-words font-heading text-lg font-semibold text-primary" : "mt-2 break-words font-heading text-lg font-semibold"}>{value}</p>
+    </div>
   );
 }
 
