@@ -145,6 +145,7 @@ import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as AuthenticatedProfessionalIndexRouteImport } from './routes/_authenticated/professional.index'
 import { Route as AuthenticatedProfessionalActivityRouteImport } from './routes/_authenticated/professional.activity'
+import { Route as AuthenticatedProfessionalCredentialsRouteImport } from './routes/_authenticated/professional.credentials'
 import { Route as AuthenticatedProfessionalDocumentsRouteImport } from './routes/_authenticated/professional.documents'
 import { Route as AuthenticatedProfessionalFundsRouteImport } from './routes/_authenticated/professional.funds'
 import { Route as AuthenticatedProfessionalInvestmentsRouteImport } from './routes/_authenticated/professional.investments'
@@ -975,6 +976,12 @@ const AuthenticatedProfessionalActivityRoute =
     path: '/activity',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedProfessionalCredentialsRoute =
+  AuthenticatedProfessionalCredentialsRouteImport.update({
+    id: '/credentials',
+    path: '/credentials',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
 const AuthenticatedProfessionalDocumentsRoute =
   AuthenticatedProfessionalDocumentsRouteImport.update({
     id: '/documents',
@@ -1505,6 +1512,7 @@ export interface FileRoutesByFullPath {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
+  '/professional/credentials': typeof AuthenticatedProfessionalCredentialsRoute
   '/professional/documents': typeof AuthenticatedProfessionalDocumentsRoute
   '/professional/funds': typeof AuthenticatedProfessionalFundsRoute
   '/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
@@ -1705,6 +1713,7 @@ export interface FileRoutesByTo {
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
+  '/professional/credentials': typeof AuthenticatedProfessionalCredentialsRoute
   '/professional/documents': typeof AuthenticatedProfessionalDocumentsRoute
   '/professional/funds': typeof AuthenticatedProfessionalFundsRoute
   '/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
@@ -1911,6 +1920,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/_authenticated/professional/activity': typeof AuthenticatedProfessionalActivityRoute
+  '/_authenticated/professional/credentials': typeof AuthenticatedProfessionalCredentialsRoute
   '/_authenticated/professional/documents': typeof AuthenticatedProfessionalDocumentsRoute
   '/_authenticated/professional/funds': typeof AuthenticatedProfessionalFundsRoute
   '/_authenticated/professional/investments': typeof AuthenticatedProfessionalInvestmentsRoute
@@ -2118,6 +2128,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/team'
     | '/professional/activity'
+    | '/professional/credentials'
     | '/professional/documents'
     | '/professional/funds'
     | '/professional/investments'
@@ -2318,6 +2329,7 @@ export interface FileRouteTypes {
     | '/ops/tax-documents'
     | '/ops/team'
     | '/professional/activity'
+    | '/professional/credentials'
     | '/professional/documents'
     | '/professional/funds'
     | '/professional/investments'
@@ -2523,6 +2535,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
     | '/_authenticated/professional/activity'
+    | '/_authenticated/professional/credentials'
     | '/_authenticated/professional/documents'
     | '/_authenticated/professional/funds'
     | '/_authenticated/professional/investments'
@@ -3588,6 +3601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfessionalActivityRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
     }
+    '/_authenticated/professional/credentials': {
+      id: '/_authenticated/professional/credentials'
+      path: '/credentials'
+      fullPath: '/professional/credentials'
+      preLoaderRoute: typeof AuthenticatedProfessionalCredentialsRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
     '/_authenticated/professional/documents': {
       id: '/_authenticated/professional/documents'
       path: '/documents'
@@ -4186,6 +4206,7 @@ const AuthenticatedClientRouteWithChildren =
 
 interface AuthenticatedProfessionalRouteChildren {
   AuthenticatedProfessionalActivityRoute: typeof AuthenticatedProfessionalActivityRoute
+  AuthenticatedProfessionalCredentialsRoute: typeof AuthenticatedProfessionalCredentialsRoute
   AuthenticatedProfessionalDocumentsRoute: typeof AuthenticatedProfessionalDocumentsRoute
   AuthenticatedProfessionalFundsRoute: typeof AuthenticatedProfessionalFundsRoute
   AuthenticatedProfessionalInvestmentsRoute: typeof AuthenticatedProfessionalInvestmentsRoute
@@ -4203,6 +4224,8 @@ const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChil
   {
     AuthenticatedProfessionalActivityRoute:
       AuthenticatedProfessionalActivityRoute,
+    AuthenticatedProfessionalCredentialsRoute:
+      AuthenticatedProfessionalCredentialsRoute,
     AuthenticatedProfessionalDocumentsRoute:
       AuthenticatedProfessionalDocumentsRoute,
     AuthenticatedProfessionalFundsRoute: AuthenticatedProfessionalFundsRoute,
