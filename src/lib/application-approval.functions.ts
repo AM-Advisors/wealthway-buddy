@@ -160,7 +160,11 @@ export const decideApplicationApproval = createServerFn({ method: "POST" })
       }
     }
 
-    const { error } = await supabase
+    const { db } = await (await import("@/lib/reviewer-authz.server")).authorizeApplication(
+      userId,
+      data.applicationId,
+    );
+    const { error } = await db
       .from("investor_applications")
       .update({
         manager_review_status: data.decision,

@@ -315,19 +315,26 @@ export const matchBankTransaction = createServerFn({ method: "POST" })
       .eq("id", data.transactionId);
     if (error) throw new Error(error.message);
 
-    const { data: payment } = await supabase
+    // Payments and application funding state are written with the privileged
+    // client, only after the fund and investor above have been verified.
+    const { db } = await (await import("@/lib/reviewer-authz.server")).authorizeApplication(
+      userId,
+      data.applicationId,
+    );
+
+    const { data: payment } = await db
       .from("payments")
       .select("id")
       .eq("application_id", data.applicationId)
       .maybeSingle();
     if (payment) {
-      await supabase
+      await db
         .from("payments")
         .update({ status: "settled", confirmed_at: now, failure_reason: null, updated_at: now })
         .eq("id", payment.id);
     }
 
-    await supabase
+    await db
       .from("investor_applications")
       .update({ funding_status: "settled", status: "funded", updated_at: now })
       .eq("id", data.applicationId);

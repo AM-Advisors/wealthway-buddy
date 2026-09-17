@@ -624,7 +624,8 @@ export const inviteMigratedInvestors = createServerFn({ method: "POST" })
 
     let invited = 0;
     for (const row of list) {
-      const { error } = await context.supabase.from("fund_invitations").insert({
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error } = await supabaseAdmin.from("fund_invitations").insert({
         email: String(row.email).toLowerCase(),
         invited_name: row.full_name || null,
         offering_id: data.offeringId,
