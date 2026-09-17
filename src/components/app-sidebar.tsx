@@ -296,7 +296,13 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       );
     }
     return list;
-  }, [adminAccess?.isAdmin, adminAccess?.isReviewer, operations?.allowed, pathname]);
+  }, [
+    adminAccess?.isAdmin,
+    adminAccess?.isReviewer,
+    operations?.allowed,
+    standing?.isProfessional,
+    pathname,
+  ]);
 
   const search = query.trim().toLowerCase();
   const matches = (item: NavItem) => !search || item.title.toLowerCase().includes(search);
