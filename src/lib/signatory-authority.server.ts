@@ -854,6 +854,87 @@ export async function requireRenewedAcceptance(delegationId: string, reason: str
 
 // ------------------------------------------------------ authority documents
 
+/**
+ * Authority documents live in a private bucket no browser session can reach.
+ * Every read is a server-issued URL that lasts one minute.
+ */
+export const AUTHORITY_BUCKET = "authority-documents";
+const AUTHORITY_PREFIX = "authority";
+const AUTHORITY_URL_TTL_SECONDS = 60;
+
+function safeFileName(name: string): string {
+  return (name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120) || "document").replace(/^\.+/, "_");
+}
+
+/** A one-time upload slot inside this delegation's own folder. */
+export async function createAuthorityUploadTicket(
+  actorUserId: string | null | undefined,
+  delegationId: string,
+  fileName: string,
+) {
+  if (!actorUserId) throw new Error("Forbidden: not signed in.");
+  const { data: row } = await db()
+    .from("delegations")
+    .select("id, principal_user_id, delegate_user_id")
+    .eq("id", delegationId)
+    .maybeSingle();
+  if (!row) throw new Error("That delegation is not available.");
+  if (row.principal_user_id !== actorUserId && row.delegate_user_id !== actorUserId) {
+    throw new Error("Forbidden: you are not a party to that delegation.");
+  }
+
+  const path = `${AUTHORITY_PREFIX}/${row.id}/${Date.now()}-${safeFileName(fileName)}`;
+  const { data, error } = await db()
+    .storage.from(AUTHORITY_BUCKET)
+    .createSignedUploadUrl(path);
+  if (error) throw new Error(error.message);
+  return { path, signedUrl: data?.signedUrl ?? null, token: data?.token ?? null };
+}
+
+/**
+ * Short-lived read access, only for the two parties and Harmonious staff, and
+ * only for the exact stored object. Document ids from other clients, funds,
+ * firms or delegations resolve to rows the caller is not a party to, so they
+ * are refused.
+ */
+export async function getAuthorityDocumentUrl(
+  actorUserId: string | null | undefined,
+  documentId: string,
+) {
+  if (!actorUserId) throw new Error("Forbidden: not signed in.");
+  const { data: doc } = await db()
+    .from("authority_documents")
+    .select("*")
+    .eq("id", documentId)
+    .maybeSingle();
+  if (!doc) throw new Error("That authority document is not available.");
+
+  const party =
+    doc.principal_user_id === actorUserId ||
+    doc.delegate_user_id === actorUserId ||
+    (await isStaffUser(actorUserId));
+  if (!party) throw new Error("Forbidden: that document is not yours.");
+
+  const { data, error } = await db()
+    .storage.from(AUTHORITY_BUCKET)
+    .createSignedUrl(doc.storage_path, AUTHORITY_URL_TTL_SECONDS);
+  if (error) throw new Error(error.message);
+
+  await recordDelegationAudit({
+    actorUserId,
+    action: "authority_document_viewed",
+    organizationId: doc.organization_id,
+    delegationId: doc.delegation_id,
+    principalUserId: doc.principal_user_id,
+    delegateUserId: doc.delegate_user_id,
+    outcome: "viewed",
+    after: { authority_document_id: doc.id, version: doc.version },
+  });
+
+  return { url: data?.signedUrl ?? null, expiresInSeconds: AUTHORITY_URL_TTL_SECONDS };
+}
+
+
 export async function submitAuthorityDocument(
   actorUserId: string | null | undefined,
   input: {
