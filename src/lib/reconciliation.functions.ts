@@ -66,7 +66,13 @@ export const decideReconciliation = createServerFn({ method: "POST" })
       action: data.action === "correct" ? "approve" : data.action,
       ...(data.reason ? { reason: data.reason } : {}),
       ...(data.message ? { message: data.message } : {}),
-      ...(data.correction ? { correction: data.correction } : {}),
+      ...(data.correction
+        ? {
+            correction: Object.fromEntries(
+              Object.entries(data.correction).filter(([, v]) => v !== undefined),
+            ) as NonNullable<typeof data.correction>,
+          }
+        : {}),
     });
   });
 
@@ -181,7 +187,12 @@ export const savePostingRuleFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { savePostingRule } = await import("@/lib/reconciliation.server");
-    return savePostingRule(context.userId, data);
+    return savePostingRule(
+      context.userId,
+      Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined)) as Parameters<
+        typeof savePostingRule
+      >[1],
+    );
   });
 
 /** The items waiting on this fund manager or client, and nothing else. */

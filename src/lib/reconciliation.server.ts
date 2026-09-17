@@ -891,7 +891,7 @@ export async function reconciliationQueue(
       confidence: r.confidence as Confidence,
       reasons: (r.match_reasons ?? []) as string[],
       conflicts: (r.conflicts ?? []) as string[],
-      matched: (r.matched_records ?? {}) as Record<string, unknown>,
+      matched: (r.matched_records ?? {}) as Record<string, string | null>,
       approvalRequired: r.approval_required as string,
       journalEntryId: r.journal_entry_id as string | null,
       correctionReason: r.correction_reason as string | null,
