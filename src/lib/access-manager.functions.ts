@@ -123,6 +123,16 @@ export const grantReadOnlyAccess = createServerFn({ method: "POST" })
       if (!READ_ONLY.includes(cap as any)) {
         throw new Error("Only viewing permissions can be granted right now.");
       }
+      // Banking and wire details sit above view-only authority and need a
+      // signed authorisation, which is not part of this phase.
+      if (!capabilityAllowedAtAuthority(cap as any, "view")) {
+        throw new Error(
+          "Banking and wire details need a signed authorisation and cannot be granted here yet.",
+        );
+      }
+    }
+    if (data.scope_type === "data_category") {
+      throw new Error("Choose a client, profile, fund or investment for this access.");
     }
     if (data.delegate_user_id === userId) {
       throw new Error("You cannot grant access to yourself.");
@@ -160,6 +170,15 @@ export const grantReadOnlyAccess = createServerFn({ method: "POST" })
         .eq("id", data.scope_id)
         .maybeSingle();
       if (!app || app.user_id !== userId) throw new Error("That investment is not yours.");
+    }
+    if (data.scope_type === "fund" && data.scope_id) {
+      const { data: app } = await db
+        .from("investor_applications")
+        .select("id")
+        .eq("offering_id", data.scope_id)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!app) throw new Error("You have no investment in that fund.");
     }
     if (data.scope_type === "person") {
       data.scope_id = userId;
