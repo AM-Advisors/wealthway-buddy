@@ -4,7 +4,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { consumeOAuthReturnError, startGoogleOAuth } from "@/lib/google-oauth";
 
 import { useAuth } from "@/hooks/useAuth";
 import { AuthShell } from "@/components/auth-shell";
@@ -57,19 +57,21 @@ function ClientLoginPage() {
     }
   }
 
+  useEffect(() => {
+    const message = consumeOAuthReturnError();
+    if (message) toast.error(message);
+  }, []);
+
   async function signInWithGoogle() {
     setBusy(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/client-login`,
-      });
-      const error = result.error;
-      if (error) toast.error(error.message ?? "Google sign-in failed");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
-    } finally {
+    const errorMessage = await startGoogleOAuth("/client-login");
+    if (errorMessage) {
+      void recordAttempt("google-oauth", false, errorMessage);
+      toast.error(errorMessage);
       setBusy(false);
     }
+    // Otherwise the browser is redirecting to Google; the session listener
+    // above routes signed-in clients to their portal once we're back.
   }
 
   async function submit(e: React.FormEvent) {

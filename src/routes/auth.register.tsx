@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { checkInviteEligibility } from "@/lib/portal-access.functions";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { consumeOAuthReturnError, startGoogleOAuth } from "@/lib/google-oauth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,19 +41,20 @@ function RegisterPage() {
   const [sent, setSent] = useState(false);
   const checkEligibility = useServerFn(checkInviteEligibility);
 
+  useEffect(() => {
+    const message = consumeOAuthReturnError();
+    if (message) toast.error(message);
+  }, []);
+
   async function signUpWithGoogle() {
     setBusy(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth`,
-      });
-      const error = result.error;
-      if (error) toast.error(error.message ?? "Google sign-up failed");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Google sign-up failed");
-    } finally {
+    const errorMessage = await startGoogleOAuth("/auth");
+    if (errorMessage) {
+      toast.error(errorMessage);
       setBusy(false);
     }
+    // Otherwise the browser is redirecting to Google; the session listener
+    // on the sign-in page finishes registration once we're back.
   }
 
   async function submit(e: React.FormEvent) {
