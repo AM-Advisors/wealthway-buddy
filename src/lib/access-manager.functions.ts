@@ -11,10 +11,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { SCOPE_TYPES, capabilityAllowedAtAuthority } from "@/lib/delegation-model";
-import { PHASE_3A_CAPABILITIES } from "@/lib/professional-model";
+import {
+  SCOPE_TYPES,
+  capabilityAllowedAtAuthority,
+  requiresSignedAuthority,
+} from "@/lib/delegation-model";
+import { ACTIVATED_CAPABILITIES, PHASE_3B_CAPABILITIES } from "@/lib/professional-model";
 
-const READ_ONLY = PHASE_3A_CAPABILITIES;
+const ACTIVATED = ACTIVATED_CAPABILITIES;
+
 
 async function isStaff(supabase: any, userId: string) {
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
@@ -105,30 +110,35 @@ const grantSchema = z.object({
   scope_type: z.enum(SCOPE_TYPES),
   scope_id: z.string().uuid().nullable().optional(),
   capabilities: z.array(z.string()).min(1),
+  authority_level: z.enum(["view", "assist"]).optional(),
   effective_at: z.string().optional(),
   expires_at: z.string().nullable().optional(),
 });
 
 /**
- * Grant read-only access. Phase 3A refuses anything beyond viewing: no assist,
- * no signing, no transaction authority, and no capability outside the
- * activated read-only set.
+ * Grant access. Only viewing (Phase 3A) and preparing/assisting (Phase 3B) can
+ * be granted: signing, money movement, banking and wire details all need the
+ * signed-authority workflow that does not exist yet and are refused here.
  */
 export const grantReadOnlyAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => grantSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
+    const needsAssist = data.capabilities.some((c) => PHASE_3B_CAPABILITIES.includes(c as any));
+    const authority = needsAssist ? "assist" : (data.authority_level ?? "view");
+
     for (const cap of data.capabilities) {
-      if (!READ_ONLY.includes(cap as any)) {
-        throw new Error("Only viewing permissions can be granted right now.");
-      }
-      // Banking and wire details sit above view-only authority and need a
-      // signed authorisation, which is not part of this phase.
-      if (!capabilityAllowedAtAuthority(cap as any, "view")) {
+      if (requiresSignedAuthority(cap as any)) {
         throw new Error(
-          "Banking and wire details need a signed authorisation and cannot be granted here yet.",
+          "signed_authority_required: banking, wire, signing and payment permissions need a signed authorisation and cannot be granted yet.",
         );
+      }
+      if (!ACTIVATED.includes(cap as any)) {
+        throw new Error("That permission is not available yet.");
+      }
+      if (!capabilityAllowedAtAuthority(cap as any, authority)) {
+        throw new Error("That permission needs a higher authority than is available yet.");
       }
     }
     if (data.scope_type === "data_category") {
@@ -137,6 +147,7 @@ export const grantReadOnlyAccess = createServerFn({ method: "POST" })
     if (data.delegate_user_id === userId) {
       throw new Error("You cannot grant access to yourself.");
     }
+
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { recordDelegationAudit } = await import("@/lib/delegated-access.server");
@@ -192,7 +203,7 @@ export const grantReadOnlyAccess = createServerFn({ method: "POST" })
         organization_id: data.organization_id ?? null,
         scope_type: data.scope_type,
         scope_id: data.scope_id ?? null,
-        authority_level: "view",
+        authority_level: authority,
         status: "active",
         effective_at: data.effective_at ?? new Date().toISOString(),
         expires_at: data.expires_at || null,
@@ -220,9 +231,10 @@ export const grantReadOnlyAccess = createServerFn({ method: "POST" })
       delegateUserId: data.delegate_user_id,
       scopeType: data.scope_type,
       scopeId: data.scope_id ?? null,
-      authorityLevel: "view",
+      authorityLevel: authority,
       capabilities: data.capabilities,
-      after: { ...data, authority_level: "view" },
+      after: { ...data, authority_level: authority },
+
     });
 
     return { id: delegation.id as string };
