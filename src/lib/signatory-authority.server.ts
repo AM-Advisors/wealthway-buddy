@@ -305,6 +305,50 @@ function sixDigitCode(): string {
 }
 
 /**
+ * How the confirmation code reaches the professional. The code is never written
+ * to the database in readable form — only its hash is stored — so delivery is a
+ * separate, replaceable channel.
+ */
+export type StepUpDelivery = (input: {
+  userId: string;
+  code: string;
+  delegationId: string;
+  expiresAt: string;
+}) => Promise<void>;
+
+async function emailStepUpCode(input: {
+  userId: string;
+  code: string;
+  delegationId: string;
+  expiresAt: string;
+}) {
+  const { data: person } = await db()
+    .from("persons")
+    .select("email, legal_first_name")
+    .eq("user_id", input.userId)
+    .maybeSingle();
+  const to = person?.email ?? null;
+  if (!to) throw new Error("No email address on file for signing confirmation.");
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  await sendTemplateEmail("manager-alert", to, {
+    templateData: {
+      managerName: person?.legal_first_name ?? "there",
+      headline: "Your signing confirmation code",
+      intro: `Use ${input.code} to confirm the signature you just started. It expires in five minutes. If this was not you, do not use it.`,
+      details: [],
+      portalUrl: "https://onboard.harmonious.co/professional/signatures",
+    },
+  });
+}
+
+let stepUpDelivery: StepUpDelivery = emailStepUpCode;
+
+/** Test seam: replaces the delivery channel for the confirmation code. */
+export function __setStepUpDelivery(fn: StepUpDelivery | null) {
+  stepUpDelivery = fn ?? emailStepUpCode;
+}
+
+/**
  * Opens a short-lived challenge bound to one action on one resource. The code
  * itself is never stored — only its hash.
  */
@@ -343,11 +387,19 @@ export async function beginSigningStepUp(
     .maybeSingle();
   if (error) throw new Error(error.message);
 
+  await stepUpDelivery({
+    userId: actorUserId,
+    code,
+    delegationId: input.delegationId,
+    expiresAt,
+  });
+
+  // The notification records that a code was sent — never the code itself.
   await db().from("authority_notifications").insert({
     recipient_user_id: actorUserId,
     recipient_kind: "professional",
     kind: "step_up_challenge",
-    message: `Your signing confirmation code is ${code}. It expires in five minutes.`,
+    message: "A signing confirmation code was sent to you. It expires in five minutes.",
     delegation_id: input.delegationId,
   });
 
@@ -379,10 +431,15 @@ export async function verifySigningStepUp(
 
   const matches = row.challenge_reference === (await sha256(code));
   if (!matches) {
-    await db()
-      .from("stepup_authentications")
-      .update({ attempts: (row.attempts ?? 0) + 1 })
-      .eq("id", challengeId);
+    // Counted in the database, so parallel guesses cannot outrun the limit.
+    const { data: attempts } = await db().rpc("register_stepup_attempt", {
+      p_id: challengeId,
+      p_user_id: actorUserId,
+      p_max: STEP_UP_MAX_ATTEMPTS,
+    });
+    if (typeof attempts === "number" && attempts >= STEP_UP_MAX_ATTEMPTS) {
+      throw new Error("Too many attempts. Start again.");
+    }
     throw new Error("That code is not correct.");
   }
 
@@ -393,33 +450,29 @@ export async function verifySigningStepUp(
   return { verified: true as const };
 }
 
-/** A step-up only satisfies the exact action and resource it was opened for. */
+/**
+ * A step-up only satisfies the exact action and resource it was opened for.
+ * The claim is made in a single conditional database write, so two concurrent
+ * signing attempts cannot both consume the same challenge.
+ */
 async function consumeStepUp(
   actorUserId: string,
   challengeId: string,
   delegationId: string,
   resourceType: string,
   resourceId: string,
-  now: Date,
+  _now: Date,
 ): Promise<any | null> {
-  const { data: row } = await db()
-    .from("stepup_authentications")
-    .select("*")
-    .eq("id", challengeId)
-    .maybeSingle();
-  if (!row) return null;
-  if (row.user_id !== actorUserId) return null;
-  if (row.status !== "verified") return null;
-  if (row.consumed_at) return null;
-  if (row.action !== STEP_UP_SIGN_ACTION) return null;
-  if (row.delegation_id !== delegationId) return null;
-  if (row.resource_type !== resourceType || row.resource_id !== resourceId) return null;
-  if (new Date(row.expires_at) <= now) return null;
-
-  await db()
-    .from("stepup_authentications")
-    .update({ status: "consumed", consumed_at: now.toISOString() })
-    .eq("id", challengeId);
+  const { data, error } = await db().rpc("consume_signing_stepup", {
+    p_id: challengeId,
+    p_user_id: actorUserId,
+    p_delegation_id: delegationId,
+    p_action: STEP_UP_SIGN_ACTION,
+    p_resource_type: resourceType,
+    p_resource_id: resourceId,
+  });
+  if (error) return null;
+  const row = Array.isArray(data) ? (data[0] ?? null) : (data ?? null);
   return row;
 }
 
