@@ -38,6 +38,15 @@ export const getBankFeed = createServerFn({ method: "GET" })
       await import("@/lib/bank-auto-match.server")
     ).runAutoMatch(supabase, userId, data.fundId, "fund bank feed");
 
+    // Every deposit and payment is also classified for the accounting queue, so
+    // cash reaches the books through one reviewed path rather than by hand.
+    try {
+      const { classifyFundCash } = await import("@/lib/reconciliation.server");
+      await classifyFundCash(userId, data.fundId);
+    } catch {
+      // Classification never blocks the bank feed from being read.
+    }
+
 
     const [{ data: account }, { data: transactions }, { data: applications }] = await Promise.all([
       supabase
