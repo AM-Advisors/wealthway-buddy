@@ -158,22 +158,20 @@ function AuthorityDocuments() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 sm:col-span-2">
               <Label className="text-xs" htmlFor="auth-file">
-                File name
-              </Label>
-              <Input id="auth-file" value={fileName} onChange={(e) => setFileName(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs" htmlFor="auth-path">
-                Stored location
+                Authority document
               </Label>
               <Input
-                id="auth-path"
-                value={storagePath}
-                onChange={(e) => setStoragePath(e.target.value)}
-                placeholder="Leave blank to generate"
+                id="auth-file"
+                type="file"
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
+              <p className="text-xs text-muted-foreground">
+                Kept private. Only you, your client and Harmonious can open it, through a link that
+                lasts a minute.
+              </p>
             </div>
             <div className="space-y-1">
               <Label className="text-xs" htmlFor="auth-expires">
