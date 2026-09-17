@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { grantReadOnlyAccess, listProfessionalDirectory } from "@/lib/access-manager.functions";
 import { getMyIdentity } from "@/lib/identity.functions";
+import { cn } from "@/lib/utils";
 import {
   CAPABILITY_LABELS,
   DEFAULT_CAPABILITIES,
