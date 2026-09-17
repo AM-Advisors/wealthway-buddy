@@ -27,7 +27,12 @@ import {
   type AuthorityReviewStatus,
   type SignableDocumentType,
 } from "@/lib/signatory-model";
-import { listAuthorityDocs, submitAuthorityDoc } from "@/lib/signatory.functions";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  listAuthorityDocs,
+  startAuthorityUpload,
+  submitAuthorityDoc,
+} from "@/lib/signatory.functions";
 import { listDelegationsAwaitingAcceptance } from "@/lib/signatory.functions";
 import { listMyProfessionalClients } from "@/lib/professional.functions";
 
