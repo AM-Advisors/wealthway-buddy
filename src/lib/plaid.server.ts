@@ -38,6 +38,10 @@ async function call<T>(path: string, body: Record<string, unknown>): Promise<T> 
   return JSON.parse(text) as T;
 }
 
+/** Where Plaid sends signed updates for connections created here. */
+export const PLAID_WEBHOOK_URL =
+  "https://onboard.harmonious.co/api/public/plaid-webhook";
+
 export function createLinkToken(opts: { userId: string; fundName: string }) {
   return call<{ link_token: string; expiration: string }>("/link/token/create", {
     user: { client_user_id: opts.userId },
@@ -45,6 +49,7 @@ export function createLinkToken(opts: { userId: string; fundName: string }) {
     products: ["transactions"],
     country_codes: ["US"],
     language: "en",
+    webhook: PLAID_WEBHOOK_URL,
   });
 }
 
