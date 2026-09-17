@@ -18,7 +18,9 @@ import {
 import {
   cancelStaffInvitation,
   inviteStaff,
+  listAdminReview,
   listStaffAccounts,
+
   setStaffRole,
   STAFF_ROLES,
 } from "@/lib/staff-access.functions";
@@ -109,6 +111,8 @@ export function TeamAccessBoard() {
 
   return (
     <div className="space-y-4">
+      <AdminReviewPanel />
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Harmonious team access</CardTitle>
