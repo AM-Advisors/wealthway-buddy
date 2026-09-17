@@ -204,7 +204,7 @@ export async function transitionPeriod(
   const now = new Date().toISOString();
   const patch: Record<string, unknown> = { status: to, updated_at: now };
   if (to === "soft_closed") Object.assign(patch, { soft_closed_at: now, soft_closed_by: userId });
-  if (to === "review") patch.review_started_at = now;
+  if (to === "review") patch['review_started_at'] = now;
   if (to === "closed") Object.assign(patch, { closed_at: now, closed_by: userId });
   if (to === "locked") Object.assign(patch, { locked_at: now, locked_by: userId });
   if (to === "open" && SEALED_PERIOD_STATUSES.includes(from)) {
@@ -668,8 +668,8 @@ export async function advanceReport(userId: string, reportId: string, to: Report
 
   const now = new Date().toISOString();
   const patch: Record<string, unknown> = { status: to, updated_at: now };
-  if (to === "review") patch.reviewed_by = userId;
-  if (to === "review") patch.reviewed_at = now;
+  if (to === "review") patch['reviewed_by'] = userId;
+  if (to === "review") patch['reviewed_at'] = now;
   if (to === "approved") Object.assign(patch, { approved_by: userId, approved_at: now });
   if (to === "published") Object.assign(patch, { published_by: userId, published_at: now });
 
