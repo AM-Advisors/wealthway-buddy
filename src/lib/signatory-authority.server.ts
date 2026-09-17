@@ -893,6 +893,18 @@ export async function submitAuthorityDocument(
     .eq("delegation_id", row.id);
   const version = ((existing ?? []) as any[]).length + 1;
 
+  // The file must live under this delegation's own folder. A path pointing at
+  // another client's, firm's or delegation's object is refused outright.
+  const prefix = `${AUTHORITY_PREFIX}/${row.id}/`;
+  if (
+    !input.storagePath.startsWith(prefix) ||
+    input.storagePath.includes("..") ||
+    input.storagePath.length > 600
+  ) {
+    throw new Error("Forbidden: that file location does not belong to this authorisation.");
+  }
+
+
   const { data: doc, error } = await db()
     .from("authority_documents")
     .insert({
