@@ -11105,12 +11105,6 @@ export type Database = {
         Args: { _document_id: string }
         Returns: boolean
       }
-      fdr_can_modify: { Args: { _name: string }; Returns: boolean }
-      fdr_can_read: { Args: { _name: string }; Returns: boolean }
-      fdr_can_write: { Args: { _name: string }; Returns: boolean }
-      fdr_fund_id: { Args: { _name: string }; Returns: string }
-      fdr_is_lp_object: { Args: { _name: string }; Returns: boolean }
-      fdr_lp_id: { Args: { _name: string }; Returns: string }
       fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
       get_bank_access_token: {
         Args: { p_offering_id: string }
