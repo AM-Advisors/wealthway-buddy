@@ -80,18 +80,22 @@ describe("internal job authentication", () => {
   });
 });
 
-describe("privileged job logic is not entered before authentication", () => {
-  const sendInvoiceReminders = vi.fn();
-  const claimReminderRun = vi.fn();
-  const drainManagerAlerts = vi.fn();
+const mocks = vi.hoisted(() => ({
+  sendInvoiceReminders: vi.fn(),
+  claimReminderRun: vi.fn(),
+  drainManagerAlerts: vi.fn(),
+}));
 
-  vi.mock("@/lib/invoice-reminders.server", () => ({
-    sendInvoiceReminders: () => sendInvoiceReminders(),
-    claimReminderRun: () => claimReminderRun(),
-  }));
-  vi.mock("@/lib/manager-alerts.server", () => ({
-    drainManagerAlerts: () => drainManagerAlerts(),
-  }));
+vi.mock("@/lib/invoice-reminders.server", () => ({
+  sendInvoiceReminders: mocks.sendInvoiceReminders,
+  claimReminderRun: mocks.claimReminderRun,
+}));
+vi.mock("@/lib/manager-alerts.server", () => ({
+  drainManagerAlerts: mocks.drainManagerAlerts,
+}));
+
+describe("privileged job logic is not entered before authentication", () => {
+  const { sendInvoiceReminders, claimReminderRun, drainManagerAlerts } = mocks;
 
   beforeEach(() => {
     process.env["CRON_SECRET"] = SECRET;
