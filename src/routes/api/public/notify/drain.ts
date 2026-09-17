@@ -1,20 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { requireInternalJob } from "@/lib/internal-job-auth.server";
+
 // Safety-net drain for fund manager alert emails. Normal flows send within
 // seconds; this endpoint catches anything that failed or was missed.
-// Protected by a shared secret — never publicly callable without it.
+// Internal job only — never callable without the server-side job secret.
 export const Route = createFileRoute("/api/public/notify/drain")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env["LOVABLE_CRON_SECRET"];
-        const provided =
-          request.headers.get("x-cron-secret") ??
-          (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-
-        if (!secret || provided !== secret) {
-          return new Response("unauthorized", { status: 401 });
-        }
+        const unauthorized = requireInternalJob(request);
+        if (unauthorized) return unauthorized;
 
         const { drainManagerAlerts } = await import("@/lib/manager-alerts.server");
         const result = await drainManagerAlerts(50);
