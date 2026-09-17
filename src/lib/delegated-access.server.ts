@@ -171,6 +171,12 @@ export interface CanActOptions {
   mutation?: boolean;
   /** The firm the professional says they are acting through. */
   organizationId?: string | null;
+  /**
+   * Decide using only this one delegation. Used when a professional is acting
+   * in an explicit delegated context, so one grant can never be satisfied by
+   * an unrelated grant the same person happens to hold.
+   */
+  delegationId?: string | null;
   now?: Date;
 }
 
@@ -209,6 +215,7 @@ export async function canAct(
 
   const candidates = (rows ?? []).filter((row: any) => {
     if (!liveDelegation(row, now)) return false;
+    if (options.delegationId && row.id !== options.delegationId) return false;
     if (options.organizationId && row.organization_id !== options.organizationId) return false;
     return scopeCovers(row.scope_type, row.scope_id, row.principal_user_id, target);
   });

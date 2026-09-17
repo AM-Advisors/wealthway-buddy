@@ -59,6 +59,7 @@ import { getOperationsAccess } from "@/lib/operations.functions";
 import { getNavState } from "@/lib/nav.functions";
 import { getNavCounts } from "@/lib/nav-counts.functions";
 import { getPolicyStatus } from "@/lib/policies.functions";
+import { getProfessionalStanding } from "@/lib/professional.functions";
 import { cn } from "@/lib/utils";
 
 type BadgeKey = "signOff" | "applications" | "unpaidInvoices" | "serviceRequests" | "myClients";
@@ -82,6 +83,19 @@ const investorItems: NavItem[] = [
   { title: "Due diligence", url: "/diligence", icon: FolderLock },
   { title: "Portal", url: "/portal", icon: Building2 },
   { title: "My equity", url: "/my-equity", icon: Briefcase },
+  { title: "Who can see my information", url: "/access", icon: BookLock },
+];
+
+const professionalItems: NavItem[] = [
+  { title: "My clients", url: "/professional", icon: Users },
+  { title: "Client profiles", url: "/professional/profiles", icon: Briefcase },
+  { title: "Funds", url: "/professional/funds", icon: Building2 },
+  { title: "Investments", url: "/professional/investments", icon: Layers },
+  { title: "Documents", url: "/professional/documents", icon: FileText },
+  { title: "Tax", url: "/professional/tax", icon: FileSpreadsheet },
+  { title: "Tasks", url: "/professional/tasks", icon: ClipboardList },
+  { title: "Activity", url: "/professional/activity", icon: History },
+  { title: "Organization", url: "/professional/organization", icon: Handshake },
 ];
 
 const managerItems: NavItem[] = [
@@ -207,6 +221,11 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
     queryKey: ["operations-access"],
     queryFn: () => opsAccess(),
   });
+  const standingFn = useServerFn(getProfessionalStanding);
+  const { data: standing } = useQuery({
+    queryKey: ["professional-standing"],
+    queryFn: () => standingFn(),
+  });
   const policyStatus = useServerFn(getPolicyStatus);
   const { data: signOff } = useQuery({ queryKey: ["policy-status"], queryFn: () => policyStatus() });
   const navCountsFn = useServerFn(getNavCounts);
@@ -265,6 +284,8 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         list.push({ id: "selected-fund", label: "Selected fund", items: selectedFundItems(selectedFundId) });
       }
     }
+    if (standing?.isProfessional)
+      list.push({ id: "professional", label: "Acting for clients", items: professionalItems });
     if (operations?.allowed)
       list.push({ id: "operations", label: "Operations", items: operationsItems });
     if (adminAccess?.isAdmin) {
@@ -275,7 +296,13 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
       );
     }
     return list;
-  }, [adminAccess?.isAdmin, adminAccess?.isReviewer, operations?.allowed, pathname]);
+  }, [
+    adminAccess?.isAdmin,
+    adminAccess?.isReviewer,
+    operations?.allowed,
+    standing?.isProfessional,
+    pathname,
+  ]);
 
   const search = query.trim().toLowerCase();
   const matches = (item: NavItem) => !search || item.title.toLowerCase().includes(search);
