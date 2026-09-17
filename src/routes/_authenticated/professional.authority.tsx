@@ -27,7 +27,12 @@ import {
   type AuthorityReviewStatus,
   type SignableDocumentType,
 } from "@/lib/signatory-model";
-import { listAuthorityDocs, submitAuthorityDoc } from "@/lib/signatory.functions";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  listAuthorityDocs,
+  startAuthorityUpload,
+  submitAuthorityDoc,
+} from "@/lib/signatory.functions";
 import { listDelegationsAwaitingAcceptance } from "@/lib/signatory.functions";
 import { listMyProfessionalClients } from "@/lib/professional.functions";
 
@@ -38,10 +43,11 @@ function AuthorityDocuments() {
   const submit = useServerFn(submitAuthorityDoc);
   const qc = useQueryClient();
 
+  const startUpload = useServerFn(startAuthorityUpload);
+
   const [delegationId, setDelegationId] = useState("");
   const [docType, setDocType] = useState<AuthorityDocumentType>("power_of_attorney");
-  const [fileName, setFileName] = useState("");
-  const [storagePath, setStoragePath] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [expires, setExpires] = useState("");
   const [covered, setCovered] = useState<SignableDocumentType[]>([]);
 
@@ -73,21 +79,38 @@ function AuthorityDocuments() {
   ].filter((o, i, all) => all.findIndex((x) => x.id === o.id) === i);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      submit({
+    mutationFn: async () => {
+      if (!file) throw new Error("Choose the authority document first.");
+      const ticket = await startUpload({
+        data: { delegation_id: delegationId, file_name: file.name },
+      });
+      if (!ticket.signedUrl || !ticket.token) throw new Error("Could not start that upload.");
+
+      const { error } = await supabase.storage
+        .from("authority-documents")
+        .uploadToSignedUrl(ticket.path, ticket.token, file);
+      if (error) throw new Error(error.message);
+
+      const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+      const hash = Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      return submit({
         data: {
           delegation_id: delegationId,
           document_type: docType,
-          file_name: fileName,
-          storage_path: storagePath || `authority/${delegationId}/${fileName}`,
+          file_name: file.name,
+          storage_path: ticket.path,
+          document_hash: hash,
           covered_document_types: covered,
           expires_at: expires || null,
         },
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success("Submitted for review.");
-      setFileName("");
-      setStoragePath("");
+      setFile(null);
       setCovered([]);
       void qc.invalidateQueries({ queryKey: ["authority-documents", "delegate"] });
     },
@@ -140,22 +163,20 @@ function AuthorityDocuments() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 sm:col-span-2">
               <Label className="text-xs" htmlFor="auth-file">
-                File name
-              </Label>
-              <Input id="auth-file" value={fileName} onChange={(e) => setFileName(e.target.value)} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs" htmlFor="auth-path">
-                Stored location
+                Authority document
               </Label>
               <Input
-                id="auth-path"
-                value={storagePath}
-                onChange={(e) => setStoragePath(e.target.value)}
-                placeholder="Leave blank to generate"
+                id="auth-file"
+                type="file"
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
+              <p className="text-xs text-muted-foreground">
+                Kept private. Only you, your client and Harmonious can open it, through a link that
+                lasts a minute.
+              </p>
             </div>
             <div className="space-y-1">
               <Label className="text-xs" htmlFor="auth-expires">
@@ -191,7 +212,7 @@ function AuthorityDocuments() {
 
           <Button
             disabled={
-              mutation.isPending || !delegationId || !fileName || covered.length === 0
+              mutation.isPending || !delegationId || !file || covered.length === 0
             }
             onClick={() => mutation.mutate()}
           >
