@@ -903,6 +903,147 @@ export type Database = {
           },
         ]
       }
+      authority_documents: {
+        Row: {
+          covered_actions: string[]
+          covered_document_types: string[]
+          created_at: string
+          delegate_user_id: string
+          delegation_id: string | null
+          document_hash: string | null
+          document_type: string
+          effective_at: string
+          expires_at: string | null
+          file_name: string
+          id: string
+          organization_id: string | null
+          principal_user_id: string
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          scope_id: string | null
+          scope_type: Database["public"]["Enums"]["delegation_scope_type"]
+          storage_path: string
+          submitted_by: string
+          superseded_by: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          covered_actions?: string[]
+          covered_document_types?: string[]
+          created_at?: string
+          delegate_user_id: string
+          delegation_id?: string | null
+          document_hash?: string | null
+          document_type: string
+          effective_at?: string
+          expires_at?: string | null
+          file_name: string
+          id?: string
+          organization_id?: string | null
+          principal_user_id: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope_id?: string | null
+          scope_type: Database["public"]["Enums"]["delegation_scope_type"]
+          storage_path: string
+          submitted_by: string
+          superseded_by?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          covered_actions?: string[]
+          covered_document_types?: string[]
+          created_at?: string
+          delegate_user_id?: string
+          delegation_id?: string | null
+          document_hash?: string | null
+          document_type?: string
+          effective_at?: string
+          expires_at?: string | null
+          file_name?: string
+          id?: string
+          organization_id?: string | null
+          principal_user_id?: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope_id?: string | null
+          scope_type?: Database["public"]["Enums"]["delegation_scope_type"]
+          storage_path?: string
+          submitted_by?: string
+          superseded_by?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authority_documents_delegation_id_fkey"
+            columns: ["delegation_id"]
+            isOneToOne: false
+            referencedRelation: "delegations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "authority_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      authority_notifications: {
+        Row: {
+          authority_document_id: string | null
+          created_at: string
+          delegation_id: string | null
+          id: string
+          kind: string
+          message: string
+          organization_id: string | null
+          read_at: string | null
+          recipient_kind: string
+          recipient_user_id: string
+        }
+        Insert: {
+          authority_document_id?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          id?: string
+          kind: string
+          message: string
+          organization_id?: string | null
+          read_at?: string | null
+          recipient_kind?: string
+          recipient_user_id: string
+        }
+        Update: {
+          authority_document_id?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          id?: string
+          kind?: string
+          message?: string
+          organization_id?: string | null
+          read_at?: string | null
+          recipient_kind?: string
+          recipient_user_id?: string
+        }
+        Relationships: []
+      }
       bank_accounts: {
         Row: {
           account_mask: string | null
@@ -4698,6 +4839,173 @@ export type Database = {
           },
         ]
       }
+      delegated_signatures: {
+        Row: {
+          authority_document_id: string
+          authority_level: Database["public"]["Enums"]["delegation_authority_level"]
+          delegation_id: string
+          document_hash: string
+          document_name: string | null
+          document_reference: string | null
+          document_type: string
+          fund_id: string | null
+          id: string
+          investment_id: string | null
+          ip_address: string | null
+          organization_id: string | null
+          organization_name: string | null
+          principal_name: string | null
+          principal_user_id: string
+          profile_id: string | null
+          profile_label: string | null
+          signature_statement: string
+          signed_at: string
+          signer_name: string
+          signer_title: string | null
+          signer_user_id: string
+          stepup_id: string
+          stepup_method: string
+          user_agent: string | null
+        }
+        Insert: {
+          authority_document_id: string
+          authority_level: Database["public"]["Enums"]["delegation_authority_level"]
+          delegation_id: string
+          document_hash: string
+          document_name?: string | null
+          document_reference?: string | null
+          document_type: string
+          fund_id?: string | null
+          id?: string
+          investment_id?: string | null
+          ip_address?: string | null
+          organization_id?: string | null
+          organization_name?: string | null
+          principal_name?: string | null
+          principal_user_id: string
+          profile_id?: string | null
+          profile_label?: string | null
+          signature_statement: string
+          signed_at?: string
+          signer_name: string
+          signer_title?: string | null
+          signer_user_id: string
+          stepup_id: string
+          stepup_method: string
+          user_agent?: string | null
+        }
+        Update: {
+          authority_document_id?: string
+          authority_level?: Database["public"]["Enums"]["delegation_authority_level"]
+          delegation_id?: string
+          document_hash?: string
+          document_name?: string | null
+          document_reference?: string | null
+          document_type?: string
+          fund_id?: string | null
+          id?: string
+          investment_id?: string | null
+          ip_address?: string | null
+          organization_id?: string | null
+          organization_name?: string | null
+          principal_name?: string | null
+          principal_user_id?: string
+          profile_id?: string | null
+          profile_label?: string | null
+          signature_statement?: string
+          signed_at?: string
+          signer_name?: string
+          signer_title?: string | null
+          signer_user_id?: string
+          stepup_id?: string
+          stepup_method?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      delegation_acceptance_events: {
+        Row: {
+          action: string
+          actor_kind: string
+          actor_user_id: string
+          authority_level:
+            | Database["public"]["Enums"]["delegation_authority_level"]
+            | null
+          capabilities: string[]
+          created_at: string
+          delegate_user_id: string
+          delegation_id: string
+          effective_at: string | null
+          expires_at: string | null
+          grant_version: number
+          id: string
+          organization_id: string | null
+          principal_user_id: string
+          scope_id: string | null
+          scope_type:
+            | Database["public"]["Enums"]["delegation_scope_type"]
+            | null
+          snapshot: Json
+          terms_version: string | null
+        }
+        Insert: {
+          action: string
+          actor_kind: string
+          actor_user_id: string
+          authority_level?:
+            | Database["public"]["Enums"]["delegation_authority_level"]
+            | null
+          capabilities?: string[]
+          created_at?: string
+          delegate_user_id: string
+          delegation_id: string
+          effective_at?: string | null
+          expires_at?: string | null
+          grant_version?: number
+          id?: string
+          organization_id?: string | null
+          principal_user_id: string
+          scope_id?: string | null
+          scope_type?:
+            | Database["public"]["Enums"]["delegation_scope_type"]
+            | null
+          snapshot?: Json
+          terms_version?: string | null
+        }
+        Update: {
+          action?: string
+          actor_kind?: string
+          actor_user_id?: string
+          authority_level?:
+            | Database["public"]["Enums"]["delegation_authority_level"]
+            | null
+          capabilities?: string[]
+          created_at?: string
+          delegate_user_id?: string
+          delegation_id?: string
+          effective_at?: string | null
+          expires_at?: string | null
+          grant_version?: number
+          id?: string
+          organization_id?: string | null
+          principal_user_id?: string
+          scope_id?: string | null
+          scope_type?:
+            | Database["public"]["Enums"]["delegation_scope_type"]
+            | null
+          snapshot?: Json
+          terms_version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delegation_acceptance_events_delegation_id_fkey"
+            columns: ["delegation_id"]
+            isOneToOne: false
+            referencedRelation: "delegations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delegation_audit_events: {
         Row: {
           action: string
@@ -4804,17 +5112,24 @@ export type Database = {
       }
       delegations: {
         Row: {
+          acceptance_state: string
+          accepted_at: string | null
+          accepted_by: string | null
+          accepted_terms_version: string | null
           authority_document_name: string | null
           authority_document_path: string | null
           authority_level: Database["public"]["Enums"]["delegation_authority_level"]
+          covered_document_types: string[]
           created_at: string
           data_category: string | null
           delegate_user_id: string
           effective_at: string
           expires_at: string | null
+          grant_version: number
           granted_by: string
           id: string
           last_used_at: string | null
+          material_change_at: string | null
           organization_id: string | null
           principal_user_id: string
           revoke_reason: string | null
@@ -4826,17 +5141,24 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acceptance_state?: string
+          accepted_at?: string | null
+          accepted_by?: string | null
+          accepted_terms_version?: string | null
           authority_document_name?: string | null
           authority_document_path?: string | null
           authority_level?: Database["public"]["Enums"]["delegation_authority_level"]
+          covered_document_types?: string[]
           created_at?: string
           data_category?: string | null
           delegate_user_id: string
           effective_at?: string
           expires_at?: string | null
+          grant_version?: number
           granted_by: string
           id?: string
           last_used_at?: string | null
+          material_change_at?: string | null
           organization_id?: string | null
           principal_user_id: string
           revoke_reason?: string | null
@@ -4848,17 +5170,24 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acceptance_state?: string
+          accepted_at?: string | null
+          accepted_by?: string | null
+          accepted_terms_version?: string | null
           authority_document_name?: string | null
           authority_document_path?: string | null
           authority_level?: Database["public"]["Enums"]["delegation_authority_level"]
+          covered_document_types?: string[]
           created_at?: string
           data_category?: string | null
           delegate_user_id?: string
           effective_at?: string
           expires_at?: string | null
+          grant_version?: number
           granted_by?: string
           id?: string
           last_used_at?: string | null
+          material_change_at?: string | null
           organization_id?: string | null
           principal_user_id?: string
           revoke_reason?: string | null
@@ -10132,6 +10461,71 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_credentials: {
+        Row: {
+          created_at: string
+          credential_number: string | null
+          credential_type: string
+          expires_at: string | null
+          fiduciary_capacity: string | null
+          firm_identifier: string | null
+          id: string
+          issued_at: string | null
+          jurisdiction: string | null
+          organization_id: string | null
+          review_note: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          credential_number?: string | null
+          credential_type: string
+          expires_at?: string | null
+          fiduciary_capacity?: string | null
+          firm_identifier?: string | null
+          id?: string
+          issued_at?: string | null
+          jurisdiction?: string | null
+          organization_id?: string | null
+          review_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          credential_number?: string | null
+          credential_type?: string
+          expires_at?: string | null
+          fiduciary_capacity?: string | null
+          firm_identifier?: string | null
+          id?: string
+          issued_at?: string | null
+          jurisdiction?: string | null
+          organization_id?: string | null
+          review_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_credentials_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_memberships: {
         Row: {
           activated_at: string | null
@@ -10188,47 +10582,160 @@ export type Database = {
           },
         ]
       }
-      professional_organizations: {
+      professional_organization_documents: {
         Row: {
           created_at: string
-          created_by: string | null
+          document_hash: string | null
+          document_type: string
+          expires_at: string | null
+          file_name: string
           id: string
-          jurisdiction: string | null
-          legal_name: string | null
-          name: string
-          notes: string | null
-          org_type: Database["public"]["Enums"]["professional_org_type"]
-          registration_number: string | null
-          status: string
-          updated_at: string
-          website: string | null
+          organization_id: string
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          storage_path: string
+          uploaded_by: string
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
+          document_hash?: string | null
+          document_type: string
+          expires_at?: string | null
+          file_name: string
           id?: string
-          jurisdiction?: string | null
-          legal_name?: string | null
-          name: string
-          notes?: string | null
-          org_type?: Database["public"]["Enums"]["professional_org_type"]
-          registration_number?: string | null
-          status?: string
-          updated_at?: string
-          website?: string | null
+          organization_id: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path: string
+          uploaded_by: string
         }
         Update: {
           created_at?: string
+          document_hash?: string | null
+          document_type?: string
+          expires_at?: string | null
+          file_name?: string
+          id?: string
+          organization_id?: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_organization_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "professional_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_organizations: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          business_identifier: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          dba_name: string | null
+          id: string
+          jurisdiction: string | null
+          legal_name: string | null
+          license_number: string | null
+          name: string
+          notes: string | null
+          org_type: Database["public"]["Enums"]["professional_org_type"]
+          postal_code: string | null
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          region: string | null
+          registration_number: string | null
+          regulatory_identifiers: Json
+          reverification_due_at: string | null
+          status: string
+          updated_at: string
+          verification_note: string | null
+          verification_status: string
+          verification_submitted_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+          website: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_identifier?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
           created_by?: string | null
+          dba_name?: string | null
           id?: string
           jurisdiction?: string | null
           legal_name?: string | null
+          license_number?: string | null
+          name: string
+          notes?: string | null
+          org_type?: Database["public"]["Enums"]["professional_org_type"]
+          postal_code?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          region?: string | null
+          registration_number?: string | null
+          regulatory_identifiers?: Json
+          reverification_due_at?: string | null
+          status?: string
+          updated_at?: string
+          verification_note?: string | null
+          verification_status?: string
+          verification_submitted_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          website?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_identifier?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          dba_name?: string | null
+          id?: string
+          jurisdiction?: string | null
+          legal_name?: string | null
+          license_number?: string | null
           name?: string
           notes?: string | null
           org_type?: Database["public"]["Enums"]["professional_org_type"]
+          postal_code?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          region?: string | null
           registration_number?: string | null
+          regulatory_identifiers?: Json
+          reverification_due_at?: string | null
           status?: string
           updated_at?: string
+          verification_note?: string | null
+          verification_status?: string
+          verification_submitted_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
           website?: string | null
         }
         Relationships: []
@@ -11838,6 +12345,66 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      stepup_authentications: {
+        Row: {
+          action: string
+          attempts: number
+          challenge_reference: string | null
+          consumed_at: string | null
+          created_at: string
+          delegation_id: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          method: string
+          resource_id: string | null
+          resource_type: string | null
+          session_reference: string | null
+          status: string
+          user_agent: string | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          action: string
+          attempts?: number
+          challenge_reference?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          method: string
+          resource_id?: string | null
+          resource_type?: string | null
+          session_reference?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          action?: string
+          attempts?: number
+          challenge_reference?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          method?: string
+          resource_id?: string | null
+          resource_type?: string | null
+          session_reference?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
