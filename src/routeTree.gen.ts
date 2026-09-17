@@ -153,6 +153,7 @@ import { Route as AuthenticatedProfessionalPrepareRouteImport } from './routes/_
 import { Route as AuthenticatedProfessionalProfilesRouteImport } from './routes/_authenticated/professional.profiles'
 import { Route as AuthenticatedProfessionalTasksRouteImport } from './routes/_authenticated/professional.tasks'
 import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_authenticated/professional.tax'
+import { Route as AuthenticatedProfessionalVerificationRouteImport } from './routes/_authenticated/professional.verification'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
@@ -1022,6 +1023,12 @@ const AuthenticatedProfessionalTaxRoute =
     path: '/tax',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedProfessionalVerificationRoute =
+  AuthenticatedProfessionalVerificationRouteImport.update({
+    id: '/verification',
+    path: '/verification',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
 const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   id: '/api/public/cap-claim',
   path: '/api/public/cap-claim',
@@ -1506,6 +1513,7 @@ export interface FileRoutesByFullPath {
   '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
+  '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
@@ -1705,6 +1713,7 @@ export interface FileRoutesByTo {
   '/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
+  '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
@@ -1910,6 +1919,7 @@ export interface FileRoutesById {
   '/_authenticated/professional/profiles': typeof AuthenticatedProfessionalProfilesRoute
   '/_authenticated/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/_authenticated/professional/tax': typeof AuthenticatedProfessionalTaxRoute
+  '/_authenticated/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
@@ -2116,6 +2126,7 @@ export interface FileRouteTypes {
     | '/professional/profiles'
     | '/professional/tasks'
     | '/professional/tax'
+    | '/professional/verification'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
@@ -2315,6 +2326,7 @@ export interface FileRouteTypes {
     | '/professional/profiles'
     | '/professional/tasks'
     | '/professional/tax'
+    | '/professional/verification'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
@@ -2519,6 +2531,7 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/profiles'
     | '/_authenticated/professional/tasks'
     | '/_authenticated/professional/tax'
+    | '/_authenticated/professional/verification'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/login-attempt'
@@ -3631,6 +3644,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfessionalTaxRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
     }
+    '/_authenticated/professional/verification': {
+      id: '/_authenticated/professional/verification'
+      path: '/verification'
+      fullPath: '/professional/verification'
+      preLoaderRoute: typeof AuthenticatedProfessionalVerificationRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
     '/api/public/cap-claim': {
       id: '/api/public/cap-claim'
       path: '/api/public/cap-claim'
@@ -4174,6 +4194,7 @@ interface AuthenticatedProfessionalRouteChildren {
   AuthenticatedProfessionalProfilesRoute: typeof AuthenticatedProfessionalProfilesRoute
   AuthenticatedProfessionalTasksRoute: typeof AuthenticatedProfessionalTasksRoute
   AuthenticatedProfessionalTaxRoute: typeof AuthenticatedProfessionalTaxRoute
+  AuthenticatedProfessionalVerificationRoute: typeof AuthenticatedProfessionalVerificationRoute
   AuthenticatedProfessionalIndexRoute: typeof AuthenticatedProfessionalIndexRoute
   AuthenticatedProfessionalActingDelegationIdRoute: typeof AuthenticatedProfessionalActingDelegationIdRoute
 }
@@ -4195,6 +4216,8 @@ const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChil
       AuthenticatedProfessionalProfilesRoute,
     AuthenticatedProfessionalTasksRoute: AuthenticatedProfessionalTasksRoute,
     AuthenticatedProfessionalTaxRoute: AuthenticatedProfessionalTaxRoute,
+    AuthenticatedProfessionalVerificationRoute:
+      AuthenticatedProfessionalVerificationRoute,
     AuthenticatedProfessionalIndexRoute: AuthenticatedProfessionalIndexRoute,
     AuthenticatedProfessionalActingDelegationIdRoute:
       AuthenticatedProfessionalActingDelegationIdRoute,
