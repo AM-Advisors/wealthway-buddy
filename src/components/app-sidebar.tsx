@@ -78,6 +78,7 @@ const investorItems: NavItem[] = [
   { title: "Documents", url: "/documents", icon: FileText },
   { title: "Capital statements", url: "/statements", icon: FileSpreadsheet },
   { title: "Fund reports", url: "/investor-financials", icon: FileSpreadsheet },
+  { title: "Performance", url: "/investor-performance", icon: Gauge },
   { title: "Fund documents", url: "/fund-documents", icon: FolderLock },
   { title: "Document vault", url: "/vault", icon: FileSignature },
   { title: "Wire instructions", url: "/wire", icon: Landmark },
@@ -119,6 +120,7 @@ const managerItems: NavItem[] = [
   { title: "Fund NAV", url: "/manager/nav", icon: Gauge },
   { title: "Investor capital", url: "/manager/allocations", icon: Users },
   { title: "Fund financials", url: "/manager/financials", icon: FileSpreadsheet },
+  { title: "Published performance", url: "/manager/performance-reporting", icon: Gauge },
   { title: "Reviewer activity", url: "/manager/activity", icon: ClipboardList },
 ];
 
@@ -139,6 +141,7 @@ const operationsItems: NavItem[] = [
   { title: "NAV review", url: "/ops/nav", icon: Gauge },
   { title: "Investor allocations", url: "/ops/allocations", icon: Users },
   { title: "Financial reporting", url: "/ops/financials", icon: FileSpreadsheet },
+  { title: "Performance reporting", url: "/ops/performance", icon: Gauge },
   { title: "Banking requests", url: "/ops/banking", icon: Landmark },
   { title: "EIN and SS-4", url: "/ops/ss4", icon: FileText },
   { title: "Tax documents", url: "/ops/tax-documents", icon: FileSpreadsheet },
