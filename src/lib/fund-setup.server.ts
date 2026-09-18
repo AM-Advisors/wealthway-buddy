@@ -747,11 +747,11 @@ export async function saveTargetAsset(
     issuer_approval_status: input['issuerApprovalStatus'] ?? "not_required",
     transfer_restrictions: input['transferRestrictions'] ?? null,
     purchase_agreement_document_id: input['purchaseAgreementDocumentId'] ?? null,
-    notes: input.notes ?? null,
+    notes: input['notes'] ?? null,
     updated_at: nowIso(),
   };
-  const result = input.id
-    ? await db().from("fund_target_assets").update(payload).eq("id", input.id).select("*").single()
+  const result = input['id']
+    ? await db().from("fund_target_assets").update(payload).eq("id", input['id']).select("*").single()
     : await db()
         .from("fund_target_assets")
         .insert({ ...payload, created_by: userId })
