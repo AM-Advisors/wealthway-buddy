@@ -1015,14 +1015,14 @@ export function distributionBucket(line: {
 /** What a fund manager may see. Never a destination, never tax evidence. */
 export function managerSafeLine(line: Record<string, any>) {
   return {
-    id: line.id,
-    displayName: line.display_name ?? line.displayName ?? null,
-    investmentProfileId: line.investment_profile_id ?? line.investmentProfileId ?? null,
-    grossCents: Number(line.gross_cents ?? line.grossCents ?? 0),
-    withholdingCents: Number(line.withholding_cents ?? line.withholdingCents ?? 0),
-    netCents: Number(line.net_cents ?? line.netCents ?? 0),
-    approvalState: line.approval_state ?? line.approvalState ?? "draft",
-    paymentState: line.payment_state ?? line.paymentState ?? "not_started",
+    id: line['id'],
+    displayName: line['display_name'] ?? line['displayName'] ?? null,
+    investmentProfileId: line['investment_profile_id'] ?? line['investmentProfileId'] ?? null,
+    grossCents: Number(line['gross_cents'] ?? line['grossCents'] ?? 0),
+    withholdingCents: Number(line['withholding_cents'] ?? line['withholdingCents'] ?? 0),
+    netCents: Number(line['net_cents'] ?? line['netCents'] ?? 0),
+    approvalState: line['approval_state'] ?? line['approvalState'] ?? "draft",
+    paymentState: line['payment_state'] ?? line['paymentState'] ?? "not_started",
     // Deliberately absent: destination, masked account, secured details,
     // tax documentation, characterization evidence, internal workpapers.
   };
@@ -1031,17 +1031,18 @@ export function managerSafeLine(line: Record<string, any>) {
 /** What an investor may see about their own line, and only their own. */
 export function investorSafeLine(line: Record<string, any>, instructionMasked: string | null) {
   return {
-    id: line.id,
-    offeringId: line.offering_id ?? line.offeringId ?? null,
-    investmentProfileId: line.investment_profile_id ?? line.investmentProfileId ?? null,
-    distributionType: line.distribution_type ?? line.distributionType ?? "ordinary",
-    grossCents: Number(line.gross_cents ?? line.grossCents ?? 0),
-    withholdingCents: Number(line.withholding_cents ?? line.withholdingCents ?? 0),
-    feeCents: Number(line.fee_cents ?? line.feeCents ?? 0),
-    netCents: Number(line.net_cents ?? line.netCents ?? 0),
-    currency: line.currency ?? "USD",
-    effectiveDate: line.effective_date ?? line.effectiveDate ?? null,
+    id: line['id'],
+    offeringId: line['offering_id'] ?? line['offeringId'] ?? null,
+    investmentProfileId: line['investment_profile_id'] ?? line['investmentProfileId'] ?? null,
+    distributionType: line['distribution_type'] ?? line['distributionType'] ?? "ordinary",
+    grossCents: Number(line['gross_cents'] ?? line['grossCents'] ?? 0),
+    withholdingCents: Number(line['withholding_cents'] ?? line['withholdingCents'] ?? 0),
+    feeCents: Number(line['fee_cents'] ?? line['feeCents'] ?? 0),
+    netCents: Number(line['net_cents'] ?? line['netCents'] ?? 0),
+    currency: line['currency'] ?? "USD",
+    effectiveDate: line['effective_date'] ?? line['effectiveDate'] ?? null,
     destinationEnding: instructionMasked,
-    paymentState: line.payment_state ?? line.paymentState ?? "not_started",
+    paymentState: line['payment_state'] ?? line['paymentState'] ?? "not_started",
   };
 }
+
