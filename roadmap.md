@@ -59,3 +59,6 @@
 ## Fund administration
 - [x] Phase A: fund setup, configuration and launch approval
 - [x] Phase B: end-to-end investor onboarding and subscription — orchestration records (onboardings, exceptions, append-only events, versioned questionnaires), deny-by-default rules engine, server engine re-resolving authority per call, investor journey page, Harmonious review queue, manager progress board, funding instructions gated on released banking, conservative bank matching, acceptance and closing handed off to existing positions and commitment events
+- [x] Phase C: capital calls, funding, cash receipt and investor closing — lifecycle derived from posted accounting, never UI state
+- [x] Phase D: distributions, return of capital, withholding and outbound money movement — entitlements from approved economics, withholding from tax documentation, verified destinations with step-up, independent notice and cooling-off, manager + two-person Harmonious approval, provider confirmation correlated not trusted, reconciliation and posted GL before any capital account moves, versioned notices, full audit trail
+- [ ] Delegated transaction authority — deliberately not enabled

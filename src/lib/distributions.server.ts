@@ -779,7 +779,7 @@ export async function proposeDistribution(
       investmentProfileId: r.investment_profile_id ? String(r.investment_profile_id) : null,
       displayName: r.display_name ?? null,
       classId: r.class_id ? String(r.class_id) : null,
-      commitmentCents: Number(commitment?.commitmentCents ?? 0),
+      commitmentCents: Number(commitment?.currentCommitmentCents ?? 0),
       contributedCents: Number(commitment?.contributedCents ?? 0),
       capitalAccountCents: Number(account?.ending_capital_cents ?? 0),
       ownershipBps: Math.round(Number(account?.ownership_pct ?? 0) * 100),
@@ -2032,7 +2032,7 @@ export async function publishDistributionNotice(userId: string, lineId: string) 
     paymentMethod: instruction?.method ?? line.payment_method ?? null,
     destinationEnding: instruction?.masked_account ?? null,
     characterization: line.characterization ?? {},
-    remainingCommitmentCents: Number(commitment?.unfundedCents ?? 0),
+    remainingCommitmentCents: Number(commitment?.remainingCommitmentCents ?? 0),
     contributedCents: Number(commitment?.contributedCents ?? 0),
   };
 
@@ -2222,6 +2222,16 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
     : { data: [] };
   const instructionById = new Map(((instructions ?? []) as any[]).map((i) => [String(i.id), i]));
 
+  const { data: payments } = batchIds.length
+    ? await db()
+        .from("distribution_payments")
+        .select("id, distribution_line_id, attempt, status")
+        .in("batch_id", batchIds)
+        .order("attempt", { ascending: true })
+    : { data: [] };
+  const paymentByLine = new Map<string, any>();
+  for (const p of (payments ?? []) as any[]) paymentByLine.set(String(p.distribution_line_id), p);
+
   const now = nowIso();
   const rows = ((lines ?? []) as any[]).map((l) => {
     const batch = batchById.get(String(l.batch_id));
@@ -2255,6 +2265,9 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
       paymentState: String(l.payment_state),
       reconciliationState: String(l.reconciliation_state),
       accountingState: String(l.accounting_state),
+      paymentId: paymentByLine.get(String(l.id))?.id
+        ? String(paymentByLine.get(String(l.id)).id)
+        : null,
       bucket,
     };
   });
@@ -2361,4 +2374,9 @@ export async function distributionAuditTrail(userId: string, batchId: string) {
     notices: notices ?? [],
     events: events ?? [],
   };
+}
+
+/** Provider intake is a Harmonious-operated action, never an open endpoint. */
+export async function assertStaffForProviderIntake(userId: string) {
+  return assertStaff(userId);
 }

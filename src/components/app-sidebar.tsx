@@ -80,6 +80,7 @@ const investorItems: NavItem[] = [
   { title: "Fund reports", url: "/investor-financials", icon: FileSpreadsheet },
   { title: "Performance", url: "/investor-performance", icon: Gauge },
   { title: "Reports", url: "/investor-reporting", icon: FileSpreadsheet },
+  { title: "My distributions", url: "/investor-distributions", icon: Banknote },
   { title: "Fund documents", url: "/fund-documents", icon: FolderLock },
   { title: "Document vault", url: "/vault", icon: FileSignature },
   { title: "Wire instructions", url: "/wire", icon: Landmark },
@@ -124,6 +125,7 @@ const managerItems: NavItem[] = [
   { title: "Fund financials", url: "/manager/financials", icon: FileSpreadsheet },
   { title: "Published performance", url: "/manager/performance-reporting", icon: Gauge },
   { title: "Investor packages", url: "/manager/reporting", icon: FileSpreadsheet },
+  { title: "Fund distributions", url: "/manager/distributions", icon: Banknote },
   { title: "Reviewer activity", url: "/manager/activity", icon: ClipboardList },
 ];
 
@@ -156,6 +158,7 @@ const clientsAndMoneyItems: NavItem[] = [
   { title: "Client onboarding", url: "/admin/onboarding", icon: UserPlus },
   { title: "Onboarding progress", url: "/admin/onboarding-progress", icon: Gauge },
   { title: "Investor onboarding", url: "/admin/investor-onboarding", icon: Users },
+  { title: "Distributions & payments", url: "/admin/distributions", icon: Banknote },
   { title: "Clients and scope", url: "/admin/contracts", icon: Handshake },
   { title: "Entities and engagements", url: "/admin/entities", icon: Building2 },
   { title: "Services administration", url: "/admin/services", icon: Layers },
