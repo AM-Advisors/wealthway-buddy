@@ -144,6 +144,7 @@ import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_au
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
+import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
@@ -981,6 +982,12 @@ const AuthenticatedOpsAccountingRoute =
     path: '/ops/accounting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsAllocationsRoute =
+  AuthenticatedOpsAllocationsRouteImport.update({
+    id: '/ops/allocations',
+    path: '/ops/allocations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   id: '/ops/banking',
   path: '/ops/banking',
@@ -1579,6 +1586,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -1790,6 +1798,7 @@ export interface FileRoutesByTo {
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -2007,6 +2016,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -2225,6 +2235,7 @@ export interface FileRouteTypes {
     | '/onboarding/funding'
     | '/onboarding/kyc'
     | '/ops/accounting'
+    | '/ops/allocations'
     | '/ops/banking'
     | '/ops/nav'
     | '/ops/ss4'
@@ -2436,6 +2447,7 @@ export interface FileRouteTypes {
     | '/onboarding/funding'
     | '/onboarding/kyc'
     | '/ops/accounting'
+    | '/ops/allocations'
     | '/ops/banking'
     | '/ops/nav'
     | '/ops/ss4'
@@ -2652,6 +2664,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding/funding'
     | '/_authenticated/onboarding/kyc'
     | '/_authenticated/ops/accounting'
+    | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/ss4'
@@ -3721,6 +3734,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsAccountingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/allocations': {
+      id: '/_authenticated/ops/allocations'
+      path: '/ops/allocations'
+      fullPath: '/ops/allocations'
+      preLoaderRoute: typeof AuthenticatedOpsAllocationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/banking': {
       id: '/_authenticated/ops/banking'
       path: '/ops/banking'
@@ -4590,6 +4610,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingFundingRoute: typeof AuthenticatedOnboardingFundingRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
+  AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
@@ -4732,6 +4753,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingFundingRoute: AuthenticatedOnboardingFundingRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
+  AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
