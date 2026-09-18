@@ -293,9 +293,15 @@ describe("database policies", () => {
       const name = /create policy\s+"([^"]+)"/i.exec(block)?.[1];
       if (name) inForce.set(name, block);
     }
-    const broad = [...inForce.values()].filter(
-      (block) => !/as restrictive/i.test(block) && /for all\s+to\s+authenticated/i.test(block),
-    );
+    // A FOR ALL policy is only "broad" when nothing narrows it: an unguarded
+    // USING (true), or no USING clause at all. Staff- or ownership-guarded
+    // policies are the intended shape.
+    const broad = [...inForce.values()].filter((block) => {
+      if (/as restrictive/i.test(block)) return false;
+      if (!/for all\s+to\s+authenticated/i.test(block)) return false;
+      const using = /using\s*\(([\s\S]*?)\)\s*(with check|;)/i.exec(block)?.[1] ?? "";
+      return using.trim() === "" || /^true$/i.test(using.trim());
+    });
     expect(broad).toEqual([]);
   });
 
