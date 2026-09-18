@@ -120,6 +120,13 @@
       "when": 1789707021108,
       "tag": "0016_investor_reporting_center_step7",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789746971463,
+      "tag": "0017_tax_operations_step8",
+      "breakpoints": true
     }
   ]
 }

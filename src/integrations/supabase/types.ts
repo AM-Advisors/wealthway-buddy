@@ -2298,6 +2298,103 @@ export type Database = {
           },
         ]
       }
+      book_tax_adjustments: {
+        Row: {
+          account_id: string | null
+          adjustment_cents: number
+          approved_at: string | null
+          approved_by: string | null
+          book_amount_cents: number
+          category: string
+          created_at: string
+          difference_type: string
+          evidence: Json
+          explanation: string
+          id: string
+          item_code: string
+          offering_id: string | null
+          prepared_at: string | null
+          prepared_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string | null
+          status: string
+          tax_amount_cents: number
+          tax_year_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          adjustment_cents?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          book_amount_cents?: number
+          category: string
+          created_at?: string
+          difference_type: string
+          evidence?: Json
+          explanation: string
+          id?: string
+          item_code: string
+          offering_id?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          status?: string
+          tax_amount_cents?: number
+          tax_year_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          adjustment_cents?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          book_amount_cents?: number
+          category?: string
+          created_at?: string
+          difference_type?: string
+          evidence?: Json
+          explanation?: string
+          id?: string
+          item_code?: string
+          offering_id?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          status?: string
+          tax_amount_cents?: number
+          tax_year_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_tax_adjustments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_tax_adjustments_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_tax_adjustments_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cap_certificates: {
         Row: {
           cancelled_at: string | null
@@ -8913,6 +9010,332 @@ export type Database = {
           },
         ]
       }
+      form_1042_returns: {
+        Row: {
+          approved_by: string | null
+          control_totals: Json
+          created_at: string
+          difference_cents: number
+          exceptions: Json
+          filing_status: string
+          id: string
+          offering_id: string
+          prepared_by: string | null
+          recipient_totals: Json
+          reviewed_by: string | null
+          source_manifest: Json
+          status: string
+          supersedes_id: string | null
+          tax_year: number
+          tax_year_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_by?: string | null
+          control_totals?: Json
+          created_at?: string
+          difference_cents?: number
+          exceptions?: Json
+          filing_status?: string
+          id?: string
+          offering_id: string
+          prepared_by?: string | null
+          recipient_totals?: Json
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_year: number
+          tax_year_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_by?: string | null
+          control_totals?: Json
+          created_at?: string
+          difference_cents?: number
+          exceptions?: Json
+          filing_status?: string
+          id?: string
+          offering_id?: string
+          prepared_by?: string | null
+          recipient_totals?: Json
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_year?: number
+          tax_year_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_1042_returns_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1042_returns_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "form_1042_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1042_returns_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_1042s_records: {
+        Row: {
+          amendment_reason: string | null
+          approved_by: string | null
+          chapter: string
+          country: string | null
+          created_at: string
+          delivered_at: string | null
+          exemption_code: string | null
+          gross_income_cents: number
+          id: string
+          income_code: string
+          investment_profile_id: string | null
+          offering_id: string
+          prepared_by: string | null
+          rate_bps: number
+          recipient_user_id: string | null
+          reviewed_by: string | null
+          source_manifest: Json
+          status: string
+          supersedes_id: string | null
+          tax_year: number
+          tax_year_id: string | null
+          updated_at: string
+          version: number
+          withheld_cents: number
+          withholding_record_ids: Json
+        }
+        Insert: {
+          amendment_reason?: string | null
+          approved_by?: string | null
+          chapter?: string
+          country?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          exemption_code?: string | null
+          gross_income_cents?: number
+          id?: string
+          income_code: string
+          investment_profile_id?: string | null
+          offering_id: string
+          prepared_by?: string | null
+          rate_bps?: number
+          recipient_user_id?: string | null
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_year: number
+          tax_year_id?: string | null
+          updated_at?: string
+          version?: number
+          withheld_cents?: number
+          withholding_record_ids?: Json
+        }
+        Update: {
+          amendment_reason?: string | null
+          approved_by?: string | null
+          chapter?: string
+          country?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          exemption_code?: string | null
+          gross_income_cents?: number
+          id?: string
+          income_code?: string
+          investment_profile_id?: string | null
+          offering_id?: string
+          prepared_by?: string | null
+          rate_bps?: number
+          recipient_user_id?: string | null
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_year?: number
+          tax_year_id?: string | null
+          updated_at?: string
+          version?: number
+          withheld_cents?: number
+          withholding_record_ids?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_1042s_records_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1042s_records_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1042s_records_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "form_1042s_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1042s_records_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_1099_records: {
+        Row: {
+          approved_by: string | null
+          boxes: Json
+          correction_reason: string | null
+          corrects_id: string | null
+          created_at: string
+          delivered_at: string | null
+          exceptions: Json
+          filing_status: string
+          form_type: string
+          id: string
+          is_correction: boolean
+          offering_id: string | null
+          payer_entity_id: string | null
+          payer_name: string
+          payment_record_ids: Json
+          prepared_by: string | null
+          recipient_classification: string | null
+          recipient_name: string
+          recipient_profile_id: string | null
+          recipient_user_id: string | null
+          reviewed_by: string | null
+          source_manifest: Json
+          status: string
+          tax_year: number
+          tax_year_id: string | null
+          tin_on_file: boolean
+          total_amount_cents: number
+          updated_at: string
+          version: number
+          withheld_cents: number
+        }
+        Insert: {
+          approved_by?: string | null
+          boxes?: Json
+          correction_reason?: string | null
+          corrects_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          exceptions?: Json
+          filing_status?: string
+          form_type: string
+          id?: string
+          is_correction?: boolean
+          offering_id?: string | null
+          payer_entity_id?: string | null
+          payer_name: string
+          payment_record_ids?: Json
+          prepared_by?: string | null
+          recipient_classification?: string | null
+          recipient_name: string
+          recipient_profile_id?: string | null
+          recipient_user_id?: string | null
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          tax_year: number
+          tax_year_id?: string | null
+          tin_on_file?: boolean
+          total_amount_cents?: number
+          updated_at?: string
+          version?: number
+          withheld_cents?: number
+        }
+        Update: {
+          approved_by?: string | null
+          boxes?: Json
+          correction_reason?: string | null
+          corrects_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          exceptions?: Json
+          filing_status?: string
+          form_type?: string
+          id?: string
+          is_correction?: boolean
+          offering_id?: string | null
+          payer_entity_id?: string | null
+          payer_name?: string
+          payment_record_ids?: Json
+          prepared_by?: string | null
+          recipient_classification?: string | null
+          recipient_name?: string
+          recipient_profile_id?: string | null
+          recipient_user_id?: string | null
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          tax_year?: number
+          tax_year_id?: string | null
+          tin_on_file?: boolean
+          total_amount_cents?: number
+          updated_at?: string
+          version?: number
+          withheld_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_1099_records_corrects_id_fkey"
+            columns: ["corrects_id"]
+            isOneToOne: false
+            referencedRelation: "form_1099_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1099_records_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1099_records_recipient_profile_id_fkey"
+            columns: ["recipient_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_1099_records_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_access_requests: {
         Row: {
           created_at: string
@@ -9645,6 +10068,209 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      individual_tax_documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dedupe_key: string | null
+          document_type: string
+          household_id: string
+          id: string
+          issuer: string | null
+          origin: string
+          owner_user_id: string | null
+          person_id: string | null
+          return_id: string | null
+          source_id: string | null
+          source_table: string | null
+          source_version: number | null
+          status: string
+          storage_path: string | null
+          structured_data: Json
+          tax_year: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dedupe_key?: string | null
+          document_type: string
+          household_id: string
+          id?: string
+          issuer?: string | null
+          origin?: string
+          owner_user_id?: string | null
+          person_id?: string | null
+          return_id?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          source_version?: number | null
+          status?: string
+          storage_path?: string | null
+          structured_data?: Json
+          tax_year: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dedupe_key?: string | null
+          document_type?: string
+          household_id?: string
+          id?: string
+          issuer?: string | null
+          origin?: string
+          owner_user_id?: string | null
+          person_id?: string | null
+          return_id?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          source_version?: number | null
+          status?: string
+          storage_path?: string | null
+          structured_data?: Json
+          tax_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "individual_tax_documents_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "taxpayer_households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "individual_tax_documents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "individual_tax_documents_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "individual_tax_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      individual_tax_returns: {
+        Row: {
+          amendment_reason: string | null
+          approved_at: string | null
+          approved_by: string | null
+          calculation_version: string
+          created_at: string
+          delivered_at: string | null
+          document_generated_at: string | null
+          filing_status: string
+          filing_status_code: string
+          household_id: string
+          id: string
+          missing_information: Json
+          prepared_at: string | null
+          prepared_by: string | null
+          primary_user_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          schedules: Json
+          source_manifest: Json
+          status: string
+          supersedes_id: string | null
+          tax_year: number
+          tax_year_id: string | null
+          taxpayer_approved_at: string | null
+          taxpayer_approved_by: string | null
+          totals: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          amendment_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          calculation_version?: string
+          created_at?: string
+          delivered_at?: string | null
+          document_generated_at?: string | null
+          filing_status?: string
+          filing_status_code?: string
+          household_id: string
+          id?: string
+          missing_information?: Json
+          prepared_at?: string | null
+          prepared_by?: string | null
+          primary_user_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          schedules?: Json
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_year: number
+          tax_year_id?: string | null
+          taxpayer_approved_at?: string | null
+          taxpayer_approved_by?: string | null
+          totals?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          amendment_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          calculation_version?: string
+          created_at?: string
+          delivered_at?: string | null
+          document_generated_at?: string | null
+          filing_status?: string
+          filing_status_code?: string
+          household_id?: string
+          id?: string
+          missing_information?: Json
+          prepared_at?: string | null
+          prepared_by?: string | null
+          primary_user_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          schedules?: Json
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_year?: number
+          tax_year_id?: string | null
+          taxpayer_approved_at?: string | null
+          taxpayer_approved_by?: string | null
+          totals?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "individual_tax_returns_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "taxpayer_households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "individual_tax_returns_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "individual_tax_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "individual_tax_returns_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
             referencedColumns: ["id"]
           },
         ]
@@ -11525,6 +12151,148 @@ export type Database = {
           },
         ]
       }
+      k1_forms: {
+        Row: {
+          amendment_reason: string | null
+          approved_at: string | null
+          approved_by: string | null
+          book_capital: Json
+          boxes: Json
+          created_at: string
+          delivered_at: string | null
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string
+          is_foreign: boolean
+          offering_id: string
+          outside_basis: Json
+          outside_basis_available: boolean
+          partner_classification: string | null
+          position_id: string | null
+          prepared_at: string | null
+          prepared_by: string | null
+          return_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_manifest: Json
+          status: string
+          storage_path: string | null
+          supersedes_id: string | null
+          tax_capital: Json
+          tax_year: number
+          tax_year_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          amendment_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          book_capital?: Json
+          boxes?: Json
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id: string
+          is_foreign?: boolean
+          offering_id: string
+          outside_basis?: Json
+          outside_basis_available?: boolean
+          partner_classification?: string | null
+          position_id?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          return_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          storage_path?: string | null
+          supersedes_id?: string | null
+          tax_capital?: Json
+          tax_year: number
+          tax_year_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          amendment_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          book_capital?: Json
+          boxes?: Json
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string
+          is_foreign?: boolean
+          offering_id?: string
+          outside_basis?: Json
+          outside_basis_available?: boolean
+          partner_classification?: string | null
+          position_id?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          return_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_manifest?: Json
+          status?: string
+          storage_path?: string | null
+          supersedes_id?: string | null
+          tax_capital?: Json
+          tax_year?: number
+          tax_year_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "k1_forms_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "k1_forms_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "k1_forms_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "k1_forms_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "partnership_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "k1_forms_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "k1_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "k1_forms_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           application_id: string
@@ -13380,6 +14148,140 @@ export type Database = {
           },
         ]
       }
+      partnership_returns: {
+        Row: {
+          adjustments_cents: number
+          allocation_run_id: string | null
+          amendment_reason: string | null
+          approved_at: string | null
+          approved_by: string | null
+          book_income_cents: number
+          capital_reconciliation: Json
+          created_at: string
+          document_generated_at: string | null
+          ein_last4: string | null
+          exceptions: Json
+          filing_status: string
+          form_type: string
+          id: string
+          manager_note: string | null
+          manager_responded_at: string | null
+          manager_responded_by: string | null
+          manager_response: string | null
+          offering_id: string
+          prepared_at: string | null
+          prepared_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          separately_stated: Json
+          source_manifest: Json
+          status: string
+          supersedes_id: string | null
+          tax_income_cents: number
+          tax_year: number
+          tax_year_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          adjustments_cents?: number
+          allocation_run_id?: string | null
+          amendment_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          book_income_cents?: number
+          capital_reconciliation?: Json
+          created_at?: string
+          document_generated_at?: string | null
+          ein_last4?: string | null
+          exceptions?: Json
+          filing_status?: string
+          form_type?: string
+          id?: string
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          offering_id: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          separately_stated?: Json
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_income_cents?: number
+          tax_year: number
+          tax_year_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          adjustments_cents?: number
+          allocation_run_id?: string | null
+          amendment_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          book_income_cents?: number
+          capital_reconciliation?: Json
+          created_at?: string
+          document_generated_at?: string | null
+          ein_last4?: string | null
+          exceptions?: Json
+          filing_status?: string
+          form_type?: string
+          id?: string
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          offering_id?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          separately_stated?: Json
+          source_manifest?: Json
+          status?: string
+          supersedes_id?: string | null
+          tax_income_cents?: number
+          tax_year?: number
+          tax_year_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_returns_allocation_run_id_fkey"
+            columns: ["allocation_run_id"]
+            isOneToOne: false
+            referencedRelation: "tax_allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_returns_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_returns_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "partnership_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_returns_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pass_through_expenses: {
         Row: {
           amount_cents: number
@@ -13459,6 +14361,109 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "third_party_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payee_payment_records: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          determination_reasons: Json
+          determination_status: string
+          entity_id: string | null
+          filing_responsibility: string
+          gross_amount_cents: number
+          id: string
+          offering_id: string | null
+          paid_on: string | null
+          payee_classification: string | null
+          payee_name: string
+          payee_profile_id: string | null
+          payee_user_id: string | null
+          payment_type: string
+          proposed_form_type: string | null
+          reportable_amount_cents: number | null
+          source_id: string | null
+          source_type: string
+          tax_document_id: string | null
+          tax_year: number
+          tin_on_file: boolean
+          updated_at: string
+          withheld_cents: number
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          determination_reasons?: Json
+          determination_status?: string
+          entity_id?: string | null
+          filing_responsibility?: string
+          gross_amount_cents?: number
+          id?: string
+          offering_id?: string | null
+          paid_on?: string | null
+          payee_classification?: string | null
+          payee_name: string
+          payee_profile_id?: string | null
+          payee_user_id?: string | null
+          payment_type: string
+          proposed_form_type?: string | null
+          reportable_amount_cents?: number | null
+          source_id?: string | null
+          source_type: string
+          tax_document_id?: string | null
+          tax_year: number
+          tin_on_file?: boolean
+          updated_at?: string
+          withheld_cents?: number
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          determination_reasons?: Json
+          determination_status?: string
+          entity_id?: string | null
+          filing_responsibility?: string
+          gross_amount_cents?: number
+          id?: string
+          offering_id?: string | null
+          paid_on?: string | null
+          payee_classification?: string | null
+          payee_name?: string
+          payee_profile_id?: string | null
+          payee_user_id?: string | null
+          payment_type?: string
+          proposed_form_type?: string | null
+          reportable_amount_cents?: number | null
+          source_id?: string | null
+          source_type?: string
+          tax_document_id?: string | null
+          tax_year?: number
+          tin_on_file?: boolean
+          updated_at?: string
+          withheld_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payee_payment_records_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payee_payment_records_payee_profile_id_fkey"
+            columns: ["payee_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payee_payment_records_tax_document_id_fkey"
+            columns: ["tax_document_id"]
+            isOneToOne: false
+            referencedRelation: "tax_document_records"
             referencedColumns: ["id"]
           },
         ]
@@ -18017,6 +19022,89 @@ export type Database = {
         }
         Relationships: []
       }
+      state_tax_returns: {
+        Row: {
+          created_at: string
+          federal_return_id: string | null
+          filing_status_code: string
+          household_id: string | null
+          id: string
+          jurisdiction: string
+          notes: string | null
+          offering_id: string | null
+          partnership_return_id: string | null
+          residency: string | null
+          source_income: Json
+          state_withholding_cents: number
+          status: string
+          tax_year: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          federal_return_id?: string | null
+          filing_status_code?: string
+          household_id?: string | null
+          id?: string
+          jurisdiction: string
+          notes?: string | null
+          offering_id?: string | null
+          partnership_return_id?: string | null
+          residency?: string | null
+          source_income?: Json
+          state_withholding_cents?: number
+          status?: string
+          tax_year: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          federal_return_id?: string | null
+          filing_status_code?: string
+          household_id?: string | null
+          id?: string
+          jurisdiction?: string
+          notes?: string | null
+          offering_id?: string | null
+          partnership_return_id?: string | null
+          residency?: string | null
+          source_income?: Json
+          state_withholding_cents?: number
+          status?: string
+          tax_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "state_tax_returns_federal_return_id_fkey"
+            columns: ["federal_return_id"]
+            isOneToOne: false
+            referencedRelation: "individual_tax_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "state_tax_returns_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "taxpayer_households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "state_tax_returns_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "state_tax_returns_partnership_return_id_fkey"
+            columns: ["partnership_return_id"]
+            isOneToOne: false
+            referencedRelation: "partnership_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       statement_mapping_versions: {
         Row: {
           activated_at: string | null
@@ -18205,6 +19293,231 @@ export type Database = {
           },
         ]
       }
+      tax_access_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          allowed: boolean
+          capability: string | null
+          created_at: string
+          delegation_id: string | null
+          id: string
+          on_behalf_of: string | null
+          reason: string | null
+          resource_id: string | null
+          resource_table: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          allowed?: boolean
+          capability?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          id?: string
+          on_behalf_of?: string | null
+          reason?: string | null
+          resource_id?: string | null
+          resource_table: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          allowed?: boolean
+          capability?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          id?: string
+          on_behalf_of?: string | null
+          reason?: string | null
+          resource_id?: string | null
+          resource_table?: string
+        }
+        Relationships: []
+      }
+      tax_allocation_lines: {
+        Row: {
+          amount_cents: number
+          basis: Json
+          created_at: string
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          item_code: string
+          item_label: string | null
+          k1_box: string | null
+          offering_id: string
+          ownership_pct: number | null
+          position_id: string | null
+          run_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          basis?: Json
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          item_code: string
+          item_label?: string | null
+          k1_box?: string | null
+          offering_id: string
+          ownership_pct?: number | null
+          position_id?: string | null
+          run_id: string
+        }
+        Update: {
+          amount_cents?: number
+          basis?: Json
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          item_code?: string
+          item_label?: string | null
+          k1_box?: string | null
+          offering_id?: string
+          ownership_pct?: number | null
+          position_id?: string | null
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_allocation_lines_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocation_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocation_lines_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocation_lines_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "tax_allocation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_allocation_runs: {
+        Row: {
+          allocated_totals: Json
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          difference_cents: number
+          entity_totals: Json
+          exceptions: Json
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          inputs_snapshot: Json
+          methodology_code: string
+          methodology_snapshot: Json
+          methodology_version: number
+          offering_id: string
+          prepared_at: string | null
+          prepared_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          supersedes_id: string | null
+          tax_year: number
+          tax_year_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allocated_totals?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          difference_cents?: number
+          entity_totals?: Json
+          exceptions?: Json
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          inputs_snapshot?: Json
+          methodology_code: string
+          methodology_snapshot?: Json
+          methodology_version?: number
+          offering_id: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supersedes_id?: string | null
+          tax_year: number
+          tax_year_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allocated_totals?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          difference_cents?: number
+          entity_totals?: Json
+          exceptions?: Json
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          inputs_snapshot?: Json
+          methodology_code?: string
+          methodology_snapshot?: Json
+          methodology_version?: number
+          offering_id?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          supersedes_id?: string | null
+          tax_year?: number
+          tax_year_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_allocation_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocation_runs_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "tax_allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_allocation_runs_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_allocations: {
         Row: {
           allocation_method: string
@@ -18308,6 +19621,267 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tax_classification_records: {
+        Row: {
+          classification: string
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          evidence: Json
+          id: string
+          investment_profile_id: string | null
+          is_foreign: boolean
+          note: string | null
+          person_id: string | null
+          recorded_by: string | null
+          residency_country: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          sub_classification: string | null
+          subject_user_id: string | null
+          supersedes_id: string | null
+          treaty_country: string | null
+          treaty_rate_bps: number | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          classification: string
+          created_at?: string
+          effective_from: string
+          effective_to?: string | null
+          evidence?: Json
+          id?: string
+          investment_profile_id?: string | null
+          is_foreign?: boolean
+          note?: string | null
+          person_id?: string | null
+          recorded_by?: string | null
+          residency_country?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          sub_classification?: string | null
+          subject_user_id?: string | null
+          supersedes_id?: string | null
+          treaty_country?: string | null
+          treaty_rate_bps?: number | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          classification?: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          evidence?: Json
+          id?: string
+          investment_profile_id?: string | null
+          is_foreign?: boolean
+          note?: string | null
+          person_id?: string | null
+          recorded_by?: string | null
+          residency_country?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          sub_classification?: string | null
+          subject_user_id?: string | null
+          supersedes_id?: string | null
+          treaty_country?: string | null
+          treaty_rate_bps?: number | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_classification_records_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_classification_records_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_classification_records_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "tax_classification_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_document_records: {
+        Row: {
+          certification_date: string | null
+          classification: string | null
+          created_at: string
+          effective_from: string | null
+          expires_on: string | null
+          form_type: string
+          id: string
+          investment_profile_id: string | null
+          is_substitute: boolean
+          offering_id: string | null
+          person_id: string | null
+          received_date: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          storage_path: string | null
+          subject_user_id: string | null
+          supersedes_id: string | null
+          tin_last4: string | null
+          tin_on_file: boolean
+          tin_type: string | null
+          updated_at: string
+          uploaded_by: string | null
+          validation_notes: string | null
+          validation_status: string
+          version: number
+        }
+        Insert: {
+          certification_date?: string | null
+          classification?: string | null
+          created_at?: string
+          effective_from?: string | null
+          expires_on?: string | null
+          form_type: string
+          id?: string
+          investment_profile_id?: string | null
+          is_substitute?: boolean
+          offering_id?: string | null
+          person_id?: string | null
+          received_date?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path?: string | null
+          subject_user_id?: string | null
+          supersedes_id?: string | null
+          tin_last4?: string | null
+          tin_on_file?: boolean
+          tin_type?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          validation_notes?: string | null
+          validation_status?: string
+          version?: number
+        }
+        Update: {
+          certification_date?: string | null
+          classification?: string | null
+          created_at?: string
+          effective_from?: string | null
+          expires_on?: string | null
+          form_type?: string
+          id?: string
+          investment_profile_id?: string | null
+          is_substitute?: boolean
+          offering_id?: string | null
+          person_id?: string | null
+          received_date?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          storage_path?: string | null
+          subject_user_id?: string | null
+          supersedes_id?: string | null
+          tin_last4?: string | null
+          tin_on_file?: boolean
+          tin_type?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          validation_notes?: string | null
+          validation_status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_document_records_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_document_records_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_document_records_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_document_records_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "tax_document_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          delegation_id: string | null
+          detail: Json
+          event: string
+          from_status: string | null
+          household_id: string | null
+          id: string
+          offering_id: string | null
+          on_behalf_of: string | null
+          subject_id: string
+          subject_table: string
+          tax_year: number | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          detail?: Json
+          event: string
+          from_status?: string | null
+          household_id?: string | null
+          id?: string
+          offering_id?: string | null
+          on_behalf_of?: string | null
+          subject_id: string
+          subject_table: string
+          tax_year?: number | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          delegation_id?: string | null
+          detail?: Json
+          event?: string
+          from_status?: string | null
+          household_id?: string | null
+          id?: string
+          offering_id?: string | null
+          on_behalf_of?: string | null
+          subject_id?: string
+          subject_table?: string
+          tax_year?: number | null
+          to_status?: string | null
+        }
+        Relationships: []
       }
       tax_filings: {
         Row: {
@@ -18537,6 +20111,337 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_provider_exchanges: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          created_by: string | null
+          direction: string
+          id: string
+          operation: string
+          payload: Json
+          provider: string
+          provider_reference: string | null
+          provider_status: string | null
+          subject_id: string
+          subject_table: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          direction: string
+          id?: string
+          operation: string
+          payload?: Json
+          provider?: string
+          provider_reference?: string | null
+          provider_status?: string | null
+          subject_id: string
+          subject_table: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          id?: string
+          operation?: string
+          payload?: Json
+          provider?: string
+          provider_reference?: string | null
+          provider_status?: string | null
+          subject_id?: string
+          subject_table?: string
+        }
+        Relationships: []
+      }
+      tax_return_lines: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          line_code: string
+          line_label: string | null
+          provenance: Json
+          return_id: string
+          schedule_code: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          line_code: string
+          line_label?: string | null
+          provenance?: Json
+          return_id: string
+          schedule_code: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          line_code?: string
+          line_label?: string | null
+          provenance?: Json
+          return_id?: string
+          schedule_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_return_lines_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "individual_tax_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_workpapers: {
+        Row: {
+          content: Json
+          created_at: string
+          exceptions: Json
+          household_id: string | null
+          id: string
+          kind: string
+          offering_id: string | null
+          prepared_at: string | null
+          prepared_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          support: Json
+          tax_year: number
+          tax_year_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          exceptions?: Json
+          household_id?: string | null
+          id?: string
+          kind: string
+          offering_id?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          support?: Json
+          tax_year: number
+          tax_year_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          exceptions?: Json
+          household_id?: string | null
+          id?: string
+          kind?: string
+          offering_id?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          support?: Json
+          tax_year?: number
+          tax_year_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_workpapers_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "taxpayer_households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_workpapers_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_workpapers_tax_year_id_fkey"
+            columns: ["tax_year_id"]
+            isOneToOne: false
+            referencedRelation: "tax_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_years: {
+        Row: {
+          created_at: string
+          ein_last4: string | null
+          entity_id: string | null
+          exceptions: Json
+          household_id: string | null
+          id: string
+          offering_id: string | null
+          opened_by: string | null
+          period_end: string | null
+          period_start: string | null
+          readiness: Json
+          scope: string
+          status: string
+          tax_year: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ein_last4?: string | null
+          entity_id?: string | null
+          exceptions?: Json
+          household_id?: string | null
+          id?: string
+          offering_id?: string | null
+          opened_by?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          readiness?: Json
+          scope: string
+          status?: string
+          tax_year: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ein_last4?: string | null
+          entity_id?: string | null
+          exceptions?: Json
+          household_id?: string | null
+          id?: string
+          offering_id?: string | null
+          opened_by?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          readiness?: Json
+          scope?: string
+          status?: string
+          tax_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_years_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxpayer_household_members: {
+        Row: {
+          access_authorized: boolean
+          access_authorized_at: string | null
+          access_authorized_by: string | null
+          created_at: string
+          filing_status: string | null
+          household_id: string
+          id: string
+          member_user_id: string | null
+          person_id: string | null
+          relationship: string
+          tax_year: number
+          updated_at: string
+        }
+        Insert: {
+          access_authorized?: boolean
+          access_authorized_at?: string | null
+          access_authorized_by?: string | null
+          created_at?: string
+          filing_status?: string | null
+          household_id: string
+          id?: string
+          member_user_id?: string | null
+          person_id?: string | null
+          relationship: string
+          tax_year: number
+          updated_at?: string
+        }
+        Update: {
+          access_authorized?: boolean
+          access_authorized_at?: string | null
+          access_authorized_by?: string | null
+          created_at?: string
+          filing_status?: string | null
+          household_id?: string
+          id?: string
+          member_user_id?: string | null
+          person_id?: string | null
+          relationship?: string
+          tax_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxpayer_household_members_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "taxpayer_households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxpayer_household_members_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxpayer_households: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          primary_person_id: string | null
+          primary_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          primary_person_id?: string | null
+          primary_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          primary_person_id?: string | null
+          primary_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxpayer_households_primary_person_id_fkey"
+            columns: ["primary_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -19101,10 +21006,14 @@ export type Database = {
       withholding_records: {
         Row: {
           amount_withheld_cents: number
+          authority_reference: string | null
           book_id: string
+          classification: string | null
           created_at: string
+          dedupe_key: string | null
           deposited_at: string | null
           documentation_form: Database["public"]["Enums"]["tax_documentation_form"]
+          exceptions: Json
           exemption_code: string | null
           form_id: string | null
           gross_amount_cents: number
@@ -19114,20 +21023,32 @@ export type Database = {
           investment_profile_id: string | null
           journal_entry_id: string | null
           offering_id: string | null
+          position_id: string | null
+          rate_basis: string
           recipient_user_id: string | null
+          recorded_by: string | null
+          reviewed_by: string | null
+          source_id: string | null
+          source_type: string | null
           status: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_document_id: string | null
           tax_profile_id: string | null
           tax_residency_country: string | null
           tax_year: number
           updated_at: string
+          withholding_classification: string
           withholding_rate_bps: number
         }
         Insert: {
           amount_withheld_cents?: number
+          authority_reference?: string | null
           book_id: string
+          classification?: string | null
           created_at?: string
+          dedupe_key?: string | null
           deposited_at?: string | null
           documentation_form?: Database["public"]["Enums"]["tax_documentation_form"]
+          exceptions?: Json
           exemption_code?: string | null
           form_id?: string | null
           gross_amount_cents?: number
@@ -19137,20 +21058,32 @@ export type Database = {
           investment_profile_id?: string | null
           journal_entry_id?: string | null
           offering_id?: string | null
+          position_id?: string | null
+          rate_basis?: string
           recipient_user_id?: string | null
+          recorded_by?: string | null
+          reviewed_by?: string | null
+          source_id?: string | null
+          source_type?: string | null
           status?: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_document_id?: string | null
           tax_profile_id?: string | null
           tax_residency_country?: string | null
           tax_year: number
           updated_at?: string
+          withholding_classification?: string
           withholding_rate_bps?: number
         }
         Update: {
           amount_withheld_cents?: number
+          authority_reference?: string | null
           book_id?: string
+          classification?: string | null
           created_at?: string
+          dedupe_key?: string | null
           deposited_at?: string | null
           documentation_form?: Database["public"]["Enums"]["tax_documentation_form"]
+          exceptions?: Json
           exemption_code?: string | null
           form_id?: string | null
           gross_amount_cents?: number
@@ -19160,12 +21093,20 @@ export type Database = {
           investment_profile_id?: string | null
           journal_entry_id?: string | null
           offering_id?: string | null
+          position_id?: string | null
+          rate_basis?: string
           recipient_user_id?: string | null
+          recorded_by?: string | null
+          reviewed_by?: string | null
+          source_id?: string | null
+          source_type?: string | null
           status?: Database["public"]["Enums"]["tax_workflow_status"]
+          tax_document_id?: string | null
           tax_profile_id?: string | null
           tax_residency_country?: string | null
           tax_year?: number
           updated_at?: string
+          withholding_classification?: string
           withholding_rate_bps?: number
         }
         Relationships: [
@@ -19202,6 +21143,20 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withholding_records_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withholding_records_tax_document_id_fkey"
+            columns: ["tax_document_id"]
+            isOneToOne: false
+            referencedRelation: "tax_document_records"
             referencedColumns: ["id"]
           },
           {
@@ -19597,6 +21552,14 @@ export type Database = {
         | "view_wire_instructions"
         | "sign_specified_documents"
         | "approve_specified_actions"
+        | "view_tax_returns"
+        | "prepare_entity_return"
+        | "review_entity_return"
+        | "prepare_individual_return"
+        | "review_individual_return"
+        | "request_tax_information"
+        | "deliver_tax_return"
+        | "manage_tax_workpapers"
       delegation_scope_type:
         | "person"
         | "investment_profile"
@@ -20051,6 +22014,14 @@ export const Constants = {
         "view_wire_instructions",
         "sign_specified_documents",
         "approve_specified_actions",
+        "view_tax_returns",
+        "prepare_entity_return",
+        "review_entity_return",
+        "prepare_individual_return",
+        "review_individual_return",
+        "request_tax_information",
+        "deliver_tax_return",
+        "manage_tax_workpapers",
       ],
       delegation_scope_type: [
         "person",
