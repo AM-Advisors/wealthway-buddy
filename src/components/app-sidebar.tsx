@@ -115,6 +115,7 @@ const professionalItems: NavItem[] = [
 const managerItems: NavItem[] = [
   { title: "My funds", url: "/manager", icon: Briefcase },
   { title: "Document inbox", url: "/manager/inbox", icon: Mail },
+  { title: "Joining investors", url: "/manager/investor-onboarding", icon: Users },
   { title: "Investor approvals", url: "/manager/approvals", icon: BadgeCheck },
   { title: "Cash to confirm", url: "/manager/cash-approvals", icon: Banknote },
   { title: "Fund valuations", url: "/manager/valuations", icon: Gauge },
@@ -154,6 +155,7 @@ const operationsItems: NavItem[] = [
 const clientsAndMoneyItems: NavItem[] = [
   { title: "Client onboarding", url: "/admin/onboarding", icon: UserPlus },
   { title: "Onboarding progress", url: "/admin/onboarding-progress", icon: Gauge },
+  { title: "Investor onboarding", url: "/admin/investor-onboarding", icon: Users },
   { title: "Clients and scope", url: "/admin/contracts", icon: Handshake },
   { title: "Entities and engagements", url: "/admin/entities", icon: Building2 },
   { title: "Services administration", url: "/admin/services", icon: Layers },
