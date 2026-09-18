@@ -112,6 +112,7 @@ import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
 import { Route as AuthenticatedManagerActivityRouteImport } from './routes/_authenticated/manager.activity'
+import { Route as AuthenticatedManagerAllocationsRouteImport } from './routes/_authenticated/manager.allocations'
 import { Route as AuthenticatedManagerApprovalsRouteImport } from './routes/_authenticated/manager.approvals'
 import { Route as AuthenticatedManagerCapTableRouteImport } from './routes/_authenticated/manager.cap-table'
 import { Route as AuthenticatedManagerCapTableBoardRouteImport } from './routes/_authenticated/manager.cap-table-board'
@@ -791,6 +792,12 @@ const AuthenticatedManagerActivityRoute =
   AuthenticatedManagerActivityRouteImport.update({
     id: '/manager/activity',
     path: '/manager/activity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerAllocationsRoute =
+  AuthenticatedManagerAllocationsRouteImport.update({
+    id: '/manager/allocations',
+    path: '/manager/allocations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerApprovalsRoute =
@@ -1555,6 +1562,7 @@ export interface FileRoutesByFullPath {
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/manager/allocations': typeof AuthenticatedManagerAllocationsRoute
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
@@ -1767,6 +1775,7 @@ export interface FileRoutesByTo {
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/manager/allocations': typeof AuthenticatedManagerAllocationsRoute
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
@@ -1985,6 +1994,7 @@ export interface FileRoutesById {
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/_authenticated/manager/allocations': typeof AuthenticatedManagerAllocationsRoute
   '/_authenticated/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/_authenticated/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/_authenticated/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
@@ -2204,6 +2214,7 @@ export interface FileRouteTypes {
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
+    | '/manager/allocations'
     | '/manager/approvals'
     | '/manager/cap-table'
     | '/manager/cap-table-board'
@@ -2416,6 +2427,7 @@ export interface FileRouteTypes {
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
+    | '/manager/allocations'
     | '/manager/approvals'
     | '/manager/cap-table'
     | '/manager/cap-table-board'
@@ -2633,6 +2645,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
+    | '/_authenticated/manager/allocations'
     | '/_authenticated/manager/approvals'
     | '/_authenticated/manager/cap-table'
     | '/_authenticated/manager/cap-table-board'
@@ -3508,6 +3521,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/activity'
       fullPath: '/manager/activity'
       preLoaderRoute: typeof AuthenticatedManagerActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/allocations': {
+      id: '/_authenticated/manager/allocations'
+      path: '/manager/allocations'
+      fullPath: '/manager/allocations'
+      preLoaderRoute: typeof AuthenticatedManagerAllocationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/approvals': {
@@ -4579,6 +4599,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
+  AuthenticatedManagerAllocationsRoute: typeof AuthenticatedManagerAllocationsRoute
   AuthenticatedManagerApprovalsRoute: typeof AuthenticatedManagerApprovalsRoute
   AuthenticatedManagerCapTableRoute: typeof AuthenticatedManagerCapTableRoute
   AuthenticatedManagerCapTableBoardRoute: typeof AuthenticatedManagerCapTableBoardRoute
@@ -4716,6 +4737,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,
   AuthenticatedManagerActivityRoute: AuthenticatedManagerActivityRoute,
+  AuthenticatedManagerAllocationsRoute: AuthenticatedManagerAllocationsRoute,
   AuthenticatedManagerApprovalsRoute: AuthenticatedManagerApprovalsRoute,
   AuthenticatedManagerCapTableRoute: AuthenticatedManagerCapTableRoute,
   AuthenticatedManagerCapTableBoardRoute:
