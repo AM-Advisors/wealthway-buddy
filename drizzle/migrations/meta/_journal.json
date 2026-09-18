@@ -92,6 +92,13 @@
       "when": 1789688742058,
       "tag": "0012_nav_engine_step3",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789697320924,
+      "tag": "0013_investor_allocations_capital_accounts_step4",
+      "breakpoints": true
     }
   ]
 }

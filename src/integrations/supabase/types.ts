@@ -708,6 +708,430 @@ export type Database = {
           },
         ]
       }
+      allocation_events: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          offering_id: string | null
+          payload: Json
+          position_id: string | null
+          reason: string | null
+          run_id: string | null
+          statement_id: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_role?: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          offering_id?: string | null
+          payload?: Json
+          position_id?: string | null
+          reason?: string | null
+          run_id?: string | null
+          statement_id?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          offering_id?: string | null
+          payload?: Json
+          position_id?: string | null
+          reason?: string | null
+          run_id?: string | null
+          statement_id?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocation_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_events_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_events_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "investor_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      allocation_lines: {
+        Row: {
+          allocated_income_cents: number
+          allocated_loss_cents: number
+          basis: string
+          basis_amount_cents: number
+          beginning_capital_cents: number
+          carried_interest_cents: number
+          class_id: string | null
+          commitment_cents: number
+          contributed_to_date_cents: number
+          contributions_cents: number
+          created_at: string
+          days_in_period: number | null
+          distributions_cents: number
+          ending_capital_cents: number
+          fund_expenses_cents: number
+          id: string
+          inputs: Json
+          management_fees_cents: number
+          offering_id: string
+          other_adjustments_cents: number
+          ownership_pct: number | null
+          position_id: string
+          realized_gain_cents: number
+          run_id: string
+          tax_allocations: Json
+          unfunded_commitment_cents: number
+          units: number | null
+          unrealized_gain_cents: number
+          weight: number
+        }
+        Insert: {
+          allocated_income_cents?: number
+          allocated_loss_cents?: number
+          basis: string
+          basis_amount_cents?: number
+          beginning_capital_cents?: number
+          carried_interest_cents?: number
+          class_id?: string | null
+          commitment_cents?: number
+          contributed_to_date_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          days_in_period?: number | null
+          distributions_cents?: number
+          ending_capital_cents?: number
+          fund_expenses_cents?: number
+          id?: string
+          inputs?: Json
+          management_fees_cents?: number
+          offering_id: string
+          other_adjustments_cents?: number
+          ownership_pct?: number | null
+          position_id: string
+          realized_gain_cents?: number
+          run_id: string
+          tax_allocations?: Json
+          unfunded_commitment_cents?: number
+          units?: number | null
+          unrealized_gain_cents?: number
+          weight?: number
+        }
+        Update: {
+          allocated_income_cents?: number
+          allocated_loss_cents?: number
+          basis?: string
+          basis_amount_cents?: number
+          beginning_capital_cents?: number
+          carried_interest_cents?: number
+          class_id?: string | null
+          commitment_cents?: number
+          contributed_to_date_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          days_in_period?: number | null
+          distributions_cents?: number
+          ending_capital_cents?: number
+          fund_expenses_cents?: number
+          id?: string
+          inputs?: Json
+          management_fees_cents?: number
+          offering_id?: string
+          other_adjustments_cents?: number
+          ownership_pct?: number | null
+          position_id?: string
+          realized_gain_cents?: number
+          run_id?: string
+          tax_allocations?: Json
+          unfunded_commitment_cents?: number
+          units?: number | null
+          unrealized_gain_cents?: number
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocation_lines_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "investor_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_lines_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_lines_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      allocation_policies: {
+        Row: {
+          basis: string
+          created_at: string
+          documented_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean
+          manager_workflow: string
+          methodology: string
+          methodology_note: string | null
+          offering_id: string
+          rounding: string
+          settings: Json
+          spv_simple: boolean
+          time_weighted: boolean
+          tolerance_cents: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          basis?: string
+          created_at?: string
+          documented_by?: string | null
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          manager_workflow?: string
+          methodology?: string
+          methodology_note?: string | null
+          offering_id: string
+          rounding?: string
+          settings?: Json
+          spv_simple?: boolean
+          time_weighted?: boolean
+          tolerance_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          basis?: string
+          created_at?: string
+          documented_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          manager_workflow?: string
+          methodology?: string
+          methodology_note?: string | null
+          offering_id?: string
+          rounding?: string
+          settings?: Json
+          spv_simple?: boolean
+          time_weighted?: boolean
+          tolerance_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocation_policies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      allocation_runs: {
+        Row: {
+          allocated_totals: Json
+          approved_at: string | null
+          approved_by: string | null
+          book_id: string | null
+          created_at: string
+          difference_cents: number
+          exceptions: Json
+          finalized_at: string | null
+          finalized_by: string | null
+          fund_totals: Json
+          id: string
+          inputs_snapshot: Json
+          manager_note: string | null
+          manager_responded_at: string | null
+          manager_responded_by: string | null
+          manager_response: string | null
+          nav_version_id: string | null
+          offering_id: string
+          period_end: string
+          period_id: string | null
+          period_start: string
+          policy_id: string | null
+          policy_snapshot: Json
+          prepared_at: string
+          prepared_by: string | null
+          reconciliation: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_cutoff_at: string
+          status: string
+          supersedes_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allocated_totals?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id?: string | null
+          created_at?: string
+          difference_cents?: number
+          exceptions?: Json
+          finalized_at?: string | null
+          finalized_by?: string | null
+          fund_totals?: Json
+          id?: string
+          inputs_snapshot?: Json
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          nav_version_id?: string | null
+          offering_id: string
+          period_end: string
+          period_id?: string | null
+          period_start: string
+          policy_id?: string | null
+          policy_snapshot?: Json
+          prepared_at?: string
+          prepared_by?: string | null
+          reconciliation?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_cutoff_at?: string
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allocated_totals?: Json
+          approved_at?: string | null
+          approved_by?: string | null
+          book_id?: string | null
+          created_at?: string
+          difference_cents?: number
+          exceptions?: Json
+          finalized_at?: string | null
+          finalized_by?: string | null
+          fund_totals?: Json
+          id?: string
+          inputs_snapshot?: Json
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          nav_version_id?: string | null
+          offering_id?: string
+          period_end?: string
+          period_id?: string | null
+          period_start?: string
+          policy_id?: string | null
+          policy_snapshot?: Json
+          prepared_at?: string
+          prepared_by?: string | null
+          reconciliation?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_cutoff_at?: string
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocation_runs_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_runs_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_runs_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_runs_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_runs_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aml_screenings: {
         Row: {
           application_id: string
@@ -2352,6 +2776,88 @@ export type Database = {
           },
         ]
       }
+      capital_account_adjustments: {
+        Row: {
+          amount_cents: number
+          approved_at: string | null
+          approved_by: string | null
+          classification: string
+          created_at: string
+          decision_note: string | null
+          effective_date: string
+          evidence_path: string | null
+          id: string
+          offering_id: string
+          position_id: string
+          reason: string
+          requested_at: string
+          requested_by: string | null
+          run_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          approved_at?: string | null
+          approved_by?: string | null
+          classification: string
+          created_at?: string
+          decision_note?: string | null
+          effective_date: string
+          evidence_path?: string | null
+          id?: string
+          offering_id: string
+          position_id: string
+          reason: string
+          requested_at?: string
+          requested_by?: string | null
+          run_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          classification?: string
+          created_at?: string
+          decision_note?: string | null
+          effective_date?: string
+          evidence_path?: string | null
+          id?: string
+          offering_id?: string
+          position_id?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string | null
+          run_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_account_adjustments_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_account_adjustments_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_account_adjustments_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capital_account_statements: {
         Row: {
           application_id: string
@@ -2428,20 +2934,29 @@ export type Database = {
           allocated_loss_cents: number
           allocation_inputs: Json
           allocation_method: string
+          allocation_run_id: string | null
           application_id: string | null
           approved_by: string | null
           beginning_capital_cents: number
           book_id: string
+          carried_interest_cents: number
+          class_id: string | null
           commitment_cents: number
+          contributed_to_date_cents: number
           contributions_cents: number
           created_at: string
           distributions_cents: number
+          distributions_to_date_cents: number
           ending_capital_cents: number
+          finalized_at: string | null
+          finalized_by: string | null
+          fund_expenses_cents: number
           generated_at: string
           generated_by: string | null
           id: string
           investment_profile_id: string | null
           investor_user_id: string | null
+          management_fees_cents: number
           nav_version_id: string | null
           offering_id: string | null
           other_adjustments_cents: number
@@ -2449,12 +2964,17 @@ export type Database = {
           period_end: string
           period_id: string | null
           period_start: string
+          position_id: string | null
           published_at: string | null
           published_by: string | null
+          realized_gain_cents: number
           reviewed_by: string | null
           status: Database["public"]["Enums"]["report_status"]
           supersedes_id: string | null
+          tax_allocations: Json
           unfunded_commitment_cents: number
+          units: number | null
+          unrealized_gain_cents: number
           updated_at: string
           version: number
         }
@@ -2463,20 +2983,29 @@ export type Database = {
           allocated_loss_cents?: number
           allocation_inputs?: Json
           allocation_method?: string
+          allocation_run_id?: string | null
           application_id?: string | null
           approved_by?: string | null
           beginning_capital_cents?: number
           book_id: string
+          carried_interest_cents?: number
+          class_id?: string | null
           commitment_cents?: number
+          contributed_to_date_cents?: number
           contributions_cents?: number
           created_at?: string
           distributions_cents?: number
+          distributions_to_date_cents?: number
           ending_capital_cents?: number
+          finalized_at?: string | null
+          finalized_by?: string | null
+          fund_expenses_cents?: number
           generated_at?: string
           generated_by?: string | null
           id?: string
           investment_profile_id?: string | null
           investor_user_id?: string | null
+          management_fees_cents?: number
           nav_version_id?: string | null
           offering_id?: string | null
           other_adjustments_cents?: number
@@ -2484,12 +3013,17 @@ export type Database = {
           period_end: string
           period_id?: string | null
           period_start: string
+          position_id?: string | null
           published_at?: string | null
           published_by?: string | null
+          realized_gain_cents?: number
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["report_status"]
           supersedes_id?: string | null
+          tax_allocations?: Json
           unfunded_commitment_cents?: number
+          units?: number | null
+          unrealized_gain_cents?: number
           updated_at?: string
           version?: number
         }
@@ -2498,20 +3032,29 @@ export type Database = {
           allocated_loss_cents?: number
           allocation_inputs?: Json
           allocation_method?: string
+          allocation_run_id?: string | null
           application_id?: string | null
           approved_by?: string | null
           beginning_capital_cents?: number
           book_id?: string
+          carried_interest_cents?: number
+          class_id?: string | null
           commitment_cents?: number
+          contributed_to_date_cents?: number
           contributions_cents?: number
           created_at?: string
           distributions_cents?: number
+          distributions_to_date_cents?: number
           ending_capital_cents?: number
+          finalized_at?: string | null
+          finalized_by?: string | null
+          fund_expenses_cents?: number
           generated_at?: string
           generated_by?: string | null
           id?: string
           investment_profile_id?: string | null
           investor_user_id?: string | null
+          management_fees_cents?: number
           nav_version_id?: string | null
           offering_id?: string | null
           other_adjustments_cents?: number
@@ -2519,16 +3062,28 @@ export type Database = {
           period_end?: string
           period_id?: string | null
           period_start?: string
+          position_id?: string | null
           published_at?: string | null
           published_by?: string | null
+          realized_gain_cents?: number
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["report_status"]
           supersedes_id?: string | null
+          tax_allocations?: Json
           unfunded_commitment_cents?: number
+          units?: number | null
+          unrealized_gain_cents?: number
           updated_at?: string
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "capital_accounts_allocation_run_id_fkey"
+            columns: ["allocation_run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "capital_accounts_application_id_fkey"
             columns: ["application_id"]
@@ -2541,6 +3096,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_accounts_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "investor_classes"
             referencedColumns: ["id"]
           },
           {
@@ -2572,10 +3134,91 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "capital_accounts_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "capital_accounts_supersedes_id_fkey"
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "capital_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carry_allocations: {
+        Row: {
+          amount_cents: number
+          approved_by: string | null
+          clawback_cents: number
+          created_at: string
+          id: string
+          inputs: Json
+          offering_id: string
+          position_id: string | null
+          run_id: string | null
+          source: string
+          terms_id: string | null
+          tier: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          approved_by?: string | null
+          clawback_cents?: number
+          created_at?: string
+          id?: string
+          inputs?: Json
+          offering_id: string
+          position_id?: string | null
+          run_id?: string | null
+          source?: string
+          terms_id?: string | null
+          tier?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          approved_by?: string | null
+          clawback_cents?: number
+          created_at?: string
+          id?: string
+          inputs?: Json
+          offering_id?: string
+          position_id?: string | null
+          run_id?: string | null
+          source?: string
+          terms_id?: string | null
+          tier?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carry_allocations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carry_allocations_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carry_allocations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carry_allocations_terms_id_fkey"
+            columns: ["terms_id"]
+            isOneToOne: false
+            referencedRelation: "waterfall_terms"
             referencedColumns: ["id"]
           },
         ]
@@ -3678,6 +4321,89 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commitment_events: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          dedupe_key: string | null
+          effective_date: string
+          event_type: string
+          evidence_path: string | null
+          id: string
+          journal_entry_id: string | null
+          offering_id: string
+          payment_id: string | null
+          position_id: string
+          reason: string | null
+          recorded_by: string | null
+          source: string
+          source_ref: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          dedupe_key?: string | null
+          effective_date: string
+          event_type: string
+          evidence_path?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          offering_id: string
+          payment_id?: string | null
+          position_id: string
+          reason?: string | null
+          recorded_by?: string | null
+          source: string
+          source_ref?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          dedupe_key?: string | null
+          effective_date?: string
+          event_type?: string
+          evidence_path?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          offering_id?: string
+          payment_id?: string | null
+          position_id?: string
+          reason?: string | null
+          recorded_by?: string | null
+          source?: string
+          source_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commitment_events_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commitment_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commitment_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commitment_events_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
             referencedColumns: ["id"]
           },
         ]
@@ -7656,6 +8382,98 @@ export type Database = {
           },
         ]
       }
+      fee_calculations: {
+        Row: {
+          basis: string
+          basis_amount_cents: number
+          created_at: string
+          gross_fee_cents: number
+          id: string
+          inputs: Json
+          ledger_fee_cents: number | null
+          net_fee_cents: number
+          offering_id: string
+          offset_cents: number
+          period_end: string
+          period_start: string
+          position_id: string | null
+          rate_bps: number
+          reconciled: boolean
+          run_id: string | null
+          term_id: string | null
+          waiver_cents: number
+        }
+        Insert: {
+          basis: string
+          basis_amount_cents?: number
+          created_at?: string
+          gross_fee_cents?: number
+          id?: string
+          inputs?: Json
+          ledger_fee_cents?: number | null
+          net_fee_cents?: number
+          offering_id: string
+          offset_cents?: number
+          period_end: string
+          period_start: string
+          position_id?: string | null
+          rate_bps?: number
+          reconciled?: boolean
+          run_id?: string | null
+          term_id?: string | null
+          waiver_cents?: number
+        }
+        Update: {
+          basis?: string
+          basis_amount_cents?: number
+          created_at?: string
+          gross_fee_cents?: number
+          id?: string
+          inputs?: Json
+          ledger_fee_cents?: number | null
+          net_fee_cents?: number
+          offering_id?: string
+          offset_cents?: number
+          period_end?: string
+          period_start?: string
+          position_id?: string | null
+          rate_bps?: number
+          reconciled?: boolean
+          run_id?: string | null
+          term_id?: string | null
+          waiver_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_calculations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_calculations_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_calculations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_calculations_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "management_fee_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_reports: {
         Row: {
           accounting_snapshot: Json
@@ -8859,6 +9677,74 @@ export type Database = {
           },
         ]
       }
+      investor_classes: {
+        Row: {
+          carry_bps: number | null
+          code: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          expense_share_pct: number | null
+          id: string
+          liquidity_terms: string | null
+          management_fee_bps: number | null
+          name: string
+          offering_id: string
+          preferred_return_bps: number | null
+          series_label: string | null
+          terms: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          carry_bps?: number | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          effective_from: string
+          effective_to?: string | null
+          expense_share_pct?: number | null
+          id?: string
+          liquidity_terms?: string | null
+          management_fee_bps?: number | null
+          name: string
+          offering_id: string
+          preferred_return_bps?: number | null
+          series_label?: string | null
+          terms?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          carry_bps?: number | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          expense_share_pct?: number | null
+          id?: string
+          liquidity_terms?: string | null
+          management_fee_bps?: number | null
+          name?: string
+          offering_id?: string
+          preferred_return_bps?: number | null
+          series_label?: string | null
+          terms?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_classes_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_documents: {
         Row: {
           application_id: string
@@ -9088,6 +9974,115 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_positions: {
+        Row: {
+          admitted_on: string | null
+          application_id: string | null
+          book_id: string | null
+          capacity: string
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          is_gp: boolean
+          notes: string | null
+          offering_id: string
+          person_id: string | null
+          status: string
+          transferred_to_id: string | null
+          updated_at: string
+          withdrawn_on: string | null
+        }
+        Insert: {
+          admitted_on?: string | null
+          application_id?: string | null
+          book_id?: string | null
+          capacity?: string
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          is_gp?: boolean
+          notes?: string | null
+          offering_id: string
+          person_id?: string | null
+          status?: string
+          transferred_to_id?: string | null
+          updated_at?: string
+          withdrawn_on?: string | null
+        }
+        Update: {
+          admitted_on?: string | null
+          application_id?: string | null
+          book_id?: string | null
+          capacity?: string
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          is_gp?: boolean
+          notes?: string | null
+          offering_id?: string
+          person_id?: string | null
+          status?: string
+          transferred_to_id?: string | null
+          updated_at?: string
+          withdrawn_on?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_positions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_positions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_positions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "investor_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_positions_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_positions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_positions_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_signoffs: {
         Row: {
           acknowledgements: Json
@@ -9156,6 +10151,140 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_statements: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          capital_account_id: string | null
+          created_at: string
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          offering_id: string
+          period_end: string
+          period_start: string
+          position_id: string
+          prepared_at: string
+          prepared_by: string | null
+          provenance: Json
+          published_at: string | null
+          published_by: string | null
+          report_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          run_id: string | null
+          snapshot: Json
+          status: string
+          supersedes_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          capital_account_id?: string | null
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          offering_id: string
+          period_end: string
+          period_start: string
+          position_id: string
+          prepared_at?: string
+          prepared_by?: string | null
+          provenance?: Json
+          published_at?: string | null
+          published_by?: string | null
+          report_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          run_id?: string | null
+          snapshot?: Json
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          capital_account_id?: string | null
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          offering_id?: string
+          period_end?: string
+          period_start?: string
+          position_id?: string
+          prepared_at?: string
+          prepared_by?: string | null
+          provenance?: Json
+          published_at?: string | null
+          published_by?: string | null
+          report_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          run_id?: string | null
+          snapshot?: Json
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_statements_capital_account_id_fkey"
+            columns: ["capital_account_id"]
+            isOneToOne: false
+            referencedRelation: "capital_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_statements_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_statements_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_statements_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_statements_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_statements_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_statements_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "investor_statements"
             referencedColumns: ["id"]
           },
         ]
@@ -9910,6 +11039,91 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      management_fee_terms: {
+        Row: {
+          basis: string
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          ends_on: string | null
+          flat_amount_cents: number
+          frequency: string
+          id: string
+          note: string | null
+          offering_id: string
+          offset_pct: number
+          position_id: string | null
+          rate_bps: number
+          starts_on: string
+          step_downs: Json
+          updated_at: string
+          version: number
+          waiver_bps: number
+        }
+        Insert: {
+          basis?: string
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          flat_amount_cents?: number
+          frequency?: string
+          id?: string
+          note?: string | null
+          offering_id: string
+          offset_pct?: number
+          position_id?: string | null
+          rate_bps?: number
+          starts_on: string
+          step_downs?: Json
+          updated_at?: string
+          version?: number
+          waiver_bps?: number
+        }
+        Update: {
+          basis?: string
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          flat_amount_cents?: number
+          frequency?: string
+          id?: string
+          note?: string | null
+          offering_id?: string
+          offset_pct?: number
+          position_id?: string | null
+          rate_bps?: number
+          starts_on?: string
+          step_downs?: Json
+          updated_at?: string
+          version?: number
+          waiver_bps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "management_fee_terms_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "investor_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "management_fee_terms_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "management_fee_terms_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       manager_onboarding_documents: {
         Row: {
@@ -12779,6 +13993,82 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "portfolio_valuations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      position_transfers: {
+        Row: {
+          approved_by: string | null
+          authorization_document_path: string | null
+          authorization_reference: string
+          capital_cents: number
+          commitment_cents: number
+          created_at: string
+          effective_date: string
+          from_position_id: string
+          id: string
+          offering_id: string
+          recorded_by: string | null
+          status: string
+          tax_basis_reference: string | null
+          to_position_id: string
+          units: number | null
+        }
+        Insert: {
+          approved_by?: string | null
+          authorization_document_path?: string | null
+          authorization_reference: string
+          capital_cents?: number
+          commitment_cents?: number
+          created_at?: string
+          effective_date: string
+          from_position_id: string
+          id?: string
+          offering_id: string
+          recorded_by?: string | null
+          status?: string
+          tax_basis_reference?: string | null
+          to_position_id: string
+          units?: number | null
+        }
+        Update: {
+          approved_by?: string | null
+          authorization_document_path?: string | null
+          authorization_reference?: string
+          capital_cents?: number
+          commitment_cents?: number
+          created_at?: string
+          effective_date?: string
+          from_position_id?: string
+          id?: string
+          offering_id?: string
+          recorded_by?: string | null
+          status?: string
+          tax_basis_reference?: string | null
+          to_position_id?: string
+          units?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "position_transfers_from_position_id_fkey"
+            columns: ["from_position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_transfers_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_transfers_to_position_id_fkey"
+            columns: ["to_position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
             referencedColumns: ["id"]
           },
         ]
@@ -15688,6 +16978,81 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "valuation_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waterfall_terms: {
+        Row: {
+          carry_pct: number
+          catch_up_pct: number
+          class_id: string | null
+          clawback_tracked: boolean
+          compounding: string
+          created_at: string
+          documented_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          offering_id: string
+          preferred_return_bps: number
+          return_of_capital_first: boolean
+          structure: string
+          tiers: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          carry_pct?: number
+          catch_up_pct?: number
+          class_id?: string | null
+          clawback_tracked?: boolean
+          compounding?: string
+          created_at?: string
+          documented_by?: string | null
+          effective_from: string
+          effective_to?: string | null
+          id?: string
+          offering_id: string
+          preferred_return_bps?: number
+          return_of_capital_first?: boolean
+          structure?: string
+          tiers?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          carry_pct?: number
+          catch_up_pct?: number
+          class_id?: string | null
+          clawback_tracked?: boolean
+          compounding?: string
+          created_at?: string
+          documented_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          offering_id?: string
+          preferred_return_bps?: number
+          return_of_capital_first?: boolean
+          structure?: string
+          tiers?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waterfall_terms_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "investor_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waterfall_terms_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
