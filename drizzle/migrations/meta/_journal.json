@@ -113,6 +113,13 @@
       "when": 1789702795918,
       "tag": "0015_performance_reporting_step6",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789707021108,
+      "tag": "0016_investor_reporting_center_step7",
+      "breakpoints": true
     }
   ]
 }

@@ -9351,6 +9351,56 @@ export type Database = {
           },
         ]
       }
+      fund_reporting_policies: {
+        Row: {
+          administrator_attribution: string
+          branding: Json
+          contact: Json
+          created_at: string
+          id: string
+          manager_review_enabled: boolean
+          offering_id: string
+          portfolio_columns: Json
+          portfolio_visibility: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          administrator_attribution?: string
+          branding?: Json
+          contact?: Json
+          created_at?: string
+          id?: string
+          manager_review_enabled?: boolean
+          offering_id: string
+          portfolio_columns?: Json
+          portfolio_visibility?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          administrator_attribution?: string
+          branding?: Json
+          contact?: Json
+          created_at?: string
+          id?: string
+          manager_review_enabled?: boolean
+          offering_id?: string
+          portfolio_columns?: Json
+          portfolio_visibility?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_reporting_policies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_requests: {
         Row: {
           client_id: string
@@ -10164,6 +10214,362 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_notice_targets: {
+        Row: {
+          created_at: string
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string
+          notice_id: string
+          offering_id: string
+          position_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id: string
+          notice_id: string
+          offering_id: string
+          position_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string
+          notice_id?: string
+          offering_id?: string
+          position_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_notice_targets_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "investor_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_notice_targets_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_notice_targets_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_notices: {
+        Row: {
+          amount_cents: number | null
+          body: string
+          created_at: string
+          created_by: string | null
+          document_path: string | null
+          due_date: string | null
+          effective_date: string | null
+          id: string
+          kind: string
+          offering_id: string
+          period_label: string | null
+          published_at: string | null
+          published_by: string | null
+          requires_acknowledgement: boolean
+          status: string
+          superseded_by_id: string | null
+          supersedes_id: string | null
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          amount_cents?: number | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          document_path?: string | null
+          due_date?: string | null
+          effective_date?: string | null
+          id?: string
+          kind: string
+          offering_id: string
+          period_label?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          requires_acknowledgement?: boolean
+          status?: string
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          amount_cents?: number | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          document_path?: string | null
+          due_date?: string | null
+          effective_date?: string | null
+          id?: string
+          kind?: string
+          offering_id?: string
+          period_label?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          requires_acknowledgement?: boolean
+          status?: string
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_notices_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_notices_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "investor_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_notices_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "investor_notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_package_components: {
+        Row: {
+          created_at: string
+          id: string
+          offering_id: string
+          package_id: string
+          section_key: string
+          snapshot: Json
+          sort_order: number
+          source_id: string | null
+          source_status: string | null
+          source_table: string | null
+          source_version: number | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offering_id: string
+          package_id: string
+          section_key: string
+          snapshot?: Json
+          sort_order?: number
+          source_id?: string | null
+          source_status?: string | null
+          source_table?: string | null
+          source_version?: number | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offering_id?: string
+          package_id?: string
+          section_key?: string
+          snapshot?: Json
+          sort_order?: number
+          source_id?: string | null
+          source_status?: string | null
+          source_table?: string | null
+          source_version?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_package_components_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_package_components_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "investor_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_packages: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          branding: Json
+          created_at: string
+          exceptions: Json
+          generated_at: string | null
+          generated_by: string | null
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string
+          manager_note: string | null
+          manager_responded_at: string | null
+          manager_responded_by: string | null
+          manager_response: string | null
+          manifest: Json
+          offering_id: string
+          period_end: string
+          period_kind: string
+          period_label: string
+          period_start: string
+          position_id: string | null
+          published_at: string | null
+          published_by: string | null
+          requires_acknowledgement: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revision_reason: string | null
+          sections: Json
+          status: string
+          superseded_by_id: string | null
+          supersedes_id: string | null
+          template_code: string | null
+          template_id: string | null
+          template_version: number | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          branding?: Json
+          created_at?: string
+          exceptions?: Json
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id: string
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          manifest?: Json
+          offering_id: string
+          period_end: string
+          period_kind?: string
+          period_label: string
+          period_start: string
+          position_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          requires_acknowledgement?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_reason?: string | null
+          sections?: Json
+          status?: string
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          template_code?: string | null
+          template_id?: string | null
+          template_version?: number | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          branding?: Json
+          created_at?: string
+          exceptions?: Json
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          manifest?: Json
+          offering_id?: string
+          period_end?: string
+          period_kind?: string
+          period_label?: string
+          period_start?: string
+          position_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          requires_acknowledgement?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_reason?: string | null
+          sections?: Json
+          status?: string
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          template_code?: string | null
+          template_id?: string | null
+          template_version?: number | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_packages_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_packages_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_packages_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "investor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_packages_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "investor_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_packages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "reporting_package_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -16488,6 +16894,138 @@ export type Database = {
           },
           {
             foreignKeyName: "report_packages_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reporting_delivery_events: {
+        Row: {
+          actor_user_id: string | null
+          channel: string
+          created_at: string
+          delegation_id: string | null
+          detail: Json
+          event: string
+          id: string
+          investor_user_id: string | null
+          notice_id: string | null
+          offering_id: string | null
+          on_behalf_of: boolean
+          package_id: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          channel?: string
+          created_at?: string
+          delegation_id?: string | null
+          detail?: Json
+          event: string
+          id?: string
+          investor_user_id?: string | null
+          notice_id?: string | null
+          offering_id?: string | null
+          on_behalf_of?: boolean
+          package_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          channel?: string
+          created_at?: string
+          delegation_id?: string | null
+          detail?: Json
+          event?: string
+          id?: string
+          investor_user_id?: string | null
+          notice_id?: string | null
+          offering_id?: string | null
+          on_behalf_of?: boolean
+          package_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reporting_delivery_events_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "investor_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reporting_delivery_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reporting_delivery_events_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "investor_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reporting_package_templates: {
+        Row: {
+          branding: Json
+          code: string
+          created_at: string
+          created_by: string | null
+          frequency: string
+          fund_type: string | null
+          id: string
+          investor_class_id: string | null
+          is_active: boolean
+          name: string
+          offering_id: string | null
+          portfolio_detail: string
+          required_components: Json
+          sections: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          branding?: Json
+          code: string
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          fund_type?: string | null
+          id?: string
+          investor_class_id?: string | null
+          is_active?: boolean
+          name: string
+          offering_id?: string | null
+          portfolio_detail?: string
+          required_components?: Json
+          sections?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          branding?: Json
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          fund_type?: string | null
+          id?: string
+          investor_class_id?: string | null
+          is_active?: boolean
+          name?: string
+          offering_id?: string | null
+          portfolio_detail?: string
+          required_components?: Json
+          sections?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reporting_package_templates_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
