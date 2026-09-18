@@ -50,4 +50,5 @@
 - [x] Step 1: bank feed → reconciliation → general ledger (posting rules, exceptions, maker-checker)
 - [x] Step 2: portfolio holdings, versioned valuations, evidence, governance, prepared-only ledger impact, realisations
 - [x] Step 3: NAV engine — calculated from posted ledger and as-of valuations, pre-NAV checks, documented overrides, reconciling bridge, maker-checker review/approval, immutable publication and revisions, manager acknowledge/challenge, capital-account handoff
-- [ ] Step 4: capital account allocations, financial statements and investor statements
+- [x] Step 4: investor allocation engine — positions per investment profile, immutable commitment ledger, versioned allocation policies, time-weighted participation, management fees, waterfall/carry, controlled adjustments and transfers, runs reconciled exactly to fund net assets, finalized capital accounts and versioned investor capital statements
+- [ ] Step 5: fund financial statements, performance reporting and tax forms
