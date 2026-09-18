@@ -136,7 +136,14 @@ export const reviewQueueFn = createServerFn({ method: "POST" })
       })
       .parse,
   )
-  .handler(async ({ data, context }) => (await engine()).reviewQueue(context.userId, data));
+  .handler(async ({ data, context }) =>
+    (await engine()).reviewQueue(context.userId, {
+      offeringId: data.offeringId ?? null,
+      bucket: data.bucket ?? null,
+      investorUserId: data.investorUserId ?? null,
+      assignedTo: data.assignedTo ?? null,
+    }),
+  );
 
 export const reviewDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
