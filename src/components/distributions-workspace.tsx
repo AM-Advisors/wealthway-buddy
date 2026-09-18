@@ -59,7 +59,7 @@ export function DistributionsWorkspace() {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["distributions-workspace"] });
 
-  const act = <T,>(fn: (input: T) => Promise<any>, success: string) =>
+  const act = (fn: (input: any) => Promise<any>, success: string) =>
     useMutationLike(fn, success, refresh);
 
   const reviewM = act(review, "Sent for approval.");
@@ -278,14 +278,14 @@ export function DistributionsWorkspace() {
 }
 
 /** Small helper so each action shares the same toast and refresh behaviour. */
-function useMutationLike<T>(fn: (input: T) => Promise<any>, success: string, refresh: () => void) {
+function useMutationLike(fn: (input: any) => Promise<any>, success: string, refresh: () => void) {
   const mutation = useMutation({
-    mutationFn: (input: T) => fn({ data: input } as any),
+    mutationFn: (input: any) => fn({ data: input } as any),
     onSuccess: () => {
       toast.success(success);
       refresh();
     },
     onError: (e: any) => toast.error(e?.message ?? "That didn't go through."),
   });
-  return { run: (input: T) => mutation.mutate(input), pending: mutation.isPending };
+  return { run: (input: any) => mutation.mutate(input), pending: mutation.isPending };
 }

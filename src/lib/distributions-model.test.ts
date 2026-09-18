@@ -110,7 +110,7 @@ describe("economic entitlement", () => {
   it("prefers the approved waterfall when the fund has one", () => {
     const result = calculateEntitlements({
       declaredAmountCents: 900_000,
-      distributionType: "realized_gain",
+      distributionType: "realized_proceeds",
       useWaterfall: true,
       lines: [
         investor({ positionId: "a", ownershipBps: 5000, waterfallCents: 200_000 }),
