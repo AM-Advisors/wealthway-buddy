@@ -966,9 +966,9 @@ export async function managerRespondToPackage(
 
 interface ViewerOptions {
   /** Viewing as a delegated professional for this principal. */
-  onBehalfOfUserId?: string | null;
-  delegationId?: string | null;
-  organizationId?: string | null;
+  onBehalfOfUserId?: string | null | undefined;
+  delegationId?: string | null | undefined;
+  organizationId?: string | null | undefined;
 }
 
 async function resolveViewer(userId: string, options: ViewerOptions = {}) {
@@ -1599,7 +1599,7 @@ export async function packageDetail(userId: string, packageId: string) {
     package: pkg,
     components: (components ?? []) as any[],
     manifest: pkg.manifest ?? {},
-    delivery: deliveryState(((events ?? []) as any[]) ?? []),
+    delivery: deliveryState((events ?? []) as any[]),
     events: scope.isAdmin ? ((events ?? []) as any[]) : [],
   };
 }
