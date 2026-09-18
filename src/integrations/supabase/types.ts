@@ -9845,11 +9845,14 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          intended_amount_cents: number | null
+          invitation_source: string | null
           invite_role: Database["public"]["Enums"]["invitation_role"]
           invited_by: string | null
           invited_name: string | null
           last_sent_at: string | null
           offering_id: string
+          onboarding_status: string | null
           role: Database["public"]["Enums"]["app_role"]
           status: string
           token: string
@@ -9862,11 +9865,14 @@ export type Database = {
           email: string
           expires_at?: string
           id?: string
+          intended_amount_cents?: number | null
+          invitation_source?: string | null
           invite_role?: Database["public"]["Enums"]["invitation_role"]
           invited_by?: string | null
           invited_name?: string | null
           last_sent_at?: string | null
           offering_id: string
+          onboarding_status?: string | null
           role: Database["public"]["Enums"]["app_role"]
           status?: string
           token?: string
@@ -9879,11 +9885,14 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          intended_amount_cents?: number | null
+          invitation_source?: string | null
           invite_role?: Database["public"]["Enums"]["invitation_role"]
           invited_by?: string | null
           invited_name?: string | null
           last_sent_at?: string | null
           offering_id?: string
+          onboarding_status?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           token?: string
@@ -11980,6 +11989,256 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "investor_notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_onboarding_events: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          from_status: string | null
+          id: string
+          offering_id: string | null
+          onboarding_id: string | null
+          subject_id: string | null
+          subject_table: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          from_status?: string | null
+          id?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          subject_id?: string | null
+          subject_table?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          from_status?: string | null
+          id?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          subject_id?: string | null
+          subject_table?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_onboarding_events_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_onboarding_exceptions: {
+        Row: {
+          created_at: string
+          detail: string | null
+          exception_type: string
+          id: string
+          onboarding_id: string
+          owner: string
+          raised_by: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          exception_type: string
+          id?: string
+          onboarding_id: string
+          owner?: string
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          exception_type?: string
+          id?: string
+          onboarding_id?: string
+          owner?: string
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_onboarding_exceptions_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_onboardings: {
+        Row: {
+          acceptance_capacity: string | null
+          accepted_amount_cents: number | null
+          accepted_at: string | null
+          accepted_by: string | null
+          application_id: string | null
+          approved_to_fund_at: string | null
+          approved_to_fund_by: string | null
+          assigned_to: string | null
+          closed_amount_cents: number | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          document_template_version: number | null
+          executed_snapshot: Json | null
+          funded_amount_cents: number
+          funding_released_at: string | null
+          funding_status: string
+          id: string
+          investment_profile_id: string | null
+          investor_reports_sent_at: string | null
+          investor_user_id: string
+          invitation_id: string | null
+          last_activity_at: string
+          offering_id: string
+          person_id: string | null
+          position_id: string | null
+          questionnaire_responses: Json
+          questionnaire_version: number | null
+          requested_amount_cents: number | null
+          signature_id: string | null
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          acceptance_capacity?: string | null
+          accepted_amount_cents?: number | null
+          accepted_at?: string | null
+          accepted_by?: string | null
+          application_id?: string | null
+          approved_to_fund_at?: string | null
+          approved_to_fund_by?: string | null
+          assigned_to?: string | null
+          closed_amount_cents?: number | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          document_template_version?: number | null
+          executed_snapshot?: Json | null
+          funded_amount_cents?: number
+          funding_released_at?: string | null
+          funding_status?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_reports_sent_at?: string | null
+          investor_user_id: string
+          invitation_id?: string | null
+          last_activity_at?: string
+          offering_id: string
+          person_id?: string | null
+          position_id?: string | null
+          questionnaire_responses?: Json
+          questionnaire_version?: number | null
+          requested_amount_cents?: number | null
+          signature_id?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          acceptance_capacity?: string | null
+          accepted_amount_cents?: number | null
+          accepted_at?: string | null
+          accepted_by?: string | null
+          application_id?: string | null
+          approved_to_fund_at?: string | null
+          approved_to_fund_by?: string | null
+          assigned_to?: string | null
+          closed_amount_cents?: number | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          document_template_version?: number | null
+          executed_snapshot?: Json | null
+          funded_amount_cents?: number
+          funding_released_at?: string | null
+          funding_status?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_reports_sent_at?: string | null
+          investor_user_id?: string
+          invitation_id?: string | null
+          last_activity_at?: string
+          offering_id?: string
+          person_id?: string | null
+          position_id?: string | null
+          questionnaire_responses?: Json
+          questionnaire_version?: number | null
+          requested_amount_cents?: number | null
+          signature_id?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_onboardings_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_onboardings_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_onboardings_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "fund_invitations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_onboardings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_onboardings_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
             referencedColumns: ["id"]
           },
         ]
@@ -14765,6 +15024,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "offering_packet_links_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offering_questionnaires: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          offering_id: string
+          published_at: string | null
+          published_by: string | null
+          questions: Json
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offering_id: string
+          published_at?: string | null
+          published_by?: string | null
+          questions?: Json
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offering_id?: string
+          published_at?: string | null
+          published_by?: string | null
+          questions?: Json
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_questionnaires_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
