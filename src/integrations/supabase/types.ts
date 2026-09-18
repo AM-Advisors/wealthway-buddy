@@ -3346,6 +3346,315 @@ export type Database = {
           },
         ]
       }
+      capital_call_events: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          bank_transaction_id: string | null
+          capital_call_id: string | null
+          capital_call_line_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          expected_funding_id: string | null
+          from_status: string | null
+          funding_instruction_version_id: string | null
+          funding_match_id: string | null
+          id: string
+          journal_entry_id: string | null
+          offering_id: string | null
+          reason: string | null
+          reconciliation_id: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          bank_transaction_id?: string | null
+          capital_call_id?: string | null
+          capital_call_line_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          expected_funding_id?: string | null
+          from_status?: string | null
+          funding_instruction_version_id?: string | null
+          funding_match_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          offering_id?: string | null
+          reason?: string | null
+          reconciliation_id?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          bank_transaction_id?: string | null
+          capital_call_id?: string | null
+          capital_call_line_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          expected_funding_id?: string | null
+          from_status?: string | null
+          funding_instruction_version_id?: string | null
+          funding_match_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          offering_id?: string | null
+          reason?: string | null
+          reconciliation_id?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_call_events_capital_call_id_fkey"
+            columns: ["capital_call_id"]
+            isOneToOne: false
+            referencedRelation: "capital_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_events_capital_call_line_id_fkey"
+            columns: ["capital_call_line_id"]
+            isOneToOne: false
+            referencedRelation: "capital_call_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_events_expected_funding_id_fkey"
+            columns: ["expected_funding_id"]
+            isOneToOne: false
+            referencedRelation: "expected_fundings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_events_funding_instruction_version_id_fkey"
+            columns: ["funding_instruction_version_id"]
+            isOneToOne: false
+            referencedRelation: "funding_instruction_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_events_funding_match_id_fkey"
+            columns: ["funding_match_id"]
+            isOneToOne: false
+            referencedRelation: "funding_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capital_call_lines: {
+        Row: {
+          called_cents: number
+          capital_call_id: string
+          commitment_cents: number
+          created_at: string
+          display_name: string | null
+          due_date: string | null
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          offering_id: string
+          onboarding_id: string | null
+          position_id: string | null
+          previously_contributed_cents: number
+          received_cents: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          called_cents?: number
+          capital_call_id: string
+          commitment_cents?: number
+          created_at?: string
+          display_name?: string | null
+          due_date?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          offering_id: string
+          onboarding_id?: string | null
+          position_id?: string | null
+          previously_contributed_cents?: number
+          received_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          called_cents?: number
+          capital_call_id?: string
+          commitment_cents?: number
+          created_at?: string
+          display_name?: string | null
+          due_date?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          offering_id?: string
+          onboarding_id?: string | null
+          position_id?: string | null
+          previously_contributed_cents?: number
+          received_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_call_lines_capital_call_id_fkey"
+            columns: ["capital_call_id"]
+            isOneToOne: false
+            referencedRelation: "capital_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_lines_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_lines_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_lines_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capital_calls: {
+        Row: {
+          basis: string
+          call_number: number
+          call_type: string
+          cancel_reason: string | null
+          closed_at: string | null
+          commitment_snapshot: Json
+          created_at: string
+          due_date: string | null
+          fixed_amount_cents: number | null
+          id: string
+          notice_date: string | null
+          notice_document_name: string | null
+          notice_document_path: string | null
+          offering_id: string
+          percentage_bps: number | null
+          prepared_by: string | null
+          published_at: string | null
+          published_by: string | null
+          purpose: string | null
+          requested_at: string | null
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          superseded_at: string | null
+          supersedes_id: string | null
+          title: string | null
+          total_called_cents: number
+          total_received_cents: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          basis?: string
+          call_number: number
+          call_type?: string
+          cancel_reason?: string | null
+          closed_at?: string | null
+          commitment_snapshot?: Json
+          created_at?: string
+          due_date?: string | null
+          fixed_amount_cents?: number | null
+          id?: string
+          notice_date?: string | null
+          notice_document_name?: string | null
+          notice_document_path?: string | null
+          offering_id: string
+          percentage_bps?: number | null
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          purpose?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          title?: string | null
+          total_called_cents?: number
+          total_received_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          basis?: string
+          call_number?: number
+          call_type?: string
+          cancel_reason?: string | null
+          closed_at?: string | null
+          commitment_snapshot?: Json
+          created_at?: string
+          due_date?: string | null
+          fixed_amount_cents?: number | null
+          id?: string
+          notice_date?: string | null
+          notice_document_name?: string | null
+          notice_document_path?: string | null
+          offering_id?: string
+          percentage_bps?: number | null
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          purpose?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          title?: string | null
+          total_called_cents?: number
+          total_received_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_calls_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_calls_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "capital_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carry_allocations: {
         Row: {
           amount_cents: number
@@ -8658,6 +8967,112 @@ export type Database = {
           },
         ]
       }
+      expected_fundings: {
+        Row: {
+          capital_call_line_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          expected_amount_cents: number
+          expected_by: string | null
+          funding_instruction_version_id: string | null
+          id: string
+          investment_profile_id: string | null
+          investor_initiated_at: string | null
+          investor_user_id: string | null
+          offering_id: string
+          onboarding_id: string | null
+          position_id: string | null
+          received_amount_cents: number
+          reference_code: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          capital_call_line_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expected_amount_cents?: number
+          expected_by?: string | null
+          funding_instruction_version_id?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_initiated_at?: string | null
+          investor_user_id?: string | null
+          offering_id: string
+          onboarding_id?: string | null
+          position_id?: string | null
+          received_amount_cents?: number
+          reference_code: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          capital_call_line_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expected_amount_cents?: number
+          expected_by?: string | null
+          funding_instruction_version_id?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_initiated_at?: string | null
+          investor_user_id?: string | null
+          offering_id?: string
+          onboarding_id?: string | null
+          position_id?: string | null
+          received_amount_cents?: number
+          reference_code?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expected_fundings_capital_call_line_id_fkey"
+            columns: ["capital_call_line_id"]
+            isOneToOne: false
+            referencedRelation: "capital_call_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expected_fundings_funding_instruction_version_id_fkey"
+            columns: ["funding_instruction_version_id"]
+            isOneToOne: false
+            referencedRelation: "funding_instruction_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expected_fundings_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expected_fundings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expected_fundings_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expected_fundings_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fee_calculations: {
         Row: {
           basis: string
@@ -11074,6 +11489,308 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_exceptions: {
+        Row: {
+          bank_transaction_id: string | null
+          capital_call_line_id: string | null
+          created_at: string
+          detail: string | null
+          expected_funding_id: string | null
+          funding_match_id: string | null
+          id: string
+          kind: string
+          offering_id: string | null
+          owner: string
+          raised_by: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bank_transaction_id?: string | null
+          capital_call_line_id?: string | null
+          created_at?: string
+          detail?: string | null
+          expected_funding_id?: string | null
+          funding_match_id?: string | null
+          id?: string
+          kind: string
+          offering_id?: string | null
+          owner?: string
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bank_transaction_id?: string | null
+          capital_call_line_id?: string | null
+          created_at?: string
+          detail?: string | null
+          expected_funding_id?: string | null
+          funding_match_id?: string | null
+          id?: string
+          kind?: string
+          offering_id?: string | null
+          owner?: string
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_exceptions_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_exceptions_capital_call_line_id_fkey"
+            columns: ["capital_call_line_id"]
+            isOneToOne: false
+            referencedRelation: "capital_call_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_exceptions_expected_funding_id_fkey"
+            columns: ["expected_funding_id"]
+            isOneToOne: false
+            referencedRelation: "expected_fundings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_exceptions_funding_match_id_fkey"
+            columns: ["funding_match_id"]
+            isOneToOne: false
+            referencedRelation: "funding_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_exceptions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_instruction_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          bank_name: string | null
+          banking_setup_id: string | null
+          change_reason: string | null
+          created_at: string
+          created_by: string | null
+          details: Json
+          effective_date: string | null
+          fingerprint: string | null
+          id: string
+          offering_id: string
+          release_status: string
+          revoked_at: string | null
+          revoked_by: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          superseded_at: string | null
+          supersedes_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_name?: string | null
+          banking_setup_id?: string | null
+          change_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          effective_date?: string | null
+          fingerprint?: string | null
+          id?: string
+          offering_id: string
+          release_status?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_name?: string | null
+          banking_setup_id?: string | null
+          change_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: Json
+          effective_date?: string | null
+          fingerprint?: string | null
+          id?: string
+          offering_id?: string
+          release_status?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_instruction_versions_banking_setup_id_fkey"
+            columns: ["banking_setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_banking_setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_instruction_versions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_instruction_versions_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "funding_instruction_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_matches: {
+        Row: {
+          bank_transaction_id: string
+          commitment_event_id: string | null
+          confidence: string
+          created_at: string
+          created_by: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          evidence: Json
+          exception_kind: string | null
+          expected_funding_id: string | null
+          id: string
+          journal_entry_id: string | null
+          offering_id: string
+          posted_at: string | null
+          proposed_amount_cents: number
+          reconciliation_id: string | null
+          status: string
+          updated_at: string
+          variance_cents: number
+        }
+        Insert: {
+          bank_transaction_id: string
+          commitment_event_id?: string | null
+          confidence?: string
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence?: Json
+          exception_kind?: string | null
+          expected_funding_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          offering_id: string
+          posted_at?: string | null
+          proposed_amount_cents?: number
+          reconciliation_id?: string | null
+          status?: string
+          updated_at?: string
+          variance_cents?: number
+        }
+        Update: {
+          bank_transaction_id?: string
+          commitment_event_id?: string | null
+          confidence?: string
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence?: Json
+          exception_kind?: string | null
+          expected_funding_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          offering_id?: string
+          posted_at?: string | null
+          proposed_amount_cents?: number
+          reconciliation_id?: string | null
+          status?: string
+          updated_at?: string
+          variance_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_matches_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_matches_commitment_event_id_fkey"
+            columns: ["commitment_event_id"]
+            isOneToOne: false
+            referencedRelation: "commitment_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_matches_expected_funding_id_fkey"
+            columns: ["expected_funding_id"]
+            isOneToOne: false
+            referencedRelation: "expected_fundings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_matches_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_matches_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_matches_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "bank_reconciliations"
             referencedColumns: ["id"]
           },
         ]
