@@ -2362,3 +2362,8 @@ export async function distributionAuditTrail(userId: string, batchId: string) {
     events: events ?? [],
   };
 }
+
+/** Provider intake is a Harmonious-operated action, never an open endpoint. */
+export async function assertStaffForProviderIntake(userId: string) {
+  return assertStaff(userId);
+}
