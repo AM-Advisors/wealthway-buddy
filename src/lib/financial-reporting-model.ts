@@ -160,6 +160,12 @@ export function mapAccount(
   mapping: StatementMapping,
   statement: MappingLine["statement"],
 ): MappingLine | null {
+  // A balance sheet never absorbs an income or expense account, and the
+  // statement of operations never absorbs a balance sheet account, no matter
+  // how loosely a mapping line is written.
+  const isBalanceSheetAccount = ["asset", "liability", "equity"].includes(account.accountType);
+  if (statement === "balance_sheet" && !isBalanceSheetAccount) return null;
+  if (statement === "income_statement" && isBalanceSheetAccount) return null;
   const candidates = mapping.lines.filter((l) => l.statement === statement);
   const byCode = candidates.find((l) => (l.match.codes ?? []).includes(account.code));
   if (byCode) return byCode;
@@ -780,6 +786,8 @@ export function priorPeriodBounds(periodStart: string, periodEnd: string) {
   const lengthMs = end.getTime() - start.getTime();
   const priorEnd = new Date(start.getTime() - 86_400_000);
   const priorStart = new Date(priorEnd.getTime() - lengthMs);
+  // Periods are inclusive of both end dates, so the prior period starts a day later.
+  priorStart.setUTCDate(priorStart.getUTCDate() + 1);
   return {
     start: priorStart.toISOString().slice(0, 10),
     end: priorEnd.toISOString().slice(0, 10),
