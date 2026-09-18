@@ -366,6 +366,31 @@ function toDatedFlow(event: any): DatedCashFlow {
 
 // -------------------------------------------------------- the calculation
 
+interface FundActivity {
+  beginningValueCents: number;
+  endingValueCents: number;
+  contributionsCents: number;
+  distributionsCents: number;
+  investmentIncomeCents: number;
+  realizedGainCents: number;
+  unrealizedGainCents: number;
+  managementFeesCents: number;
+  expensesCents: number;
+  carriedInterestCents: number;
+}
+
+interface InputsSnapshot {
+  navVersion: { id: string; version: number; asOf: string } | null;
+  beginningNavVersion: { id: string; version: number; asOf: string } | null;
+  allocationRun: { id: string; version: number; periodEnd: string } | null;
+  valuationVersions: { assetId?: string; version?: number }[];
+  paidInCapitalCents: number;
+  lifetimeDistributionsCents: number;
+  investorTotalsTie: { totalCents: number; differenceCents: number; ties: boolean };
+  cashFlowCount: number;
+  inception: string | null;
+}
+
 export interface PerformanceCalculation {
   offeringId: string;
   bookId: string;
@@ -380,7 +405,7 @@ export interface PerformanceCalculation {
   navVersionId: string | null;
   beginningNavVersionId: string | null;
   allocationRunId: string | null;
-  fund: Record<string, number>;
+  fund: FundActivity;
   bridge: ReturnType<typeof performanceBridge>;
   returns: ReturnType<typeof grossAndNetReturn>;
   irr: ReturnType<typeof xirr>;
@@ -390,12 +415,12 @@ export interface PerformanceCalculation {
   cumulativeReturnBps: number | null;
   cashFlows: DatedCashFlow[];
   investors: ReturnType<typeof investorPerformance>[];
-  investorRows: any[];
+  investorRows: { line: Record<string, never> | any; position: any }[];
   exceptions: PerformanceException[];
   benchmarks: BenchmarkEntry[];
   metrics: string[];
   priorRunId: string | null;
-  inputsSnapshot: Record<string, unknown>;
+  inputsSnapshot: InputsSnapshot;
 }
 
 /**
@@ -450,7 +475,7 @@ export async function calculatePerformance(
   const pick = (key: string, navKey: string) =>
     totals[key] !== undefined ? num(totals[key]) : num(endingNav?.[navKey]);
 
-  const fund = {
+  const fund: FundActivity = {
     beginningValueCents: num(beginningNav?.net_asset_value_cents),
     endingValueCents: num(endingNav?.net_asset_value_cents),
     contributionsCents: pick("contributionsCents", "contributions_cents"),

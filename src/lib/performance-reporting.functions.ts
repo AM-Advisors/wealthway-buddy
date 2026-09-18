@@ -177,7 +177,24 @@ export const savePerformanceMethodology = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { saveMethodology } = await import("@/lib/performance.server");
     const { fundId, ...rest } = data;
-    return saveMethodology(context.userId, { offeringId: fundId, ...rest });
+    return saveMethodology(context.userId, {
+      offeringId: fundId,
+      label: rest.label,
+      fundType: rest.fundType,
+      effectiveFrom: rest.effectiveFrom,
+      ...(rest.calculationMethod ? { calculationMethod: rest.calculationMethod } : {}),
+      ...(rest.deductManagementFees === undefined
+        ? {}
+        : { deductManagementFees: rest.deductManagementFees }),
+      ...(rest.deductFundExpenses === undefined
+        ? {}
+        : { deductFundExpenses: rest.deductFundExpenses }),
+      ...(rest.deductCarriedInterest === undefined
+        ? {}
+        : { deductCarriedInterest: rest.deductCarriedInterest }),
+      ...(rest.capitalDefinition ? { capitalDefinition: rest.capitalDefinition } : {}),
+      ...(rest.notes ? { notes: rest.notes } : {}),
+    });
   });
 
 export const savePerformanceBenchmark = createServerFn({ method: "POST" })
@@ -199,7 +216,16 @@ export const savePerformanceBenchmark = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { saveBenchmark } = await import("@/lib/performance.server");
     const { fundId, ...rest } = data;
-    return saveBenchmark(context.userId, { offeringId: fundId, ...rest });
+    return saveBenchmark(context.userId, {
+      offeringId: fundId,
+      name: rest.name,
+      source: rest.source,
+      periodStart: rest.periodStart,
+      periodEnd: rest.periodEnd,
+      ...(rest.methodology ? { methodology: rest.methodology } : {}),
+      ...(rest.returnBps === undefined ? {} : { returnBps: rest.returnBps }),
+      ...(rest.note ? { note: rest.note } : {}),
+    });
   });
 
 export const getPerformanceConfiguration = createServerFn({ method: "POST" })
@@ -229,5 +255,22 @@ export const savePerformanceConfiguration = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { updatePerformanceConfig } = await import("@/lib/performance.server");
     const { fundId, ...rest } = data;
-    return updatePerformanceConfig(context.userId, { offeringId: fundId, ...rest });
+    return updatePerformanceConfig(context.userId, {
+      offeringId: fundId,
+      ...(rest.fundType ? { fundType: rest.fundType } : {}),
+      ...(rest.enabledMetrics ? { enabledMetrics: rest.enabledMetrics } : {}),
+      ...(rest.defaultFrequency ? { defaultFrequency: rest.defaultFrequency } : {}),
+      ...(rest.managerResponseEnabled === undefined
+        ? {}
+        : { managerResponseEnabled: rest.managerResponseEnabled }),
+      ...(rest.investorReportingEnabled === undefined
+        ? {}
+        : { investorReportingEnabled: rest.investorReportingEnabled }),
+      ...(rest.blockingExceptionKinds
+        ? { blockingExceptionKinds: rest.blockingExceptionKinds }
+        : {}),
+      ...(rest.largeMovementThresholdBps === undefined
+        ? {}
+        : { largeMovementThresholdBps: rest.largeMovementThresholdBps }),
+    });
   });
