@@ -13260,6 +13260,72 @@ export type Database = {
           },
         ]
       }
+      performance_benchmarks: {
+        Row: {
+          as_of: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          methodology: string
+          name: string
+          note: string | null
+          offering_id: string | null
+          period_end: string
+          period_start: string
+          return_bps: number | null
+          run_id: string | null
+          source: string
+          value_status: string
+        }
+        Insert: {
+          as_of?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          methodology?: string
+          name: string
+          note?: string | null
+          offering_id?: string | null
+          period_end: string
+          period_start: string
+          return_bps?: number | null
+          run_id?: string | null
+          source: string
+          value_status?: string
+        }
+        Update: {
+          as_of?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          methodology?: string
+          name?: string
+          note?: string | null
+          offering_id?: string | null
+          period_end?: string
+          period_start?: string
+          return_bps?: number | null
+          run_id?: string | null
+          source?: string
+          value_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_benchmarks_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_benchmarks_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_calculations: {
         Row: {
           approved_by: string | null
@@ -13397,6 +13463,686 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_configs: {
+        Row: {
+          blocking_exception_kinds: string[]
+          book_id: string | null
+          created_at: string
+          default_frequency: string
+          enabled_metrics: string[]
+          fund_type: string
+          id: string
+          investor_reporting_enabled: boolean
+          large_movement_threshold_bps: number
+          manager_response_enabled: boolean
+          methodology_id: string | null
+          notes: string | null
+          offering_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          blocking_exception_kinds?: string[]
+          book_id?: string | null
+          created_at?: string
+          default_frequency?: string
+          enabled_metrics?: string[]
+          fund_type?: string
+          id?: string
+          investor_reporting_enabled?: boolean
+          large_movement_threshold_bps?: number
+          manager_response_enabled?: boolean
+          methodology_id?: string | null
+          notes?: string | null
+          offering_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          blocking_exception_kinds?: string[]
+          book_id?: string | null
+          created_at?: string
+          default_frequency?: string
+          enabled_metrics?: string[]
+          fund_type?: string
+          id?: string
+          investor_reporting_enabled?: boolean
+          large_movement_threshold_bps?: number
+          manager_response_enabled?: boolean
+          methodology_id?: string | null
+          notes?: string | null
+          offering_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_configs_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_configs_methodology_id_fkey"
+            columns: ["methodology_id"]
+            isOneToOne: false
+            referencedRelation: "performance_methodologies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_configs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event_type: string
+          from_status: string | null
+          id: string
+          offering_id: string | null
+          run_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_type: string
+          from_status?: string | null
+          id?: string
+          offering_id?: string | null
+          run_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          offering_id?: string | null
+          run_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_events_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_lines: {
+        Row: {
+          allocated_income_cents: number
+          beginning_capital_cents: number
+          bridge: Json
+          capacity: string
+          capital_account_id: string | null
+          carry_cents: number
+          cash_flows: Json
+          commitment_cents: number
+          contributions_cents: number
+          created_at: string
+          display_name: string
+          distributions_cents: number
+          dpi: number | null
+          ending_capital_cents: number
+          exceptions: Json
+          expenses_cents: number
+          fees_cents: number
+          gross_return_bps: number | null
+          id: string
+          inputs: Json
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          irr_bps: number | null
+          irr_status: string
+          is_gp: boolean
+          moic: number | null
+          net_return_bps: number | null
+          offering_id: string
+          paid_in_capital_cents: number
+          position_id: string | null
+          realized_gain_cents: number
+          realized_value_cents: number
+          remaining_value_cents: number
+          run_id: string
+          rvpi: number | null
+          total_value_cents: number
+          tvpi: number | null
+          twr_bps: number | null
+          twr_status: string
+          unfunded_commitment_cents: number
+          unrealized_gain_cents: number
+        }
+        Insert: {
+          allocated_income_cents?: number
+          beginning_capital_cents?: number
+          bridge?: Json
+          capacity?: string
+          capital_account_id?: string | null
+          carry_cents?: number
+          cash_flows?: Json
+          commitment_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          display_name?: string
+          distributions_cents?: number
+          dpi?: number | null
+          ending_capital_cents?: number
+          exceptions?: Json
+          expenses_cents?: number
+          fees_cents?: number
+          gross_return_bps?: number | null
+          id?: string
+          inputs?: Json
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          irr_bps?: number | null
+          irr_status?: string
+          is_gp?: boolean
+          moic?: number | null
+          net_return_bps?: number | null
+          offering_id: string
+          paid_in_capital_cents?: number
+          position_id?: string | null
+          realized_gain_cents?: number
+          realized_value_cents?: number
+          remaining_value_cents?: number
+          run_id: string
+          rvpi?: number | null
+          total_value_cents?: number
+          tvpi?: number | null
+          twr_bps?: number | null
+          twr_status?: string
+          unfunded_commitment_cents?: number
+          unrealized_gain_cents?: number
+        }
+        Update: {
+          allocated_income_cents?: number
+          beginning_capital_cents?: number
+          bridge?: Json
+          capacity?: string
+          capital_account_id?: string | null
+          carry_cents?: number
+          cash_flows?: Json
+          commitment_cents?: number
+          contributions_cents?: number
+          created_at?: string
+          display_name?: string
+          distributions_cents?: number
+          dpi?: number | null
+          ending_capital_cents?: number
+          exceptions?: Json
+          expenses_cents?: number
+          fees_cents?: number
+          gross_return_bps?: number | null
+          id?: string
+          inputs?: Json
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          irr_bps?: number | null
+          irr_status?: string
+          is_gp?: boolean
+          moic?: number | null
+          net_return_bps?: number | null
+          offering_id?: string
+          paid_in_capital_cents?: number
+          position_id?: string | null
+          realized_gain_cents?: number
+          realized_value_cents?: number
+          remaining_value_cents?: number
+          run_id?: string
+          rvpi?: number | null
+          total_value_cents?: number
+          tvpi?: number | null
+          twr_bps?: number | null
+          twr_status?: string
+          unfunded_commitment_cents?: number
+          unrealized_gain_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_lines_capital_account_id_fkey"
+            columns: ["capital_account_id"]
+            isOneToOne: false
+            referencedRelation: "capital_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_lines_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_lines_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_lines_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_methodologies: {
+        Row: {
+          annualization: string
+          benchmark_methodology: Json
+          book_id: string | null
+          calculation_method: string
+          capital_definition: string
+          carry_treatment: Json
+          cash_flow_timing: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          exception_policy: Json
+          expense_treatment: Json
+          fee_treatment: Json
+          fund_type: string
+          id: string
+          label: string
+          metrics: string[]
+          notes: string | null
+          offering_id: string | null
+          rounding: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          annualization?: string
+          benchmark_methodology?: Json
+          book_id?: string | null
+          calculation_method?: string
+          capital_definition?: string
+          carry_treatment?: Json
+          cash_flow_timing?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          exception_policy?: Json
+          expense_treatment?: Json
+          fee_treatment?: Json
+          fund_type?: string
+          id?: string
+          label: string
+          metrics?: string[]
+          notes?: string | null
+          offering_id?: string | null
+          rounding?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          annualization?: string
+          benchmark_methodology?: Json
+          book_id?: string | null
+          calculation_method?: string
+          capital_definition?: string
+          carry_treatment?: Json
+          cash_flow_timing?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          exception_policy?: Json
+          expense_treatment?: Json
+          fee_treatment?: Json
+          fund_type?: string
+          id?: string
+          label?: string
+          metrics?: string[]
+          notes?: string | null
+          offering_id?: string | null
+          rounding?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_methodologies_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_methodologies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_runs: {
+        Row: {
+          allocation_run_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          beginning_nav_version_id: string | null
+          beginning_value_cents: number
+          benchmarks: Json
+          book_id: string | null
+          bridge: Json
+          carried_interest_cents: number
+          cash_flows: Json
+          contributions_cents: number
+          created_at: string
+          cumulative_return_bps: number | null
+          distributions_cents: number
+          dpi: number | null
+          ending_value_cents: number
+          exceptions: Json
+          expenses_cents: number
+          fund_type: string
+          gross_return_bps: number | null
+          id: string
+          inputs_snapshot: Json
+          investment_income_cents: number
+          investor_visible: boolean
+          irr_bps: number | null
+          irr_status: string
+          management_fees_cents: number
+          manager_note: string | null
+          manager_responded_at: string | null
+          manager_responded_by: string | null
+          manager_response: string | null
+          manager_visible: boolean
+          methodology_id: string | null
+          methodology_snapshot: Json
+          methodology_version: string
+          metrics: Json
+          moic: number | null
+          nav_version_id: string | null
+          net_return_bps: number | null
+          offering_id: string
+          overrides: Json
+          paid_in_capital_cents: number
+          period_end: string
+          period_kind: string
+          period_label: string
+          period_start: string
+          prepared_at: string
+          prepared_by: string | null
+          prior_run_id: string | null
+          published_at: string | null
+          published_by: string | null
+          realized_gain_cents: number
+          realized_value_cents: number
+          remaining_value_cents: number
+          report_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revision_reason: string | null
+          rvpi: number | null
+          source_cutoff_at: string
+          status: Database["public"]["Enums"]["report_status"]
+          subperiods: Json
+          superseded_by_id: string | null
+          supersedes_id: string | null
+          total_value_cents: number
+          tvpi: number | null
+          twr_bps: number | null
+          twr_status: string
+          unfunded_commitment_cents: number
+          unrealized_gain_cents: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allocation_run_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          beginning_nav_version_id?: string | null
+          beginning_value_cents?: number
+          benchmarks?: Json
+          book_id?: string | null
+          bridge?: Json
+          carried_interest_cents?: number
+          cash_flows?: Json
+          contributions_cents?: number
+          created_at?: string
+          cumulative_return_bps?: number | null
+          distributions_cents?: number
+          dpi?: number | null
+          ending_value_cents?: number
+          exceptions?: Json
+          expenses_cents?: number
+          fund_type?: string
+          gross_return_bps?: number | null
+          id?: string
+          inputs_snapshot?: Json
+          investment_income_cents?: number
+          investor_visible?: boolean
+          irr_bps?: number | null
+          irr_status?: string
+          management_fees_cents?: number
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          manager_visible?: boolean
+          methodology_id?: string | null
+          methodology_snapshot?: Json
+          methodology_version?: string
+          metrics?: Json
+          moic?: number | null
+          nav_version_id?: string | null
+          net_return_bps?: number | null
+          offering_id: string
+          overrides?: Json
+          paid_in_capital_cents?: number
+          period_end: string
+          period_kind?: string
+          period_label?: string
+          period_start: string
+          prepared_at?: string
+          prepared_by?: string | null
+          prior_run_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          realized_gain_cents?: number
+          realized_value_cents?: number
+          remaining_value_cents?: number
+          report_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_reason?: string | null
+          rvpi?: number | null
+          source_cutoff_at?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          subperiods?: Json
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          total_value_cents?: number
+          tvpi?: number | null
+          twr_bps?: number | null
+          twr_status?: string
+          unfunded_commitment_cents?: number
+          unrealized_gain_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allocation_run_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          beginning_nav_version_id?: string | null
+          beginning_value_cents?: number
+          benchmarks?: Json
+          book_id?: string | null
+          bridge?: Json
+          carried_interest_cents?: number
+          cash_flows?: Json
+          contributions_cents?: number
+          created_at?: string
+          cumulative_return_bps?: number | null
+          distributions_cents?: number
+          dpi?: number | null
+          ending_value_cents?: number
+          exceptions?: Json
+          expenses_cents?: number
+          fund_type?: string
+          gross_return_bps?: number | null
+          id?: string
+          inputs_snapshot?: Json
+          investment_income_cents?: number
+          investor_visible?: boolean
+          irr_bps?: number | null
+          irr_status?: string
+          management_fees_cents?: number
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          manager_visible?: boolean
+          methodology_id?: string | null
+          methodology_snapshot?: Json
+          methodology_version?: string
+          metrics?: Json
+          moic?: number | null
+          nav_version_id?: string | null
+          net_return_bps?: number | null
+          offering_id?: string
+          overrides?: Json
+          paid_in_capital_cents?: number
+          period_end?: string
+          period_kind?: string
+          period_label?: string
+          period_start?: string
+          prepared_at?: string
+          prepared_by?: string | null
+          prior_run_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          realized_gain_cents?: number
+          realized_value_cents?: number
+          remaining_value_cents?: number
+          report_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision_reason?: string | null
+          rvpi?: number | null
+          source_cutoff_at?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          subperiods?: Json
+          superseded_by_id?: string | null
+          supersedes_id?: string | null
+          total_value_cents?: number
+          tvpi?: number | null
+          twr_bps?: number | null
+          twr_status?: string
+          unfunded_commitment_cents?: number
+          unrealized_gain_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_runs_allocation_run_id_fkey"
+            columns: ["allocation_run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_beginning_nav_version_id_fkey"
+            columns: ["beginning_nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_methodology_id_fkey"
+            columns: ["methodology_id"]
+            isOneToOne: false
+            referencedRelation: "performance_methodologies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_prior_run_id_fkey"
+            columns: ["prior_run_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_runs_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "performance_runs"
             referencedColumns: ["id"]
           },
         ]
