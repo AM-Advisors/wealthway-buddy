@@ -114,6 +114,9 @@ export function allocationSegregationError(
   if ((action === "review" || action === "approve") && people.preparedBy === actorUserId) {
     return `Allocations must be ${action}ed by someone other than the person who prepared them.`;
   }
+  if (action === "approve" && people.reviewedBy === actorUserId) {
+    return "Allocations must be approved by someone other than the person who reviewed them.";
+  }
   if (action === "approve" && !people.reviewedBy) {
     return "Allocations must be reviewed before they can be approved.";
   }

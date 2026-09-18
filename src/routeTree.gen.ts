@@ -47,6 +47,7 @@ import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
 import { Route as AuthenticatedSignatoryRouteImport } from './routes/_authenticated/signatory'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
+import { Route as AuthenticatedStatementsRouteImport } from './routes/_authenticated/statements'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedVaultRouteImport } from './routes/_authenticated/vault'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
@@ -112,6 +113,7 @@ import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
 import { Route as AuthenticatedManagerActivityRouteImport } from './routes/_authenticated/manager.activity'
+import { Route as AuthenticatedManagerAllocationsRouteImport } from './routes/_authenticated/manager.allocations'
 import { Route as AuthenticatedManagerApprovalsRouteImport } from './routes/_authenticated/manager.approvals'
 import { Route as AuthenticatedManagerCapTableRouteImport } from './routes/_authenticated/manager.cap-table'
 import { Route as AuthenticatedManagerCapTableBoardRouteImport } from './routes/_authenticated/manager.cap-table-board'
@@ -144,6 +146,7 @@ import { Route as AuthenticatedOnboardingFundingRouteImport } from './routes/_au
 import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authenticated/onboarding.kyc'
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
+import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
@@ -415,6 +418,11 @@ const AuthenticatedSignatoryRoute = AuthenticatedSignatoryRouteImport.update({
 const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStatementsRoute = AuthenticatedStatementsRouteImport.update({
+  id: '/statements',
+  path: '/statements',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSubscriptionRoute =
@@ -792,6 +800,12 @@ const AuthenticatedManagerActivityRoute =
     path: '/manager/activity',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerAllocationsRoute =
+  AuthenticatedManagerAllocationsRouteImport.update({
+    id: '/manager/allocations',
+    path: '/manager/allocations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerApprovalsRoute =
   AuthenticatedManagerApprovalsRouteImport.update({
     id: '/manager/approvals',
@@ -979,6 +993,12 @@ const AuthenticatedOpsAccountingRoute =
   AuthenticatedOpsAccountingRouteImport.update({
     id: '/ops/accounting',
     path: '/ops/accounting',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsAllocationsRoute =
+  AuthenticatedOpsAllocationsRouteImport.update({
+    id: '/ops/allocations',
+    path: '/ops/allocations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
@@ -1487,6 +1507,7 @@ export interface FileRoutesByFullPath {
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/signatory': typeof AuthenticatedSignatoryRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/statements': typeof AuthenticatedStatementsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/vault': typeof AuthenticatedVaultRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -1548,6 +1569,7 @@ export interface FileRoutesByFullPath {
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/manager/allocations': typeof AuthenticatedManagerAllocationsRoute
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
@@ -1579,6 +1601,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -1700,6 +1723,7 @@ export interface FileRoutesByTo {
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/signatory': typeof AuthenticatedSignatoryRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/statements': typeof AuthenticatedStatementsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/vault': typeof AuthenticatedVaultRoute
   '/wire': typeof AuthenticatedWireRoute
@@ -1759,6 +1783,7 @@ export interface FileRoutesByTo {
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/manager/allocations': typeof AuthenticatedManagerAllocationsRoute
   '/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
@@ -1790,6 +1815,7 @@ export interface FileRoutesByTo {
   '/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -1915,6 +1941,7 @@ export interface FileRoutesById {
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
   '/_authenticated/signatory': typeof AuthenticatedSignatoryRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/_authenticated/statements': typeof AuthenticatedStatementsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/vault': typeof AuthenticatedVaultRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
@@ -1976,6 +2003,7 @@ export interface FileRoutesById {
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
+  '/_authenticated/manager/allocations': typeof AuthenticatedManagerAllocationsRoute
   '/_authenticated/manager/approvals': typeof AuthenticatedManagerApprovalsRoute
   '/_authenticated/manager/cap-table': typeof AuthenticatedManagerCapTableRoute
   '/_authenticated/manager/cap-table-board': typeof AuthenticatedManagerCapTableBoardRoute
@@ -2007,6 +2035,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding/funding': typeof AuthenticatedOnboardingFundingRoute
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -2133,6 +2162,7 @@ export interface FileRouteTypes {
     | '/sign-off'
     | '/signatory'
     | '/staff'
+    | '/statements'
     | '/subscription'
     | '/vault'
     | '/wire'
@@ -2194,6 +2224,7 @@ export interface FileRouteTypes {
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
+    | '/manager/allocations'
     | '/manager/approvals'
     | '/manager/cap-table'
     | '/manager/cap-table-board'
@@ -2225,6 +2256,7 @@ export interface FileRouteTypes {
     | '/onboarding/funding'
     | '/onboarding/kyc'
     | '/ops/accounting'
+    | '/ops/allocations'
     | '/ops/banking'
     | '/ops/nav'
     | '/ops/ss4'
@@ -2346,6 +2378,7 @@ export interface FileRouteTypes {
     | '/sign-off'
     | '/signatory'
     | '/staff'
+    | '/statements'
     | '/subscription'
     | '/vault'
     | '/wire'
@@ -2405,6 +2438,7 @@ export interface FileRouteTypes {
     | '/diligence/$offeringId'
     | '/manager/$applicationId'
     | '/manager/activity'
+    | '/manager/allocations'
     | '/manager/approvals'
     | '/manager/cap-table'
     | '/manager/cap-table-board'
@@ -2436,6 +2470,7 @@ export interface FileRouteTypes {
     | '/onboarding/funding'
     | '/onboarding/kyc'
     | '/ops/accounting'
+    | '/ops/allocations'
     | '/ops/banking'
     | '/ops/nav'
     | '/ops/ss4'
@@ -2560,6 +2595,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sign-off'
     | '/_authenticated/signatory'
     | '/_authenticated/staff'
+    | '/_authenticated/statements'
     | '/_authenticated/subscription'
     | '/_authenticated/vault'
     | '/_authenticated/wire'
@@ -2621,6 +2657,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
+    | '/_authenticated/manager/allocations'
     | '/_authenticated/manager/approvals'
     | '/_authenticated/manager/cap-table'
     | '/_authenticated/manager/cap-table-board'
@@ -2652,6 +2689,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding/funding'
     | '/_authenticated/onboarding/kyc'
     | '/_authenticated/ops/accounting'
+    | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/ss4'
@@ -3040,6 +3078,13 @@ declare module '@tanstack/react-router' {
       path: '/staff'
       fullPath: '/staff'
       preLoaderRoute: typeof AuthenticatedStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/statements': {
+      id: '/_authenticated/statements'
+      path: '/statements'
+      fullPath: '/statements'
+      preLoaderRoute: typeof AuthenticatedStatementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/subscription': {
@@ -3497,6 +3542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/allocations': {
+      id: '/_authenticated/manager/allocations'
+      path: '/manager/allocations'
+      fullPath: '/manager/allocations'
+      preLoaderRoute: typeof AuthenticatedManagerAllocationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/approvals': {
       id: '/_authenticated/manager/approvals'
       path: '/manager/approvals'
@@ -3719,6 +3771,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/accounting'
       fullPath: '/ops/accounting'
       preLoaderRoute: typeof AuthenticatedOpsAccountingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/allocations': {
+      id: '/_authenticated/ops/allocations'
+      path: '/ops/allocations'
+      fullPath: '/ops/allocations'
+      preLoaderRoute: typeof AuthenticatedOpsAllocationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/banking': {
@@ -4513,6 +4572,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
   AuthenticatedSignatoryRoute: typeof AuthenticatedSignatoryRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
+  AuthenticatedStatementsRoute: typeof AuthenticatedStatementsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedVaultRoute: typeof AuthenticatedVaultRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
@@ -4559,6 +4619,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
+  AuthenticatedManagerAllocationsRoute: typeof AuthenticatedManagerAllocationsRoute
   AuthenticatedManagerApprovalsRoute: typeof AuthenticatedManagerApprovalsRoute
   AuthenticatedManagerCapTableRoute: typeof AuthenticatedManagerCapTableRoute
   AuthenticatedManagerCapTableBoardRoute: typeof AuthenticatedManagerCapTableBoardRoute
@@ -4590,6 +4651,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingFundingRoute: typeof AuthenticatedOnboardingFundingRoute
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
+  AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
@@ -4642,6 +4704,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
   AuthenticatedSignatoryRoute: AuthenticatedSignatoryRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
+  AuthenticatedStatementsRoute: AuthenticatedStatementsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedVaultRoute: AuthenticatedVaultRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
@@ -4695,6 +4758,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerApplicationIdRoute:
     AuthenticatedManagerApplicationIdRoute,
   AuthenticatedManagerActivityRoute: AuthenticatedManagerActivityRoute,
+  AuthenticatedManagerAllocationsRoute: AuthenticatedManagerAllocationsRoute,
   AuthenticatedManagerApprovalsRoute: AuthenticatedManagerApprovalsRoute,
   AuthenticatedManagerCapTableRoute: AuthenticatedManagerCapTableRoute,
   AuthenticatedManagerCapTableBoardRoute:
@@ -4732,6 +4796,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingFundingRoute: AuthenticatedOnboardingFundingRoute,
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
+  AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,

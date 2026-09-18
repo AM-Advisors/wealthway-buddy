@@ -76,6 +76,7 @@ type NavGroup = { id: string; label: string; items: NavItem[] };
 const investorItems: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Documents", url: "/documents", icon: FileText },
+  { title: "Capital statements", url: "/statements", icon: FileSpreadsheet },
   { title: "Fund documents", url: "/fund-documents", icon: FolderLock },
   { title: "Document vault", url: "/vault", icon: FileSignature },
   { title: "Wire instructions", url: "/wire", icon: Landmark },
@@ -115,6 +116,7 @@ const managerItems: NavItem[] = [
   { title: "Cash to confirm", url: "/manager/cash-approvals", icon: Banknote },
   { title: "Fund valuations", url: "/manager/valuations", icon: Gauge },
   { title: "Fund NAV", url: "/manager/nav", icon: Gauge },
+  { title: "Investor capital", url: "/manager/allocations", icon: Users },
   { title: "Reviewer activity", url: "/manager/activity", icon: ClipboardList },
 ];
 
@@ -133,6 +135,7 @@ const operationsItems: NavItem[] = [
   { title: "Accounting operations", url: "/ops/accounting", icon: ClipboardList },
   { title: "Valuation review", url: "/ops/valuations", icon: Gauge },
   { title: "NAV review", url: "/ops/nav", icon: Gauge },
+  { title: "Investor allocations", url: "/ops/allocations", icon: Users },
   { title: "Banking requests", url: "/ops/banking", icon: Landmark },
   { title: "EIN and SS-4", url: "/ops/ss4", icon: FileText },
   { title: "Tax documents", url: "/ops/tax-documents", icon: FileSpreadsheet },
