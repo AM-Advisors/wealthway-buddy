@@ -138,7 +138,7 @@ export async function refreshTaxYearReadiness(userId: string, taxYearId: string)
   const rows = (r: any) => (r?.data ?? []) as any[];
   const asOf = year.period_end ?? `${year.tax_year}-12-31`;
   const outstanding = rows(documents).filter(
-    (d) => documentValidityAsOf(d.validation_status, d.expires_on, asOf) !== "valid",
+    (d) => documentValidityAsOf({ validation_status: d.validation_status, expires_on: d.expires_on }, asOf) !== "valid",
   ).length;
 
   const exceptions = taxCloseReadiness({
@@ -318,11 +318,11 @@ export async function taxDocumentExceptions(userId: string, asOf?: string) {
     const forms = expectedDocumentForms(cls.classification);
     const held = byProfile.get(key) ?? [];
     const valid = held.filter(
-      (d) => documentValidityAsOf(d.validation_status, d.expires_on, date) === "valid",
+      (d) => documentValidityAsOf({ validation_status: d.validation_status, expires_on: d.expires_on }, date) === "valid",
     );
     if (valid.length === 0) {
       const stale = held.find(
-        (d) => documentValidityAsOf(d.validation_status, d.expires_on, date) === "expired",
+        (d) => documentValidityAsOf({ validation_status: d.validation_status, expires_on: d.expires_on }, date) === "expired",
       );
       const entry = {
         investmentProfileId: cls.investment_profile_id,
@@ -944,8 +944,7 @@ export async function recordWithholding(
 ;
   const document = ((docs ?? []) as any[])[0] ?? null;
   const validity = documentValidityAsOf(
-    document?.validation_status ?? null,
-    document?.expires_on ?? null,
+    document ? { validation_status: document.validation_status, expires_on: document.expires_on } : null,
     input.paymentDate,
   );
   const decision = withholdingDecision({
@@ -1164,8 +1163,7 @@ export async function determinePayeeReporting(userId: string, paymentId: string)
   if (payment.tax_document_id) {
     const doc = await rowOrFail("tax_document_records", payment.tax_document_id, "Tax document");
     validity = documentValidityAsOf(
-      doc.validation_status,
-      doc.expires_on,
+      { validation_status: doc.validation_status, expires_on: doc.expires_on },
       payment.paid_on ?? nowIso().slice(0, 10),
     );
   }

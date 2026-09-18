@@ -52,7 +52,7 @@ async function rowOrFail(table: string, id: string, label: string) {
 
 export async function ensureHousehold(
   userId: string,
-  input: { primaryUserId?: string; name?: string; personId?: string | null } = {},
+  input: { primaryUserId?: string | undefined; name?: string | undefined; personId?: string | null } = {},
 ) {
   const actor = await taxActor(userId);
   const primary = input.primaryUserId ?? userId;
@@ -138,7 +138,7 @@ export async function authorizeHouseholdMember(
 
 export async function openIndividualReturn(
   userId: string,
-  input: { householdId: string; taxYear: number; filingStatus?: string },
+  input: { householdId: string; taxYear: number; filingStatus?: string | undefined },
 ) {
   const { actor } = await assertHouseholdAccess(userId, input.householdId, input.taxYear);
   if (!actor.isStaff) forbid("Harmonious tax operations opens the individual return.");
@@ -182,7 +182,7 @@ export async function openIndividualReturn(
 
 export async function requestTaxDocument(
   userId: string,
-  input: { householdId: string; taxYear: number; documentType: string; note?: string },
+  input: { householdId: string; taxYear: number; documentType: string; note?: string | undefined },
 ) {
   const { actor } = await assertHouseholdAccess(userId, input.householdId, input.taxYear, {
     resource: "tax_information_request",
@@ -679,13 +679,13 @@ export async function personalTaxCenter(
       .maybeSingle();
     if (!data) {
       return {
-        household: null,
+        household: null as any,
         taxYear,
         returns: [],
         documents: [],
         lines: [],
         stateReturns: [],
-        missingInformation: [],
+        missingInformation: [] as Record<string, unknown>[],
         checklist: [],
         priorYears: [],
       };
@@ -740,6 +740,6 @@ export async function personalTaxCenter(
     requested: yearDocuments.filter((d) => d.status === "requested"),
     lines,
     stateReturns: rows(states).filter((s) => s.tax_year === taxYear),
-    missingInformation: (current?.missing_information ?? []) as unknown[],
+    missingInformation: (current?.missing_information ?? []) as Record<string, unknown>[],
   };
 }
