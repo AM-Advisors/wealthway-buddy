@@ -216,6 +216,16 @@ export function DistributionsWorkspace() {
                 <Button size="sm" variant="outline" onClick={() => noticeM.run({ lineId: l.id })}>
                   Publish notice
                 </Button>
+                {l.paymentId ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={postM.pending}
+                    onClick={() => postM.run({ paymentId: l.paymentId })}
+                  >
+                    Post to the ledger
+                  </Button>
+                ) : null}
               </div>
             </div>
           ))}
@@ -259,16 +269,10 @@ export function DistributionsWorkspace() {
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        Posting a payment to the ledger is a separate act by a second person:{" "}
-        <button
-          type="button"
-          className="underline"
-          onClick={() => toast.message("Open a payment from the audit trail to post it.")}
-        >
-          how posting works
-        </button>
-        . Use {postM.pending ? "…" : "the audit trail"} to trace any payment end to end.
+        Posting to the ledger is a separate act by a second person. Only then does an investor's
+        capital account change.
       </p>
+
     </div>
   );
 }
