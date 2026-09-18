@@ -238,6 +238,106 @@ export type Database = {
           },
         ]
       }
+      accounting_workpapers: {
+        Row: {
+          book_id: string | null
+          created_at: string
+          exceptions: Json
+          figures: Json
+          id: string
+          kind: string
+          note: string | null
+          offering_id: string | null
+          period_end: string
+          period_id: string | null
+          period_start: string | null
+          prepared_at: string | null
+          prepared_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          shared_with_manager: boolean
+          signed_off_at: string | null
+          signed_off_by: string | null
+          source_records: Json
+          status: string
+          support: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string
+          exceptions?: Json
+          figures?: Json
+          id?: string
+          kind: string
+          note?: string | null
+          offering_id?: string | null
+          period_end: string
+          period_id?: string | null
+          period_start?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shared_with_manager?: boolean
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          source_records?: Json
+          status?: string
+          support?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string
+          exceptions?: Json
+          figures?: Json
+          id?: string
+          kind?: string
+          note?: string | null
+          offering_id?: string | null
+          period_end?: string
+          period_id?: string | null
+          period_start?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shared_with_manager?: boolean
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          source_records?: Json
+          status?: string
+          support?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounting_workpapers_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_workpapers_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounting_workpapers_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accreditation_documents: {
         Row: {
           application_id: string
@@ -4263,6 +4363,85 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      close_checklist_items: {
+        Row: {
+          blocking: boolean
+          book_id: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          detail: Json
+          id: string
+          item_key: string
+          label: string
+          offering_id: string | null
+          period_end: string
+          period_id: string | null
+          status: string
+          updated_at: string
+          waived_by: string | null
+          waived_reason: string | null
+        }
+        Insert: {
+          blocking?: boolean
+          book_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          item_key: string
+          label: string
+          offering_id?: string | null
+          period_end: string
+          period_id?: string | null
+          status?: string
+          updated_at?: string
+          waived_by?: string | null
+          waived_reason?: string | null
+        }
+        Update: {
+          blocking?: boolean
+          book_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          item_key?: string
+          label?: string
+          offering_id?: string | null
+          period_end?: string
+          period_id?: string | null
+          status?: string
+          updated_at?: string
+          waived_by?: string | null
+          waived_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "close_checklist_items_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "close_checklist_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "close_checklist_items_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       closing_documents: {
         Row: {
@@ -8477,29 +8656,48 @@ export type Database = {
       financial_reports: {
         Row: {
           accounting_snapshot: Json
+          allocation_run_id: string | null
           approved_at: string | null
           approved_by: string | null
+          basis: string
           book_id: string | null
           client_entity_id: string | null
+          close_snapshot: Json
+          comparatives: Json
           created_at: string
           ct_company_id: string | null
           ct_stakeholder_id: string | null
           domain: Database["public"]["Enums"]["report_domain"]
+          exceptions: Json
           generated_at: string
           generated_by: string | null
+          gl_cutoff_at: string | null
           id: string
+          investor_visible: boolean
+          manager_note: string | null
+          manager_responded_at: string | null
+          manager_responded_by: string | null
+          manager_response: string | null
+          manager_visible: boolean
+          mapping_version: number | null
+          mapping_version_id: string | null
           methodology_version: string
           nav_version_id: string | null
           offering_id: string | null
+          package_run_id: string | null
           payload: Json
           period_end: string | null
           period_id: string | null
           period_start: string | null
+          prepared_at: string | null
+          prepared_by: string | null
           published_at: string | null
           published_by: string | null
+          reconciliations: Json
           report_type: string
           reviewed_at: string | null
           reviewed_by: string | null
+          revision_reason: string | null
           source_cutoff_at: string
           status: Database["public"]["Enums"]["report_status"]
           storage_path: string | null
@@ -8508,33 +8706,53 @@ export type Database = {
           superseded_by_id: string | null
           supersedes_id: string | null
           updated_at: string
+          valuation_versions: Json
           version: number
         }
         Insert: {
           accounting_snapshot?: Json
+          allocation_run_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          basis?: string
           book_id?: string | null
           client_entity_id?: string | null
+          close_snapshot?: Json
+          comparatives?: Json
           created_at?: string
           ct_company_id?: string | null
           ct_stakeholder_id?: string | null
           domain?: Database["public"]["Enums"]["report_domain"]
+          exceptions?: Json
           generated_at?: string
           generated_by?: string | null
+          gl_cutoff_at?: string | null
           id?: string
+          investor_visible?: boolean
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          manager_visible?: boolean
+          mapping_version?: number | null
+          mapping_version_id?: string | null
           methodology_version?: string
           nav_version_id?: string | null
           offering_id?: string | null
+          package_run_id?: string | null
           payload?: Json
           period_end?: string | null
           period_id?: string | null
           period_start?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           published_at?: string | null
           published_by?: string | null
+          reconciliations?: Json
           report_type: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          revision_reason?: string | null
           source_cutoff_at?: string
           status?: Database["public"]["Enums"]["report_status"]
           storage_path?: string | null
@@ -8543,33 +8761,53 @@ export type Database = {
           superseded_by_id?: string | null
           supersedes_id?: string | null
           updated_at?: string
+          valuation_versions?: Json
           version?: number
         }
         Update: {
           accounting_snapshot?: Json
+          allocation_run_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          basis?: string
           book_id?: string | null
           client_entity_id?: string | null
+          close_snapshot?: Json
+          comparatives?: Json
           created_at?: string
           ct_company_id?: string | null
           ct_stakeholder_id?: string | null
           domain?: Database["public"]["Enums"]["report_domain"]
+          exceptions?: Json
           generated_at?: string
           generated_by?: string | null
+          gl_cutoff_at?: string | null
           id?: string
+          investor_visible?: boolean
+          manager_note?: string | null
+          manager_responded_at?: string | null
+          manager_responded_by?: string | null
+          manager_response?: string | null
+          manager_visible?: boolean
+          mapping_version?: number | null
+          mapping_version_id?: string | null
           methodology_version?: string
           nav_version_id?: string | null
           offering_id?: string | null
+          package_run_id?: string | null
           payload?: Json
           period_end?: string | null
           period_id?: string | null
           period_start?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           published_at?: string | null
           published_by?: string | null
+          reconciliations?: Json
           report_type?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          revision_reason?: string | null
           source_cutoff_at?: string
           status?: Database["public"]["Enums"]["report_status"]
           storage_path?: string | null
@@ -8578,9 +8816,17 @@ export type Database = {
           superseded_by_id?: string | null
           supersedes_id?: string | null
           updated_at?: string
+          valuation_versions?: Json
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "financial_reports_allocation_run_id_fkey"
+            columns: ["allocation_run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "financial_reports_book_id_fkey"
             columns: ["book_id"]
@@ -8610,6 +8856,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "financial_reports_mapping_version_id_fkey"
+            columns: ["mapping_version_id"]
+            isOneToOne: false
+            referencedRelation: "statement_mapping_versions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "financial_reports_nav_version_id_fkey"
             columns: ["nav_version_id"]
             isOneToOne: false
@@ -8621,6 +8874,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_reports_package_run_id_fkey"
+            columns: ["package_run_id"]
+            isOneToOne: false
+            referencedRelation: "report_package_runs"
             referencedColumns: ["id"]
           },
           {
@@ -15215,6 +15475,280 @@ export type Database = {
           },
         ]
       }
+      report_exceptions: {
+        Row: {
+          book_id: string | null
+          context: Json
+          created_at: string
+          detail: string
+          id: string
+          kind: string
+          offering_id: string | null
+          period_end: string | null
+          report_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+        }
+        Insert: {
+          book_id?: string | null
+          context?: Json
+          created_at?: string
+          detail: string
+          id?: string
+          kind: string
+          offering_id?: string | null
+          period_end?: string | null
+          report_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+        }
+        Update: {
+          book_id?: string | null
+          context?: Json
+          created_at?: string
+          detail?: string
+          id?: string
+          kind?: string
+          offering_id?: string | null
+          period_end?: string | null
+          report_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_exceptions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_exceptions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_exceptions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_lines: {
+        Row: {
+          account_codes: Json
+          amount_cents: number
+          comparative_cents: number | null
+          created_at: string
+          id: string
+          is_total: boolean
+          label: string
+          line_key: string
+          provenance: Json
+          report_id: string
+          section: string | null
+          sort_order: number
+          statement: string
+        }
+        Insert: {
+          account_codes?: Json
+          amount_cents?: number
+          comparative_cents?: number | null
+          created_at?: string
+          id?: string
+          is_total?: boolean
+          label: string
+          line_key: string
+          provenance?: Json
+          report_id: string
+          section?: string | null
+          sort_order?: number
+          statement: string
+        }
+        Update: {
+          account_codes?: Json
+          amount_cents?: number
+          comparative_cents?: number | null
+          created_at?: string
+          id?: string
+          is_total?: boolean
+          label?: string
+          line_key?: string
+          provenance?: Json
+          report_id?: string
+          section?: string | null
+          sort_order?: number
+          statement?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_lines_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_package_runs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audience: string
+          book_id: string | null
+          created_at: string
+          id: string
+          manifest: Json
+          offering_id: string | null
+          package_id: string | null
+          period_end: string
+          period_start: string | null
+          prepared_at: string | null
+          prepared_by: string | null
+          published_at: string | null
+          published_by: string | null
+          report_ids: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience?: string
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          manifest?: Json
+          offering_id?: string | null
+          package_id?: string | null
+          period_end: string
+          period_start?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          report_ids?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience?: string
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          manifest?: Json
+          offering_id?: string | null
+          package_id?: string | null
+          period_end?: string
+          period_start?: string | null
+          prepared_at?: string | null
+          prepared_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          report_ids?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_package_runs_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_package_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_package_runs_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "report_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_packages: {
+        Row: {
+          audience: string
+          book_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          items: Json
+          name: string
+          offering_id: string | null
+          package_type: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          audience?: string
+          book_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          items?: Json
+          name: string
+          offering_id?: string | null
+          package_type?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          audience?: string
+          book_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          items?: Json
+          name?: string
+          offering_id?: string | null
+          package_type?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_packages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_packages_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       responsibility_items: {
         Row: {
           client_id: string | null
@@ -16198,6 +16732,78 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      statement_mapping_versions: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          basis: string
+          book_id: string | null
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          id: string
+          label: string
+          lines: Json
+          offering_id: string | null
+          presentation: Json
+          retired_at: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          basis?: string
+          book_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          id?: string
+          label?: string
+          lines?: Json
+          offering_id?: string | null
+          presentation?: Json
+          retired_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          basis?: string
+          book_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          id?: string
+          label?: string
+          lines?: Json
+          offering_id?: string | null
+          presentation?: Json
+          retired_at?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "statement_mapping_versions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statement_mapping_versions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stepup_authentications: {
         Row: {
@@ -17843,6 +18449,7 @@ export type Database = {
       report_domain: "fund_accounting" | "cap_table"
       report_status:
         | "draft"
+        | "prepared"
         | "review"
         | "approved"
         | "published"
@@ -18309,7 +18916,14 @@ export const Constants = {
       reconciliation_approver: ["none", "fund_manager", "client"],
       reg_type: ["506b", "506c", "regcf", "rega", "regaplus"],
       report_domain: ["fund_accounting", "cap_table"],
-      report_status: ["draft", "review", "approved", "published", "superseded"],
+      report_status: [
+        "draft",
+        "prepared",
+        "review",
+        "approved",
+        "published",
+        "superseded",
+      ],
       tax_documentation_form: [
         "w9",
         "w8ben",
