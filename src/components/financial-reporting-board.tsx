@@ -103,7 +103,8 @@ export function FinancialReportingBoard({ role }: { role: "harmonious" | "manage
 
   const queue = useQuery({
     queryKey: ["financial-queue", role],
-    queryFn: () => (isStaff ? loadQueue({ data: {} }) : loadManager({ data: {} })),
+    queryFn: async (): Promise<any> =>
+      isStaff ? loadQueue({ data: {} }) : loadManager({ data: {} }),
   });
 
   const detail = useQuery({
