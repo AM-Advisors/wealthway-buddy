@@ -148,6 +148,7 @@ import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
 import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
+import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
@@ -1006,6 +1007,12 @@ const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   path: '/ops/banking',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsFinancialsRoute =
+  AuthenticatedOpsFinancialsRouteImport.update({
+    id: '/ops/financials',
+    path: '/ops/financials',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
   id: '/ops/nav',
   path: '/ops/nav',
@@ -1603,6 +1610,7 @@ export interface FileRoutesByFullPath {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
@@ -1817,6 +1825,7 @@ export interface FileRoutesByTo {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
@@ -2037,6 +2046,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
@@ -2258,6 +2268,7 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/allocations'
     | '/ops/banking'
+    | '/ops/financials'
     | '/ops/nav'
     | '/ops/ss4'
     | '/ops/tax-documents'
@@ -2472,6 +2483,7 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/allocations'
     | '/ops/banking'
+    | '/ops/financials'
     | '/ops/nav'
     | '/ops/ss4'
     | '/ops/tax-documents'
@@ -2691,6 +2703,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/accounting'
     | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
+    | '/_authenticated/ops/financials'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
@@ -3787,6 +3800,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsBankingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/financials': {
+      id: '/_authenticated/ops/financials'
+      path: '/ops/financials'
+      fullPath: '/ops/financials'
+      preLoaderRoute: typeof AuthenticatedOpsFinancialsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/nav': {
       id: '/_authenticated/ops/nav'
       path: '/ops/nav'
@@ -4653,6 +4673,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
   AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
+  AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
@@ -4798,6 +4819,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
   AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
+  AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
