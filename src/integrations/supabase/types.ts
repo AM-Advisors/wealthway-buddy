@@ -8229,6 +8229,964 @@ export type Database = {
           },
         ]
       }
+      distribution_batches: {
+        Row: {
+          allocation_run_id: string | null
+          balance_detail: Json
+          balances: boolean
+          batch_number: number
+          cancel_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          declared_amount_cents: number
+          distribution_type: string
+          effective_date: string | null
+          executed_at: string | null
+          executed_by: string | null
+          final_approved_at: string | null
+          final_approved_by: string | null
+          id: string
+          manager_approved_at: string | null
+          manager_approved_by: string | null
+          nav_version_id: string | null
+          offering_id: string
+          payment_date: string | null
+          payment_status: string
+          prepared_at: string | null
+          prepared_by: string | null
+          purpose: string | null
+          recipient_count: number
+          record_date: string | null
+          requested_at: string | null
+          requested_by: string | null
+          reserve_cents: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_detail: Json
+          source_proceeds: string | null
+          status: string
+          superseded_at: string | null
+          supersedes_id: string | null
+          title: string | null
+          total_fee_cents: number
+          total_gross_cents: number
+          total_net_cents: number
+          total_withholding_cents: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allocation_run_id?: string | null
+          balance_detail?: Json
+          balances?: boolean
+          batch_number: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          declared_amount_cents?: number
+          distribution_type?: string
+          effective_date?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          final_approved_at?: string | null
+          final_approved_by?: string | null
+          id?: string
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          nav_version_id?: string | null
+          offering_id: string
+          payment_date?: string | null
+          payment_status?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          purpose?: string | null
+          recipient_count?: number
+          record_date?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          reserve_cents?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_detail?: Json
+          source_proceeds?: string | null
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          title?: string | null
+          total_fee_cents?: number
+          total_gross_cents?: number
+          total_net_cents?: number
+          total_withholding_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allocation_run_id?: string | null
+          balance_detail?: Json
+          balances?: boolean
+          batch_number?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          declared_amount_cents?: number
+          distribution_type?: string
+          effective_date?: string | null
+          executed_at?: string | null
+          executed_by?: string | null
+          final_approved_at?: string | null
+          final_approved_by?: string | null
+          id?: string
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          nav_version_id?: string | null
+          offering_id?: string
+          payment_date?: string | null
+          payment_status?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          purpose?: string | null
+          recipient_count?: number
+          record_date?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          reserve_cents?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_detail?: Json
+          source_proceeds?: string | null
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          title?: string | null
+          total_fee_cents?: number
+          total_gross_cents?: number
+          total_net_cents?: number
+          total_withholding_cents?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_batches_allocation_run_id_fkey"
+            columns: ["allocation_run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_batches_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_batches_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_batches_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_events: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          bank_transaction_id: string | null
+          batch_id: string | null
+          created_at: string
+          detail: Json
+          distribution_line_id: string | null
+          event: string
+          from_status: string | null
+          id: string
+          instruction_change_id: string | null
+          instruction_id: string | null
+          journal_entry_id: string | null
+          offering_id: string | null
+          payment_id: string | null
+          provider_event_id: string | null
+          reason: string | null
+          reconciliation_id: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          bank_transaction_id?: string | null
+          batch_id?: string | null
+          created_at?: string
+          detail?: Json
+          distribution_line_id?: string | null
+          event: string
+          from_status?: string | null
+          id?: string
+          instruction_change_id?: string | null
+          instruction_id?: string | null
+          journal_entry_id?: string | null
+          offering_id?: string | null
+          payment_id?: string | null
+          provider_event_id?: string | null
+          reason?: string | null
+          reconciliation_id?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          bank_transaction_id?: string | null
+          batch_id?: string | null
+          created_at?: string
+          detail?: Json
+          distribution_line_id?: string | null
+          event?: string
+          from_status?: string | null
+          id?: string
+          instruction_change_id?: string | null
+          instruction_id?: string | null
+          journal_entry_id?: string | null
+          offering_id?: string | null
+          payment_id?: string | null
+          provider_event_id?: string | null
+          reason?: string | null
+          reconciliation_id?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_events_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_events_distribution_line_id_fkey"
+            columns: ["distribution_line_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_events_instruction_change_id_fkey"
+            columns: ["instruction_change_id"]
+            isOneToOne: false
+            referencedRelation: "payment_instruction_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_events_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "investor_payment_instructions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_events_provider_event_id_fkey"
+            columns: ["provider_event_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_provider_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_exceptions: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          detail: string | null
+          distribution_line_id: string | null
+          id: string
+          instruction_change_id: string | null
+          kind: string
+          offering_id: string | null
+          owner: string
+          payment_id: string | null
+          provider_event_id: string | null
+          raised_by: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          detail?: string | null
+          distribution_line_id?: string | null
+          id?: string
+          instruction_change_id?: string | null
+          kind: string
+          offering_id?: string | null
+          owner?: string
+          payment_id?: string | null
+          provider_event_id?: string | null
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          detail?: string | null
+          distribution_line_id?: string | null
+          id?: string
+          instruction_change_id?: string | null
+          kind?: string
+          offering_id?: string | null
+          owner?: string
+          payment_id?: string | null
+          provider_event_id?: string | null
+          raised_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_exceptions_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_exceptions_distribution_line_id_fkey"
+            columns: ["distribution_line_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_exceptions_instruction_change_id_fkey"
+            columns: ["instruction_change_id"]
+            isOneToOne: false
+            referencedRelation: "payment_instruction_changes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_exceptions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_exceptions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_exceptions_provider_event_id_fkey"
+            columns: ["provider_event_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_provider_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_lines: {
+        Row: {
+          accounting_state: string
+          approval_state: string
+          batch_id: string
+          capital_account_cents: number
+          characterization: Json
+          commitment_cents: number
+          contributed_cents: number
+          created_at: string
+          currency: string
+          destination_verified: boolean
+          display_name: string | null
+          distribution_type: string
+          effective_date: string | null
+          entitlement_basis: string
+          entitlement_detail: Json
+          fee_cents: number
+          gross_cents: number
+          hold_state: string
+          id: string
+          investment_profile_id: string | null
+          investor_class_id: string | null
+          investor_confirmation_required: boolean
+          investor_confirmed_at: string | null
+          investor_user_id: string | null
+          manual_adjustment_approved_at: string | null
+          manual_adjustment_approved_by: string | null
+          manual_adjustment_cents: number
+          manual_adjustment_evidence: string | null
+          manual_adjustment_reason: string | null
+          net_cents: number
+          offering_id: string
+          payment_instruction_id: string | null
+          payment_instruction_version: number | null
+          payment_method: string | null
+          payment_state: string
+          position_id: string | null
+          reconciliation_state: string
+          updated_at: string
+          withholding_cents: number
+        }
+        Insert: {
+          accounting_state?: string
+          approval_state?: string
+          batch_id: string
+          capital_account_cents?: number
+          characterization?: Json
+          commitment_cents?: number
+          contributed_cents?: number
+          created_at?: string
+          currency?: string
+          destination_verified?: boolean
+          display_name?: string | null
+          distribution_type?: string
+          effective_date?: string | null
+          entitlement_basis?: string
+          entitlement_detail?: Json
+          fee_cents?: number
+          gross_cents?: number
+          hold_state?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_class_id?: string | null
+          investor_confirmation_required?: boolean
+          investor_confirmed_at?: string | null
+          investor_user_id?: string | null
+          manual_adjustment_approved_at?: string | null
+          manual_adjustment_approved_by?: string | null
+          manual_adjustment_cents?: number
+          manual_adjustment_evidence?: string | null
+          manual_adjustment_reason?: string | null
+          net_cents?: number
+          offering_id: string
+          payment_instruction_id?: string | null
+          payment_instruction_version?: number | null
+          payment_method?: string | null
+          payment_state?: string
+          position_id?: string | null
+          reconciliation_state?: string
+          updated_at?: string
+          withholding_cents?: number
+        }
+        Update: {
+          accounting_state?: string
+          approval_state?: string
+          batch_id?: string
+          capital_account_cents?: number
+          characterization?: Json
+          commitment_cents?: number
+          contributed_cents?: number
+          created_at?: string
+          currency?: string
+          destination_verified?: boolean
+          display_name?: string | null
+          distribution_type?: string
+          effective_date?: string | null
+          entitlement_basis?: string
+          entitlement_detail?: Json
+          fee_cents?: number
+          gross_cents?: number
+          hold_state?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_class_id?: string | null
+          investor_confirmation_required?: boolean
+          investor_confirmed_at?: string | null
+          investor_user_id?: string | null
+          manual_adjustment_approved_at?: string | null
+          manual_adjustment_approved_by?: string | null
+          manual_adjustment_cents?: number
+          manual_adjustment_evidence?: string | null
+          manual_adjustment_reason?: string | null
+          net_cents?: number
+          offering_id?: string
+          payment_instruction_id?: string | null
+          payment_instruction_version?: number | null
+          payment_method?: string | null
+          payment_state?: string
+          position_id?: string | null
+          reconciliation_state?: string
+          updated_at?: string
+          withholding_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_lines_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_lines_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_lines_investor_class_id_fkey"
+            columns: ["investor_class_id"]
+            isOneToOne: false
+            referencedRelation: "investor_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_lines_payment_instruction_id_fkey"
+            columns: ["payment_instruction_id"]
+            isOneToOne: false
+            referencedRelation: "investor_payment_instructions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_lines_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_notices: {
+        Row: {
+          batch_id: string
+          content: Json
+          created_at: string
+          distribution_line_id: string
+          document_name: string | null
+          document_path: string | null
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          offering_id: string
+          published_at: string | null
+          published_by: string | null
+          report_id: string | null
+          status: string
+          superseded_at: string | null
+          supersedes_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          batch_id: string
+          content?: Json
+          created_at?: string
+          distribution_line_id: string
+          document_name?: string | null
+          document_path?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          offering_id: string
+          published_at?: string | null
+          published_by?: string | null
+          report_id?: string | null
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          batch_id?: string
+          content?: Json
+          created_at?: string
+          distribution_line_id?: string
+          document_name?: string | null
+          document_path?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          offering_id?: string
+          published_at?: string | null
+          published_by?: string | null
+          report_id?: string | null
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_notices_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_notices_distribution_line_id_fkey"
+            columns: ["distribution_line_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_notices_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_notices_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_notices_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_notices_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_notices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_payments: {
+        Row: {
+          approval_chain: Json
+          attempt: number
+          bank_transaction_id: string | null
+          batch_id: string
+          commitment_event_id: string | null
+          confirmed_at: string | null
+          created_at: string
+          distribution_line_id: string
+          failed_at: string | null
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          journal_entry_id: string | null
+          offering_id: string
+          payment_instruction_id: string | null
+          payment_instruction_version: number | null
+          posted_at: string | null
+          provider: string
+          provider_payment_id: string | null
+          reconciliation_id: string | null
+          reissue_of_id: string | null
+          status: string
+          submitted_amount_cents: number
+          submitted_at: string
+          submitted_by: string | null
+          submitted_currency: string
+          submitted_destination: Json
+          submitted_destination_masked: string | null
+          submitting_system: string
+          updated_at: string
+        }
+        Insert: {
+          approval_chain?: Json
+          attempt?: number
+          bank_transaction_id?: string | null
+          batch_id: string
+          commitment_event_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          distribution_line_id: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          idempotency_key: string
+          journal_entry_id?: string | null
+          offering_id: string
+          payment_instruction_id?: string | null
+          payment_instruction_version?: number | null
+          posted_at?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          reconciliation_id?: string | null
+          reissue_of_id?: string | null
+          status?: string
+          submitted_amount_cents?: number
+          submitted_at?: string
+          submitted_by?: string | null
+          submitted_currency?: string
+          submitted_destination?: Json
+          submitted_destination_masked?: string | null
+          submitting_system?: string
+          updated_at?: string
+        }
+        Update: {
+          approval_chain?: Json
+          attempt?: number
+          bank_transaction_id?: string | null
+          batch_id?: string
+          commitment_event_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          distribution_line_id?: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          idempotency_key?: string
+          journal_entry_id?: string | null
+          offering_id?: string
+          payment_instruction_id?: string | null
+          payment_instruction_version?: number | null
+          posted_at?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          reconciliation_id?: string | null
+          reissue_of_id?: string | null
+          status?: string
+          submitted_amount_cents?: number
+          submitted_at?: string
+          submitted_by?: string | null
+          submitted_currency?: string
+          submitted_destination?: Json
+          submitted_destination_masked?: string | null
+          submitting_system?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_payments_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_commitment_event_id_fkey"
+            columns: ["commitment_event_id"]
+            isOneToOne: false
+            referencedRelation: "commitment_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_distribution_line_id_fkey"
+            columns: ["distribution_line_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_payment_instruction_id_fkey"
+            columns: ["payment_instruction_id"]
+            isOneToOne: false
+            referencedRelation: "investor_payment_instructions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "bank_reconciliations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_payments_reissue_of_id_fkey"
+            columns: ["reissue_of_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_provider_events: {
+        Row: {
+          correlation_detail: Json
+          correlation_status: string
+          event_type: string
+          id: string
+          payload: Json
+          payment_id: string | null
+          provider: string
+          provider_event_id: string
+          provider_payment_id: string | null
+          received_at: string
+          reported_amount_cents: number | null
+          reported_currency: string | null
+          reported_destination_masked: string | null
+          reported_direction: string | null
+        }
+        Insert: {
+          correlation_detail?: Json
+          correlation_status?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          payment_id?: string | null
+          provider: string
+          provider_event_id: string
+          provider_payment_id?: string | null
+          received_at?: string
+          reported_amount_cents?: number | null
+          reported_currency?: string | null
+          reported_destination_masked?: string | null
+          reported_direction?: string | null
+        }
+        Update: {
+          correlation_detail?: Json
+          correlation_status?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          payment_id?: string | null
+          provider?: string
+          provider_event_id?: string
+          provider_payment_id?: string | null
+          received_at?: string
+          reported_amount_cents?: number | null
+          reported_currency?: string | null
+          reported_destination_masked?: string | null
+          reported_direction?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_provider_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_withholdings: {
+        Row: {
+          amount_cents: number
+          basis_cents: number
+          created_at: string
+          determination_reason: string | null
+          determined_by: string | null
+          distribution_line_id: string
+          documentation_form: string | null
+          id: string
+          jurisdiction: string | null
+          offering_id: string
+          rate_bps: number
+          tax_profile_id: string | null
+          updated_at: string
+          withholding_type: string
+        }
+        Insert: {
+          amount_cents?: number
+          basis_cents?: number
+          created_at?: string
+          determination_reason?: string | null
+          determined_by?: string | null
+          distribution_line_id: string
+          documentation_form?: string | null
+          id?: string
+          jurisdiction?: string | null
+          offering_id: string
+          rate_bps?: number
+          tax_profile_id?: string | null
+          updated_at?: string
+          withholding_type: string
+        }
+        Update: {
+          amount_cents?: number
+          basis_cents?: number
+          created_at?: string
+          determination_reason?: string | null
+          determined_by?: string | null
+          distribution_line_id?: string
+          documentation_form?: string | null
+          id?: string
+          jurisdiction?: string | null
+          offering_id?: string
+          rate_bps?: number
+          tax_profile_id?: string | null
+          updated_at?: string
+          withholding_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_withholdings_distribution_line_id_fkey"
+            columns: ["distribution_line_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_withholdings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_withholdings_tax_profile_id_fkey"
+            columns: ["tax_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investor_tax_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_signatures: {
         Row: {
           application_id: string
@@ -13173,6 +14131,136 @@ export type Database = {
           },
         ]
       }
+      investor_payment_instructions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          bank_name: string | null
+          beneficiary_name: string | null
+          cooling_off_until: string | null
+          cooling_off_waived_by: string | null
+          cooling_off_waiver_reason: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          effective_date: string | null
+          fingerprint: string
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string
+          label: string | null
+          masked_account: string | null
+          masked_routing: string | null
+          method: string
+          offering_id: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          secured_details: Json
+          status: string
+          superseded_at: string | null
+          supersedes_id: string | null
+          updated_at: string
+          verification_method: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_name?: string | null
+          beneficiary_name?: string | null
+          cooling_off_until?: string | null
+          cooling_off_waived_by?: string | null
+          cooling_off_waiver_reason?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          effective_date?: string | null
+          fingerprint: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id: string
+          label?: string | null
+          masked_account?: string | null
+          masked_routing?: string | null
+          method?: string
+          offering_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          secured_details?: Json
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          verification_method?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_name?: string | null
+          beneficiary_name?: string | null
+          cooling_off_until?: string | null
+          cooling_off_waived_by?: string | null
+          cooling_off_waiver_reason?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          effective_date?: string | null
+          fingerprint?: string
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string
+          label?: string | null
+          masked_account?: string | null
+          masked_routing?: string | null
+          method?: string
+          offering_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          secured_details?: Json
+          status?: string
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          updated_at?: string
+          verification_method?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_payment_instructions_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_payment_instructions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_payment_instructions_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "investor_payment_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_personas: {
         Row: {
           address_line1: string | null
@@ -16522,6 +17610,131 @@ export type Database = {
             columns: ["instruction_id"]
             isOneToOne: false
             referencedRelation: "payment_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_instruction_changes: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          change_kind: string
+          changed_fields: Json
+          cooling_off_until: string | null
+          cooling_off_waived_by: string | null
+          cooling_off_waiver_reason: string | null
+          created_at: string
+          harmonious_notified_at: string | null
+          id: string
+          independent_notice_channel: string | null
+          independent_notice_sent_at: string | null
+          instruction_id: string | null
+          investment_profile_id: string | null
+          investor_user_id: string
+          new_masked: string | null
+          offering_id: string | null
+          old_masked: string | null
+          previous_instruction_id: string | null
+          rejected_reason: string | null
+          requested_at: string
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_level: string
+          status: string
+          stepup_method: string | null
+          stepup_verified_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_kind?: string
+          changed_fields?: Json
+          cooling_off_until?: string | null
+          cooling_off_waived_by?: string | null
+          cooling_off_waiver_reason?: string | null
+          created_at?: string
+          harmonious_notified_at?: string | null
+          id?: string
+          independent_notice_channel?: string | null
+          independent_notice_sent_at?: string | null
+          instruction_id?: string | null
+          investment_profile_id?: string | null
+          investor_user_id: string
+          new_masked?: string | null
+          offering_id?: string | null
+          old_masked?: string | null
+          previous_instruction_id?: string | null
+          rejected_reason?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level?: string
+          status?: string
+          stepup_method?: string | null
+          stepup_verified_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_kind?: string
+          changed_fields?: Json
+          cooling_off_until?: string | null
+          cooling_off_waived_by?: string | null
+          cooling_off_waiver_reason?: string | null
+          created_at?: string
+          harmonious_notified_at?: string | null
+          id?: string
+          independent_notice_channel?: string | null
+          independent_notice_sent_at?: string | null
+          instruction_id?: string | null
+          investment_profile_id?: string | null
+          investor_user_id?: string
+          new_masked?: string | null
+          offering_id?: string | null
+          old_masked?: string | null
+          previous_instruction_id?: string | null
+          rejected_reason?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_level?: string
+          status?: string
+          stepup_method?: string | null
+          stepup_verified_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_instruction_changes_instruction_id_fkey"
+            columns: ["instruction_id"]
+            isOneToOne: false
+            referencedRelation: "investor_payment_instructions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_instruction_changes_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_instruction_changes_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_instruction_changes_previous_instruction_id_fkey"
+            columns: ["previous_instruction_id"]
+            isOneToOne: false
+            referencedRelation: "investor_payment_instructions"
             referencedColumns: ["id"]
           },
         ]
