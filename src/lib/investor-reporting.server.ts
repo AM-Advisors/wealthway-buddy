@@ -729,6 +729,10 @@ export async function generatePackages(
     periodEnd: string;
     periodStart?: string;
     templateId?: string | null;
+    /** Set when amending: rebuild even though an open package exists. */
+    regenerate?: boolean;
+    /** Limit the run to one investor position (used when amending). */
+    positionId?: string | null;
   },
 ) {
   await assertHarmonious(userId);
@@ -760,7 +764,10 @@ export async function generatePackages(
   const fundName = String(offering?.name ?? "Fund");
 
   const created: any[] = [];
-  for (const position of (positions ?? []) as any[]) {
+  const targets = ((positions ?? []) as any[]).filter(
+    (p) => !input.positionId || String(p.id) === String(input.positionId),
+  );
+  for (const position of targets) {
     const template = await templateFor(
       input.offeringId,
       input.periodKind,
@@ -778,10 +785,11 @@ export async function generatePackages(
       .order("version", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (prior && !isImmutablePackage(String(prior.status))) {
-      // an unpublished draft for this period already exists; leave it alone
+    if (prior && !isImmutablePackage(String(prior.status)) && !input.regenerate) {
+      // an unpublished package for this period already exists; leave it alone
       continue;
     }
+
 
     const { data: pkg, error } = await db()
       .from("investor_packages")
