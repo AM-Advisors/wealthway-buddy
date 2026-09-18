@@ -914,6 +914,8 @@ export async function revisePackage(userId: string, packageId: string, reason: s
     periodKind: pkg.period_kind,
     periodEnd: pkg.period_end,
     periodStart: pkg.period_start,
+    positionId: pkg.position_id,
+    regenerate: true,
   });
   const replacement = generated.packages.find((p: any) => p.position_id === pkg.position_id);
   if (!replacement) fail("Could not rebuild this investor's package.");
