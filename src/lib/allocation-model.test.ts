@@ -113,6 +113,7 @@ describe("exact distribution", () => {
       ],
       "ownership_percentage",
       period,
+      false,
     );
     const shares = distributeAmount(100, weights);
     expect([...shares.values()].reduce((s, v) => s + v, 0)).toBe(100);
@@ -126,6 +127,7 @@ describe("exact distribution", () => {
       ],
       "ownership_percentage",
       period,
+      false,
     );
     const shares = distributeAmount(-101, weights);
     expect([...shares.values()].reduce((s, v) => s + v, 0)).toBe(-101);
@@ -143,7 +145,7 @@ describe("allocation reconciles to the fund", () => {
       ...handoff,
       endingNetAssetsCents: 1_100_000,
     });
-    const run = allocateRun({ positions, fundTotals: totals, basis: "ownership_percentage", period });
+    const run = allocateRun({ positions, fundTotals: totals, basis: "ownership_percentage", period, timeWeighted: false });
     const sum = run.lines.reduce((s, l) => s + l.endingCapitalCents, 0);
     expect(sum).toBe(totals.endingNetAssetsCents);
     const reconciliation = reconcileAllocations(totals, run.allocatedTotals);
@@ -153,7 +155,7 @@ describe("allocation reconciles to the fund", () => {
 
   it("blocks finalization when a single cent is unexplained", () => {
     const totals = fundTotalsFromHandoff({ ...handoff, endingNetAssetsCents: 1_070_001 });
-    const run = allocateRun({ positions, fundTotals: totals, basis: "ownership_percentage", period });
+    const run = allocateRun({ positions, fundTotals: totals, basis: "ownership_percentage", period, timeWeighted: false });
     const reconciliation = reconcileAllocations(totals, run.allocatedTotals);
     expect(reconciliation.reconciles).toBe(false);
     expect(finalizationBlockers(reconciliation).length).toBeGreaterThan(0);
@@ -218,7 +220,7 @@ describe("management fees", () => {
 
 describe("carried interest", () => {
   const waterfall = {
-    structure: "european" as const,
+    structure: "european_whole_fund" as const,
     preferredReturnBps: 800,
     compounding: "annual" as const,
     catchUpPct: 100,
@@ -271,7 +273,6 @@ describe("controls", () => {
       adjustmentError({
         classification: "correction",
         amountCents: 1_000,
-        effectiveDate: "2026-02-01",
         reason: "typo",
         evidencePath: "x",
       }),
@@ -280,7 +281,6 @@ describe("controls", () => {
       adjustmentError({
         classification: "correction",
         amountCents: 1_000,
-        effectiveDate: "2026-02-01",
         reason: "Corrects a misposted contribution from February.",
         evidencePath: "",
       }),
