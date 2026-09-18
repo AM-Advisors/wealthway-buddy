@@ -309,8 +309,10 @@ describe("authorship and segregation", () => {
     await expect(server.advancePerformanceRun(PREPARER, RUN_A_PREPARED, "review")).rejects.toThrow();
   });
 
-  it("stops the reviewer approving their own review", async () => {
-    await expect(server.advancePerformanceRun(REVIEWER, RUN_A_REVIEW, "approved")).rejects.toThrow();
+  it("stops the preparer approving their own numbers", async () => {
+    await expect(server.advancePerformanceRun(PREPARER, RUN_A_REVIEW, "approved")).rejects.toThrow(
+      /other than its preparer/,
+    );
   });
 
   it("allows a different person to review and then a third to approve", async () => {
@@ -350,8 +352,8 @@ describe("publication", () => {
 
   it("keeps the service role out of human approvals", async () => {
     await expect(
-      server.advancePerformanceRun("service-role", RUN_A_PREPARED, "review"),
-    ).rejects.toThrow(/Harmonious/);
+      server.advancePerformanceRun("service_role", RUN_A_PREPARED, "review"),
+    ).rejects.toThrow(/Forbidden/);
   });
 });
 
