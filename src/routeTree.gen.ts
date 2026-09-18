@@ -35,6 +35,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
 import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticated/my-claims'
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
@@ -360,6 +361,12 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInvestorFinancialsRoute =
+  AuthenticatedInvestorFinancialsRouteImport.update({
+    id: '/investor-financials',
+    path: '/investor-financials',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMyClaimsRoute = AuthenticatedMyClaimsRouteImport.update({
   id: '/my-claims',
   path: '/my-claims',
@@ -1509,6 +1516,7 @@ export interface FileRoutesByFullPath {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -1728,6 +1736,7 @@ export interface FileRoutesByTo {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -1947,6 +1956,7 @@ export interface FileRoutesById {
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/_authenticated/my-claims': typeof AuthenticatedMyClaimsRoute
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -2170,6 +2180,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/investor-financials'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -2389,6 +2400,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/investor-financials'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -2607,6 +2619,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fund-documents'
     | '/_authenticated/fund-memo'
     | '/_authenticated/home'
+    | '/_authenticated/investor-financials'
     | '/_authenticated/my-claims'
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
@@ -3020,6 +3033,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/investor-financials': {
+      id: '/_authenticated/investor-financials'
+      path: '/investor-financials'
+      fullPath: '/investor-financials'
+      preLoaderRoute: typeof AuthenticatedInvestorFinancialsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-claims': {
@@ -4600,6 +4620,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
   AuthenticatedMyClaimsRoute: typeof AuthenticatedMyClaimsRoute
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
@@ -4734,6 +4755,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,
   AuthenticatedMyClaimsRoute: AuthenticatedMyClaimsRoute,
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
