@@ -87,9 +87,13 @@ describe("NAV lifecycle", () => {
 });
 
 describe("segregation of duties", () => {
+  it("will not approve a NAV nobody reviewed", () => {
+    expect(segregationError({ preparedBy: "u1" }, "u2", "approve")).toMatch(/reviewed before/i);
+  });
+
   it("stops the preparer approving their own NAV", () => {
     expect(segregationError({ preparedBy: "u1" }, "u1", "approve")).toMatch(/other than/);
-    expect(segregationError({ preparedBy: "u1" }, "u2", "approve")).toBeNull();
+    expect(segregationError({ preparedBy: "u1", reviewedBy: "u2" }, "u2", "approve")).toBeNull();
   });
 
   it("stops the reviewer publishing", () => {
