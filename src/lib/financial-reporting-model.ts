@@ -567,7 +567,7 @@ export type ReportException = {
   kind: ReportExceptionKind;
   severity: "blocking" | "warning";
   detail: string;
-  context?: Record<string, unknown>;
+  context?: Record<string, string | number | boolean | null | string[]>;
 };
 
 export type ReconciliationInput = {

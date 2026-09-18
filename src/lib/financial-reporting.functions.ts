@@ -205,7 +205,11 @@ export const updateCloseChecklistItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { setCloseChecklistItem } = await import("@/lib/financial-reporting.server");
-    return setCloseChecklistItem(context.userId, data);
+    return setCloseChecklistItem(context.userId, {
+      itemId: data.itemId,
+      status: data.status,
+      ...(data.reason === undefined ? {} : { reason: data.reason }),
+    });
   });
 
 export const buildWorkpapers = createServerFn({ method: "POST" })
