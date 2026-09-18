@@ -523,7 +523,7 @@ export async function saveQuestionnaire(
 ) {
   const { actor, row } = await assertInvestorOwns(userId, input.onboardingId);
   const questionnaire = await publishedQuestionnaire(row.offering_id);
-  const questions = ((questionnaire?.questions ?? []) as Question[]) ?? [];
+  const questions = (questionnaire?.questions ?? []) as Question[];
 
   if (input.submit) {
     const result = validateQuestionnaire(questions, input.answers);
@@ -685,7 +685,7 @@ export async function myInvestments(userId: string) {
   };
 }
 
-export async function onboardingDetail(userId: string, onboardingId: string) {
+export async function onboardingDetail(userId: string, onboardingId: string): Promise<any> {
   const { actor, row, role } = await assertOnboardingAccess(userId, onboardingId);
   const facts = await gatherFacts(row);
   const exceptions = await openExceptions(row.id);
