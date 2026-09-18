@@ -49,4 +49,5 @@
 ## Fund accounting
 - [x] Step 1: bank feed → reconciliation → general ledger (posting rules, exceptions, maker-checker)
 - [x] Step 2: portfolio holdings, versioned valuations, evidence, governance, prepared-only ledger impact, realisations
-- [ ] Step 3: NAV publication and financial statements
+- [x] Step 3: NAV engine — calculated from posted ledger and as-of valuations, pre-NAV checks, documented overrides, reconciling bridge, maker-checker review/approval, immutable publication and revisions, manager acknowledge/challenge, capital-account handoff
+- [ ] Step 4: capital account allocations, financial statements and investor statements
