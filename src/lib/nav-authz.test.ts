@@ -23,6 +23,7 @@ const MANAGER_A = "manager-a";
 const MANAGER_B = "manager-b";
 const PREPARER = "admin-preparer";
 const REVIEWER = "admin-reviewer";
+const PUBLISHER = "admin-publisher";
 
 type Write = { table: string; op: string; payload: any };
 let writes: Write[] = [];
@@ -59,6 +60,7 @@ const tables: Record<string, any[]> = {
     { user_id: MANAGER_B, role: "fund_manager" },
     { user_id: PREPARER, role: "admin" },
     { user_id: REVIEWER, role: "admin" },
+    { user_id: PUBLISHER, role: "admin" },
   ],
   fund_managers: [
     { user_id: MANAGER_A, offering_id: FUND_A },
@@ -218,8 +220,8 @@ describe("publication is final", () => {
   });
 
   it("refuses to publish an already published NAV", async () => {
-    await expect(publishNav(REVIEWER, NAV_A_PUBLISHED)).rejects.toThrow(
-      /cannot move to published|already/i,
+    await expect(publishNav(PUBLISHER, NAV_A_PUBLISHED)).rejects.toThrow(
+      /cannot move to published/i,
     );
   });
 
@@ -264,7 +266,7 @@ describe("database guarantees", () => {
       migrationSql.match(/create policy "[^"]*nav[^"]*" on public\.nav_[a-z_]+[\s\S]*?;/gi) ?? [];
     expect(policies.length).toBeGreaterThan(0);
     for (const policy of policies) {
-      expect(policy).toMatch(/is_any_staff\(\)|manages_offering|private\./i);
+      expect(policy).toMatch(/is_any_staff\(\)|manages_offering|investor_applications|private\./i);
     }
   });
 
