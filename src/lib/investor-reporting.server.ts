@@ -917,7 +917,6 @@ export async function revisePackage(userId: string, packageId: string, reason: s
     positionId: pkg.position_id,
     regenerate: true,
   });
-  if (process.env["DBG"]) console.log("DBG", JSON.stringify(generated));
   const replacement = generated.packages.find((p: any) => p.position_id === pkg.position_id);
   if (!replacement) fail("Could not rebuild this investor's package.");
 
