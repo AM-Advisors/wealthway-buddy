@@ -790,7 +790,7 @@ export async function capitalCallForInvestor(userId: string, lineId: string) {
     callId: call.id,
     callNumber: call.call_number,
     callVersion: call.version,
-    status: call.status,
+    callStatus: call.status,
     title: call.title,
     purpose: call.purpose,
     noticeDate: call.notice_date,
@@ -798,6 +798,7 @@ export async function capitalCallForInvestor(userId: string, lineId: string) {
     fund: offering ? { id: offering.id, name: offering.name, slug: offering.slug } : null,
     profile: profile ? { id: profile.id, label: profile.display_label, type: profile.profile_type } : null,
     ...summary,
+    lineStatus: summary.status,
     contributedToDateCents: summary.contributedToDateCents,
     postedContributionsCents: postedTotal,
     notice: call.notice_document_path
