@@ -685,7 +685,7 @@ export async function personalTaxCenter(
         documents: [],
         lines: [],
         stateReturns: [],
-        missingInformation: [] as Record<string, unknown>[],
+        missingInformation: [] as any[],
         checklist: [],
         priorYears: [],
       };
@@ -740,6 +740,6 @@ export async function personalTaxCenter(
     requested: yearDocuments.filter((d) => d.status === "requested"),
     lines,
     stateReturns: rows(states).filter((s) => s.tax_year === taxYear),
-    missingInformation: (current?.missing_information ?? []) as Record<string, unknown>[],
+    missingInformation: (current?.missing_information ?? []) as any[],
   };
 }
