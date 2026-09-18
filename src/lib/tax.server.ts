@@ -83,7 +83,7 @@ async function rowOrFail(table: string, id: string, label: string) {
 
 export async function openTaxYear(
   userId: string,
-  input: { offeringId: string; taxYear: number; periodStart?: string; periodEnd?: string },
+  input: { offeringId: string; taxYear: number; periodStart?: string | undefined; periodEnd?: string | undefined },
 ) {
   await assertTaxStaff(userId);
   const { data: existing } = await db()
