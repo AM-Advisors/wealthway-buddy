@@ -36,6 +36,7 @@ import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authen
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
+import { Route as AuthenticatedInvestorPerformanceRouteImport } from './routes/_authenticated/investor-performance'
 import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticated/my-claims'
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
@@ -131,6 +132,7 @@ import { Route as AuthenticatedManagerNavRouteImport } from './routes/_authentic
 import { Route as AuthenticatedManagerOfferingStatementRouteImport } from './routes/_authenticated/manager.offering-statement'
 import { Route as AuthenticatedManagerOnboardingRouteImport } from './routes/_authenticated/manager.onboarding'
 import { Route as AuthenticatedManagerPerformanceRouteImport } from './routes/_authenticated/manager.performance'
+import { Route as AuthenticatedManagerPerformanceReportingRouteImport } from './routes/_authenticated/manager.performance-reporting'
 import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_authenticated/manager.permissions'
 import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes/_authenticated/manager.portfolio-value'
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
@@ -152,6 +154,7 @@ import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
+import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
@@ -365,6 +368,12 @@ const AuthenticatedInvestorFinancialsRoute =
   AuthenticatedInvestorFinancialsRouteImport.update({
     id: '/investor-financials',
     path: '/investor-financials',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInvestorPerformanceRoute =
+  AuthenticatedInvestorPerformanceRouteImport.update({
+    id: '/investor-performance',
+    path: '/investor-performance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMyClaimsRoute = AuthenticatedMyClaimsRouteImport.update({
@@ -910,6 +919,12 @@ const AuthenticatedManagerPerformanceRoute =
     path: '/manager/performance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerPerformanceReportingRoute =
+  AuthenticatedManagerPerformanceReportingRouteImport.update({
+    id: '/manager/performance-reporting',
+    path: '/manager/performance-reporting',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerPermissionsRoute =
   AuthenticatedManagerPermissionsRouteImport.update({
     id: '/manager/permissions',
@@ -1032,6 +1047,12 @@ const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
   path: '/ops/nav',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsPerformanceRoute =
+  AuthenticatedOpsPerformanceRouteImport.update({
+    id: '/ops/performance',
+    path: '/ops/performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
   id: '/ops/ss4',
   path: '/ops/ss4',
@@ -1517,6 +1538,7 @@ export interface FileRoutesByFullPath {
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
+  '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -1608,6 +1630,7 @@ export interface FileRoutesByFullPath {
   '/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/performance': typeof AuthenticatedManagerPerformanceRoute
+  '/manager/performance-reporting': typeof AuthenticatedManagerPerformanceReportingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
@@ -1628,6 +1651,7 @@ export interface FileRoutesByFullPath {
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -1737,6 +1761,7 @@ export interface FileRoutesByTo {
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
+  '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -1825,6 +1850,7 @@ export interface FileRoutesByTo {
   '/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/manager/performance': typeof AuthenticatedManagerPerformanceRoute
+  '/manager/performance-reporting': typeof AuthenticatedManagerPerformanceReportingRoute
   '/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
@@ -1845,6 +1871,7 @@ export interface FileRoutesByTo {
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -1957,6 +1984,7 @@ export interface FileRoutesById {
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
+  '/_authenticated/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/_authenticated/my-claims': typeof AuthenticatedMyClaimsRoute
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -2048,6 +2076,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/offering-statement': typeof AuthenticatedManagerOfferingStatementRoute
   '/_authenticated/manager/onboarding': typeof AuthenticatedManagerOnboardingRoute
   '/_authenticated/manager/performance': typeof AuthenticatedManagerPerformanceRoute
+  '/_authenticated/manager/performance-reporting': typeof AuthenticatedManagerPerformanceReportingRoute
   '/_authenticated/manager/permissions': typeof AuthenticatedManagerPermissionsRoute
   '/_authenticated/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
@@ -2068,6 +2097,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -2181,6 +2211,7 @@ export interface FileRouteTypes {
     | '/fund-memo'
     | '/home'
     | '/investor-financials'
+    | '/investor-performance'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -2272,6 +2303,7 @@ export interface FileRouteTypes {
     | '/manager/offering-statement'
     | '/manager/onboarding'
     | '/manager/performance'
+    | '/manager/performance-reporting'
     | '/manager/permissions'
     | '/manager/portfolio-value'
     | '/manager/profile'
@@ -2292,6 +2324,7 @@ export interface FileRouteTypes {
     | '/ops/banking'
     | '/ops/financials'
     | '/ops/nav'
+    | '/ops/performance'
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
@@ -2401,6 +2434,7 @@ export interface FileRouteTypes {
     | '/fund-memo'
     | '/home'
     | '/investor-financials'
+    | '/investor-performance'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -2489,6 +2523,7 @@ export interface FileRouteTypes {
     | '/manager/offering-statement'
     | '/manager/onboarding'
     | '/manager/performance'
+    | '/manager/performance-reporting'
     | '/manager/permissions'
     | '/manager/portfolio-value'
     | '/manager/profile'
@@ -2509,6 +2544,7 @@ export interface FileRouteTypes {
     | '/ops/banking'
     | '/ops/financials'
     | '/ops/nav'
+    | '/ops/performance'
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
@@ -2620,6 +2656,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fund-memo'
     | '/_authenticated/home'
     | '/_authenticated/investor-financials'
+    | '/_authenticated/investor-performance'
     | '/_authenticated/my-claims'
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
@@ -2711,6 +2748,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/offering-statement'
     | '/_authenticated/manager/onboarding'
     | '/_authenticated/manager/performance'
+    | '/_authenticated/manager/performance-reporting'
     | '/_authenticated/manager/permissions'
     | '/_authenticated/manager/portfolio-value'
     | '/_authenticated/manager/profile'
@@ -2731,6 +2769,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/nav'
+    | '/_authenticated/ops/performance'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
@@ -3040,6 +3079,13 @@ declare module '@tanstack/react-router' {
       path: '/investor-financials'
       fullPath: '/investor-financials'
       preLoaderRoute: typeof AuthenticatedInvestorFinancialsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/investor-performance': {
+      id: '/_authenticated/investor-performance'
+      path: '/investor-performance'
+      fullPath: '/investor-performance'
+      preLoaderRoute: typeof AuthenticatedInvestorPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-claims': {
@@ -3707,6 +3753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/performance-reporting': {
+      id: '/_authenticated/manager/performance-reporting'
+      path: '/manager/performance-reporting'
+      fullPath: '/manager/performance-reporting'
+      preLoaderRoute: typeof AuthenticatedManagerPerformanceReportingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/permissions': {
       id: '/_authenticated/manager/permissions'
       path: '/manager/permissions'
@@ -3852,6 +3905,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/nav'
       fullPath: '/ops/nav'
       preLoaderRoute: typeof AuthenticatedOpsNavRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/performance': {
+      id: '/_authenticated/ops/performance'
+      path: '/ops/performance'
+      fullPath: '/ops/performance'
+      preLoaderRoute: typeof AuthenticatedOpsPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/ss4': {
@@ -4621,6 +4681,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
+  AuthenticatedInvestorPerformanceRoute: typeof AuthenticatedInvestorPerformanceRoute
   AuthenticatedMyClaimsRoute: typeof AuthenticatedMyClaimsRoute
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
@@ -4697,6 +4758,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerOfferingStatementRoute: typeof AuthenticatedManagerOfferingStatementRoute
   AuthenticatedManagerOnboardingRoute: typeof AuthenticatedManagerOnboardingRoute
   AuthenticatedManagerPerformanceRoute: typeof AuthenticatedManagerPerformanceRoute
+  AuthenticatedManagerPerformanceReportingRoute: typeof AuthenticatedManagerPerformanceReportingRoute
   AuthenticatedManagerPermissionsRoute: typeof AuthenticatedManagerPermissionsRoute
   AuthenticatedManagerPortfolioValueRoute: typeof AuthenticatedManagerPortfolioValueRoute
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
@@ -4717,6 +4779,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
+  AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
@@ -4756,6 +4819,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,
+  AuthenticatedInvestorPerformanceRoute: AuthenticatedInvestorPerformanceRoute,
   AuthenticatedMyClaimsRoute: AuthenticatedMyClaimsRoute,
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
@@ -4842,6 +4906,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerOfferingStatementRoute,
   AuthenticatedManagerOnboardingRoute: AuthenticatedManagerOnboardingRoute,
   AuthenticatedManagerPerformanceRoute: AuthenticatedManagerPerformanceRoute,
+  AuthenticatedManagerPerformanceReportingRoute:
+    AuthenticatedManagerPerformanceReportingRoute,
   AuthenticatedManagerPermissionsRoute: AuthenticatedManagerPermissionsRoute,
   AuthenticatedManagerPortfolioValueRoute:
     AuthenticatedManagerPortfolioValueRoute,
@@ -4865,6 +4931,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
+  AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
