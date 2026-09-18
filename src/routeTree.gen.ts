@@ -37,6 +37,7 @@ import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
 import { Route as AuthenticatedInvestorPerformanceRouteImport } from './routes/_authenticated/investor-performance'
+import { Route as AuthenticatedInvestorReportingRouteImport } from './routes/_authenticated/investor-reporting'
 import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticated/my-claims'
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
@@ -137,6 +138,7 @@ import { Route as AuthenticatedManagerPermissionsRouteImport } from './routes/_a
 import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes/_authenticated/manager.portfolio-value'
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
 import { Route as AuthenticatedManagerPublicPageRouteImport } from './routes/_authenticated/manager.public-page'
+import { Route as AuthenticatedManagerReportingRouteImport } from './routes/_authenticated/manager.reporting'
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authenticated/manager.tax'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
@@ -155,6 +157,7 @@ import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
+import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
@@ -374,6 +377,12 @@ const AuthenticatedInvestorPerformanceRoute =
   AuthenticatedInvestorPerformanceRouteImport.update({
     id: '/investor-performance',
     path: '/investor-performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInvestorReportingRoute =
+  AuthenticatedInvestorReportingRouteImport.update({
+    id: '/investor-reporting',
+    path: '/investor-reporting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMyClaimsRoute = AuthenticatedMyClaimsRouteImport.update({
@@ -949,6 +958,12 @@ const AuthenticatedManagerPublicPageRoute =
     path: '/manager/public-page',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerReportingRoute =
+  AuthenticatedManagerReportingRouteImport.update({
+    id: '/manager/reporting',
+    path: '/manager/reporting',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerRequestsRoute =
   AuthenticatedManagerRequestsRouteImport.update({
     id: '/manager/requests',
@@ -1051,6 +1066,12 @@ const AuthenticatedOpsPerformanceRoute =
   AuthenticatedOpsPerformanceRouteImport.update({
     id: '/ops/performance',
     path: '/ops/performance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsReportingRoute =
+  AuthenticatedOpsReportingRouteImport.update({
+    id: '/ops/reporting',
+    path: '/ops/reporting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
@@ -1539,6 +1560,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
+  '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -1635,6 +1657,7 @@ export interface FileRoutesByFullPath {
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
+  '/manager/reporting': typeof AuthenticatedManagerReportingRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -1652,6 +1675,7 @@ export interface FileRoutesByFullPath {
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
+  '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -1762,6 +1786,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
+  '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -1855,6 +1880,7 @@ export interface FileRoutesByTo {
   '/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
+  '/manager/reporting': typeof AuthenticatedManagerReportingRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -1872,6 +1898,7 @@ export interface FileRoutesByTo {
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
+  '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -1985,6 +2012,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/_authenticated/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
+  '/_authenticated/investor-reporting': typeof AuthenticatedInvestorReportingRoute
   '/_authenticated/my-claims': typeof AuthenticatedMyClaimsRoute
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -2081,6 +2109,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/portfolio-value': typeof AuthenticatedManagerPortfolioValueRoute
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/_authenticated/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
+  '/_authenticated/manager/reporting': typeof AuthenticatedManagerReportingRoute
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -2098,6 +2127,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
+  '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -2212,6 +2242,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/investor-financials'
     | '/investor-performance'
+    | '/investor-reporting'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -2308,6 +2339,7 @@ export interface FileRouteTypes {
     | '/manager/portfolio-value'
     | '/manager/profile'
     | '/manager/public-page'
+    | '/manager/reporting'
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
@@ -2325,6 +2357,7 @@ export interface FileRouteTypes {
     | '/ops/financials'
     | '/ops/nav'
     | '/ops/performance'
+    | '/ops/reporting'
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
@@ -2435,6 +2468,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/investor-financials'
     | '/investor-performance'
+    | '/investor-reporting'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -2528,6 +2562,7 @@ export interface FileRouteTypes {
     | '/manager/portfolio-value'
     | '/manager/profile'
     | '/manager/public-page'
+    | '/manager/reporting'
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
@@ -2545,6 +2580,7 @@ export interface FileRouteTypes {
     | '/ops/financials'
     | '/ops/nav'
     | '/ops/performance'
+    | '/ops/reporting'
     | '/ops/ss4'
     | '/ops/tax-documents'
     | '/ops/team'
@@ -2657,6 +2693,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/investor-financials'
     | '/_authenticated/investor-performance'
+    | '/_authenticated/investor-reporting'
     | '/_authenticated/my-claims'
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
@@ -2753,6 +2790,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/portfolio-value'
     | '/_authenticated/manager/profile'
     | '/_authenticated/manager/public-page'
+    | '/_authenticated/manager/reporting'
     | '/_authenticated/manager/requests'
     | '/_authenticated/manager/tax'
     | '/_authenticated/manager/timeline'
@@ -2770,6 +2808,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/performance'
+    | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/team'
@@ -3086,6 +3125,13 @@ declare module '@tanstack/react-router' {
       path: '/investor-performance'
       fullPath: '/investor-performance'
       preLoaderRoute: typeof AuthenticatedInvestorPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/investor-reporting': {
+      id: '/_authenticated/investor-reporting'
+      path: '/investor-reporting'
+      fullPath: '/investor-reporting'
+      preLoaderRoute: typeof AuthenticatedInvestorReportingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-claims': {
@@ -3788,6 +3834,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerPublicPageRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/reporting': {
+      id: '/_authenticated/manager/reporting'
+      path: '/manager/reporting'
+      fullPath: '/manager/reporting'
+      preLoaderRoute: typeof AuthenticatedManagerReportingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/requests': {
       id: '/_authenticated/manager/requests'
       path: '/manager/requests'
@@ -3912,6 +3965,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/performance'
       fullPath: '/ops/performance'
       preLoaderRoute: typeof AuthenticatedOpsPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/reporting': {
+      id: '/_authenticated/ops/reporting'
+      path: '/ops/reporting'
+      fullPath: '/ops/reporting'
+      preLoaderRoute: typeof AuthenticatedOpsReportingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/ss4': {
@@ -4682,6 +4742,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
   AuthenticatedInvestorPerformanceRoute: typeof AuthenticatedInvestorPerformanceRoute
+  AuthenticatedInvestorReportingRoute: typeof AuthenticatedInvestorReportingRoute
   AuthenticatedMyClaimsRoute: typeof AuthenticatedMyClaimsRoute
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
@@ -4763,6 +4824,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerPortfolioValueRoute: typeof AuthenticatedManagerPortfolioValueRoute
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
   AuthenticatedManagerPublicPageRoute: typeof AuthenticatedManagerPublicPageRoute
+  AuthenticatedManagerReportingRoute: typeof AuthenticatedManagerReportingRoute
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTaxRoute: typeof AuthenticatedManagerTaxRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
@@ -4780,6 +4842,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
+  AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
@@ -4820,6 +4883,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,
   AuthenticatedInvestorPerformanceRoute: AuthenticatedInvestorPerformanceRoute,
+  AuthenticatedInvestorReportingRoute: AuthenticatedInvestorReportingRoute,
   AuthenticatedMyClaimsRoute: AuthenticatedMyClaimsRoute,
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
@@ -4913,6 +4977,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerPortfolioValueRoute,
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
   AuthenticatedManagerPublicPageRoute: AuthenticatedManagerPublicPageRoute,
+  AuthenticatedManagerReportingRoute: AuthenticatedManagerReportingRoute,
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTaxRoute: AuthenticatedManagerTaxRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
@@ -4932,6 +4997,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
+  AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
