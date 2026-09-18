@@ -9401,6 +9401,71 @@ export type Database = {
           },
         ]
       }
+      fund_banking_setups: {
+        Row: {
+          account_active_at: string | null
+          account_reference: string | null
+          application_submitted_at: string | null
+          approved_at: string | null
+          bank_name: string | null
+          created_at: string
+          id: string
+          investor_instructions_released: boolean
+          investor_instructions_released_at: string | null
+          investor_instructions_released_by: string | null
+          notes: string | null
+          relationship_contact: string | null
+          setup_id: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_active_at?: string | null
+          account_reference?: string | null
+          application_submitted_at?: string | null
+          approved_at?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          investor_instructions_released?: boolean
+          investor_instructions_released_at?: string | null
+          investor_instructions_released_by?: string | null
+          notes?: string | null
+          relationship_contact?: string | null
+          setup_id: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_active_at?: string | null
+          account_reference?: string | null
+          application_submitted_at?: string | null
+          approved_at?: string | null
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          investor_instructions_released?: boolean
+          investor_instructions_released_at?: string | null
+          investor_instructions_released_by?: string | null
+          notes?: string | null
+          relationship_contact?: string | null
+          setup_id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_banking_setups_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: true
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_compliance_items: {
         Row: {
           category: string
@@ -9548,6 +9613,230 @@ export type Database = {
           },
         ]
       }
+      fund_economics_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          change_reason: string | null
+          classes: Json
+          created_at: string
+          effective_from: string | null
+          id: string
+          investor_specific: Json
+          prepared_by: string | null
+          setup_id: string
+          status: string
+          supersedes_id: string | null
+          terms: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          classes?: Json
+          created_at?: string
+          effective_from?: string | null
+          id?: string
+          investor_specific?: Json
+          prepared_by?: string | null
+          setup_id: string
+          status?: string
+          supersedes_id?: string | null
+          terms?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_reason?: string | null
+          classes?: Json
+          created_at?: string
+          effective_from?: string | null
+          id?: string
+          investor_specific?: Json
+          prepared_by?: string | null
+          setup_id?: string
+          status?: string
+          supersedes_id?: string | null
+          terms?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_economics_versions_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_economics_versions_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "fund_economics_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_eligibility_configs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          rules: Json
+          setup_id: string
+          status: string
+          supersedes_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          rules?: Json
+          setup_id: string
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          rules?: Json
+          setup_id?: string
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_eligibility_configs_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_eligibility_configs_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "fund_eligibility_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_entity_formation: {
+        Row: {
+          certificate_document_id: string | null
+          created_at: string
+          ein_letter_document_id: string | null
+          ein_received_at: string | null
+          ein_requested_at: string | null
+          entity_active_at: string | null
+          entity_identifiers: Json
+          formation_accepted_at: string | null
+          formation_document_id: string | null
+          formation_filed_at: string | null
+          formation_requested_at: string | null
+          id: string
+          jurisdiction: string | null
+          notes: string | null
+          registered_agent: string | null
+          registered_agent_confirmed_at: string | null
+          setup_id: string
+          step: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          certificate_document_id?: string | null
+          created_at?: string
+          ein_letter_document_id?: string | null
+          ein_received_at?: string | null
+          ein_requested_at?: string | null
+          entity_active_at?: string | null
+          entity_identifiers?: Json
+          formation_accepted_at?: string | null
+          formation_document_id?: string | null
+          formation_filed_at?: string | null
+          formation_requested_at?: string | null
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          registered_agent?: string | null
+          registered_agent_confirmed_at?: string | null
+          setup_id: string
+          step?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          certificate_document_id?: string | null
+          created_at?: string
+          ein_letter_document_id?: string | null
+          ein_received_at?: string | null
+          ein_requested_at?: string | null
+          entity_active_at?: string | null
+          entity_identifiers?: Json
+          formation_accepted_at?: string | null
+          formation_document_id?: string | null
+          formation_filed_at?: string | null
+          formation_requested_at?: string | null
+          id?: string
+          jurisdiction?: string | null
+          notes?: string | null
+          registered_agent?: string | null
+          registered_agent_confirmed_at?: string | null
+          setup_id?: string
+          step?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_entity_formation_certificate_document_id_fkey"
+            columns: ["certificate_document_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setup_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_entity_formation_ein_letter_document_id_fkey"
+            columns: ["ein_letter_document_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setup_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_entity_formation_formation_document_id_fkey"
+            columns: ["formation_document_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setup_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_entity_formation_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: true
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_invitations: {
         Row: {
           accepted_at: string | null
@@ -9606,6 +9895,94 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_launch_approvals: {
+        Row: {
+          decided_at: string
+          decided_by: string
+          decision: string
+          id: string
+          reason: string | null
+          setup_id: string
+          unmet_conditions: Json
+        }
+        Insert: {
+          decided_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          reason?: string | null
+          setup_id: string
+          unmet_conditions?: Json
+        }
+        Update: {
+          decided_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          reason?: string | null
+          setup_id?: string
+          unmet_conditions?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_launch_approvals_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_launch_conditions: {
+        Row: {
+          condition_key: string
+          created_at: string
+          evidence: Json
+          id: string
+          label: string
+          required: boolean
+          satisfied: boolean
+          satisfied_at: string | null
+          setup_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          condition_key: string
+          created_at?: string
+          evidence?: Json
+          id?: string
+          label: string
+          required?: boolean
+          satisfied?: boolean
+          satisfied_at?: string | null
+          setup_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          condition_key?: string
+          created_at?: string
+          evidence?: Json
+          id?: string
+          label?: string
+          required?: boolean
+          satisfied?: boolean
+          satisfied_at?: string | null
+          setup_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_launch_conditions_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
             referencedColumns: ["id"]
           },
         ]
@@ -9774,6 +10151,116 @@ export type Database = {
           },
         ]
       }
+      fund_onboarding_requirements: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          investor_type: string
+          required: boolean
+          setup_id: string
+          sort_order: number
+          step: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          investor_type?: string
+          required?: boolean
+          setup_id: string
+          sort_order?: number
+          step: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          investor_type?: string
+          required?: boolean
+          setup_id?: string
+          sort_order?: number
+          step?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_onboarding_requirements_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_regulatory_configs: {
+        Row: {
+          amendment_reason: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          locked_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selections: Json
+          setup_id: string
+          status: string
+          supersedes_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          amendment_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selections?: Json
+          setup_id: string
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          amendment_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selections?: Json
+          setup_id?: string
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_regulatory_configs_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_regulatory_configs_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "fund_regulatory_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_reporting_policies: {
         Row: {
           administrator_attribution: string
@@ -9921,6 +10408,516 @@ export type Database = {
             columns: ["sow_id"]
             isOneToOne: false
             referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_setup_documents: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          doc_type: string
+          external_reference: string | null
+          id: string
+          investor_facing: boolean
+          is_current: boolean
+          notes: string | null
+          setup_id: string
+          status: string
+          storage_path: string | null
+          supersedes_id: string | null
+          task_id: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          uploaded_role: string | null
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          doc_type: string
+          external_reference?: string | null
+          id?: string
+          investor_facing?: boolean
+          is_current?: boolean
+          notes?: string | null
+          setup_id: string
+          status?: string
+          storage_path?: string | null
+          supersedes_id?: string | null
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_role?: string | null
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          doc_type?: string
+          external_reference?: string | null
+          id?: string
+          investor_facing?: boolean
+          is_current?: boolean
+          notes?: string | null
+          setup_id?: string
+          status?: string
+          storage_path?: string | null
+          supersedes_id?: string | null
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_role?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setup_documents_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_setup_documents_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setup_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_setup_documents_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setup_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_setup_events: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          from_status: string | null
+          id: string
+          setup_id: string | null
+          subject_id: string | null
+          subject_table: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          from_status?: string | null
+          id?: string
+          setup_id?: string | null
+          subject_id?: string | null
+          subject_table: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          from_status?: string | null
+          id?: string
+          setup_id?: string | null
+          subject_id?: string | null
+          subject_table?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setup_events_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_setup_parties: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string
+          entity_id: string | null
+          id: string
+          is_authorized_signatory: boolean
+          notes: string | null
+          organization_id: string | null
+          person_id: string | null
+          role: string
+          setup_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name: string
+          entity_id?: string | null
+          id?: string
+          is_authorized_signatory?: boolean
+          notes?: string | null
+          organization_id?: string | null
+          person_id?: string | null
+          role: string
+          setup_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string
+          entity_id?: string | null
+          id?: string
+          is_authorized_signatory?: boolean
+          notes?: string | null
+          organization_id?: string | null
+          person_id?: string | null
+          role?: string
+          setup_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setup_parties_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_setup_tasks: {
+        Row: {
+          assigned_user_id: string | null
+          blocking: boolean
+          client_editable: boolean
+          client_owner_user_id: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          dependencies: string[]
+          description: string | null
+          due_date: string | null
+          id: string
+          label: string
+          notes: string | null
+          response: Json
+          responsible_party: string
+          section: string
+          setup_id: string
+          sort_order: number
+          status: string
+          task_key: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_user_id?: string | null
+          blocking?: boolean
+          client_editable?: boolean
+          client_owner_user_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          dependencies?: string[]
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          response?: Json
+          responsible_party?: string
+          section: string
+          setup_id: string
+          sort_order?: number
+          status?: string
+          task_key: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_user_id?: string | null
+          blocking?: boolean
+          client_editable?: boolean
+          client_owner_user_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          dependencies?: string[]
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          response?: Json
+          responsible_party?: string
+          section?: string
+          setup_id?: string
+          sort_order?: number
+          status?: string
+          task_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setup_tasks_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_setups: {
+        Row: {
+          base_currency: string
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          domicile: string | null
+          entity_type: string | null
+          extension_terms: string | null
+          final_close: string | null
+          fiscal_year_end: string | null
+          formation_date: string | null
+          fund_request_id: string | null
+          fund_term_months: number | null
+          hard_cap_cents: number | null
+          id: string
+          investment_period_months: number | null
+          investment_strategy: string | null
+          investor_onboarding_url: string | null
+          launch_approved_at: string | null
+          launch_approved_by: string | null
+          launch_state: string
+          launched_at: string | null
+          legal_fund_name: string | null
+          min_investment_cents: number | null
+          notes: string | null
+          offering_id: string
+          regulatory_structure: string | null
+          series_designation: string | null
+          series_parent_id: string | null
+          stage: string
+          structure: string
+          structure_other: string | null
+          target_close: string | null
+          target_size_cents: number | null
+          tax_year: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_currency?: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          domicile?: string | null
+          entity_type?: string | null
+          extension_terms?: string | null
+          final_close?: string | null
+          fiscal_year_end?: string | null
+          formation_date?: string | null
+          fund_request_id?: string | null
+          fund_term_months?: number | null
+          hard_cap_cents?: number | null
+          id?: string
+          investment_period_months?: number | null
+          investment_strategy?: string | null
+          investor_onboarding_url?: string | null
+          launch_approved_at?: string | null
+          launch_approved_by?: string | null
+          launch_state?: string
+          launched_at?: string | null
+          legal_fund_name?: string | null
+          min_investment_cents?: number | null
+          notes?: string | null
+          offering_id: string
+          regulatory_structure?: string | null
+          series_designation?: string | null
+          series_parent_id?: string | null
+          stage?: string
+          structure?: string
+          structure_other?: string | null
+          target_close?: string | null
+          target_size_cents?: number | null
+          tax_year?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_currency?: string
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          domicile?: string | null
+          entity_type?: string | null
+          extension_terms?: string | null
+          final_close?: string | null
+          fiscal_year_end?: string | null
+          formation_date?: string | null
+          fund_request_id?: string | null
+          fund_term_months?: number | null
+          hard_cap_cents?: number | null
+          id?: string
+          investment_period_months?: number | null
+          investment_strategy?: string | null
+          investor_onboarding_url?: string | null
+          launch_approved_at?: string | null
+          launch_approved_by?: string | null
+          launch_state?: string
+          launched_at?: string | null
+          legal_fund_name?: string | null
+          min_investment_cents?: number | null
+          notes?: string | null
+          offering_id?: string
+          regulatory_structure?: string | null
+          series_designation?: string | null
+          series_parent_id?: string | null
+          stage?: string
+          structure?: string
+          structure_other?: string | null
+          target_close?: string | null
+          target_size_cents?: number | null
+          tax_year?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setups_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_setups_fund_request_id_fkey"
+            columns: ["fund_request_id"]
+            isOneToOne: false
+            referencedRelation: "fund_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_setups_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_setups_series_parent_id_fkey"
+            columns: ["series_parent_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_target_assets: {
+        Row: {
+          asset_name: string
+          closing_date: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          investment_terms: Json
+          issuer_approval_status: string
+          issuer_name: string | null
+          notes: string | null
+          price_per_unit_cents: number | null
+          purchase_agreement_document_id: string | null
+          purchase_amount_cents: number | null
+          round_name: string | null
+          security_type: string | null
+          setup_id: string
+          transfer_restrictions: string | null
+          unit_count: number | null
+          updated_at: string
+          valuation_cents: number | null
+        }
+        Insert: {
+          asset_name: string
+          closing_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investment_terms?: Json
+          issuer_approval_status?: string
+          issuer_name?: string | null
+          notes?: string | null
+          price_per_unit_cents?: number | null
+          purchase_agreement_document_id?: string | null
+          purchase_amount_cents?: number | null
+          round_name?: string | null
+          security_type?: string | null
+          setup_id: string
+          transfer_restrictions?: string | null
+          unit_count?: number | null
+          updated_at?: string
+          valuation_cents?: number | null
+        }
+        Update: {
+          asset_name?: string
+          closing_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          investment_terms?: Json
+          issuer_approval_status?: string
+          issuer_name?: string | null
+          notes?: string | null
+          price_per_unit_cents?: number | null
+          purchase_agreement_document_id?: string | null
+          purchase_amount_cents?: number | null
+          round_name?: string | null
+          security_type?: string | null
+          setup_id?: string
+          transfer_restrictions?: string | null
+          unit_count?: number | null
+          updated_at?: string
+          valuation_cents?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_target_assets_purchase_agreement_document_id_fkey"
+            columns: ["purchase_agreement_document_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setup_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_target_assets_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "fund_setups"
             referencedColumns: ["id"]
           },
         ]
@@ -21278,6 +22275,7 @@ export type Database = {
         Returns: boolean
       }
       fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
+      fund_setup_manager: { Args: { _setup_id: string }; Returns: boolean }
       get_bank_access_token: {
         Args: { p_offering_id: string }
         Returns: string
