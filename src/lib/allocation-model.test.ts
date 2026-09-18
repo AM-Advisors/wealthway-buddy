@@ -85,10 +85,11 @@ describe("participation and weighting", () => {
   it("gives a late investor a smaller share than an original investor", () => {
     const weights = allocationWeights(
       [
-        position({ positionId: "early", beginningCapitalCents: 1_000_000 }),
+        position({ positionId: "early", contributedToDateCents: 1_000_000 }),
         position({
           positionId: "late",
           admittedOn: "2026-03-01",
+          contributedToDateCents: 1_000_000,
           cashFlows: [{ date: "2026-03-01", amountCents: 1_000_000 }],
         }),
       ],
@@ -140,7 +141,7 @@ describe("allocation reconciles to the fund", () => {
   it("sums investor capital back to fund net assets", () => {
     const totals = fundTotalsFromHandoff({
       ...handoff,
-      endingNetAssetsCents: 1_000_000 + 100_000 - 20_000 - 10_000,
+      endingNetAssetsCents: 1_100_000,
     });
     const run = allocateRun({ positions, fundTotals: totals, basis: "ownership_percentage", period });
     const sum = run.lines.reduce((s, l) => s + l.endingCapitalCents, 0);
@@ -162,7 +163,7 @@ describe("allocation reconciles to the fund", () => {
 describe("commitment ledger", () => {
   const events: CommitmentEvent[] = [
     { eventType: "original_commitment", amountCents: 1_000_000, effectiveDate: "2025-01-01" },
-    { eventType: "amended_commitment", amountCents: 1_500_000, effectiveDate: "2025-06-01" },
+    { eventType: "commitment_amendment", amountCents: 1_500_000, effectiveDate: "2025-06-01" },
     { eventType: "contribution", amountCents: 500_000, effectiveDate: "2025-07-01" },
     { eventType: "distribution", amountCents: 100_000, effectiveDate: "2026-02-01" },
   ];
@@ -244,6 +245,9 @@ describe("controls", () => {
     expect(
       allocationSegregationError({ ...people, reviewedBy: "ben" }, "ben", "approve"),
     ).toBeTruthy();
+    expect(
+      allocationSegregationError({ ...people, reviewedBy: "ben" }, "cas", "approve"),
+    ).toBeNull();
     expect(allocationSegregationError(people, null, "approve")).toBeTruthy();
   });
 
