@@ -122,6 +122,9 @@ export function segregationError(
   if (action === "approve" && people.preparedBy === actorUserId) {
     return "NAV must be approved by someone other than the person who prepared it.";
   }
+  if (action === "approve" && !people.reviewedBy) {
+    return "NAV must be reviewed before it can be approved.";
+  }
   if (action === "publish" && people.reviewedBy && people.reviewedBy === actorUserId) {
     return "NAV must be published by someone other than the reviewer.";
   }
