@@ -121,6 +121,7 @@ import { Route as AuthenticatedManagerCashApprovalsRouteImport } from './routes/
 import { Route as AuthenticatedManagerClosingRouteImport } from './routes/_authenticated/manager.closing'
 import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_authenticated/manager.diligence'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
+import { Route as AuthenticatedManagerFinancialsRouteImport } from './routes/_authenticated/manager.financials'
 import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authenticated/manager.inbox'
 import { Route as AuthenticatedManagerInvestorsRouteImport } from './routes/_authenticated/manager.investors'
 import { Route as AuthenticatedManagerMemoRouteImport } from './routes/_authenticated/manager.memo'
@@ -847,6 +848,12 @@ const AuthenticatedManagerDocumentsRoute =
   AuthenticatedManagerDocumentsRouteImport.update({
     id: '/manager/documents',
     path: '/manager/documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerFinancialsRoute =
+  AuthenticatedManagerFinancialsRouteImport.update({
+    id: '/manager/financials',
+    path: '/manager/financials',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerInboxRoute =
@@ -1584,6 +1591,7 @@ export interface FileRoutesByFullPath {
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/memo': typeof AuthenticatedManagerMemoRoute
@@ -1799,6 +1807,7 @@ export interface FileRoutesByTo {
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/manager/memo': typeof AuthenticatedManagerMemoRoute
@@ -2020,6 +2029,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/_authenticated/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/_authenticated/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/_authenticated/manager/inbox': typeof AuthenticatedManagerInboxRoute
   '/_authenticated/manager/investors': typeof AuthenticatedManagerInvestorsRoute
   '/_authenticated/manager/memo': typeof AuthenticatedManagerMemoRoute
@@ -2242,6 +2252,7 @@ export interface FileRouteTypes {
     | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
+    | '/manager/financials'
     | '/manager/inbox'
     | '/manager/investors'
     | '/manager/memo'
@@ -2457,6 +2468,7 @@ export interface FileRouteTypes {
     | '/manager/closing'
     | '/manager/diligence'
     | '/manager/documents'
+    | '/manager/financials'
     | '/manager/inbox'
     | '/manager/investors'
     | '/manager/memo'
@@ -2677,6 +2689,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/closing'
     | '/_authenticated/manager/diligence'
     | '/_authenticated/manager/documents'
+    | '/_authenticated/manager/financials'
     | '/_authenticated/manager/inbox'
     | '/_authenticated/manager/investors'
     | '/_authenticated/manager/memo'
@@ -3609,6 +3622,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/documents'
       fullPath: '/manager/documents'
       preLoaderRoute: typeof AuthenticatedManagerDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/financials': {
+      id: '/_authenticated/manager/financials'
+      path: '/manager/financials'
+      fullPath: '/manager/financials'
+      preLoaderRoute: typeof AuthenticatedManagerFinancialsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/inbox': {
@@ -4647,6 +4667,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerClosingRoute: typeof AuthenticatedManagerClosingRoute
   AuthenticatedManagerDiligenceRoute: typeof AuthenticatedManagerDiligenceRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
+  AuthenticatedManagerFinancialsRoute: typeof AuthenticatedManagerFinancialsRoute
   AuthenticatedManagerInboxRoute: typeof AuthenticatedManagerInboxRoute
   AuthenticatedManagerInvestorsRoute: typeof AuthenticatedManagerInvestorsRoute
   AuthenticatedManagerMemoRoute: typeof AuthenticatedManagerMemoRoute
@@ -4789,6 +4810,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerClosingRoute: AuthenticatedManagerClosingRoute,
   AuthenticatedManagerDiligenceRoute: AuthenticatedManagerDiligenceRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
+  AuthenticatedManagerFinancialsRoute: AuthenticatedManagerFinancialsRoute,
   AuthenticatedManagerInboxRoute: AuthenticatedManagerInboxRoute,
   AuthenticatedManagerInvestorsRoute: AuthenticatedManagerInvestorsRoute,
   AuthenticatedManagerMemoRoute: AuthenticatedManagerMemoRoute,
