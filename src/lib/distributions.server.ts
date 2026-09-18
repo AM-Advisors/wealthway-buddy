@@ -779,7 +779,7 @@ export async function proposeDistribution(
       investmentProfileId: r.investment_profile_id ? String(r.investment_profile_id) : null,
       displayName: r.display_name ?? null,
       classId: r.class_id ? String(r.class_id) : null,
-      commitmentCents: Number(commitment?.commitmentCents ?? 0),
+      commitmentCents: Number(commitment?.currentCommitmentCents ?? 0),
       contributedCents: Number(commitment?.contributedCents ?? 0),
       capitalAccountCents: Number(account?.ending_capital_cents ?? 0),
       ownershipBps: Math.round(Number(account?.ownership_pct ?? 0) * 100),
@@ -2032,7 +2032,7 @@ export async function publishDistributionNotice(userId: string, lineId: string) 
     paymentMethod: instruction?.method ?? line.payment_method ?? null,
     destinationEnding: instruction?.masked_account ?? null,
     characterization: line.characterization ?? {},
-    remainingCommitmentCents: Number(commitment?.unfundedCents ?? 0),
+    remainingCommitmentCents: Number(commitment?.remainingCommitmentCents ?? 0),
     contributedCents: Number(commitment?.contributedCents ?? 0),
   };
 
