@@ -790,7 +790,7 @@ export async function capitalCallForInvestor(userId: string, lineId: string) {
     callId: call.id,
     callNumber: call.call_number,
     callVersion: call.version,
-    status: call.status,
+    callStatus: call.status,
     title: call.title,
     purpose: call.purpose,
     noticeDate: call.notice_date,
