@@ -127,12 +127,12 @@ export async function createFundSetup(
   userId: string,
   input: {
     offeringId: string;
-    clientId?: string | null;
-    fundRequestId?: string | null;
+    clientId?: string | null | undefined;
+    fundRequestId?: string | null | undefined;
     structure: string;
-    structureOther?: string | null;
-    legalFundName?: string | null;
-    displayName?: string | null;
+    structureOther?: string | null | undefined;
+    legalFundName?: string | null | undefined;
+    displayName?: string | null | undefined;
   },
 ) {
   const actor = await assertStaff(userId);
@@ -299,18 +299,18 @@ export async function setSetupStage(userId: string, setupId: string, stage: stri
 export async function saveParty(
   userId: string,
   input: {
-    id?: string;
+    id?: string | undefined;
     setupId: string;
     role: string;
     displayName: string;
-    organizationId?: string | null;
-    personId?: string | null;
-    entityId?: string | null;
-    partyUserId?: string | null;
-    contactEmail?: string | null;
-    contactPhone?: string | null;
-    isAuthorizedSignatory?: boolean;
-    notes?: string | null;
+    organizationId?: string | null | undefined;
+    personId?: string | null | undefined;
+    entityId?: string | null | undefined;
+    partyUserId?: string | null | undefined;
+    contactEmail?: string | null | undefined;
+    contactPhone?: string | null | undefined;
+    isAuthorizedSignatory?: boolean | undefined;
+    notes?: string | null | undefined;
   },
 ) {
   await assertStaff(userId);
@@ -345,13 +345,13 @@ export async function updateTask(
   userId: string,
   input: {
     taskId: string;
-    status?: TaskStatus;
-    assignedUserId?: string | null;
-    clientOwnerUserId?: string | null;
-    dueDate?: string | null;
-    responsibleParty?: string;
-    notes?: string | null;
-    response?: Record<string, unknown>;
+    status?: TaskStatus | undefined;
+    assignedUserId?: string | null | undefined;
+    clientOwnerUserId?: string | null | undefined;
+    dueDate?: string | null | undefined;
+    responsibleParty?: string | undefined;
+    notes?: string | null | undefined;
+    response?: Record<string, unknown> | undefined;
   },
 ) {
   const { data: task } = await db()
@@ -434,11 +434,11 @@ export async function saveSetupDocument(
     setupId: string;
     docType: string;
     title: string;
-    storagePath?: string | null;
-    externalReference?: string | null;
-    taskId?: string | null;
-    investorFacing?: boolean;
-    notes?: string | null;
+    storagePath?: string | null | undefined;
+    externalReference?: string | null | undefined;
+    taskId?: string | null | undefined;
+    investorFacing?: boolean | undefined;
+    notes?: string | null | undefined;
   },
 ) {
   const { actor } = await assertSetupAccess(userId, input.setupId);
@@ -535,12 +535,12 @@ export async function advanceEntityFormation(
   input: {
     setupId: string;
     step: EntityStep;
-    jurisdiction?: string | null;
-    registeredAgent?: string | null;
-    entityIdentifiers?: Record<string, unknown>;
-    formationDocumentId?: string | null;
-    certificateDocumentId?: string | null;
-    einLetterDocumentId?: string | null;
+    jurisdiction?: string | null | undefined;
+    registeredAgent?: string | null | undefined;
+    entityIdentifiers?: Record<string, unknown> | undefined;
+    formationDocumentId?: string | null | undefined;
+    certificateDocumentId?: string | null | undefined;
+    einLetterDocumentId?: string | null | undefined;
   },
 ) {
   await assertStaff(userId);
@@ -609,11 +609,11 @@ export async function saveEconomics(
   input: {
     setupId: string;
     terms: Record<string, unknown>;
-    classes?: unknown[];
-    investorSpecific?: unknown[];
-    effectiveFrom?: string | null;
-    changeReason?: string | null;
-    versionId?: string;
+    classes?: unknown[] | undefined;
+    investorSpecific?: unknown[] | undefined;
+    effectiveFrom?: string | null | undefined;
+    changeReason?: string | null | undefined;
+    versionId?: string | undefined;
   },
 ) {
   await assertStaff(userId);
@@ -735,18 +735,18 @@ export async function saveTargetAsset(
   const payload = {
     setup_id: input.setupId,
     asset_name: input.assetName,
-    issuer_name: input.issuerName ?? null,
-    security_type: input.securityType ?? null,
-    round_name: input.roundName ?? null,
-    price_per_unit_cents: input.pricePerUnitCents ?? null,
-    valuation_cents: input.valuationCents ?? null,
-    purchase_amount_cents: input.purchaseAmountCents ?? null,
-    unit_count: input.unitCount ?? null,
-    closing_date: input.closingDate ?? null,
-    investment_terms: input.investmentTerms ?? {},
-    issuer_approval_status: input.issuerApprovalStatus ?? "not_required",
-    transfer_restrictions: input.transferRestrictions ?? null,
-    purchase_agreement_document_id: input.purchaseAgreementDocumentId ?? null,
+    issuer_name: input['issuerName'] ?? null,
+    security_type: input['securityType'] ?? null,
+    round_name: input['roundName'] ?? null,
+    price_per_unit_cents: input['pricePerUnitCents'] ?? null,
+    valuation_cents: input['valuationCents'] ?? null,
+    purchase_amount_cents: input['purchaseAmountCents'] ?? null,
+    unit_count: input['unitCount'] ?? null,
+    closing_date: input['closingDate'] ?? null,
+    investment_terms: input['investmentTerms'] ?? {},
+    issuer_approval_status: input['issuerApprovalStatus'] ?? "not_required",
+    transfer_restrictions: input['transferRestrictions'] ?? null,
+    purchase_agreement_document_id: input['purchaseAgreementDocumentId'] ?? null,
     notes: input.notes ?? null,
     updated_at: nowIso(),
   };
@@ -767,11 +767,11 @@ export async function updateBanking(
   userId: string,
   input: {
     setupId: string;
-    status?: BankingStatus;
-    bankName?: string | null;
-    relationshipContact?: string | null;
-    accountReference?: string | null;
-    notes?: string | null;
+    status?: BankingStatus | undefined;
+    bankName?: string | null | undefined;
+    relationshipContact?: string | null | undefined;
+    accountReference?: string | null | undefined;
+    notes?: string | null | undefined;
   },
 ) {
   await assertStaff(userId);
@@ -874,8 +874,8 @@ export async function saveRegulatoryConfig(
   input: {
     setupId: string;
     selections: Record<string, unknown>;
-    amendmentReason?: string | null;
-    configId?: string;
+    amendmentReason?: string | null | undefined;
+    configId?: string | undefined;
   },
 ) {
   const actor = await assertStaff(userId);
@@ -980,7 +980,7 @@ export async function reviewRegulatoryConfig(userId: string, configId: string) {
 
 export async function saveEligibilityConfig(
   userId: string,
-  input: { setupId: string; rules: Record<string, unknown>; configId?: string },
+  input: { setupId: string; rules: Record<string, unknown>; configId?: string | undefined },
 ) {
   await assertStaff(userId);
   const { data: rows } = await db()
@@ -1060,7 +1060,7 @@ export async function setOnboardingRequirement(
     investorType: string;
     step: string;
     required: boolean;
-    config?: Record<string, unknown>;
+    config?: Record<string, unknown> | undefined;
   },
 ) {
   await assertStaff(userId);
@@ -1125,10 +1125,10 @@ export async function setLaunchCondition(
   input: {
     setupId: string;
     conditionKey: string;
-    label?: string;
-    required?: boolean;
-    satisfied?: boolean;
-    evidence?: Record<string, unknown>;
+    label?: string | undefined;
+    required?: boolean | undefined;
+    satisfied?: boolean | undefined;
+    evidence?: Record<string, unknown> | undefined;
   },
 ) {
   await assertStaff(userId);
@@ -1173,7 +1173,7 @@ export async function getReadiness(userId: string, setupId: string) {
  */
 export async function decideLaunch(
   userId: string,
-  input: { setupId: string; decision: "approved" | "declined"; reason?: string },
+  input: { setupId: string; decision: "approved" | "declined"; reason?: string | undefined },
 ) {
   const actor = await assertStaff(userId);
   const setup = await setupRow(input.setupId);
