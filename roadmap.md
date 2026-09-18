@@ -51,4 +51,5 @@
 - [x] Step 2: portfolio holdings, versioned valuations, evidence, governance, prepared-only ledger impact, realisations
 - [x] Step 3: NAV engine — calculated from posted ledger and as-of valuations, pre-NAV checks, documented overrides, reconciling bridge, maker-checker review/approval, immutable publication and revisions, manager acknowledge/challenge, capital-account handoff
 - [x] Step 4: investor allocation engine — positions per investment profile, immutable commitment ledger, versioned allocation policies, time-weighted participation, management fees, waterfall/carry, controlled adjustments and transfers, runs reconciled exactly to fund net assets, finalized capital accounts and versioned investor capital statements
-- [ ] Step 5: fund financial statements, performance reporting and tax forms
+- [x] Step 5a: financial statements, trial balance, general ledger reporting and administrator workpapers — versioned COA-to-statement mappings, accrual/cash/modified bases, statements reconciled to approved NAV and finalized investor capital, comparatives, packages, workpapers with second-person sign-off, period close checklist, draft→prepared→review→approved→published→superseded with preparer≠approver, amendments as superseding versions, full drill-down to source records
+- [ ] Step 5b: performance reporting and tax forms
