@@ -35,6 +35,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedInvestorDistributionsRouteImport } from './routes/_authenticated/investor-distributions'
 import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
 import { Route as AuthenticatedInvestorPerformanceRouteImport } from './routes/_authenticated/investor-performance'
 import { Route as AuthenticatedInvestorReportingRouteImport } from './routes/_authenticated/investor-reporting'
@@ -77,6 +78,7 @@ import { Route as AuthenticatedAdminCapTableRequestsRouteImport } from './routes
 import { Route as AuthenticatedAdminClientActivityRouteImport } from './routes/_authenticated/admin.client-activity'
 import { Route as AuthenticatedAdminClientBankAccountsRouteImport } from './routes/_authenticated/admin.client-bank-accounts'
 import { Route as AuthenticatedAdminClientCapTablesRouteImport } from './routes/_authenticated/admin.client-cap-tables'
+import { Route as AuthenticatedAdminDistributionsRouteImport } from './routes/_authenticated/admin.distributions'
 import { Route as AuthenticatedAdminDocumentLogRouteImport } from './routes/_authenticated/admin.document-log'
 import { Route as AuthenticatedAdminEmailPreviewRouteImport } from './routes/_authenticated/admin.email-preview'
 import { Route as AuthenticatedAdminFundingRouteImport } from './routes/_authenticated/admin.funding'
@@ -126,6 +128,7 @@ import { Route as AuthenticatedManagerCapTableBoardRouteImport } from './routes/
 import { Route as AuthenticatedManagerCashApprovalsRouteImport } from './routes/_authenticated/manager.cash-approvals'
 import { Route as AuthenticatedManagerClosingRouteImport } from './routes/_authenticated/manager.closing'
 import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_authenticated/manager.diligence'
+import { Route as AuthenticatedManagerDistributionsRouteImport } from './routes/_authenticated/manager.distributions'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
 import { Route as AuthenticatedManagerFinancialsRouteImport } from './routes/_authenticated/manager.financials'
 import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authenticated/manager.inbox'
@@ -371,6 +374,12 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInvestorDistributionsRoute =
+  AuthenticatedInvestorDistributionsRouteImport.update({
+    id: '/investor-distributions',
+    path: '/investor-distributions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInvestorFinancialsRoute =
   AuthenticatedInvestorFinancialsRouteImport.update({
     id: '/investor-financials',
@@ -599,6 +608,12 @@ const AuthenticatedAdminClientCapTablesRoute =
   AuthenticatedAdminClientCapTablesRouteImport.update({
     id: '/admin/client-cap-tables',
     path: '/admin/client-cap-tables',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDistributionsRoute =
+  AuthenticatedAdminDistributionsRouteImport.update({
+    id: '/admin/distributions',
+    path: '/admin/distributions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminDocumentLogRoute =
@@ -888,6 +903,12 @@ const AuthenticatedManagerDiligenceRoute =
   AuthenticatedManagerDiligenceRouteImport.update({
     id: '/manager/diligence',
     path: '/manager/diligence',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagerDistributionsRoute =
+  AuthenticatedManagerDistributionsRouteImport.update({
+    id: '/manager/distributions',
+    path: '/manager/distributions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedManagerDocumentsRoute =
@@ -1585,6 +1606,7 @@ export interface FileRoutesByFullPath {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/investor-distributions': typeof AuthenticatedInvestorDistributionsRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
@@ -1626,6 +1648,7 @@ export interface FileRoutesByFullPath {
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
+  '/admin/distributions': typeof AuthenticatedAdminDistributionsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -1672,6 +1695,7 @@ export interface FileRoutesByFullPath {
   '/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
+  '/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -1815,6 +1839,7 @@ export interface FileRoutesByTo {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/investor-distributions': typeof AuthenticatedInvestorDistributionsRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
@@ -1855,6 +1880,7 @@ export interface FileRoutesByTo {
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
+  '/admin/distributions': typeof AuthenticatedAdminDistributionsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -1899,6 +1925,7 @@ export interface FileRoutesByTo {
   '/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
+  '/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -2045,6 +2072,7 @@ export interface FileRoutesById {
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/investor-distributions': typeof AuthenticatedInvestorDistributionsRoute
   '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/_authenticated/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/_authenticated/investor-reporting': typeof AuthenticatedInvestorReportingRoute
@@ -2086,6 +2114,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/_authenticated/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/_authenticated/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
+  '/_authenticated/admin/distributions': typeof AuthenticatedAdminDistributionsRoute
   '/_authenticated/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/_authenticated/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
   '/_authenticated/admin/funding': typeof AuthenticatedAdminFundingRoute
@@ -2132,6 +2161,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/_authenticated/manager/closing': typeof AuthenticatedManagerClosingRoute
   '/_authenticated/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
+  '/_authenticated/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
   '/_authenticated/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/_authenticated/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -2279,6 +2309,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/investor-distributions'
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
@@ -2320,6 +2351,7 @@ export interface FileRouteTypes {
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
+    | '/admin/distributions'
     | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funding'
@@ -2366,6 +2398,7 @@ export interface FileRouteTypes {
     | '/manager/cash-approvals'
     | '/manager/closing'
     | '/manager/diligence'
+    | '/manager/distributions'
     | '/manager/documents'
     | '/manager/financials'
     | '/manager/inbox'
@@ -2509,6 +2542,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/investor-distributions'
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
@@ -2549,6 +2583,7 @@ export interface FileRouteTypes {
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
+    | '/admin/distributions'
     | '/admin/document-log'
     | '/admin/email-preview'
     | '/admin/funding'
@@ -2593,6 +2628,7 @@ export interface FileRouteTypes {
     | '/manager/cash-approvals'
     | '/manager/closing'
     | '/manager/diligence'
+    | '/manager/distributions'
     | '/manager/documents'
     | '/manager/financials'
     | '/manager/inbox'
@@ -2738,6 +2774,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fund-documents'
     | '/_authenticated/fund-memo'
     | '/_authenticated/home'
+    | '/_authenticated/investor-distributions'
     | '/_authenticated/investor-financials'
     | '/_authenticated/investor-performance'
     | '/_authenticated/investor-reporting'
@@ -2779,6 +2816,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/client-activity'
     | '/_authenticated/admin/client-bank-accounts'
     | '/_authenticated/admin/client-cap-tables'
+    | '/_authenticated/admin/distributions'
     | '/_authenticated/admin/document-log'
     | '/_authenticated/admin/email-preview'
     | '/_authenticated/admin/funding'
@@ -2825,6 +2863,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/cash-approvals'
     | '/_authenticated/manager/closing'
     | '/_authenticated/manager/diligence'
+    | '/_authenticated/manager/distributions'
     | '/_authenticated/manager/documents'
     | '/_authenticated/manager/financials'
     | '/_authenticated/manager/inbox'
@@ -3165,6 +3204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/investor-distributions': {
+      id: '/_authenticated/investor-distributions'
+      path: '/investor-distributions'
+      fullPath: '/investor-distributions'
+      preLoaderRoute: typeof AuthenticatedInvestorDistributionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/investor-financials': {
       id: '/_authenticated/investor-financials'
       path: '/investor-financials'
@@ -3457,6 +3503,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/client-cap-tables'
       fullPath: '/admin/client-cap-tables'
       preLoaderRoute: typeof AuthenticatedAdminClientCapTablesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/distributions': {
+      id: '/_authenticated/admin/distributions'
+      path: '/admin/distributions'
+      fullPath: '/admin/distributions'
+      preLoaderRoute: typeof AuthenticatedAdminDistributionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/document-log': {
@@ -3800,6 +3853,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/diligence'
       fullPath: '/manager/diligence'
       preLoaderRoute: typeof AuthenticatedManagerDiligenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/distributions': {
+      id: '/_authenticated/manager/distributions'
+      path: '/manager/distributions'
+      fullPath: '/manager/distributions'
+      preLoaderRoute: typeof AuthenticatedManagerDistributionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/documents': {
@@ -4820,6 +4880,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedInvestorDistributionsRoute: typeof AuthenticatedInvestorDistributionsRoute
   AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
   AuthenticatedInvestorPerformanceRoute: typeof AuthenticatedInvestorPerformanceRoute
   AuthenticatedInvestorReportingRoute: typeof AuthenticatedInvestorReportingRoute
@@ -4854,6 +4915,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminClientActivityRoute: typeof AuthenticatedAdminClientActivityRoute
   AuthenticatedAdminClientBankAccountsRoute: typeof AuthenticatedAdminClientBankAccountsRoute
   AuthenticatedAdminClientCapTablesRoute: typeof AuthenticatedAdminClientCapTablesRoute
+  AuthenticatedAdminDistributionsRoute: typeof AuthenticatedAdminDistributionsRoute
   AuthenticatedAdminDocumentLogRoute: typeof AuthenticatedAdminDocumentLogRoute
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
   AuthenticatedAdminFundingRoute: typeof AuthenticatedAdminFundingRoute
@@ -4891,6 +4953,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerCashApprovalsRoute: typeof AuthenticatedManagerCashApprovalsRoute
   AuthenticatedManagerClosingRoute: typeof AuthenticatedManagerClosingRoute
   AuthenticatedManagerDiligenceRoute: typeof AuthenticatedManagerDiligenceRoute
+  AuthenticatedManagerDistributionsRoute: typeof AuthenticatedManagerDistributionsRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
   AuthenticatedManagerFinancialsRoute: typeof AuthenticatedManagerFinancialsRoute
   AuthenticatedManagerInboxRoute: typeof AuthenticatedManagerInboxRoute
@@ -4964,6 +5027,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedInvestorDistributionsRoute:
+    AuthenticatedInvestorDistributionsRoute,
   AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,
   AuthenticatedInvestorPerformanceRoute: AuthenticatedInvestorPerformanceRoute,
   AuthenticatedInvestorReportingRoute: AuthenticatedInvestorReportingRoute,
@@ -5002,6 +5067,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAdminClientBankAccountsRoute,
   AuthenticatedAdminClientCapTablesRoute:
     AuthenticatedAdminClientCapTablesRoute,
+  AuthenticatedAdminDistributionsRoute: AuthenticatedAdminDistributionsRoute,
   AuthenticatedAdminDocumentLogRoute: AuthenticatedAdminDocumentLogRoute,
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
   AuthenticatedAdminFundingRoute: AuthenticatedAdminFundingRoute,
@@ -5046,6 +5112,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerCashApprovalsRoute,
   AuthenticatedManagerClosingRoute: AuthenticatedManagerClosingRoute,
   AuthenticatedManagerDiligenceRoute: AuthenticatedManagerDiligenceRoute,
+  AuthenticatedManagerDistributionsRoute:
+    AuthenticatedManagerDistributionsRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
   AuthenticatedManagerFinancialsRoute: AuthenticatedManagerFinancialsRoute,
   AuthenticatedManagerInboxRoute: AuthenticatedManagerInboxRoute,

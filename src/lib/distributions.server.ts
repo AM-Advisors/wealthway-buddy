@@ -2222,6 +2222,16 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
     : { data: [] };
   const instructionById = new Map(((instructions ?? []) as any[]).map((i) => [String(i.id), i]));
 
+  const { data: payments } = batchIds.length
+    ? await db()
+        .from("distribution_payments")
+        .select("id, distribution_line_id, attempt, status")
+        .in("batch_id", batchIds)
+        .order("attempt", { ascending: true })
+    : { data: [] };
+  const paymentByLine = new Map<string, any>();
+  for (const p of (payments ?? []) as any[]) paymentByLine.set(String(p.distribution_line_id), p);
+
   const now = nowIso();
   const rows = ((lines ?? []) as any[]).map((l) => {
     const batch = batchById.get(String(l.batch_id));
@@ -2255,6 +2265,9 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
       paymentState: String(l.payment_state),
       reconciliationState: String(l.reconciliation_state),
       accountingState: String(l.accounting_state),
+      paymentId: paymentByLine.get(String(l.id))?.id
+        ? String(paymentByLine.get(String(l.id)).id)
+        : null,
       bucket,
     };
   });
