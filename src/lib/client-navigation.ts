@@ -292,3 +292,28 @@ export function navigationTelemetry(input: {
     section,
   };
 }
+
+/**
+ * Which menu a page should get. Client pages get the client menu; the internal
+ * sections keep the internal menu until the operations console moves to its own
+ * address. This is presentation only — the backend still authorizes every
+ * request either way.
+ */
+export function menuForContext(input: {
+  pathname: string;
+  hasClientWorkspace: boolean;
+  activeKind: WorkspaceKind | null;
+}): "client" | "internal" {
+  const onInternalPage = INTERNAL_PATH_PREFIXES.some(
+    (prefix) => input.pathname === prefix || input.pathname.startsWith(`${prefix}/`),
+  );
+  if (onInternalPage || !input.hasClientWorkspace || input.activeKind === "operations") {
+    return "internal";
+  }
+  return "client";
+}
+
+/** What must be forgotten when a person switches workspace or signs out. */
+export function contextToClear(): string[] {
+  return ["query-cache", "harmonious.workspace.active", "delegated-context"];
+}
