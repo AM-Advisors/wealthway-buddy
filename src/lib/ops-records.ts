@@ -73,11 +73,20 @@ export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
   ],
 };
 
-/** Only the tabs whose area this staff member may see at all. */
+/** Whether the record itself may be opened at all. */
+export function canOpenRecord(
+  type: OpsRecordType,
+  capabilities: readonly OpsCapability[],
+): boolean {
+  return can(capabilities, RECORD_AREA[type], "see");
+}
+
+/** Only the tabs whose area this staff member may see, and only if the record may be opened. */
 export function recordTabs(
   type: OpsRecordType,
   capabilities: readonly OpsCapability[],
 ): OpsRecordTab[] {
+  if (!canOpenRecord(type, capabilities)) return [];
   return RECORD_TABS[type].filter((tab) => can(capabilities, tab.area, "see"));
 }
 
