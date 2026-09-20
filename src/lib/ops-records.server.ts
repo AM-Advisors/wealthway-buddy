@@ -68,7 +68,7 @@ function activityFrom(
 
 /* ------------------------------------------------------------------ lists */
 
-export async function listRecords(context: any, data: { type: OpsRecordType; search?: string }) {
+export async function listRecords(context: any, data: { type: OpsRecordType; search?: string | undefined }) {
     await gateRecord(context, data.type);
     const s = context.supabase;
     const like = data.search ? `%${data.search}%` : null;
