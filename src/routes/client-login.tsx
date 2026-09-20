@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { consumeOAuthReturnError, startGoogleOAuth } from "@/lib/google-oauth";
 
 import { useAuth } from "@/hooks/useAuth";
+import { destinationAfterSignIn, intendedPathFromLocation } from "@/lib/post-signin";
 import { AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,17 @@ function ClientLoginPage() {
 
   useEffect(() => {
     if (loading || !session) return;
-    navigate({ to: "/client", replace: true });
+    let active = true;
+    (async () => {
+      // The server decides where this person belongs — the sign-in page never does.
+      const intended =
+        typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
+      const to = await destinationAfterSignIn(session.user.id, intended);
+      if (active) navigate({ to: to as never, replace: true });
+    })();
+    return () => {
+      active = false;
+    };
   }, [loading, session, navigate]);
 
   async function recordAttempt(address: string, success: boolean, reason?: string) {
