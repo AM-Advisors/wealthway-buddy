@@ -246,11 +246,11 @@ describe("each item opens the record where the action belongs", () => {
   it("sends onboarding review to the investor and capital work to the fund", async () => {
     const result = await queue.workQueue(contextFor(STAFF_ADMIN));
     const onboarding = result.items.find((i) => i.id === "onboarding:ob-1");
-    expect(onboarding?.destination).toBe(`/ops/investors/${INVESTOR_1}/investments`);
+    expect(onboarding?.destination).toBe(`/ops/investors/${INVESTOR_1}?tab=investments`);
     const call = result.items.find((i) => i.id === "capital-call:call-a");
-    expect(call?.destination).toBe(`/ops/funds/${FUND_A}/capital`);
+    expect(call?.destination).toBe(`/ops/funds/${FUND_A}?tab=capital`);
     const exception = result.items.find((i) => i.id === "accounting-exception:exc-1");
-    expect(exception?.destination).toBe(`/ops/funds/${FUND_A}/accounting`);
+    expect(exception?.destination).toBe(`/ops/funds/${FUND_A}?tab=accounting`);
   });
 
   it("counts assigned work separately from work a person may merely see", async () => {
