@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated")({
     if (error || !data.user) {
       // Remember where they were heading so the deep link survives signing in.
       const next = safeInternalPath(location.href, "");
-      throw redirect({ to: "/auth", search: next ? { next } : undefined });
+      throw redirect({ to: "/auth", search: (next ? { next } : {}) as never });
     }
     return { user: data.user };
   },
