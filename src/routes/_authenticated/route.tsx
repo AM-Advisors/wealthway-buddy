@@ -79,7 +79,7 @@ function Menu({ onSignOut }: { onSignOut: () => void }) {
   const loadOps = useServerFn(getOperationsContext);
   const { data: ops } = useQuery({
     queryKey: ["operations-context"],
-    queryFn: () => loadOps({ data: {} }) as Promise<any>,
+    queryFn: () => loadOps() as Promise<any>,
     staleTime: 60_000,
   });
 

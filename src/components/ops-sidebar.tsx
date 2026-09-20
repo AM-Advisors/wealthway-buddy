@@ -66,7 +66,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const { data } = useQuery({
     queryKey: ["operations-context"],
-    queryFn: () => load({ data: {} }) as Promise<any>,
+    queryFn: () => load() as Promise<any>,
     staleTime: 60_000,
   });
 
