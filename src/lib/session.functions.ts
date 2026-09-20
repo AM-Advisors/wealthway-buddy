@@ -92,9 +92,9 @@ async function gatherFacts(context: any): Promise<RelationshipFacts & { email: s
   // record, never from anything held in the browser.
   const { data: onboarding } = await supabase
     .from("investor_onboardings")
-    .select("id, status, stage")
+    .select("id, stage, closed_at")
     .eq("investor_user_id", userId)
-    .not("status", "in", "(closed,cancelled,withdrawn)")
+    .is("closed_at", null)
     .limit(1);
   if (!onboarding || onboarding.length === 0) {
     const { data: application } = await supabase
