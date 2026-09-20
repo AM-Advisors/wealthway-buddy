@@ -172,7 +172,9 @@ export function redactDetail(detail: unknown): Record<string, unknown> {
   return out;
 }
 
-export function redactActivity(entry: ActivityEntry & { detail?: unknown }): ActivityEntry {
+export function redactActivity(
+  entry: Omit<ActivityEntry, "detail"> & { detail?: unknown },
+): ActivityEntry {
   const detail = redactDetail(entry.detail);
   const keys = Object.keys(detail);
   return {
