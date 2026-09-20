@@ -4,6 +4,7 @@ import { capabilitiesFor } from "@/lib/ops-capabilities";
 import {
   allowedActions,
   bankingDetailVisible,
+  canOpenRecord,
   canOpenTab,
   defaultTab,
   isRestrictedField,
@@ -18,6 +19,7 @@ import {
 const compliance = capabilitiesFor(["compliance"]);
 const executive = capabilitiesFor(["executive"]);
 const finance = capabilitiesFor(["finance"]);
+const fundAdmin = capabilitiesFor(["fund_administration"]);
 const admin = capabilitiesFor(["admin"]);
 const clientSuccess = capabilitiesFor(["client_success"]);
 
@@ -30,13 +32,19 @@ describe("record tabs follow capabilities, not the menu", () => {
     expect(recordTabs("fund", admin).map((t) => t.id)).toContain("banking");
   });
 
-  it("hides fund accounting, capital and tax from compliance", () => {
-    const ids = recordTabs("fund", compliance).map((t) => t.id);
-    expect(ids).not.toContain("accounting");
-    expect(ids).not.toContain("capital");
-    expect(ids).not.toContain("banking");
+  it("hides fund tax and regulatory from fund administration", () => {
+    const ids = recordTabs("fund", fundAdmin).map((t) => t.id);
+    expect(ids).toContain("accounting");
+    expect(ids).toContain("capital");
     expect(ids).not.toContain("tax");
-    expect(ids).toContain("regulatory");
+    expect(ids).not.toContain("regulatory");
+    expect(ids).not.toContain("documents");
+  });
+
+  it("refuses the whole fund record to compliance, who has no funds capability", () => {
+    expect(recordTabs("fund", compliance)).toEqual([]);
+    expect(canOpenRecord("fund", compliance)).toBe(false);
+    expect(canOpenTab("fund", "regulatory", compliance)).toBe(true);
   });
 
   it("refuses an unknown tab name", () => {
@@ -45,12 +53,13 @@ describe("record tabs follow capabilities, not the menu", () => {
   });
 
   it("falls back to the first tab the person may open", () => {
-    expect(defaultTab("fund", compliance)).toBe("investors");
+    expect(defaultTab("fund", fundAdmin)).toBe("overview");
     expect(defaultTab("company", compliance)).toBeNull();
   });
 
   it("keeps client_success out of company records entirely", () => {
     expect(recordTabs("company", clientSuccess)).toEqual([]);
+    expect(canOpenRecord("company", clientSuccess)).toBe(false);
     expect(canOpenTab("company", "cap-table", clientSuccess)).toBe(false);
   });
 });
