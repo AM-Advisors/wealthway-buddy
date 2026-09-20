@@ -4,7 +4,7 @@ import { OpsRecordPage } from "@/components/ops-record";
 
 export const Route = createFileRoute("/_authenticated/ops/clients/$clientId")({
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: typeof search.tab === "string" ? search.tab : undefined,
+    tab: typeof search["tab"] === "string" ? (search["tab"] as string) : undefined,
   }),
   head: () => ({
     meta: [
