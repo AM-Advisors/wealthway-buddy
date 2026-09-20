@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-
 import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { safeInternalPath } from "@/lib/app-origins";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PolicyGate } from "@/components/policy-gate";
 import { PortalGate } from "@/components/portal-gate";
