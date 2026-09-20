@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NeedsYou, Stat, type NeedsYouItem } from "@/components/dashboard-primitives";
+import { SetupCard } from "@/components/setup-card";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -395,6 +396,8 @@ function RoleHome() {
           ))}
         </div>
       </header>
+
+      <SetupCard />
 
       <NeedsYou items={needsYou} />
 
