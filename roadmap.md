@@ -68,7 +68,11 @@
 - [x] Stage 1: domain and authentication foundation — configured client/ops origins with open-redirect-safe paths, one server-side post-login resolver (relationships, workspaces, requirements, destination), both sign-in pages routed through it, deep link preserved through sign-in, 24 new tests
 - [x] Stage 2: client navigation shell — client shell with workspace switcher, per-relationship menus (investor/manager/company/professional), contextual investment and fund tabs, setup card, delegated banner, new Activity/Tax/Funds/Capital pages, 64 new tests
 - [x] Stage 2 audit: signature-block visibility fixed, rate card/catalogue/vendor/eligibility reads tightened, trigger functions no longer callable, remembered browser context cleared on switch and sign-out; 736 tests
-- [ ] Stage 3: operations record-centric shell — proposed, awaiting approval
+- [x] Stage 3 step 1: Operations permission model (13 areas x see/prepare/review/approve/execute), staff-only entry, no-self-approval rule, 13 tests
+- [x] Stage 3 step 2: Operations menu at /ops, built from resolved permissions
+- [ ] Stage 3 step 3: Client / Fund / Investor / Company record pages assembled from existing pages
+- [ ] Stage 3 step 4: Operations home as a work queue from authoritative workflow state
+- [ ] Stage 3 step 5: move Operations to its own address, old addresses redirect (needs the ops address live)
 - [ ] Stage 4: Client 360 and Fund 360
 - [ ] Stage 5: universal requirement-driven onboarding
 - [ ] Stage 6: authoritative synchronisation cleanup
