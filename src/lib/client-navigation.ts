@@ -317,3 +317,21 @@ export function menuForContext(input: {
 export function contextToClear(): string[] {
   return ["query-cache", "harmonious.workspace.active", "delegated-context"];
 }
+
+/**
+ * Remembered things that say nothing about a record or a relationship — only
+ * how the screen was arranged last time. These survive a workspace switch.
+ */
+export const COSMETIC_STORAGE_KEYS = ["harmonious.sidebar.openGroups"];
+
+/**
+ * Which remembered browser entries must go when a person switches workspace or
+ * signs out: everything the application stored except purely cosmetic layout
+ * state. The backend re-checks authority regardless; this keeps a record chosen
+ * in one workspace from being shown while the next one loads.
+ */
+export function storageKeysToClear(existing: string[]): string[] {
+  return existing.filter(
+    (key) => key.startsWith("harmonious.") && !COSMETIC_STORAGE_KEYS.includes(key),
+  );
+}
