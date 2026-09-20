@@ -1,9 +1,12 @@
-import { Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/app-origins";
+import { INTERNAL_PATH_PREFIXES } from "@/lib/client-navigation";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ClientSidebar } from "@/components/client-sidebar";
+import { ClientWorkspaceProvider, useClientWorkspace } from "@/components/client-workspace";
 import { PolicyGate } from "@/components/policy-gate";
 import { PortalGate } from "@/components/portal-gate";
 import { PortalTopbar } from "@/components/portal-topbar";
@@ -31,26 +34,55 @@ function AuthenticatedLayout() {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    try {
+      // Nothing about the last workspace or delegated context survives sign-out.
+      window.sessionStorage.removeItem("harmonious.workspace.active");
+    } catch {
+      /* storage unavailable — there is nothing to clear */
+    }
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar onSignOut={signOut} />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <PortalTopbar onSignOut={signOut} />
-          <main className="min-w-0 flex-1">
-            <PolicyGate onSignOut={signOut}>
-              <PortalGate onSignOut={signOut}>
-                <Outlet />
-              </PortalGate>
-            </PolicyGate>
-          </main>
-          <PortalFooter />
+    <ClientWorkspaceProvider>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <Menu onSignOut={signOut} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <PortalTopbar onSignOut={signOut} />
+            <main className="min-w-0 flex-1">
+              <PolicyGate onSignOut={signOut}>
+                <PortalGate onSignOut={signOut}>
+                  <Outlet />
+                </PortalGate>
+              </PolicyGate>
+            </main>
+            <PortalFooter />
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </ClientWorkspaceProvider>
   );
+}
+
+/**
+ * Client pages get the client menu, built from the workspace this person is
+ * actually in. Harmonious-only sections keep the internal menu until the
+ * operations console moves to its own address. Either way the backend, not the
+ * menu, decides what anyone may open.
+ */
+function Menu({ onSignOut }: { onSignOut: () => void }) {
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { options, activeKind } = useClientWorkspace();
+
+  const onInternalPage = INTERNAL_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+  const hasClientWorkspace = options.some((option) => option.surface === "client");
+
+  if (onInternalPage || !hasClientWorkspace || activeKind === "operations") {
+    return <AppSidebar onSignOut={onSignOut} />;
+  }
+  return <ClientSidebar onSignOut={onSignOut} />;
 }
