@@ -396,6 +396,8 @@ function RoleHome() {
         </div>
       </header>
 
+      <SetupCard />
+
       <NeedsYou items={needsYou} />
 
       {sections.length <= 1 ? (
