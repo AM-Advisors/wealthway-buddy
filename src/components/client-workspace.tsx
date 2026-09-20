@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
+import { clearStoredClientContext } from "@/lib/client-context-storage";
 import { enterWorkspace, resolveSession } from "@/lib/session.functions";
 import { workspaceOptions, type WorkspaceOption } from "@/lib/client-navigation";
 import type { WorkspaceKind } from "@/lib/session-resolution";
@@ -90,6 +91,8 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
     async (workspaceId: string) => {
       // The server re-resolves authority; an identifier typed by hand fails here.
       const result: any = await enter({ data: { workspaceId } });
+      // Nothing chosen in the previous workspace may be remembered here.
+      clearStoredClientContext();
       try {
         window.sessionStorage.setItem(ACTIVE_KEY, workspaceId);
       } catch {
@@ -105,11 +108,7 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
   );
 
   const clearWorkspace = useCallback(() => {
-    try {
-      window.sessionStorage.removeItem(ACTIVE_KEY);
-    } catch {
-      /* nothing to clear */
-    }
+    clearStoredClientContext();
     setActiveId(null);
   }, []);
 

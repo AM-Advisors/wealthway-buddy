@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/app-origins";
+import { clearStoredClientContext } from "@/lib/client-context-storage";
 import { INTERNAL_PATH_PREFIXES } from "@/lib/client-navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ClientSidebar } from "@/components/client-sidebar";
@@ -34,12 +35,8 @@ function AuthenticatedLayout() {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    try {
-      // Nothing about the last workspace or delegated context survives sign-out.
-      window.sessionStorage.removeItem("harmonious.workspace.active");
-    } catch {
-      /* storage unavailable — there is nothing to clear */
-    }
+    // Nothing about the last workspace, company or delegated context survives sign-out.
+    clearStoredClientContext();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
