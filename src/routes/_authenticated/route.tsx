@@ -1,5 +1,9 @@
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+
+import { OpsSidebar } from "@/components/ops-sidebar";
+import { getOperationsContext } from "@/lib/ops-access.functions";
 
 import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/app-origins";
@@ -72,11 +76,25 @@ function AuthenticatedLayout() {
 function Menu({ onSignOut }: { onSignOut: () => void }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { options, activeKind } = useClientWorkspace();
+  const loadOps = useServerFn(getOperationsContext);
+  const { data: ops } = useQuery({
+    queryKey: ["operations-context"],
+    queryFn: () => loadOps() as Promise<any>,
+    staleTime: 60_000,
+  });
 
   const onInternalPage = INTERNAL_PATH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
   const hasClientWorkspace = options.some((option) => option.surface === "client");
+
+  // Operations pages get the Operations menu, built from the permissions the
+  // backend resolved for this staff member. Everything else is unchanged until
+  // the remaining internal pages move across.
+  const inOperations = pathname === "/ops" || pathname.startsWith("/ops/");
+  if (inOperations && ops?.staff) {
+    return <OpsSidebar onSignOut={onSignOut} />;
+  }
 
   if (onInternalPage || !hasClientWorkspace || activeKind === "operations") {
     return <AppSidebar onSignOut={onSignOut} />;
