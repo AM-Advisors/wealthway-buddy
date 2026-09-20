@@ -220,16 +220,22 @@ export const getOpsClientTab = createServerFn({ method: "GET" })
     if (data.tab === "documents") {
       const funds = rows(await s.from("offerings").select("id").eq("client_id", data.id));
       const fundIds = funds.map((f: any) => f.id);
-      const docs = fundIds.length
+      const setupIds = fundIds.length
+        ? rows(await s.from("fund_setups").select("id").in("offering_id", fundIds)).map((r: any) => r.id)
+        : [];
+      const docs = setupIds.length
         ? rows(
             await s
               .from("fund_setup_documents")
-              .select("id, doc_type, file_name, status, created_at, setup_id")
+              .select("id, doc_type, title, status, created_at")
+              .in("setup_id", setupIds)
+              .order("created_at", { ascending: false })
               .limit(100),
           )
         : [];
       return { documents: docs };
     }
+
     if (data.tab === "tasks") {
       const funds = rows(await s.from("offerings").select("id").eq("client_id", data.id));
       const fundIds = funds.map((f: any) => f.id);
@@ -402,21 +408,23 @@ export const getOpsFundTab = createServerFn({ method: "GET" })
     }
 
     if (data.tab === "investments") {
-      const assets = rows(
-        await s
-          .from("fund_target_assets")
-          .select("id, name, asset_class, status, amount_cents")
-          .eq("offering_id", data.id)
-          .limit(100)
-          .then((r: any) => r)
-          .catch(() => ({ data: [], error: null })),
-      );
+      const setup = await s.from("fund_setups").select("id").eq("offering_id", data.id).maybeSingle();
+      const setupId = (setup as any)?.data?.id;
+      const assets = setupId
+        ? rows(
+            await s
+              .from("fund_target_assets")
+              .select("id, asset_name, issuer_name, security_type, purchase_amount_cents, closing_date, issuer_approval_status")
+              .eq("setup_id", setupId)
+              .limit(100),
+          )
+        : [];
       const valuations = rows(
         await s
           .from("asset_valuations")
-          .select("id, as_of_date, status, fair_value_cents")
+          .select("id, asset_name, valuation_date, status, value_cents")
           .eq("offering_id", data.id)
-          .order("as_of_date", { ascending: false })
+          .order("valuation_date", { ascending: false })
           .limit(20),
       );
       return { assets, valuations };
@@ -530,7 +538,7 @@ export const getOpsFundTab = createServerFn({ method: "GET" })
       const setup = await s.from("fund_setups").select("id").eq("offering_id", data.id).maybeSingle();
       const setupId = (setup as any)?.data?.id;
       const documents = setupId
-        ? rows(await s.from("fund_setup_documents").select("id, doc_type, file_name, status, created_at").eq("setup_id", setupId).order("created_at", { ascending: false }).limit(100))
+        ? rows(await s.from("fund_setup_documents").select("id, doc_type, title, status, created_at").eq("setup_id", setupId).order("created_at", { ascending: false }).limit(100))
         : [];
       return { documents };
     }
@@ -538,17 +546,24 @@ export const getOpsFundTab = createServerFn({ method: "GET" })
     const setup = await s.from("fund_setups").select("id").eq("offering_id", data.id).maybeSingle();
     const setupId = (setup as any)?.data?.id;
     const events = setupId
-      ? rows(await s.from("fund_setup_events").select("*").eq("setup_id", setupId).order("created_at", { ascending: false }).limit(50))
+      ? rows(
+          await s
+            .from("fund_setup_events")
+            .select("created_at, event, from_status, to_status, subject_table, actor_user_id, actor_role")
+            .eq("setup_id", setupId)
+            .order("created_at", { ascending: false })
+            .limit(50),
+        )
       : [];
-    const names = await namesFor(s, events.map((e: any) => e.actor_id ?? e.created_by));
+    const names = await namesFor(s, events.map((e: any) => e.actor_user_id));
     return {
       activity: activityFrom(events, (row) => ({
         at: row.created_at,
-        actor: names.get(row.actor_id ?? row.created_by) ?? "Harmonious",
+        actor: names.get(row.actor_user_id) ?? "Harmonious",
         capacity: row.actor_role ?? "staff",
-        action: row.event_type ?? row.kind ?? "event",
-        resource: "fund",
-        detail: { note: row.note ?? row.summary ?? null },
+        action: row.event,
+        resource: row.subject_table ?? "fund",
+        detail: { from: row.from_status, to: row.to_status },
       })),
     };
   });
@@ -682,12 +697,10 @@ export const getOpsInvestorTab = createServerFn({ method: "GET" })
       const docs = rows(
         await s
           .from("investor_documents")
-          .select("id, doc_type, file_name, status, created_at")
+          .select("id, doc_kind, file_name, review_status, uploaded_at")
           .eq("user_id", data.id)
-          .order("created_at", { ascending: false })
-          .limit(100)
-          .then((r: any) => r)
-          .catch(() => ({ data: [], error: null })),
+          .order("uploaded_at", { ascending: false })
+          .limit(100),
       );
       return { documents: docs };
     }
@@ -704,7 +717,7 @@ export const getOpsInvestorTab = createServerFn({ method: "GET" })
             s.from("accreditation_records").select("application_id, method, status, verified_at, expires_at").in("application_id", appIds),
           ])
         : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
-      // Only the operational summary: provider payloads and результат blobs stay behind their own controls.
+      // Only the operational summary: provider payloads and provider result blobs stay behind their own controls.
       return {
         applications,
         kyc: rows(kyc).map((k: any) => ({ applicationId: k.application_id, provider: k.provider, status: k.status, completedAt: k.completed_at, expiresAt: k.expired_at })),
@@ -713,25 +726,28 @@ export const getOpsInvestorTab = createServerFn({ method: "GET" })
       };
     }
 
-    const events = rows(
-      await s
-        .from("investor_onboarding_events")
-        .select("*")
-        .eq("investor_user_id", data.id)
-        .order("created_at", { ascending: false })
-        .limit(50)
-        .then((r: any) => r)
-        .catch(() => ({ data: [], error: null })),
-    );
-    const names = await namesFor(s, events.map((e: any) => e.actor_id ?? e.created_by));
+    const onboardingIds = rows(
+      await s.from("investor_onboardings").select("id").eq("investor_user_id", data.id).limit(100),
+    ).map((o: any) => o.id);
+    const events = onboardingIds.length
+      ? rows(
+          await s
+            .from("investor_onboarding_events")
+            .select("created_at, event, from_status, to_status, subject_table, actor_user_id, actor_role")
+            .in("onboarding_id", onboardingIds)
+            .order("created_at", { ascending: false })
+            .limit(50),
+        )
+      : [];
+    const names = await namesFor(s, events.map((e: any) => e.actor_user_id));
     return {
       activity: activityFrom(events, (row) => ({
         at: row.created_at,
-        actor: names.get(row.actor_id ?? row.created_by) ?? "Harmonious",
+        actor: names.get(row.actor_user_id) ?? "Harmonious",
         capacity: row.actor_role ?? "staff",
-        action: row.event_type ?? row.kind ?? "event",
-        resource: "investor onboarding",
-        detail: { note: row.note ?? null, stage: row.to_stage ?? null },
+        action: row.event,
+        resource: row.subject_table ?? "investor onboarding",
+        detail: { from: row.from_status, to: row.to_status },
       })),
     };
   });
@@ -855,17 +871,22 @@ export const getOpsCompanyTab = createServerFn({ method: "GET" })
     }
 
     const events = rows(
-      await s.from("ct_events").select("*").eq("company_id", data.id).order("created_at", { ascending: false }).limit(50),
+      await s
+        .from("ct_events")
+        .select("occurred_at, action, entity_type, reason, actor_id")
+        .eq("company_id", data.id)
+        .order("occurred_at", { ascending: false })
+        .limit(50),
     );
-    const names = await namesFor(s, events.map((e: any) => e.actor_id ?? e.created_by));
+    const names = await namesFor(s, events.map((e: any) => e.actor_id));
     return {
       activity: activityFrom(events, (row) => ({
-        at: row.created_at,
-        actor: names.get(row.actor_id ?? row.created_by) ?? "Harmonious",
-        capacity: row.actor_role ?? "staff",
-        action: row.event_type ?? row.kind ?? "event",
-        resource: "company",
-        detail: { note: row.note ?? row.summary ?? null },
+        at: row.occurred_at,
+        actor: names.get(row.actor_id) ?? "Harmonious",
+        capacity: "staff",
+        action: row.action,
+        resource: row.entity_type ?? "company",
+        detail: { reason: row.reason },
       })),
     };
   });
