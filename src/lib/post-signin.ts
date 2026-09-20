@@ -1,29 +1,37 @@
-import { supabase } from "@/integrations/supabase/client";
+import { resolveSession } from "@/lib/session.functions";
+import { safeInternalPath } from "@/lib/app-origins";
 
-/** Where a person belongs right after signing in. */
-export async function destinationAfterSignIn(userId: string): Promise<string> {
+/**
+ * Where a person belongs right after signing in.
+ *
+ * The answer comes from the server resolver, which reads the authoritative
+ * relationship records. The browser asks; it never decides. If the resolver
+ * cannot be reached we send people to their own dashboard rather than
+ * guessing at anything privileged.
+ */
+export async function destinationAfterSignIn(
+  _userId: string,
+  intended?: string | null,
+): Promise<string> {
   try {
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    const list = (roles ?? []).map((r: any) => r.role as string);
-    if (list.includes("admin")) return "/admin";
-    if (list.includes("operations")) return "/ops";
-    if (list.includes("fund_manager")) return "/manager";
+    const result: any = await resolveSession({
+      data: { intended: intended ? safeInternalPath(intended, "") : null },
+    });
+    return safeInternalPath(result?.destination, "/dashboard");
   } catch {
-    /* fall through to the investor paths */
+    return "/dashboard";
   }
+}
 
+/** Reads a "where I was heading" path from the current URL, safely. */
+export function intendedPathFromLocation(search: string): string | null {
   try {
-    const { data } = await supabase
-      .from("investor_applications")
-      .select("id")
-      .eq("user_id", userId)
-      .limit(1);
-    if (data && data.length > 0) return "/dashboard";
+    const params = new URLSearchParams(search);
+    const next = params.get("next") ?? params.get("redirect");
+    if (!next) return null;
+    const safe = safeInternalPath(next, "");
+    return safe || null;
   } catch {
-    /* fall through */
+    return null;
   }
-  return "/onboarding/kyc";
 }

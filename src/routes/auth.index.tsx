@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { consumeOAuthReturnError, startGoogleOAuth } from "@/lib/google-oauth";
 
 import { useAuth } from "@/hooks/useAuth";
-import { destinationAfterSignIn } from "@/lib/post-signin";
+import { destinationAfterSignIn, intendedPathFromLocation } from "@/lib/post-signin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +41,9 @@ function SignInPage() {
     if (loading || !session) return;
     let active = true;
     (async () => {
-      const to = await destinationAfterSignIn(session.user.id);
+      const intended =
+        typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
+      const to = await destinationAfterSignIn(session.user.id, intended);
       if (active) navigate({ to: to as never });
     })();
     return () => {

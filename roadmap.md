@@ -62,3 +62,14 @@
 - [x] Phase C: capital calls, funding, cash receipt and investor closing — lifecycle derived from posted accounting, never UI state
 - [x] Phase D: distributions, return of capital, withholding and outbound money movement — entitlements from approved economics, withholding from tax documentation, verified destinations with step-up, independent notice and cooling-off, manager + two-person Harmonious approval, provider confirmation correlated not trusted, reconciliation and posted GL before any capital account moves, versioned notices, full audit trail
 - [ ] Delegated transaction authority — deliberately not enabled
+
+## Platform consolidation (client app + operations console)
+- [x] Phase 0: architecture audit report (routes, navigation, authentication, domains, sources of truth, risks, 8 stages)
+- [x] Stage 1: domain and authentication foundation — configured client/ops origins with open-redirect-safe paths, one server-side post-login resolver (relationships, workspaces, requirements, destination), both sign-in pages routed through it, deep link preserved through sign-in, 24 new tests
+- [ ] Stage 2: client navigation shell (capability-driven, per client type)
+- [ ] Stage 3: operations navigation shell (13 sections)
+- [ ] Stage 4: Client 360 and Fund 360
+- [ ] Stage 5: universal requirement-driven onboarding
+- [ ] Stage 6: authoritative synchronisation cleanup
+- [ ] Stage 7: legacy route and domain migration (75 hard-coded addresses)
+- [ ] Stage 8: security regression (22 proofs)

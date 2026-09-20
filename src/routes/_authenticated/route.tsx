@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-
 import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
+import { safeInternalPath } from "@/lib/app-origins";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PolicyGate } from "@/components/policy-gate";
 import { PortalGate } from "@/components/portal-gate";
@@ -11,9 +12,13 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) {
+      // Remember where they were heading so the deep link survives signing in.
+      const next = safeInternalPath(location.href, "");
+      throw redirect({ to: "/auth", search: (next ? { next } : {}) as never });
+    }
     return { user: data.user };
   },
   component: AuthenticatedLayout,
