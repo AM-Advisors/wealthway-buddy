@@ -70,7 +70,7 @@
 - [x] Stage 2 audit: signature-block visibility fixed, rate card/catalogue/vendor/eligibility reads tightened, trigger functions no longer callable, remembered browser context cleared on switch and sign-out; 736 tests
 - [x] Stage 3 step 1: Operations permission model (13 areas x see/prepare/review/approve/execute), staff-only entry, no-self-approval rule, 13 tests
 - [x] Stage 3 step 2: Operations menu at /ops, built from resolved permissions
-- [ ] Stage 3 step 3: Client / Fund / Investor / Company record pages assembled from existing pages
+- [x] Stage 3 step 3: Client / Fund / Investor / Company record pages assembled from existing pages
 - [ ] Stage 3 step 4: Operations home as a work queue from authoritative workflow state
 - [ ] Stage 3 step 5: move Operations to its own address, old addresses redirect (needs the ops address live)
 - [ ] Stage 4: Client 360 and Fund 360

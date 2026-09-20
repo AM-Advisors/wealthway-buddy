@@ -124,10 +124,10 @@ export type OpsSection = { id: OpsArea; title: string; url: string; icon: string
 
 /** The Operations menu: destinations, in the order the work happens. */
 const SECTIONS: OpsSection[] = [
-  { id: "clients", title: "Clients", url: "/admin/contracts", icon: "briefcase" },
-  { id: "funds", title: "Funds & SPVs", url: "/admin/funds", icon: "building" },
-  { id: "companies", title: "Companies", url: "/admin/client-cap-tables", icon: "table" },
-  { id: "investors", title: "Investors", url: "/admin/investors", icon: "people" },
+  { id: "clients", title: "Clients", url: "/ops/clients", icon: "briefcase" },
+  { id: "funds", title: "Funds & SPVs", url: "/ops/funds", icon: "building" },
+  { id: "companies", title: "Companies", url: "/ops/companies", icon: "table" },
+  { id: "investors", title: "Investors", url: "/ops/investors", icon: "people" },
   { id: "onboarding", title: "Onboarding & checks", url: "/admin/investor-onboarding", icon: "check" },
   { id: "capital", title: "Capital & banking", url: "/ops/banking", icon: "money" },
   { id: "accounting", title: "Accounting", url: "/ops/accounting", icon: "ledger" },
