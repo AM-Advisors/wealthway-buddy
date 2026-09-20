@@ -241,7 +241,7 @@ export function legacyClientRedirect(path: string): string | null {
 /** The banner text shown while acting for someone else. */
 export function delegationBanner(input: {
   principalName: string;
-  organizationName?: string | null;
+  organizationName?: string | null | undefined;
 }): { acting: string; through: string | null; exitLabel: string; exitUrl: string } {
   return {
     acting: `Acting on behalf of ${input.principalName}`,
