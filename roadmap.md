@@ -67,7 +67,8 @@
 - [x] Phase 0: architecture audit report (routes, navigation, authentication, domains, sources of truth, risks, 8 stages)
 - [x] Stage 1: domain and authentication foundation — configured client/ops origins with open-redirect-safe paths, one server-side post-login resolver (relationships, workspaces, requirements, destination), both sign-in pages routed through it, deep link preserved through sign-in, 24 new tests
 - [x] Stage 2: client navigation shell — client shell with workspace switcher, per-relationship menus (investor/manager/company/professional), contextual investment and fund tabs, setup card, delegated banner, new Activity/Tax/Funds/Capital pages, 64 new tests
-- [ ] Stage 3: operations navigation shell (13 sections)
+- [x] Stage 2 audit: signature-block visibility fixed, rate card/catalogue/vendor/eligibility reads tightened, trigger functions no longer callable, remembered browser context cleared on switch and sign-out; 736 tests
+- [ ] Stage 3: operations record-centric shell — proposed, awaiting approval
 - [ ] Stage 4: Client 360 and Fund 360
 - [ ] Stage 5: universal requirement-driven onboarding
 - [ ] Stage 6: authoritative synchronisation cleanup

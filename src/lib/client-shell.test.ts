@@ -6,6 +6,7 @@ import {
   clientNavigation,
   contextToClear,
   menuForContext,
+  storageKeysToClear,
   type ClientNavLink,
 } from "@/lib/client-navigation";
 import { nextRequirementPath } from "@/lib/session-resolution";
@@ -63,6 +64,21 @@ describe("stale context", () => {
       "query-cache",
       "harmonious.workspace.active",
       "delegated-context",
+    ]);
+  });
+
+  it("forgets the workspace and the chosen company, keeping only screen layout", () => {
+    const remembered = [
+      "harmonious.workspace.active",
+      "harmonious.captable.company",
+      "harmonious.lastTestEmail.abc",
+      "harmonious.sidebar.openGroups",
+      "theme",
+    ];
+    expect(storageKeysToClear(remembered)).toEqual([
+      "harmonious.workspace.active",
+      "harmonious.captable.company",
+      "harmonious.lastTestEmail.abc",
     ]);
   });
 });
