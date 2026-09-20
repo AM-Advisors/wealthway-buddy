@@ -228,7 +228,15 @@ import { Route as AuthenticatedFundOfferingIdDocumentsRouteImport } from './rout
 import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes/_authenticated/fund.$offeringId.funding'
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
+import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
+import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
+import { Route as AuthenticatedOpsCompaniesIndexRouteImport } from './routes/_authenticated/ops.companies.index'
+import { Route as AuthenticatedOpsCompaniesCompanyIdRouteImport } from './routes/_authenticated/ops.companies.$companyId'
+import { Route as AuthenticatedOpsFundFundIdRouteImport } from './routes/_authenticated/ops.fund.$fundId'
+import { Route as AuthenticatedOpsFundsIndexRouteImport } from './routes/_authenticated/ops.funds.index'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
+import { Route as AuthenticatedOpsInvestorsIndexRouteImport } from './routes/_authenticated/ops.investors.index'
+import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './routes/_authenticated/ops.investors.$investorId'
 import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from './routes/_authenticated/professional.acting.$delegationId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
@@ -1496,10 +1504,58 @@ const AuthenticatedManagerFundFundIdRoute =
     path: '/manager/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsClientsIndexRoute =
+  AuthenticatedOpsClientsIndexRouteImport.update({
+    id: '/ops/clients/',
+    path: '/ops/clients/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsClientsClientIdRoute =
+  AuthenticatedOpsClientsClientIdRouteImport.update({
+    id: '/ops/clients/$clientId',
+    path: '/ops/clients/$clientId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsCompaniesIndexRoute =
+  AuthenticatedOpsCompaniesIndexRouteImport.update({
+    id: '/ops/companies/',
+    path: '/ops/companies/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsCompaniesCompanyIdRoute =
+  AuthenticatedOpsCompaniesCompanyIdRouteImport.update({
+    id: '/ops/companies/$companyId',
+    path: '/ops/companies/$companyId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsFundFundIdRoute =
+  AuthenticatedOpsFundFundIdRouteImport.update({
+    id: '/ops/fund/$fundId',
+    path: '/ops/fund/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsFundsIndexRoute =
+  AuthenticatedOpsFundsIndexRouteImport.update({
+    id: '/ops/funds/',
+    path: '/ops/funds/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFundsFundIdRoute =
   AuthenticatedOpsFundsFundIdRouteImport.update({
     id: '/ops/funds/$fundId',
     path: '/ops/funds/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsInvestorsIndexRoute =
+  AuthenticatedOpsInvestorsIndexRouteImport.update({
+    id: '/ops/investors/',
+    path: '/ops/investors/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsInvestorsInvestorIdRoute =
+  AuthenticatedOpsInvestorsInvestorIdRouteImport.update({
+    id: '/ops/investors/$investorId',
+    path: '/ops/investors/$investorId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProfessionalActingDelegationIdRoute =
@@ -1820,7 +1876,11 @@ export interface FileRoutesByFullPath {
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
+  '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
@@ -1835,6 +1895,10 @@ export interface FileRoutesByFullPath {
   '/client/agreements/': typeof AuthenticatedClientAgreementsIndexRoute
   '/client/cap-table/': typeof AuthenticatedClientCapTableIndexRoute
   '/client/services/': typeof AuthenticatedClientServicesIndexRoute
+  '/ops/clients/': typeof AuthenticatedOpsClientsIndexRoute
+  '/ops/companies/': typeof AuthenticatedOpsCompaniesIndexRoute
+  '/ops/funds/': typeof AuthenticatedOpsFundsIndexRoute
+  '/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
@@ -2053,7 +2117,11 @@ export interface FileRoutesByTo {
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
+  '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
+  '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
@@ -2068,6 +2136,10 @@ export interface FileRoutesByTo {
   '/client/agreements': typeof AuthenticatedClientAgreementsIndexRoute
   '/client/cap-table': typeof AuthenticatedClientCapTableIndexRoute
   '/client/services': typeof AuthenticatedClientServicesIndexRoute
+  '/ops/clients': typeof AuthenticatedOpsClientsIndexRoute
+  '/ops/companies': typeof AuthenticatedOpsCompaniesIndexRoute
+  '/ops/funds': typeof AuthenticatedOpsFundsIndexRoute
+  '/ops/investors': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
@@ -2294,7 +2366,11 @@ export interface FileRoutesById {
   '/_authenticated/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
+  '/_authenticated/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/_authenticated/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
@@ -2309,6 +2385,10 @@ export interface FileRoutesById {
   '/_authenticated/client/agreements/': typeof AuthenticatedClientAgreementsIndexRoute
   '/_authenticated/client/cap-table/': typeof AuthenticatedClientCapTableIndexRoute
   '/_authenticated/client/services/': typeof AuthenticatedClientServicesIndexRoute
+  '/_authenticated/ops/clients/': typeof AuthenticatedOpsClientsIndexRoute
+  '/_authenticated/ops/companies/': typeof AuthenticatedOpsCompaniesIndexRoute
+  '/_authenticated/ops/funds/': typeof AuthenticatedOpsFundsIndexRoute
+  '/_authenticated/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/_authenticated/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
@@ -2535,7 +2615,11 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
+    | '/ops/clients/$clientId'
+    | '/ops/companies/$companyId'
+    | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
+    | '/ops/investors/$investorId'
     | '/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
@@ -2550,6 +2634,10 @@ export interface FileRouteTypes {
     | '/client/agreements/'
     | '/client/cap-table/'
     | '/client/services/'
+    | '/ops/clients/'
+    | '/ops/companies/'
+    | '/ops/funds/'
+    | '/ops/investors/'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/manager/fund/$fundId/assets'
@@ -2768,7 +2856,11 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
+    | '/ops/clients/$clientId'
+    | '/ops/companies/$companyId'
+    | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
+    | '/ops/investors/$investorId'
     | '/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
@@ -2783,6 +2875,10 @@ export interface FileRouteTypes {
     | '/client/agreements'
     | '/client/cap-table'
     | '/client/services'
+    | '/ops/clients'
+    | '/ops/companies'
+    | '/ops/funds'
+    | '/ops/investors'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/manager/fund/$fundId/assets'
@@ -3008,7 +3104,11 @@ export interface FileRouteTypes {
     | '/_authenticated/fund/$offeringId/funding'
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund/$fundId'
+    | '/_authenticated/ops/clients/$clientId'
+    | '/_authenticated/ops/companies/$companyId'
+    | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
+    | '/_authenticated/ops/investors/$investorId'
     | '/_authenticated/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
@@ -3023,6 +3123,10 @@ export interface FileRouteTypes {
     | '/_authenticated/client/agreements/'
     | '/_authenticated/client/cap-table/'
     | '/_authenticated/client/services/'
+    | '/_authenticated/ops/clients/'
+    | '/_authenticated/ops/companies/'
+    | '/_authenticated/ops/funds/'
+    | '/_authenticated/ops/investors/'
     | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
     | '/_authenticated/manager/fund/$fundId/assets'
@@ -4605,11 +4709,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/clients/': {
+      id: '/_authenticated/ops/clients/'
+      path: '/ops/clients'
+      fullPath: '/ops/clients/'
+      preLoaderRoute: typeof AuthenticatedOpsClientsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/clients/$clientId': {
+      id: '/_authenticated/ops/clients/$clientId'
+      path: '/ops/clients/$clientId'
+      fullPath: '/ops/clients/$clientId'
+      preLoaderRoute: typeof AuthenticatedOpsClientsClientIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/companies/': {
+      id: '/_authenticated/ops/companies/'
+      path: '/ops/companies'
+      fullPath: '/ops/companies/'
+      preLoaderRoute: typeof AuthenticatedOpsCompaniesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/companies/$companyId': {
+      id: '/_authenticated/ops/companies/$companyId'
+      path: '/ops/companies/$companyId'
+      fullPath: '/ops/companies/$companyId'
+      preLoaderRoute: typeof AuthenticatedOpsCompaniesCompanyIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/fund/$fundId': {
+      id: '/_authenticated/ops/fund/$fundId'
+      path: '/ops/fund/$fundId'
+      fullPath: '/ops/fund/$fundId'
+      preLoaderRoute: typeof AuthenticatedOpsFundFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/funds/': {
+      id: '/_authenticated/ops/funds/'
+      path: '/ops/funds'
+      fullPath: '/ops/funds/'
+      preLoaderRoute: typeof AuthenticatedOpsFundsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/funds/$fundId': {
       id: '/_authenticated/ops/funds/$fundId'
       path: '/ops/funds/$fundId'
       fullPath: '/ops/funds/$fundId'
       preLoaderRoute: typeof AuthenticatedOpsFundsFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/investors/': {
+      id: '/_authenticated/ops/investors/'
+      path: '/ops/investors'
+      fullPath: '/ops/investors/'
+      preLoaderRoute: typeof AuthenticatedOpsInvestorsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/investors/$investorId': {
+      id: '/_authenticated/ops/investors/$investorId'
+      path: '/ops/investors/$investorId'
+      fullPath: '/ops/investors/$investorId'
+      preLoaderRoute: typeof AuthenticatedOpsInvestorsInvestorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/professional/acting/$delegationId': {
@@ -5092,9 +5252,17 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundOfferingIdFundingRoute: typeof AuthenticatedFundOfferingIdFundingRoute
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
+  AuthenticatedOpsCompaniesCompanyIdRoute: typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
+  AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
   AuthenticatedAdminContractsIndexRoute: typeof AuthenticatedAdminContractsIndexRoute
   AuthenticatedAdminEntitiesIndexRoute: typeof AuthenticatedAdminEntitiesIndexRoute
+  AuthenticatedOpsClientsIndexRoute: typeof AuthenticatedOpsClientsIndexRoute
+  AuthenticatedOpsCompaniesIndexRoute: typeof AuthenticatedOpsCompaniesIndexRoute
+  AuthenticatedOpsFundsIndexRoute: typeof AuthenticatedOpsFundsIndexRoute
+  AuthenticatedOpsInvestorsIndexRoute: typeof AuthenticatedOpsInvestorsIndexRoute
   AuthenticatedAdminClientsClientIdEntitiesRoute: typeof AuthenticatedAdminClientsClientIdEntitiesRoute
 }
 
@@ -5273,9 +5441,19 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundBankingFundIdRoute,
   AuthenticatedManagerFundFundIdRoute:
     AuthenticatedManagerFundFundIdRouteWithChildren,
+  AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
+  AuthenticatedOpsCompaniesCompanyIdRoute:
+    AuthenticatedOpsCompaniesCompanyIdRoute,
+  AuthenticatedOpsFundFundIdRoute: AuthenticatedOpsFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
+  AuthenticatedOpsInvestorsInvestorIdRoute:
+    AuthenticatedOpsInvestorsInvestorIdRoute,
   AuthenticatedAdminContractsIndexRoute: AuthenticatedAdminContractsIndexRoute,
   AuthenticatedAdminEntitiesIndexRoute: AuthenticatedAdminEntitiesIndexRoute,
+  AuthenticatedOpsClientsIndexRoute: AuthenticatedOpsClientsIndexRoute,
+  AuthenticatedOpsCompaniesIndexRoute: AuthenticatedOpsCompaniesIndexRoute,
+  AuthenticatedOpsFundsIndexRoute: AuthenticatedOpsFundsIndexRoute,
+  AuthenticatedOpsInvestorsIndexRoute: AuthenticatedOpsInvestorsIndexRoute,
   AuthenticatedAdminClientsClientIdEntitiesRoute:
     AuthenticatedAdminClientsClientIdEntitiesRoute,
 }
