@@ -66,7 +66,7 @@
 ## Platform consolidation (client app + operations console)
 - [x] Phase 0: architecture audit report (routes, navigation, authentication, domains, sources of truth, risks, 8 stages)
 - [x] Stage 1: domain and authentication foundation — configured client/ops origins with open-redirect-safe paths, one server-side post-login resolver (relationships, workspaces, requirements, destination), both sign-in pages routed through it, deep link preserved through sign-in, 24 new tests
-- [ ] Stage 2: client navigation shell (capability-driven, per client type)
+- [x] Stage 2: client navigation shell — client shell with workspace switcher, per-relationship menus (investor/manager/company/professional), contextual investment and fund tabs, setup card, delegated banner, new Activity/Tax/Funds/Capital pages, 64 new tests
 - [ ] Stage 3: operations navigation shell (13 sections)
 - [ ] Stage 4: Client 360 and Fund 360
 - [ ] Stage 5: universal requirement-driven onboarding
