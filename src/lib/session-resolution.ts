@@ -8,6 +8,8 @@
  * privilege.
  */
 
+import { safeInternalPath } from "@/lib/app-origins";
+
 export type StaffAuthorization = {
   /** Explicitly recorded, currently active Harmonious staff authority. */
   active: boolean;
