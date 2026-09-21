@@ -184,7 +184,7 @@ describe("the queue only reads authoritative state", () => {
     const before = await queue.workQueue(contextFor(STAFF_ADMIN));
     expect(before.items.some((i) => i.id === "capital-call:call-a")).toBe(true);
 
-    const call = tables.capital_calls[0];
+    const call = tables["capital_calls"]![0];
     const original = call.status;
     call.status = "published";
     const after = await queue.workQueue(contextFor(STAFF_ADMIN));
