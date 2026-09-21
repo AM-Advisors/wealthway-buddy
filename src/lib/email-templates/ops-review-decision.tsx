@@ -40,7 +40,7 @@ function OpsReviewDecision({
   decision = 'approved',
   note = '',
   reviewer = 'The operations team',
-  portalUrl = 'https://onboard.harmonious.co/admin',
+  portalUrl = 'https://ops.harmonious.co/admin',
 }: OpsReviewDecisionProps) {
   const shape = DECISIONS[decision] ?? DECISIONS['updated']!
 

@@ -31,7 +31,7 @@ function DocumentSigned({
   documentTitle = 'Fund document',
   signedAt = '',
   commitmentCents = 0,
-  portalUrl = 'https://onboard.harmonious.co/manager',
+  portalUrl = 'https://app.harmonious.co/manager',
 }: DocumentSignedProps) {
   const label = { color: '#6b7a90', fontSize: '12px', letterSpacing: '0.04em', margin: '0 0 2px', textTransform: 'uppercase' as const }
   const value = { color: '#221F20', fontSize: '15px', fontWeight: 600, margin: '0 0 16px' }
@@ -96,6 +96,6 @@ export const template: TemplateEntry = {
     documentTitle: 'Subscription Agreement',
     signedAt: new Date().toISOString(),
     commitmentCents: 25000000,
-    portalUrl: 'https://onboard.harmonious.co/manager',
+    portalUrl: 'https://app.harmonious.co/manager',
   },
 }

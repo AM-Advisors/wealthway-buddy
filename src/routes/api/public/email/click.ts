@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/public/email/click")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const token = url.searchParams.get("t") ?? "";
-        const fallback = "https://onboard.harmonious.co/dashboard";
+        const fallback = "https://app.harmonious.co/dashboard";
         if (!token) return Response.redirect(fallback, 302);
 
         try {

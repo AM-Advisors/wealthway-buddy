@@ -221,7 +221,7 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
           documentTitle: doc?.title ?? "Fund document",
           signedAt,
           commitmentCents: application.commitment_cents ?? 0,
-          portalUrl: `https://onboard.harmonious.co/manager/${applicationId}`,
+          portalUrl: `https://app.harmonious.co/manager/${applicationId}`,
         },
         idempotencyKey: `doc-signed-${signatureId}-${manager.email}`,
       }).catch((e) => console.error("[box-sign] manager email failed", e));

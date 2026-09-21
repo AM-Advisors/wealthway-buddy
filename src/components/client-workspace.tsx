@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { clearStoredClientContext } from "@/lib/client-context-storage";
+import { configuredOrigins } from "@/lib/app-origins";
+import { opsLeavesCurrentHost } from "@/lib/host-routing";
 import { enterWorkspace, resolveSession } from "@/lib/session.functions";
 import { workspaceOptions, type WorkspaceOption } from "@/lib/client-navigation";
 import type { WorkspaceKind } from "@/lib/session-resolution";
@@ -72,15 +74,24 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
     setActiveId(readStored());
   }, []);
 
-  const options = useMemo(
-    // The operations entry stays inside this application until the operations
-    // console has its own address; its authorization is unchanged either way.
-    () =>
-      workspaceOptions((data?.workspaces ?? []) as never).map((option) =>
-        option.surface === "ops" ? { ...option, href: option.path, external: false } : option,
-      ),
-    [data?.workspaces],
-  );
+  const options = useMemo(() => {
+    const env = {
+      CLIENT_APP_ORIGIN: import.meta.env["VITE_CLIENT_APP_ORIGIN"] as string | undefined,
+      OPS_APP_ORIGIN: import.meta.env["VITE_OPS_APP_ORIGIN"] as string | undefined,
+    };
+    const opsOrigin = configuredOrigins(env).ops;
+    const currentHost = typeof window === "undefined" ? "" : window.location.host;
+    // Harmonious Operations lives at its own address. On a preview or local
+    // address, where both applications are served together, it stays in place.
+    // Either way the entry only appears because the server resolved it, and
+    // opening it grants nothing on its own.
+    const leaves = opsLeavesCurrentHost(currentHost, opsOrigin);
+    return workspaceOptions((data?.workspaces ?? []) as never, env).map((option) =>
+      option.surface === "ops" && !leaves
+        ? { ...option, href: option.path, external: false }
+        : option,
+    );
+  }, [data?.workspaces]);
 
   const resolvedActive = useMemo(() => {
     const stored = options.find((o) => o.id === activeId);
@@ -102,9 +113,17 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
       // Nothing from the previous workspace should linger.
       await queryClient.cancelQueries();
       queryClient.clear();
+      const option = options.find((o) => o.id === workspaceId);
+      // Harmonious Operations is a separate application at its own address.
+      // Leaving for it carries no permission with it; that address authorizes
+      // the person again from their staff records.
+      if (option?.external) {
+        window.location.assign(option.href);
+        return;
+      }
       navigate({ to: result.path as never });
     },
-    [enter, navigate, queryClient],
+    [enter, navigate, options, queryClient],
   );
 
   const clearWorkspace = useCallback(() => {

@@ -281,7 +281,7 @@ export const maybeSendClientWelcome = createServerFn({ method: "POST" })
       const email = profile?.email as string | undefined;
       if (!email) return { sent: false as const, reason: "no_email" as const };
 
-      const origin = process.env["SITE_URL"] || "https://onboard.harmonious.co";
+      const origin = process.env["SITE_URL"] || "https://app.harmonious.co";
       const result = await sendTemplateEmail("client-welcome", email, {
         templateData: {
           contactName: (profile?.legal_name as string | undefined) || "there",

@@ -21,7 +21,7 @@ function ManagerAlert({
   intro = 'There is new activity on one of your funds.',
   offeringName = 'your fund',
   details = [],
-  portalUrl = 'https://onboard.harmonious.co/manager',
+  portalUrl = 'https://app.harmonious.co/manager',
 }: ManagerAlertProps) {
   const label = {
     color: '#6b7a90',
@@ -133,6 +133,6 @@ export const template = {
       { label: 'Amount', value: '$250,000' },
       { label: 'Sending bank', value: 'First National — ****4821' },
     ],
-    portalUrl: 'https://onboard.harmonious.co/manager',
+    portalUrl: 'https://app.harmonious.co/manager',
   },
 } satisfies TemplateEntry

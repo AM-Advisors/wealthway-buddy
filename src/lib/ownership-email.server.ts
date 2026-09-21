@@ -3,7 +3,7 @@
 // figures we told each investor are kept on their cap position row, so nobody
 // is emailed twice about the same numbers.
 
-const PORTAL_ORIGIN = "https://onboard.harmonious.co";
+const PORTAL_ORIGIN = "https://app.harmonious.co";
 
 function money(cents: number | null | undefined) {
   if (cents === null || cents === undefined) return undefined;

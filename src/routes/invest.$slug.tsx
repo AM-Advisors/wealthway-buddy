@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const SITE = "https://onboard.harmonious.co";
+const SITE = "https://app.harmonious.co";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;

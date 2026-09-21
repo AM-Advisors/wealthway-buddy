@@ -72,7 +72,9 @@
 - [x] Stage 3 step 2: Operations menu at /ops, built from resolved permissions
 - [x] Stage 3 step 3: Client / Fund / Investor / Company record pages assembled from existing pages
 - [x] Stage 3 step 4: Operations home as a work queue from authoritative workflow state
-- [ ] Stage 3 step 5: move Operations to its own address, old addresses redirect (needs the ops address live)
+- [x] Stage 3 step 5 (Stage 3.5): Operations canonicalised to ops.harmonious.co, client to app.harmonious.co, old
+      addresses forwarded per path, sign-in never returns a non-staff person to Operations, 28 tests
+      — remaining: DNS, hosting and Google/auth callback configuration must be done outside the code
 - [ ] Stage 4: Client 360 and Fund 360
 - [ ] Stage 5: universal requirement-driven onboarding
 - [ ] Stage 6: authoritative synchronisation cleanup

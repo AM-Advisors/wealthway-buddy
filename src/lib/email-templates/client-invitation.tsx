@@ -31,8 +31,8 @@ function ClientInvitation({
   roleLabel = 'Client contact',
   invitedByName = 'The Harmonious team',
   note = '',
-  passwordUrl = 'https://onboard.harmonious.co/reset-password',
-  signInUrl = 'https://onboard.harmonious.co/client-login',
+  passwordUrl = 'https://app.harmonious.co/reset-password',
+  signInUrl = 'https://app.harmonious.co/client-login',
   canApprove = false,
 }: ClientInvitationProps) {
   const label = {

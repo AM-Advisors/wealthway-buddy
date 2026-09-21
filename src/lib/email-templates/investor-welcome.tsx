@@ -182,8 +182,8 @@ export const template = {
   previewData: {
     investorName: 'Jane Doe',
     offeringName: 'Harmonious Growth Fund II',
-    portalUrl: 'https://onboard.harmonious.co/portal',
-    diligenceUrl: 'https://onboard.harmonious.co/diligence/4590531e-1973-4e0d-b1df-81bafb17c2ae',
+    portalUrl: 'https://app.harmonious.co/portal',
+    diligenceUrl: 'https://app.harmonious.co/diligence/4590531e-1973-4e0d-b1df-81bafb17c2ae',
     commitment: '$250,000',
     reviewerName: 'the fund team',
   },

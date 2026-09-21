@@ -2,7 +2,7 @@
 // application is approved, with the fund's due diligence room link and the
 // next steps. Recorded on the application so it never sends twice.
 
-const PORTAL_ORIGIN = "https://onboard.harmonious.co";
+const PORTAL_ORIGIN = "https://app.harmonious.co";
 
 function money(cents: number | null | undefined) {
   if (cents === null || cents === undefined) return undefined;

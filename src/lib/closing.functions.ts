@@ -281,7 +281,7 @@ export const confirmClosing = createServerFn({ method: "POST" })
               investorName: profile.legal_name ?? "Investor",
               subject: `Your investment has closed — ${offering?.name ?? "your fund"}`,
               offeringName: offering?.name ?? "your fund",
-              body: `We have received your funds in full and your investment closed on ${data.closing_date}.\n\nAmount received: ${amount}\n\nYour closing date and final documents are now in your portal at https://onboard.harmonious.co/dashboard.${
+              body: `We have received your funds in full and your investment closed on ${data.closing_date}.\n\nAmount received: ${amount}\n\nYour closing date and final documents are now in your portal at https://app.harmonious.co/dashboard.${
                 note ? `\n\nNote from the team: ${note}` : ""
               }`,
             },

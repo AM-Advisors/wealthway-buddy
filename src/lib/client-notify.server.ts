@@ -10,7 +10,7 @@ const ADMIN_CLIENT_ROLES = [
   "client_compliance",
 ];
 
-const PORTAL_BASE = "https://onboard.harmonious.co";
+const PORTAL_BASE = "https://app.harmonious.co";
 
 export interface ClientAlert {
   headline: string;

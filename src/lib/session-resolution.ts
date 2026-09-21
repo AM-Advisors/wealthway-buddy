@@ -8,6 +8,8 @@
  * privilege.
  */
 
+import { safeInternalPath } from "@/lib/app-origins";
+
 export type StaffAuthorization = {
   /** Explicitly recorded, currently active Harmonious staff authority. */
   active: boolean;
@@ -156,12 +158,32 @@ export function nextRequirementPath(requirements: string[]): string | null {
  * Order: an intended destination they were sent to, then an outstanding
  * requirement, then their default workspace, then onboarding.
  */
+/** Sections that only Harmonious staff may be returned to after signing in. */
+const INTERNAL_DESTINATION_PREFIXES = ["/ops", "/admin", "/staff"];
+
+export function isInternalDestination(path: string): boolean {
+  return INTERNAL_DESTINATION_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+}
+
 export function resolveDestination(
   facts: RelationshipFacts,
   intended?: string | null,
-): { path: string; reason: "intended" | "requirement" | "workspace" | "onboarding" } {
-  if (intended && intended.startsWith("/") && !intended.startsWith("//")) {
-    return { path: intended, reason: "intended" };
+): { path: string; reason: "intended" | "requirement" | "workspace" | "onboarding" | "denied" } {
+  // Anything that could leave Harmonious — an absolute address, a
+  // protocol-relative path, a backslash trick, an encoded scheme — is discarded
+  // here rather than trusted because it arrived in a link.
+  const safe = intended ? safeInternalPath(intended, "") : "";
+  if (safe) {
+    // Someone who is not Harmonious staff is never returned to an Operations
+    // address, however they arrived at it. They go to their own part of the
+    // platform instead.
+    if (isInternalDestination(safe) && !hasOperationsAccess(facts)) {
+      const own = defaultWorkspace(facts);
+      return { path: own ? own.path : "/home", reason: "denied" };
+    }
+    return { path: safe, reason: "intended" };
   }
   const requirement = nextRequirementPath(facts.outstandingRequirements);
   if (requirement) return { path: requirement, reason: "requirement" };

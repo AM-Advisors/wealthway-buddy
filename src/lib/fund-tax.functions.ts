@@ -195,7 +195,7 @@ export const uploadFundTaxDocument = createServerFn({ method: "POST" })
           fundName: ((offering as any)?.name as string) ?? "A fund",
           detail: data.fileName,
           raisedBy: who.name,
-          portalUrl: "https://onboard.harmonious.co/ops/tax-documents",
+          portalUrl: "https://ops.harmonious.co/ops/tax-documents",
         },
         idempotencyKey: `ops-tax-${(inserted as any).id}`,
       });

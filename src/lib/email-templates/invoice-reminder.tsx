@@ -36,7 +36,7 @@ function InvoiceReminder({
   dueDate = '',
   timing = 'due soon',
   overdue = false,
-  payUrl = 'https://onboard.harmonious.co/client/invoices',
+  payUrl = 'https://app.harmonious.co/client/invoices',
 }: InvoiceReminderProps) {
   const label = {
     color: '#6b7a90',
@@ -175,6 +175,6 @@ export const template = {
     dueDate: '2026-10-11',
     timing: 'due in 3 days',
     overdue: false,
-    payUrl: 'https://onboard.harmonious.co/client/invoices',
+    payUrl: 'https://app.harmonious.co/client/invoices',
   },
 } satisfies TemplateEntry

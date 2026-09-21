@@ -5,7 +5,7 @@ import { INVITABLE_ROLES, type InvitationRole } from "@/lib/invitation-role";
 
 const invitationRoleSchema = z.enum(INVITABLE_ROLES);
 
-const PORTAL_ORIGIN = "https://onboard.harmonious.co";
+const PORTAL_ORIGIN = "https://app.harmonious.co";
 
 type Roles = { isAdmin: boolean; managedOfferingIds: string[] };
 

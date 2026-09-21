@@ -2,7 +2,7 @@
  *  (fund invitations and client contact invitations).
  *  Server-only: uses the admin client. */
 
-export const PORTAL_ORIGIN = "https://onboard.harmonious.co";
+export const PORTAL_ORIGIN = "https://app.harmonious.co";
 
 /** Creates a one-time link where an invited person chooses their own password.
  *  Passwords are never emailed; the link expires and only works once. */
