@@ -47,7 +47,7 @@ async function alertAdmins(eventType: string, recipient: string, subjectLine: st
           subjectLine,
           occurredAt: new Date().toISOString(),
           detail: DETAIL[eventType] ?? 'This message did not reach the inbox.',
-          consoleUrl: 'https://onboard.harmonious.co/admin',
+          consoleUrl: 'https://ops.harmonious.co/admin',
         },
       })
     }

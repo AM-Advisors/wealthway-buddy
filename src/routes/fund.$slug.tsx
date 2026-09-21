@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 
-const SITE = "https://onboard.harmonious.co";
+const SITE = "https://app.harmonious.co";
 
 export const Route = createFileRoute("/fund/$slug")({
   loader: async ({ params }) => {

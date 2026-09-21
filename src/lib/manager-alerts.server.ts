@@ -6,7 +6,7 @@
 // investor actions, admin actions, provider webhooks — is captured. This
 // worker only decides who to tell and sends the email once.
 
-const SITE = "https://onboard.harmonious.co";
+const SITE = "https://app.harmonious.co";
 
 type Row = {
   id: string;

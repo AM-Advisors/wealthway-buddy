@@ -15,7 +15,7 @@ function OpsReviewRequest({
   fundName = 'A fund',
   detail = '',
   raisedBy = 'A fund manager',
-  portalUrl = 'https://onboard.harmonious.co/ops',
+  portalUrl = 'https://ops.harmonious.co/ops',
 }: OpsReviewRequestProps) {
   const label = {
     color: '#6b7a90',

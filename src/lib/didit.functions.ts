@@ -45,7 +45,7 @@ export const startIdentityCheck = createServerFn({ method: "POST" })
       return { url: existing.session_url, resumed: true };
     }
 
-    let origin = "https://onboard.harmonious.co";
+    let origin = "https://app.harmonious.co";
     try {
       const request = getRequest();
       if (request?.url) origin = new URL(request.url).origin;

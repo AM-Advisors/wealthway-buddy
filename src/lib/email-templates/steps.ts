@@ -69,7 +69,7 @@ export const ONBOARDING_STEPS: OnboardingStepDef[] = [
   },
 ]
 
-export const DEFAULT_PORTAL_ORIGIN = 'https://onboard.harmonious.co'
+export const DEFAULT_PORTAL_ORIGIN = 'https://app.harmonious.co'
 
 export function findStep(key?: string | null): OnboardingStepDef | undefined {
   if (!key) return undefined

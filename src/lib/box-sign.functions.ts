@@ -111,7 +111,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       documentName: `${offering?.name ?? "Harmonious"} — ${doc.title}`,
       message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
       externalId: `${application.id}:${doc.id}`,
-      redirectUrl: "https://onboard.harmonious.co/portal",
+      redirectUrl: "https://app.harmonious.co/portal",
     });
 
     const now = new Date().toISOString();

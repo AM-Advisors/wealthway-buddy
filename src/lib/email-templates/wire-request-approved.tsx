@@ -42,7 +42,7 @@ function WireRequestApproved({
   wireFee = 'Not set',
   closingCost = 'Not set',
   sharePrice = 'Not set',
-  portalUrl = 'https://onboard.harmonious.co/client/wire-requests',
+  portalUrl = 'https://app.harmonious.co/client/wire-requests',
 }: WireRequestApprovedProps) {
   const label = {
     color: '#6b7a90',
@@ -211,6 +211,6 @@ export const template = {
     wireFee: '$35.00',
     closingCost: '$750.00',
     sharePrice: '$100.00',
-    portalUrl: 'https://onboard.harmonious.co/client/wire-requests',
+    portalUrl: 'https://app.harmonious.co/client/wire-requests',
   },
 } satisfies TemplateEntry

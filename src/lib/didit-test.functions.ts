@@ -64,7 +64,7 @@ export const sendTestDiditEvent = createServerFn({ method: "POST" })
     const rawBody = canonicalJson(payload);
     const signature = createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
 
-    const origin = process.env["PUBLIC_SITE_ORIGIN"] ?? "https://onboard.harmonious.co";
+    const origin = process.env["PUBLIC_SITE_ORIGIN"] ?? "https://app.harmonious.co";
     const res = await fetch(`${origin}/api/public/webhooks/didit`, {
       method: "POST",
       headers: {

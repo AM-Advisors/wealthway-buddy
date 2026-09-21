@@ -43,7 +43,7 @@ function InvoiceIssued({
   dueDate = '',
   periodLabel = '',
   lines = [],
-  payUrl = 'https://onboard.harmonious.co/client/invoices',
+  payUrl = 'https://app.harmonious.co/client/invoices',
   note = '',
 }: InvoiceIssuedProps) {
   const label = {
@@ -201,6 +201,6 @@ export const template = {
     dueDate: '2026-10-11',
     periodLabel: '2026-09-01 to 2026-09-11',
     lines: [{ label: 'SPV formation and administration', amount: '$9,500.00' }],
-    payUrl: 'https://onboard.harmonious.co/client/invoices',
+    payUrl: 'https://app.harmonious.co/client/invoices',
   },
 } satisfies TemplateEntry

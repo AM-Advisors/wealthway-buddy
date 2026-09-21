@@ -174,7 +174,7 @@ async function notifyManagers(row: NdaRow) {
           documentTitle: "Confidentiality agreement (NDA)",
           signedAt,
           commitmentCents: 0,
-          portalUrl: `https://onboard.harmonious.co/manager/diligence`,
+          portalUrl: `https://app.harmonious.co/manager/diligence`,
         },
         idempotencyKey: `nda-signed-${row.id}-${manager.email}`,
       }).catch((e) => console.error("[nda-sign] manager email failed", e));

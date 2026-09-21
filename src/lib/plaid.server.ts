@@ -40,7 +40,7 @@ async function call<T>(path: string, body: Record<string, unknown>): Promise<T> 
 
 /** Where Plaid sends signed updates for connections created here. */
 export const PLAID_WEBHOOK_URL =
-  "https://onboard.harmonious.co/api/public/plaid-webhook";
+  "https://app.harmonious.co/api/public/plaid-webhook";
 
 export function createLinkToken(opts: { userId: string; fundName: string }) {
   return call<{ link_token: string; expiration: string }>("/link/token/create", {

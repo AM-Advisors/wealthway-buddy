@@ -213,7 +213,7 @@ export const template = {
   previewData: {
     investorName: 'Jane Doe',
     offeringName: 'Harmonious Growth Fund II',
-    portalUrl: 'https://onboard.harmonious.co/dashboard',
+    portalUrl: 'https://app.harmonious.co/dashboard',
     contactEmail: 'operations@harmonious.co',
   },
 } satisfies TemplateEntry

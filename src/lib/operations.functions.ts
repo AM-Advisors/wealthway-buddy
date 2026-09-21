@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const SITE = "https://onboard.harmonious.co";
+const SITE = "https://app.harmonious.co";
 const TEAM_EMAIL = "operations@harmonious.co";
 
 export const TAX_DOC_TYPES = [

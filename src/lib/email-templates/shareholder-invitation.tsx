@@ -23,8 +23,8 @@ interface ShareholderInvitationProps {
 function ShareholderInvitation({
   holderName = 'there',
   companyName = 'the company',
-  passwordUrl = 'https://onboard.harmonious.co/reset-password',
-  signInUrl = 'https://onboard.harmonious.co/shares',
+  passwordUrl = 'https://app.harmonious.co/reset-password',
+  signInUrl = 'https://app.harmonious.co/shares',
 }: ShareholderInvitationProps) {
   const body = { color: '#221F20', fontSize: '15px', lineHeight: '24px', margin: '0 0 16px' }
 

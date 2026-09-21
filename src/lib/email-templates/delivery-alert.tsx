@@ -23,7 +23,7 @@ function DeliveryAlert({
   subjectLine = 'Onboarding email',
   occurredAt = new Date().toISOString(),
   detail = 'The mailbox rejected this message. Future sends to this address are blocked.',
-  consoleUrl = 'https://onboard.harmonious.co/admin',
+  consoleUrl = 'https://ops.harmonious.co/admin',
 }: DeliveryAlertProps) {
   const label = {
     color: '#6b7a90',

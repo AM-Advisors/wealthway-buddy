@@ -11,7 +11,7 @@ export const BANK_CHOICES = [
 export const BANK_STATUSES = ["requested", "in_progress", "opened", "cancelled"] as const;
 
 const TEAM_EMAIL = "operations@harmonious.co";
-const SITE = "https://onboard.harmonious.co";
+const SITE = "https://app.harmonious.co";
 
 async function isAdminUser(supabase: any, userId: string) {
   const { data, error } = await supabase

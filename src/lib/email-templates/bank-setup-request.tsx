@@ -23,7 +23,7 @@ function BankSetupRequest({
   requestedBy = 'A fund manager',
   requestedByEmail = '',
   note = '',
-  portalUrl = 'https://onboard.harmonious.co/admin',
+  portalUrl = 'https://ops.harmonious.co/admin',
 }: BankSetupRequestProps) {
   const label = {
     color: '#6b7a90',

@@ -23,8 +23,8 @@ interface ClientWelcomeProps {
 function ClientWelcome({
   contactName = 'there',
   clientName = 'your organisation',
-  portalUrl = 'https://onboard.harmonious.co/client',
-  signOffUrl = 'https://onboard.harmonious.co/sign-off',
+  portalUrl = 'https://app.harmonious.co/client',
+  signOffUrl = 'https://app.harmonious.co/sign-off',
 }: ClientWelcomeProps) {
   const label = {
     color: '#6b7a90',

@@ -336,7 +336,7 @@ async function emailStepUpCode(input: {
       headline: "Your signing confirmation code",
       intro: `Use ${input.code} to confirm the signature you just started. It expires in five minutes. If this was not you, do not use it.`,
       details: [],
-      portalUrl: "https://onboard.harmonious.co/professional/signatures",
+      portalUrl: "https://app.harmonious.co/professional/signatures",
     },
   });
 }

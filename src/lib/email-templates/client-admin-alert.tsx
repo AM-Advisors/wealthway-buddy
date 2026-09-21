@@ -22,7 +22,7 @@ function ClientAdminAlert({
   intro = 'There is an update waiting for you in your Harmonious portal.',
   details = [],
   actionLabel = 'Open your portal',
-  actionUrl = 'https://onboard.harmonious.co/client',
+  actionUrl = 'https://app.harmonious.co/client',
   footnote = 'Harmonious provides administrative, technology, onboarding, reporting, payment-facilitation, recordkeeping and compliance-support services under your master service agreement and statements of work.',
 }: ClientAdminAlertProps) {
   const label = {
@@ -133,6 +133,6 @@ export const template = {
       { label: 'Due', value: 'Oct 11, 2026' },
     ],
     actionLabel: 'View the invoice',
-    actionUrl: 'https://onboard.harmonious.co/client/invoices',
+    actionUrl: 'https://app.harmonious.co/client/invoices',
   },
 } satisfies TemplateEntry

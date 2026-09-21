@@ -219,7 +219,7 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    const packetUrl = `https://onboard.harmonious.co/api/public/packet/${link.token}`;
+    const packetUrl = `https://app.harmonious.co/api/public/packet/${link.token}`;
     const expiresOn = new Date(link.expires_at as string).toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",

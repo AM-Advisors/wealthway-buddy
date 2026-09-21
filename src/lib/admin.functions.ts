@@ -444,7 +444,7 @@ export const sendOnboardingInvitation = createServerFn({ method: "POST" })
 
     const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
     const portalUrl = await buildTrackedUrl({
-      url: "https://onboard.harmonious.co/dashboard",
+      url: "https://app.harmonious.co/dashboard",
       recipient: data.to,
       template: "investor-invitation",
       label: "Begin onboarding",

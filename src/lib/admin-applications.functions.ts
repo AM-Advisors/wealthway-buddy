@@ -182,7 +182,7 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
       try {
         const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
         const portalUrl = await buildTrackedUrl({
-          url: "https://onboard.harmonious.co/dashboard",
+          url: "https://app.harmonious.co/dashboard",
           recipient: email,
           template: "investor-invitation",
           label: "Begin onboarding",
