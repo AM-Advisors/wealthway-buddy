@@ -1,4 +1,6 @@
 /**
+
+import { safeInternalPath } from "@/lib/app-origins";
  * Pure rules for deciding, after someone signs in, which parts of Harmonious
  * they may enter and where they should land.
  *
