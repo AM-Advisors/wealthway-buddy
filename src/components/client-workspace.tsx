@@ -113,9 +113,17 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
       // Nothing from the previous workspace should linger.
       await queryClient.cancelQueries();
       queryClient.clear();
+      const option = options.find((o) => o.id === workspaceId);
+      // Harmonious Operations is a separate application at its own address.
+      // Leaving for it carries no permission with it; that address authorizes
+      // the person again from their staff records.
+      if (option?.external) {
+        window.location.assign(option.href);
+        return;
+      }
       navigate({ to: result.path as never });
     },
-    [enter, navigate, queryClient],
+    [enter, navigate, options, queryClient],
   );
 
   const clearWorkspace = useCallback(() => {
