@@ -169,15 +169,19 @@ export function resolveDestination(
   facts: RelationshipFacts,
   intended?: string | null,
 ): { path: string; reason: "intended" | "requirement" | "workspace" | "onboarding" | "denied" } {
-  if (intended && intended.startsWith("/") && !intended.startsWith("//")) {
+  // Anything that could leave Harmonious — an absolute address, a
+  // protocol-relative path, a backslash trick, an encoded scheme — is discarded
+  // here rather than trusted because it arrived in a link.
+  const safe = intended ? safeInternalPath(intended, "") : "";
+  if (safe) {
     // Someone who is not Harmonious staff is never returned to an Operations
     // address, however they arrived at it. They go to their own part of the
     // platform instead.
-    if (isInternalDestination(intended) && !hasOperationsAccess(facts)) {
+    if (isInternalDestination(safe) && !hasOperationsAccess(facts)) {
       const own = defaultWorkspace(facts);
       return { path: own ? own.path : "/home", reason: "denied" };
     }
-    return { path: intended, reason: "intended" };
+    return { path: safe, reason: "intended" };
   }
   const requirement = nextRequirementPath(facts.outstandingRequirements);
   if (requirement) return { path: requirement, reason: "requirement" };
