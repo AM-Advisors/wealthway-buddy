@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { LogOut, User } from "lucide-react";
@@ -25,6 +27,19 @@ export function PortalTopbar({ onSignOut }: { onSignOut: () => void }) {
     staleTime: 60_000,
   });
 
+  // Staff must never be in any doubt about which side of Harmonious they are
+  // looking at, so the privileged surface says so in the bar and the tab title.
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const inOperations = pathname === "/ops" || pathname.startsWith("/ops/");
+  const surfaceLabel = inOperations ? "Harmonious Operations" : "Client & investor portal";
+
+  useEffect(() => {
+    if (typeof document === "undefined" || !inOperations) return;
+    if (!document.title.startsWith("Harmonious Operations")) {
+      document.title = `Harmonious Operations — ${document.title}`;
+    }
+  }, [inOperations, pathname]);
+
   const name = (nav as any)?.profile?.legal_name as string | undefined;
   const email = (nav as any)?.profile?.email as string | undefined;
   const label = name || email || "Your account";
@@ -39,9 +54,15 @@ export function PortalTopbar({ onSignOut }: { onSignOut: () => void }) {
           <Logo variant="navy" className="h-6 w-auto" />
         </Link>
 
-        <span className="ml-1 hidden truncate text-sm text-muted-foreground sm:inline">
-          Client &amp; investor portal
-        </span>
+        {inOperations ? (
+          <span className="ml-1 truncate rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            {surfaceLabel}
+          </span>
+        ) : (
+          <span className="ml-1 hidden truncate text-sm text-muted-foreground sm:inline">
+            {surfaceLabel}
+          </span>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           <DropdownMenu>
