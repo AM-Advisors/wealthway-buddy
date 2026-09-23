@@ -53,12 +53,37 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
           return new Response("ok");
         }
 
+        // Idempotency and replay protection: Box gives every delivery its own
+        // id. The unique index makes a repeat delivery a no-op, so a duplicate
+        // or replayed event can never complete a signature twice.
+        const deliveryId =
+          request.headers.get("box-delivery-id") ??
+          `${trigger}:${signRequestId}:${body?.created_at ?? ""}`;
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { error: dedupeError } = await supabaseAdmin
+          .from("box_sign_webhook_events")
+          .insert({
+            provider_event_id: deliveryId,
+            trigger,
+            sign_request_id: signRequestId,
+            delivered_at: body?.created_at ? new Date(body.created_at).toISOString() : null,
+          });
+        if (dedupeError) {
+          console.log("[box-sign] duplicate webhook ignored", trigger, signRequestId);
+          return new Response("ok");
+        }
+
         try {
           const opts = {
             ...(body?.created_at
               ? { completedAt: new Date(body.created_at).toISOString() }
               : {}),
           };
+          // Per-signer truth comes from Box itself, never from this payload.
+          const { syncSignersFromBox } = await import("@/lib/document-signing.server");
+          await syncSignersFromBox(supabaseAdmin, signRequestId).catch((e) =>
+            console.error("[box-sign] signer sync failed", e),
+          );
           const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
           const result = await syncBoxSignRequest(signRequestId, opts);
           if (result.status === "unknown_sign_request") {
