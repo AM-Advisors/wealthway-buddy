@@ -32,7 +32,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useClientWorkspace } from "@/components/client-workspace";
-import { getNavigation } from "@/lib/navigation";
+import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -65,12 +65,6 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { session } = useClientWorkspace();
   const sections = getNavigation(session as never, "operations", pathname).operations;
 
-  const isActive = (url: string) => {
-    const base = url.split("?")[0] ?? url;
-    if (base === "/ops") return pathname === base;
-    return pathname === base || pathname.startsWith(`${base}/`);
-  };
-
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -94,7 +88,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                   <SidebarMenuItem key={section.url}>
                     <SidebarMenuButton
                       asChild
-                      isActive={isActive(section.url)}
+                      isActive={operationsNavItemIsActive(section.url, pathname)}
                       tooltip={section.title}
                       className="data-[active=true]:border-l-2 data-[active=true]:border-sidebar-primary data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium"
                     >

@@ -63,6 +63,7 @@ export function SetupCard() {
         </ul>
         {next && (
           <Button
+            className="h-auto max-w-full whitespace-normal text-left leading-snug"
             onClick={() => {
               const path = nextRequirementPath([next]);
               if (path) navigate({ to: path as never });

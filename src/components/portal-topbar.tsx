@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useClientWorkspace } from "@/components/client-workspace";
+import { surfaceLabelForPath } from "@/lib/navigation";
 
 /** Branded bar across the top of every signed-in page. */
 export function PortalTopbar({ onSignOut }: { onSignOut: () => void }) {
@@ -25,7 +26,7 @@ export function PortalTopbar({ onSignOut }: { onSignOut: () => void }) {
   // looking at, so the privileged surface says so in the bar and the tab title.
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const inOperations = pathname === "/ops" || pathname.startsWith("/ops/");
-  const surfaceLabel = inOperations ? "Harmonious Operations" : "Client & investor portal";
+  const surfaceLabel = surfaceLabelForPath(pathname);
 
   useEffect(() => {
     if (typeof document === "undefined" || !inOperations) return;

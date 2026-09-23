@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
@@ -9,6 +9,7 @@ import { opsLeavesCurrentHost } from "@/lib/host-routing";
 import { enterWorkspace, resolveSession } from "@/lib/session.functions";
 import { workspaceOptions, type WorkspaceOption } from "@/lib/client-navigation";
 import type { WorkspaceKind } from "@/lib/session-resolution";
+import { workspaceKindForPath } from "@/lib/navigation";
 
 const ACTIVE_KEY = "harmonious.workspace.active";
 
@@ -59,6 +60,7 @@ function readStored(): string | null {
  */
 export function ClientWorkspaceProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
   const queryClient = useQueryClient();
   const resolve = useServerFn(resolveSession);
   const enter = useServerFn(enterWorkspace);
@@ -109,9 +111,11 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
   }, [data, options, activeId]);
 
   const resolvedActive = useMemo(() => {
+    const pathKind = workspaceKindForPath(pathname);
+    const fromPath = options.find((o) => pathKind !== null && o.kind === pathKind);
     const stored = options.find((o) => o.id === activeId);
-    return stored ?? options.find((o) => o.surface === "client") ?? options[0] ?? null;
-  }, [options, activeId]);
+    return fromPath ?? stored ?? options.find((o) => o.surface === "client") ?? options[0] ?? null;
+  }, [options, activeId, pathname]);
 
   const switchTo = useCallback(
     async (workspaceId: string) => {
