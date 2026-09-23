@@ -163,7 +163,15 @@ export const distributionExecutionCheckFn = authed()
   });
 
 export const executeDistributionPaymentFn = authed()
-  .inputValidator((input: { lineId: string; provider?: string; providerPaymentId?: string | null }) => input)
+  .inputValidator(
+    (input: { lineId: string; externalReference: string; providerPaymentId?: string | null }) => ({
+      lineId: String(input.lineId),
+      externalReference: String(input.externalReference ?? ""),
+      providerPaymentId: input.providerPaymentId ?? null,
+      // Recording only: the application never initiates a transfer.
+      provider: "manual_bank",
+    }),
+  )
   .handler(async ({ data, context }) => {
     const { executeDistributionPayment } = await import("@/lib/distributions.server");
     return executeDistributionPayment(context.userId, data);
@@ -188,6 +196,27 @@ export const reverseDistributionPaymentFn = authed()
   .handler(async ({ data, context }) => {
     const { reverseDistributionPayment } = await import("@/lib/distributions.server");
     return reverseDistributionPayment(context.userId, data.paymentId, data.reason);
+  });
+
+export const approveDistributionReconciliationFn = authed()
+  .inputValidator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
+  .handler(async ({ data, context }) => {
+    const { approveDistributionReconciliation } = await import("@/lib/distributions.server");
+    return approveDistributionReconciliation(context.userId, data.paymentId);
+  });
+
+export const approveDistributionReversalFn = authed()
+  .inputValidator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
+  .handler(async ({ data, context }) => {
+    const { approveDistributionReversal } = await import("@/lib/distributions.server");
+    return approveDistributionReversal(context.userId, data.paymentId);
+  });
+
+export const reviewDistributionWithholdingFn = authed()
+  .inputValidator((input: { batchId: string }) => ({ batchId: String(input.batchId) }))
+  .handler(async ({ data, context }) => {
+    const { reviewDistributionWithholding } = await import("@/lib/distributions.server");
+    return reviewDistributionWithholding(context.userId, data.batchId);
   });
 
 export const reissueDistributionPaymentFn = authed()

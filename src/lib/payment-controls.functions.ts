@@ -230,7 +230,7 @@ export const updatePaymentChecks = createServerFn({ method: "POST" })
         verificationStatus: z.enum(["pending", "verified", "failed"]).optional(),
         callbackStatus: z.enum(["not_required", "pending", "completed", "failed"]).optional(),
         complianceStatus: z.enum(["pending", "cleared", "escalated"]).optional(),
-        bankStatus: z.enum(["not_sent", "sent", "settled", "returned", "rejected"]).optional(),
+        bankStatus: z.enum(["not_sent", "sent", "returned", "rejected"]).optional(),
         callbackNote: z.string().max(500).optional().or(z.literal("")),
       })
       .parse(d),
@@ -250,58 +250,9 @@ export const updatePaymentChecks = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
 
-    if (data.bankStatus === "settled") {
-      const { data: instruction } = await context.supabase
-        .from("payment_instructions")
-        .select("invoice_id, status, purpose, offering_id, amount_cents")
-        .eq("id", data.id)
-        .maybeSingle();
-
-      // A settled distribution becomes the fund's record of money paid out.
-      const inst = instruction as any;
-      if (
-        inst &&
-        inst.offering_id &&
-        ["distribution", "return_of_capital"].includes(String(inst.purpose))
-      ) {
-        if (inst.status !== "approved") {
-          throw new Error("This payment has not cleared dual approval yet.");
-        }
-        const reference = `Instruction ${data.id}`;
-        const { data: already } = await context.supabase
-          .from("fund_distributions")
-          .select("id")
-          .eq("offering_id", inst.offering_id)
-          .eq("note", reference)
-          .maybeSingle();
-        if (!already) {
-          await context.supabase.from("fund_distributions").insert({
-            offering_id: inst.offering_id,
-            paid_on: new Date().toISOString().slice(0, 10),
-            amount_cents: inst.amount_cents,
-            kind: String(inst.purpose) === "return_of_capital" ? "return_of_capital" : "distribution",
-            note: reference,
-            created_by: context.userId,
-          });
-        }
-      }
-
-      const invoiceId = inst?.invoice_id;
-      if (invoiceId) {
-        if (inst?.status !== "approved") {
-          throw new Error("This payment has not cleared dual approval yet.");
-        }
-        await context.supabase
-          .from("invoices")
-          .update({
-            status: "paid",
-            paid_on: new Date().toISOString().slice(0, 10),
-            payment_reference: `Instruction ${data.id}`,
-          })
-          .eq("id", invoiceId)
-          .eq("status", "issued");
-      }
-    }
+    // D1: settlement is never typed in. A legacy instruction cannot be marked
+    // settled, cannot create a fund distribution and cannot mark an invoice
+    // paid from here; those follow bank reconciliation and posted accounting.
 
     await log(context, roles, { action: "checks updated", target: data.id, new_value: patch as any });
     return { ok: true };
