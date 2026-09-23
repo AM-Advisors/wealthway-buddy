@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { safeInternalPath } from "@/lib/app-origins";
 
 /**
  * Direct Supabase Google OAuth. Google consent branding comes from the
@@ -19,14 +20,45 @@ export function mapGoogleOAuthError(message: string | undefined): string {
 }
 
 /**
+ * Builds the address Google returns to after signing in: always the same-origin
+ * sign-in page, carrying nothing but a sanitised application path so the person
+ * can be put back where they were heading. Anything that could leave the
+ * application — absolute addresses, protocol-relative paths, encoded schemes —
+ * is discarded here, and the destination is re-checked against the server
+ * resolver after sign-in anyway. No token, code or credential is ever placed
+ * in this address.
+ */
+export function googleReturnUrl(
+  origin: string,
+  redirectPath: string,
+  intended?: string | null,
+): string {
+  const base = `${origin}${safeInternalPath(redirectPath, "/auth")}`;
+  const safe = safeInternalPath(intended ?? "", "");
+  if (!safe) return base;
+  // A destination that only looks safe until it is decoded is discarded too.
+  let decoded = safe;
+  try {
+    decoded = decodeURIComponent(safe);
+  } catch {
+    return base;
+  }
+  if (safeInternalPath(decoded, "") !== decoded) return base;
+  return `${base}?next=${encodeURIComponent(safe)}`;
+}
+
+/**
  * Starts Google OAuth. Returns an error message to display, or null when the
  * browser is on its way to Google (the session listener handles the return).
  */
-export async function startGoogleOAuth(redirectPath: string): Promise<string | null> {
+export async function startGoogleOAuth(
+  redirectPath: string,
+  intended?: string | null,
+): Promise<string | null> {
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}${redirectPath}` },
+      options: { redirectTo: googleReturnUrl(window.location.origin, redirectPath, intended) },
     });
     if (error) return mapGoogleOAuthError(error.message);
     return null;
