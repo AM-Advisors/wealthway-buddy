@@ -242,7 +242,7 @@ describe("delegated scope", () => {
   });
 
   it("surfaces an invitation still awaiting acceptance without reading client data", async () => {
-    tables["delegations"] = [delegation({ acceptance_state: "pending", status: "pending" })];
+    tables["delegations"] = [delegation({ acceptance_state: "awaiting_acceptance", status: "active" })];
     const attentionFor = await load();
     const result = await attentionFor(ctx("pro-a"), "professional");
     expect(result.groups.needs_you.map((i) => i.source)).toEqual(["professional.acceptance"]);

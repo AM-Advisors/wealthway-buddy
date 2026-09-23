@@ -202,6 +202,7 @@ const tables: Record<string, any[]> = {
       scope_id: INVESTOR,
       authority_level: "view",
       status: "active",
+      acceptance_state: "not_required", // DB default (NOT NULL)
       effective_at: "2026-01-01T00:00:00Z",
       expires_at: null,
       revoked_at: null,
