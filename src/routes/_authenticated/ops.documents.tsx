@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
+import { AgreementPreparation } from "@/components/agreement-preparation";
+import { AgreementsPipeline } from "@/components/agreements-pipeline";
 import { OpsSignatureRequests } from "@/components/ops-signature-requests";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityPanel } from "@/components/activity-panel";
@@ -38,9 +40,17 @@ function OpsDocuments() {
 
       <Tabs defaultValue="signatures" className="mt-6">
         <TabsList>
+          <TabsTrigger value="prepare">Prepare</TabsTrigger>
+          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="signatures">Signature requests</TabsTrigger>
           <TabsTrigger value="activity">Audit trail</TabsTrigger>
         </TabsList>
+        <TabsContent value="prepare" className="mt-6">
+          <AgreementPreparation />
+        </TabsContent>
+        <TabsContent value="pipeline" className="mt-6">
+          <AgreementsPipeline />
+        </TabsContent>
         <TabsContent value="signatures" className="mt-6">
           <OpsSignatureRequests />
         </TabsContent>
@@ -48,7 +58,7 @@ function OpsDocuments() {
           <ActivityPanel
             areas={["document"]}
             title="Document history"
-            description="Who issued, resent, cancelled and completed each agreement, and when."
+            description="Who authored, prepared, sent, resent, cancelled and completed each agreement, and when."
             limit={100}
           />
         </TabsContent>

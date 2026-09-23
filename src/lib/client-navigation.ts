@@ -49,6 +49,7 @@ const FUND_MANAGER_NAV: ClientNavLink[] = [
   { title: "Capital", url: "/manager/capital", icon: "money" },
   { title: "Reports", url: "/manager/reporting", icon: "report" },
   { title: "Documents", url: "/manager/documents", icon: "document" },
+  { title: "Agreements", url: "/manager/agreements", icon: "document" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 
