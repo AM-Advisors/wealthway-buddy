@@ -151,6 +151,7 @@ import { Route as AuthenticatedManagerPortfolioValueRouteImport } from './routes
 import { Route as AuthenticatedManagerProfileRouteImport } from './routes/_authenticated/manager.profile'
 import { Route as AuthenticatedManagerPublicPageRouteImport } from './routes/_authenticated/manager.public-page'
 import { Route as AuthenticatedManagerReportingRouteImport } from './routes/_authenticated/manager.reporting'
+import { Route as AuthenticatedManagerRequestFundRouteImport } from './routes/_authenticated/manager.request-fund'
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authenticated/manager.tax'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
@@ -230,6 +231,7 @@ import { Route as AuthenticatedClientServicesRequestRouteImport } from './routes
 import { Route as AuthenticatedFundOfferingIdDocumentsRouteImport } from './routes/_authenticated/fund.$offeringId.documents'
 import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes/_authenticated/fund.$offeringId.funding'
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
+import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './routes/_authenticated/manager.fund-setup.$requestId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
@@ -1056,6 +1058,12 @@ const AuthenticatedManagerReportingRoute =
     path: '/manager/reporting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerRequestFundRoute =
+  AuthenticatedManagerRequestFundRouteImport.update({
+    id: '/manager/request-fund',
+    path: '/manager/request-fund',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerRequestsRoute =
   AuthenticatedManagerRequestsRouteImport.update({
     id: '/manager/requests',
@@ -1520,6 +1528,12 @@ const AuthenticatedManagerFundBankingFundIdRoute =
     path: '/manager/fund-banking/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerFundSetupRequestIdRoute =
+  AuthenticatedManagerFundSetupRequestIdRouteImport.update({
+    id: '/manager/fund-setup/$requestId',
+    path: '/manager/fund-setup/$requestId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdRoute =
   AuthenticatedManagerFundFundIdRouteImport.update({
     id: '/manager/fund/$fundId',
@@ -1828,6 +1842,7 @@ export interface FileRoutesByFullPath {
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/manager/reporting': typeof AuthenticatedManagerReportingRoute
+  '/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -1906,6 +1921,7 @@ export interface FileRoutesByFullPath {
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
+  '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -2074,6 +2090,7 @@ export interface FileRoutesByTo {
   '/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/manager/reporting': typeof AuthenticatedManagerReportingRoute
+  '/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -2152,6 +2169,7 @@ export interface FileRoutesByTo {
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
+  '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
@@ -2326,6 +2344,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/profile': typeof AuthenticatedManagerProfileRoute
   '/_authenticated/manager/public-page': typeof AuthenticatedManagerPublicPageRoute
   '/_authenticated/manager/reporting': typeof AuthenticatedManagerReportingRoute
+  '/_authenticated/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
@@ -2404,6 +2423,7 @@ export interface FileRoutesById {
   '/_authenticated/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/_authenticated/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
+  '/_authenticated/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -2579,6 +2599,7 @@ export interface FileRouteTypes {
     | '/manager/profile'
     | '/manager/public-page'
     | '/manager/reporting'
+    | '/manager/request-fund'
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
@@ -2657,6 +2678,7 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
+    | '/manager/fund-setup/$requestId'
     | '/manager/fund/$fundId'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
@@ -2825,6 +2847,7 @@ export interface FileRouteTypes {
     | '/manager/profile'
     | '/manager/public-page'
     | '/manager/reporting'
+    | '/manager/request-fund'
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
@@ -2903,6 +2926,7 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
+    | '/manager/fund-setup/$requestId'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/companies/$companyId'
@@ -3076,6 +3100,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/profile'
     | '/_authenticated/manager/public-page'
     | '/_authenticated/manager/reporting'
+    | '/_authenticated/manager/request-fund'
     | '/_authenticated/manager/requests'
     | '/_authenticated/manager/tax'
     | '/_authenticated/manager/timeline'
@@ -3154,6 +3179,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fund/$offeringId/documents'
     | '/_authenticated/fund/$offeringId/funding'
     | '/_authenticated/manager/fund-banking/$fundId'
+    | '/_authenticated/manager/fund-setup/$requestId'
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/clients/$clientId'
@@ -4222,6 +4248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerReportingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/request-fund': {
+      id: '/_authenticated/manager/request-fund'
+      path: '/manager/request-fund'
+      fullPath: '/manager/request-fund'
+      preLoaderRoute: typeof AuthenticatedManagerRequestFundRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/requests': {
       id: '/_authenticated/manager/requests'
       path: '/manager/requests'
@@ -4775,6 +4808,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundBankingFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/fund-setup/$requestId': {
+      id: '/_authenticated/manager/fund-setup/$requestId'
+      path: '/manager/fund-setup/$requestId'
+      fullPath: '/manager/fund-setup/$requestId'
+      preLoaderRoute: typeof AuthenticatedManagerFundSetupRequestIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/fund/$fundId': {
       id: '/_authenticated/manager/fund/$fundId'
       path: '/manager/fund/$fundId'
@@ -5294,6 +5334,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerProfileRoute: typeof AuthenticatedManagerProfileRoute
   AuthenticatedManagerPublicPageRoute: typeof AuthenticatedManagerPublicPageRoute
   AuthenticatedManagerReportingRoute: typeof AuthenticatedManagerReportingRoute
+  AuthenticatedManagerRequestFundRoute: typeof AuthenticatedManagerRequestFundRoute
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTaxRoute: typeof AuthenticatedManagerTaxRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
@@ -5334,6 +5375,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundOfferingIdDocumentsRoute: typeof AuthenticatedFundOfferingIdDocumentsRoute
   AuthenticatedFundOfferingIdFundingRoute: typeof AuthenticatedFundOfferingIdFundingRoute
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
+  AuthenticatedManagerFundSetupRequestIdRoute: typeof AuthenticatedManagerFundSetupRequestIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
@@ -5474,6 +5516,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerProfileRoute: AuthenticatedManagerProfileRoute,
   AuthenticatedManagerPublicPageRoute: AuthenticatedManagerPublicPageRoute,
   AuthenticatedManagerReportingRoute: AuthenticatedManagerReportingRoute,
+  AuthenticatedManagerRequestFundRoute: AuthenticatedManagerRequestFundRoute,
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTaxRoute: AuthenticatedManagerTaxRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
@@ -5526,6 +5569,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedFundOfferingIdFundingRoute,
   AuthenticatedManagerFundBankingFundIdRoute:
     AuthenticatedManagerFundBankingFundIdRoute,
+  AuthenticatedManagerFundSetupRequestIdRoute:
+    AuthenticatedManagerFundSetupRequestIdRoute,
   AuthenticatedManagerFundFundIdRoute:
     AuthenticatedManagerFundFundIdRouteWithChildren,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,

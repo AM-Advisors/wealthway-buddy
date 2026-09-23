@@ -925,6 +925,35 @@ async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: str
   return out;
 }
 
+async function fundRequestItems(s: any, lookup: Lookup, now: Date) {
+  const requests = await safely(async () =>
+    rows(
+      await s
+        .from("fund_requests")
+        .select("id, client_id, fund_name, status, created_at, updated_at")
+        .eq("status", "submitted")
+        .limit(SOURCE_LIMIT),
+    ),
+  );
+  return (requests as any[]).map((r) =>
+    build(lookup, now, {
+      id: `fund-request:${r.id}`,
+      source: "funds.request",
+      area: "funds",
+      recordType: "client",
+      recordId: r.client_id,
+      recordTab: "overview",
+      title: `New fund request — ${r.fund_name}`,
+      reason: "New fund request requires review",
+      workflowState: String(r.status),
+      requiredAction: "review",
+      clientId: r.client_id,
+      dueDate: null,
+      at: r.updated_at ?? r.created_at ?? null,
+    }),
+  );
+}
+
 /* -------------------------------------------------------------- the queue */
 
 
@@ -933,6 +962,7 @@ const COLLECTORS: {
   load: (s: any, lookup: Lookup, now: Date, fundId?: string) => Promise<WorkItem[]>;
 }[] = [
   { area: "onboarding", load: onboardingItems },
+  { area: "funds", load: (s, l, n) => fundRequestItems(s, l, n) },
   { area: "onboarding", load: (s, l, n) => identityItems(s, l, n) },
   { area: "capital", load: capitalItems },
   { area: "accounting", load: reconciliationItems },

@@ -30,12 +30,13 @@ function ManagerFundsPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
-      <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div>
         <h1 className="text-2xl font-semibold">Funds</h1>
         <p className="text-sm text-muted-foreground">
           Open a fund to see its investors, investments, capital, reports and documents.
         </p>
       </div>
+      <Link to="/manager/request-fund" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">+ Request New Fund / SPV</Link></div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading your funds…</p>}
 
@@ -59,7 +60,7 @@ function ManagerFundsPage() {
                     params={{ fundId: id }}
                     className="font-medium underline"
                   >
-                    Open fund
+                    Manage Fund
                   </Link>
                 )}
               </CardContent>

@@ -439,6 +439,36 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   const managed = await safely(async () =>
     rows(await s.from("fund_managers").select("offering_id").eq("user_id", ctx.userId)),
   );
+  // Own fund setup requests (RLS limits to the reader's firm).
+  const requests = await safely(async () =>
+    rows(
+      await s
+        .from("fund_requests")
+        .select("id, fund_name, status, updated_at, created_by")
+        .eq("created_by", ctx.userId)
+        .in("status", ["submitted", "sow_issued"])
+        .limit(LIMIT),
+    ),
+  );
+  for (const r of requests as any[]) {
+    out.push(
+      buildAttentionItem({
+        id: `manager-fund-request:${r.id}`,
+        source: "manager.fund_request",
+        workspace: "fund_manager",
+        group: "harmonious_working",
+        severity: "info",
+        title: `Setting up ${r.fund_name}`,
+        workflowState: String(r.status),
+        status: "Harmonious is reviewing your fund request",
+        sourceTable: "fund_requests",
+        sourceId: r.id,
+        href: `/manager/fund-setup/${r.id}`,
+        at: r.updated_at ?? null,
+      }),
+    );
+  }
+
   const fundIds = [...new Set((managed as any[]).map((m) => String(m.offering_id)))];
   if (!fundIds.length) return out;
 
@@ -675,6 +705,37 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   if (!clientIds.length) return out;
 
   const clientName = (id: string | null) => (id ? (n.clients.get(id) ?? null) : null);
+
+  // Cap table started but no securities recorded yet.
+  const setupCompanies = await safely(async () =>
+    rows(await s.from("ct_companies").select("id, name, client_id, updated_at").in("client_id", clientIds).eq("is_demo", false).limit(LIMIT)),
+  );
+  if ((setupCompanies as any[]).length) {
+    const secs = await safely(async () =>
+      rows(await s.from("ct_securities").select("company_id").in("company_id", (setupCompanies as any[]).map((c) => c.id)).limit(1000)),
+    );
+    const withSecs = new Set((secs as any[]).map((x) => x.company_id));
+    for (const c of setupCompanies as any[]) {
+      if (withSecs.has(c.id)) continue;
+      out.push(
+        buildAttentionItem({
+          id: `company-captable-setup:${c.id}`,
+          source: "company.cap_table_setup",
+          workspace: "company",
+          group: "needs_you",
+          severity: "action",
+          title: "Complete cap table setup",
+          workflowState: "no_securities",
+          status: "Add stakeholders and issue securities to show ownership",
+          sourceTable: "ct_companies",
+          sourceId: c.id,
+          href: "/client/cap-table/securities",
+          at: c.updated_at ?? null,
+          clientName: clientName(c.client_id),
+        }),
+      );
+    }
+  }
 
   const intakes = await safely(async () =>
     rows(

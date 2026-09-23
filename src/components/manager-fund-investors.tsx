@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
+import { BulkAddInvestors } from "@/components/bulk-add-investors";
 import { FundInvestorProgress, ManagerAddInvestor } from "@/components/manager-add-investor";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
@@ -22,6 +23,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   });
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("all");
+  const [panel, setPanel] = useState<"one" | "many" | null>(null);
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (data?.applications ?? []).filter((row: any) =>
@@ -36,12 +38,14 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
     <section>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Identity, eligibility, signing, and funding for this fund.</p></div>
-        <Button asChild size="sm"><Link to="/manager/investors">Manage all investors</Link></Button>
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          <Button size="sm" onClick={() => setPanel(panel === "one" ? null : "one")}>+ Add Investor</Button>
+          <Button size="sm" variant="outline" onClick={() => setPanel(panel === "many" ? null : "many")}>Add Multiple Investors</Button>
+        </div>
       </div>
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <ManagerAddInvestor fundId={fundId} />
-        <FundInvestorProgress fundId={fundId} />
-      </div>
+      {panel === "one" && <div className="mt-5"><ManagerAddInvestor fundId={fundId} /></div>}
+      {panel === "many" && <div className="mt-5"><BulkAddInvestors fundId={fundId} existingEmails={(data?.applications ?? []).map((a: any) => String(a.email ?? "")).filter(Boolean)} /></div>}
+      <div className="mt-5"><FundInvestorProgress fundId={fundId} /></div>
       <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {Object.entries(data.counts).map(([label, value]) => <Stat key={label} label={prettyStatus(label)} value={String(value)} />)}
       </div>
@@ -53,11 +57,11 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
             <Select value={stage} onValueChange={setStage}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{stages.map((value) => <SelectItem key={value} value={value}>{value === "all" ? "Every stage" : prettyStatus(value)}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
-              <thead className="border-y bg-muted/50 text-xs text-muted-foreground"><tr><th className="px-3 py-2.5 font-medium">Investor</th><th className="px-3 py-2.5 font-medium">Commitment</th><th className="px-3 py-2.5 font-medium">KYC / AML</th><th className="px-3 py-2.5 font-medium">Accreditation</th><th className="px-3 py-2.5 font-medium">Documents</th><th className="px-3 py-2.5 font-medium">Funding</th><th className="px-3 py-2.5 font-medium">Review</th><th className="px-3 py-2.5" /></tr></thead>
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead className="border-y bg-muted/50 text-xs text-muted-foreground"><tr><th className="px-3 py-2.5 font-medium">Investor</th><th className="px-3 py-2.5 font-medium">Commitment</th><th className="px-3 py-2.5 font-medium">Progress</th><th className="px-3 py-2.5 font-medium">Documents</th><th className="px-3 py-2.5 font-medium">Funding</th><th className="px-3 py-2.5" /></tr></thead>
               <tbody className="divide-y">
-                {rows.map((row: any) => <tr key={row.applicationId} className="hover:bg-muted/30"><td className="px-3 py-3"><p className="font-medium">{row.name}</p><p className="text-xs text-muted-foreground">{row.email ?? prettyStatus(row.accountLabel)}</p></td><td className="px-3 py-3">{money(row.commitmentCents)}</td><Status value={row.kycStatus === "approved" && row.amlStatus === "approved" ? "approved" : row.stage === "identity" ? "review" : row.kycStatus} /><Status value={row.accreditationStatus} /><Status value={row.documentsStatus} /><Status value={row.fundingStatus} /><Status value={row.managerReviewStatus} /><td className="px-3 py-3 text-right"><Button asChild size="sm" variant="outline"><Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }}>Review</Link></Button></td></tr>)}
-                {rows.length === 0 ? <tr><td colSpan={8} className="px-3 py-10 text-center text-muted-foreground">No investors match these filters.</td></tr> : null}
+                {rows.map((row: any) => <tr key={row.applicationId} className="hover:bg-muted/30"><td className="px-3 py-3"><p className="font-medium">{row.name}</p><p className="text-xs text-muted-foreground">{row.email ?? prettyStatus(row.accountLabel)}</p></td><td className="px-3 py-3">{money(row.commitmentCents)}</td><Status value={row.stage} /><Status value={row.documentsStatus} /><Status value={row.fundingStatus} /><td className="px-3 py-3 text-right"><Button asChild size="sm" variant="outline"><Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }}>Review</Link></Button></td></tr>)}
+                {rows.length === 0 ? <tr><td colSpan={6} className="px-3 py-10 text-center text-muted-foreground">No investors match these filters.</td></tr> : null}
               </tbody>
             </table>
           </div>

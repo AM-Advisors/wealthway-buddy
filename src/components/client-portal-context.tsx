@@ -44,3 +44,8 @@ export function useClientPortal() {
   if (!ctx) throw new Error("useClientPortal must be used inside ClientPortalProvider");
   return ctx;
 }
+
+/** Same as useClientPortal, but returns null outside the company workspace. */
+export function useOptionalClientPortal() {
+  return useContext(ClientPortalContext);
+}

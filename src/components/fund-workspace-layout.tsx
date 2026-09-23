@@ -21,11 +21,11 @@ import { cn } from "@/lib/utils";
 const sections = [
   { slug: "", label: "Overview", icon: Building2 },
   { slug: "investors", label: "Investors", icon: Users },
-  { slug: "assets", label: "Assets & performance", icon: Activity },
-  { slug: "transactions", label: "Transactions", icon: WalletCards },
+  { slug: "assets", label: "Investments", icon: Activity },
+  { slug: "transactions", label: "Capital", icon: WalletCards },
   { slug: "documents", label: "Documents", icon: FileText },
   { slug: "compliance", label: "Compliance", icon: ShieldCheck },
-  { slug: "settings", label: "Settings", icon: Settings },
+  { slug: "settings", label: "Fund Settings", icon: Settings },
 ] as const;
 
 export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
