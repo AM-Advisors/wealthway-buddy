@@ -176,6 +176,13 @@
       "when": 1790127670490,
       "tag": "0024_signing_templates_and_preparation",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790129480745,
+      "tag": "0025_kyc_didit_automation_address_verification",
+      "breakpoints": true
     }
   ]
 }
