@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { OperationsBanking } from "@/components/operations-board";
 
 export const Route = createFileRoute("/_authenticated/ops/banking")({
+
   head: () => ({
     meta: [
       { title: "Banking requests — Harmonious operations" },
