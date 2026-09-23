@@ -7,7 +7,7 @@ import { CheckCircle2, FileText, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   refreshSigningState,
   startSigningSession,
@@ -199,19 +199,24 @@ export function DocumentSignCard({
 
       <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : void closeSession())}>
         <DialogContent
-          showCloseButton={false}
           className="flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none p-0 left-0 top-0 sm:left-[50%] sm:top-[50%] sm:h-[92vh] sm:w-[94vw] sm:max-w-[94vw] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg"
         >
           <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background px-4 py-3">
             <div>
-              <h2 className="text-base font-semibold">{title}</h2>
-              <p className="text-xs text-muted-foreground">Review and sign</p>
+              <DialogTitle className="text-base">{title}</DialogTitle>
+              <DialogDescription className="text-xs">Review and sign</DialogDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={onDownload}>
                 Download
               </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={() => void closeSession()}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mr-6"
+                onClick={() => void closeSession()}
+              >
                 <X className="mr-1 h-4 w-4" aria-hidden /> Close
               </Button>
             </div>
