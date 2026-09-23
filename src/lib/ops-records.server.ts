@@ -807,7 +807,7 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           ? s
               .from("person_addresses")
               .select(
-                "id, line1, line2, city, region, postal_code, country, formatted, entry_method, validation_provider, state, state_reason, proof_document_type, proof_issue_date, proof_provider_status, proof_verified_at, is_current",
+                "id, line1, line2, city, region, postal_code, country, formatted, entry_method, validation_provider, state, state_reason, proof_document_type, proof_issue_date, proof_provider_status, proof_verified_at, is_current, owner_type, address_kind, version, record_status, source, provider_verdict, validated_at, comparison, review_reason, provider_extracted_address",
               )
               .eq("person_id", person.id)
               .order("created_at", { ascending: false })
@@ -844,18 +844,47 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           warnings: Array.isArray(c.warnings) ? c.warnings.length : 0,
           evaluatedAt: c.evaluated_at,
         })),
-        addresses: rows(addresses).map((a: any) => ({
-          address: [a.line1, a.line2, a.city, a.region, a.postal_code, a.country].filter(Boolean).join(", "),
-          state: a.state,
-          reason: a.state_reason,
-          entry: a.entry_method,
-          validatedBy: a.validation_provider,
-          proofDocument: a.proof_document_type,
-          proofIssued: a.proof_issue_date,
-          proofStatus: a.proof_provider_status,
-          proofVerifiedAt: a.proof_verified_at,
-          current: a.is_current,
-        })),
+        addresses: rows(addresses).map((a: any) => {
+          const text = [a.line1, a.line2, a.city, a.region, a.postal_code, a.country]
+            .filter(Boolean)
+            .join(", ");
+          const comparison = (a.comparison ?? null) as any;
+          const extracted = (a.provider_extracted_address ?? null) as any;
+          return {
+            address: text,
+            // Convenience link only; a map pin is not evidence of residence.
+            mapsUrl: text
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text)}`
+              : null,
+            kind: a.address_kind,
+            version: a.version,
+            recordStatus: a.record_status,
+            source: a.source,
+            state: a.state,
+            reason: a.state_reason,
+            entry: a.entry_method,
+            validatedBy: a.validation_provider,
+            providerVerdict: a.provider_verdict,
+            validatedAt: a.validated_at,
+            proofDocument: a.proof_document_type,
+            proofIssued: a.proof_issue_date,
+            proofStatus: a.proof_provider_status,
+            proofVerifiedAt: a.proof_verified_at,
+            reviewReason: a.review_reason,
+            comparison: comparison?.result ?? null,
+            differences: Array.isArray(comparison?.differences) ? comparison.differences : [],
+            // Side-by-side normalised components for authorised compliance staff.
+            sideBySide: comparison?.left && comparison?.right
+              ? { onFile: comparison.left, proofOfAddress: comparison.right }
+              : null,
+            extractedAddress: extracted
+              ? [extracted.line1, extracted.city, extracted.region, extracted.postalCode, extracted.country]
+                  .filter(Boolean)
+                  .join(", ")
+              : null,
+            current: a.is_current,
+          };
+        }),
         addressHistory: rows(addressEvents).map((e: any) => ({
           at: e.created_at,
           from: e.from_state,
