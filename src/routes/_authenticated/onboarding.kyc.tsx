@@ -274,7 +274,9 @@ function KycPage() {
             <CardHeader>
               <CardTitle><h2 className="font-semibold leading-none tracking-tight">Government identification</h2></CardTitle>
               <CardDescription>
-                Only the last four digits of the document number are stored with your file.
+                Your identification details and uploaded ID are securely stored and used for
+                identity verification and compliance purposes. Sensitive identification information
+                is restricted from fund managers and other investors.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -310,6 +312,7 @@ function KycPage() {
                 set={set}
                 errors={errors}
               />
+              <GovernmentIdUpload documentType={form.id_document_type} error={errors["government_id"]} />
             </CardContent>
           </Card>
 
