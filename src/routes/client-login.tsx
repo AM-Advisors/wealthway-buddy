@@ -75,7 +75,9 @@ function ClientLoginPage() {
 
   async function signInWithGoogle() {
     setBusy(true);
-    const errorMessage = await startGoogleOAuth("/client-login");
+    const intended =
+      typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
+    const errorMessage = await startGoogleOAuth("/client-login", intended);
     if (errorMessage) {
       void recordAttempt("google-oauth", false, errorMessage);
       toast.error(errorMessage);
