@@ -22,6 +22,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScopeNotice } from "@/components/fund-scope-section";
 import { AddressInput, addressFromSnake, addressToSnake } from "@/components/address-input";
+import { GovernmentIdUpload, useGovernmentId } from "@/components/government-id-upload";
+import { ID_SIDE_LABELS, isExpired, requiredSides } from "@/lib/government-id";
 
 export const Route = createFileRoute("/_authenticated/onboarding/kyc")({
   head: () => ({
@@ -92,6 +94,7 @@ function KycPage() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const idState = useGovernmentId();
 
   useEffect(() => {
     if (!data) return;
@@ -124,12 +127,23 @@ function KycPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const parsed = kycSchema.safeParse(form);
+    const flat: Record<string, string> = {};
     if (!parsed.success) {
-      const flat: Record<string, string> = {};
       for (const issue of (parsed.error as z.ZodError).issues) {
         const key = String(issue.path[0]);
         if (!flat[key]) flat[key] = issue.message;
       }
+    }
+    if (form.id_expiration && isExpired(form.id_expiration)) {
+      flat["id_expiration"] = "This ID has expired. Please use a current ID.";
+    }
+    if (!idState.data?.providedByVerification) {
+      const missing = requiredSides(form.id_document_type).filter(
+        (s) => !idState.data?.uploads.some((u) => u.side === s && u.documentType === form.id_document_type),
+      );
+      if (missing.length) flat["government_id"] = `Upload required: ${missing.map((s) => ID_SIDE_LABELS[s]).join(", ")}.`;
+    }
+    if (!parsed.success || Object.keys(flat).length) {
       setErrors(flat);
       toast.error("Please correct the highlighted fields.");
       return;
