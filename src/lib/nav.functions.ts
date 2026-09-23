@@ -16,7 +16,7 @@ export const getNavState = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
 
     const [{ data: profile }, { data: application }] = await Promise.all([
-      supabase.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle(),
+      import("@/lib/session-facts.server").then((m) => m.gatherPersonFacts(context)).then((data) => ({ data })),
       supabase
         .from("investor_applications")
         .select(

@@ -53,14 +53,9 @@ async function requireOperations(context: any): Promise<Who> {
 export const getOperationsAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId);
-    const roles = ((data ?? []) as any[]).map((r) => r.role as string);
-    const isAdmin = roles.includes("admin");
-    const isOperations = roles.includes("operations");
-    return { isAdmin, isOperations, allowed: isAdmin || isOperations };
+    // Legacy coarse projection of the canonical staff facts.
+    const { gatherStaffFacts, operationsAccessProjection } = await import("@/lib/session-facts.server");
+    return operationsAccessProjection(await gatherStaffFacts(context));
   });
 
 async function fundMap(supabase: any, ids: string[]) {
