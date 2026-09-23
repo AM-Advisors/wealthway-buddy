@@ -8,7 +8,12 @@ import {
   hasOperationsAccess,
   resolveDestination,
 } from "@/lib/session-resolution";
-import { gatherFacts } from "@/lib/session-facts.server";
+import {
+  adminAccessProjection,
+  gatherFacts,
+  operationsAccessProjection,
+  professionalStandingProjection,
+} from "@/lib/session-facts.server";
 
 /**
  * The one answer to "who is this, what may they enter, and where do they go?".
@@ -30,6 +35,14 @@ export const resolveSession = createServerFn({ method: "POST" })
       staffRoles: facts.staff.roles,
       // Granular Operations permissions, never collapsed into a single flag.
       operationsCapabilities: facts.operations.capabilities,
+      // Navigation flags for the legacy internal menu — projections of the same
+      // facts, so no menu ever runs its own relationship query.
+      navigation: {
+        isAdmin: adminAccessProjection(facts).isAdmin,
+        isReviewer: adminAccessProjection(facts).isReviewer,
+        legacyOperationsAllowed: operationsAccessProjection(facts.operations).allowed,
+        isProfessional: professionalStandingProjection(facts).isProfessional,
+      },
       workspaces,
       pendingInvitations: facts.pendingInvitationCount,
       outstandingRequirements: facts.outstandingRequirements,

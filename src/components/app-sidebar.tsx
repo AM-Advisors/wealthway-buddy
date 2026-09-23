@@ -54,179 +54,24 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getAdminAccess } from "@/lib/admin.functions";
-import { getOperationsAccess } from "@/lib/operations.functions";
 import { getNavState } from "@/lib/nav.functions";
 import { getNavCounts } from "@/lib/nav-counts.functions";
 import { getPolicyStatus } from "@/lib/policies.functions";
-import { getProfessionalStanding } from "@/lib/professional.functions";
 import { cn } from "@/lib/utils";
+import { useClientWorkspace } from "@/components/client-workspace";
+import {
+  internalNavigationGroups,
+  onboardingItems,
+  type LegacyNavGroup,
+  type LegacyNavItem,
+  type NavBadgeKey,
+} from "@/lib/navigation";
 
-type BadgeKey = "signOff" | "applications" | "unpaidInvoices" | "serviceRequests" | "myClients";
+type NavItem = LegacyNavItem;
+type BadgeKey = NavBadgeKey;
 
-type NavItem = {
-  title: string;
-  url: string;
-  icon: typeof LayoutDashboard;
-  badge?: BadgeKey;
-};
-
-type NavGroup = { id: string; label: string; items: NavItem[] };
-
-const investorItems: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Documents", url: "/documents", icon: FileText },
-  { title: "Capital statements", url: "/statements", icon: FileSpreadsheet },
-  { title: "Fund reports", url: "/investor-financials", icon: FileSpreadsheet },
-  { title: "Performance", url: "/investor-performance", icon: Gauge },
-  { title: "Reports", url: "/investor-reporting", icon: FileSpreadsheet },
-  { title: "My distributions", url: "/investor-distributions", icon: Banknote },
-  { title: "Fund documents", url: "/fund-documents", icon: FolderLock },
-  { title: "Document vault", url: "/vault", icon: FileSignature },
-  { title: "Wire instructions", url: "/wire", icon: Landmark },
-  { title: "Confirm your wire", url: "/wire-confirmation", icon: Send },
-  { title: "Due diligence", url: "/diligence", icon: FolderLock },
-  { title: "Portal", url: "/portal", icon: Building2 },
-  { title: "My equity", url: "/my-equity", icon: Briefcase },
-  { title: "Items prepared for me", url: "/prepared", icon: ClipboardList },
-  { title: "Who can see my information", url: "/access", icon: BookLock },
-  { title: "Signing authority", url: "/signatory", icon: FileSignature },
-
-];
-
-const professionalItems: NavItem[] = [
-  { title: "My clients", url: "/professional", icon: Users },
-  { title: "Prepare for a client", url: "/professional/prepare", icon: ClipboardList },
-  { title: "Client profiles", url: "/professional/profiles", icon: Briefcase },
-
-  { title: "Funds", url: "/professional/funds", icon: Building2 },
-  { title: "Investments", url: "/professional/investments", icon: Layers },
-  { title: "Documents", url: "/professional/documents", icon: FileText },
-  { title: "Tax", url: "/professional/tax", icon: FileSpreadsheet },
-  { title: "Tasks", url: "/professional/tasks", icon: ClipboardList },
-  { title: "Activity", url: "/professional/activity", icon: History },
-  { title: "Organization", url: "/professional/organization", icon: Handshake },
-  { title: "Firm verification", url: "/professional/verification", icon: ShieldCheck },
-  { title: "My credentials", url: "/professional/credentials", icon: BadgeCheck },
-  { title: "Awaiting acceptance", url: "/professional/acceptance", icon: Handshake },
-  { title: "Authority documents", url: "/professional/authority", icon: BookLock },
-  { title: "Signatures", url: "/professional/signatures", icon: FileSignature },
-];
-
-const managerItems: NavItem[] = [
-  { title: "My funds", url: "/manager", icon: Briefcase },
-  { title: "Document inbox", url: "/manager/inbox", icon: Mail },
-  { title: "Joining investors", url: "/manager/investor-onboarding", icon: Users },
-  { title: "Investor approvals", url: "/manager/approvals", icon: BadgeCheck },
-  { title: "Cash to confirm", url: "/manager/cash-approvals", icon: Banknote },
-  { title: "Fund valuations", url: "/manager/valuations", icon: Gauge },
-  { title: "Fund NAV", url: "/manager/nav", icon: Gauge },
-  { title: "Investor capital", url: "/manager/allocations", icon: Users },
-  { title: "Fund financials", url: "/manager/financials", icon: FileSpreadsheet },
-  { title: "Published performance", url: "/manager/performance-reporting", icon: Gauge },
-  { title: "Investor packages", url: "/manager/reporting", icon: FileSpreadsheet },
-  { title: "Fund distributions", url: "/manager/distributions", icon: Banknote },
-  { title: "Reviewer activity", url: "/manager/activity", icon: ClipboardList },
-];
-
-const selectedFundItems = (fundId: string): NavItem[] => [
-  { title: "Overview", url: `/manager/fund/${fundId}`, icon: Building2 },
-  { title: "Investors", url: `/manager/fund/${fundId}/investors`, icon: Users },
-  { title: "Assets & performance", url: `/manager/fund/${fundId}/assets`, icon: Gauge },
-  { title: "Transactions", url: `/manager/fund/${fundId}/transactions`, icon: Banknote },
-  { title: "Documents", url: `/manager/fund/${fundId}/documents`, icon: FileText },
-  { title: "Compliance", url: `/manager/fund/${fundId}/compliance`, icon: ShieldCheck },
-  { title: "Settings", url: `/manager/fund/${fundId}/settings`, icon: ScrollText },
-];
-
-const operationsItems: NavItem[] = [
-  { title: "Operations", url: "/ops", icon: ShieldCheck },
-  { title: "Accounting operations", url: "/ops/accounting", icon: ClipboardList },
-  { title: "Valuation review", url: "/ops/valuations", icon: Gauge },
-  { title: "NAV review", url: "/ops/nav", icon: Gauge },
-  { title: "Investor allocations", url: "/ops/allocations", icon: Users },
-  { title: "Financial reporting", url: "/ops/financials", icon: FileSpreadsheet },
-  { title: "Performance reporting", url: "/ops/performance", icon: Gauge },
-  { title: "Investor reporting", url: "/ops/reporting", icon: FileSpreadsheet },
-  { title: "Banking requests", url: "/ops/banking", icon: Landmark },
-  { title: "EIN and SS-4", url: "/ops/ss4", icon: FileText },
-  { title: "Tax documents", url: "/ops/tax-documents", icon: FileSpreadsheet },
-  { title: "Operations team", url: "/ops/team", icon: Users },
-];
-
-const clientsAndMoneyItems: NavItem[] = [
-  { title: "Client onboarding", url: "/admin/onboarding", icon: UserPlus },
-  { title: "Onboarding progress", url: "/admin/onboarding-progress", icon: Gauge },
-  { title: "Investor onboarding", url: "/admin/investor-onboarding", icon: Users },
-  { title: "Distributions & payments", url: "/admin/distributions", icon: Banknote },
-  { title: "Clients and scope", url: "/admin/contracts", icon: Handshake },
-  { title: "Entities and engagements", url: "/admin/entities", icon: Building2 },
-  { title: "Services administration", url: "/admin/services", icon: Layers },
-  { title: "Agreements & SOW", url: "/admin/agreements", icon: ScrollText },
-  { title: "Pricing and agreements", url: "/admin/pricing", icon: ScrollText },
-  { title: "Rate proposals", url: "/admin/rate-proposals", icon: Handshake },
-  {
-    title: "Unpaid invoices",
-    url: "/admin/invoices",
-    icon: Receipt,
-    badge: "unpaidInvoices",
-  },
-  { title: "Wires and distributions", url: "/admin/money", icon: Banknote },
-  { title: "Wire instructions", url: "/admin/wire", icon: Landmark },
-  { title: "Bank accounts", url: "/admin/bank-accounts", icon: Landmark },
-  { title: "Client bank accounts", url: "/admin/client-bank-accounts", icon: Landmark },
-
-];
-
-/** Cap table for founders — their own company ownership records. */
-const capTableFounderItems: NavItem[] = [
-  { title: "Overview", url: "/client/cap-table", icon: Gauge },
-  { title: "Cap table", url: "/client/cap-table/table", icon: FileSpreadsheet },
-  { title: "Securities", url: "/client/cap-table/securities", icon: ScrollText },
-  { title: "Employees", url: "/client/cap-table/employees", icon: Users },
-  { title: "Investors", url: "/client/cap-table/investors", icon: Briefcase },
-  { title: "Fundraising", url: "/client/cap-table/fundraising", icon: Handshake },
-  { title: "Secondaries", url: "/client/cap-table/secondaries", icon: Banknote },
-  { title: "Exposure and claims", url: "/client/cap-table/exposure", icon: ShieldCheck },
-  { title: "Migration", url: "/client/cap-table/migration", icon: History },
-  { title: "Reconciliation", url: "/client/cap-table/reconciliation", icon: ClipboardList },
-  { title: "Documents", url: "/client/cap-table/documents", icon: FileText },
-  { title: "Compliance", url: "/client/cap-table/compliance", icon: BookLock },
-  { title: "Reports", url: "/client/cap-table/reports", icon: FileSpreadsheet },
-  { title: "Settings", url: "/client/cap-table/settings", icon: ScrollText },
-];
-
-/** Cap table for Harmonious staff — the clients they administer. */
-const capTableStaffItems: NavItem[] = [
-  { title: "Client cap tables", url: "/admin/client-cap-tables", icon: Users },
-  { title: "Cap table requests", url: "/admin/cap-table-requests", icon: UserPlus },
-  { title: "Cap table plans", url: "/admin/cap-table-plans", icon: Gauge },
-  { title: "Migration concierge", url: "/admin/cap-table-migrations", icon: ScrollText },
-];
-
-const onboardingItems: NavItem[] = [
-  { title: "KYC / AML", url: "/onboarding/compliance", icon: BadgeCheck },
-  { title: "Accreditation", url: "/onboarding/accreditation", icon: FileSignature },
-];
-
-const applicationsAndFundsItems: NavItem[] = [
-  { title: "Applications", url: "/admin", icon: ClipboardList, badge: "applications" },
-  { title: "New application", url: "/admin/new-application", icon: UserPlus },
-  { title: "Fund setup", url: "/admin/setup", icon: Building2 },
-  { title: "Fund pages", url: "/admin/funds", icon: Building2 },
-  { title: "Fund access", url: "/admin/access", icon: BadgeCheck },
-];
-
-const recordsItems: NavItem[] = [
-  { title: "Sign-off", url: "/admin/signoff", icon: FileSignature, badge: "serviceRequests" },
-  { title: "Client portal activity", url: "/admin/client-activity", icon: History },
-  { title: "Onboarding funnel", url: "/admin/funnel", icon: Gauge },
-  { title: "Document activity", url: "/admin/document-log", icon: FileText },
-  { title: "Activity log", url: "/admin/activity", icon: ClipboardList },
-  { title: "Audit log", url: "/admin/audit", icon: BookLock },
-  { title: "Security", url: "/admin/security", icon: ShieldCheck },
-  { title: "Email preview", url: "/admin/email-preview", icon: Mail },
-];
+const ICONS: Record<string, typeof LayoutDashboard> = { BadgeCheck, Banknote, BookLock, Briefcase, Building2, Check, ChevronRight, CircleDashed, ClipboardList, FileSignature, FileSpreadsheet, FileText, FolderLock, Gauge, Handshake, History, Home, Landmark, LayoutDashboard, Layers, LogOut, Mail, Receipt, ScrollText, Search, Send, ShieldCheck, UserPlus, Users };
+const iconOf = (name: string) => ICONS[name] ?? LayoutDashboard;
 
 const OPEN_GROUPS_KEY = "harmonious.sidebar.openGroups";
 
@@ -245,20 +90,16 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
 
-  const access = useServerFn(getAdminAccess);
+  // Access flags are projections of the canonical session; this menu runs no
+  // relationship queries of its own.
+  const { session } = useClientWorkspace();
+  const navFlags = (session as any)?.navigation as
+    | { isAdmin: boolean; isReviewer: boolean; legacyOperationsAllowed: boolean; isProfessional: boolean }
+    | undefined;
+  const adminAccess = navFlags;
+  const operations = navFlags ? { allowed: navFlags.legacyOperationsAllowed } : undefined;
   const navState = useServerFn(getNavState);
-  const { data: adminAccess } = useQuery({ queryKey: ["admin-access"], queryFn: () => access() });
   const { data: nav } = useQuery({ queryKey: ["nav-state"], queryFn: () => navState() });
-  const opsAccess = useServerFn(getOperationsAccess);
-  const { data: operations } = useQuery({
-    queryKey: ["operations-access"],
-    queryFn: () => opsAccess(),
-  });
-  const standingFn = useServerFn(getProfessionalStanding);
-  const { data: standing } = useQuery({
-    queryKey: ["professional-standing"],
-    queryFn: () => standingFn(),
-  });
   const policyStatus = useServerFn(getPolicyStatus);
   const { data: signOff } = useQuery({ queryKey: ["policy-status"], queryFn: () => policyStatus() });
   const navCountsFn = useServerFn(getNavCounts);
@@ -301,47 +142,17 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
     return navCounts?.[key] ?? 0;
   };
 
-  const groups: NavGroup[] = useMemo(() => {
-    const list: NavGroup[] = [{ id: "application", label: "Your application", items: investorItems }];
-    list.push({
-      id: "cap-table",
-      label: "CapTable",
-      items: adminAccess?.isAdmin
-        ? [...capTableFounderItems, ...capTableStaffItems]
-        : capTableFounderItems,
-    });
-    if (adminAccess?.isReviewer) {
-      list.push({ id: "funds", label: "Fund management", items: managerItems });
-      const selectedFundId = pathname.match(/^\/manager\/fund\/([^/]+)/)?.[1];
-      if (selectedFundId) {
-        list.push({ id: "selected-fund", label: "Selected fund", items: selectedFundItems(selectedFundId) });
-      }
-    }
-    if (standing?.isProfessional)
-      list.push({ id: "professional", label: "Acting for clients", items: professionalItems });
-    if (operations?.allowed)
-      list.push({ id: "operations", label: "Operations", items: operationsItems });
-    if (adminAccess?.isAdmin) {
-      list.push(
-        { id: "clients-money", label: "Clients and money", items: clientsAndMoneyItems },
-        { id: "applications-funds", label: "Applications and funds", items: applicationsAndFundsItems },
-        { id: "records", label: "Records and oversight", items: recordsItems },
-      );
-    }
-    return list;
-  }, [
-    adminAccess?.isAdmin,
-    adminAccess?.isReviewer,
-    operations?.allowed,
-    standing?.isProfessional,
-    pathname,
-  ]);
+  const groups: LegacyNavGroup[] = useMemo(
+    () => internalNavigationGroups(navFlags, pathname),
+    [navFlags, pathname],
+  );
 
   const search = query.trim().toLowerCase();
   const matches = (item: NavItem) => !search || item.title.toLowerCase().includes(search);
 
   const renderItem = (item: NavItem) => {
     const count = badgeCount(item.badge);
+    const ItemIcon = iconOf(item.icon);
     return (
       <SidebarMenuItem key={item.url}>
         <SidebarMenuButton
@@ -351,7 +162,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
           className="data-[active=true]:border-l-2 data-[active=true]:border-sidebar-primary data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium"
         >
           <Link to={item.url as never} className="flex items-center gap-2">
-            <item.icon className="h-4 w-4 shrink-0" />
+            <ItemIcon className="h-4 w-4 shrink-0" />
             {!collapsed && <span className="truncate">{item.title}</span>}
             {count > 0 && !collapsed && (
               <span className="ml-auto rounded-full bg-sidebar-primary/20 px-1.5 text-[11px] font-medium text-sidebar-foreground">
@@ -370,7 +181,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
     );
   };
 
-  const renderGroup = (group: NavGroup) => {
+  const renderGroup = (group: LegacyNavGroup) => {
     const items = group.items.filter(matches);
     if (items.length === 0) return null;
 
@@ -428,9 +239,9 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
   const isStaff = Boolean(adminAccess?.isReviewer || operations?.allowed);
 
   const pinned: NavItem[] = [
-    { title: "Home", url: "/home", icon: Home },
+    { title: "Home", url: "/home", icon: "Home" },
     ...(isStaff
-      ? [{ title: "My clients", url: "/staff", icon: Users, badge: "myClients" as BadgeKey }]
+      ? [{ title: "My clients", url: "/staff", icon: "Users", badge: "myClients" as BadgeKey }]
       : []),
   ].filter(matches);
 
@@ -503,6 +314,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
                     {onboardingItems.map((item, index) => {
                       const step = nav?.steps[index];
                       const count = index + 1;
+                      const ItemIcon = iconOf(item.icon);
                       return (
                         <SidebarMenuItem key={item.url}>
                           <SidebarMenuButton
@@ -514,7 +326,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
                               {step?.state === "done" ? (
                                 <Check className="h-4 w-4 text-primary" />
                               ) : step?.state === "current" ? (
-                                <item.icon className="h-4 w-4 text-primary" />
+                                <ItemIcon className="h-4 w-4 text-primary" />
                               ) : (
                                 <CircleDashed className="h-4 w-4 text-muted-foreground" />
                               )}

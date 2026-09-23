@@ -38,7 +38,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { accountMenu, clientNavigation } from "@/lib/client-navigation";
+import { getNavigation } from "@/lib/navigation";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -66,9 +66,9 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { session, options, activeId, activeKind, switchTo } = useClientWorkspace();
 
-  const items = clientNavigation(activeKind);
+  const navigation = getNavigation(session as never, activeId, pathname);
+  const items = navigation.primary;
   const active = options.find((o) => o.id === activeId);
-  const isProfessional = options.some((o) => o.id === "professional");
 
   const isActive = (url: string) => {
     const base = url.split("?")[0] ?? url;
@@ -165,7 +165,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
                   {session.person.name}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  {accountMenu({ isProfessional }).map((link) => (
+                  {navigation.account.map((link) => (
                     <DropdownMenuItem key={link.url} asChild>
                       <Link to={link.url as never}>{link.title}</Link>
                     </DropdownMenuItem>

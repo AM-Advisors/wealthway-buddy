@@ -1,6 +1,4 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   BadgeCheck,
   Banknote,
@@ -33,8 +31,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getOperationsContext } from "@/lib/ops-access.functions";
-import { OPS_HOME } from "@/lib/ops-capabilities";
+import { useClientWorkspace } from "@/components/client-workspace";
+import { getNavigation } from "@/lib/navigation";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -62,15 +60,10 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const load = useServerFn(getOperationsContext);
-
-  const { data } = useQuery({
-    queryKey: ["operations-context"],
-    queryFn: () => load() as Promise<any>,
-    staleTime: 60_000,
-  });
-
-  const sections: { id: string; title: string; url: string; icon: string }[] = data?.sections ?? [];
+  // Sections are a projection of the granular capabilities the canonical
+  // session resolved; this menu runs no staff-role query of its own.
+  const { session } = useClientWorkspace();
+  const sections = getNavigation(session as never, "operations", pathname).operations;
 
   const isActive = (url: string) => {
     const base = url.split("?")[0] ?? url;
@@ -95,7 +88,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
           {!collapsed && <SidebarGroupLabel>Operations</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
-              {[OPS_HOME, ...sections].map((section) => {
+              {sections.map((section) => {
                 const Icon = ICONS[section.icon] ?? Home;
                 return (
                   <SidebarMenuItem key={section.url}>

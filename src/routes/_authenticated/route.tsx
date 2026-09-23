@@ -6,7 +6,7 @@ import { OpsSidebar } from "@/components/ops-sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/app-origins";
 import { clearStoredClientContext } from "@/lib/client-context-storage";
-import { INTERNAL_PATH_PREFIXES } from "@/lib/client-navigation";
+import { getNavigation } from "@/lib/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ClientSidebar } from "@/components/client-sidebar";
 import { ClientWorkspaceProvider, useClientWorkspace } from "@/components/client-workspace";
@@ -73,25 +73,11 @@ function AuthenticatedLayout() {
  */
 function Menu({ onSignOut }: { onSignOut: () => void }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  // Shell choice consumes the canonical resolver's answer. The hostname and
-  // pathname only pick a layout; they never grant Operations.
-  const { options, activeKind, session } = useClientWorkspace();
-
-  const onInternalPage = INTERNAL_PATH_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
-  const hasClientWorkspace = options.some((option) => option.surface === "client");
-
-  // Operations pages get the Operations menu, built from the permissions the
-  // backend resolved for this staff member. Everything else is unchanged until
-  // the remaining internal pages move across.
-  const inOperations = pathname === "/ops" || pathname.startsWith("/ops/");
-  if (inOperations && session?.operations) {
-    return <OpsSidebar onSignOut={onSignOut} />;
-  }
-
-  if (onInternalPage || !hasClientWorkspace || activeKind === "operations") {
-    return <AppSidebar onSignOut={onSignOut} />;
-  }
+  // One canonical projection decides the shell. Hostname and pathname only
+  // pick a layout; Operations still requires resolved staff facts.
+  const { activeId, session } = useClientWorkspace();
+  const { shell } = getNavigation(session as never, activeId, pathname);
+  if (shell === "ops") return <OpsSidebar onSignOut={onSignOut} />;
+  if (shell === "internal") return <AppSidebar onSignOut={onSignOut} />;
   return <ClientSidebar onSignOut={onSignOut} />;
 }

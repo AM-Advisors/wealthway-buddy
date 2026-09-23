@@ -1,8 +1,6 @@
 import { useEffect } from "react";
 
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { LogOut, User } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
@@ -16,16 +14,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { getNavState } from "@/lib/nav.functions";
+import { useClientWorkspace } from "@/components/client-workspace";
 
 /** Branded bar across the top of every signed-in page. */
 export function PortalTopbar({ onSignOut }: { onSignOut: () => void }) {
-  const loadNav = useServerFn(getNavState);
-  const { data: nav } = useQuery({
-    queryKey: ["nav-state"],
-    queryFn: () => loadNav(),
-    staleTime: 60_000,
-  });
+  // Identity comes from the canonical session, not a separate profile read.
+  const { session } = useClientWorkspace();
 
   // Staff must never be in any doubt about which side of Harmonious they are
   // looking at, so the privileged surface says so in the bar and the tab title.
@@ -40,8 +34,8 @@ export function PortalTopbar({ onSignOut }: { onSignOut: () => void }) {
     }
   }, [inOperations, pathname]);
 
-  const name = (nav as any)?.profile?.legal_name as string | undefined;
-  const email = (nav as any)?.profile?.email as string | undefined;
+  const name = session?.person.name;
+  const email = session?.person.email;
   const label = name || email || "Your account";
   const initial = (name || email || "H").trim().charAt(0).toUpperCase();
 
