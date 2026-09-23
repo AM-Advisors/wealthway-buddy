@@ -102,7 +102,10 @@ describe("the Operations menu", () => {
 
   it("goes somewhere real for every section", () => {
     for (const section of [OPS_HOME, ...opsNavigation(capabilitiesFor(["super_admin"]))]) {
-      expect(existsSync(routeFileFor(section.url)), `${section.title} → ${section.url}`).toBe(true);
+      const file = section.url.startsWith("/ops/areas/")
+        ? "src/routes/_authenticated/ops.areas.$area.tsx"
+        : routeFileFor(section.url);
+      expect(existsSync(file), `${section.title} → ${section.url}`).toBe(true);
     }
   });
 

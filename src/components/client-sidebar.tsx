@@ -18,6 +18,7 @@ import {
 
 import { Logo, LogoIcon } from "@/components/Logo";
 import { useClientWorkspace } from "@/components/client-workspace";
+import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,7 +65,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { session, options, activeId, activeKind, switchTo } = useClientWorkspace();
+  const { session, options, activeId } = useClientWorkspace();
 
   const navigation = getNavigation(session as never, activeId, pathname);
   const items = navigation.primary;
@@ -81,7 +82,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/home" aria-label="Harmonious home" className="flex items-center px-2 py-1">
+        <Link to="/home" aria-label="Harmonious home" data-testid="brand-logo" className="flex items-center px-2 py-1">
           {collapsed ? (
             <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (
@@ -89,29 +90,6 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
           )}
         </Link>
 
-        {!collapsed && options.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="mx-1 mb-1 flex w-[calc(100%-0.5rem)] items-center justify-between rounded-md border border-sidebar-border bg-sidebar-accent/40 px-2 py-1.5 text-left text-xs text-sidebar-foreground">
-              <span className="truncate">{active?.label ?? "Choose a workspace"}</span>
-              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-60">
-              <DropdownMenuLabel>Switch workspace</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {options.map((option) => (
-                <DropdownMenuItem
-                  key={option.id}
-                  onSelect={(event) => {
-                    event.preventDefault();
-                    void switchTo(option.id);
-                  }}
-                >
-                  {option.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
       </SidebarHeader>
 
       <SidebarContent>
@@ -156,32 +134,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          {!collapsed && session?.person?.name && (
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="w-full truncate rounded-md px-2 py-1.5 text-left text-xs text-sidebar-foreground/80">
-                  {session.person.name}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  {navigation.account.map((link) => (
-                    <DropdownMenuItem key={link.url} asChild>
-                      <Link to={link.url as never}>{link.title}</Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          )}
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={onSignOut} tooltip="Sign out">
-              <LogOut className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>Sign out</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      <SidebarAccountFooter workspaceLabel={active?.label ?? "Your workspace"} onSignOut={onSignOut} />
     </Sidebar>
   );
 }

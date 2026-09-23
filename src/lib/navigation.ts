@@ -15,7 +15,7 @@ import {
   INTERNAL_PATH_PREFIXES,
   type ClientNavLink,
 } from "@/lib/client-navigation";
-import { OPS_HOME, opsNavigation, type OpsCapability } from "@/lib/ops-capabilities";
+import { OPS_HOME, activeOpsSection, opsNavigation, type OpsCapability } from "@/lib/ops-capabilities";
 import type { WorkspaceKind } from "@/lib/session-resolution";
 
 export type NavBadgeKey = "signOff" | "applications" | "unpaidInvoices" | "serviceRequests" | "myClients";
@@ -257,15 +257,16 @@ export function workspaceKindForPath(pathname: string): WorkspaceKind | null {
   return null;
 }
 
+/** Exactly one primary Operations section is active for any path. */
 export function operationsNavItemIsActive(url: string, pathname: string): boolean {
   const base = url.split("?")[0] ?? url;
-  if (base === "/ops") return pathname === base;
-  if (base === "/ops/funds" && isUnder(pathname, "/ops/fund")) return true;
-  return isUnder(pathname, base);
+  const owner = activeOpsSection(pathname);
+  if (base === "/ops") return owner === "home";
+  return owner !== null && owner === activeOpsSection(base);
 }
 
 export function surfaceLabelForPath(pathname: string): string {
-  if (isUnder(pathname, "/ops")) return "Harmonious Operations";
+  if (isUnder(pathname, "/ops") || isUnder(pathname, "/admin") || isUnder(pathname, "/staff")) return "Harmonious Operations";
   if (isUnder(pathname, "/manager")) return "Fund management";
   if (isUnder(pathname, "/client")) return "Company workspace";
   if (isUnder(pathname, "/professional")) return "Professional workspace";
@@ -296,7 +297,9 @@ export function getNavigation(
   const hasClientWorkspace = workspaces.some((w) => w.surface === "client");
   const onInternalPage = INTERNAL_PATH_PREFIXES.some((p) => isUnder(pathname, p));
   let shell: Shell;
-  if (isUnder(pathname, "/ops") && staff) shell = "ops";
+  // Staff on any internal page, or in the Operations workspace, get the
+  // canonical Operations menu — never a merged client + Operations directory.
+  if (staff && (onInternalPage || (activeKind === "operations" && !hasClientWorkspace))) shell = "ops";
   else if (onInternalPage || !hasClientWorkspace || activeKind === "operations") shell = "internal";
   else shell = "client";
 
