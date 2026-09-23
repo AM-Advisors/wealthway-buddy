@@ -231,6 +231,7 @@ import { Route as AuthenticatedFundOfferingIdDocumentsRouteImport } from './rout
 import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes/_authenticated/fund.$offeringId.funding'
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
+import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
 import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
 import { Route as AuthenticatedOpsCompaniesIndexRouteImport } from './routes/_authenticated/ops.companies.index'
@@ -1525,6 +1526,12 @@ const AuthenticatedManagerFundFundIdRoute =
     path: '/manager/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsAreasAreaRoute =
+  AuthenticatedOpsAreasAreaRouteImport.update({
+    id: '/ops/areas/$area',
+    path: '/ops/areas/$area',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsClientsIndexRoute =
   AuthenticatedOpsClientsIndexRouteImport.update({
     id: '/ops/clients/',
@@ -1900,6 +1907,7 @@ export interface FileRoutesByFullPath {
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
@@ -2144,6 +2152,7 @@ export interface FileRoutesByTo {
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
+  '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
@@ -2396,6 +2405,7 @@ export interface FileRoutesById {
   '/_authenticated/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/_authenticated/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
@@ -2648,6 +2658,7 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund/$fundId'
+    | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/companies/$companyId'
     | '/ops/fund/$fundId'
@@ -2892,6 +2903,7 @@ export interface FileRouteTypes {
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
     | '/manager/fund-banking/$fundId'
+    | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/companies/$companyId'
     | '/ops/fund/$fundId'
@@ -3143,6 +3155,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fund/$offeringId/funding'
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund/$fundId'
+    | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/clients/$clientId'
     | '/_authenticated/ops/companies/$companyId'
     | '/_authenticated/ops/fund/$fundId'
@@ -4769,6 +4782,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/areas/$area': {
+      id: '/_authenticated/ops/areas/$area'
+      path: '/ops/areas/$area'
+      fullPath: '/ops/areas/$area'
+      preLoaderRoute: typeof AuthenticatedOpsAreasAreaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/clients/': {
       id: '/_authenticated/ops/clients/'
       path: '/ops/clients'
@@ -5315,6 +5335,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundOfferingIdFundingRoute: typeof AuthenticatedFundOfferingIdFundingRoute
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
   AuthenticatedOpsCompaniesCompanyIdRoute: typeof AuthenticatedOpsCompaniesCompanyIdRoute
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
@@ -5507,6 +5528,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundBankingFundIdRoute,
   AuthenticatedManagerFundFundIdRoute:
     AuthenticatedManagerFundFundIdRouteWithChildren,
+  AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
   AuthenticatedOpsCompaniesCompanyIdRoute:
     AuthenticatedOpsCompaniesCompanyIdRoute,

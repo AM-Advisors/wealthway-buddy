@@ -59,6 +59,7 @@ import { getNavCounts } from "@/lib/nav-counts.functions";
 import { getPolicyStatus } from "@/lib/policies.functions";
 import { cn } from "@/lib/utils";
 import { useClientWorkspace } from "@/components/client-workspace";
+import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import {
   internalNavigationGroups,
   onboardingItems,
@@ -248,7 +249,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/" aria-label="Harmonious home" className="flex items-center px-2 py-1">
+        <Link to="/" aria-label="Harmonious home" data-testid="brand-logo" className="flex items-center px-2 py-1">
           {collapsed ? (
             <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (
@@ -361,38 +362,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
         )}
       </SidebarContent>
 
-      <SidebarFooter>
-        {!collapsed && signOff && (
-          <p className="px-2 text-xs">
-            {signOffComplete ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-sidebar-primary/20 px-2 py-0.5 text-sidebar-foreground">
-                <BadgeCheck className="h-3 w-3" aria-hidden /> Sign-off complete
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-sidebar-accent px-2 py-0.5 text-sidebar-accent-foreground">
-                <FileSignature className="h-3 w-3" aria-hidden />
-                {signOff.outstanding.length} to sign
-              </span>
-            )}
-          </p>
-        )}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Your sign-off">
-              <Link to="/sign-off">
-                <FileSignature className="h-4 w-4" />
-                {!collapsed && <span>Your sign-off</span>}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={onSignOut} tooltip="Sign out">
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Sign out</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      <SidebarAccountFooter workspaceLabel="Harmonious (legacy menu)" onSignOut={onSignOut} />
     </Sidebar>
   );
 }
