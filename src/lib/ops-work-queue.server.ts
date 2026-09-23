@@ -726,7 +726,207 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
   );
 }
 
+/**
+ * Distributions and outbound payments (Phase D).
+ *
+ * Every line below is read from the distribution record that owns it. There is
+ * no queue status: a batch waiting for review is simply a batch whose own
+ * status says so, and it leaves the queue the moment that status moves. Money
+ * detail never travels with an item — only the fund, the stage and the reason.
+ */
+async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
+  const out: WorkItem[] = [];
+
+  let batchQuery = s
+    .from("distribution_batches")
+    .select(
+      "id, offering_id, batch_number, title, status, payment_status, balances, payment_date, recipient_count, prepared_by, updated_at",
+    )
+    .not("status", "in", "(completed,superseded,cancelled)")
+    .limit(SOURCE_LIMIT);
+  if (fundId) batchQuery = batchQuery.eq("offering_id", fundId);
+  const batches = await safely(async () => rows(await batchQuery));
+
+  const STAGE: Record<string, { action: "prepare" | "review" | "approve" | "execute"; reason: string }> = {
+    draft: { action: "prepare", reason: "Distribution is still being prepared" },
+    proposed: { action: "prepare", reason: "Proposed distribution has not been sent for review" },
+    harmonious_review: { action: "review", reason: "Waiting for Harmonious review" },
+    manager_approval: { action: "review", reason: "Waiting for the fund manager's approval" },
+    investor_confirmation: { action: "review", reason: "Waiting for investor confirmation" },
+    final_approval: { action: "approve", reason: "Waiting for final Harmonious approval" },
+    approved: { action: "execute", reason: "Approved and waiting to be sent" },
+    executing: { action: "review", reason: "Payments are in flight" },
+  };
+
+  for (const b of batches as any[]) {
+    const stage = STAGE[String(b.status)];
+    if (!stage) continue;
+    const unbalanced = b.balances === false;
+    out.push(
+      build(lookup, now, {
+        id: `distribution-batch:${b.id}`,
+        source: "capital.distribution",
+        area: "capital",
+        recordType: "fund",
+        recordId: b.offering_id,
+        recordTab: "capital",
+        title: `${b.title ?? `Distribution #${b.batch_number}`} — ${b.recipient_count ?? 0} investors`,
+        reason: unbalanced ? "Gross less withholding and fees does not equal the net payments" : stage.reason,
+        workflowState: String(b.status),
+        requiredAction: unbalanced ? "review" : stage.action,
+        fundId: b.offering_id,
+        assignedTo: null,
+        // payment_date is a real column on the batch; nothing is invented.
+        dueDate: b.payment_date ?? null,
+        ...(unbalanced ? { blocked: true, blockReason: "The batch does not reconcile" } : {}),
+        at: b.updated_at ?? null,
+      }),
+    );
+  }
+
+  const exceptions = await safely(async () =>
+    rows(
+      await s
+        .from("distribution_exceptions")
+        .select("id, offering_id, batch_id, distribution_line_id, investor_user_id, kind, status, detail, created_at")
+        .neq("status", "resolved")
+        .limit(SOURCE_LIMIT),
+    ),
+  );
+  for (const e of exceptions as any[]) {
+    if (fundId && e.offering_id !== fundId) continue;
+    out.push(
+      build(lookup, now, {
+        id: `distribution-exception:${e.id}`,
+        source: "capital.distribution.exception",
+        area: "capital",
+        recordType: "fund",
+        recordId: e.offering_id,
+        recordTab: "banking",
+        title: `Distribution exception — ${String(e.kind ?? "exception").replace(/_/g, " ")}`,
+        reason: String(e.kind ?? "exception").replace(/_/g, " "),
+        workflowState: String(e.status ?? "open"),
+        requiredAction: "review",
+        fundId: e.offering_id,
+        investorUserId: e.investor_user_id ?? null,
+        blocked: true,
+        blockReason: String(e.kind ?? "exception").replace(/_/g, " "),
+        at: e.created_at ?? null,
+      }),
+    );
+  }
+
+  const changes = await safely(async () =>
+    rows(
+      await s
+        .from("payment_instruction_changes")
+        .select(
+          "id, offering_id, investor_user_id, status, change_kind, cooling_off_until, requested_at, updated_at",
+        )
+        .not("status", "in", "(approved,rejected,cancelled)")
+        .limit(SOURCE_LIMIT),
+    ),
+  );
+  await fillPeople(s, lookup, (changes as any[]).map((c) => c.investor_user_id));
+  for (const c of changes as any[]) {
+    if (fundId && c.offering_id && c.offering_id !== fundId) continue;
+    const cooling = c.cooling_off_until ? new Date(c.cooling_off_until).getTime() > now.getTime() : false;
+    out.push(
+      build(lookup, now, {
+        id: `payment-instruction-change:${c.id}`,
+        source: "capital.payment_instruction",
+        area: "capital",
+        recordType: "investor",
+        recordId: c.investor_user_id,
+        recordTab: "capital",
+        title: `${lookup.people.get(c.investor_user_id) ?? "Investor"} — payment destination change`,
+        reason: cooling
+          ? "In the cooling-off period before the new destination can be used"
+          : "A change of payment destination is waiting for verification and approval",
+        workflowState: String(c.status),
+        requiredAction: "review",
+        fundId: c.offering_id ?? null,
+        investorUserId: c.investor_user_id,
+        blocked: true,
+        blockReason: cooling ? "Cooling-off period" : "Destination not yet verified",
+        at: c.updated_at ?? c.requested_at ?? null,
+      }),
+    );
+  }
+
+  const payments = await safely(async () =>
+    rows(
+      await s
+        .from("distribution_payments")
+        .select("id, offering_id, distribution_line_id, status, failure_reason, updated_at")
+        .in("status", ["failed", "returned", "reversed"])
+        .limit(SOURCE_LIMIT),
+    ),
+  );
+  for (const p of payments as any[]) {
+    if (fundId && p.offering_id !== fundId) continue;
+    out.push(
+      build(lookup, now, {
+        id: `distribution-payment:${p.id}`,
+        source: "capital.distribution.payment",
+        area: "capital",
+        recordType: "fund",
+        recordId: p.offering_id,
+        recordTab: "banking",
+        title: `Payment ${String(p.status)}`,
+        reason: String(p.failure_reason ?? "The bank did not complete this payment"),
+        workflowState: String(p.status),
+        requiredAction: "review",
+        fundId: p.offering_id,
+        blocked: true,
+        blockReason: String(p.status) === "returned" ? "Payment returned" : "Payment failed",
+        at: p.updated_at ?? null,
+      }),
+    );
+  }
+
+  const settled = await safely(async () =>
+    rows(
+      await s
+        .from("distribution_lines")
+        .select(
+          "id, offering_id, investor_user_id, display_name, payment_state, reconciliation_state, accounting_state, updated_at",
+        )
+        .eq("payment_state", "confirmed")
+        .limit(SOURCE_LIMIT),
+    ),
+  );
+  for (const l of settled as any[]) {
+    if (fundId && l.offering_id !== fundId) continue;
+    const reconciled = l.reconciliation_state === "reconciled";
+    const posted = l.accounting_state === "posted";
+    if (reconciled && posted) continue;
+    out.push(
+      build(lookup, now, {
+        id: `distribution-settlement:${l.id}`,
+        source: reconciled ? "capital.distribution.accounting" : "capital.distribution.reconciliation",
+        area: reconciled ? "accounting" : "capital",
+        recordType: "fund",
+        recordId: l.offering_id,
+        recordTab: reconciled ? "accounting" : "banking",
+        title: `${l.display_name ?? "Investor"} — paid, ${reconciled ? "awaiting accounting" : "awaiting reconciliation"}`,
+        reason: reconciled
+          ? "The bank payment is reconciled and the journal has not been posted"
+          : "The bank has confirmed the payment and it is not reconciled yet",
+        workflowState: reconciled ? String(l.accounting_state) : String(l.reconciliation_state),
+        requiredAction: "review",
+        fundId: l.offering_id,
+        investorUserId: l.investor_user_id ?? null,
+        at: l.updated_at ?? null,
+      }),
+    );
+  }
+
+  return out;
+}
+
 /* -------------------------------------------------------------- the queue */
+
 
 const COLLECTORS: {
   area: OpsArea;
@@ -739,6 +939,8 @@ const COLLECTORS: {
   { area: "accounting", load: accountingItems },
   { area: "reports", load: reportingItems },
   { area: "documents", load: documentItems },
+  { area: "capital", load: distributionItems },
+
 ];
 
 export type WorkQueueInput = {

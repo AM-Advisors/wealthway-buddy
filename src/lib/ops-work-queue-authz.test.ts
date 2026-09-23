@@ -218,9 +218,10 @@ describe("the queue only reads authoritative state", () => {
     const areas = result.unconfigured.map((u) => u.area);
     expect(areas).toContain("tax");
     expect(areas).toContain("regulatory");
-    expect(areas).toContain("distributions");
+    expect(areas).not.toContain("distributions");
     expect(result.items.some((i) => i.area === "tax" || i.area === "regulatory")).toBe(false);
   });
+
 });
 
 describe("summaries carry no restricted detail", () => {

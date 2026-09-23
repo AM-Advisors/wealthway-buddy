@@ -427,20 +427,36 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
           .limit(50),
       ]);
       const accountRows = rows(accounts);
+      // Distributions are summarised here; the money itself stays authoritative
+      // in the payment, reconciliation and journal records.
+      const batches = rows(
+        await s
+          .from("distribution_batches")
+          .select(
+            "id, batch_number, version, title, distribution_type, status, payment_status, balances, recipient_count, record_date, payment_date, total_gross_cents, total_withholding_cents, total_fee_cents, total_net_cents",
+          )
+          .eq("offering_id", data.id)
+          .order("batch_number", { ascending: false })
+          .limit(25),
+      );
       return {
         calls: rows(calls),
         expected: rows(expected),
         capitalAccounts: accountRows,
+        distributions: batches,
         totals: {
           endingCapitalCents: sum(accountRows, "ending_capital_cents"),
           unfundedCents: sum(accountRows, "unfunded_commitment_cents"),
+          distributedGrossCents: sum(batches, "total_gross_cents"),
+          distributedWithholdingCents: sum(batches, "total_withholding_cents"),
+          distributedNetCents: sum(batches, "total_net_cents"),
         },
       };
     }
 
     if (data.tab === "banking") {
       const detail = bankingDetailVisible(capabilities);
-      const [accounts, transactions] = await Promise.all([
+      const [accounts, transactions, payments] = await Promise.all([
         s.from("bank_accounts").select("id, institution_name, account_name, account_mask, status, last_synced_at").eq("offering_id", data.id),
         s
           .from("bank_transactions")
@@ -448,7 +464,16 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
           .eq("offering_id", data.id)
           .order("posted_on", { ascending: false })
           .limit(25),
+        s
+          .from("distribution_payments")
+          .select(
+            "id, batch_id, attempt, reissue_of_id, provider, status, submitted_amount_cents, submitted_currency, submitted_destination_masked, failure_reason, submitted_at, confirmed_at, failed_at",
+          )
+          .eq("offering_id", data.id)
+          .order("submitted_at", { ascending: false })
+          .limit(50),
       ]);
+      const paymentRows = rows(payments);
       return {
         detailVisible: detail,
         accounts: rows(accounts).map((a: any) => ({
@@ -460,8 +485,25 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
           lastSynced: a.last_synced_at,
         })),
         transactions: detail ? rows(transactions) : [],
+        // Failed and returned attempts stay in the list; nothing is ever removed.
+        outboundPayments: paymentRows.map((p: any) => ({
+          id: p.id,
+          attempt: p.attempt,
+          reissueOf: p.reissue_of_id,
+          provider: p.provider,
+          status: p.status,
+          amountCents: p.submitted_amount_cents,
+          currency: p.submitted_currency,
+          destination: detail ? p.submitted_destination_masked : null,
+          failureReason: p.failure_reason,
+          submittedAt: p.submitted_at,
+          confirmedAt: p.confirmed_at,
+          failedAt: p.failed_at,
+        })),
       };
     }
+
+
 
     if (data.tab === "accounting") {
       const books = rows(await s.from("ledger_books").select("id, name, basis, is_active").eq("offering_id", data.id));
@@ -652,7 +694,45 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           .eq("investor_user_id", data.id)
           .limit(100),
       );
-      return { capitalAccounts: accounts, callLines: lines };
+      // Each investing profile keeps its own distributions; they are never added together.
+      const distributions = rows(
+        await s
+          .from("distribution_lines")
+          .select(
+            "id, offering_id, investment_profile_id, display_name, distribution_type, gross_cents, withholding_cents, fee_cents, net_cents, currency, payment_method, destination_verified, approval_state, payment_state, reconciliation_state, accounting_state, hold_state, effective_date",
+          )
+          .eq("investor_user_id", data.id)
+          .order("effective_date", { ascending: false })
+          .limit(200),
+      );
+      const instructions = rows(
+        await s
+          .from("investor_payment_instructions")
+          .select(
+            "id, offering_id, investment_profile_id, version, method, status, verification_status, masked_account, cooling_off_until, effective_date",
+          )
+          .eq("investor_user_id", data.id)
+          .order("version", { ascending: false })
+          .limit(50),
+      );
+      return {
+        capitalAccounts: accounts,
+        callLines: lines,
+        distributions,
+        // Masked destinations only: full bank values never leave the server.
+        paymentDestinations: instructions.map((i: any) => ({
+          id: i.id,
+          offeringId: i.offering_id,
+          investmentProfileId: i.investment_profile_id,
+          version: i.version,
+          method: i.method,
+          status: i.status,
+          verification: i.verification_status,
+          destination: maskAccount(i.masked_account),
+          coolingOffUntil: i.cooling_off_until,
+          effectiveDate: i.effective_date,
+        })),
+      };
     }
 
     if (data.tab === "tax") {
@@ -660,8 +740,27 @@ export async function investorTab(context: any, data: { id: string; tab: string 
         s.from("k1_forms").select("id, offering_id, tax_year, status, version").eq("investor_user_id", data.id).order("tax_year", { ascending: false }).limit(50),
         s.from("fund_tax_documents").select("id, offering_id, doc_type, tax_year, review_status").eq("investor_user_id", data.id).limit(50),
       ]);
-      return { k1s: rows(k1s), documents: rows(docs) };
+      const distributionLines = rows(
+        await s
+          .from("distribution_lines")
+          .select("id, offering_id, investment_profile_id, effective_date, gross_cents, withholding_cents, net_cents")
+          .eq("investor_user_id", data.id)
+          .limit(200),
+      );
+      const lineIds = distributionLines.map((l: any) => l.id);
+      const withholdings = lineIds.length
+        ? rows(
+            await s
+              .from("distribution_withholdings")
+              .select(
+                "id, distribution_line_id, offering_id, withholding_type, jurisdiction, basis_cents, rate_bps, amount_cents, documentation_form, determination_reason",
+              )
+              .in("distribution_line_id", lineIds),
+          )
+        : [];
+      return { k1s: rows(k1s), documents: rows(docs), withholding: withholdings };
     }
+
 
     if (data.tab === "documents") {
       const docs = rows(

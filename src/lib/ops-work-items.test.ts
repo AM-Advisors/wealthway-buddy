@@ -170,12 +170,10 @@ describe("items open the record where the work is done", () => {
 });
 
 describe("areas without authoritative workflow say so", () => {
-  it("names distributions, tax and regulatory", () => {
-    expect(UNCONFIGURED_AREAS.map((a) => a.area).sort()).toEqual([
-      "distributions",
-      "regulatory",
-      "tax",
-    ]);
+  it("names tax and regulatory, and no longer distributions", () => {
+    expect(UNCONFIGURED_AREAS.map((a) => a.area).sort()).toEqual(["regulatory", "tax"]);
+    expect(isUnconfigured("distributions")).toBe(false);
+
     expect(isUnconfigured("tax")).toBe(true);
     expect(isUnconfigured("onboarding")).toBe(false);
     for (const entry of UNCONFIGURED_AREAS) expect(entry.message).toMatch(/not been configured/);
