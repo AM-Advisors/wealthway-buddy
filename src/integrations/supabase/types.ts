@@ -2395,6 +2395,42 @@ export type Database = {
           },
         ]
       }
+      box_sign_webhook_events: {
+        Row: {
+          delivered_at: string | null
+          id: string
+          outcome: string | null
+          payload: Json | null
+          processed_at: string | null
+          provider_event_id: string
+          received_at: string
+          sign_request_id: string | null
+          trigger: string | null
+        }
+        Insert: {
+          delivered_at?: string | null
+          id?: string
+          outcome?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          provider_event_id: string
+          received_at?: string
+          sign_request_id?: string | null
+          trigger?: string | null
+        }
+        Update: {
+          delivered_at?: string | null
+          id?: string
+          outcome?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          provider_event_id?: string
+          received_at?: string
+          sign_request_id?: string | null
+          trigger?: string | null
+        }
+        Relationships: []
+      }
       cap_certificates: {
         Row: {
           cancelled_at: string | null
@@ -9187,6 +9223,92 @@ export type Database = {
           },
         ]
       }
+      document_signature_signers: {
+        Row: {
+          application_id: string
+          created_at: string
+          decline_reason: string | null
+          declined_at: string | null
+          id: string
+          investment_profile_id: string | null
+          last_event_at: string | null
+          offering_document_id: string
+          offering_id: string | null
+          provider_embed_url: string | null
+          provider_signer_id: string | null
+          required: boolean
+          sent_at: string | null
+          signature_id: string
+          signed_at: string | null
+          signer_capacity: string
+          signer_email: string
+          signer_name: string
+          signer_user_id: string | null
+          signing_order: number
+          status: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          last_event_at?: string | null
+          offering_document_id: string
+          offering_id?: string | null
+          provider_embed_url?: string | null
+          provider_signer_id?: string | null
+          required?: boolean
+          sent_at?: string | null
+          signature_id: string
+          signed_at?: string | null
+          signer_capacity?: string
+          signer_email: string
+          signer_name: string
+          signer_user_id?: string | null
+          signing_order?: number
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          last_event_at?: string | null
+          offering_document_id?: string
+          offering_id?: string | null
+          provider_embed_url?: string | null
+          provider_signer_id?: string | null
+          required?: boolean
+          sent_at?: string | null
+          signature_id?: string
+          signed_at?: string | null
+          signer_capacity?: string
+          signer_email?: string
+          signer_name?: string
+          signer_user_id?: string | null
+          signing_order?: number
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_signature_signers_signature_id_fkey"
+            columns: ["signature_id"]
+            isOneToOne: false
+            referencedRelation: "document_signatures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_signatures: {
         Row: {
           application_id: string
@@ -9194,16 +9316,23 @@ export type Database = {
           box_file_id: string | null
           box_folder_id: string | null
           box_uploaded_at: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           consent_electronic: boolean
           document_hash: string
           id: string
           initials: string | null
+          investment_profile_id: string | null
+          locked_at: string | null
           manager_notified_at: string | null
           offering_document_id: string
           pdf_path: string | null
           provider: string
           provider_agreement_id: string | null
           provider_completed_at: string | null
+          provider_declined_at: string | null
+          provider_error: string | null
+          provider_expires_at: string | null
           provider_file_id: string | null
           provider_last_event_at: string | null
           provider_sent_at: string | null
@@ -9214,8 +9343,12 @@ export type Database = {
           signature_type: string
           signature_value: string
           signed_at: string
+          signed_file_version_id: string | null
+          signer_capacity: string | null
           signer_email: string | null
           signer_name: string
+          source_file_version_id: string | null
+          superseded_by: string | null
         }
         Insert: {
           application_id: string
@@ -9223,16 +9356,23 @@ export type Database = {
           box_file_id?: string | null
           box_folder_id?: string | null
           box_uploaded_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           consent_electronic?: boolean
           document_hash: string
           id?: string
           initials?: string | null
+          investment_profile_id?: string | null
+          locked_at?: string | null
           manager_notified_at?: string | null
           offering_document_id: string
           pdf_path?: string | null
           provider?: string
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
+          provider_declined_at?: string | null
+          provider_error?: string | null
+          provider_expires_at?: string | null
           provider_file_id?: string | null
           provider_last_event_at?: string | null
           provider_sent_at?: string | null
@@ -9243,8 +9383,12 @@ export type Database = {
           signature_type?: string
           signature_value: string
           signed_at?: string
+          signed_file_version_id?: string | null
+          signer_capacity?: string | null
           signer_email?: string | null
           signer_name: string
+          source_file_version_id?: string | null
+          superseded_by?: string | null
         }
         Update: {
           application_id?: string
@@ -9252,16 +9396,23 @@ export type Database = {
           box_file_id?: string | null
           box_folder_id?: string | null
           box_uploaded_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           consent_electronic?: boolean
           document_hash?: string
           id?: string
           initials?: string | null
+          investment_profile_id?: string | null
+          locked_at?: string | null
           manager_notified_at?: string | null
           offering_document_id?: string
           pdf_path?: string | null
           provider?: string
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
+          provider_declined_at?: string | null
+          provider_error?: string | null
+          provider_expires_at?: string | null
           provider_file_id?: string | null
           provider_last_event_at?: string | null
           provider_sent_at?: string | null
@@ -9272,8 +9423,12 @@ export type Database = {
           signature_type?: string
           signature_value?: string
           signed_at?: string
+          signed_file_version_id?: string | null
+          signer_capacity?: string | null
           signer_email?: string | null
           signer_name?: string
+          source_file_version_id?: string | null
+          superseded_by?: string | null
         }
         Relationships: [
           {

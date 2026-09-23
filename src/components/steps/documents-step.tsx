@@ -13,6 +13,8 @@ import {
   subscriptionSchema,
 } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { getSigningStates } from "@/lib/document-signing.functions";
+import { DocumentSignCard } from "@/components/document-sign-card";
 import { savePdf } from "@/lib/download-pdf";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -109,6 +111,18 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
 
   const signedByDoc = new Map((data?.signatures ?? []).map((s) => [s.offering_document_id, s]));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
+
+  // Authoritative signing state, straight from the Box signature records.
+  const loadSigning = useServerFn(getSigningStates);
+  const { data: signingData } = useQuery({
+    queryKey: ["signing-states", offeringId ?? "active"],
+    queryFn: () => loadSigning({ data: scope }),
+    refetchInterval: 30_000,
+  });
+  const boxSigning = signingData?.provider === "box_sign";
+  const signingByDoc = new Map(
+    ((signingData?.documents ?? []) as any[]).map((d) => [d.documentId as string, d]),
+  );
 
   async function onSaveSubscription(e: React.FormEvent) {
     e.preventDefault();
@@ -284,6 +298,25 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
           {(data?.documents ?? []).map((doc) => {
             const signature = signedByDoc.get(doc.id);
             const isOpen = activeDoc === doc.id;
+
+            // Box-connected signing: the agreement is reviewed and signed in
+            // Box's own ceremony, in a pop-out, with no download-and-return.
+            if (boxSigning && doc.requires_signature) {
+              return (
+                <DocumentSignCard
+                  key={doc.id}
+                  documentId={doc.id}
+                  title={doc.title}
+                  requiresSignature
+                  offeringId={offeringId ?? data?.offering?.id}
+                  signing={signingByDoc.get(doc.id)}
+                  downloading={pdfBusy === doc.id}
+                  onDownload={() => downloadPdf(doc.id)}
+                  onDownloadSigned={signature ? () => onDownload(signature.id) : undefined}
+                />
+              );
+            }
+
             return (
               <Card key={doc.id}>
                 <CardHeader>

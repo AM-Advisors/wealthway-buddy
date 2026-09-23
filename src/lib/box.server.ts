@@ -335,3 +335,131 @@ export async function listFolderTree(
   );
   return [...files, ...nested.flat()];
 }
+
+// ---------------------------------------------------------------------------
+// Box-connected signing: version locking, multiple signers, embedded sessions.
+// ---------------------------------------------------------------------------
+
+/** The Box file version currently held by a file. Used to lock a signing request. */
+export async function fileVersionId(fileId: string): Promise<string | null> {
+  const res = await boxFetch(
+    `${API}/files/${encodeURIComponent(fileId)}?fields=file_version,etag`,
+  );
+  const json = (await res.json()) as any;
+  return json?.file_version?.id ? String(json.file_version.id) : null;
+}
+
+export interface BoxSignSigner {
+  email: string;
+  name: string | null;
+  role: string;
+  /** External correlation value we set, so a signer maps back to our record. */
+  externalUserId: string | null;
+  decision: string | null;
+  viewed: boolean;
+  /** Embeddable ceremony URL. Only ever handed to the verified signer. */
+  embedUrl: string | null;
+  signedAt: string | null;
+}
+
+export interface BoxSignDetail {
+  id: string;
+  status: string;
+  sourceFileId: string | null;
+  sourceFileVersionId: string | null;
+  signedFileId: string | null;
+  signedFileVersionId: string | null;
+  signers: BoxSignSigner[];
+}
+
+function parseSignDetail(json: any): BoxSignDetail {
+  const source = json?.source_files?.[0] ?? null;
+  const signed = json?.sign_files?.files?.[0] ?? null;
+  const signers: BoxSignSigner[] = (json?.signers ?? [])
+    .filter((s: any) => String(s?.role ?? "signer") === "signer")
+    .map((s: any) => ({
+      email: String(s?.email ?? "").toLowerCase(),
+      name: s?.name ?? null,
+      role: String(s?.role ?? "signer"),
+      externalUserId: s?.embed_url_external_user_id ?? null,
+      decision: s?.signer_decision?.type ? String(s.signer_decision.type).toLowerCase() : null,
+      viewed: Boolean(s?.has_viewed_document),
+      embedUrl: s?.iframeable_embed_url ?? s?.embed_url ?? null,
+      signedAt: s?.signer_decision?.finalized_at
+        ? new Date(s.signer_decision.finalized_at).toISOString()
+        : null,
+    }));
+
+  return {
+    id: String(json?.id ?? ""),
+    status: String(json?.status ?? "unknown"),
+    sourceFileId: source?.id ? String(source.id) : null,
+    sourceFileVersionId: source?.file_version?.id ? String(source.file_version.id) : null,
+    signedFileId: signed?.id ? String(signed.id) : null,
+    signedFileVersionId: signed?.file_version?.id ? String(signed.file_version.id) : null,
+    signers,
+  };
+}
+
+export interface MultiSignerInput {
+  fileId: string;
+  documentName: string;
+  message?: string;
+  externalId: string;
+  redirectUrl?: string;
+  signers: {
+    email: string;
+    name?: string | null;
+    order?: number;
+    /** Correlates the Box signer back to our own signer row. */
+    externalUserId: string;
+  }[];
+}
+
+/** Sends a document to every required signer and returns the full Box detail. */
+export async function createMultiSignerRequest(input: MultiSignerInput): Promise<BoxSignDetail> {
+  const body: Record<string, unknown> = {
+    source_files: [{ type: "file", id: input.fileId }],
+    parent_folder: { type: "folder", id: boxFolderId() },
+    signers: input.signers.map((s) => ({
+      email: s.email,
+      role: "signer",
+      order: s.order ?? 1,
+      embed_url_external_user_id: s.externalUserId,
+      ...(s.name ? { name: s.name } : {}),
+    })),
+    name: input.documentName,
+    is_document_preparation_needed: false,
+    external_id: input.externalId,
+    ...(input.message ? { email_message: input.message } : {}),
+    ...(input.redirectUrl ? { redirect_url: input.redirectUrl } : {}),
+  };
+
+  const res = await boxFetch(`${API}/sign_requests`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return parseSignDetail(await res.json());
+}
+
+/** Full detail for a signing request, straight from Box — the only authority. */
+export async function getSignRequestDetail(signRequestId: string): Promise<BoxSignDetail> {
+  const res = await boxFetch(`${API}/sign_requests/${encodeURIComponent(signRequestId)}`);
+  return parseSignDetail(await res.json());
+}
+
+/** Asks Box to email every outstanding signer again. */
+export async function resendSignRequest(signRequestId: string): Promise<void> {
+  await boxFetch(`${API}/sign_requests/${encodeURIComponent(signRequestId)}/resend`, {
+    method: "POST",
+  });
+}
+
+/** Cancels an outstanding request in Box. Completed requests cannot be cancelled. */
+export async function cancelSignRequest(signRequestId: string): Promise<BoxSignDetail> {
+  const res = await boxFetch(`${API}/sign_requests/${encodeURIComponent(signRequestId)}/cancel`, {
+    method: "POST",
+  });
+  return parseSignDetail(await res.json());
+}
