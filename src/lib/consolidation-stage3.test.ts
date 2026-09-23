@@ -24,7 +24,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from:
 
 /* ------------------------------------------------------------------ fixtures */
 
-type Row = Record<string, any>;
+type Row = any;
 const tables: Record<string, Row[]> = {};
 function builder(table: string) {
   const eqs: Row = {};
