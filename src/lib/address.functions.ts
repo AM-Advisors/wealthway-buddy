@@ -53,7 +53,7 @@ export const saveResidentialAddress = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!person?.id) throw new Error("Complete your profile before adding an address.");
 
-    const clean = cleanAddress(data);
+    const clean = cleanAddress(data as any);
     if (!isCompleteAddress(clean)) throw new Error("Enter a street address and country.");
 
     const { validateAddress } = await import("@/lib/address-lookup.server");

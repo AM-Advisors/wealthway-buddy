@@ -204,14 +204,14 @@ export async function startVerificationSession(input: {
   const person = await personForUser(input.userId);
   const verification = await ensureVerification({
     applicationId: input.applicationId,
-    personId: (person?.id as string) ?? null,
+    personId: (person?.["id"] as string) ?? null,
   });
 
   if (verification.session_url && RESUMABLE.has(String(verification.status))) {
     return { url: String(verification.session_url), resumed: true, verificationId: verification.id };
   }
 
-  const prefill = buildDiditPrefill(person);
+  const prefill = buildDiditPrefill(person as any);
 
   const response = await fetch(DIDIT_SESSION_URL, {
     method: "POST",
@@ -269,11 +269,11 @@ export async function startVerificationSession(input: {
     .eq("id", input.applicationId)
     .eq("kyc_status", "not_started");
 
-  if (person?.id) {
+  if (person?.["id"]) {
     await db().from("person_onboarding_events").insert({
-      person_id: person.id,
-      from_state: person.onboarding_state ?? null,
-      to_state: person.onboarding_state ?? "identity_required",
+      person_id: person["id"],
+      from_state: person["onboarding_state"] ?? null,
+      to_state: person["onboarding_state"] ?? "identity_required",
       actor_kind: "system",
       reason: "Identity verification session created",
       detail: { verification_ref: verification.verification_ref, workflow_id: workflowId },
