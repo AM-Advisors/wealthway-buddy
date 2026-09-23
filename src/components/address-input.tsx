@@ -12,12 +12,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { resolveAddressSuggestion, suggestAddress } from "@/lib/address.functions";
+import {
+  previewAddressValidation,
+  resolveAddressSuggestion,
+  suggestAddress,
+} from "@/lib/address.functions";
 
 export interface AddressValue {
   line1: string;
   line2: string;
   city: string;
+  /** Returned by the provider where relevant; shown, never required. */
+  county?: string | null;
   region: string;
   postalCode: string;
   country: string;
@@ -31,6 +37,7 @@ export const EMPTY_ADDRESS: AddressValue = {
   line1: "",
   line2: "",
   city: "",
+  county: null,
   region: "",
   postalCode: "",
   country: "",
@@ -73,6 +80,9 @@ export function AddressInput({
 }: Props) {
   const suggest = useServerFn(suggestAddress);
   const resolve = useServerFn(resolveAddressSuggestion);
+  const preview = useServerFn(previewAddressValidation);
+  const [status, setStatus] = useState<{ label: string; detail: string | null } | null>(null);
+
 
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<Array<{ id: string; description: string }>>([]);
@@ -118,6 +128,31 @@ export function AddressInput({
     return () => clearTimeout(timer);
   }, [query, manual, disabled, value.country, suggest]);
 
+  async function runValidation(next: AddressValue) {
+    setStatus({ label: "Checking address…", detail: null });
+    try {
+      const res = await preview({
+        data: {
+          line1: next.line1,
+          line2: next.line2 || null,
+          city: next.city || null,
+          region: next.region || null,
+          postalCode: next.postalCode || null,
+          country: next.country,
+          formatted: next.formatted ?? null,
+          entryMethod: next.entryMethod ?? "manual",
+          providerPlaceId: next.providerPlaceId ?? null,
+        },
+      });
+      setStatus({
+        label: res.verdict === "unavailable" ? "Address validation pending" : res.label,
+        detail: res.warnings?.length ? res.warnings.join(" ") : null,
+      });
+    } catch {
+      setStatus({ label: "Address validation pending", detail: null });
+    }
+  }
+
   async function choose(placeId: string, description: string) {
     setItems([]);
     setQuery(description);
@@ -125,26 +160,30 @@ export function AddressInput({
       const parts = await resolve({ data: { placeId, sessionToken: session.current } });
       session.current = newSessionToken();
       if (parts) {
-        onChange({
+        const next: AddressValue = {
           ...value,
           line1: parts.line1 ?? value.line1,
           // The unit stays the user's to edit.
           line2: parts.line2 ?? value.line2,
           city: parts.city ?? "",
+          county: (parts as { county?: string | null }).county ?? null,
           region: parts.region ?? "",
           postalCode: parts.postalCode ?? "",
           country: (parts.country ?? value.country ?? "").toUpperCase(),
           formatted: parts.formatted ?? description,
           providerPlaceId: placeId,
           entryMethod: "autocomplete",
-        });
+        };
+        onChange(next);
         setManual(true);
+        if (next.country.length === 2) void runValidation(next);
         return;
       }
     } catch {
       /* fall through to manual entry */
     }
     setManual(true);
+    setStatus(null);
     set({ entryMethod: "manual", formatted: description });
   }
 
@@ -154,6 +193,19 @@ export function AddressInput({
         <Label htmlFor={`${idPrefix}-search`}>{label}</Label>
         {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
       </div>
+
+      {status ? (
+        <p className="text-xs text-muted-foreground" data-testid={`${idPrefix}-status`}>
+          {status.label}
+          {status.detail ? ` — ${status.detail}` : ""}
+        </p>
+      ) : null}
+      {manual && value.entryMethod === "manual" && value.line1 ? (
+        <p className="text-xs text-muted-foreground">
+          Address validation pending — we&apos;ll check this address and follow up if anything is needed.
+        </p>
+      ) : null}
+
 
       {!manual ? (
         <div className="space-y-2">
@@ -227,6 +279,12 @@ export function AddressInput({
               onChange={(e) => set({ city: e.target.value })}
             />
           </div>
+          {value.county ? (
+            <div className="space-y-1">
+              <Label htmlFor={`${idPrefix}-county`}>County</Label>
+              <Input id={`${idPrefix}-county`} value={value.county} disabled readOnly />
+            </div>
+          ) : null}
           <div className="space-y-1">
             <Label htmlFor={`${idPrefix}-region`}>State / province / region</Label>
             <Input

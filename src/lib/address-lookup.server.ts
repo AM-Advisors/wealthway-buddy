@@ -128,6 +128,7 @@ function componentsFromGoogle(list: any[]): Partial<StructuredAddress> {
     line1: [number, route].filter(Boolean).join(" ") || null,
     line2: find("subpremise"),
     city: find("locality") ?? find("postal_town") ?? find("sublocality"),
+    county: find("administrative_area_level_2"),
     region: find("administrative_area_level_1", true),
     postalCode: find("postal_code"),
     country: find("country", true) ?? undefined,

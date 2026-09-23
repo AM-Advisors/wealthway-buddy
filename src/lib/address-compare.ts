@@ -27,6 +27,15 @@ export function comparisonNeedsReview(result: AddressComparison): boolean {
   return result === "material_mismatch" || result === "unable_to_compare";
 }
 
+/**
+ * Only a material mismatch is conflicting evidence. "Unable to compare" means
+ * the comparison could not be settled — it may still need review, but it must
+ * never be presented as the two addresses disagreeing.
+ */
+export function comparisonIsConflict(result: AddressComparison): boolean {
+  return result === "material_mismatch";
+}
+
 export interface ComparableAddress {
   line1?: string | null;
   line2?: string | null;
