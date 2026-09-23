@@ -79,6 +79,9 @@ export function AddressInput({
 }: Props) {
   const suggest = useServerFn(suggestAddress);
   const resolve = useServerFn(resolveAddressSuggestion);
+  const preview = useServerFn(previewAddressValidation);
+  const [status, setStatus] = useState<{ label: string; detail: string | null } | null>(null);
+
 
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<Array<{ id: string; description: string }>>([]);
