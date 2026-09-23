@@ -284,6 +284,25 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
           {(data?.documents ?? []).map((doc) => {
             const signature = signedByDoc.get(doc.id);
             const isOpen = activeDoc === doc.id;
+
+            // Box-connected signing: the agreement is reviewed and signed in
+            // Box's own ceremony, in a pop-out, with no download-and-return.
+            if (boxSigning && doc.requires_signature) {
+              return (
+                <DocumentSignCard
+                  key={doc.id}
+                  documentId={doc.id}
+                  title={doc.title}
+                  requiresSignature
+                  offeringId={offeringId ?? data?.offering?.id}
+                  signing={signingByDoc.get(doc.id)}
+                  downloading={pdfBusy === doc.id}
+                  onDownload={() => downloadPdf(doc.id)}
+                  onDownloadSigned={signature ? () => onDownload(signature.id) : undefined}
+                />
+              );
+            }
+
             return (
               <Card key={doc.id}>
                 <CardHeader>
