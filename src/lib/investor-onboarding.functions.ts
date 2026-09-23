@@ -260,3 +260,18 @@ export const inviteInvestorFn = createServerFn({ method: "POST" })
       ...(data.expiresInDays === undefined ? {} : { expiresInDays: data.expiresInDays }),
     }),
   );
+
+export const startInvestmentVerificationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(onboardingInput.parse)
+  .handler(async ({ data, context }) => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    let origin = "https://app.harmonious.co";
+    try {
+      const url = getRequest()?.url;
+      if (url) origin = new URL(url).origin;
+    } catch {
+      /* production origin */
+    }
+    return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin);
+  });

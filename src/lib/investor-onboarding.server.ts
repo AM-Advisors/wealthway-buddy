@@ -19,6 +19,15 @@
  * Authority is always re-resolved here from user_roles and fund_managers.
  * Nothing trusts a role, fund id, profile id or amount supplied by a browser.
  */
+import {
+  applyExemption,
+  invitationRecipientError,
+  isAuthoritativeSignature,
+  journeySteps,
+  managerInvestorStatus,
+  nextJourneyStep,
+  verificationSummary,
+} from "@/lib/investor-journey-model";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   amountError,
@@ -196,7 +205,7 @@ export async function offeringRequirements(offeringId: string): Promise<Offering
     rules = ((configs ?? [])[0]?.rules ?? {}) as Record<string, any>;
   }
 
-  return {
+  return applyExemption({
     accreditationRequired: Boolean(req?.accreditation_required ?? rules['accreditationRequired'] ?? false),
     accreditationMethod: (req?.accreditation_verification ?? rules['accreditationMethod'] ?? null) as string | null,
     qualifiedPurchaserRequired: Boolean(rules['qualifiedPurchaserRequired'] ?? false),
@@ -211,7 +220,7 @@ export async function offeringRequirements(offeringId: string): Promise<Offering
     permittedJurisdictions: (rules['permittedJurisdictions'] as string[] | undefined) ?? null,
     permittedProfileTypes: (rules['permittedProfileTypes'] as string[] | undefined) ?? null,
     foreignInvestorsPermitted: rules['foreignInvestorsPermitted'] !== false,
-  };
+  }, (offering as any)?.reg_type ?? null);
 }
 
 // ------------------------------------------------------------ facts
@@ -254,14 +263,40 @@ async function gatherFacts(row: any) {
           .select("*")
           .eq("investment_profile_id", row.investment_profile_id)
       : Promise.resolve({ data: [] as any[] }),
-    row.application_id
-      ? db().from("document_signatures").select("*").eq("application_id", row.application_id)
+    row.application_id || row.investment_profile_id
+      ? db()
+          .from("document_signatures")
+          .select("*")
+          .or(
+            [
+              row.application_id ? `application_id.eq.${row.application_id}` : null,
+              row.investment_profile_id ? `investment_profile_id.eq.${row.investment_profile_id}` : null,
+            ]
+              .filter(Boolean)
+              .join(","),
+          )
       : Promise.resolve({ data: [] as any[] }),
   ]);
+  const { data: offeringDocs } = await db()
+    .from("offering_documents")
+    .select("id, title, doc_type, requires_signature")
+    .eq("offering_id", row.offering_id);
 
   const accreditation = ((accreditations ?? []) as any[])[0] ?? null;
   const tax = ((taxProfiles ?? []) as any[])[0] ?? null;
-  const signedCount = ((signatures ?? []) as any[]).length;
+  // Only completion evidence written by the verified signing webhook counts.
+  const docScope = {
+    offeringDocumentIds: ((offeringDocs ?? []) as any[]).map((d) => String(d.id)),
+    investmentProfileId: (row.investment_profile_id ?? null) as string | null,
+    applicationId: (row.application_id ?? null) as string | null,
+  };
+  const completedSignatures = ((signatures ?? []) as any[]).filter((sig) => isAuthoritativeSignature(sig, docScope));
+  const requiredToSign = ((offeringDocs ?? []) as any[]).filter((d) => d.requires_signature);
+  const signedIds = new Set(completedSignatures.map((sig) => sig.offering_document_id).filter(Boolean));
+  const allSigned =
+    completedSignatures.length > 0 &&
+    (requiredToSign.length === 0 || requiredToSign.every((d) => signedIds.has(d.id)));
+  const signedCount = allSigned ? completedSignatures.length : 0;
 
   const profileType = String(profile?.profile_type ?? "");
   const isEntity = ENTITY_PROFILE_TYPES.has(profileType as InvestmentProfileType);
@@ -313,7 +348,13 @@ async function gatherFacts(row: any) {
     nowIso: nowIso(),
   });
 
-  return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity };
+  const documents = ((offeringDocs ?? []) as any[]).map((d) => ({
+    id: String(d.id),
+    title: String(d.title ?? d.doc_type ?? "Document"),
+    requiresSignature: Boolean(d.requires_signature),
+    signed: signedIds.has(d.id),
+  }));
+  return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity, documents, completedSignatures };
 }
 
 async function openExceptions(onboardingId: string) {
@@ -360,6 +401,9 @@ export async function startOnboarding(
     const problem = invitationUsableError(data, nowIso());
     if (problem) fail(problem);
     if (data.offering_id !== offering.id) fail("That invitation is for a different fund.");
+    const { data: me } = await db().auth.admin.getUserById(actor.userId);
+    const wrongPerson = invitationRecipientError(data.email, me?.user?.email ?? null);
+    if (wrongPerson) fail(wrongPerson);
     invitation = data;
     // An invitation never grants access on its own: it only carries the
     // intended amount forward once the caller is authenticated.
@@ -587,6 +631,12 @@ export async function recordSubscriptionSignature(
   if (row.executed_snapshot) fail("This subscription has already been executed.");
 
   const facts = await gatherFacts(row);
+  // The browser can never declare a document signed. The executed record is
+  // written only once the signing provider has confirmed completion.
+  const sigReq = facts.requirements.find((r: RequirementResult) => r.key === "signature");
+  if (!sigReq || sigReq.state !== "valid") {
+    fail("We haven't received confirmation that signing is complete yet. This updates automatically once it finishes.");
+  }
   const entityName = facts.isEntity
     ? (facts.profile?.legal_name ?? facts.profile?.display_label ?? null)
     : null;
@@ -705,6 +755,12 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
   ]);
 
   const questionnaire = await publishedQuestionnaire(row.offering_id);
+  const journey = journeySteps(facts.requirements, {
+    stage: row.stage,
+    approvedToFund: Boolean(row.approved_to_fund_at),
+    fundingStatus: row.funding_status,
+    investorReportsSent: Boolean(row.investor_reports_sent_at),
+  });
 
   const base = {
     id: row.id as string,
@@ -742,6 +798,12 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     })),
     acceptedAt: row.accepted_at as string | null,
     closedAt: row.closed_at as string | null,
+    exemption: (facts.offering as any).exemption ?? null,
+    documents: facts.documents,
+    verification: verificationSummary(facts.requirements),
+    journey,
+    nextStep: nextJourneyStep(journey),
+    investorReportsSent: Boolean(row.investor_reports_sent_at),
   };
 
   if (role === "manager") {
@@ -1366,6 +1428,13 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
         requestedAmountCents: row.requested_amount_cents,
         acceptedAmountCents: row.accepted_amount_cents,
         stage: row.stage,
+        status: managerInvestorStatus({
+          stage: row.stage,
+          fundingStatus: row.funding_status,
+          approvedToFund: Boolean(row.approved_to_fund_at),
+          investorReportsSent: Boolean(row.investor_reports_sent_at),
+          acceptedAt: row.accepted_at,
+        }),
         fundingStatus: row.funding_status,
         acceptedAt: row.accepted_at,
         closedAt: row.closed_at,
@@ -1378,7 +1447,29 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
       }),
     );
   }
-  return { items };
+  // Invitations nobody has opened yet — shown as "Invited", never as progress.
+  let invQuery = db()
+    .from("fund_invitations")
+    .select("id, offering_id, email, invited_name, intended_amount_cents, status, onboarding_status, created_at")
+    .eq("invite_role", "investor")
+    .eq("onboarding_status", "invited")
+    .order("created_at", { ascending: false });
+  if (allowed) invQuery = invQuery.in("offering_id", allowed);
+  const { data: invites } = await invQuery;
+  const invited = ((invites ?? []) as any[])
+    .filter((i) => !["revoked", "cancelled", "expired"].includes(String(i.status)))
+    .map((i) => ({
+      id: `invite:${i.id}`,
+      offeringId: i.offering_id,
+      investorName: i.invited_name ?? i.email,
+      profileLabel: null,
+      requestedAmountCents: i.intended_amount_cents,
+      acceptedAmountCents: null,
+      stage: null,
+      status: "Invited" as const,
+      progress: [],
+    }));
+  return { items: [...invited, ...items] };
 }
 
 // ------------------------------------------------------- invitations
@@ -1398,7 +1489,8 @@ export async function inviteInvestor(
   if (!actor.isStaff && !actor.managedOfferingIds.includes(input.offeringId)) {
     forbid("you do not manage that fund.");
   }
-  await launchedOffering(input.offeringId);
+  const { offering: invitedOffering } = await launchedOffering(input.offeringId);
+  if (input.intendedAmountCents != null && input.intendedAmountCents <= 0) fail("Enter the investment amount.");
 
   const token = crypto.randomUUID().replace(/-/g, "");
   const expires = new Date(Date.now() + (input.expiresInDays ?? 30) * 86_400_000).toISOString();
@@ -1432,5 +1524,48 @@ export async function inviteInvestor(
     actorUserId: actor.userId,
     actorRole: actor.isStaff ? "harmonious" : "manager",
   });
-  return { invitationId: data.id as string, token: data.token as string };
+  return {
+    invitationId: data.id as string,
+    token: data.token as string,
+    // Derived from the offering's configuration — never chosen at invite time.
+    exemption: ((invitedOffering as any).reg_type ?? null) as string | null,
+    link: `/invest/${(invitedOffering as any).slug ?? input.offeringId}?invite=${data.token}`,
+  };
+}
+
+// ------------------------------------------------ verification (Didit)
+
+/**
+ * Start (or resume) the existing Didit verification session for the
+ * application behind this investment. Same session, webhook and
+ * reconciliation paths — no second verification system.
+ */
+export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string) {
+  const { row } = await assertInvestorOwns(userId, onboardingId);
+  let applicationId = row.application_id as string | null;
+  if (!applicationId) {
+    const { data } = await db()
+      .from("investor_applications")
+      .select("id")
+      .eq("user_id", row.investor_user_id)
+      .eq("offering_id", row.offering_id)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    applicationId = ((data ?? []) as any[])[0]?.id ?? null;
+    if (applicationId) await touch(row.id, { application_id: applicationId });
+  }
+  if (!applicationId) {
+    fail("Harmonious is setting up verification for this investment. We'll email you when it's ready.");
+  }
+  const { startVerificationSession } = await import("@/lib/kyc-verification.server");
+  const result = await startVerificationSession({ applicationId, userId: row.investor_user_id, origin });
+  if (String(row.stage) === "profile_selected") await touch(row.id, { stage: "verification" });
+  await recordEvent({
+    onboardingId: row.id,
+    offeringId: row.offering_id,
+    event: "verification_started",
+    actorUserId: userId,
+    actorRole: "investor",
+  });
+  return { url: result.url as string };
 }
