@@ -19,27 +19,9 @@ async function assertAdmin(supabase: any, userId: string) {
 export const getAdminAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId);
-    const roles = (data ?? []).map((r: any) => r.role as string);
-    const isAdmin = roles.includes("admin");
-    const isFundManager = roles.includes("fund_manager");
-
-
-
-
-    let offeringIds: string[] = [];
-    if (isFundManager && !isAdmin) {
-      const { data: assignments } = await context.supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", context.userId);
-      offeringIds = (assignments ?? []).map((a: any) => a.offering_id as string);
-    }
-
-    return { isAdmin, isFundManager, isReviewer: isAdmin || isFundManager, offeringIds };
+    // Projection of the canonical session facts; no independent role probe.
+    const { gatherFacts, adminAccessProjection } = await import("@/lib/session-facts.server");
+    return adminAccessProjection(await gatherFacts(context));
   });
 
 

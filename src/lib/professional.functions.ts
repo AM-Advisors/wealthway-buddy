@@ -16,33 +16,9 @@ const delegationInput = z.object({ delegation_id: z.string().uuid() });
 export const getProfessionalStanding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-
-    const [{ data: seats }, { data: held }] = await Promise.all([
-      supabase
-        .from("professional_memberships")
-        .select("id, organization_id, seat_role, status, professional_organizations(name, org_type)")
-        .eq("user_id", userId),
-      supabase.from("delegations").select("id, status").eq("delegate_user_id", userId),
-    ]);
-
-    const memberships = ((seats ?? []) as any[]).map((m) => ({
-      id: m.id,
-      organizationId: m.organization_id,
-      organizationName: m.professional_organizations?.name ?? null,
-      organizationType: m.professional_organizations?.org_type ?? null,
-      seatRole: m.seat_role,
-      status: m.status,
-    }));
-
-    const activeDelegations = ((held ?? []) as any[]).filter((d) => d.status === "active").length;
-
-    return {
-      // Membership alone reveals no client data — it only opens the workspace.
-      isProfessional: memberships.some((m) => m.status === "active") || activeDelegations > 0,
-      memberships,
-      activeDelegations,
-    };
+    // Membership alone reveals no client data — it only opens the workspace.
+    const { gatherFacts, professionalStandingProjection } = await import("@/lib/session-facts.server");
+    return professionalStandingProjection(await gatherFacts(context));
   });
 
 /** The consolidated client list, derived only from live delegations. */

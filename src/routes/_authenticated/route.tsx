@@ -1,9 +1,7 @@
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { OpsSidebar } from "@/components/ops-sidebar";
-import { getOperationsContext } from "@/lib/ops-access.functions";
 
 import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/app-origins";
@@ -75,13 +73,9 @@ function AuthenticatedLayout() {
  */
 function Menu({ onSignOut }: { onSignOut: () => void }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { options, activeKind } = useClientWorkspace();
-  const loadOps = useServerFn(getOperationsContext);
-  const { data: ops } = useQuery({
-    queryKey: ["operations-context"],
-    queryFn: () => loadOps() as Promise<any>,
-    staleTime: 60_000,
-  });
+  // Shell choice consumes the canonical resolver's answer. The hostname and
+  // pathname only pick a layout; they never grant Operations.
+  const { options, activeKind, session } = useClientWorkspace();
 
   const onInternalPage = INTERNAL_PATH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -92,7 +86,7 @@ function Menu({ onSignOut }: { onSignOut: () => void }) {
   // backend resolved for this staff member. Everything else is unchanged until
   // the remaining internal pages move across.
   const inOperations = pathname === "/ops" || pathname.startsWith("/ops/");
-  if (inOperations && ops?.staff) {
+  if (inOperations && session?.operations) {
     return <OpsSidebar onSignOut={onSignOut} />;
   }
 
