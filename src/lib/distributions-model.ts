@@ -488,7 +488,52 @@ export type DistributionAction =
   | "execute"
   | "correct"
   | "cancel"
-  | "resolve_exception";
+  | "resolve_exception"
+  | "reconcile"
+  | "approve_reconciliation"
+  | "post"
+  | "request_reversal"
+  | "approve_reversal"
+  | "review_withholding";
+
+/**
+ * The granular Operations capability each staff action requires. Being staff
+ * grants nothing by itself: every step is re-checked against this map.
+ */
+export const DISTRIBUTION_CAPABILITY: Record<
+  Exclude<DistributionAction, "manager_approve" | "investor_confirm">,
+  { area: "capital" | "accounting" | "tax"; action: "prepare" | "review" | "approve" | "execute" }
+> = {
+  prepare: { area: "capital", action: "prepare" },
+  request: { area: "capital", action: "prepare" },
+  correct: { area: "capital", action: "prepare" },
+  cancel: { area: "capital", action: "prepare" },
+  review: { area: "capital", action: "review" },
+  resolve_exception: { area: "capital", action: "review" },
+  final_approve: { area: "capital", action: "approve" },
+  execute: { area: "capital", action: "execute" },
+  reconcile: { area: "accounting", action: "prepare" },
+  approve_reconciliation: { area: "accounting", action: "review" },
+  post: { area: "accounting", action: "approve" },
+  request_reversal: { area: "capital", action: "prepare" },
+  approve_reversal: { area: "capital", action: "approve" },
+  review_withholding: { area: "tax", action: "review" },
+};
+
+/** Whether a staff member's capabilities cover a distribution action. */
+export function staffCapabilityError(
+  capabilities: readonly string[],
+  action: DistributionAction,
+): string | null {
+  if (action === "manager_approve" || action === "investor_confirm") {
+    return "Harmonious staff cannot act as the fund manager or the investor.";
+  }
+  const need = DISTRIBUTION_CAPABILITY[action];
+  if (!capabilities.includes(`${need.area}:${need.action}`)) {
+    return `This step needs the ${need.area} ${need.action} capability.`;
+  }
+  return null;
+}
 
 /** Who may do what. Managers never bypass Harmonious final approval. */
 export function canActOnDistribution(
@@ -521,56 +566,91 @@ export type ApprovalActor = {
   isServicePrincipal?: boolean;
 };
 
+export type ApprovalStep =
+  | "prepared"
+  | "requested"
+  | "reviewed"
+  | "manager_approved"
+  | "final_approved"
+  | "executed"
+  | "reconciled"
+  | "reconciliation_approved"
+  | "posted"
+  | "reversal_requested"
+  | "reversal_approved";
+
 export type ApprovalChainEntry = {
-  step: "prepared" | "requested" | "reviewed" | "manager_approved" | "final_approved" | "executed";
+  step: ApprovalStep;
   userId: string;
   isServicePrincipal?: boolean;
   at: string;
 };
 
 /**
- * Segregation of duties on outbound cash: the same human may not create and
- * finally approve and execute the same payment, and the final approver must be
- * a second human distinct from the preparer.
+ * Segregation of duties on outbound cash. Each rule names the pair of roles
+ * that must be different humans:
+ *   preparer/requester  != final approver
+ *   requester/preparer  != executor (sent-by)
+ *   final approver      != executor
+ *   executor            != accounting poster
+ *   reconciler          != reconciliation approver
+ *   reversal requester  != reversal approver
+ * An automated/service identity never satisfies any human step.
  */
 export function makerCheckerError(
   chain: ApprovalChainEntry[],
-  next: { step: ApprovalChainEntry["step"]; actor: ApprovalActor },
+  next: { step: ApprovalStep; actor: ApprovalActor },
 ): string | null {
   if (next.actor.isServicePrincipal) {
-    return "An automated process cannot approve or execute an outbound payment.";
+    return "An automated process cannot approve, record, reconcile, post or reverse an outbound payment.";
   }
-  const by = (step: ApprovalChainEntry["step"]) =>
+  const by = (step: ApprovalStep) =>
     chain.filter((c) => c.step === step && !c.isServicePrincipal).map((c) => c.userId);
-
+  const me = next.actor.userId;
   const preparers = [...by("prepared"), ...by("requested")];
-  const finalApprovers = by("final_approved");
 
-  if (next.step === "final_approved") {
-    if (preparers.includes(next.actor.userId)) {
-      return "The person who prepared this distribution cannot give the final approval. A second authorised person is required.";
+  switch (next.step) {
+    case "final_approved":
+      if (preparers.includes(me)) {
+        return "The person who prepared or requested this distribution cannot give the final approval. A second authorised person is required.";
+      }
+      if (preparers.length === 0 && by("reviewed").includes(me)) {
+        return "A second authorised person is required for final approval.";
+      }
+      return null;
+    case "executed": {
+      if (by("final_approved").length === 0) {
+        return "This payment has no human final approval and cannot be recorded as sent.";
+      }
+      if (preparers.includes(me)) {
+        return "The person who requested or prepared this distribution cannot record it as sent.";
+      }
+      if (by("final_approved").includes(me)) {
+        return "The final approver cannot also record the payment as sent.";
+      }
+      return null;
     }
-    if (by("reviewed").includes(next.actor.userId) && preparers.length === 0) {
-      return "A second authorised person is required for final approval.";
-    }
+    case "reconciliation_approved":
+      if (by("reconciled").length === 0) return "Nothing has been reconciled yet.";
+      if (by("reconciled").includes(me)) return "The reconciler cannot approve their own reconciliation.";
+      return null;
+    case "posted":
+      if (by("reconciliation_approved").length === 0) {
+        return "The reconciliation must be approved by a second person before posting.";
+      }
+      if (by("executed").includes(me)) {
+        return "The person who recorded the payment as sent cannot post it to the ledger.";
+      }
+      return null;
+    case "reversal_approved":
+      if (by("reversal_requested").length === 0) return "No reversal has been requested.";
+      if (by("reversal_requested").includes(me)) {
+        return "The person who requested the reversal cannot approve it.";
+      }
+      return null;
+    default:
+      return null;
   }
-
-  if (next.step === "executed") {
-    if (finalApprovers.length === 0) {
-      return "This payment has no final approval and cannot be executed.";
-    }
-    if (preparers.includes(next.actor.userId) && finalApprovers.includes(next.actor.userId)) {
-      return "The same person cannot prepare, approve and execute the same payment.";
-    }
-    const humans = new Set(
-      chain.filter((c) => !c.isServicePrincipal).map((c) => c.userId).concat(next.actor.userId),
-    );
-    if (humans.size < 2) {
-      return "Outbound payments require at least two authorised people.";
-    }
-  }
-
-  return null;
 }
 
 // ----------------------------------------------------------- destinations
@@ -1046,3 +1126,447 @@ export function investorSafeLine(line: Record<string, any>, instructionMasked: s
   };
 }
 
+
+// ---------------------------------------------------- financial states (D1)
+
+/**
+ * Explicit, ordered financial states. SETTLED is reached only by evidence:
+ * bank activity, approved reconciliation and a posted journal.
+ */
+export const FINANCIAL_STATES = [
+  "proposed",
+  "reviewed",
+  "approved_for_payment",
+  "execution_recorded",
+  "bank_confirmed",
+  "reconciled",
+  "accounting_posted",
+  "settled",
+  "exception",
+] as const;
+export type FinancialState = (typeof FINANCIAL_STATES)[number];
+
+export type FinancialFacts = {
+  batchStatus: BatchStatus | string;
+  reviewed: boolean;
+  paymentStatus: DistributionPaymentStatus | string | null;
+  bankTransactionLinked: boolean;
+  reconciliationApproved: boolean;
+  journalPosted: boolean;
+  hasOpenException?: boolean;
+};
+
+export function financialState(f: FinancialFacts): FinancialState {
+  if (f.hasOpenException || ["failed", "returned", "reversed"].includes(String(f.paymentStatus))) {
+    return "exception";
+  }
+  const settledEvidence = f.bankTransactionLinked && f.reconciliationApproved && f.journalPosted;
+  if (settledEvidence) return "settled";
+  if (f.journalPosted && f.reconciliationApproved) return "accounting_posted";
+  if (f.reconciliationApproved && f.bankTransactionLinked) return "reconciled";
+  if (f.paymentStatus === "confirmed" || f.bankTransactionLinked) return "bank_confirmed";
+  if (f.paymentStatus === "submitted") return "execution_recorded";
+  if (["approved", "executing", "completed"].includes(String(f.batchStatus))) return "approved_for_payment";
+  if (f.reviewed) return "reviewed";
+  return "proposed";
+}
+
+/** Only these states may be shown to an investor as paid. */
+export function isSettled(f: FinancialFacts): boolean {
+  return financialState(f) === "settled";
+}
+
+export type InvestorPaymentLabel = "Scheduled" | "Sent" | "Completed" | "Needs attention" | "Pending";
+
+/** Investor wording: Completed strictly requires reconciliation + posted accounting. */
+export function investorPaymentLabel(f: FinancialFacts): InvestorPaymentLabel {
+  const s = financialState(f);
+  if (s === "settled") return "Completed";
+  if (s === "exception") return "Needs attention";
+  if (["execution_recorded", "bank_confirmed", "reconciled", "accounting_posted"].includes(s)) return "Sent";
+  if (s === "approved_for_payment") return "Scheduled";
+  return "Pending";
+}
+
+export const OPERATIONS_STAGES = [
+  "ready_for_review",
+  "approved_for_payment",
+  "awaiting_bank_confirmation",
+  "reconciliation_required",
+  "accounting_required",
+  "completed",
+  "exception",
+] as const;
+export type OperationsStage = (typeof OPERATIONS_STAGES)[number];
+export const OPERATIONS_STAGE_LABELS: Record<OperationsStage, string> = {
+  ready_for_review: "Ready for review",
+  approved_for_payment: "Approved for payment",
+  awaiting_bank_confirmation: "Awaiting bank confirmation",
+  reconciliation_required: "Reconciliation required",
+  accounting_required: "Accounting required",
+  completed: "Completed",
+  exception: "Exception",
+};
+
+export function operationsStage(f: FinancialFacts): OperationsStage {
+  const s = financialState(f);
+  switch (s) {
+    case "exception":
+      return "exception";
+    case "settled":
+      return "completed";
+    case "accounting_posted":
+    case "reconciled":
+      return "accounting_required";
+    case "bank_confirmed":
+      return f.reconciliationApproved ? "accounting_required" : "reconciliation_required";
+    case "execution_recorded":
+      return "awaiting_bank_confirmation";
+    case "approved_for_payment":
+      return "approved_for_payment";
+    default:
+      return "ready_for_review";
+  }
+}
+
+// ------------------------------------------- multi-factor outbound matching
+
+export type MatchOutcome = "EXACT" | "STRONG" | "AMBIGUOUS" | "CONFLICT" | "UNMATCHED";
+
+export type ExpectedOutbound = {
+  offeringId: string;
+  sourceBankAccountId?: string | null;
+  amountCents: number;
+  currency: string;
+  destinationFingerprint?: string | null;
+  providerReference?: string | null;
+  recordedAtIso: string;
+  windowDays?: number;
+};
+
+export type BankCandidate = {
+  id: string;
+  offeringId: string | null;
+  bankAccountId?: string | null;
+  /** Negative amounts are outbound when direction is not recorded. */
+  amountCents: number;
+  direction?: string | null;
+  currency?: string | null;
+  counterpartyFingerprint?: string | null;
+  reference?: string | null;
+  postedOn?: string | null;
+  alreadyMatched?: boolean;
+};
+
+export type MatchField =
+  | "fund"
+  | "source_account"
+  | "direction"
+  | "amount"
+  | "currency"
+  | "destination"
+  | "reference"
+  | "date_window";
+
+export type CandidateEvidence = {
+  candidateId: string;
+  matched: MatchField[];
+  mismatched: MatchField[];
+  unavailable: MatchField[];
+  outcome: MatchOutcome;
+  rule: string;
+};
+
+function candidateDirection(c: BankCandidate): "outbound" | "inbound" | null {
+  if (c.direction) return c.direction === "outbound" || c.direction === "debit" ? "outbound" : "inbound";
+  if (typeof c.amountCents === "number" && c.amountCents !== 0) return c.amountCents < 0 ? "outbound" : "inbound";
+  return null;
+}
+
+/** Deterministic evidence for one candidate. Amount alone never matches. */
+export function evaluateCandidate(expected: ExpectedOutbound, c: BankCandidate): CandidateEvidence {
+  const matched: MatchField[] = [];
+  const mismatched: MatchField[] = [];
+  const unavailable: MatchField[] = [];
+  const check = (field: MatchField, have: unknown, want: unknown, eq: boolean) => {
+    if (have === null || have === undefined || have === "" || want === null || want === undefined || want === "") {
+      unavailable.push(field);
+    } else if (eq) matched.push(field);
+    else mismatched.push(field);
+  };
+
+  check("fund", c.offeringId, expected.offeringId, c.offeringId === expected.offeringId);
+  check(
+    "source_account",
+    c.bankAccountId,
+    expected.sourceBankAccountId,
+    c.bankAccountId === expected.sourceBankAccountId,
+  );
+  const dir = candidateDirection(c);
+  check("direction", dir, "outbound", dir === "outbound");
+  check("amount", c.amountCents, expected.amountCents, Math.abs(c.amountCents) === Math.abs(expected.amountCents));
+  check(
+    "currency",
+    c.currency,
+    expected.currency,
+    String(c.currency ?? "").toUpperCase() === String(expected.currency ?? "").toUpperCase(),
+  );
+  check(
+    "destination",
+    c.counterpartyFingerprint,
+    expected.destinationFingerprint,
+    c.counterpartyFingerprint === expected.destinationFingerprint,
+  );
+  const ref = expected.providerReference?.trim();
+  check(
+    "reference",
+    c.reference,
+    ref,
+    !!ref && !!c.reference && String(c.reference).toLowerCase().includes(ref.toLowerCase()),
+  );
+  if (c.postedOn) {
+    const days = Math.abs(Date.parse(c.postedOn) - Date.parse(expected.recordedAtIso)) / 86_400_000;
+    check("date_window", c.postedOn, expected.recordedAtIso, days <= (expected.windowDays ?? 5));
+  } else unavailable.push("date_window");
+
+  let outcome: MatchOutcome;
+  let rule: string;
+  const has = (f: MatchField) => matched.includes(f);
+  const corroborating = (["reference", "destination", "source_account", "date_window"] as MatchField[]).filter(has);
+
+  if (c.alreadyMatched) {
+    outcome = "CONFLICT";
+    rule = "The bank transaction is already matched to another record.";
+  } else if (mismatched.length > 0) {
+    outcome = "CONFLICT";
+    rule = `Authoritative fields disagree: ${mismatched.join(", ")}.`;
+  } else if (!has("fund") || !has("amount") || !has("direction")) {
+    outcome = "UNMATCHED";
+    rule = "Fund, outbound direction and amount must all be evidenced.";
+  } else if (has("reference") && (has("destination") || has("source_account")) && has("date_window")) {
+    outcome = "EXACT";
+    rule = "Fund, direction, amount, provider reference, account evidence and date all agree.";
+  } else if (corroborating.length >= 2) {
+    outcome = "STRONG";
+    rule = `Fund, direction and amount agree, corroborated by ${corroborating.join(" and ")}.`;
+  } else {
+    outcome = "AMBIGUOUS";
+    rule = "Only fund, direction and amount agree; that is not enough evidence to match.";
+  }
+  return { candidateId: c.id, matched, mismatched, unavailable, outcome, rule };
+}
+
+export type MatchResult = {
+  outcome: MatchOutcome;
+  chosenCandidateId: string | null;
+  evidence: CandidateEvidence[];
+  reason: string;
+};
+
+/**
+ * Evaluate the selected candidate in the context of every other plausible
+ * candidate. Two candidates that both look acceptable stay AMBIGUOUS.
+ */
+export function matchOutbound(
+  expected: ExpectedOutbound,
+  selectedId: string,
+  candidates: BankCandidate[],
+): MatchResult {
+  const evidence = candidates.map((c) => evaluateCandidate(expected, c));
+  const selected = evidence.find((e) => e.candidateId === selectedId);
+  if (!selected) {
+    return { outcome: "UNMATCHED", chosenCandidateId: null, evidence, reason: "The selected bank transaction is not a candidate." };
+  }
+  if (selected.outcome === "CONFLICT" || selected.outcome === "UNMATCHED" || selected.outcome === "AMBIGUOUS") {
+    return { outcome: selected.outcome, chosenCandidateId: null, evidence, reason: selected.rule };
+  }
+  const plausibleRivals = evidence.filter((e) => {
+    if (e.candidateId === selectedId) return false;
+    if (e.outcome === "CONFLICT" || e.outcome === "UNMATCHED") return false;
+    // An EXACT selection is only contested by another EXACT/STRONG rival;
+    // a STRONG selection is contested by any plausible same-amount rival.
+    if (selected.outcome === "EXACT") return e.outcome === "EXACT" || e.outcome === "STRONG";
+    return true;
+  });
+  if (plausibleRivals.length > 0) {
+    return {
+      outcome: "AMBIGUOUS",
+      chosenCandidateId: null,
+      evidence,
+      reason: "Another bank transaction is equally consistent with this payment; more evidence is needed.",
+    };
+  }
+  return { outcome: selected.outcome, chosenCandidateId: selectedId, evidence, reason: selected.rule };
+}
+
+export function matchAdvancesSettlement(outcome: MatchOutcome): boolean {
+  return outcome === "EXACT" || outcome === "STRONG";
+}
+
+// ----------------------------------------------------- compliance gate (D1)
+
+export type EvidenceState = "clear" | "blocked" | "expired" | "missing" | "unknown";
+
+export type ComplianceGateFacts = {
+  kyc: EvidenceState;
+  aml: EvidenceState;
+  sanctions: EvidenceState;
+  taxDocument: EvidenceState;
+  taxDocumentRequired: boolean;
+  destinationVerified: boolean;
+  coolingOffSatisfied: boolean;
+  openAccountingExceptions: number;
+  availableCashCents: number | null;
+  netPaymentCents: number;
+  batchBalances: boolean;
+  withholdingReviewed: boolean;
+};
+
+export type GateBlocker = { code: string; reason: string };
+
+/**
+ * Missing sources never clear: an unknown state becomes REVIEW_REQUIRED, not
+ * an assumed pass.
+ */
+export function complianceGateBlockers(f: ComplianceGateFacts): GateBlocker[] {
+  const out: GateBlocker[] = [];
+  const evaluate = (code: string, label: string, s: EvidenceState) => {
+    if (s === "clear") return;
+    if (s === "unknown" || s === "missing") out.push({ code: "REVIEW_REQUIRED", reason: `${label}: no authoritative record — review required.` });
+    else if (s === "expired") out.push({ code: `${code}_EXPIRED`, reason: `${label} has expired.` });
+    else out.push({ code: `${code}_BLOCKED`, reason: `${label} is not cleared.` });
+  };
+  evaluate("KYC", "Identity verification", f.kyc);
+  evaluate("AML", "AML screening", f.aml);
+  evaluate("SANCTIONS", "Sanctions screening", f.sanctions);
+  if (f.taxDocumentRequired) evaluate("TAX_DOCUMENT", "Required tax documentation", f.taxDocument);
+  if (!f.destinationVerified) out.push({ code: "DESTINATION_UNVERIFIED", reason: "The payment destination is not verified." });
+  if (!f.coolingOffSatisfied) out.push({ code: "COOLING_OFF", reason: "The destination cooling-off period has not passed." });
+  if (f.openAccountingExceptions > 0) {
+    out.push({ code: "ACCOUNTING_EXCEPTION", reason: "An unresolved material accounting exception is open for this fund." });
+  }
+  if (f.availableCashCents === null) {
+    out.push({ code: "REVIEW_REQUIRED", reason: "Available fund cash has no authoritative figure — review required." });
+  } else if (f.availableCashCents < f.netPaymentCents) {
+    out.push({ code: "INSUFFICIENT_CASH", reason: "The fund does not have confirmed cash for this payment." });
+  }
+  if (!f.batchBalances) out.push({ code: "UNBALANCED", reason: "The distribution does not balance to the cent." });
+  if (!f.withholdingReviewed) {
+    out.push({ code: "WITHHOLDING_REVIEW", reason: "Withholding has not been reviewed by Harmonious tax." });
+  }
+  return out;
+}
+
+// ------------------------------------------------ withholding treatment (D1)
+
+/**
+ * Hard-coded rules are a calculation aid, never tax authority. The exact
+ * figures used are preserved with their source and require human review.
+ */
+export function withholdingBasis(input: {
+  lines: { lineId: string; withholdingCents: number; ruleIds: string[]; taxDocument: EvidenceState }[];
+  ruleSource: "default_calculation_aid" | "managed_rules";
+}) {
+  return {
+    ruleSource: input.ruleSource,
+    authoritative: false as const,
+    requiresReview: true as const,
+    lines: input.lines.map((l) => ({ ...l })),
+  };
+}
+
+export function withholdingReviewBlockers(input: {
+  reviewedBy: string | null;
+  preparedBy: string | null;
+  lines: { taxDocument: EvidenceState; taxDocumentRequired: boolean }[];
+}): string[] {
+  const out: string[] = [];
+  if (!input.reviewedBy) out.push("Withholding has not been reviewed by Harmonious tax.");
+  if (input.reviewedBy && input.reviewedBy === input.preparedBy) {
+    out.push("The preparer cannot review their own withholding.");
+  }
+  if (input.lines.some((l) => l.taxDocumentRequired && l.taxDocument !== "clear")) {
+    out.push("Required tax documentation is missing or expired for at least one investor.");
+  }
+  return out;
+}
+
+// ---------------------------------------------------- economic snapshot (D1)
+
+export type EconomicSnapshotLine = {
+  lineId: string;
+  investorUserId: string | null;
+  investmentProfileId: string | null;
+  positionId: string | null;
+  grossCents: number;
+  returnOfCapitalCents: number | null;
+  incomeGainCents: number | null;
+  withholdingCents: number;
+  feeCents: number;
+  netCents: number;
+  capitalAccountSource: string | null;
+};
+
+export type EconomicSnapshot = {
+  allocationRunId: string | null;
+  navVersionId: string | null;
+  distributionType: string;
+  calculatedAt: string;
+  lines: EconomicSnapshotLine[];
+};
+
+function stableStringify(v: unknown): string {
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) return `[${v.map(stableStringify).join(",")}]`;
+  const o = v as Record<string, unknown>;
+  return `{${Object.keys(o).sort().map((k) => `${JSON.stringify(k)}:${stableStringify(o[k])}`).join(",")}}`;
+}
+
+/** Deterministic FNV-1a fingerprint of the snapshot (tamper evidence, not crypto). */
+export function snapshotHash(s: EconomicSnapshot): string {
+  const text = stableStringify({ ...s, lines: [...s.lines].sort((a, b) => a.lineId.localeCompare(b.lineId)) });
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 ^ c, 0x811c9dc5) >>> 0;
+  }
+  return `fnv1a:${h1.toString(16).padStart(8, "0")}${h2.toString(16).padStart(8, "0")}`;
+}
+
+/** A later calculation that differs from the frozen one is a change, never silent. */
+export function snapshotDrift(frozen: EconomicSnapshot, current: EconomicSnapshot): string[] {
+  const out: string[] = [];
+  const byId = new Map(current.lines.map((l) => [l.lineId, l]));
+  for (const f of frozen.lines) {
+    const c = byId.get(f.lineId);
+    if (!c) { out.push(`Line ${f.lineId} no longer exists in the current calculation.`); continue; }
+    for (const k of ["grossCents", "withholdingCents", "feeCents", "netCents", "investmentProfileId"] as const) {
+      if (f[k] !== c[k]) out.push(`Line ${f.lineId}: ${k} changed from ${f[k]} to ${c[k]}.`);
+    }
+  }
+  if (frozen.allocationRunId !== current.allocationRunId) out.push("The allocation run changed.");
+  return out;
+}
+
+// ------------------------------------------------------ reversal controls
+
+export function reversalRequestError(input: {
+  reason: string | null | undefined;
+  originalPaymentId: string | null | undefined;
+  originalJournalEntryId: string | null | undefined;
+  paymentStatus: string;
+  reconciled?: boolean;
+}): string | null {
+  if (!input.reason || input.reason.trim().length < 4) return "A reversal needs a reason.";
+  if (!input.originalPaymentId) return "A reversal must reference the original payment.";
+  if (input.paymentStatus === "reversed") return "This payment has already been reversed.";
+  if (!["submitted", "confirmed", "returned", "failed"].includes(input.paymentStatus)) {
+    return "Only a recorded payment can be reversed.";
+  }
+  if (input.reconciled && !input.originalJournalEntryId) {
+    return "A reconciled payment's reversal must reference its original accounting entry.";
+  }
+  return null;
+}
