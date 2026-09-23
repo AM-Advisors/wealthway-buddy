@@ -2,29 +2,23 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { activeApplicationId } from "@/lib/active-application";
-
-const DIDIT_SESSION_URL = "https://verification.didit.me/v2/session/";
-
-/** Statuses where an existing Didit session can still be resumed by the investor. */
-const RESUMABLE = new Set(["not_started", "pending"]);
+import {
+  evaluateHarmoniousDecision,
+  investorProgress,
+  normalizeDiditDecision,
+  type CheckStatus,
+} from "@/lib/kyc-verification";
 
 /**
- * Creates (or resumes) a Didit verification session for the signed-in investor's
- * application. Results arrive asynchronously on /api/public/webhooks/didit, which
- * writes kyc_verifications + investor_applications, so the portal simply polls.
+ * Creates (or resumes) the investor's Didit verification session. The provider
+ * key stays on the server, the session is correlated by an opaque Harmonious
+ * reference, and results arrive on /api/public/webhooks/didit — with
+ * reconciliation as the backstop when a webhook is missed.
  */
 export const startIdentityCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-
-    const apiKey = process.env["DIDIT_API_KEY"];
-    const workflowId = process.env["DIDIT_WORKFLOW_ID"];
-    if (!apiKey || !workflowId) {
-      throw new Error(
-        "Identity verification is not configured yet. Please contact the fund administrator.",
-      );
-    }
 
     const { data: application, error: appError } = await supabase
       .from("investor_applications")
@@ -35,16 +29,6 @@ export const startIdentityCheck = createServerFn({ method: "POST" })
     if (appError) throw new Error(appError.message);
     if (!application) throw new Error("No application found. Reload and try again.");
 
-    const { data: existing } = await supabase
-      .from("kyc_verifications")
-      .select("id, session_url, session_id, status")
-      .eq("application_id", application.id)
-      .maybeSingle();
-
-    if (existing?.session_url && RESUMABLE.has(existing.status)) {
-      return { url: existing.session_url, resumed: true };
-    }
-
     let origin = "https://app.harmonious.co";
     try {
       const request = getRequest();
@@ -53,60 +37,102 @@ export const startIdentityCheck = createServerFn({ method: "POST" })
       /* fall back to the production origin */
     }
 
-    const response = await fetch(DIDIT_SESSION_URL, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": apiKey },
-      body: JSON.stringify({
-        workflow_id: workflowId,
-        vendor_data: application.id,
-        callback: `${origin}/portal`,
-      }),
+    const { startVerificationSession } = await import("@/lib/kyc-verification.server");
+    const result = await startVerificationSession({
+      applicationId: application.id,
+      userId,
+      origin,
     });
+    return { url: result.url, resumed: result.resumed };
+  });
 
-    const text = await response.text();
-    if (!response.ok) {
-      console.error("[didit] session create failed", response.status, text.slice(0, 500));
-      throw new Error("Could not start identity verification. Please try again shortly.");
+/**
+ * The investor-facing progression. Nothing here exposes risk scores,
+ * provider payloads or compliance notes.
+ */
+export const identityVerificationProgress = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const applicationId = await activeApplicationId(supabase, userId);
+    if (!applicationId) {
+      return { started: false, summary: "Verification not started", steps: [], message: null };
     }
 
-    let payload: Record<string, any>;
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      throw new Error("Identity provider returned an unreadable response.");
+    const { data: verification } = await supabase
+      .from("kyc_verifications")
+      .select("id, status, session_url, decision, harmonious_decision, document_expired, person_id")
+      .eq("application_id", applicationId)
+      .maybeSingle();
+
+    if (!verification) {
+      return { started: false, summary: "Verification not started", steps: [], message: null };
     }
 
-    const sessionId = payload["session_id"] ? String(payload["session_id"]) : null;
-    const url = payload["url"] ?? payload["session_url"] ?? payload["verification_url"];
-    if (!url) throw new Error("Identity provider did not return a verification link.");
+    const { data: checks } = await supabase
+      .from("identity_check_results")
+      .select("check_kind, harmonious_status, provider_status")
+      .eq("verification_id", verification.id);
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const now = new Date().toISOString();
-    const row = {
-      application_id: application.id,
-      provider: "didit",
-      session_id: sessionId,
-      inquiry_id: sessionId,
-      session_url: String(url),
-      vendor_data: application.id,
-      status: "pending" as const,
-      updated_at: now,
+    const started = verification.status !== "not_started";
+    const decisionRecord = (verification as any).decision;
+    const normalized = normalizeDiditDecision(decisionRecord ?? {});
+    const decision = (checks ?? []).length
+      ? {
+          providerDecision: null,
+          kyc: ((verification as any).harmonious_decision ?? verification.status) as CheckStatus,
+          aml: "not_started" as CheckStatus,
+          reasons: [],
+          investorMessage: null,
+          documentExpired: Boolean((verification as any).document_expired),
+          reviewRequired: false,
+          checks: (checks ?? []).map((c: any) => ({
+            kind: c.check_kind,
+            providerStatus: c.provider_status,
+            harmoniousStatus: c.harmonious_status,
+            warnings: [],
+            detail: {},
+          })),
+        }
+      : evaluateHarmoniousDecision({
+          normalized,
+          verificationDate: new Date(),
+          proofOfAddressRequired: false,
+        });
+
+    const progress = investorProgress({ decision: decision as any, started });
+    return {
+      started,
+      summary: progress.summary,
+      steps: progress.steps,
+      message: progress.steps.find((s) => s.message)?.message ?? null,
     };
+  });
 
-    if (existing?.id) {
-      const { error } = await supabaseAdmin.from("kyc_verifications").update(row).eq("id", existing.id);
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await supabaseAdmin.from("kyc_verifications").insert(row);
-      if (error) throw new Error(error.message);
+/**
+ * Staff-only recovery for a missed webhook: re-reads the outstanding session
+ * from the provider. It never creates a new verification session.
+ */
+export const reconcileIdentityVerifications = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { verificationId?: string | null } | undefined) => input ?? {})
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: isStaff } = await supabase.rpc("is_staff_user", { _user_id: userId } as any);
+    if (!isStaff) {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      const list = (roles ?? []).map((r: any) => String(r.role));
+      if (!list.some((r) => ["admin", "operations", "compliance"].includes(r))) {
+        throw new Error("Forbidden");
+      }
     }
 
-    if (application.kyc_status === "not_started") {
-      await supabase
-        .from("investor_applications")
-        .update({ kyc_status: "pending", updated_at: now })
-        .eq("id", application.id);
-    }
-
-    return { url: String(url), resumed: false };
+    const { reconcileOutstandingVerifications } = await import("@/lib/kyc-verification.server");
+    return await reconcileOutstandingVerifications({
+      verificationId: data.verificationId ?? null,
+      actorUserId: userId,
+    });
   });
