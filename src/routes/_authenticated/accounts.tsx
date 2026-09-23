@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+import { AddressInput, addressFromSnake, addressToSnake } from "@/components/address-input";
   Select,
   SelectContent,
   SelectItem,
@@ -313,43 +314,17 @@ function AccountsPage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="address_line1">Address</Label>
-                <Input
-                  id="address_line1"
-                  value={form.address_line1 ?? ""}
-                  onChange={(e) => set("address_line1")(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={form.city ?? ""}
-                  onChange={(e) => set("city")(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="region">State / region</Label>
-                <Input
-                  id="region"
-                  value={form.region ?? ""}
-                  onChange={(e) => set("region")(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="postal_code">Postal code</Label>
-                <Input
-                  id="postal_code"
-                  value={form.postal_code ?? ""}
-                  onChange={(e) => set("postal_code")(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Input
-                  id="country"
-                  value={form.country ?? ""}
-                  onChange={(e) => set("country")(e.target.value)}
+                <AddressInput
+                  idPrefix="persona-address"
+                  label="Address"
+                  countryMode="free"
+                  value={addressFromSnake(form as any)}
+                  onChange={(next) => {
+                    const snake = addressToSnake(next);
+                    (Object.keys(snake) as Array<keyof typeof snake>).forEach((key) =>
+                      set(key as any)(snake[key]),
+                    );
+                  }}
                 />
               </div>
             </div>
