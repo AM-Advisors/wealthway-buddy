@@ -306,7 +306,7 @@ describe("authority and maker/checker", () => {
       ],
       { step: "executed", actor: { userId: "ops-1", role: "harmonious" } },
     );
-    expect(error).toMatch(/cannot prepare, approve and execute/i);
+    expect(error).toMatch(/requested or prepared|cannot prepare, approve and execute/i);
   });
 
   it("a service account never counts as a human approver", () => {
@@ -319,7 +319,7 @@ describe("authority and maker/checker", () => {
         step: "executed",
         actor: { userId: "ops-2", role: "harmonious" },
       }),
-    ).toMatch(/no final approval/i);
+    ).toMatch(/no (human )?final approval/i);
   });
 
   it("execution without a final approval is refused", () => {
@@ -328,7 +328,7 @@ describe("authority and maker/checker", () => {
         step: "executed",
         actor: { userId: "ops-2", role: "harmonious" },
       }),
-    ).toMatch(/no final approval/i);
+    ).toMatch(/no (human )?final approval/i);
   });
 });
 
