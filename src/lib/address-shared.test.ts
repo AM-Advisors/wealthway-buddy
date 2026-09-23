@@ -112,7 +112,7 @@ describe("manual entry and provider outage", () => {
   it("an outage leaves the address usable rather than invalid", () => {
     expect(OFFLINE_CAPABILITIES.autocomplete).toBe(false);
     expect(OFFLINE_CAPABILITIES.validation).toBe(false);
-    expect(stateForVerdict("unavailable").state).not.toBe("failed");
+    expect(stateForVerdict("unavailable", "manual").state).toBe("entered");
     expect(stateForEntry({ entryMethod: "manual", validation: null }).state).not.toBe("failed");
   });
 
