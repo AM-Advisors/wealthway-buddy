@@ -36,6 +36,14 @@ export function googleReturnUrl(
   const base = `${origin}${safeInternalPath(redirectPath, "/auth")}`;
   const safe = safeInternalPath(intended ?? "", "");
   if (!safe) return base;
+  // A destination that only looks safe until it is decoded is discarded too.
+  let decoded = safe;
+  try {
+    decoded = decodeURIComponent(safe);
+  } catch {
+    return base;
+  }
+  if (safeInternalPath(decoded, "") !== decoded) return base;
   return `${base}?next=${encodeURIComponent(safe)}`;
 }
 
