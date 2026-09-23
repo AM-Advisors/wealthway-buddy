@@ -20,6 +20,11 @@ import {
   type NormalizedVerification,
 } from "@/lib/kyc-verification";
 import { applyProofPolicy, evaluateProofOfAddress } from "@/lib/address-validation";
+import {
+  compareAddressComponents,
+  comparisonNeedsReview,
+  comparisonToMatch,
+} from "@/lib/address-compare";
 import { refreshOnboardingState } from "@/lib/identity.server";
 
 const db = () => supabaseAdmin as any;
@@ -597,9 +602,32 @@ async function applyAddressEvidence(input: {
   const poa = input.normalized.proofOfAddress;
   const current = String(input.address.state) as any;
 
+  // Component-by-component comparison happens here, on the server. The browser
+  // never reports whether the proof document matches the address on file.
+  const comparison = compareAddressComponents(
+    {
+      line1: input.address.line1,
+      line2: input.address.line2,
+      city: input.address.city,
+      region: input.address.region,
+      postalCode: input.address.postal_code,
+      country: input.address.country,
+    },
+    poa.extracted
+      ? {
+          line1: poa.extracted.line1,
+          city: poa.extracted.city,
+          region: poa.extracted.region,
+          postalCode: poa.extracted.postalCode,
+          country: poa.extracted.country,
+        }
+      : null,
+  );
+
   const evaluation = poa.status === "not_started" && !input.poaRequired
     ? null
     : evaluateProofOfAddress({
+        addressMatchOverride: comparisonToMatch(comparison),
         current,
         onFile: {
           line1: input.address.line1,
@@ -622,19 +650,33 @@ async function applyAddressEvidence(input: {
         providerStatus: poa.status,
       });
 
-  const target = evaluation ? evaluation.state : applyProofPolicy(current, input.poaRequired);
+  let target: string = evaluation ? evaluation.state : applyProofPolicy(current, input.poaRequired);
+  // A material difference between the address on file and the proof document is
+  // never silently accepted; it is recorded as a mismatch for compliance review.
+  if (poa.status === "approved" && comparisonNeedsReview(comparison.result)) {
+    target = "proof_mismatch";
+  }
   if (target === current && !evaluation) return;
 
   const nowIso = new Date().toISOString();
   await db()
     .from("person_addresses")
     .update({
-      state: target,
+      state: target as any,
       state_reason: evaluation?.reason ?? "Proof of residence required by policy.",
       provider_extracted_address: poa.extracted ?? null,
       match_result: evaluation
         ? { address: evaluation.addressMatch, name: evaluation.nameMatch }
         : {},
+      comparison: {
+        result: comparison.result,
+        differences: comparison.differences,
+        left: comparison.left,
+        right: comparison.right,
+      } as any,
+      review_reason: comparisonNeedsReview(comparison.result)
+        ? "Address on file differs materially from the proof-of-address document."
+        : null,
       proof_document_type: poa.documentType,
       proof_issue_date: poa.issueDate,
       proof_provider_status: poa.status,
@@ -657,6 +699,8 @@ async function applyAddressEvidence(input: {
       issue_date: poa.issueDate,
       warnings: poa.warnings,
       match: evaluation ? { address: evaluation.addressMatch, name: evaluation.nameMatch } : null,
+      comparison: comparison.result,
+      comparison_differences: comparison.differences,
     },
   });
 }
