@@ -139,24 +139,19 @@ function ProfilePage() {
             <Input id="residence_country" name="residence_country" defaultValue={person.residence_country ?? ""} />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="address_line1">Residential address</Label>
-            <Input id="address_line1" name="address_line1" defaultValue={person.address_line1 ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="city">City</Label>
-            <Input id="city" name="city" defaultValue={person.city ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="region">State / region</Label>
-            <Input id="region" name="region" defaultValue={person.region ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="postal_code">Postal code</Label>
-            <Input id="postal_code" name="postal_code" defaultValue={person.postal_code ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="country">Country</Label>
-            <Input id="country" name="country" defaultValue={person.country ?? ""} />
+            <AddressInput
+              idPrefix="profile-address"
+              label="Residential address"
+              countryMode="free"
+              value={address}
+              onChange={setAddress}
+            />
+            <input type="hidden" name="address_line1" value={address.line1} />
+            <input type="hidden" name="address_line2" value={address.line2} />
+            <input type="hidden" name="city" value={address.city} />
+            <input type="hidden" name="region" value={address.region} />
+            <input type="hidden" name="postal_code" value={address.postalCode} />
+            <input type="hidden" name="country" value={address.country} />
           </div>
           <div className="sm:col-span-2">
             <Button type="submit" disabled={personMutation.isPending}>
