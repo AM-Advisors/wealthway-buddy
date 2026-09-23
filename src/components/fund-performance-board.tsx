@@ -219,59 +219,15 @@ function EntryForms({ fund, onDone }: { fund: FundPerformance; onDone: () => voi
 
       <div className="space-y-3 rounded-lg border p-4">
         <h4 className="text-sm font-semibold">Money paid back to investors</h4>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor={`dist-date-${fund.offering_id}`}>Paid on</Label>
-            <Input
-              id={`dist-date-${fund.offering_id}`}
-              type="date"
-              value={distDate}
-              onChange={(e) => setDistDate(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor={`dist-amount-${fund.offering_id}`}>Amount (USD)</Label>
-            <Input
-              id={`dist-amount-${fund.offering_id}`}
-              inputMode="decimal"
-              placeholder="50000"
-              value={distAmount}
-              onChange={(e) => setDistAmount(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor={`dist-note-${fund.offering_id}`}>Note (optional)</Label>
-          <Input
-            id={`dist-note-${fund.offering_id}`}
-            value={distNote}
-            onChange={(e) => setDistNote(e.target.value)}
-            placeholder="Quarterly distribution"
-          />
-        </div>
-        <Button
-          size="sm"
-          disabled={
-            !distAmount || Number.isNaN(Number(distAmount)) || distributionMutation.isPending
-          }
-          onClick={() => distributionMutation.mutate()}
-        >
-          Record distribution
-        </Button>
+        <p className="text-xs text-muted-foreground">
+          Distributions appear here automatically once Harmonious has matched the bank payment and
+          posted the accounting. They can't be typed in or removed.
+        </p>
         <ul className="space-y-1 text-xs text-muted-foreground">
           {fund.distributions.slice(0, 5).map((d) => (
-            <li key={d.id} className="flex items-center justify-between gap-2">
-              <span>
-                {d.paid_on} · {money(d.amount_cents)}
-                {d.note ? ` · ${d.note}` : ""}
-              </span>
-              <button
-                type="button"
-                className="underline"
-                onClick={() => deleteMutation.mutate({ id: d.id, kind: "distribution" })}
-              >
-                Remove
-              </button>
+            <li key={d.id}>
+              {d.paid_on} · {money(d.amount_cents)}
+              {d.note ? ` · ${d.note}` : ""}
             </li>
           ))}
         </ul>

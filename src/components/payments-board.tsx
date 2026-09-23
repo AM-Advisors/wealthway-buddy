@@ -222,11 +222,10 @@ export function PaymentsBoard({ purposes }: { purposes?: string[] } = {}) {
                 <CheckSelect
                   label="Bank"
                   value={r.bank_status}
-                  disabled={r.status !== "approved"}
+                  disabled={r.status !== "approved" || r.bank_status === "settled"}
                   options={[
                     ["not_sent", "Not sent"],
                     ["sent", "Sent"],
-                    ["settled", "Settled"],
                     ["returned", "Returned"],
                     ["rejected", "Rejected"],
                   ]}
