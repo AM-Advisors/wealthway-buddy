@@ -12,12 +12,18 @@ import { useServerFn } from "@tanstack/react-start";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { resolveAddressSuggestion, suggestAddress } from "@/lib/address.functions";
+import {
+  previewAddressValidation,
+  resolveAddressSuggestion,
+  suggestAddress,
+} from "@/lib/address.functions";
 
 export interface AddressValue {
   line1: string;
   line2: string;
   city: string;
+  /** Returned by the provider where relevant; shown, never required. */
+  county?: string | null;
   region: string;
   postalCode: string;
   country: string;
