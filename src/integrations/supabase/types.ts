@@ -438,6 +438,50 @@ export type Database = {
           },
         ]
       }
+      address_usages: {
+        Row: {
+          address_id: string
+          context: string
+          context_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+          owner_id: string | null
+          owner_type: string
+          recorded_by: string | null
+        }
+        Insert: {
+          address_id: string
+          context: string
+          context_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          owner_id?: string | null
+          owner_type?: string
+          recorded_by?: string | null
+        }
+        Update: {
+          address_id?: string
+          context?: string
+          context_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          owner_id?: string | null
+          owner_type?: string
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_usages_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "person_addresses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       address_verification_events: {
         Row: {
           actor_user_id: string | null
@@ -19171,6 +19215,7 @@ export type Database = {
         Row: {
           address_kind: string
           city: string | null
+          comparison: Json
           country: string
           created_at: string
           created_by: string | null
@@ -19181,7 +19226,10 @@ export type Database = {
           line1: string
           line2: string | null
           match_result: Json
-          person_id: string
+          owner_id: string | null
+          owner_type: string
+          person_id: string | null
+          place_id: string | null
           postal_code: string | null
           proof_document_type: string | null
           proof_issue_date: string | null
@@ -19189,17 +19237,25 @@ export type Database = {
           proof_verified_at: string | null
           proof_warnings: Json
           provider_extracted_address: Json | null
+          provider_verdict: string | null
+          record_status: string
           region: string | null
+          review_reason: string | null
+          source: string
           state: Database["public"]["Enums"]["address_verification_state"]
           state_reason: string | null
+          supersedes_id: string | null
           updated_at: string
+          validated_at: string | null
           validation_provider: string | null
           validation_result: Json
           verification_id: string | null
+          version: number
         }
         Insert: {
           address_kind?: string
           city?: string | null
+          comparison?: Json
           country: string
           created_at?: string
           created_by?: string | null
@@ -19210,7 +19266,10 @@ export type Database = {
           line1: string
           line2?: string | null
           match_result?: Json
-          person_id: string
+          owner_id?: string | null
+          owner_type?: string
+          person_id?: string | null
+          place_id?: string | null
           postal_code?: string | null
           proof_document_type?: string | null
           proof_issue_date?: string | null
@@ -19218,17 +19277,25 @@ export type Database = {
           proof_verified_at?: string | null
           proof_warnings?: Json
           provider_extracted_address?: Json | null
+          provider_verdict?: string | null
+          record_status?: string
           region?: string | null
+          review_reason?: string | null
+          source?: string
           state?: Database["public"]["Enums"]["address_verification_state"]
           state_reason?: string | null
+          supersedes_id?: string | null
           updated_at?: string
+          validated_at?: string | null
           validation_provider?: string | null
           validation_result?: Json
           verification_id?: string | null
+          version?: number
         }
         Update: {
           address_kind?: string
           city?: string | null
+          comparison?: Json
           country?: string
           created_at?: string
           created_by?: string | null
@@ -19239,7 +19306,10 @@ export type Database = {
           line1?: string
           line2?: string | null
           match_result?: Json
-          person_id?: string
+          owner_id?: string | null
+          owner_type?: string
+          person_id?: string | null
+          place_id?: string | null
           postal_code?: string | null
           proof_document_type?: string | null
           proof_issue_date?: string | null
@@ -19247,13 +19317,20 @@ export type Database = {
           proof_verified_at?: string | null
           proof_warnings?: Json
           provider_extracted_address?: Json | null
+          provider_verdict?: string | null
+          record_status?: string
           region?: string | null
+          review_reason?: string | null
+          source?: string
           state?: Database["public"]["Enums"]["address_verification_state"]
           state_reason?: string | null
+          supersedes_id?: string | null
           updated_at?: string
+          validated_at?: string | null
           validation_provider?: string | null
           validation_result?: Json
           verification_id?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -19261,6 +19338,13 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_addresses_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "person_addresses"
             referencedColumns: ["id"]
           },
           {
