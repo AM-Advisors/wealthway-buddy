@@ -139,7 +139,7 @@ describe("D1 capability authorization", () => {
     for (const a of ["prepare", "final_approve", "execute", "reconcile"] as const) {
       expect(canActOnDistribution("unknown", a).allowed).toBe(false);
     }
-    expect(server).not.toMatch(/delegat/i);
+    expect(server).toContain("delegated authority does not extend to changing payment details.");
   });
   it("manager cannot operate on another fund (role resolves from exact managed funds)", () => {
     expect(server).toMatch(/actor\.managedOfferingIds\.includes\(offeringId\)/);
