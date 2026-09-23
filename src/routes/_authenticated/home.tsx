@@ -18,7 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NeedsYou, Stat, type NeedsYouItem } from "@/components/dashboard-primitives";
+import { Stat } from "@/components/dashboard-primitives";
+import { useClientWorkspace } from "@/components/client-workspace";
 import { AttentionCenter } from "@/components/attention-center";
 import { SetupCard } from "@/components/setup-card";
 
@@ -73,6 +74,7 @@ function QuickLinks({ links }: { links: QuickLinkDef[] }) {
 }
 
 function RoleHome() {
+  const { activeKind } = useClientWorkspace();
   const load = useServerFn(getRoleOverview);
   const { data, isLoading } = useQuery({
     queryKey: ["role-overview"],
@@ -85,105 +87,9 @@ function RoleHome() {
   }
   if (!data) return null;
 
-  const needsYou: NeedsYouItem[] = [];
-
-  if (data.roles.investor) {
-    for (const app of data.investor.applications) {
-      if (app.currentStep) {
-        needsYou.push({
-          id: `app-${app.applicationId}`,
-          title: `Continue your ${app.fundName} application`,
-          detail: `Next: ${prettyStatus(app.currentStep)}`,
-          to: "/dashboard",
-          urgency: "open",
-          actionLabel: "Continue",
-        });
-      }
-    }
-    if (data.investor.unreadMessages > 0) {
-      needsYou.push({
-        id: "investor-messages",
-        title: `${data.investor.unreadMessages} unread message${data.investor.unreadMessages === 1 ? "" : "s"}`,
-        to: "/dashboard",
-        urgency: "soon",
-        actionLabel: "Read",
-      });
-    }
-  }
-
-  if (data.manager) {
-    if (data.manager.needsReview > 0)
-      needsYou.push({
-        id: "manager-review",
-        title: `${data.manager.needsReview} application${data.manager.needsReview === 1 ? "" : "s"} to review`,
-        to: "/manager/approvals",
-        urgency: "soon",
-        actionLabel: "Review",
-      });
-    if (data.manager.wiresToReview > 0)
-      needsYou.push({
-        id: "manager-wires",
-        title: `${data.manager.wiresToReview} wire${data.manager.wiresToReview === 1 ? "" : "s"} to review`,
-        to: "/manager/wires",
-        urgency: "soon",
-        actionLabel: "Review",
-      });
-    if (data.manager.uploadsToReview > 0)
-      needsYou.push({
-        id: "manager-uploads",
-        title: `${data.manager.uploadsToReview} document${data.manager.uploadsToReview === 1 ? "" : "s"} in your inbox`,
-        to: "/manager/inbox",
-        urgency: "open",
-        actionLabel: "Open inbox",
-      });
-  }
-
-  if (data.operations) {
-    if (data.operations.bankingPending > 0)
-      needsYou.push({
-        id: "ops-banking",
-        title: `${data.operations.bankingPending} banking request${data.operations.bankingPending === 1 ? "" : "s"} waiting`,
-        to: "/ops/banking",
-        urgency: "soon",
-        actionLabel: "Open",
-      });
-    if (data.operations.ss4Pending > 0)
-      needsYou.push({
-        id: "ops-ss4",
-        title: `${data.operations.ss4Pending} EIN or SS-4 item${data.operations.ss4Pending === 1 ? "" : "s"} waiting`,
-        to: "/ops/ss4",
-        urgency: "open",
-        actionLabel: "Open",
-      });
-    if (data.operations.taxPending > 0)
-      needsYou.push({
-        id: "ops-tax",
-        title: `${data.operations.taxPending} tax document${data.operations.taxPending === 1 ? "" : "s"} waiting`,
-        to: "/ops/tax-documents",
-        urgency: "open",
-        actionLabel: "Open",
-      });
-  }
-
-  if (data.admin) {
-    if (data.admin.accessRequests > 0)
-      needsYou.push({
-        id: "admin-access",
-        title: `${data.admin.accessRequests} fund access request${data.admin.accessRequests === 1 ? "" : "s"}`,
-        to: "/admin/requests",
-        urgency: "soon",
-        actionLabel: "Review",
-      });
-    if (data.admin.wireRequests > 0)
-      needsYou.push({
-        id: "admin-wires",
-        title: `${data.admin.wireRequests} wire request${data.admin.wireRequests === 1 ? "" : "s"} to decide`,
-        to: "/admin/signoff",
-        urgency: "soon",
-        actionLabel: "Review",
-      });
-  }
-
+  // Workflow state ("what needs you") comes only from the Action Center read
+  // model below. The cards that follow are summary context, not a second
+  // workflow calculation.
   const investorCard = data.roles.investor ? (
     <Card>
       <CardHeader className="pb-3">
@@ -401,9 +307,7 @@ function RoleHome() {
 
       <SetupCard />
 
-      <AttentionCenter />
-
-      <NeedsYou items={needsYou} />
+      <AttentionCenter {...(activeKind && activeKind !== "operations" ? { workspace: activeKind } : {})} />
 
 
       {sections.length <= 1 ? (
