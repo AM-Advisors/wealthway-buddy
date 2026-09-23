@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  amlStatusFromDecision,
-  collectDecisionWarnings,
   collectEmails,
   fetchDiditSessionDecision,
-  mapDiditStatus,
   verifyDiditWebhook,
 } from "@/lib/didit.server";
 
@@ -85,26 +82,56 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
         let processingError: string | null = null;
 
         try {
-          const resolved = await resolveApplication(supabaseAdmin, body, sessionId);
+          const { resolveVerification, ensureVerification, syncVerification } = await import(
+            "@/lib/kyc-verification.server"
+          );
+
+          // Correlation is by the opaque Harmonious reference or the session
+          // Harmonious recorded — never by email address alone.
+          let verification = await resolveVerification({
+            vendorData: body["vendor_data"] ? String(body["vendor_data"]) : null,
+            sessionId,
+          });
+
+          const resolved = verification
+            ? {
+                applicationId: verification.application_id,
+                sessionId: (verification.session_id as string | null) ?? sessionId,
+                diditUserId: body["vendor_user_id"] ? String(body["vendor_user_id"]) : null,
+                decision: null as Record<string, any> | null,
+              }
+            : await resolveApplication(supabaseAdmin, body, sessionId);
+
           applicationId = resolved.applicationId;
 
           if (!KNOWN_EVENTS.has(webhookType)) {
             processingError = `unhandled webhook_type: ${webhookType}`;
           } else if (!applicationId) {
             processingError = "no matching application";
-          } else if (SESSION_EVENTS.has(webhookType)) {
-            await applySessionEvent(
-              supabaseAdmin,
-              applicationId,
-              body,
-              resolved.sessionId ?? sessionId,
-              status,
-              resolved.decision,
-            );
           } else {
-            // user.*/business.* events carry no session status: re-read the
-            // investor's latest session from Didit so the console stays current.
-            await resyncFromProvider(supabaseAdmin, applicationId, resolved.sessionId);
+            if (!verification) {
+              verification = await ensureVerification({ applicationId });
+            }
+            if (body["vendor_user_id"]) {
+              await supabaseAdmin
+                .from("kyc_verifications")
+                .update({ didit_user_id: String(body["vendor_user_id"]) })
+                .eq("id", verification.id)
+                .is("didit_user_id", null);
+            }
+
+            // Session events and account-level events alike are applied from
+            // the provider's authoritative decision, re-read server-side.
+            const result = await syncVerification({
+              verification,
+              sessionId: resolved.sessionId ?? sessionId,
+              fallbackPayload: SESSION_EVENTS.has(webhookType)
+                ? (resolved.decision ?? body)
+                : resolved.decision,
+              trigger: "webhook",
+            });
+            if (!result.applied) processingError = result.reason ?? "no decision applied";
+            void status;
           }
 
           if (applicationId) {
@@ -242,25 +269,6 @@ async function tagUser(admin: any, resolved: Resolved): Promise<Resolved> {
   return resolved;
 }
 
-/** Pulls the current session decision from Didit and applies it. */
-async function resyncFromProvider(admin: any, applicationId: string, sessionId: string | null) {
-  let id = sessionId;
-  if (!id) {
-    const { data } = await admin
-      .from("kyc_verifications")
-      .select("session_id")
-      .eq("application_id", applicationId)
-      .maybeSingle();
-    id = (data?.session_id as string | null) ?? null;
-  }
-  if (!id) return;
-  const decision = await fetchDiditSessionDecision(id);
-  if (!decision) return;
-  const status = decision["status"] ? String(decision["status"]) : null;
-  if (!status) return;
-  await applySessionEvent(admin, applicationId, decision, id, status, decision);
-}
-
 /** Links earlier unmatched events for the same session/user to the application. */
 async function backfillRelatedEvents(
   admin: any,
@@ -282,86 +290,4 @@ async function backfillRelatedEvents(
       .is("application_id", null)
       .contains("payload", { vendor_user_id: diditUserId });
   }
-}
-
-
-
-async function applySessionEvent(
-  admin: any,
-  applicationId: string,
-  body: Record<string, any>,
-  sessionId: string | null,
-  status: string | null,
-  fetchedDecision?: Record<string, any> | null,
-) {
-  const mapping = mapDiditStatus(status ?? undefined);
-  if (!mapping) return;
-
-  const decision = body["decision"] ?? fetchedDecision ?? {};
-  const now = new Date().toISOString();
-
-  const kycRow: Record<string, any> = {
-    application_id: applicationId,
-    provider: "didit",
-    session_id: sessionId,
-    vendor_data: body["vendor_data"] ? String(body["vendor_data"]) : null,
-    status: mapping.kyc,
-
-    decision,
-    result: decision,
-    updated_at: now,
-    completed_at: mapping.completed ? now : null,
-    expired_at: mapping.expired ? now : null,
-  };
-  if (sessionId) kycRow["inquiry_id"] = sessionId;
-  if (body["vendor_user_id"]) kycRow["didit_user_id"] = String(body["vendor_user_id"]);
-
-
-  const { data: existing } = await admin
-    .from("kyc_verifications")
-    .select("id")
-    .eq("application_id", applicationId)
-    .maybeSingle();
-
-  if (existing?.id) {
-    const { error } = await admin.from("kyc_verifications").update(kycRow).eq("id", existing.id);
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await admin.from("kyc_verifications").insert(kycRow);
-    if (error) throw new Error(error.message);
-  }
-
-  if (mapping.kyc === "declined") {
-    const warnings = collectDecisionWarnings(decision);
-    if (warnings.length) console.warn("[didit] declined", applicationId, warnings.join("; "));
-  }
-
-  const appUpdate: Record<string, any> = { kyc_status: mapping.kyc, updated_at: now };
-
-  const aml = amlStatusFromDecision(decision);
-  if (aml) {
-    const { data: amlRow } = await admin
-      .from("aml_screenings")
-      .select("id")
-      .eq("application_id", applicationId)
-      .maybeSingle();
-    const amlPayload = {
-      application_id: applicationId,
-      provider: "didit",
-      report_id: sessionId,
-      status: aml.status,
-      matches: aml.matches,
-      completed_at: aml.status === "approved" || aml.status === "declined" ? now : null,
-      updated_at: now,
-    };
-    if (amlRow?.id) await admin.from("aml_screenings").update(amlPayload).eq("id", amlRow.id);
-    else await admin.from("aml_screenings").insert(amlPayload);
-    appUpdate["aml_status"] = aml.status;
-  }
-
-  const { error: appError } = await admin
-    .from("investor_applications")
-    .update(appUpdate)
-    .eq("id", applicationId);
-  if (appError) throw new Error(appError.message);
 }

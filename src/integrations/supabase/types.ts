@@ -438,6 +438,63 @@ export type Database = {
           },
         ]
       }
+      address_verification_events: {
+        Row: {
+          actor_user_id: string | null
+          address_id: string
+          created_at: string
+          detail: Json
+          from_state:
+            | Database["public"]["Enums"]["address_verification_state"]
+            | null
+          id: string
+          person_id: string | null
+          source: string
+          to_state: Database["public"]["Enums"]["address_verification_state"]
+        }
+        Insert: {
+          actor_user_id?: string | null
+          address_id: string
+          created_at?: string
+          detail?: Json
+          from_state?:
+            | Database["public"]["Enums"]["address_verification_state"]
+            | null
+          id?: string
+          person_id?: string | null
+          source?: string
+          to_state: Database["public"]["Enums"]["address_verification_state"]
+        }
+        Update: {
+          actor_user_id?: string | null
+          address_id?: string
+          created_at?: string
+          detail?: Json
+          from_state?:
+            | Database["public"]["Enums"]["address_verification_state"]
+            | null
+          id?: string
+          person_id?: string | null
+          source?: string
+          to_state?: Database["public"]["Enums"]["address_verification_state"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_verification_events_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "person_addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "address_verification_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_notes: {
         Row: {
           application_id: string
@@ -12936,6 +12993,60 @@ export type Database = {
           },
         ]
       }
+      identity_check_results: {
+        Row: {
+          check_kind: Database["public"]["Enums"]["identity_check_kind"]
+          detail: Json
+          evaluated_at: string
+          harmonious_status: Database["public"]["Enums"]["check_status"]
+          id: string
+          person_id: string | null
+          provider: string
+          provider_status: string | null
+          verification_id: string
+          warnings: Json
+        }
+        Insert: {
+          check_kind: Database["public"]["Enums"]["identity_check_kind"]
+          detail?: Json
+          evaluated_at?: string
+          harmonious_status?: Database["public"]["Enums"]["check_status"]
+          id?: string
+          person_id?: string | null
+          provider?: string
+          provider_status?: string | null
+          verification_id: string
+          warnings?: Json
+        }
+        Update: {
+          check_kind?: Database["public"]["Enums"]["identity_check_kind"]
+          detail?: Json
+          evaluated_at?: string
+          harmonious_status?: Database["public"]["Enums"]["check_status"]
+          id?: string
+          person_id?: string | null
+          provider?: string
+          provider_status?: string | null
+          verification_id?: string
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_check_results_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_check_results_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       individual_tax_documents: {
         Row: {
           created_at: string
@@ -15539,55 +15650,130 @@ export type Database = {
       }
       kyc_verifications: {
         Row: {
+          address_check_status: Database["public"]["Enums"]["check_status"]
           application_id: string
           completed_at: string | null
           created_at: string
           decision: Json
           didit_user_id: string | null
+          document_expiration_date: string | null
+          document_expired: boolean
+          document_issue_date: string | null
+          document_issuing_country: string | null
+          document_issuing_region: string | null
+          document_number_last4: string | null
+          document_type: string | null
           expired_at: string | null
+          face_match_score: number | null
+          face_match_status: Database["public"]["Enums"]["check_status"]
+          harmonious_decision: Database["public"]["Enums"]["check_status"]
+          harmonious_decision_reason: string | null
           id: string
           inquiry_id: string | null
+          last_synced_at: string | null
+          liveness_status: Database["public"]["Enums"]["check_status"]
+          person_id: string | null
+          prefill_sent: Json
+          proof_of_address_status: Database["public"]["Enums"]["check_status"]
           provider: string
+          provider_decision: string | null
+          provider_warnings: Json
+          reconciled_at: string | null
           result: Json
           session_id: string | null
           session_url: string | null
           status: Database["public"]["Enums"]["check_status"]
           updated_at: string
           vendor_data: string | null
+          verification_completed_on: string | null
+          verification_ref: string
+          verified_date_of_birth: string | null
+          verified_full_name: string | null
+          workflow_id: string | null
         }
         Insert: {
+          address_check_status?: Database["public"]["Enums"]["check_status"]
           application_id: string
           completed_at?: string | null
           created_at?: string
           decision?: Json
           didit_user_id?: string | null
+          document_expiration_date?: string | null
+          document_expired?: boolean
+          document_issue_date?: string | null
+          document_issuing_country?: string | null
+          document_issuing_region?: string | null
+          document_number_last4?: string | null
+          document_type?: string | null
           expired_at?: string | null
+          face_match_score?: number | null
+          face_match_status?: Database["public"]["Enums"]["check_status"]
+          harmonious_decision?: Database["public"]["Enums"]["check_status"]
+          harmonious_decision_reason?: string | null
           id?: string
           inquiry_id?: string | null
+          last_synced_at?: string | null
+          liveness_status?: Database["public"]["Enums"]["check_status"]
+          person_id?: string | null
+          prefill_sent?: Json
+          proof_of_address_status?: Database["public"]["Enums"]["check_status"]
           provider?: string
+          provider_decision?: string | null
+          provider_warnings?: Json
+          reconciled_at?: string | null
           result?: Json
           session_id?: string | null
           session_url?: string | null
           status?: Database["public"]["Enums"]["check_status"]
           updated_at?: string
           vendor_data?: string | null
+          verification_completed_on?: string | null
+          verification_ref?: string
+          verified_date_of_birth?: string | null
+          verified_full_name?: string | null
+          workflow_id?: string | null
         }
         Update: {
+          address_check_status?: Database["public"]["Enums"]["check_status"]
           application_id?: string
           completed_at?: string | null
           created_at?: string
           decision?: Json
           didit_user_id?: string | null
+          document_expiration_date?: string | null
+          document_expired?: boolean
+          document_issue_date?: string | null
+          document_issuing_country?: string | null
+          document_issuing_region?: string | null
+          document_number_last4?: string | null
+          document_type?: string | null
           expired_at?: string | null
+          face_match_score?: number | null
+          face_match_status?: Database["public"]["Enums"]["check_status"]
+          harmonious_decision?: Database["public"]["Enums"]["check_status"]
+          harmonious_decision_reason?: string | null
           id?: string
           inquiry_id?: string | null
+          last_synced_at?: string | null
+          liveness_status?: Database["public"]["Enums"]["check_status"]
+          person_id?: string | null
+          prefill_sent?: Json
+          proof_of_address_status?: Database["public"]["Enums"]["check_status"]
           provider?: string
+          provider_decision?: string | null
+          provider_warnings?: Json
+          reconciled_at?: string | null
           result?: Json
           session_id?: string | null
           session_url?: string | null
           status?: Database["public"]["Enums"]["check_status"]
           updated_at?: string
           vendor_data?: string | null
+          verification_completed_on?: string | null
+          verification_ref?: string
+          verified_date_of_birth?: string | null
+          verified_full_name?: string | null
+          workflow_id?: string | null
         }
         Relationships: [
           {
@@ -15595,6 +15781,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_verifications_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -18970,6 +19163,111 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "performance_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      person_addresses: {
+        Row: {
+          address_kind: string
+          city: string | null
+          country: string
+          created_at: string
+          created_by: string | null
+          entry_method: string
+          formatted: string | null
+          id: string
+          is_current: boolean
+          line1: string
+          line2: string | null
+          match_result: Json
+          person_id: string
+          postal_code: string | null
+          proof_document_type: string | null
+          proof_issue_date: string | null
+          proof_provider_status: string | null
+          proof_verified_at: string | null
+          proof_warnings: Json
+          provider_extracted_address: Json | null
+          region: string | null
+          state: Database["public"]["Enums"]["address_verification_state"]
+          state_reason: string | null
+          updated_at: string
+          validation_provider: string | null
+          validation_result: Json
+          verification_id: string | null
+        }
+        Insert: {
+          address_kind?: string
+          city?: string | null
+          country: string
+          created_at?: string
+          created_by?: string | null
+          entry_method?: string
+          formatted?: string | null
+          id?: string
+          is_current?: boolean
+          line1: string
+          line2?: string | null
+          match_result?: Json
+          person_id: string
+          postal_code?: string | null
+          proof_document_type?: string | null
+          proof_issue_date?: string | null
+          proof_provider_status?: string | null
+          proof_verified_at?: string | null
+          proof_warnings?: Json
+          provider_extracted_address?: Json | null
+          region?: string | null
+          state?: Database["public"]["Enums"]["address_verification_state"]
+          state_reason?: string | null
+          updated_at?: string
+          validation_provider?: string | null
+          validation_result?: Json
+          verification_id?: string | null
+        }
+        Update: {
+          address_kind?: string
+          city?: string | null
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          entry_method?: string
+          formatted?: string | null
+          id?: string
+          is_current?: boolean
+          line1?: string
+          line2?: string | null
+          match_result?: Json
+          person_id?: string
+          postal_code?: string | null
+          proof_document_type?: string | null
+          proof_issue_date?: string | null
+          proof_provider_status?: string | null
+          proof_verified_at?: string | null
+          proof_warnings?: Json
+          provider_extracted_address?: Json | null
+          region?: string | null
+          state?: Database["public"]["Enums"]["address_verification_state"]
+          state_reason?: string | null
+          updated_at?: string
+          validation_provider?: string | null
+          validation_result?: Json
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_addresses_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_addresses_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_verifications"
             referencedColumns: ["id"]
           },
         ]
@@ -25009,6 +25307,15 @@ export type Database = {
         | "review"
         | "closed"
         | "locked"
+      address_verification_state:
+        | "entered"
+        | "normalized"
+        | "validated"
+        | "proof_required"
+        | "proof_pending"
+        | "proof_verified"
+        | "review_required"
+        | "failed"
       app_role:
         | "admin"
         | "investor"
@@ -25116,6 +25423,14 @@ export type Database = {
         | "revoked"
         | "expired"
       funding_method: "wire" | "ach"
+      identity_check_kind:
+        | "identity"
+        | "document"
+        | "liveness"
+        | "face_match"
+        | "address"
+        | "proof_of_address"
+        | "aml"
       investment_profile_type:
         | "individual"
         | "joint"
@@ -25465,6 +25780,16 @@ export const Constants = {
         "closed",
         "locked",
       ],
+      address_verification_state: [
+        "entered",
+        "normalized",
+        "validated",
+        "proof_required",
+        "proof_pending",
+        "proof_verified",
+        "review_required",
+        "failed",
+      ],
       app_role: [
         "admin",
         "investor",
@@ -25581,6 +25906,15 @@ export const Constants = {
         "expired",
       ],
       funding_method: ["wire", "ach"],
+      identity_check_kind: [
+        "identity",
+        "document",
+        "liveness",
+        "face_match",
+        "address",
+        "proof_of_address",
+        "aml",
+      ],
       investment_profile_type: [
         "individual",
         "joint",

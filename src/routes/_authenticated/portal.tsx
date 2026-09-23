@@ -16,6 +16,7 @@ import {
 } from "@/lib/box-sign.functions";
 
 import { PortalMessageThread } from "@/components/portal-message-thread";
+import { IdentityVerificationCard } from "@/components/identity-verification-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -393,44 +394,12 @@ function Portal() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="text-base">Identity verification</CardTitle>
-                <CardDescription>
-                  Verify your ID and selfie with our secure verification partner. Your identity and
-                  watchlist results update here automatically — usually within a minute.
-                </CardDescription>
-              </div>
-              <Badge variant={tone(app.kyc_status)}>{label(app.kyc_status)}</Badge>
-            </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-3">
-              {app.kyc_status === "approved" ? (
-                <p className="text-sm text-muted-foreground">
-                  Your identity is verified. No further action needed.
-                </p>
-              ) : app.kyc_status === "declined" ? (
-                <p className="text-sm text-muted-foreground">
-                  We couldn't verify your identity. Contact the fund team and we'll help you retry.
-                </p>
-              ) : (
-                <>
-                  <Button size="sm" disabled={starting} onClick={startVerification}>
-                    {starting
-                      ? "Opening…"
-                      : data?.kyc?.session_url
-                        ? "Continue verification"
-                        : "Start verification"}
-                  </Button>
-                  <span className="text-xs text-muted-foreground">
-                    {app.kyc_status === "review"
-                      ? "Submitted — a reviewer is finishing the check."
-                      : "Opens in a new tab; come back here when you're done."}
-                  </span>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <IdentityVerificationCard
+            kycStatus={app.kyc_status}
+            hasSession={Boolean(data?.kyc?.session_url)}
+            starting={starting}
+            onStart={startVerification}
+          />
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
