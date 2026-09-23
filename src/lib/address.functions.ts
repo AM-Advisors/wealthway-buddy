@@ -86,12 +86,12 @@ export const saveResidentialAddress = createServerFn({ method: "POST" })
         region: clean.region,
         postal_code: clean.postalCode,
         country: clean.country,
-        formatted_address: validation?.formatted ?? clean.formatted,
-        normalized_address: validation?.formatted ?? null,
+        formatted: validation?.formatted ?? clean.formatted,
         entry_method: data.entryMethod,
         validation_provider: validation?.provider ?? null,
-        validation_result: validation ? (validation.raw ?? {}) : {},
-        provider_place_id: data.providerPlaceId ?? null,
+        validation_result: validation
+          ? { verdict: validation.verdict, place_id: data.providerPlaceId ?? null, ...(validation.raw ?? {}) }
+          : { place_id: data.providerPlaceId ?? null },
         state,
         state_reason: entry.reason,
         is_current: true,
