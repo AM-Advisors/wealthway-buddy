@@ -239,9 +239,9 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
   const isStaff = Boolean(adminAccess?.isReviewer || operations?.allowed);
 
   const pinned: NavItem[] = [
-    { title: "Home", url: "/home", icon: Home },
+    { title: "Home", url: "/home", icon: "Home" },
     ...(isStaff
-      ? [{ title: "My clients", url: "/staff", icon: Users, badge: "myClients" as BadgeKey }]
+      ? [{ title: "My clients", url: "/staff", icon: "Users", badge: "myClients" as BadgeKey }]
       : []),
   ].filter(matches);
 
