@@ -21,6 +21,12 @@ import {
   type AttentionResult,
 } from "@/lib/attention-model";
 import { canAct } from "@/lib/delegated-access.server";
+import {
+  companyFeeProposalItems,
+  companyInvoiceItems,
+  OPEN_INVOICE_STATES,
+  SETTLED_INVOICE_STATES,
+} from "@/lib/company-actions";
 import type { WorkspaceKind } from "@/lib/session-resolution";
 
 const LIMIT = 100;
@@ -669,35 +675,38 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     );
   }
 
-  const invoices = await safely(async () =>
-    rows(
-      await s
-        .from("invoices")
-        .select("id, client_id, status, due_date, updated_at")
-        .in("client_id", clientIds)
-        .eq("status", "issued")
-        .limit(LIMIT),
-    ),
-  );
-  for (const i of invoices as any[]) {
-    out.push(
-      buildAttentionItem({
-        id: `company-invoice:${i.id}`,
-        source: "company.invoice",
-        workspace: "company",
-        group: "needs_you",
-        severity: "action",
-        title: "Invoice awaiting payment",
-        workflowState: "issued",
-        status: "An invoice is waiting for payment",
-        sourceTable: "invoices",
-        sourceId: i.id,
-        href: "/client/invoices",
-        at: i.updated_at ?? null,
-        clientName: clientName(i.client_id),
-        ...(i.due_date ? { dueDate: String(i.due_date), dueDateSource: "invoices.due_date" } : {}),
-      }),
-    );
+  // Billing and fee proposals belong to the client engagement, so they are
+  // read only for clients this person is a member of (client_users) — never
+  // for cap-table-only access. The database policy enforces the same scope.
+  const engagementClientIds = [...new Set((memberships as any[]).map((m) => String(m.client_id)))];
+  if (engagementClientIds.length) {
+    const [invoices, requests, catalog] = await Promise.all([
+      safely(async () =>
+        rows(
+          await s
+            .from("invoices")
+            .select("id, client_id, status, number, due_date, client_approved_at, updated_at")
+            .in("client_id", engagementClientIds)
+            .in("status", [...OPEN_INVOICE_STATES, ...SETTLED_INVOICE_STATES])
+            .limit(LIMIT),
+        ),
+      ),
+      safely(async () =>
+        rows(
+          await s
+            .from("service_requests")
+            .select("id, client_id, service_key, status, updated_at")
+            .in("client_id", engagementClientIds)
+            .limit(LIMIT),
+        ),
+      ),
+      safely(async () => rows(await s.from("service_catalog").select("key, name"))),
+    ]);
+    const catalogName = new Map((catalog as any[]).map((c) => [String(c.key), String(c.name)]));
+    const serviceName = (key: string | null) =>
+      (key && catalogName.get(key)) || String(key ?? "service").replace(/_/g, " ");
+    out.push(...companyInvoiceItems(invoices as any[], clientName));
+    out.push(...companyFeeProposalItems(requests as any[], serviceName, clientName));
   }
 
   const companies = await safely(async () =>
@@ -796,7 +805,9 @@ async function professionalItems(ctx: Ctx): Promise<AttentionItem[]> {
   );
 
   for (const d of delegations as any[]) {
-    if (d.acceptance_state === "pending") {
+    // The stored acceptance states are awaiting_acceptance / renewal_required
+    // (the old check compared against "pending", which is never stored).
+    if (d.acceptance_state === "awaiting_acceptance" || d.acceptance_state === "renewal_required") {
       out.push(
         buildAttentionItem({
           id: `professional-acceptance:${d.id}`,
@@ -805,7 +816,7 @@ async function professionalItems(ctx: Ctx): Promise<AttentionItem[]> {
           group: "needs_you",
           severity: "action",
           title: "Delegation awaiting your acceptance",
-          workflowState: "pending",
+          workflowState: String(d.acceptance_state),
           status: "A client has asked you to act for them",
           sourceTable: "delegations",
           sourceId: d.id,
@@ -817,6 +828,8 @@ async function professionalItems(ctx: Ctx): Promise<AttentionItem[]> {
       continue;
     }
     if (d.status !== "active") continue;
+    // Only accepted (or acceptance-not-required) delegations carry authority.
+    if (d.acceptance_state !== "accepted" && d.acceptance_state !== "not_required") continue;
 
     const decision = await canAct(ctx.userId, "view_compliance_status", {
       type: "person",
