@@ -2592,6 +2592,17 @@ export async function myDistributions(userId: string, filter?: { investmentProfi
     ((notices ?? []) as any[]).map((n) => [String(n.distribution_line_id), n]),
   );
 
+  const lineIds = ((lines ?? []) as any[]).map((l) => String(l.id));
+  const { data: linePayments } = lineIds.length
+    ? await db()
+        .from("distribution_payments")
+        .select("distribution_line_id, attempt, status, bank_transaction_id, reconciliation_approved_by, posted_at, settled_at")
+        .in("distribution_line_id", lineIds)
+        .order("attempt", { ascending: true })
+    : { data: [] };
+  const latestPayment = new Map<string, any>();
+  for (const p of (linePayments ?? []) as any[]) latestPayment.set(String(p.distribution_line_id), p);
+
   const visible = ((lines ?? []) as any[]).filter((l) => {
     const batch = batchById.get(String(l.batch_id));
     return batch && ["approved", "executing", "completed", "superseded"].includes(String(batch.status));
@@ -2606,12 +2617,18 @@ export async function myDistributions(userId: string, filter?: { investmentProfi
         batchNumber: Number(batch?.batch_number ?? 0),
         title: batch?.title ?? null,
         paymentDate: batch?.payment_date ?? null,
-        status:
-          String(l.accounting_state) === "posted"
-            ? "paid"
-            : String(l.payment_state) === "submitted"
-              ? "sent"
-              : String(l.payment_state),
+        // Completed strictly requires bank evidence, approved reconciliation and a posted journal.
+        status: (() => {
+          const pay = latestPayment.get(String(l.id));
+          return investorPaymentLabel({
+            batchStatus: String(batch?.status ?? ""),
+            reviewed: true,
+            paymentStatus: pay?.status ?? null,
+            bankTransactionLinked: Boolean(pay?.bank_transaction_id),
+            reconciliationApproved: Boolean(pay?.reconciliation_approved_by),
+            journalPosted: Boolean(pay?.posted_at && pay?.settled_at),
+          });
+        })(),
         notice: noticeByLine.get(String(l.id)) ?? null,
         confirmationRequired:
           Boolean(l.investor_confirmation_required) && !l.investor_confirmed_at,
@@ -2698,7 +2715,7 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
   const { data: payments } = batchIds.length
     ? await db()
         .from("distribution_payments")
-        .select("id, distribution_line_id, attempt, status")
+        .select("id, distribution_line_id, attempt, status, bank_transaction_id, reconciled_by, reconciliation_approved_by, posted_at, settled_at, match_outcome, reversal_requested_by, submitted_by")
         .in("batch_id", batchIds)
         .order("attempt", { ascending: true })
     : { data: [] };
@@ -2742,6 +2759,26 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
         ? String(paymentByLine.get(String(l.id)).id)
         : null,
       bucket,
+      ...(() => {
+        const pay = paymentByLine.get(String(l.id));
+        const stage = operationsStage({
+          batchStatus: String(batch?.status ?? "draft"),
+          reviewed: Boolean(batch?.reviewed_by),
+          paymentStatus: pay?.status ?? null,
+          bankTransactionLinked: Boolean(pay?.bank_transaction_id),
+          reconciliationApproved: Boolean(pay?.reconciliation_approved_by),
+          journalPosted: Boolean(pay?.posted_at && pay?.settled_at),
+          hasOpenException: openByLine.has(String(l.id)),
+        });
+        return {
+          stage,
+          stageLabel: OPERATIONS_STAGE_LABELS[stage],
+          matchOutcome: pay?.match_outcome ?? null,
+          reconciliationPrepared: Boolean(pay?.reconciled_by),
+          reconciliationApproved: Boolean(pay?.reconciliation_approved_by),
+          reversalRequested: Boolean(pay?.reversal_requested_by),
+        };
+      })(),
     };
   });
 
@@ -2764,6 +2801,8 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
       balanceDetail: b.balance_detail ?? {},
       managerApproved: Boolean(b.manager_approved_by),
       finalApproved: Boolean(b.final_approved_by),
+      withholdingReviewed: Boolean(b.withholding_reviewed_by),
+      economicSnapshotHash: b.economic_snapshot_hash ?? null,
     })),
     lines: rows,
     exceptions: ((exceptions ?? []) as any[]).map((e) => ({
