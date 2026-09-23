@@ -267,8 +267,8 @@ export interface PreparerActor {
 
 export type PrepareTarget = {
   scope: "harmonious" | "fund" | "company";
-  offeringId?: string | null;
-  companyId?: string | null;
+  offeringId?: string | null | undefined;
+  companyId?: string | null | undefined;
 };
 
 /**
