@@ -126,7 +126,7 @@ export function DocumentSignCard({
                 <CardDescription>
                   {executed ? (
                     <>
-                      Signed {formatWhen(signing?.signedAt)}
+                      Signed {formatWhen(signing?.signedAt ?? null)}
                       {signing?.signerName ? ` by ${signing.signerName}` : ""}
                       {signing?.signerCapacityLabel &&
                       signing.signerCapacityLabel !== "Individual"
