@@ -133,7 +133,7 @@ const SECTIONS: OpsSection[] = [
   { id: "accounting", title: "Accounting", url: "/ops/accounting", icon: "ledger" },
   { id: "tax", title: "Tax", url: "/ops/tax-documents", icon: "tax" },
   { id: "regulatory", title: "Regulatory & filings", url: "/ops/ss4", icon: "shield" },
-  { id: "documents", title: "Documents", url: "/admin/document-log", icon: "document" },
+  { id: "documents", title: "Documents", url: "/ops/documents", icon: "document" },
   { id: "tasks", title: "Tasks & activity", url: "/admin/activity", icon: "tasks" },
   { id: "reports", title: "Reports", url: "/ops/reporting", icon: "report" },
   { id: "administration", title: "Administration", url: "/admin/access", icon: "settings" },
