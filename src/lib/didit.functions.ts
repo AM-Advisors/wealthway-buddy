@@ -118,17 +118,10 @@ export const reconcileIdentityVerifications = createServerFn({ method: "POST" })
   .inputValidator((input: { verificationId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: isStaff } = await supabase.rpc("is_staff_user", { _user_id: userId } as any);
-    if (!isStaff) {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-      const list = (roles ?? []).map((r: any) => String(r.role));
-      if (!list.some((r) => ["admin", "operations", "compliance"].includes(r))) {
-        throw new Error("Forbidden");
-      }
-    }
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const list = ((roles ?? []) as any[]).map((r) => String(r.role));
+    const allowed = ["admin", "super_admin", "operations", "compliance", "fund_administration"];
+    if (!list.some((r) => allowed.includes(r))) throw new Error("Forbidden");
 
     const { reconcileOutstandingVerifications } = await import("@/lib/kyc-verification.server");
     return await reconcileOutstandingVerifications({
