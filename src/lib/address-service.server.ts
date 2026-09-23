@@ -297,7 +297,7 @@ export async function pinAddressUsage(input: {
       owner_type: input.ownerType,
       owner_id: input.ownerId,
       recorded_by: input.recordedBy ?? null,
-      detail: input.detail ?? {},
+      detail: (input.detail ?? {}) as never,
     })
     .select("id, address_id")
     .single();

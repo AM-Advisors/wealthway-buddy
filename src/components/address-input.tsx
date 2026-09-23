@@ -304,7 +304,16 @@ export function addressFromSnake(form: SnakeAddress, entryMethod: "autocomplete"
   };
 }
 
-export function addressToSnake(value: AddressValue): Required<SnakeAddress> {
+export interface SnakeAddressOut {
+  address_line1: string;
+  address_line2: string;
+  city: string;
+  region: string;
+  postal_code: string;
+  country: string;
+}
+
+export function addressToSnake(value: AddressValue): SnakeAddressOut {
   return {
     address_line1: value.line1,
     address_line2: value.line2,

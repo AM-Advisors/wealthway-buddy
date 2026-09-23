@@ -77,7 +77,7 @@ export const saveResidentialAddress = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!person?.id) throw new Error("Complete your profile before adding an address.");
 
-    const clean = cleanAddress(data);
+    const clean = cleanAddress(data as Record<string, any>);
     if (!isCompleteAddress(clean)) throw new Error("Enter a street address and country.");
 
     const { proofOfAddressRequired } = await import("@/lib/kyc-verification.server");
