@@ -199,7 +199,7 @@ export function DocumentSignCard({
 
       <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : void closeSession())}>
         <DialogContent
-          className="flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none p-0 left-0 top-0 sm:left-[50%] sm:top-[50%] sm:h-[92vh] sm:w-[94vw] sm:max-w-[94vw] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg"
+          className="flex max-h-none overflow-hidden h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none p-0 left-0 top-0 sm:left-[50%] sm:top-[50%] sm:h-[92vh] sm:w-[94vw] sm:max-w-[94vw] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg"
         >
           <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background px-4 py-3">
             <div>
