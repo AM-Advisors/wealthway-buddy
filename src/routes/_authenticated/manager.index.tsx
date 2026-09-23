@@ -97,12 +97,12 @@ function ManagerPortfolio() {
         <Select value={status} onValueChange={setStatus}><SelectTrigger className="sm:w-32"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="open">Open</SelectItem><SelectItem value="closed">Closed</SelectItem></SelectContent></Select>
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {funds.map((fund: any) => {
           const setup = progressOf(fund.id);
           const outstanding = fund.openFlags + fund.pendingWires + fund.identity + fund.accreditation + fund.documents;
           return (
-            <Card key={fund.id} className="flex flex-col">
+            <Card key={fund.id} className="flex min-w-0 flex-col">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0"><CardTitle className="truncate text-lg">{fund.name}</CardTitle><CardDescription>{fund.fundType ? prettyStatus(fund.fundType) : "Fund"}</CardDescription></div>
@@ -127,7 +127,7 @@ function ManagerPortfolio() {
 
       <div className="mt-8"><AttentionCenter workspace="fund_manager" /></div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2"><FundInvitations title="Invite people to a fund" /><Card><CardHeader><CardTitle className="text-base">Email alerts</CardTitle><CardDescription>Choose which fund activity reaches your inbox.</CardDescription></CardHeader><CardContent><AlertPreferenceToggle /></CardContent></Card></div>
+      <div className="mt-6 grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2"><FundInvitations title="Invite people to a fund" /><Card><CardHeader><CardTitle className="text-base">Email alerts</CardTitle><CardDescription>Choose which fund activity reaches your inbox.</CardDescription></CardHeader><CardContent><AlertPreferenceToggle /></CardContent></Card></div>
     </main>
   );
 }
