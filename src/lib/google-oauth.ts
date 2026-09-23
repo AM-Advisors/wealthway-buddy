@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { safeInternalPath } from "@/lib/app-origins";
 
 /**
  * Direct Supabase Google OAuth. Google consent branding comes from the
