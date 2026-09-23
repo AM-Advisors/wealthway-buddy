@@ -627,7 +627,7 @@ async function applyAddressEvidence(input: {
   const evaluation = poa.status === "not_started" && !input.poaRequired
     ? null
     : evaluateProofOfAddress({
-        addressMatchOverride: comparisonToMatch(comparison),
+        addressMatchOverride: comparisonToMatch(comparison.result),
         current,
         onFile: {
           line1: input.address.line1,
