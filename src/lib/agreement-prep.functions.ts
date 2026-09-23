@@ -110,7 +110,7 @@ export const getPreparationContext = createServerFn({ method: "POST" })
       (applications ?? []).length
         ? supabaseAdmin
             .from("subscriptions")
-            .select("application_id, entity_name, tax_classification, commitment_cents")
+            .select("application_id, ownership_title, tax_classification, commitment_cents")
             .in(
               "application_id",
               ((applications ?? []) as any[]).map((a) => a.id),
@@ -138,7 +138,7 @@ export const getPreparationContext = createServerFn({ method: "POST" })
         const sub = subBy.get(a.id);
         return {
           applicationId: a.id,
-          name: sub?.entity_name ?? profile?.legal_name ?? profile?.email ?? "Investor",
+          name: sub?.ownership_title ?? profile?.legal_name ?? profile?.email ?? "Investor",
           contactName: profile?.legal_name ?? null,
           email: profile?.email ?? null,
           taxClassification: sub?.tax_classification ?? null,
@@ -228,7 +228,7 @@ export const reviewPreparedAgreement = createServerFn({ method: "POST" })
     const [{ data: subscription }, { data: profile }] = await Promise.all([
       supabaseAdmin
         .from("subscriptions")
-        .select("entity_name")
+        .select("ownership_title")
         .eq("application_id", application.id)
         .maybeSingle(),
       supabaseAdmin
@@ -241,7 +241,7 @@ export const reviewPreparedAgreement = createServerFn({ method: "POST" })
     const review = buildSendReview({
       agreementTitle: String(doc.title),
       investorName:
-        subscription?.entity_name ?? profile?.legal_name ?? profile?.email ?? "Investor",
+        subscription?.ownership_title ?? profile?.legal_name ?? profile?.email ?? "Investor",
       roles: data.roles as TemplateRole[],
       fields: data.fields as PlacedField[],
       signers: data.signers,

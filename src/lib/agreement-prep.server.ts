@@ -376,7 +376,7 @@ export async function sendPreparedAgreement(
       admin.from("offerings").select("id, name, reg_type").eq("id", doc.offering_id).maybeSingle(),
       admin
         .from("subscriptions")
-        .select("commitment_cents, tax_classification, entity_name")
+        .select("commitment_cents, tax_classification, ownership_title")
         .eq("application_id", application.id)
         .maybeSingle(),
       admin
@@ -392,13 +392,13 @@ export async function sendPreparedAgreement(
     ]);
 
   const investorLabel =
-    subscription?.entity_name ?? investor?.legal_name ?? investor?.email ?? "Investor";
+    subscription?.ownership_title ?? investor?.legal_name ?? investor?.email ?? "Investor";
 
   const prefillFor = (roleKey: string): PrefillContext => {
     const signer = input.signers.find((s) => s.roleKey === roleKey);
     return {
       legalInvestorName: investor?.legal_name ?? null,
-      investingEntity: subscription?.entity_name ?? investor?.legal_name ?? null,
+      investingEntity: subscription?.ownership_title ?? investor?.legal_name ?? null,
       signerName: signer?.name ?? null,
       signerTitle: roleLabel(roleKey),
       fundName: offering?.name ?? null,

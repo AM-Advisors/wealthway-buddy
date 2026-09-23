@@ -280,7 +280,7 @@ const tables: Record<string, any[]> = {
     { id: APP_B, offering_id: FUND_B, user_id: "investor-2" },
   ],
   offerings: [{ id: FUND_A, name: "Fund A", reg_type: "506b" }],
-  subscriptions: [{ application_id: APP_A, commitment_cents: 100_000_00, tax_classification: "individual", entity_name: "One LLC" }],
+  subscriptions: [{ application_id: APP_A, commitment_cents: 100_000_00, tax_classification: "individual", ownership_title: "One LLC" }],
   investor_onboardings: [{ application_id: APP_A, investment_profile_id: "prof-1" }],
   profiles: [{ user_id: "investor-1", legal_name: "Investor One", email: "one@test.test" }],
   document_signatures: [],
