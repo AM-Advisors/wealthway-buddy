@@ -26,11 +26,26 @@ interface Transport {
   headers: Record<string, string>;
 }
 
-/** Resolves credentials at call time; module scope never reads env. */
-function transport(): Transport | null {
+type TransportKind = "places" | "validation";
+
+function directKey(kind: TransportKind): string | null {
+  const places = process.env["GOOGLE_PLACES_API_KEY"];
+  const validation = process.env["GOOGLE_ADDRESS_API_KEY"];
+  const chosen = kind === "places" ? (places ?? validation) : (validation ?? places);
+  return chosen && chosen.trim() ? chosen.trim() : null;
+}
+
+/**
+ * Resolves credentials at call time; module scope never reads env.
+ * Places requests use GOOGLE_PLACES_API_KEY and Address Validation requests
+ * use GOOGLE_ADDRESS_API_KEY; either falls back to the other only when a
+ * single key is configured for both APIs.
+ */
+function transport(kind: TransportKind): Transport | null {
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const connectorKey = process.env["GOOGLE_MAPS_API_KEY"];
-  if (lovableKey && connectorKey) {
+  const direct = directKey(kind);
+  if (!direct && lovableKey && connectorKey) {
     return {
       mode: "gateway",
       placesUrl: (path) => `${GATEWAY}/places${path}`,
@@ -42,28 +57,26 @@ function transport(): Transport | null {
       },
     };
   }
-  const direct = process.env["GOOGLE_PLACES_API_KEY"] ?? process.env["GOOGLE_ADDRESS_API_KEY"];
-  if (direct && direct.trim()) {
+  if (direct) {
     return {
       mode: "direct",
       placesUrl: (path) => `${DIRECT_PLACES}${path}`,
       validationUrl: (path) => `${DIRECT_VALIDATION}${path}`,
-      headers: { "X-Goog-Api-Key": direct.trim(), "content-type": "application/json" },
+      headers: { "X-Goog-Api-Key": direct, "content-type": "application/json" },
     };
   }
   return null;
 }
 
 export function addressProviderConfigured(): boolean {
-  return transport() !== null;
+  return transport("places") !== null || transport("validation") !== null;
 }
 
 export function addressCapabilities() {
-  const t = transport();
   return {
-    autocomplete: t !== null,
-    validation: t !== null,
-    providerLabel: t ? "Google Address Validation" : "Not configured",
+    autocomplete: transport("places") !== null,
+    validation: transport("validation") !== null,
+    providerLabel: transport("validation") !== null ? "Google Address Validation" : "Not configured",
   };
 }
 
