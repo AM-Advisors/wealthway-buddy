@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { getManagerProfile, saveManagerProfile } from "@/lib/manager-profile.functions";
 import { getAlertPreference, setAlertPreference } from "@/lib/notification-preferences.functions";
+import { AddressInput, addressFromSnake, addressToSnake } from "@/components/address-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ScopeNotice } from "@/components/fund-scope-section";
+import { AddressInput, addressFromSnake, addressToSnake } from "@/components/address-input";
 
 export const Route = createFileRoute("/_authenticated/onboarding/kyc")({
   head: () => ({
