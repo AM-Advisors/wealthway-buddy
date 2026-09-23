@@ -13,6 +13,8 @@ import {
   subscriptionSchema,
 } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { getSigningStates } from "@/lib/document-signing.functions";
+import { DocumentSignCard } from "@/components/document-sign-card";
 import { savePdf } from "@/lib/download-pdf";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
