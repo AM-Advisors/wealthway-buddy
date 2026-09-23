@@ -152,6 +152,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const renderItem = (item: NavItem) => {
     const count = badgeCount(item.badge);
+    const ItemIcon = iconOf(item.icon);
     return (
       <SidebarMenuItem key={item.url}>
         <SidebarMenuButton
@@ -180,7 +181,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
     );
   };
 
-  const renderGroup = (group: NavGroup) => {
+  const renderGroup = (group: LegacyNavGroup) => {
     const items = group.items.filter(matches);
     if (items.length === 0) return null;
 
@@ -313,6 +314,7 @@ export function AppSidebar({ onSignOut }: { onSignOut: () => void }) {
                     {onboardingItems.map((item, index) => {
                       const step = nav?.steps[index];
                       const count = index + 1;
+                      const ItemIcon = iconOf(item.icon);
                       return (
                         <SidebarMenuItem key={item.url}>
                           <SidebarMenuButton
