@@ -98,7 +98,10 @@ export function OperationsWorkHome() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <h1 className="text-2xl">Operations</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl">Operations</h1>
+        <OpsNewMenu capabilities={data?.capabilities} />
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">
         Work waiting on the Harmonious team, read straight from each workflow. Open an item to act on it
         in the record itself.
@@ -345,6 +348,19 @@ export function OperationsWorkHome() {
         </Link>
         .
       </p>
+    </div>
+  );
+}
+
+/** Global "+ New" — shown per granular capability; each destination re-checks on the server. */
+function OpsNewMenu({ capabilities }: { capabilities?: readonly string[] | undefined }) {
+  const may = (area: string) => (capabilities ?? []).includes(`${area}:prepare`);
+  if (!may("funds") && !may("companies") && !may("investors")) return null;
+  return (
+    <div className="flex flex-wrap gap-2" aria-label="Create new">
+      {may("funds") && <Button asChild size="sm" variant="outline"><Link to="/admin/setup">+ New Fund / SPV</Link></Button>}
+      {may("companies") && <Button asChild size="sm" variant="outline"><Link to="/admin/client-cap-tables">+ New Company / Cap Table</Link></Button>}
+      {may("investors") && <Button asChild size="sm" variant="outline"><Link to="/ops/funds">+ Add Investor</Link></Button>}
     </div>
   );
 }

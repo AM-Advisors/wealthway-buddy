@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -35,6 +35,11 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("unknown");
   const [link, setLink] = useState<string | null>(null);
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem(`harmonious.invite-draft.${fundId}`);
+    if (!raw) return;
+    try { const d = JSON.parse(raw); setEmail(d.email ?? ""); setName(d.name ?? ""); setAmount(d.amount ?? ""); setType(d.type ?? "unknown"); } catch { /* ignore */ }
+  }, [fundId]);
 
   const send = useMutation({
     mutationFn: () =>
@@ -50,6 +55,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
     onSuccess: (r: any) => {
       toast.success("Invitation created.");
       setLink(`${window.location.origin}${r.link}`);
+      window.sessionStorage.removeItem(`harmonious.invite-draft.${fundId}`);
       setEmail("");
       setName("");
       setAmount("");
@@ -61,7 +67,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Add investor</CardTitle>
+        <CardTitle className="text-base">Add Investor</CardTitle>
         <CardDescription>
           They'll get one secure link to complete their investment.
           {exemptionLabel ? ` This fund is offered under ${exemptionLabel}, so the right checks apply automatically.` : ""}
@@ -92,7 +98,10 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
           </div>
         </div>
         <Button disabled={!/.+@.+\..+/.test(email) || send.isPending} onClick={() => send.mutate()}>
-          {send.isPending ? "Sending…" : "Send invitation"}
+          {send.isPending ? "Sending…" : "Send Invitation"}
+        </Button>
+        <Button variant="outline" className="ml-2" onClick={() => { window.sessionStorage.setItem(`harmonious.invite-draft.${fundId}`, JSON.stringify({ email, name, amount, type })); toast.success("Draft saved on this device."); }}>
+          Save Draft
         </Button>
         {link ? (
           <p className="break-all rounded-md bg-muted p-3 text-xs text-muted-foreground">

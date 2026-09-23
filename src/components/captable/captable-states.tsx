@@ -1,3 +1,4 @@
+import { CapTableSetup } from "@/components/captable/cap-table-setup";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -42,12 +43,7 @@ export function CapTableSection({ children }: { children: React.ReactNode }) {
   if (isLoading) return <CapTableLoading />;
   if (error) return <CapTableError error={error} />;
   if (!workspace?.company) {
-    return (
-      <CapTableEmpty
-        title="No company on your account yet"
-        body="Set up your company in Settings, or switch on the demo company to look around first."
-      />
-    );
+    return <CapTableSetup />;
   }
   return <>{children}</>;
 }

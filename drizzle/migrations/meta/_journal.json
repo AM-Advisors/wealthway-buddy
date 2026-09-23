@@ -218,6 +218,13 @@
       "when": 1790202311700,
       "tag": "0030_government_id_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790203025918,
+      "tag": "0031_self_service_boundaries",
+      "breakpoints": true
     }
   ]
 }

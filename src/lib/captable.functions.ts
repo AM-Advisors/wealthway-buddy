@@ -434,6 +434,19 @@ export const createCapCompany = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    // Only the caller's own (non read-only) company, or cap-table staff.
+    const [{ data: member }, { data: staff }] = await Promise.all([
+      context.supabase
+        .from("client_users")
+        .select("client_role")
+        .eq("client_id", data.clientId)
+        .eq("user_id", context.userId)
+        .maybeSingle(),
+      context.supabase.rpc("ct_is_staff"),
+    ]);
+    if (!staff && (!member || member.client_role === "client_readonly")) {
+      throw new Error("You can only set up the cap table for a company you administer.");
+    }
     const { data: row, error } = await context.supabase
       .from("ct_companies")
       .insert({
@@ -498,6 +511,16 @@ export const saveCapStakeholder = createServerFn({ method: "POST" })
         next: payload,
       });
       return { id: data.id };
+    }
+    // Reuse an existing holder with the same email instead of duplicating them.
+    if (payload.email) {
+      const { data: existing } = await context.supabase
+        .from("ct_stakeholders")
+        .select("id")
+        .eq("company_id", data.companyId)
+        .ilike("email", payload.email)
+        .maybeSingle();
+      if (existing?.id) return { id: existing.id as string, reused: true };
     }
     const { data: row, error } = await context.supabase
       .from("ct_stakeholders")

@@ -189,7 +189,7 @@ function Body() {
   );
 }
 
-function AddStakeholderDialog({ onDone }: { onDone: () => void }) {
+export function AddStakeholderDialog({ onDone }: { onDone: () => void }) {
   const { workspace } = useCapTable();
   const save = useServerFn(saveCapStakeholder);
   const [open, setOpen] = useState(false);
@@ -208,7 +208,7 @@ function AddStakeholderDialog({ onDone }: { onDone: () => void }) {
         },
       }),
     onSuccess: () => {
-      toast.success("Stakeholder added");
+      toast.success("Stakeholder added. This does not create any ownership — use Issue Security to record shares.");
       setForm({ name: "", email: "", type: "investor", entityName: "", title: "" });
       setOpen(false);
       onDone();
@@ -220,7 +220,7 @@ function AddStakeholderDialog({ onDone }: { onDone: () => void }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Add stakeholder</Button>
+        <Button variant="outline">+ Add Stakeholder</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -270,7 +270,7 @@ function AddStakeholderDialog({ onDone }: { onDone: () => void }) {
   );
 }
 
-function IssueSecurityDialog({ onDone }: { onDone: () => void }) {
+export function IssueSecurityDialog({ onDone }: { onDone: () => void }) {
   const { workspace } = useCapTable();
   const issue = useServerFn(issueCapSecurity);
   const [open, setOpen] = useState(false);
@@ -322,7 +322,7 @@ function IssueSecurityDialog({ onDone }: { onDone: () => void }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Issue security</Button>
+        <Button>+ Issue Security</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
