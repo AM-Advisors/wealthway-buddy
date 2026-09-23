@@ -694,7 +694,45 @@ export async function investorTab(context: any, data: { id: string; tab: string 
           .eq("investor_user_id", data.id)
           .limit(100),
       );
-      return { capitalAccounts: accounts, callLines: lines };
+      // Each investing profile keeps its own distributions; they are never added together.
+      const distributions = rows(
+        await s
+          .from("distribution_lines")
+          .select(
+            "id, offering_id, investment_profile_id, display_name, distribution_type, gross_cents, withholding_cents, fee_cents, net_cents, currency, payment_method, destination_verified, approval_state, payment_state, reconciliation_state, accounting_state, hold_state, effective_date",
+          )
+          .eq("investor_user_id", data.id)
+          .order("effective_date", { ascending: false })
+          .limit(200),
+      );
+      const instructions = rows(
+        await s
+          .from("investor_payment_instructions")
+          .select(
+            "id, offering_id, investment_profile_id, version, method, status, verification_status, masked_account, cooling_off_until, effective_date",
+          )
+          .eq("investor_user_id", data.id)
+          .order("version", { ascending: false })
+          .limit(50),
+      );
+      return {
+        capitalAccounts: accounts,
+        callLines: lines,
+        distributions,
+        // Masked destinations only: full bank values never leave the server.
+        paymentDestinations: instructions.map((i: any) => ({
+          id: i.id,
+          offeringId: i.offering_id,
+          investmentProfileId: i.investment_profile_id,
+          version: i.version,
+          method: i.method,
+          status: i.status,
+          verification: i.verification_status,
+          destination: maskAccount(i.masked_account),
+          coolingOffUntil: i.cooling_off_until,
+          effectiveDate: i.effective_date,
+        })),
+      };
     }
 
     if (data.tab === "tax") {
@@ -702,8 +740,27 @@ export async function investorTab(context: any, data: { id: string; tab: string 
         s.from("k1_forms").select("id, offering_id, tax_year, status, version").eq("investor_user_id", data.id).order("tax_year", { ascending: false }).limit(50),
         s.from("fund_tax_documents").select("id, offering_id, doc_type, tax_year, review_status").eq("investor_user_id", data.id).limit(50),
       ]);
-      return { k1s: rows(k1s), documents: rows(docs) };
+      const distributionLines = rows(
+        await s
+          .from("distribution_lines")
+          .select("id, offering_id, investment_profile_id, effective_date, gross_cents, withholding_cents, net_cents")
+          .eq("investor_user_id", data.id)
+          .limit(200),
+      );
+      const lineIds = distributionLines.map((l: any) => l.id);
+      const withholdings = lineIds.length
+        ? rows(
+            await s
+              .from("distribution_withholdings")
+              .select(
+                "id, distribution_line_id, offering_id, withholding_type, jurisdiction, basis_cents, rate_bps, amount_cents, documentation_form, determination_reason",
+              )
+              .in("distribution_line_id", lineIds),
+          )
+        : [];
+      return { k1s: rows(k1s), documents: rows(docs), withholding: withholdings };
     }
+
 
     if (data.tab === "documents") {
       const docs = rows(
