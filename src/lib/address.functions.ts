@@ -90,7 +90,7 @@ export const reconcileAddresses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
-    const { data: staff } = await supabase.rpc("is_staff_user");
+    const { data: staff } = await supabase.rpc("ct_is_staff");
     if (staff !== true) throw new Error("Not authorised.");
     const { reconcileAddressValidation } = await import("@/lib/address-service.server");
     return await reconcileAddressValidation();
