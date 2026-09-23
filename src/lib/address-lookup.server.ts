@@ -89,7 +89,7 @@ export async function suggestAddresses(
   country?: string | null,
   sessionToken?: string | null,
 ): Promise<AddressSuggestion[]> {
-  const t = transport();
+  const t = transport("places");
   if (!t || query.trim().length < 3) return [];
   try {
     const res = await fetch(t.placesUrl("/v1/places:autocomplete"), {
@@ -153,7 +153,7 @@ export async function resolveSuggestion(
   placeId: string,
   sessionToken?: string | null,
 ): Promise<(Partial<StructuredAddress> & { placeId: string }) | null> {
-  const t = transport();
+  const t = transport("places");
   if (!t || !placeId) return null;
   try {
     const qs = sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : "";
@@ -205,7 +205,7 @@ export function unavailableValidation(): ValidationOutcome {
  * cannot find the address returns "unresolved" (review).
  */
 export async function validateAddress(address: StructuredAddress): Promise<ValidationOutcome> {
-  const t = transport();
+  const t = transport("validation");
   if (!t) return unavailableValidation();
   const clean = cleanAddress(address);
   try {
