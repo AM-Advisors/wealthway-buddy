@@ -278,6 +278,12 @@ export function AddressInput({
               onChange={(e) => set({ city: e.target.value })}
             />
           </div>
+          {value.county ? (
+            <div className="space-y-1">
+              <Label htmlFor={`${idPrefix}-county`}>County</Label>
+              <Input id={`${idPrefix}-county`} value={value.county} disabled readOnly />
+            </div>
+          ) : null}
           <div className="space-y-1">
             <Label htmlFor={`${idPrefix}-region`}>State / province / region</Label>
             <Input
