@@ -193,6 +193,19 @@ export function AddressInput({
         {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
       </div>
 
+      {status ? (
+        <p className="text-xs text-muted-foreground" data-testid={`${idPrefix}-status`}>
+          {status.label}
+          {status.detail ? ` — ${status.detail}` : ""}
+        </p>
+      ) : null}
+      {manual && value.entryMethod === "manual" && value.line1 ? (
+        <p className="text-xs text-muted-foreground">
+          Address validation pending — we&apos;ll check this address and follow up if anything is needed.
+        </p>
+      ) : null}
+
+
       {!manual ? (
         <div className="space-y-2">
           <Input
