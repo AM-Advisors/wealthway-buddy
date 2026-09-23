@@ -21,6 +21,8 @@ export interface StructuredAddress {
   line1: string;
   line2: string | null;
   city: string | null;
+  /** Populated by the provider where relevant; never required from the user. */
+  county?: string | null;
   region: string | null;
   postalCode: string | null;
   country: string;
@@ -66,6 +68,7 @@ export function cleanAddress(input: Partial<StructuredAddress>): StructuredAddre
     line1: text(input.line1) ?? "",
     line2: text(input.line2),
     city: text(input.city),
+    county: text(input.county),
     region: text(input.region),
     postalCode: text(input.postalCode),
     country: (text(input.country) ?? "").toUpperCase(),
