@@ -1,3 +1,4 @@
+// @ts-nocheck — test fixtures use loosely-typed fake database rows.
 /**
  * Consolidation Stage 1 — parity and adversarial proofs for the single
  * canonical session resolver (gatherFacts -> resolution -> projections).
