@@ -25316,6 +25316,9 @@ export type Database = {
         | "proof_verified"
         | "review_required"
         | "failed"
+        | "located"
+        | "validation_warning"
+        | "proof_mismatch"
       app_role:
         | "admin"
         | "investor"
@@ -25789,6 +25792,9 @@ export const Constants = {
         "proof_verified",
         "review_required",
         "failed",
+        "located",
+        "validation_warning",
+        "proof_mismatch",
       ],
       app_role: [
         "admin",
