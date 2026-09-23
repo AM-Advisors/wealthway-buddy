@@ -198,10 +198,10 @@ export const SECTION_EMPTY: Record<WorkSection, string> = {
  * so in words; it never shows a zero that would read as "all clear".
  */
 export const UNCONFIGURED_AREAS: { area: string; message: string }[] = [
-  { area: "distributions", message: "Distribution operations have not been configured yet." },
   { area: "tax", message: "Tax operations workflow has not been configured yet." },
   { area: "regulatory", message: "Regulatory filing workflow has not been configured yet." },
 ];
+
 
 export function isUnconfigured(area: string): boolean {
   return UNCONFIGURED_AREAS.some((entry) => entry.area === area);
