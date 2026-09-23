@@ -427,20 +427,36 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
           .limit(50),
       ]);
       const accountRows = rows(accounts);
+      // Distributions are summarised here; the money itself stays authoritative
+      // in the payment, reconciliation and journal records.
+      const batches = rows(
+        await s
+          .from("distribution_batches")
+          .select(
+            "id, batch_number, version, title, distribution_type, status, payment_status, balances, recipient_count, record_date, payment_date, total_gross_cents, total_withholding_cents, total_fee_cents, total_net_cents",
+          )
+          .eq("offering_id", data.id)
+          .order("batch_number", { ascending: false })
+          .limit(25),
+      );
       return {
         calls: rows(calls),
         expected: rows(expected),
         capitalAccounts: accountRows,
+        distributions: batches,
         totals: {
           endingCapitalCents: sum(accountRows, "ending_capital_cents"),
           unfundedCents: sum(accountRows, "unfunded_commitment_cents"),
+          distributedGrossCents: sum(batches, "total_gross_cents"),
+          distributedWithholdingCents: sum(batches, "total_withholding_cents"),
+          distributedNetCents: sum(batches, "total_net_cents"),
         },
       };
     }
 
     if (data.tab === "banking") {
       const detail = bankingDetailVisible(capabilities);
-      const [accounts, transactions] = await Promise.all([
+      const [accounts, transactions, payments] = await Promise.all([
         s.from("bank_accounts").select("id, institution_name, account_name, account_mask, status, last_synced_at").eq("offering_id", data.id),
         s
           .from("bank_transactions")
@@ -448,7 +464,16 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
           .eq("offering_id", data.id)
           .order("posted_on", { ascending: false })
           .limit(25),
+        s
+          .from("distribution_payments")
+          .select(
+            "id, batch_id, attempt, reissue_of_id, provider, status, submitted_amount_cents, submitted_currency, submitted_destination_masked, failure_reason, submitted_at, confirmed_at, failed_at",
+          )
+          .eq("offering_id", data.id)
+          .order("submitted_at", { ascending: false })
+          .limit(50),
       ]);
+      const paymentRows = rows(payments);
       return {
         detailVisible: detail,
         accounts: rows(accounts).map((a: any) => ({
@@ -460,8 +485,25 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
           lastSynced: a.last_synced_at,
         })),
         transactions: detail ? rows(transactions) : [],
+        // Failed and returned attempts stay in the list; nothing is ever removed.
+        outboundPayments: paymentRows.map((p: any) => ({
+          id: p.id,
+          attempt: p.attempt,
+          reissueOf: p.reissue_of_id,
+          provider: p.provider,
+          status: p.status,
+          amountCents: p.submitted_amount_cents,
+          currency: p.submitted_currency,
+          destination: detail ? p.submitted_destination_masked : null,
+          failureReason: p.failure_reason,
+          submittedAt: p.submitted_at,
+          confirmedAt: p.confirmed_at,
+          failedAt: p.failed_at,
+        })),
       };
     }
+
+
 
     if (data.tab === "accounting") {
       const books = rows(await s.from("ledger_books").select("id, name, basis, is_active").eq("offering_id", data.id));
