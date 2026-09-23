@@ -34,21 +34,19 @@ export const getRoleOverview = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId, claims } = context;
 
-    const [{ data: roleRows }, { data: profile }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-      supabase.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle(),
-    ]);
-    const roles = ((roleRows ?? []) as any[]).map((r) => r.role as string);
+    // Roles, identity and managed funds come from the canonical session facts;
+    // this summary no longer rediscovers relationships itself.
+    const { gatherFacts } = await import("@/lib/session-facts.server");
+    const facts = await gatherFacts(context);
+    const roles = facts.roles;
     const isAdmin = roles.includes("admin");
     const isManager = roles.includes("fund_manager");
     const isOperations = roles.includes("operations") || isAdmin;
     const isReviewer = isAdmin || isManager;
+    void claims;
 
-    const email =
-      ((profile as any)?.email as string | undefined) ??
-      ((claims as any)?.email as string | undefined) ??
-      "";
-    const name = ((profile as any)?.legal_name as string | undefined) || email || "there";
+    const email = facts.email;
+    const name = facts.name || email || "there";
 
     // ---------- Investor ----------
     const { data: myApps } = await supabase
@@ -65,11 +63,7 @@ export const getRoleOverview = createServerFn({ method: "GET" })
     // ---------- Reviewer scope ----------
     let managedOfferingIds: string[] = [];
     if (isManager && !isAdmin) {
-      const { data: assignments } = await supabase
-        .from("fund_managers")
-        .select("offering_id")
-        .eq("user_id", userId);
-      managedOfferingIds = [...new Set(((assignments ?? []) as any[]).map((a) => a.offering_id))];
+      managedOfferingIds = [...new Set(facts.managedFundIds)];
     }
 
     const lookupIds = [...new Set([...myOfferingIds, ...managedOfferingIds])];

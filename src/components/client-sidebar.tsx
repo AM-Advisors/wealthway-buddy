@@ -69,7 +69,6 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const navigation = getNavigation(session as never, activeId, pathname);
   const items = navigation.primary;
   const active = options.find((o) => o.id === activeId);
-  const isProfessional = options.some((o) => o.id === "professional");
 
   const isActive = (url: string) => {
     const base = url.split("?")[0] ?? url;
