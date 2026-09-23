@@ -1,4 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  AddressInput,
+  addressFromSnake,
+  EMPTY_ADDRESS,
+  type AddressValue,
+} from "@/components/address-input";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -64,6 +70,12 @@ function ProfilePage() {
   const { data, isPending } = useQuery({ queryKey: ["my-identity"], queryFn: () => load() });
   const [newType, setNewType] = useState<InvestmentProfileType>("individual");
   const [newLabel, setNewLabel] = useState("");
+  const [address, setAddress] = useState<AddressValue>(EMPTY_ADDRESS);
+  const loadedPerson = (data?.person ?? null) as any;
+  useEffect(() => {
+    if (!loadedPerson) return;
+    setAddress(addressFromSnake(loadedPerson));
+  }, [loadedPerson]);
 
   const personMutation = useMutation({
     mutationFn: (form: any) => savePerson({ data: form }),
