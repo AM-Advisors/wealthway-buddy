@@ -32,7 +32,7 @@ function builder(table: string) {
   queryCount += 1;
   const filters: ((r: Row) => boolean)[] = [];
   let single = false;
-  const run = () => (tables[table] ?? []).filter((r) => filters.every((f) => f(r)));
+  const run = () => (tables[table] ?? []).filter((r: any) => filters.every((f) => f(r)));
   const api: any = {
     select: () => api,
     order: () => api,
@@ -77,7 +77,7 @@ const delegation = (id: string, principal: string, extra: Row = {}) => ({
 
 /* ---------------- Legacy reference implementations (pre-refactor) ---------------- */
 
-async function legacyAllowedWorkspaces(t: Record<string, Row[]>, userId = ME) {
+async function legacyAllowedWorkspaces(t: any, userId = ME) {
   const any = (rows: Row[]) => rows.length > 0;
   const by = (name: string, col: string) => (t[name] ?? []).filter((r) => r[col] === userId);
   const list: string[] = [];
@@ -90,7 +90,7 @@ async function legacyAllowedWorkspaces(t: Record<string, Row[]>, userId = ME) {
   if (any(by("user_roles", "user_id"))) list.push("operations");
   return list;
 }
-function legacyAdminAccess(t: Record<string, Row[]>, userId = ME) {
+function legacyAdminAccess(t: any, userId = ME) {
   const roles = (t.user_roles ?? []).filter((r) => r.user_id === userId).map((r) => r.role);
   const isAdmin = roles.includes("admin");
   const isFundManager = roles.includes("fund_manager");
@@ -100,18 +100,18 @@ function legacyAdminAccess(t: Record<string, Row[]>, userId = ME) {
       : [];
   return { isAdmin, isFundManager, isReviewer: isAdmin || isFundManager, offeringIds };
 }
-function legacyOperationsAccess(t: Record<string, Row[]>, userId = ME) {
+function legacyOperationsAccess(t: any, userId = ME) {
   const roles = (t.user_roles ?? []).filter((r) => r.user_id === userId).map((r) => r.role);
   const isAdmin = roles.includes("admin");
   const isOperations = roles.includes("operations");
   return { isAdmin, isOperations, allowed: isAdmin || isOperations };
 }
-function legacyProfessionalStanding(t: Record<string, Row[]>, userId = ME) {
+function legacyProfessionalStanding(t: any, userId = ME) {
   const seats = (t.professional_memberships ?? []).filter((m) => m.user_id === userId);
   const active = (t.delegations ?? []).filter((d) => d.delegate_user_id === userId && d.status === "active").length;
   return { isProfessional: seats.some((m) => m.status === "active") || active > 0, activeDelegations: active };
 }
-function legacySessionKinds(t: Record<string, Row[]>, userId = ME) {
+function legacySessionKinds(t: any, userId = ME) {
   // Old gatherFacts: delegation usable if status active + accepted/not_required (no expiry check).
   const ds = (t.delegations ?? []).filter(
     (d) =>
@@ -124,7 +124,7 @@ function legacySessionKinds(t: Record<string, Row[]>, userId = ME) {
 
 /* ---------------- Scenarios ---------------- */
 
-const SCENARIOS: Record<string, () => Record<string, Row[]>> = {
+const SCENARIOS: Record<string, () => any> = {
   "investor only": () => ({ investment_profiles: [{ id: "p1", owner_user_id: ME }] }),
   "multiple investment profiles": () => ({
     investment_profiles: [
