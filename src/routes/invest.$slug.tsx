@@ -30,6 +30,7 @@ export const Route = createFileRoute("/invest/$slug")({
     ).slice(0, 155);
     return {
       meta: [
+        { name: "robots", content: "noindex, nofollow" },
         { title: `Invest in ${name} — Harmonious` },
         { name: "description", content: description },
         { property: "og:title", content: `Invest in ${name} — Harmonious` },

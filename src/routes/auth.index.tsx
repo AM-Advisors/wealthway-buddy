@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth/")({
   head: () => ({
     meta: [
+        { name: "robots", content: "noindex, nofollow" },
       { title: "Sign In — Harmonious" },
       {
         name: "description",

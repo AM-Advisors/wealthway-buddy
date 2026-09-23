@@ -86,3 +86,12 @@
 ## Client self-service (funds, investors, cap tables)
 - [x] Fund manager Home, Request Fund wizard, setup tracker, bulk investors, cap table setup/actions, Ops + New, Action Center items, tests
 - [ ] Browser QA as a dedicated fund-manager and founder account (needs account choice)
+
+## Public website (www.harmonious.co replacement)
+- [x] Stage 1 audit
+- [x] Stage 2 information architecture & migration foundation
+- [ ] Stage 3 homepage (awaiting approval)
+- [ ] Wix article export + import (needs Wix export)
+- [ ] Pages required before cutover: /kyc-aml, /careers; REVIEW-list decisions
+- [ ] Approved metrics, prices, disclosure wording, Salesforce connection
+- [ ] Cutover: DNS, Wix 301s, robots Sitemap directive

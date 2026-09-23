@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/client-login")({
   head: () => ({
     meta: [
+        { name: "robots", content: "noindex, nofollow" },
       { title: "Client Sign In — Harmonious Portal" },
       {
         name: "description",

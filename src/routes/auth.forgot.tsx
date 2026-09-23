@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth/forgot")({
   head: () => ({
     meta: [
+        { name: "robots", content: "noindex, nofollow" },
       { title: "Reset Your Password — Harmonious" },
       {
         name: "description",

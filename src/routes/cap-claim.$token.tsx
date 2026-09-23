@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/cap-claim/$token")({
   head: () => ({
     meta: [
+        { name: "robots", content: "noindex, nofollow" },
       { title: "Declare your position | Harmonious CapTable" },
       {
         name: "description",

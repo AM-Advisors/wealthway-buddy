@@ -14,16 +14,21 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CapTableRouteImport } from './routes/cap-table'
+import { Route as CapTableManagementRouteImport } from './routes/cap-table-management'
 import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
 import { Route as CapTableTermsRouteImport } from './routes/cap-table-terms'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
+import { Route as ContactusRouteImport } from './routes/contactus'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
+import { Route as HarmoniousclassroomRouteImport } from './routes/harmoniousclassroom'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
 import { Route as PlatformRouteImport } from './routes/platform'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SpvRouteImport } from './routes/spv'
+import { Route as SpvsRouteImport } from './routes/spvs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAccessRouteImport } from './routes/_authenticated/access'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
@@ -64,6 +69,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
+import { Route as PostSlugRouteImport } from './routes/post.$slug'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
@@ -286,6 +292,11 @@ const CapTableRoute = CapTableRouteImport.update({
   path: '/cap-table',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CapTableManagementRoute = CapTableManagementRouteImport.update({
+  id: '/cap-table-management',
+  path: '/cap-table-management',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CapTablePrivacyRoute = CapTablePrivacyRouteImport.update({
   id: '/cap-table-privacy',
   path: '/cap-table-privacy',
@@ -301,9 +312,19 @@ const ClientLoginRoute = ClientLoginRouteImport.update({
   path: '/client-login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactusRoute = ContactusRouteImport.update({
+  id: '/contactus',
+  path: '/contactus',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FundAdministrationRoute = FundAdministrationRouteImport.update({
   id: '/fund-administration',
   path: '/fund-administration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HarmoniousclassroomRoute = HarmoniousclassroomRouteImport.update({
+  id: '/harmoniousclassroom',
+  path: '/harmoniousclassroom',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManagerLoginRoute = ManagerLoginRouteImport.update({
@@ -314,6 +335,11 @@ const ManagerLoginRoute = ManagerLoginRouteImport.update({
 const PlatformRoute = PlatformRouteImport.update({
   id: '/platform',
   path: '/platform',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -334,6 +360,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SpvRoute = SpvRouteImport.update({
   id: '/spv',
   path: '/spv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpvsRoute = SpvsRouteImport.update({
+  id: '/spvs',
+  path: '/spvs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -543,6 +574,11 @@ const FundSlugRoute = FundSlugRouteImport.update({
 const InvestSlugRoute = InvestSlugRouteImport.update({
   id: '/invest/$slug',
   path: '/invest/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostSlugRoute = PostSlugRouteImport.update({
+  id: '/post/$slug',
+  path: '/post/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SharesTokenRoute = SharesTokenRouteImport.update({
@@ -1709,16 +1745,21 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
   '/cap-table': typeof CapTableRoute
+  '/cap-table-management': typeof CapTableManagementRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
+  '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
+  '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
+  '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
   '/access': typeof AuthenticatedAccessRoute
   '/accounts': typeof AuthenticatedAccountsRoute
@@ -1758,6 +1799,7 @@ export interface FileRoutesByFullPath {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
@@ -1961,16 +2003,21 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/cap-table': typeof CapTableRoute
+  '/cap-table-management': typeof CapTableManagementRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
+  '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
+  '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
+  '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
   '/access': typeof AuthenticatedAccessRoute
   '/accounts': typeof AuthenticatedAccountsRoute
@@ -2008,6 +2055,7 @@ export interface FileRoutesByTo {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
@@ -2211,16 +2259,21 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRouteWithChildren
   '/cap-table': typeof CapTableRoute
+  '/cap-table-management': typeof CapTableManagementRoute
   '/cap-table-privacy': typeof CapTablePrivacyRoute
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
+  '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
+  '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/manager-login': typeof ManagerLoginRoute
   '/platform': typeof PlatformRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
+  '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/access': typeof AuthenticatedAccessRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
@@ -2260,6 +2313,7 @@ export interface FileRoutesById {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
@@ -2466,16 +2520,21 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/cap-table'
+    | '/cap-table-management'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
+    | '/contactus'
     | '/fund-administration'
+    | '/harmoniousclassroom'
     | '/manager-login'
     | '/platform'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
+    | '/spvs'
     | '/terms'
     | '/access'
     | '/accounts'
@@ -2515,6 +2574,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/post/$slug'
     | '/shares/$token'
     | '/auth/'
     | '/admin/$applicationId'
@@ -2718,16 +2778,21 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/cap-table'
+    | '/cap-table-management'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
+    | '/contactus'
     | '/fund-administration'
+    | '/harmoniousclassroom'
     | '/manager-login'
     | '/platform'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
+    | '/spvs'
     | '/terms'
     | '/access'
     | '/accounts'
@@ -2765,6 +2830,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/post/$slug'
     | '/shares/$token'
     | '/auth'
     | '/admin/$applicationId'
@@ -2967,16 +3033,21 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/cap-table'
+    | '/cap-table-management'
     | '/cap-table-privacy'
     | '/cap-table-terms'
     | '/client-login'
+    | '/contactus'
     | '/fund-administration'
+    | '/harmoniousclassroom'
     | '/manager-login'
     | '/platform'
+    | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
+    | '/spvs'
     | '/terms'
     | '/_authenticated/access'
     | '/_authenticated/accounts'
@@ -3016,6 +3087,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/post/$slug'
     | '/shares/$token'
     | '/auth/'
     | '/_authenticated/admin/$applicationId'
@@ -3222,20 +3294,26 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRouteWithChildren
   CapTableRoute: typeof CapTableRoute
+  CapTableManagementRoute: typeof CapTableManagementRoute
   CapTablePrivacyRoute: typeof CapTablePrivacyRoute
   CapTableTermsRoute: typeof CapTableTermsRoute
   ClientLoginRoute: typeof ClientLoginRoute
+  ContactusRoute: typeof ContactusRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
+  HarmoniousclassroomRoute: typeof HarmoniousclassroomRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
   PlatformRoute: typeof PlatformRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SpvRoute: typeof SpvRoute
+  SpvsRoute: typeof SpvsRoute
   TermsRoute: typeof TermsRoute
   CapClaimTokenRoute: typeof CapClaimTokenRoute
   FundSlugRoute: typeof FundSlugRoute
   InvestSlugRoute: typeof InvestSlugRoute
+  PostSlugRoute: typeof PostSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
@@ -3289,6 +3367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CapTableRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cap-table-management': {
+      id: '/cap-table-management'
+      path: '/cap-table-management'
+      fullPath: '/cap-table-management'
+      preLoaderRoute: typeof CapTableManagementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cap-table-privacy': {
       id: '/cap-table-privacy'
       path: '/cap-table-privacy'
@@ -3310,11 +3395,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contactus': {
+      id: '/contactus'
+      path: '/contactus'
+      fullPath: '/contactus'
+      preLoaderRoute: typeof ContactusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/fund-administration': {
       id: '/fund-administration'
       path: '/fund-administration'
       fullPath: '/fund-administration'
       preLoaderRoute: typeof FundAdministrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/harmoniousclassroom': {
+      id: '/harmoniousclassroom'
+      path: '/harmoniousclassroom'
+      fullPath: '/harmoniousclassroom'
+      preLoaderRoute: typeof HarmoniousclassroomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manager-login': {
@@ -3329,6 +3428,13 @@ declare module '@tanstack/react-router' {
       path: '/platform'
       fullPath: '/platform'
       preLoaderRoute: typeof PlatformRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -3357,6 +3463,13 @@ declare module '@tanstack/react-router' {
       path: '/spv'
       fullPath: '/spv'
       preLoaderRoute: typeof SpvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spvs': {
+      id: '/spvs'
+      path: '/spvs'
+      fullPath: '/spvs'
+      preLoaderRoute: typeof SpvsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -3637,6 +3750,13 @@ declare module '@tanstack/react-router' {
       path: '/invest/$slug'
       fullPath: '/invest/$slug'
       preLoaderRoute: typeof InvestSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post/$slug': {
+      id: '/post/$slug'
+      path: '/post/$slug'
+      fullPath: '/post/$slug'
+      preLoaderRoute: typeof PostSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shares/$token': {
@@ -5614,20 +5734,26 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRouteWithChildren,
   CapTableRoute: CapTableRoute,
+  CapTableManagementRoute: CapTableManagementRoute,
   CapTablePrivacyRoute: CapTablePrivacyRoute,
   CapTableTermsRoute: CapTableTermsRoute,
   ClientLoginRoute: ClientLoginRoute,
+  ContactusRoute: ContactusRoute,
   FundAdministrationRoute: FundAdministrationRoute,
+  HarmoniousclassroomRoute: HarmoniousclassroomRoute,
   ManagerLoginRoute: ManagerLoginRoute,
   PlatformRoute: PlatformRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SpvRoute: SpvRoute,
+  SpvsRoute: SpvsRoute,
   TermsRoute: TermsRoute,
   CapClaimTokenRoute: CapClaimTokenRoute,
   FundSlugRoute: FundSlugRoute,
   InvestSlugRoute: InvestSlugRoute,
+  PostSlugRoute: PostSlugRoute,
   SharesTokenRoute: SharesTokenRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,

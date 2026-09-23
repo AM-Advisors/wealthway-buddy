@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { marketingHead } from "@/lib/marketing/seo";
 
 import heroImage from "@/assets/platform-funding.png";
 import { Button } from "@/components/ui/button";
@@ -7,39 +8,28 @@ import { SiteHeader } from "@/components/site-header";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Harmonious — Your Funds On Easy Mode" },
-      {
-        name: "description",
-        content:
-          "Harmonious Capital Administration forms your SPV, administers your fund and onboards your investors — identity, accreditation, documents and funding in one secure platform.",
-      },
-      { property: "og:title", content: "Harmonious — Your Funds On Easy Mode" },
-      {
-        property: "og:description",
-        content:
-          "Same-day SPV formation, fund administration and compliant investor onboarding in one platform.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://onboard.harmonious.co/og-harmonious.jpg" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://onboard.harmonious.co/og-harmonious.jpg" },
-    ],
-  }),
+  head: () =>
+    marketingHead({
+      path: "/",
+      title: "Fund Administration, SPVs & Cap Table Management | Harmonious",
+      description: "Harmonious provides fund and SPV administration, investor onboarding, cap table management, fund accounting, reporting and private-market infrastructure for fund managers and founders.",
+      image: "https://onboard.harmonious.co/og-harmonious.jpg",
+      
+      
+    }),
   component: Index,
 });
 
 const PILLARS = [
   {
     title: "Form The Entity",
-    body: "Same-day SPV and fund entity formation, with the operating agreement, subscription documents and offering memorandum prepared alongside it.",
-    to: "/spv",
-    cta: "Same-Day SPV",
+    body: "Streamlined SPV and fund entity formation, with the operating agreement, subscription documents and offering memorandum prepared alongside it.",
+    to: "/spvs",
+    cta: "SPV Administration",
   },
   {
     title: "Onboard The Investors",
-    body: "Identity verification, AML screening, accreditation under Rule 506(b) or 506(c), document e-signature and wire or ACH funding — in one guided flow.",
+    body: "Identity verification, AML screening, accreditation under Rule 506(b) or 506(c), document e-signature and investor funding workflows — in one guided flow.",
     to: "/platform",
     cta: "See the platform",
   },
@@ -56,7 +46,7 @@ const STEPS = [
   ["02", "Screening", "Source of funds and wealth, PEP and sanctions declarations."],
   ["03", "Accreditation", "506(b) self-certification or 506(c) third-party evidence."],
   ["04", "Documents", "Review the offering materials and sign them in the browser."],
-  ["05", "Funding", "Wire or ACH against the fund's own instructions, tracked to receipt."],
+  ["05", "Funding", "Investors fund against the fund's own instructions; receipt is matched and reconciled."],
   ["06", "Ownership", "Shares, ownership percentage and portfolio value, live in the portal."],
 ] as const;
 
@@ -159,17 +149,17 @@ function Index() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild>
-                <Link to="/cap-table" search={{ move: "carta" }}>
+                <Link to="/cap-table-management" search={{ move: "carta" }}>
                   Move from Carta
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/cap-table" search={{ move: "pulley" }}>
+                <Link to="/cap-table-management" search={{ move: "pulley" }}>
                   Move from Pulley
                 </Link>
               </Button>
               <Link
-                to="/cap-table"
+                to="/cap-table-management"
                 className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
               >
                 See Harmonious CapTable →
@@ -242,7 +232,7 @@ function Index() {
             </div>
             <div className="flex gap-3">
               <Button asChild size="lg" variant="secondary">
-                <Link to="/auth/register">Get started</Link>
+                <Link to="/contactus" search={{ cta: "schedule_demo", intent: "other" }}>Schedule a Demo</Link>
               </Button>
               <Button
                 asChild
