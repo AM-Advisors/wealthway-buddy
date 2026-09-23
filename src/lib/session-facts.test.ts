@@ -24,8 +24,8 @@ import {
   operationsAccessFromEmail,
 } from "@/lib/session-resolution";
 
-type Row = Record<string, any>;
-let tables: Record<string, Row[]> = {};
+type Row = any;
+let tables: any = {};
 let queryCount = 0;
 
 function builder(table: string) {
