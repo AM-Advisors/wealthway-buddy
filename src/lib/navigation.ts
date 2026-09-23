@@ -241,6 +241,38 @@ export type Navigation = {
 const isUnder = (pathname: string, prefix: string) => pathname === prefix || pathname.startsWith(`${prefix}/`);
 
 /**
+ * Compatibility URLs still identify the client workspace they belong to. The
+ * result is only used when that workspace is present in the server-resolved
+ * list, so typing a URL cannot grant a relationship.
+ */
+export function workspaceKindForPath(pathname: string): WorkspaceKind | null {
+  if (isUnder(pathname, "/manager")) return "fund_manager";
+  if (isUnder(pathname, "/client")) return "company";
+  if (isUnder(pathname, "/professional")) return "professional";
+  if (
+    isUnder(pathname, "/dashboard") ||
+    isUnder(pathname, "/portal") ||
+    isUnder(pathname, "/investment")
+  ) return "investor";
+  return null;
+}
+
+export function operationsNavItemIsActive(url: string, pathname: string): boolean {
+  const base = url.split("?")[0] ?? url;
+  if (base === "/ops") return pathname === base;
+  if (base === "/ops/funds" && isUnder(pathname, "/ops/fund")) return true;
+  return isUnder(pathname, base);
+}
+
+export function surfaceLabelForPath(pathname: string): string {
+  if (isUnder(pathname, "/ops")) return "Harmonious Operations";
+  if (isUnder(pathname, "/manager")) return "Fund management";
+  if (isUnder(pathname, "/client")) return "Company workspace";
+  if (isUnder(pathname, "/professional")) return "Professional workspace";
+  return "Client & investor portal";
+}
+
+/**
  * The one navigation projection. `activeWorkspaceId` is untrusted browser
  * state: it is honoured only when it names a workspace the server returned.
  */
@@ -250,7 +282,9 @@ export function getNavigation(
   pathname: string,
 ): Navigation {
   const workspaces = session?.workspaces ?? [];
+  const pathKind = workspaceKindForPath(pathname);
   const active =
+    workspaces.find((w) => pathKind !== null && w.kind === pathKind) ??
     workspaces.find((w) => w.id === activeWorkspaceId) ??
     workspaces.find((w) => w.surface === "client") ??
     workspaces[0] ??

@@ -7,7 +7,15 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { getNavigation, HOME_ROUTE_MAP, internalNavigationGroups, onboardingItems } from "@/lib/navigation";
+import {
+  getNavigation,
+  HOME_ROUTE_MAP,
+  internalNavigationGroups,
+  onboardingItems,
+  operationsNavItemIsActive,
+  surfaceLabelForPath,
+  workspaceKindForPath,
+} from "@/lib/navigation";
 import { clientNavigation, contextToClear, storageKeysToClear } from "@/lib/client-navigation";
 import { capabilitiesFor, OPS_HOME, opsNavigation } from "@/lib/ops-capabilities";
 
@@ -82,6 +90,20 @@ describe("parity: legacy OpsSidebar", () => {
 });
 
 describe("workspace projection", () => {
+  it("uses an authorized compatibility route to select its matching workspace", () => {
+    const s = session(["investor", "fund_manager", "company", "professional"]);
+    expect(getNavigation(s, "investor", "/manager").activeKind).toBe("fund_manager");
+    expect(getNavigation(s, "investor", "/client/services").activeKind).toBe("company");
+    expect(getNavigation(s, "investor", "/professional/tasks").activeKind).toBe("professional");
+    expect(workspaceKindForPath("/dashboard")).toBe("investor");
+  });
+
+  it("does not let a compatibility route invent a workspace", () => {
+    const nav = getNavigation(session(["investor"]), "investor", "/manager");
+    expect(nav.activeKind).toBe("investor");
+    expect(nav.primary).toEqual(clientNavigation("investor"));
+  });
+
   it("fund manager, company and professional menus require the matching workspace", () => {
     const investorOnly = session(["investor"]);
     for (const id of ["fund-manager", "company", "professional", "operations"]) {
@@ -128,6 +150,21 @@ describe("workspace projection", () => {
     expect(storageKeysToClear(["harmonious.workspace.active", "harmonious.client.selected", "harmonious.sidebar.openGroups"])).toEqual([
       "harmonious.workspace.active", "harmonious.client.selected",
     ]);
+  });
+});
+
+describe("visual route cues", () => {
+  it("labels each signed-in client surface in human language", () => {
+    expect(surfaceLabelForPath("/manager")).toBe("Fund management");
+    expect(surfaceLabelForPath("/client/cap-table")).toBe("Company workspace");
+    expect(surfaceLabelForPath("/professional/tasks")).toBe("Professional workspace");
+    expect(surfaceLabelForPath("/dashboard")).toBe("Client & investor portal");
+    expect(surfaceLabelForPath("/ops/clients")).toBe("Harmonious Operations");
+  });
+
+  it("keeps Funds & SPVs highlighted on a singular Fund 360 route", () => {
+    expect(operationsNavItemIsActive("/ops/funds", "/ops/fund/F1")).toBe(true);
+    expect(operationsNavItemIsActive("/ops/funds", "/ops/clients/C1")).toBe(false);
   });
 });
 
