@@ -195,9 +195,9 @@ export async function saveTemplateVersion(
     if (!existing) refuse("That signing template no longer exists.");
     // Scope comes from the stored template, never from the browser.
     assertCanPrepare(actor, {
-      scope: existing.scope,
-      offeringId: existing.offering_id,
-      companyId: existing.company_id,
+      scope: existing.scope as PrepareTarget["scope"],
+      offeringId: (existing.offering_id as string | null) ?? null,
+      companyId: (existing.company_id as string | null) ?? null,
     });
   } else {
     const { data: created, error } = await admin
