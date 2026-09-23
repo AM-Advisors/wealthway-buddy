@@ -939,6 +939,8 @@ const COLLECTORS: {
   { area: "accounting", load: accountingItems },
   { area: "reports", load: reportingItems },
   { area: "documents", load: documentItems },
+  { area: "capital", load: distributionItems },
+
 ];
 
 export type WorkQueueInput = {
