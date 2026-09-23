@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
+import { FundInvestorProgress, ManagerAddInvestor } from "@/components/manager-add-investor";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,11 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
     <section>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Identity, eligibility, signing, and funding for this fund.</p></div>
-        <Button asChild size="sm"><Link to="/manager/investors">Invite or manage investors</Link></Button>
+        <Button asChild size="sm"><Link to="/manager/investors">Manage all investors</Link></Button>
+      </div>
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <ManagerAddInvestor fundId={fundId} />
+        <FundInvestorProgress fundId={fundId} />
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {Object.entries(data.counts).map(([label, value]) => <Stat key={label} label={prettyStatus(label)} value={String(value)} />)}

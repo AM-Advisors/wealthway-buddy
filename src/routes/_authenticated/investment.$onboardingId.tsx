@@ -18,15 +18,17 @@ export const Route = createFileRoute("/_authenticated/investment/$onboardingId")
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { step?: string } =>
+    typeof search["step"] === "string" ? { step: search["step"] as string } : {},
   component: InvestmentPage,
 });
 
 function InvestmentPage() {
   const { onboardingId } = Route.useParams();
+  const { step } = Route.useSearch();
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="mb-6 text-3xl">Your investment</h1>
-      <InvestorOnboardingJourney onboardingId={onboardingId} />
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={step} />
     </main>
   );
 }

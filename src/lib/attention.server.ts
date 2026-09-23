@@ -10,6 +10,7 @@
  * collector that finds no relationship returns nothing at all.
  */
 
+import { investmentAttentionStep } from "@/lib/attention-investment";
 import {
   ATTENTION_GAPS,
   buildAttentionItem,
@@ -67,6 +68,40 @@ const done = (value: unknown) => value === "approved" || value === "settled" || 
 async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   const s = ctx.supabase;
   const out: AttentionItem[] = [];
+
+  // One item per open investment, deep-linked to its next step.
+  const investments = await safely(async () =>
+    rows(
+      await s
+        .from("investor_onboardings")
+        .select("id, offering_id, stage, funding_status, approved_to_fund_at, investor_reports_sent_at, updated_at")
+        .eq("investor_user_id", ctx.userId)
+        .not("stage", "in", "(closed,declined,cancelled)")
+        .limit(LIMIT),
+    ),
+  );
+  for (const inv of investments as any[]) {
+    const step = investmentAttentionStep(inv);
+    if (!step) continue;
+    const fundName = n.funds.get(inv.offering_id) ?? null;
+    out.push(
+      buildAttentionItem({
+        id: `investor-investment:${inv.id}`,
+        source: "investor.investment",
+        workspace: "investor" as WorkspaceKind,
+        group: step.waiting ? "harmonious_working" : "needs_you",
+        severity: step.waiting ? "info" : "action",
+        title: `Complete your investment${fundName ? ` in ${fundName}` : ""}`,
+        workflowState: String(inv.stage),
+        status: step.status,
+        sourceTable: "investor_onboardings",
+        sourceId: inv.id,
+        href: `/investment/${inv.id}?step=${step.step}`,
+        at: inv.updated_at ?? null,
+        fundName,
+      }),
+    );
+  }
 
   const applications = await safely(async () =>
     rows(
