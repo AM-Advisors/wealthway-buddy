@@ -19,7 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NeedsYou, Stat, type NeedsYouItem } from "@/components/dashboard-primitives";
+import { AttentionCenter } from "@/components/attention-center";
 import { SetupCard } from "@/components/setup-card";
+
 import { money, prettyStatus, statusTone } from "@/lib/status";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -399,7 +401,10 @@ function RoleHome() {
 
       <SetupCard />
 
+      <AttentionCenter />
+
       <NeedsYou items={needsYou} />
+
 
       {sections.length <= 1 ? (
         sections.map((section) => <div key={section.id}>{section.node}</div>)

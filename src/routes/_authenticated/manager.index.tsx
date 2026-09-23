@@ -8,6 +8,8 @@ import { getManagerPanelSummary } from "@/lib/manager.functions";
 import { getManagerFundProgress } from "@/lib/manager-fund.functions";
 import { money, prettyStatus } from "@/lib/status";
 import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
+import { AttentionCenter } from "@/components/attention-center";
+
 import { FundInvitations } from "@/components/fund-invitations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,6 +74,12 @@ function ManagerPortfolio() {
         <Metric label="Pending reviews" value={String(totals.approvals)} />
         <Metric label="Open exceptions" value={String(totals.exceptions)} alert={totals.exceptions > 0} />
       </div>
+
+      <div className="mt-6">
+        <AttentionCenter workspace="fund_manager" />
+      </div>
+
+
 
       <Card className="mt-6">
         <CardHeader className="border-b"><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle className="text-base">Portfolio</CardTitle><CardDescription>{all.length} {all.length === 1 ? "fund" : "funds"} available to your account</CardDescription></div><div className="flex w-full gap-2 sm:w-auto"><div className="relative min-w-0 flex-1 sm:w-64"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search funds" /></div><Select value={status} onValueChange={setStatus}><SelectTrigger className="w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="open">Open</SelectItem><SelectItem value="closed">Closed</SelectItem></SelectContent></Select></div></div></CardHeader>

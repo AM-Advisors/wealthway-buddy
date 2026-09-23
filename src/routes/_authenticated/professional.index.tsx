@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
+import { AttentionCenter } from "@/components/attention-center";
 import { Empty, WorkspaceSection, useProfessionalOverview } from "@/components/professional-workspace";
 import { AUTHORITY_LABELS, CAPABILITY_LABELS } from "@/lib/professional-model";
 
@@ -11,10 +12,13 @@ function MyClients() {
   const viewByDelegation = new Map((data?.views ?? []).map((v: any) => [v.context.delegationId, v]));
 
   return (
-    <WorkspaceSection
+    <div className="space-y-6">
+      <AttentionCenter workspace="professional" />
+      <WorkspaceSection
       title="My clients"
       description="Built only from live delegations. Nothing outside the granted scope appears."
     >
+
       {clients.length === 0 ? (
         <Empty>No client has authorised you yet.</Empty>
       ) : (
@@ -75,8 +79,10 @@ function MyClients() {
           })}
         </ul>
       )}
-    </WorkspaceSection>
+      </WorkspaceSection>
+    </div>
   );
+
 }
 
 export const Route = createFileRoute("/_authenticated/professional/")({
