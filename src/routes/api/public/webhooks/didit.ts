@@ -85,26 +85,56 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
         let processingError: string | null = null;
 
         try {
-          const resolved = await resolveApplication(supabaseAdmin, body, sessionId);
+          const { resolveVerification, ensureVerification, syncVerification } = await import(
+            "@/lib/kyc-verification.server"
+          );
+
+          // Correlation is by the opaque Harmonious reference or the session
+          // Harmonious recorded — never by email address alone.
+          let verification = await resolveVerification({
+            vendorData: body["vendor_data"] ? String(body["vendor_data"]) : null,
+            sessionId,
+          });
+
+          const resolved = verification
+            ? {
+                applicationId: verification.application_id,
+                sessionId: (verification.session_id as string | null) ?? sessionId,
+                diditUserId: body["vendor_user_id"] ? String(body["vendor_user_id"]) : null,
+                decision: null as Record<string, any> | null,
+              }
+            : await resolveApplication(supabaseAdmin, body, sessionId);
+
           applicationId = resolved.applicationId;
 
           if (!KNOWN_EVENTS.has(webhookType)) {
             processingError = `unhandled webhook_type: ${webhookType}`;
           } else if (!applicationId) {
             processingError = "no matching application";
-          } else if (SESSION_EVENTS.has(webhookType)) {
-            await applySessionEvent(
-              supabaseAdmin,
-              applicationId,
-              body,
-              resolved.sessionId ?? sessionId,
-              status,
-              resolved.decision,
-            );
           } else {
-            // user.*/business.* events carry no session status: re-read the
-            // investor's latest session from Didit so the console stays current.
-            await resyncFromProvider(supabaseAdmin, applicationId, resolved.sessionId);
+            if (!verification) {
+              verification = await ensureVerification({ applicationId });
+            }
+            if (body["vendor_user_id"]) {
+              await supabaseAdmin
+                .from("kyc_verifications")
+                .update({ didit_user_id: String(body["vendor_user_id"]) })
+                .eq("id", verification.id)
+                .is("didit_user_id", null);
+            }
+
+            // Session events and account-level events alike are applied from
+            // the provider's authoritative decision, re-read server-side.
+            const result = await syncVerification({
+              verification,
+              sessionId: resolved.sessionId ?? sessionId,
+              fallbackPayload: SESSION_EVENTS.has(webhookType)
+                ? (resolved.decision ?? body)
+                : resolved.decision,
+              trigger: "webhook",
+            });
+            if (!result.applied) processingError = result.reason ?? "no decision applied";
+            void status;
           }
 
           if (applicationId) {
