@@ -93,6 +93,7 @@ function delegation(over: Record<string, any>, caps: string[]): string {
     scope_id: PRINCIPAL_A,
     authority_level: "assist",
     status: "active",
+    acceptance_state: "not_required", // DB default (NOT NULL)
     effective_at: past,
     expires_at: null,
     revoked_at: null,

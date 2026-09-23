@@ -64,7 +64,9 @@ const ok = (d: string | null | undefined) => d === "accepted" || d === "not_requ
 
 export function delegationFact(row: any, now = Date.now()): DelegationFact {
   const expired = row.expires_at ? new Date(row.expires_at).getTime() <= now : false;
-  const current = row.status === "active" && !row.revoked_at && !expired;
+  // Same rule canAct applies: a delegation that has not yet taken effect is not current.
+  const notYetEffective = row.effective_at ? new Date(row.effective_at).getTime() > now : false;
+  const current = row.status === "active" && !row.revoked_at && !expired && !notYetEffective;
   return {
     id: String(row.id),
     principalUserId: String(row.principal_user_id ?? ""),
@@ -126,7 +128,7 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
       supabase
         .from("delegations")
         .select(
-          "id, principal_user_id, organization_id, status, acceptance_state, scope_type, scope_id, authority_level, expires_at, revoked_at",
+          "id, principal_user_id, organization_id, status, acceptance_state, scope_type, scope_id, authority_level, effective_at, expires_at, revoked_at",
         )
         .eq("delegate_user_id", userId),
       supabase
@@ -240,11 +242,24 @@ export function operationsAccessProjection(s: StaffFacts) {
   return { isAdmin, isOperations, allowed: isAdmin || isOperations };
 }
 
+/**
+ * Professional STANDING (may this person open the professional workspace?) is
+ * deliberately separate from AUTHORITY to act for a client (canAct, per
+ * resource). Standing = an active firm seat, or a current delegation — current
+ * includes one still awaiting acceptance, because the delegate must be able to
+ * open the workspace to accept it. Such a delegation authorizes nothing: it is
+ * not counted in `usableDelegations` and canAct refuses it.
+ *
+ * Stage 3 change: expired, revoked and not-yet-effective delegations whose
+ * status column still reads "active" no longer confer standing.
+ */
 export function professionalStandingProjection(f: CanonicalFacts) {
-  const activeDelegations = f.delegations.filter((d) => d.status === "active").length;
+  const current = f.delegations.filter((d) => d.current);
   return {
-    isProfessional: f.professionalMemberships.some((m) => m.status === "active") || activeDelegations > 0,
+    isProfessional: f.professionalMemberships.some((m) => m.status === "active") || current.length > 0,
     memberships: f.professionalMemberships,
-    activeDelegations,
+    activeDelegations: current.length,
+    usableDelegations: current.filter((d) => d.usable).length,
+    awaitingAcceptance: current.filter((d) => !d.usable).length,
   };
 }

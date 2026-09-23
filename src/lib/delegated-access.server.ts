@@ -183,6 +183,9 @@ function liveDelegation(row: any, now: Date): boolean {
   if (row.revoked_at) return false;
   if (row.effective_at && new Date(row.effective_at) > now) return false;
   if (row.expires_at && new Date(row.expires_at) <= now) return false;
+  // Stage 3: authority needs acceptance when the delegation requires it. An
+  // awaiting / renewal-required / declined delegation authorizes nothing.
+  if (row.acceptance_state !== "accepted" && row.acceptance_state !== "not_required") return false;
   return true;
 }
 
@@ -234,7 +237,7 @@ export async function canAct(
   const { data: rows, error } = await db
     .from("delegations")
     .select(
-      "id, principal_user_id, delegate_user_id, organization_id, scope_type, scope_id, authority_level, status, effective_at, expires_at, revoked_at",
+      "id, principal_user_id, delegate_user_id, organization_id, scope_type, scope_id, authority_level, status, acceptance_state, effective_at, expires_at, revoked_at",
     )
     .eq("delegate_user_id", actorUserId);
   if (error) return DENY("Could not check authorization.");
