@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressInput, addressFromSnake, addressToSnake } from "@/components/address-input";
 
 export const Route = createFileRoute("/_authenticated/admin/investors")({
   head: () => ({
@@ -408,28 +409,13 @@ function InvestorDatabase() {
               </select>
             </div>
             <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor="ed-a1">Address</Label>
-              <Input id="ed-a1" {...field("address_line1")} />
-            </div>
-            <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor="ed-a2">Address line 2</Label>
-              <Input id="ed-a2" {...field("address_line2")} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="ed-city">City</Label>
-              <Input id="ed-city" {...field("city")} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="ed-region">State or region</Label>
-              <Input id="ed-region" {...field("region")} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="ed-post">Postal code</Label>
-              <Input id="ed-post" {...field("postal_code")} />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="ed-country">Country</Label>
-              <Input id="ed-country" {...field("country")} />
+              <AddressInput
+                idPrefix="ed-address"
+                label="Address"
+                countryMode="free"
+                value={addressFromSnake(form as any)}
+                onChange={(next) => setForm((p) => ({ ...p, ...addressToSnake(next) }))}
+              />
             </div>
             {editing?.application_id && (
               <div className="space-y-1 sm:col-span-2">
