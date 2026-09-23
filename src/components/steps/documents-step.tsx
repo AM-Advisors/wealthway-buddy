@@ -110,6 +110,18 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
   const signedByDoc = new Map((data?.signatures ?? []).map((s) => [s.offering_document_id, s]));
   const hasSubscription = Boolean(data?.subscription?.commitment_cents);
 
+  // Authoritative signing state, straight from the Box signature records.
+  const loadSigning = useServerFn(getSigningStates);
+  const { data: signingData } = useQuery({
+    queryKey: ["signing-states", offeringId ?? "active"],
+    queryFn: () => loadSigning({ data: scope }),
+    refetchInterval: 30_000,
+  });
+  const boxSigning = signingData?.provider === "box_sign";
+  const signingByDoc = new Map(
+    ((signingData?.documents ?? []) as any[]).map((d) => [d.documentId as string, d]),
+  );
+
   async function onSaveSubscription(e: React.FormEvent) {
     e.preventDefault();
     const cents = Math.round(Number(amount.replace(/[^0-9.]/g, "")) * 100);
