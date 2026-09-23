@@ -70,7 +70,10 @@ function SideSlot({
 
   async function onFile(file: File) {
     const bad = isAllowedIdFile(file.type, file.size, file.name);
-    if (bad) return toast.error(bad);
+    if (bad) {
+      toast.error(bad);
+      return;
+    }
     setBusy(true);
     try {
       const ticket = await start({
