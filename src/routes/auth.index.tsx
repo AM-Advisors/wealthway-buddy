@@ -70,7 +70,11 @@ function SignInPage() {
 
   async function signInWithGoogle() {
     setBusy(true);
-    const errorMessage = await startGoogleOAuth("/auth");
+    // The page they originally asked for travels with them and is re-checked
+    // by the server resolver on return — it never grants anything by itself.
+    const intended =
+      typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
+    const errorMessage = await startGoogleOAuth("/auth", intended);
     if (errorMessage) {
       void recordAttempt("google-oauth", false, errorMessage);
       toast.error(errorMessage);
