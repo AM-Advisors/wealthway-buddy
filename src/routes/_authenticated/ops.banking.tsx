@@ -21,5 +21,22 @@ export const Route = createFileRoute("/_authenticated/ops/banking")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <OperationsBanking />,
+  component: BankingPage,
 });
+
+function BankingPage() {
+  return (
+    <div>
+      <div className="mx-auto w-full max-w-5xl px-4 pt-6">
+        <Link
+          to="/ops/distributions"
+          className="text-sm font-medium text-primary underline underline-offset-4"
+        >
+          Distributions and payments →
+        </Link>
+      </div>
+      <OperationsBanking />
+    </div>
+  );
+}
+
