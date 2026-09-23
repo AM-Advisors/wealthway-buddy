@@ -673,7 +673,7 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     rows(
       await s
         .from("invoices")
-        .select("id, client_id, status, due_date, invoice_number, updated_at")
+        .select("id, client_id, status, due_date, updated_at")
         .in("client_id", clientIds)
         .eq("status", "issued")
         .limit(LIMIT),
