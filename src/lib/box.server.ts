@@ -413,6 +413,11 @@ export interface MultiSignerInput {
     order?: number;
     /** Correlates the Box signer back to our own signer row. */
     externalUserId: string;
+    /**
+     * Native Box Sign fields placed for this signer during preparation.
+     * Box renders and enforces them; we never draw fields ourselves.
+     */
+    inputs?: Record<string, unknown>[];
   }[];
 }
 
@@ -427,6 +432,7 @@ export async function createMultiSignerRequest(input: MultiSignerInput): Promise
       order: s.order ?? 1,
       embed_url_external_user_id: s.externalUserId,
       ...(s.name ? { name: s.name } : {}),
+      ...(s.inputs && s.inputs.length ? { inputs: s.inputs } : {}),
     })),
     name: input.documentName,
     is_document_preparation_needed: false,

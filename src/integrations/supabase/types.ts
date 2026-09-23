@@ -9237,6 +9237,7 @@ export type Database = {
           provider_embed_url: string | null
           provider_signer_id: string | null
           required: boolean
+          role_key: string | null
           sent_at: string | null
           signature_id: string
           signed_at: string | null
@@ -9262,6 +9263,7 @@ export type Database = {
           provider_embed_url?: string | null
           provider_signer_id?: string | null
           required?: boolean
+          role_key?: string | null
           sent_at?: string | null
           signature_id: string
           signed_at?: string | null
@@ -9287,6 +9289,7 @@ export type Database = {
           provider_embed_url?: string | null
           provider_signer_id?: string | null
           required?: boolean
+          role_key?: string | null
           sent_at?: string | null
           signature_id?: string
           signed_at?: string | null
@@ -9319,6 +9322,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           consent_electronic: boolean
+          document_author: string | null
           document_hash: string
           id: string
           initials: string | null
@@ -9327,6 +9331,9 @@ export type Database = {
           manager_notified_at: string | null
           offering_document_id: string
           pdf_path: string | null
+          placed_fields: Json | null
+          prepared_at: string | null
+          prepared_by: string | null
           provider: string
           provider_agreement_id: string | null
           provider_completed_at: string | null
@@ -9340,6 +9347,7 @@ export type Database = {
           provider_source_file_id: string | null
           provider_status: string | null
           provider_viewed_at: string | null
+          sent_by: string | null
           signature_type: string
           signature_value: string
           signed_at: string
@@ -9349,6 +9357,7 @@ export type Database = {
           signer_name: string
           source_file_version_id: string | null
           superseded_by: string | null
+          template_version_id: string | null
         }
         Insert: {
           application_id: string
@@ -9359,6 +9368,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           consent_electronic?: boolean
+          document_author?: string | null
           document_hash: string
           id?: string
           initials?: string | null
@@ -9367,6 +9377,9 @@ export type Database = {
           manager_notified_at?: string | null
           offering_document_id: string
           pdf_path?: string | null
+          placed_fields?: Json | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           provider?: string
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
@@ -9380,6 +9393,7 @@ export type Database = {
           provider_source_file_id?: string | null
           provider_status?: string | null
           provider_viewed_at?: string | null
+          sent_by?: string | null
           signature_type?: string
           signature_value: string
           signed_at?: string
@@ -9389,6 +9403,7 @@ export type Database = {
           signer_name: string
           source_file_version_id?: string | null
           superseded_by?: string | null
+          template_version_id?: string | null
         }
         Update: {
           application_id?: string
@@ -9399,6 +9414,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           consent_electronic?: boolean
+          document_author?: string | null
           document_hash?: string
           id?: string
           initials?: string | null
@@ -9407,6 +9423,9 @@ export type Database = {
           manager_notified_at?: string | null
           offering_document_id?: string
           pdf_path?: string | null
+          placed_fields?: Json | null
+          prepared_at?: string | null
+          prepared_by?: string | null
           provider?: string
           provider_agreement_id?: string | null
           provider_completed_at?: string | null
@@ -9420,6 +9439,7 @@ export type Database = {
           provider_source_file_id?: string | null
           provider_status?: string | null
           provider_viewed_at?: string | null
+          sent_by?: string | null
           signature_type?: string
           signature_value?: string
           signed_at?: string
@@ -9429,6 +9449,7 @@ export type Database = {
           signer_name?: string
           source_file_version_id?: string | null
           superseded_by?: string | null
+          template_version_id?: string | null
         }
         Relationships: [
           {
@@ -9443,6 +9464,13 @@ export type Database = {
             columns: ["offering_document_id"]
             isOneToOne: false
             referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_signatures_template_version_id_fkey"
+            columns: ["template_version_id"]
+            isOneToOne: false
+            referencedRelation: "signing_template_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -22093,6 +22121,132 @@ export type Database = {
             columns: ["signature_id"]
             isOneToOne: false
             referencedRelation: "document_signatures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signing_template_versions: {
+        Row: {
+          created_at: string
+          fields: Json
+          id: string
+          notes: string | null
+          offering_document_id: string | null
+          prepared_by: string
+          published_at: string | null
+          published_by: string | null
+          roles: Json
+          source_box_file_id: string | null
+          source_box_file_version_id: string | null
+          status: string
+          template_id: string
+          updated_at: string
+          version_no: number
+        }
+        Insert: {
+          created_at?: string
+          fields?: Json
+          id?: string
+          notes?: string | null
+          offering_document_id?: string | null
+          prepared_by: string
+          published_at?: string | null
+          published_by?: string | null
+          roles?: Json
+          source_box_file_id?: string | null
+          source_box_file_version_id?: string | null
+          status?: string
+          template_id: string
+          updated_at?: string
+          version_no: number
+        }
+        Update: {
+          created_at?: string
+          fields?: Json
+          id?: string
+          notes?: string | null
+          offering_document_id?: string | null
+          prepared_by?: string
+          published_at?: string | null
+          published_by?: string | null
+          roles?: Json
+          source_box_file_id?: string | null
+          source_box_file_version_id?: string | null
+          status?: string
+          template_id?: string
+          updated_at?: string
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signing_template_versions_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signing_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "signing_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signing_templates: {
+        Row: {
+          agreement_type: string
+          company_id: string | null
+          created_at: string
+          created_by: string
+          current_version: number
+          id: string
+          name: string
+          offering_id: string | null
+          scope: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agreement_type?: string
+          company_id?: string | null
+          created_at?: string
+          created_by: string
+          current_version?: number
+          id?: string
+          name: string
+          offering_id?: string | null
+          scope: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agreement_type?: string
+          company_id?: string | null
+          created_at?: string
+          created_by?: string
+          current_version?: number
+          id?: string
+          name?: string
+          offering_id?: string | null
+          scope?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signing_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signing_templates_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]

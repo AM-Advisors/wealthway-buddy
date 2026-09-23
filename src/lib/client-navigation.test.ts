@@ -42,6 +42,7 @@ describe("client navigation by workspace", () => {
       "Capital",
       "Reports",
       "Documents",
+      "Agreements",
       "Profile",
     ]);
   });
