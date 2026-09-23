@@ -82,3 +82,7 @@
 - [ ] Stage 6: authoritative synchronisation cleanup
 - [ ] Stage 7: legacy route and domain migration (75 hard-coded addresses)
 - [ ] Stage 8: security regression (22 proofs)
+
+## Client self-service (funds, investors, cap tables)
+- [x] Fund manager Home, Request Fund wizard, setup tracker, bulk investors, cap table setup/actions, Ops + New, Action Center items, tests
+- [ ] Browser QA as a dedicated fund-manager and founder account (needs account choice)
