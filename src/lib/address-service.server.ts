@@ -304,6 +304,68 @@ export async function pinAddressUsage(input: {
   return data;
 }
 
+/**
+ * Re-runs validation for addresses that were saved while the validation
+ * provider was unreachable. This never creates a new version and never lowers
+ * an address that has since been reviewed or evidenced.
+ */
+export async function reconcileAddressValidation(limit = 25) {
+  const db = await admin();
+  const { needsRevalidation } = await import("@/lib/address-model");
+  const { validateAddress } = await import("@/lib/address-lookup.server");
+
+  const { data: rows } = await db
+    .from("person_addresses")
+    .select("*")
+    .in("record_status", ["pending", "effective"])
+    .in("state", ["entered", "proof_required"])
+    .order("created_at", { ascending: true })
+    .limit(limit);
+
+  let checked = 0;
+  let updated = 0;
+  for (const row of rows ?? []) {
+    const verdict = (row["provider_verdict"] ?? null) as never;
+    const state = row["state"] as AddressRecordState;
+    if (!needsRevalidation(state, verdict)) continue;
+    checked += 1;
+    const validation = await validateAddress(cleanAddress(rowParts(row) as never));
+    if (validation.verdict === "unavailable") continue;
+
+    const entry = stateForVerdict(validation.verdict, (row["entry_method"] ?? "manual") as never);
+    const next = applyProofRequirement(entry.state, state === "proof_required");
+    await db
+      .from("person_addresses")
+      .update({
+        provider_verdict: validation.verdict,
+        validation_provider: validation.provider,
+        validated_at: validation.validatedAt,
+        validation_result: {
+          verdict: validation.verdict,
+          warnings: validation.warnings,
+          normalized: validation.formatted,
+          components: validation.components,
+          ...validation.raw,
+        } as never,
+        state: next,
+        state_reason: entry.reason,
+        review_reason: next === "review_required" ? entry.reason : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row["id"]);
+    await db.from("address_verification_events").insert({
+      address_id: row["id"],
+      person_id: row["person_id"] ?? null,
+      from_state: state,
+      to_state: next,
+      source: row["source"] ?? "user_entered",
+      detail: { reason: entry.reason, provider_verdict: validation.verdict, reconciled: true } as never,
+    });
+    updated += 1;
+  }
+  return { checked, updated };
+}
+
 export async function addressForUsage(context: AddressUsageContext, contextId: string) {
   const db = await admin();
   const { data } = await db

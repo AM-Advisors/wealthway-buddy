@@ -58,6 +58,45 @@ export const resolveAddressSuggestion = createServerFn({ method: "POST" })
   });
 
 /**
+ * Runs the selected address through the validation provider so the person can
+ * see the outcome before saving. Nothing is stored and the browser cannot
+ * assert the result — saving re-validates on the server.
+ */
+export const previewAddressValidation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    addressInput.omit({ kind: true }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { validateAddress } = await import("@/lib/address-lookup.server");
+    const { stateForVerdict, ADDRESS_STATE_DISPLAY } = await import("@/lib/address-model");
+    const clean = cleanAddress(data as Record<string, any>);
+    if (!isCompleteAddress(clean)) {
+      return { verdict: "unresolved" as const, state: "review_required", label: "Review required", formatted: null, warnings: [] as string[] };
+    }
+    const outcome = await validateAddress(clean);
+    const entry = stateForVerdict(outcome.verdict, data.entryMethod);
+    return {
+      verdict: outcome.verdict,
+      state: entry.state,
+      label: ADDRESS_STATE_DISPLAY[entry.state],
+      formatted: outcome.formatted,
+      warnings: outcome.warnings,
+    };
+  });
+
+/** Staff-only: re-checks addresses saved while the provider was unavailable. */
+export const reconcileAddresses = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data: staff } = await supabase.rpc("is_staff_user");
+    if (staff !== true) throw new Error("Not authorised.");
+    const { reconcileAddressValidation } = await import("@/lib/address-service.server");
+    return await reconcileAddressValidation();
+  });
+
+/**
  * Records the signed-in person's address.
  *
  * Selecting a suggestion is convenience, never proof of residence, and the
