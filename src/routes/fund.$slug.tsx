@@ -35,6 +35,7 @@ export const Route = createFileRoute("/fund/$slug")({
     const url = `${SITE}/fund/${params.slug}`;
     return {
       meta: [
+        { name: "robots", content: "noindex, nofollow" },
         { title: `${fund.name} — Harmonious` },
         { name: "description", content: description },
         { property: "og:title", content: `${fund.name} — Harmonious` },

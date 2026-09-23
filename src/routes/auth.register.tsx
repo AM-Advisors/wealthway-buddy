@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth/register")({
   head: () => ({
     meta: [
+        { name: "robots", content: "noindex, nofollow" },
       { title: "Create Your Investor Account — Harmonious" },
       {
         name: "description",

@@ -1,28 +1,20 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { marketingHead } from "@/lib/marketing/seo";
 
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 export const Route = createFileRoute("/platform")({
-  head: () => ({
-    meta: [
-      { title: "The Harmonious Platform — Onboarding, Diligence and Funding" },
-      {
-        name: "description",
-        content:
-          "Investor onboarding, KYC and AML, accreditation, due diligence rooms, e-signature, wire and ACH funding, cap table and reporting — the Harmonious platform end to end.",
-      },
-      { property: "og:title", content: "The Harmonious Platform" },
-      {
-        property: "og:description",
-        content:
-          "Everything a sponsor needs between the term sheet and the final close, in one secure workspace.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    marketingHead({
+      path: "/platform",
+      title: "The Harmonious Platform — Onboarding, Administration & Reporting",
+      description: "Investor onboarding, identity and AML checks, accreditation, deal rooms, e-signature, investor funding workflows, cap tables and reporting in one platform.",
+      
+      breadcrumbs: [{ name: "Home", path: "/" }, { name: "Platform", path: "/platform" }],
+      
+    }),
   component: PlatformPage,
 });
 
@@ -48,7 +40,7 @@ const MODULES = [
     body: "Offering memorandum, subscription agreement and operating agreement issued for signature, with signed copies stored privately and filed to your document vault automatically.",
   },
   {
-    title: "Wire & ACH Funding",
+    title: "Investor Funding Workflows",
     body: "Fund bank details kept in restricted storage, acknowledged by the investor before funding, then wire confirmations reviewed and matched to received capital.",
   },
   {
@@ -124,10 +116,10 @@ function PlatformPage() {
           <h2 className="text-2xl">See it with your own fund.</h2>
           <div className="flex gap-3">
             <Button asChild size="lg">
-              <Link to="/auth/register">Get started</Link>
+              <Link to="/contactus" search={{ cta: "schedule_demo", intent: "other" }}>Schedule a Demo</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/spv">Same-Day SPV</Link>
+              <Link to="/spvs">SPV Administration</Link>
             </Button>
           </div>
         </section>

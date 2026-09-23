@@ -16325,6 +16325,72 @@ export type Database = {
           },
         ]
       }
+      marketing_leads: {
+        Row: {
+          company: string
+          created_at: string
+          crm_error: string | null
+          crm_external_id: string | null
+          crm_status: string
+          crm_synced_at: string | null
+          cta: string | null
+          id: string
+          intent: string
+          message: string | null
+          name: string
+          referrer: string | null
+          source_page: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          work_email: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          crm_error?: string | null
+          crm_external_id?: string | null
+          crm_status?: string
+          crm_synced_at?: string | null
+          cta?: string | null
+          id?: string
+          intent: string
+          message?: string | null
+          name: string
+          referrer?: string | null
+          source_page?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          work_email: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          crm_error?: string | null
+          crm_external_id?: string | null
+          crm_status?: string
+          crm_synced_at?: string | null
+          cta?: string | null
+          id?: string
+          intent?: string
+          message?: string | null
+          name?: string
+          referrer?: string | null
+          source_page?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          work_email?: string
+        }
+        Relationships: []
+      }
       marketing_releases: {
         Row: {
           authorized_on: string | null

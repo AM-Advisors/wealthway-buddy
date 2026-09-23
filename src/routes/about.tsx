@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { marketingHead } from "@/lib/marketing/seo";
 
 import { Button } from "@/components/ui/button";
 import { LogoIcon } from "@/components/Logo";
@@ -9,20 +10,15 @@ const DESCRIPTION =
   "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs — formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: "About Harmonious Capital Administration" },
-      { name: "description", content: DESCRIPTION },
-      { property: "og:title", content: "About Harmonious Capital Administration" },
-      {
-        property: "og:description",
-        content:
-          "Who we are, how every engagement is scoped, the work we take on and the roles we deliberately do not take on.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    marketingHead({
+      path: "/about",
+      title: "About Harmonious Capital Administration",
+      description: DESCRIPTION,
+      
+      breadcrumbs: [{ name: "Home", path: "/" }, { name: "About", path: "/about" }],
+      
+    }),
   component: AboutPage,
 });
 
@@ -54,7 +50,7 @@ const WHAT_WE_DO: readonly [string, string][] = [
   ],
   [
     "Payment facilitation",
-    "Wire and ACH instructions raised against verified beneficiaries, checked, approved by two authorised people, then matched back to invoices and investor deposits.",
+    "Payment instructions recorded against verified beneficiaries, checked, approved by two authorised people, then matched back to invoices and investor deposits.",
   ],
   [
     "Compliance and regulatory support",
@@ -185,7 +181,7 @@ function AboutPage() {
             <h2 className="text-2xl">Work with us.</h2>
             <div className="flex gap-3">
               <Button asChild size="lg">
-                <Link to="/auth/register">Get started</Link>
+                <Link to="/contactus" search={{ cta: "schedule_demo", intent: "other" }}>Schedule a Demo</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/auth">Sign in</Link>

@@ -13,4 +13,3 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://onboard.harmonious.co/sitemap.xml

@@ -1,35 +1,27 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { marketingHead } from "@/lib/marketing/seo";
 
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 export const Route = createFileRoute("/fund-administration")({
-  head: () => ({
-    meta: [
-      { title: "Fund Administration — Harmonious" },
-      {
-        name: "description",
-        content:
-          "Cap table, capital calls, closings, wire reconciliation, investor reporting and a complete audit trail, administered on the Harmonious platform.",
-      },
-      { property: "og:title", content: "Fund Administration — Harmonious" },
-      {
-        property: "og:description",
-        content:
-          "Ongoing administration for SPVs and funds: capital, closings, reporting and the record behind them.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    marketingHead({
+      path: "/fund-administration",
+      title: "Fund Administration for Private Funds | Harmonious",
+      description: "Fund administration from Harmonious: capital and closings, investor onboarding, cap table maintenance, investor reporting, document custody and compliance records.",
+      
+      breadcrumbs: [{ name: "Home", path: "/" }, { name: "Fund Administration", path: "/fund-administration" }],
+      service: { name: "Fund Administration", description: "Administration of private investment funds: investor onboarding, capital activity, reporting and records." },
+    }),
   component: FundAdministrationPage,
 });
 
 const SERVICES = [
   {
     title: "Capital & Closings",
-    body: "Commitments confirmed against the fund's minimum, wire and ACH tracked from submission to receipt, and closings confirmed once the round is fully funded.",
+    body: "Commitments confirmed against the fund's minimum, investor funding coordinated and reconciled on receipt, and closings confirmed once the round is fully funded.",
   },
   {
     title: "Cap Table Maintenance",
@@ -114,7 +106,7 @@ function FundAdministrationPage() {
           <h2 className="text-2xl">Bring your existing fund across.</h2>
           <div className="flex gap-3">
             <Button asChild size="lg">
-              <Link to="/auth/register">Get started</Link>
+              <Link to="/contactus" search={{ cta: "request_fund_admin", intent: "fund_administration" }}>Request Fund Administration</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link to="/platform">See the platform</Link>
