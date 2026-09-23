@@ -781,15 +781,109 @@ export async function investorTab(context: any, data: { id: string; tab: string 
       const appIds = applications.map((a: any) => a.id);
       const [kyc, aml, accreditation] = appIds.length
         ? await Promise.all([
-            s.from("kyc_verifications").select("application_id, provider, status, completed_at, expired_at").in("application_id", appIds),
+            s
+              .from("kyc_verifications")
+              .select(
+                "id, application_id, provider, status, completed_at, expired_at, document_type, document_issuing_country, document_issuing_region, document_issue_date, document_expiration_date, document_number_last4, document_expired, verified_full_name, liveness_status, face_match_status, face_match_score, address_check_status, proof_of_address_status, provider_decision, provider_warnings, harmonious_decision, harmonious_decision_reason, last_synced_at, reconciled_at, workflow_id",
+              )
+              .in("application_id", appIds),
             s.from("aml_screenings").select("application_id, provider, status, completed_at").in("application_id", appIds),
             s.from("accreditation_records").select("application_id, method, status, verified_at, expires_at").in("application_id", appIds),
           ])
         : [{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }];
-      // Only the operational summary: provider payloads and provider result blobs stay behind their own controls.
+
+      const verifications = rows(kyc);
+      const verificationIds = verifications.map((k: any) => k.id).filter(Boolean);
+      const person = (await s.from("persons").select("id").eq("user_id", data.id).maybeSingle()).data as any;
+
+      const [checks, addresses, addressEvents] = await Promise.all([
+        verificationIds.length
+          ? s
+              .from("identity_check_results")
+              .select("verification_id, check_kind, provider_status, harmonious_status, warnings, evaluated_at")
+              .in("verification_id", verificationIds)
+          : Promise.resolve({ data: [], error: null } as any),
+        person?.id
+          ? s
+              .from("person_addresses")
+              .select(
+                "id, line1, line2, city, region, postal_code, country, formatted, entry_method, validation_provider, state, state_reason, proof_document_type, proof_issue_date, proof_provider_status, proof_verified_at, is_current",
+              )
+              .eq("person_id", person.id)
+              .order("created_at", { ascending: false })
+              .limit(20)
+          : Promise.resolve({ data: [], error: null } as any),
+        person?.id
+          ? s
+              .from("address_verification_events")
+              .select("created_at, from_state, to_state, source")
+              .eq("person_id", person.id)
+              .order("created_at", { ascending: false })
+              .limit(25)
+          : Promise.resolve({ data: [], error: null } as any),
+      ]);
+
+      // Operational summary only: full document numbers, provider payloads and
+      // temporary provider document links never leave the compliance store.
       return {
         applications,
-        kyc: rows(kyc).map((k: any) => ({ applicationId: k.application_id, provider: k.provider, status: k.status, completedAt: k.completed_at, expiresAt: k.expired_at })),
+        governmentId: verifications.map((k: any) => ({
+          applicationId: k.application_id,
+          documentType: k.document_type,
+          issuingJurisdiction: [k.document_issuing_region, k.document_issuing_country].filter(Boolean).join(", ") || null,
+          issued: k.document_issue_date,
+          expires: k.document_expiration_date,
+          documentNumber: k.document_number_last4 ? `••••${k.document_number_last4}` : null,
+          expired: k.document_expired,
+          verifiedName: k.verified_full_name,
+        })),
+        identityChecks: rows(checks).map((c: any) => ({
+          check: c.check_kind,
+          provider: c.provider_status,
+          harmonious: c.harmonious_status,
+          warnings: Array.isArray(c.warnings) ? c.warnings.length : 0,
+          evaluatedAt: c.evaluated_at,
+        })),
+        addresses: rows(addresses).map((a: any) => ({
+          address: [a.line1, a.line2, a.city, a.region, a.postal_code, a.country].filter(Boolean).join(", "),
+          state: a.state,
+          reason: a.state_reason,
+          entry: a.entry_method,
+          validatedBy: a.validation_provider,
+          proofDocument: a.proof_document_type,
+          proofIssued: a.proof_issue_date,
+          proofStatus: a.proof_provider_status,
+          proofVerifiedAt: a.proof_verified_at,
+          current: a.is_current,
+        })),
+        addressHistory: rows(addressEvents).map((e: any) => ({
+          at: e.created_at,
+          from: e.from_state,
+          to: e.to_state,
+          source: e.source,
+        })),
+        provider: verifications.map((k: any) => ({
+          applicationId: k.application_id,
+          provider: k.provider,
+          workflow: k.workflow_id,
+          providerDecision: k.provider_decision,
+          warnings: Array.isArray(k.provider_warnings) ? k.provider_warnings.length : 0,
+          lastSynced: k.last_synced_at,
+          reconciled: k.reconciled_at,
+        })),
+        kyc: verifications.map((k: any) => ({
+          applicationId: k.application_id,
+          provider: k.provider,
+          status: k.status,
+          harmoniousDecision: k.harmonious_decision,
+          reason: k.harmonious_decision_reason,
+          liveness: k.liveness_status,
+          faceMatch: k.face_match_status,
+          addressCheck: k.address_check_status,
+          proofOfAddress: k.proof_of_address_status,
+          completedAt: k.completed_at,
+          expiresAt: k.expired_at,
+        })),
         aml: rows(aml).map((a: any) => ({ applicationId: a.application_id, provider: a.provider, status: a.status, completedAt: a.completed_at })),
         accreditation: rows(accreditation).map((a: any) => ({ applicationId: a.application_id, method: a.method, status: a.status, verifiedAt: a.verified_at, expiresAt: a.expires_at })),
       };
