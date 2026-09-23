@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import {
   getFundPerformance,
   removePerformanceEntry,
-  saveFundDistribution,
   saveFundValuation,
   type FundPerformance,
 } from "@/lib/performance.functions";
@@ -98,15 +97,11 @@ function CashFlowChart({ fund }: { fund: FundPerformance }) {
 
 function EntryForms({ fund, onDone }: { fund: FundPerformance; onDone: () => void }) {
   const saveValuation = useServerFn(saveFundValuation);
-  const saveDistribution = useServerFn(saveFundDistribution);
   const removeEntry = useServerFn(removePerformanceEntry);
 
   const [navAmount, setNavAmount] = useState("");
   const [navDate, setNavDate] = useState(today());
   const [navNote, setNavNote] = useState("");
-  const [distAmount, setDistAmount] = useState("");
-  const [distDate, setDistDate] = useState(today());
-  const [distNote, setDistNote] = useState("");
 
   const valuationMutation = useMutation({
     mutationFn: () =>
@@ -122,26 +117,6 @@ function EntryForms({ fund, onDone }: { fund: FundPerformance; onDone: () => voi
       toast.success("Fund value saved");
       setNavAmount("");
       setNavNote("");
-      onDone();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const distributionMutation = useMutation({
-    mutationFn: () =>
-      saveDistribution({
-        data: {
-          offering_id: fund.offering_id,
-          paid_on: distDate,
-          amount_cents: Math.round(Number(distAmount) * 100),
-          kind: "distribution",
-          note: distNote,
-        },
-      }),
-    onSuccess: () => {
-      toast.success("Distribution recorded");
-      setDistAmount("");
-      setDistNote("");
       onDone();
     },
     onError: (e: Error) => toast.error(e.message),
