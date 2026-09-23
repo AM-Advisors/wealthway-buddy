@@ -282,12 +282,12 @@ export default AddressInput;
 // ---------------------------------------------------------------------------
 
 export interface SnakeAddress {
-  address_line1?: string | null;
-  address_line2?: string | null;
-  city?: string | null;
-  region?: string | null;
-  postal_code?: string | null;
-  country?: string | null;
+  address_line1?: string | null | undefined;
+  address_line2?: string | null | undefined;
+  city?: string | null | undefined;
+  region?: string | null | undefined;
+  postal_code?: string | null | undefined;
+  country?: string | null | undefined;
 }
 
 export function addressFromSnake(form: SnakeAddress, entryMethod: "autocomplete" | "manual" = "manual"): AddressValue {
