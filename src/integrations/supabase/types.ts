@@ -13131,6 +13131,129 @@ export type Database = {
           },
         ]
       }
+      government_id_documents: {
+        Row: {
+          application_id: string
+          confirmed_at: string | null
+          created_at: string
+          document_type: string
+          file_name: string
+          id: string
+          investment_profile_id: string | null
+          kyc_verification_id: string | null
+          mime_type: string
+          person_id: string | null
+          side: string
+          size_bytes: number
+          status: string
+          storage_path: string
+          superseded_at: string | null
+          superseded_by: string | null
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          document_type: string
+          file_name: string
+          id?: string
+          investment_profile_id?: string | null
+          kyc_verification_id?: string | null
+          mime_type: string
+          person_id?: string | null
+          side: string
+          size_bytes: number
+          status?: string
+          storage_path: string
+          superseded_at?: string | null
+          superseded_by?: string | null
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          id?: string
+          investment_profile_id?: string | null
+          kyc_verification_id?: string | null
+          mime_type?: string
+          person_id?: string | null
+          side?: string
+          size_bytes?: number
+          status?: string
+          storage_path?: string
+          superseded_at?: string | null
+          superseded_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "government_id_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "government_id_documents_kyc_verification_id_fkey"
+            columns: ["kyc_verification_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_verifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "government_id_documents_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "government_id_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      government_id_events: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_role: string
+          created_at: string
+          detail: Json
+          document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_role: string
+          created_at?: string
+          detail?: Json
+          document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_role?: string
+          created_at?: string
+          detail?: Json
+          document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "government_id_events_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "government_id_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_check_results: {
         Row: {
           check_kind: Database["public"]["Enums"]["identity_check_kind"]

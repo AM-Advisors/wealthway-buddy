@@ -195,6 +195,19 @@ export const submitKyc = createServerFn({ method: "POST" })
     if (appError) throw new Error(appError.message);
     if (!application) throw new Error("No application found. Reload and try again.");
 
+    // The ID copy (or the verification provider's captured ID) must exist for this check.
+    const idEvidence = await (await import("@/lib/government-id.functions")).assertIdEvidence(
+      userId,
+      String(application.id),
+      {
+        documentType: data.id_document_type,
+        documentNumber: data.id_document_number,
+        issuingCountry: data.id_issuing_country,
+        expiration: data.id_expiration,
+      },
+    );
+
+
     const details = {
       legal_name: data.legal_name,
       email: data.email,
@@ -250,6 +263,7 @@ export const submitKyc = createServerFn({ method: "POST" })
       id_document_number_last4: data.id_document_number.slice(-4),
       id_issuing_country: data.id_issuing_country,
       id_expiration: data.id_expiration,
+      id_evidence: idEvidence.satisfiedBy,
       submitted_at: new Date().toISOString(),
     };
 

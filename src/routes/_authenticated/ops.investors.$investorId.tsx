@@ -1,6 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 
 import { OpsRecordPage } from "@/components/ops-record";
+import { GovernmentIdReview } from "@/components/government-id-review";
 
 export const Route = createFileRoute("/_authenticated/ops/investors/$investorId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -22,5 +23,10 @@ export const Route = createFileRoute("/_authenticated/ops/investors/$investorId"
 
 function RecordRoute() {
   const { investorId } = useParams({ from: "/_authenticated/ops/investors/$investorId" });
-  return <OpsRecordPage type="investor" id={investorId} />;
+  return (
+    <>
+      <OpsRecordPage type="investor" id={investorId} />
+      {/^[0-9a-f-]{36}$/i.test(investorId) ? <GovernmentIdReview investorUserId={investorId} /> : null}
+    </>
+  );
 }
