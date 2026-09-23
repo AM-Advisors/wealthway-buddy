@@ -37,6 +37,7 @@ export const EMPTY_ADDRESS: AddressValue = {
   line1: "",
   line2: "",
   city: "",
+  county: null,
   region: "",
   postalCode: "",
   country: "",
