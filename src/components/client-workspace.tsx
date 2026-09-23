@@ -93,6 +93,21 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
     );
   }, [data?.workspaces]);
 
+  // A remembered workspace the server no longer lists (revoked, expired,
+  // removed) is forgotten, along with any context chosen inside it.
+  useEffect(() => {
+    if (!data || !activeId) return;
+    if (!options.some((o) => o.id === activeId)) {
+      clearStoredClientContext();
+      try {
+        window.sessionStorage.removeItem(ACTIVE_KEY);
+      } catch {
+        /* storage unavailable */
+      }
+      setActiveId(null);
+    }
+  }, [data, options, activeId]);
+
   const resolvedActive = useMemo(() => {
     const stored = options.find((o) => o.id === activeId);
     return stored ?? options.find((o) => o.surface === "client") ?? options[0] ?? null;
