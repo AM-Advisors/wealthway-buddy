@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
+import { AttentionCenter } from "@/components/attention-center";
 import { ClientDashboard } from "@/components/client-dashboard";
+
 import { useClientPortal } from "@/components/client-portal-context";
 import { getClientRecords } from "@/lib/client-records.functions";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +73,11 @@ function ClientOverviewPage() {
       </div>
 
       <div className="mt-6">
+        <AttentionCenter workspace="company" />
+      </div>
+
+      <div className="mt-6">
+
         <ClientDashboard
           funds={funds}
           invoices={invoices}

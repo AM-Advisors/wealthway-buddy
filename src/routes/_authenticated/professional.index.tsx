@@ -79,8 +79,10 @@ function MyClients() {
           })}
         </ul>
       )}
-    </WorkspaceSection>
+      </WorkspaceSection>
+    </div>
   );
+
 }
 
 export const Route = createFileRoute("/_authenticated/professional/")({
