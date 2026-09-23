@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { AddressInput, addressFromSnake, addressToSnake } from "@/components/address-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -278,12 +279,25 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
           <Field id="date_of_birth" label="Date of birth" type="date" value={form["date_of_birth"]} onChange={set("date_of_birth")} />
           <Field id="tax_id" label="SSN or EIN" value={form["tax_id"]} onChange={set("tax_id")} />
           <Field id="entity_name" label="Entity name (if investing through one)" value={form["entity_name"]} onChange={set("entity_name")} />
-          <Field id="address_line1" label="Street address" value={form["address_line1"]} onChange={set("address_line1")} />
-          <Field id="address_line2" label="Address line 2" value={form["address_line2"]} onChange={set("address_line2")} />
-          <Field id="city" label="City" value={form["city"]} onChange={set("city")} />
-          <Field id="region" label="State / region" value={form["region"]} onChange={set("region")} />
-          <Field id="postal_code" label="Postal code" value={form["postal_code"]} onChange={set("postal_code")} />
-          <Field id="country" label="Country" value={form["country"]} onChange={set("country")} />
+          <div className="sm:col-span-2">
+            <AddressInput
+              idPrefix="room-kyc-address"
+              label="Residential address"
+              countryMode="free"
+              value={addressFromSnake({
+                address_line1: form["address_line1"],
+                address_line2: form["address_line2"],
+                city: form["city"],
+                region: form["region"],
+                postal_code: form["postal_code"],
+                country: form["country"],
+              })}
+              onChange={(next) => {
+                const snake = addressToSnake(next);
+                setForm((f) => ({ ...f, ...snake }));
+              }}
+            />
+          </div>
           <div className="space-y-2">
             <Label>ID document type</Label>
             <Select value={form["id_document_type"] ?? "passport"} onValueChange={set("id_document_type")}>

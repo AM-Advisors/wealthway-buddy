@@ -15,18 +15,13 @@ import {
   type OrgVerificationStatus,
 } from "@/lib/signatory-model";
 import { getOrganizationVerification, saveOrganizationProfile } from "@/lib/signatory.functions";
+import { AddressInput, addressFromSnake, addressToSnake } from "@/components/address-input";
 
 const FIELDS = [
   ["legal_name", "Legal name"],
   ["dba_name", "Trading / display name"],
   ["website", "Website"],
   ["jurisdiction", "Jurisdiction"],
-  ["address_line1", "Address"],
-  ["address_line2", "Address line 2"],
-  ["city", "City"],
-  ["region", "State / region"],
-  ["postal_code", "Postcode"],
-  ["country", "Country"],
   ["business_identifier", "Business identifier (EIN)"],
   ["registration_number", "Registration number"],
   ["license_number", "Licence number"],
@@ -95,6 +90,27 @@ function OrganizationVerification() {
                   Add yours under My credentials.
                 </p>
               ) : null}
+
+              <AddressInput
+                idPrefix={`org-${org.id}-address`}
+                label="Registered address"
+                description="Where the firm is registered. Google finding the address does not evidence that the firm operates there."
+                countryMode="free"
+                value={addressFromSnake({
+                  address_line1: value("address_line1"),
+                  address_line2: value("address_line2"),
+                  city: value("city"),
+                  region: value("region"),
+                  postal_code: value("postal_code"),
+                  country: value("country"),
+                })}
+                onChange={(next) =>
+                  setDrafts((prev) => ({
+                    ...prev,
+                    [org.id]: { ...(prev[org.id] ?? {}), ...addressToSnake(next) },
+                  }))
+                }
+              />
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {FIELDS.map(([key, label]) => (

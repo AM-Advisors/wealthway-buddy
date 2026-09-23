@@ -1,4 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  AddressInput,
+  addressFromSnake,
+  EMPTY_ADDRESS,
+  type AddressValue,
+} from "@/components/address-input";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -64,6 +70,12 @@ function ProfilePage() {
   const { data, isPending } = useQuery({ queryKey: ["my-identity"], queryFn: () => load() });
   const [newType, setNewType] = useState<InvestmentProfileType>("individual");
   const [newLabel, setNewLabel] = useState("");
+  const [address, setAddress] = useState<AddressValue>(EMPTY_ADDRESS);
+  const loadedPerson = (data?.person ?? null) as any;
+  useEffect(() => {
+    if (!loadedPerson) return;
+    setAddress(addressFromSnake(loadedPerson));
+  }, [loadedPerson]);
 
   const personMutation = useMutation({
     mutationFn: (form: any) => savePerson({ data: form }),
@@ -139,24 +151,19 @@ function ProfilePage() {
             <Input id="residence_country" name="residence_country" defaultValue={person.residence_country ?? ""} />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="address_line1">Residential address</Label>
-            <Input id="address_line1" name="address_line1" defaultValue={person.address_line1 ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="city">City</Label>
-            <Input id="city" name="city" defaultValue={person.city ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="region">State / region</Label>
-            <Input id="region" name="region" defaultValue={person.region ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="postal_code">Postal code</Label>
-            <Input id="postal_code" name="postal_code" defaultValue={person.postal_code ?? ""} />
-          </div>
-          <div>
-            <Label htmlFor="country">Country</Label>
-            <Input id="country" name="country" defaultValue={person.country ?? ""} />
+            <AddressInput
+              idPrefix="profile-address"
+              label="Residential address"
+              countryMode="free"
+              value={address}
+              onChange={setAddress}
+            />
+            <input type="hidden" name="address_line1" value={address.line1} />
+            <input type="hidden" name="address_line2" value={address.line2} />
+            <input type="hidden" name="city" value={address.city} />
+            <input type="hidden" name="region" value={address.region} />
+            <input type="hidden" name="postal_code" value={address.postalCode} />
+            <input type="hidden" name="country" value={address.country} />
           </div>
           <div className="sm:col-span-2">
             <Button type="submit" disabled={personMutation.isPending}>

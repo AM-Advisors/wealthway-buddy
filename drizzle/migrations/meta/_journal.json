@@ -190,6 +190,13 @@
       "when": 1790130735806,
       "tag": "0026_address_states_extend",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1790130912654,
+      "tag": "0027_shared_address_service",
+      "breakpoints": true
     }
   ]
 }

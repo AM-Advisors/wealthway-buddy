@@ -130,8 +130,14 @@ export function evaluateProofOfAddress(input: {
   documentIssueDate?: string | null;
   maxDocumentAgeDays?: number;
   asOf?: Date;
+  /**
+   * Server-side component comparison result. When supplied it replaces the
+   * string comparison, so "100 N Main St" and "100 North Main Street" are not
+   * treated as a mismatch. Never supplied by the browser.
+   */
+  addressMatchOverride?: MatchResult;
 }): ProofEvaluation {
-  const addressMatch = compareAddresses(input.onFile, input.extracted);
+  const addressMatch = input.addressMatchOverride ?? compareAddresses(input.onFile, input.extracted);
 
   if (input.providerStatus === "declined") {
     return {

@@ -1,13 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  ADDRESS_STATE_LABELS,
-  applyProofPolicy,
-  cleanAddress,
-  isCompleteAddress,
-  stateForEntry,
-} from "@/lib/address-validation";
+import { ADDRESS_KINDS, ADDRESS_STATE_DISPLAY, type AddressKind } from "@/lib/address-model";
+import { cleanAddress, isCompleteAddress } from "@/lib/address-validation";
 
 const addressInput = z.object({
   line1: z.string().min(3).max(200),
@@ -19,26 +14,55 @@ const addressInput = z.object({
   formatted: z.string().max(400).nullable().optional(),
   entryMethod: z.enum(["autocomplete", "manual"]).default("manual"),
   providerPlaceId: z.string().max(400).nullable().optional(),
+  kind: z.enum(ADDRESS_KINDS).default("residential"),
 });
 
-/** Address suggestions, proxied so the lookup key never reaches the browser. */
+/** What the browser is allowed to know about provider availability. */
+export const addressProviderStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const { addressCapabilities } = await import("@/lib/address-lookup.server");
+  return addressCapabilities();
+});
+
+/** Address suggestions, proxied so the lookup credential never reaches the browser. */
 export const suggestAddress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { query: string; country?: string | null }) =>
-    z.object({ query: z.string().max(200), country: z.string().length(2).nullable().optional() }).parse(input),
+  .inputValidator((input: { query: string; country?: string | null; sessionToken?: string | null }) =>
+    z
+      .object({
+        query: z.string().max(200),
+        country: z.string().length(2).nullable().optional(),
+        sessionToken: z.string().max(80).nullable().optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data }) => {
-    const { suggestAddresses, addressProviderConfigured } = await import("@/lib/address-lookup.server");
+    const { suggestAddresses, addressCapabilities } = await import("@/lib/address-lookup.server");
+    const caps = addressCapabilities();
     return {
-      configured: addressProviderConfigured(),
-      suggestions: await suggestAddresses(data.query, data.country ?? null),
+      ...caps,
+      suggestions: await suggestAddresses(data.query, data.country ?? null, data.sessionToken ?? null),
     };
   });
 
+/** Expands a chosen suggestion into structured fields the user can still edit. */
+export const resolveAddressSuggestion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { placeId: string; sessionToken?: string | null }) =>
+    z
+      .object({ placeId: z.string().min(1).max(400), sessionToken: z.string().max(80).nullable().optional() })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { resolveSuggestion } = await import("@/lib/address-lookup.server");
+    return await resolveSuggestion(data.placeId, data.sessionToken ?? null);
+  });
+
 /**
- * Records the person's residential address. Selecting a suggestion is a
- * convenience, never proof of residence: only a verified document can lift an
- * address to PROOF VERIFIED.
+ * Records the signed-in person's address.
+ *
+ * Selecting a suggestion is convenience, never proof of residence, and the
+ * browser can only ever assert the address text — the state, the provider
+ * verdict and the provenance are all decided on the server.
  */
 export const saveResidentialAddress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -53,61 +77,67 @@ export const saveResidentialAddress = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!person?.id) throw new Error("Complete your profile before adding an address.");
 
-    const clean = cleanAddress(data as any);
+    const clean = cleanAddress(data as Record<string, any>);
     if (!isCompleteAddress(clean)) throw new Error("Enter a street address and country.");
 
-    const { validateAddress } = await import("@/lib/address-lookup.server");
-    const validation = await validateAddress(clean);
-    const entry = stateForEntry({ entryMethod: data.entryMethod, validation });
-
     const { proofOfAddressRequired } = await import("@/lib/kyc-verification.server");
-    const poaRequired = await proofOfAddressRequired({
+    const proofRequired = await proofOfAddressRequired({
       personId: person.id,
       applicationId: null,
     }).catch(() => false);
-    const state = applyProofPolicy(entry.state, poaRequired);
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const nowIso = new Date().toISOString();
-
-    await supabaseAdmin
-      .from("person_addresses")
-      .update({ is_current: false, updated_at: nowIso })
-      .eq("person_id", person.id)
-      .eq("is_current", true);
-
-    const { data: inserted, error } = await supabaseAdmin
-      .from("person_addresses")
-      .insert({
-        person_id: person.id,
-        line1: clean.line1,
-        line2: clean.line2,
-        city: clean.city,
-        region: clean.region,
-        postal_code: clean.postalCode,
-        country: clean.country,
-        formatted: validation?.formatted ?? clean.formatted,
-        entry_method: data.entryMethod,
-        validation_provider: validation?.provider ?? null,
-        validation_result: validation
-          ? { verdict: validation.verdict, place_id: data.providerPlaceId ?? null, ...(validation.raw ?? {}) }
-          : { place_id: data.providerPlaceId ?? null },
-        state,
-        state_reason: entry.reason,
-        is_current: true,
-      })
-      .select("id, state")
-      .single();
-    if (error) throw new Error(error.message);
-
-    await supabaseAdmin.from("address_verification_events").insert({
-      address_id: inserted.id,
-      person_id: person.id,
-      from_state: null,
-      to_state: state,
-      source: data.entryMethod === "autocomplete" ? "lookup_provider" : "self_reported",
-      detail: { reason: entry.reason, provider: validation?.provider ?? null },
+    const { recordAddress } = await import("@/lib/address-service.server");
+    const result = await recordAddress({
+      ownerType: "person",
+      ownerId: person.id,
+      personId: person.id,
+      kind: data.kind as AddressKind,
+      address: clean,
+      entryMethod: data.entryMethod,
+      // The browser may only ever claim that the user typed or picked it.
+      source: "user_entered",
+      actorUserId: userId,
+      placeId: data.providerPlaceId ?? null,
+      proofRequired,
     });
 
-    return { id: inserted.id, state, label: ADDRESS_STATE_LABELS[state], reason: entry.reason };
+    return {
+      ...result,
+      label: ADDRESS_STATE_DISPLAY[result.state],
+      pending: result.status === "pending",
+    };
+  });
+
+/** The person's current and pending addresses, as shown in the portal. */
+export const myAddresses = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: person } = await supabase
+      .from("persons")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!person?.id) return { current: null, pending: null };
+
+    const { currentAddress, pendingAddress } = await import("@/lib/address-service.server");
+    const [current, pending] = await Promise.all([
+      currentAddress("person", person.id, "residential"),
+      pendingAddress("person", person.id, "residential"),
+    ]);
+    const view = (row: Record<string, any> | null) =>
+      row
+        ? {
+            id: row["id"] as string,
+            version: row["version"] as number,
+            formatted:
+              (row["formatted"] as string | null) ??
+              [row["line1"], row["city"], row["region"], row["postal_code"], row["country"]]
+                .filter(Boolean)
+                .join(", "),
+            state: row["state"] as string,
+            label: ADDRESS_STATE_DISPLAY[row["state"] as keyof typeof ADDRESS_STATE_DISPLAY] ?? row["state"],
+          }
+        : null;
+    return { current: view(current), pending: view(pending) };
   });

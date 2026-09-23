@@ -1,48 +1,94 @@
 /**
- * Server-side address lookup and validation.
+ * Address lookup and validation transport (server only).
  *
- * The provider key never reaches the browser: suggestions and validation are
- * proxied through the server. When no provider is configured the controlled
- * manual-entry path stays available — an address simply cannot reach the
- * VALIDATED state without provider evidence.
+ * Credentials never reach the browser: suggestions and validation are proxied
+ * through the server. Two credential routes are supported — the Lovable
+ * connector gateway, and a directly configured Google Maps Platform server
+ * key. When neither is configured, or the provider is unavailable, the
+ * controlled manual-entry path stays open and the address is simply queued for
+ * validation later. An outage never marks an address invalid.
  */
 
-import {
-  cleanAddress,
-  type AddressSuggestion,
-  type ProviderValidation,
-  type StructuredAddress,
-} from "@/lib/address-validation";
+import type { ProviderVerdict } from "@/lib/address-model";
+import { cleanAddress, type AddressSuggestion, type StructuredAddress } from "@/lib/address-validation";
 
-const PLACES_AUTOCOMPLETE = "https://places.googleapis.com/v1/places:autocomplete";
-const PLACES_DETAILS = "https://places.googleapis.com/v1/places/";
-const ADDRESS_VALIDATION = "https://addressvalidation.googleapis.com/v1:validateAddress";
+const GATEWAY = "https://connector-gateway.lovable.dev/google_maps";
+const DIRECT_PLACES = "https://places.googleapis.com";
+const DIRECT_VALIDATION = "https://addressvalidation.googleapis.com";
 
 export const ADDRESS_PROVIDER = "google_address_validation";
+export const AUTOCOMPLETE_PROVIDER = "google_places";
 
-function apiKey(): string | null {
-  const key = process.env["GOOGLE_PLACES_API_KEY"];
-  return key && key.trim() ? key.trim() : null;
+interface Transport {
+  mode: "gateway" | "direct";
+  placesUrl: (path: string) => string;
+  validationUrl: (path: string) => string;
+  headers: Record<string, string>;
+}
+
+/** Resolves credentials at call time; module scope never reads env. */
+function transport(): Transport | null {
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const connectorKey = process.env["GOOGLE_MAPS_API_KEY"];
+  if (lovableKey && connectorKey) {
+    return {
+      mode: "gateway",
+      placesUrl: (path) => `${GATEWAY}/places${path}`,
+      validationUrl: (path) => `${GATEWAY}/addressvalidation${path}`,
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": connectorKey,
+        "content-type": "application/json",
+      },
+    };
+  }
+  const direct = process.env["GOOGLE_PLACES_API_KEY"] ?? process.env["GOOGLE_ADDRESS_API_KEY"];
+  if (direct && direct.trim()) {
+    return {
+      mode: "direct",
+      placesUrl: (path) => `${DIRECT_PLACES}${path}`,
+      validationUrl: (path) => `${DIRECT_VALIDATION}${path}`,
+      headers: { "X-Goog-Api-Key": direct.trim(), "content-type": "application/json" },
+    };
+  }
+  return null;
 }
 
 export function addressProviderConfigured(): boolean {
-  return !!apiKey();
+  return transport() !== null;
 }
 
-/** Address suggestions for a partial entry. Empty when no provider is set up. */
+export function addressCapabilities() {
+  const t = transport();
+  return {
+    autocomplete: t !== null,
+    validation: t !== null,
+    providerLabel: t ? "Google Address Validation" : "Not configured",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Places autocomplete
+// ---------------------------------------------------------------------------
+
 export async function suggestAddresses(
   query: string,
   country?: string | null,
+  sessionToken?: string | null,
 ): Promise<AddressSuggestion[]> {
-  const key = apiKey();
-  if (!key || query.trim().length < 3) return [];
+  const t = transport();
+  if (!t || query.trim().length < 3) return [];
   try {
-    const res = await fetch(PLACES_AUTOCOMPLETE, {
+    const res = await fetch(t.placesUrl("/v1/places:autocomplete"), {
       method: "POST",
-      headers: { "content-type": "application/json", "X-Goog-Api-Key": key },
+      headers: {
+        ...t.headers,
+        "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text",
+      },
       body: JSON.stringify({
         input: query.trim().slice(0, 200),
         includedPrimaryTypes: ["street_address", "premise", "subpremise"],
+        ...(sessionToken ? { sessionToken } : {}),
         ...(country && /^[A-Za-z]{2}$/.test(country)
           ? { includedRegionCodes: [country.toUpperCase()] }
           : {}),
@@ -58,7 +104,7 @@ export async function suggestAddresses(
         return {
           id: String(place.placeId),
           description: String(place.text?.text ?? ""),
-          provider: ADDRESS_PROVIDER,
+          provider: AUTOCOMPLETE_PROVIDER,
         } satisfies AddressSuggestion;
       })
       .filter(Boolean)
@@ -72,7 +118,9 @@ function componentsFromGoogle(list: any[]): Partial<StructuredAddress> {
   const find = (type: string, short = false) => {
     const hit = list.find((c: any) => Array.isArray(c?.types) && c.types.includes(type));
     if (!hit) return null;
-    return String((short ? hit.shortText : hit.longText) ?? hit.longText ?? hit.shortText ?? "") || null;
+    return (
+      String((short ? hit.shortText : hit.longText) ?? hit.longText ?? hit.shortText ?? "") || null
+    );
   };
   const number = find("street_number");
   const route = find("route");
@@ -87,41 +135,69 @@ function componentsFromGoogle(list: any[]): Partial<StructuredAddress> {
 }
 
 /** Resolves a chosen suggestion into structured components. */
-export async function resolveSuggestion(placeId: string): Promise<Partial<StructuredAddress> | null> {
-  const key = apiKey();
-  if (!key || !placeId) return null;
+export async function resolveSuggestion(
+  placeId: string,
+  sessionToken?: string | null,
+): Promise<(Partial<StructuredAddress> & { placeId: string }) | null> {
+  const t = transport();
+  if (!t || !placeId) return null;
   try {
-    const res = await fetch(`${PLACES_DETAILS}${encodeURIComponent(placeId)}`, {
-      headers: {
-        "X-Goog-Api-Key": key,
-        "X-Goog-FieldMask": "formattedAddress,addressComponents",
-      },
+    const qs = sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : "";
+    const res = await fetch(t.placesUrl(`/v1/places/${encodeURIComponent(placeId)}${qs}`), {
+      headers: { ...t.headers, "X-Goog-FieldMask": "formattedAddress,addressComponents" },
     });
     if (!res.ok) return null;
     const body = (await res.json()) as any;
     const parts = componentsFromGoogle(
       Array.isArray(body?.addressComponents) ? body.addressComponents : [],
     );
-    return { ...parts, formatted: body?.formattedAddress ?? null };
+    return { ...parts, formatted: body?.formattedAddress ?? null, placeId };
   } catch {
     return null;
   }
 }
 
+// ---------------------------------------------------------------------------
+// Address validation
+// ---------------------------------------------------------------------------
+
+export interface ValidationOutcome {
+  provider: string;
+  verdict: ProviderVerdict;
+  formatted: string | null;
+  components: Partial<StructuredAddress>;
+  placeId: string | null;
+  warnings: string[];
+  raw: Record<string, unknown>;
+  validatedAt: string | null;
+}
+
+export function unavailableValidation(): ValidationOutcome {
+  return {
+    provider: ADDRESS_PROVIDER,
+    verdict: "unavailable",
+    formatted: null,
+    components: {},
+    placeId: null,
+    warnings: [],
+    raw: { reason: "validation_provider_unavailable" },
+    validatedAt: null,
+  };
+}
+
 /**
- * Validates a structured address. A provider that cannot confirm the address
- * yields "unresolved", which sends the address to review rather than through.
+ * Validates a structured address. A provider outage returns "unavailable"
+ * (address stays usable, queued for validation); a provider that actively
+ * cannot find the address returns "unresolved" (review).
  */
-export async function validateAddress(
-  address: StructuredAddress,
-): Promise<ProviderValidation | null> {
-  const key = apiKey();
-  if (!key) return null;
+export async function validateAddress(address: StructuredAddress): Promise<ValidationOutcome> {
+  const t = transport();
+  if (!t) return unavailableValidation();
   const clean = cleanAddress(address);
   try {
-    const res = await fetch(`${ADDRESS_VALIDATION}?key=${encodeURIComponent(key)}`, {
+    const res = await fetch(t.validationUrl("/v1:validateAddress"), {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: t.headers,
       body: JSON.stringify({
         address: {
           regionCode: clean.country,
@@ -132,16 +208,27 @@ export async function validateAddress(
         },
       }),
     });
-    if (!res.ok) {
-      return { provider: ADDRESS_PROVIDER, verdict: "unresolved", formatted: null };
-    }
+    if (!res.ok) return unavailableValidation();
+
     const body = (await res.json()) as any;
     const result = body?.result ?? {};
-    const verdict = result?.verdict ?? {};
+    const verdictBlock = result?.verdict ?? {};
     const formatted = result?.address?.formattedAddress ?? null;
-    const complete = verdict?.addressComplete === true;
-    const granularity = String(verdict?.validationGranularity ?? "");
-    const confirmed = ["PREMISE", "SUB_PREMISE", "PREMISE_PROXIMITY"].includes(granularity);
+    const complete = verdictBlock?.addressComplete === true;
+    const granularity = String(verdictBlock?.validationGranularity ?? "");
+    const confirmed = ["PREMISE", "SUB_PREMISE"].includes(granularity);
+    const located = ["PREMISE", "SUB_PREMISE", "PREMISE_PROXIMITY", "BLOCK", "ROUTE"].includes(
+      granularity,
+    );
+
+    const warnings: string[] = [];
+    if (verdictBlock?.hasUnconfirmedComponents) warnings.push("Some parts of the address could not be confirmed.");
+    if (verdictBlock?.hasInferredComponents) warnings.push("Some parts of the address were inferred by the provider.");
+    if (verdictBlock?.hasReplacedComponents) warnings.push("Some parts of the address were replaced by the provider.");
+    const missing: string[] = Array.isArray(result?.address?.missingComponentTypes)
+      ? result.address.missingComponentTypes.map((m: unknown) => String(m))
+      : [];
+    if (missing.length) warnings.push(`Missing: ${missing.join(", ")}`);
 
     const components = componentsFromGoogle(
       (result?.address?.addressComponents ?? []).map((c: any) => ({
@@ -151,19 +238,31 @@ export async function validateAddress(
       })),
     );
 
+    let verdict: ProviderVerdict;
+    if (complete && confirmed && warnings.length === 0) verdict = "validated";
+    else if (complete && confirmed) verdict = "validation_warning" as ProviderVerdict;
+    else if (formatted && located) verdict = warnings.length ? "warning" : "normalized";
+    else if (formatted) verdict = "located";
+    else verdict = "unresolved";
+    if ((verdict as string) === "validation_warning") verdict = "warning";
+
     return {
       provider: ADDRESS_PROVIDER,
-      verdict: complete && confirmed ? "validated" : formatted ? "normalized" : "unresolved",
+      verdict,
       formatted,
       components,
+      placeId: result?.geocode?.placeId ?? null,
+      warnings,
       raw: {
         granularity,
         addressComplete: complete,
-        hasUnconfirmedComponents: verdict?.hasUnconfirmedComponents ?? null,
-        hasInferredComponents: verdict?.hasInferredComponents ?? null,
+        hasUnconfirmedComponents: verdictBlock?.hasUnconfirmedComponents ?? null,
+        hasInferredComponents: verdictBlock?.hasInferredComponents ?? null,
+        missingComponentTypes: missing,
       },
+      validatedAt: new Date().toISOString(),
     };
   } catch {
-    return { provider: ADDRESS_PROVIDER, verdict: "unresolved", formatted: null };
+    return unavailableValidation();
   }
 }
