@@ -316,3 +316,41 @@ describe("database policies", () => {
     }
   });
 });
+
+/* ---------------- Consolidation Stage 3: acceptance semantics ---------------- */
+describe("Stage 3 — acceptance is required before a delegation authorizes", () => {
+  const pro = (n: number) => `77777777-7777-4777-8777-00000000000${n}`;
+
+  for (const [n, state] of [
+    [1, "awaiting_acceptance"],
+    [2, "renewal_required"],
+    [3, "declined"],
+  ] as const) {
+    it(`an ${state} delegation authorizes nothing`, async () => {
+      delegation({ delegate_user_id: pro(n), acceptance_state: state, authority_level: "assist" }, ["view_profile"]);
+      const res = await canAct(pro(n), "view_profile", { type: "person", id: PRINCIPAL_A });
+      expect(res.allowed).toBe(false);
+    });
+  }
+
+  it("an accepted delegation keeps working", async () => {
+    delegation({ delegate_user_id: pro(4), acceptance_state: "accepted", authority_level: "assist" }, ["view_profile"]);
+    const res = await canAct(pro(4), "view_profile", { type: "person", id: PRINCIPAL_A });
+    expect(res.allowed).toBe(true);
+  });
+
+  it("a not_required (view-level) delegation keeps working", async () => {
+    delegation({ delegate_user_id: pro(5) }, ["view_profile"]);
+    expect((await canAct(pro(5), "view_profile", { type: "person", id: PRINCIPAL_A })).allowed).toBe(true);
+  });
+
+  it("an accepted Client A delegation never reaches Client B", async () => {
+    delegation({ delegate_user_id: pro(6), acceptance_state: "accepted" }, ["view_profile"]);
+    expect((await canAct(pro(6), "view_profile", { type: "person", id: PRINCIPAL_B })).allowed).toBe(false);
+  });
+
+  it("a missing acceptance state is refused, not assumed accepted", async () => {
+    delegation({ delegate_user_id: pro(7), acceptance_state: null }, ["view_profile"]);
+    expect((await canAct(pro(7), "view_profile", { type: "person", id: PRINCIPAL_A })).allowed).toBe(false);
+  });
+});
