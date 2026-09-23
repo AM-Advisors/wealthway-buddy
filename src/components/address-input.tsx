@@ -47,6 +47,11 @@ interface Props {
   description?: string;
   disabled?: boolean;
   idPrefix?: string;
+  /**
+   * "iso2" keeps the strict two-letter code used by the verification records;
+   * "free" preserves existing forms that store a country name.
+   */
+  countryMode?: "iso2" | "free";
 }
 
 function newSessionToken() {
@@ -64,6 +69,7 @@ export function AddressInput({
   description,
   disabled,
   idPrefix = "addr",
+  countryMode = "iso2",
 }: Props) {
   const suggest = useServerFn(suggestAddress);
   const resolve = useServerFn(resolveAddressSuggestion);
@@ -240,13 +246,17 @@ export function AddressInput({
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`${idPrefix}-country`}>Country (2-letter code)</Label>
+            <Label htmlFor={`${idPrefix}-country`}>
+              {countryMode === "iso2" ? "Country (2-letter code)" : "Country"}
+            </Label>
             <Input
               id={`${idPrefix}-country`}
               value={value.country}
-              maxLength={2}
+              maxLength={countryMode === "iso2" ? 2 : 80}
               disabled={disabled}
-              onChange={(e) => set({ country: e.target.value.toUpperCase() })}
+              onChange={(e) =>
+                set({ country: countryMode === "iso2" ? e.target.value.toUpperCase() : e.target.value })
+              }
             />
           </div>
           <div className="sm:col-span-2">
