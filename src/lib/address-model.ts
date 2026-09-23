@@ -307,6 +307,8 @@ export type ProviderVerdict = "validated" | "normalized" | "located" | "warning"
  * outage never invalidates an address: it stays entered and is picked up for
  * validation later.
  */
+export const VALIDATION_PENDING_REASON = "Address validation pending.";
+
 export function stateForVerdict(
   verdict: ProviderVerdict | null,
   entryMethod: "autocomplete" | "manual",
@@ -315,11 +317,27 @@ export function stateForVerdict(
     case "validated":
       return { state: "validated", reason: "Confirmed by the address validation provider." };
     case "normalized":
-      return { state: "normalized", reason: "Standardised by the address validation provider." };
     case "located":
-      return { state: "located", reason: "Found by the address provider but not fully confirmed." };
-    case "warning":
-      return { state: "validation_warning", reason: "The address provider returned warnings about this address." };
+    case "warning": {
+      // A manually typed address is never lifted to a provider-confirmed state
+      // on a partial result: it stays flagged for validation or review.
+      if (entryMethod === "manual") {
+        return {
+          state: "review_required",
+          reason: "Entered manually and not confirmed by the validation provider; validation required.",
+        };
+      }
+      if (verdict === "normalized") {
+        return { state: "normalized", reason: "Standardised by the address validation provider." };
+      }
+      if (verdict === "located") {
+        return { state: "located", reason: "Found by the address provider but not fully confirmed." };
+      }
+      return {
+        state: "validation_warning",
+        reason: "The address provider returned warnings about this address.",
+      };
+    }
     case "unresolved":
       return { state: "review_required", reason: "The address provider could not locate this address." };
     case "unavailable":
@@ -329,10 +347,23 @@ export function stateForVerdict(
         state: "entered",
         reason:
           entryMethod === "manual"
-            ? "Entered manually; queued for validation."
-            : "Selected from suggestions; queued for validation.",
+            ? `${VALIDATION_PENDING_REASON} Entered manually; queued for validation.`
+            : `${VALIDATION_PENDING_REASON} Selected from suggestions; queued for validation.`,
       };
   }
+}
+
+/**
+ * True when an address should be picked up again by reconciliation — it was
+ * saved while the validation provider was unreachable, so it is neither
+ * validated nor in review, just waiting.
+ */
+export function needsRevalidation(
+  state: AddressRecordState,
+  verdict: ProviderVerdict | null,
+): boolean {
+  if (state !== "entered" && state !== "proof_required") return false;
+  return verdict === null || verdict === "unavailable";
 }
 
 /** Layers Harmonious proof policy on top of the captured state. */
