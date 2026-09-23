@@ -90,7 +90,7 @@ export function InvestorDistributions() {
             {lines.map((l) => (
               <div key={l.id} className="rounded-md border p-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{money(l.netCents)} paid to you</span>
+                  <span className="font-medium">{money(l.netCents)} {l.status === "Completed" ? "paid to you" : "net to you"}</span>
                   <Badge variant="outline">{STATUS_LABEL[l.status] ?? l.status}</Badge>
                   {l.paymentDate ? <Badge variant="outline">{l.paymentDate}</Badge> : null}
                 </div>

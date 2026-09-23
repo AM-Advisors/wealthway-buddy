@@ -20,6 +20,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, type OnboardingActor } from "@/lib/investor-onboarding.server";
 import { commitmentAsOf, type CommitmentEvent } from "@/lib/allocation-model";
 import { assertNoHold } from "@/lib/compliance-holds.functions";
+import { capabilitiesFor, hasOperationsEntry } from "@/lib/ops-capabilities";
 import { ledgerBookForOffering } from "@/lib/accounting.server";
 import {
   advanceReconciliationJournal,
@@ -33,6 +34,20 @@ import {
   canActOnDistribution,
   capitalAccountEffect,
   changedDestinationFields,
+  complianceGateBlockers,
+  investorPaymentLabel,
+  matchAdvancesSettlement,
+  matchOutbound,
+  operationsStage,
+  OPERATIONS_STAGE_LABELS,
+  reversalRequestError,
+  snapshotHash,
+  staffCapabilityError,
+  withholdingReviewBlockers,
+  type BankCandidate,
+  type DistributionAction,
+  type EconomicSnapshot,
+  type EvidenceState,
   checkBatchBalance,
   coolingOffSatisfied,
   coolingOffUntil,
@@ -75,30 +90,53 @@ function fail(message: string): never {
 
 // ------------------------------------------------------------- authority
 
-async function actorFor(userId: string): Promise<OnboardingActor> {
-  return onboardingActor(userId);
+type DistributionActor = OnboardingActor & { capabilities: string[] };
+
+/**
+ * Authority is resolved from authoritative role records on every call. Being
+ * "staff" grants read visibility only; every action needs its own granular
+ * Operations capability (see DISTRIBUTION_CAPABILITY).
+ */
+async function actorFor(userId: string): Promise<DistributionActor> {
+  const base = await onboardingActor(userId);
+  const { data: roles } = await db().from("user_roles").select("role").eq("user_id", userId);
+  const list = ((roles ?? []) as { role: string }[]).map((r) => String(r.role));
+  const capabilities = hasOperationsEntry(list) ? capabilitiesFor(list) : [];
+  return {
+    ...base,
+    capabilities,
+    isStaff: capabilities.includes("capital:see") || capabilities.includes("accounting:see"),
+  };
 }
 
-async function assertStaff(userId: string) {
+async function assertStaff(userId: string, action: DistributionAction | "see" = "see") {
   const actor = await actorFor(userId);
   if (!actor.isStaff) forbid("Harmonious distribution authority is required.");
+  if (action !== "see") {
+    const error = staffCapabilityError(actor.capabilities, action);
+    if (error) forbid(error);
+  }
   return actor;
 }
 
 async function roleForOffering(
   userId: string,
   offeringId: string,
-): Promise<{ actor: OnboardingActor; role: DistributionActorRole }> {
+): Promise<{ actor: DistributionActor; role: DistributionActorRole }> {
   const actor = await actorFor(userId);
   if (actor.isStaff) return { actor, role: "harmonious" };
   if (actor.managedOfferingIds.includes(offeringId)) return { actor, role: "manager" };
   return { actor, role: "investor" };
 }
 
-async function assertCan(userId: string, offeringId: string, action: Parameters<typeof canActOnDistribution>[1]) {
+async function assertCan(userId: string, offeringId: string, action: DistributionAction) {
   const { actor, role } = await roleForOffering(userId, offeringId);
   const verdict = canActOnDistribution(role, action);
   if (!verdict.allowed) forbid(verdict.reason ?? "you do not have authority for this action.");
+  if (role === "harmonious") {
+    const error = staffCapabilityError(actor.capabilities, action);
+    if (error) forbid(error);
+  }
   return { actor, role };
 }
 
@@ -448,7 +486,7 @@ export async function verifyPaymentInstruction(
   userId: string,
   input: { changeId: string; method: string; independentNoticeChannel: string },
 ) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "review");
   const { data: change } = await db()
     .from("payment_instruction_changes")
     .select("*")
@@ -492,7 +530,7 @@ export async function verifyPaymentInstruction(
 
 /** Harmonious reviews, then a different person approves the new destination. */
 export async function reviewPaymentInstruction(userId: string, changeId: string) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "review");
   const { data: change } = await db()
     .from("payment_instruction_changes")
     .select("*")
@@ -521,7 +559,7 @@ export async function approvePaymentInstruction(
   userId: string,
   input: { changeId: string; waiveCoolingOff?: boolean; waiverReason?: string | null },
 ) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "final_approve");
   const { data: change } = await db()
     .from("payment_instruction_changes")
     .select("*")
@@ -983,6 +1021,152 @@ export async function proposeDistribution(
   return { batchId: String(batch.id), balance, recipients: entitlement.lines.length };
 }
 
+// ------------------------------------------------ D1 compliance evidence
+
+const CLEAR_STATUSES = ["cleared", "clear", "passed", "approved", "verified", "accepted", "received", "valid", "on_file", "reviewed"];
+const BLOCKED_STATUSES = ["rejected", "failed", "blocked", "declined", "hit", "confirmed_match"];
+
+function evidenceFrom(status: string | null | undefined): EvidenceState {
+  if (!status) return "unknown";
+  const v = String(status).toLowerCase();
+  if (CLEAR_STATUSES.includes(v)) return "clear";
+  if (BLOCKED_STATUSES.includes(v)) return "blocked";
+  if (v === "expired") return "expired";
+  return "unknown";
+}
+
+/**
+ * Reads the authoritative identity, AML, sanctions and tax records for one
+ * line. Anything that has no authoritative record comes back "unknown", which
+ * the gate turns into REVIEW_REQUIRED — never an assumed pass.
+ */
+async function identityEvidenceForLine(line: any, batch: any) {
+  const out = { kyc: "unknown" as EvidenceState, aml: "unknown" as EvidenceState, sanctions: "unknown" as EvidenceState, taxDocument: "missing" as EvidenceState };
+  if (line.investor_user_id) {
+    const { data: onboarding } = await db()
+      .from("investor_onboardings")
+      .select("person_id")
+      .eq("offering_id", batch.offering_id)
+      .eq("investor_user_id", line.investor_user_id)
+      .not("person_id", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (onboarding?.person_id) {
+      const { data: checks } = await db()
+        .from("identity_check_results")
+        .select("check_kind, harmonious_status, evaluated_at")
+        .eq("person_id", onboarding.person_id)
+        .order("evaluated_at", { ascending: false });
+      const latest = (kind: string) => ((checks ?? []) as any[]).find((c) => String(c.check_kind) === kind);
+      out.kyc = evidenceFrom(latest("identity")?.harmonious_status);
+      out.aml = evidenceFrom(latest("aml")?.harmonious_status);
+      // The AML screening is the sanctions-list screening; a sanctions hold overrides it below.
+      out.sanctions = out.aml;
+    }
+  }
+  const { data: sanctionHolds } = await db()
+    .from("compliance_holds")
+    .select("id, kind")
+    .eq("status", "active")
+    .in("kind", ["sanctions_concern", "aml_concern"])
+    .or([`offering_id.eq.${batch.offering_id}`, line.investor_user_id ? `subject_user_id.eq.${line.investor_user_id}` : null].filter(Boolean).join(","));
+  for (const h of (sanctionHolds ?? []) as any[]) {
+    if (String(h.kind) === "sanctions_concern") out.sanctions = "blocked";
+    if (String(h.kind) === "aml_concern") out.aml = "blocked";
+  }
+  let taxQuery = db().from("investor_tax_profiles").select("documentation_status, documentation_expires_on").order("updated_at", { ascending: false }).limit(1);
+  taxQuery = line.investment_profile_id ? taxQuery.eq("investment_profile_id", line.investment_profile_id) : taxQuery.eq("investor_user_id", line.investor_user_id ?? "00000000-0000-0000-0000-000000000000");
+  const { data: tax } = await taxQuery.maybeSingle();
+  if (tax) {
+    if (tax.documentation_expires_on && String(tax.documentation_expires_on) < today()) out.taxDocument = "expired";
+    else out.taxDocument = evidenceFrom(tax.documentation_status);
+  }
+  return out;
+}
+
+async function openMaterialAccountingExceptions(offeringId: string) {
+  const { count } = await db()
+    .from("accounting_exceptions")
+    .select("id", { count: "exact", head: true })
+    .eq("offering_id", offeringId)
+    .eq("is_material", true)
+    .neq("status", "resolved");
+  return Number(count ?? 0);
+}
+
+function economicSnapshotFor(batch: any, lines: any[]): EconomicSnapshot {
+  return {
+    allocationRunId: batch.allocation_run_id ?? null,
+    navVersionId: batch.nav_version_id ?? null,
+    distributionType: String(batch.distribution_type ?? "ordinary"),
+    calculatedAt: nowIso(),
+    lines: lines.map((l) => {
+      const isRoc = String(l.distribution_type ?? batch.distribution_type) === "return_of_capital";
+      const detail = (l.entitlement_detail ?? {}) as Record<string, any>;
+      return {
+        lineId: String(l.id),
+        investorUserId: l.investor_user_id ?? null,
+        investmentProfileId: l.investment_profile_id ?? null,
+        positionId: l.position_id ?? null,
+        grossCents: Number(l.gross_cents),
+        returnOfCapitalCents: isRoc ? Number(l.gross_cents) : (typeof detail['returnOfCapitalCents'] === "number" ? detail['returnOfCapitalCents'] : null),
+        incomeGainCents: isRoc ? 0 : (typeof detail['incomeGainCents'] === "number" ? detail['incomeGainCents'] : null),
+        withholdingCents: Number(l.withholding_cents),
+        feeCents: Number(l.fee_cents ?? 0),
+        netCents: Number(l.net_cents),
+        capitalAccountSource: l.capital_account_cents != null ? `capital_account_cents:${l.capital_account_cents}` : null,
+      };
+    }),
+  };
+}
+
+/** Harmonious tax reviews the withholding used. Hard-coded rules are an aid, not authority. */
+export async function reviewDistributionWithholding(userId: string, batchId: string) {
+  const batch = await batchRow(batchId);
+  const actor = await assertStaff(userId, "review_withholding");
+  if (["approved", "executing", "completed", "superseded", "cancelled"].includes(String(batch.status))) {
+    fail("Withholding on an approved distribution is frozen.");
+  }
+  const { data: lines } = await db().from("distribution_lines").select("*").eq("batch_id", batchId);
+  const { data: withholdings } = await db()
+    .from("distribution_withholdings")
+    .select("*")
+    .in("distribution_line_id", ((lines ?? []) as any[]).map((l) => l.id));
+  const evidence = await Promise.all(((lines ?? []) as any[]).map((l) => identityEvidenceForLine(l, batch)));
+  const blockers = withholdingReviewBlockers({
+    reviewedBy: actor.userId,
+    preparedBy: batch.prepared_by ? String(batch.prepared_by) : null,
+    lines: evidence.map((e) => ({ taxDocument: e.taxDocument, taxDocumentRequired: true })),
+  });
+  if (blockers.length > 0) fail(blockers.join(" "));
+  const basis = {
+    ruleSource: "default_calculation_aid",
+    authoritative: false,
+    reviewedAs: "reviewed_input",
+    lines: ((lines ?? []) as any[]).map((l) => ({
+      lineId: String(l.id),
+      withholdingCents: Number(l.withholding_cents),
+      detail: ((withholdings ?? []) as any[])
+        .filter((w) => String(w.distribution_line_id) === String(l.id))
+        .map((w) => ({ type: w.withholding_type, rateBps: w.rate_bps, amountCents: w.amount_cents, basisCents: w.basis_cents, form: w.documentation_form, reason: w.determination_reason })),
+    })),
+  };
+  await db()
+    .from("distribution_batches")
+    .update({ withholding_basis: basis, withholding_reviewed_by: actor.userId, withholding_reviewed_at: nowIso() })
+    .eq("id", batchId);
+  await recordEvent({
+    offeringId: batch.offering_id,
+    batchId,
+    event: "distribution_withholding_reviewed",
+    detail: basis,
+    actorUserId: actor.userId,
+    actorRole: "harmonious",
+  });
+  return { ok: true };
+}
+
 async function batchRow(batchId: string) {
   const { data } = await db().from("distribution_batches").select("*").eq("id", batchId).maybeSingle();
   if (!data) fail("That distribution was not found.");
@@ -1136,7 +1320,7 @@ export async function adjustDistributionLine(
     requestedByUserId: string;
   },
 ) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "correct");
   const { data: line } = await db()
     .from("distribution_lines")
     .select("*")
@@ -1232,6 +1416,30 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
   });
   if (chainError) fail(chainError);
 
+  // D1: withholding must be a reviewed input, and identity/tax evidence must be current.
+  if (!batch.withholding_reviewed_by) fail("Withholding has not been reviewed by Harmonious tax.");
+  const { data: approvalLines } = await db().from("distribution_lines").select("*").eq("batch_id", batch.id);
+  const identityBlockers: string[] = [];
+  for (const l of (approvalLines ?? []) as any[]) {
+    const ev = await identityEvidenceForLine(l, batch);
+    const gate = complianceGateBlockers({
+      ...ev,
+      taxDocumentRequired: true,
+      destinationVerified: true,
+      coolingOffSatisfied: true,
+      openAccountingExceptions: 0,
+      availableCashCents: Number.MAX_SAFE_INTEGER,
+      netPaymentCents: 0,
+      batchBalances: true,
+      withholdingReviewed: true,
+    });
+    for (const g of gate) identityBlockers.push(`${l.display_name ?? "Investor"}: ${g.reason}`);
+  }
+  if (identityBlockers.length > 0) fail(identityBlockers.join(" "));
+
+  const snapshot = economicSnapshotFor(batch, (approvalLines ?? []) as any[]);
+  const frozenHash = snapshotHash(snapshot);
+
   if (String(batch.status) !== "final_approval") {
     const move = batchTransitionError(String(batch.status) as BatchStatus, "final_approval");
     if (move) fail(move);
@@ -1241,7 +1449,14 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
 
   await db()
     .from("distribution_batches")
-    .update({ status: "approved", final_approved_by: actor.userId, final_approved_at: nowIso() })
+    .update({
+      status: "approved",
+      final_approved_by: actor.userId,
+      final_approved_at: nowIso(),
+      economic_snapshot: batch.economic_snapshot_hash ? batch.economic_snapshot : snapshot,
+      economic_snapshot_hash: batch.economic_snapshot_hash ?? frozenHash,
+      economic_snapshot_at: batch.economic_snapshot_at ?? nowIso(),
+    })
     .eq("id", batch.id);
   await db()
     .from("distribution_lines")
@@ -1254,6 +1469,7 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
     event: "distribution_final_approved",
     fromStatus: String(batch.status),
     toStatus: "approved",
+    detail: { economicSnapshotHash: batch.economic_snapshot_hash ?? frozenHash },
     actorUserId: actor.userId,
     actorRole: "harmonious",
   });
@@ -1263,7 +1479,7 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
 export async function supersedeDistribution(userId: string, batchId: string, reason: string) {
   const batch = await batchRow(batchId);
   await assertCan(userId, String(batch.offering_id), "correct");
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "correct");
   if (!reason || reason.trim().length < 8) fail("A correction needs a written reason.");
 
   const { data: created, error } = await db()
@@ -1405,8 +1621,17 @@ export async function distributionExecutionCheck(userId: string, lineId: string)
  */
 export async function executeDistributionPayment(
   userId: string,
-  input: { lineId: string; provider?: string; providerPaymentId?: string | null },
+  input: { lineId: string; provider?: string; providerPaymentId?: string | null; externalReference?: string | null },
 ) {
+  // D1: this records a bank transfer a person already initiated outside the
+  // application. The application never sends money.
+  if (input.provider && input.provider !== "manual_bank") {
+    fail("Only a manually initiated bank transfer can be recorded. No payment provider is connected.");
+  }
+  const externalReference = (input.externalReference ?? input.providerPaymentId ?? "").trim();
+  if (externalReference.length < 3) {
+    fail("Enter the bank's reference for the transfer you initiated outside Harmonious.");
+  }
   const { data: line } = await db()
     .from("distribution_lines")
     .select("*")
@@ -1423,6 +1648,27 @@ export async function executeDistributionPayment(
 
   const { facts, instruction } = await executionFactsForLine(line, batch);
   const blockers = executionBlockers(facts);
+  const ev = await identityEvidenceForLine(line, batch);
+  const gate = complianceGateBlockers({
+    ...ev,
+    taxDocumentRequired: true,
+    destinationVerified: facts.destinationVerified,
+    coolingOffSatisfied: !blockers.some((b) => /cooling/i.test(b)),
+    openAccountingExceptions: await openMaterialAccountingExceptions(String(batch.offering_id)),
+    availableCashCents: facts.availableCashCents,
+    netPaymentCents: facts.netPaymentCents,
+    batchBalances: facts.batchBalances,
+    withholdingReviewed: Boolean(batch.withholding_reviewed_by),
+  });
+  for (const g of gate) if (!blockers.includes(g.reason)) blockers.push(g.reason);
+  if (!batch.economic_snapshot_hash) blockers.push("The economic calculation was not frozen at approval.");
+  if (
+    instruction &&
+    line.payment_instruction_version != null &&
+    Number(instruction.version) !== Number(line.payment_instruction_version)
+  ) {
+    blockers.push("The destination changed after approval; the approval must be renewed.");
+  }
   if (blockers.length > 0) {
     await raiseException({
       offeringId: batch.offering_id,
@@ -1473,8 +1719,10 @@ export async function executeDistributionPayment(
       batch_id: batch.id,
       offering_id: batch.offering_id,
       attempt,
-      provider: input.provider ?? "manual_bank",
+      provider: "manual_bank",
       provider_payment_id: input.providerPaymentId ?? null,
+      external_reference: externalReference,
+      recorded_as: "external_bank_action",
       idempotency_key: `distribution:${line.id}:${attempt}`,
       payment_instruction_id: instruction?.id ?? null,
       payment_instruction_version: instruction?.version ?? null,
@@ -1507,7 +1755,7 @@ export async function executeDistributionPayment(
     distributionLineId: String(line.id),
     paymentId: String(payment.id),
     instructionId: instruction?.id ?? null,
-    event: "distribution_payment_submitted",
+    event: "distribution_external_transfer_recorded",
     toStatus: "submitted",
     detail: {
       amountCents: Number(line.net_cents),
@@ -1670,40 +1918,116 @@ export async function recordProviderEvent(input: {
 
 // ----------------------------------------------------------- reconciliation
 
-/** Hands confirmed outbound cash to the reconciliation engine already in place. */
+/**
+ * Step 1 of outbound reconciliation (the reconciler). Evaluates the selected
+ * bank transaction against every plausible candidate using independent
+ * authoritative fields; amount alone never matches. Nothing is approved here.
+ */
 export async function reconcileDistributionPayment(
   userId: string,
   input: { paymentId: string; bankTransactionId: string },
 ) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "reconcile");
   const { data: payment } = await db()
     .from("distribution_payments")
     .select("*")
     .eq("id", input.paymentId)
     .maybeSingle();
   if (!payment) fail("That payment was not found.");
-  if (String(payment.status) !== "confirmed") {
-    fail("Only a confirmed payment can be reconciled.");
+  if (!["submitted", "confirmed"].includes(String(payment.status))) {
+    fail("Only a recorded or bank-confirmed payment can be reconciled.");
   }
+  if (payment.reconciliation_id) fail("This payment already has a reconciliation.");
 
-  const { data: txn } = await db()
+  const chainError = makerCheckerError(paymentChain(payment), {
+    step: "reconciled",
+    actor: { userId: actor.userId, role: "harmonious" },
+  });
+  if (chainError) fail(chainError);
+
+  const { data: selected } = await db()
     .from("bank_transactions")
     .select("*")
     .eq("id", input.bankTransactionId)
     .maybeSingle();
-  if (!txn) fail("That bank transaction was not found.");
-  if (String(txn.offering_id) !== String(payment.offering_id)) {
-    fail("That bank transaction belongs to a different fund.");
-  }
-  if (Math.abs(Number(txn.amount_cents)) !== Number(payment.submitted_amount_cents)) {
+  if (!selected) fail("That bank transaction was not found.");
+
+  const { data: batch } = await db()
+    .from("distribution_batches")
+    .select("source_bank_account_id")
+    .eq("id", payment.batch_id)
+    .maybeSingle();
+  const { data: others } = await db()
+    .from("bank_transactions")
+    .select("*")
+    .eq("offering_id", payment.offering_id)
+    .in("amount_cents", [Number(payment.submitted_amount_cents), -Number(payment.submitted_amount_cents)])
+    .limit(50);
+  const { data: taken } = await db()
+    .from("distribution_payments")
+    .select("bank_transaction_id")
+    .not("bank_transaction_id", "is", null)
+    .neq("id", payment.id);
+  const takenIds = new Set(((taken ?? []) as any[]).map((t) => String(t.bank_transaction_id)));
+
+  const toCandidate = (t: any): BankCandidate => ({
+    id: String(t.id),
+    offeringId: t.offering_id ?? null,
+    bankAccountId: t.bank_account_id ?? null,
+    amountCents: Number(t.amount_cents),
+    direction: t.direction ?? null,
+    currency: t.currency ?? null,
+    counterpartyFingerprint: t.counterparty_fingerprint ?? null,
+    reference: t.reference ?? t.name ?? t.description ?? null,
+    postedOn: t.posted_on ?? null,
+    alreadyMatched:
+      takenIds.has(String(t.id)) ||
+      Boolean(t.matched_application_id || t.matched_invoice_id || t.matched_wire_request_id),
+  });
+  const pool = new Map<string, BankCandidate>();
+  for (const t of (others ?? []) as any[]) pool.set(String(t.id), toCandidate(t));
+  pool.set(String(selected.id), toCandidate(selected));
+
+  const result = matchOutbound(
+    {
+      offeringId: String(payment.offering_id),
+      sourceBankAccountId: batch?.source_bank_account_id ?? null,
+      amountCents: Number(payment.submitted_amount_cents),
+      currency: String(payment.submitted_currency ?? "USD"),
+      destinationFingerprint: (payment.submitted_destination ?? {})['fingerprint'] ?? null,
+      providerReference: payment.external_reference ?? payment.provider_payment_id ?? null,
+      recordedAtIso: String(payment.submitted_at ?? payment.created_at ?? nowIso()),
+    },
+    String(selected.id),
+    [...pool.values()],
+  );
+
+  await db()
+    .from("distribution_payments")
+    .update({ match_outcome: result.outcome, match_evidence: result.evidence })
+    .eq("id", payment.id);
+
+  if (!matchAdvancesSettlement(result.outcome)) {
     await raiseException({
       offeringId: payment.offering_id,
       paymentId: String(payment.id),
+      distributionLineId: payment.distribution_line_id,
       kind: "reconciliation_unmatched",
-      detail: "The bank amount differs from the approved payment amount.",
+      detail: `${result.outcome}: ${result.reason}`,
       raisedBy: actor.userId,
     });
-    fail("The bank amount differs from the approved payment amount.");
+    await recordEvent({
+      offeringId: payment.offering_id,
+      batchId: payment.batch_id,
+      distributionLineId: payment.distribution_line_id,
+      paymentId: String(payment.id),
+      bankTransactionId: String(selected.id),
+      event: "distribution_match_rejected",
+      detail: { outcome: result.outcome, reason: result.reason, evidence: result.evidence },
+      actorUserId: actor.userId,
+      actorRole: "harmonious",
+    });
+    fail(`This bank transaction cannot be matched (${result.outcome}): ${result.reason}`);
   }
 
   const { data: line } = await db()
@@ -1711,7 +2035,6 @@ export async function reconcileDistributionPayment(
     .select("*")
     .eq("id", payment.distribution_line_id)
     .maybeSingle();
-
   const book = await ledgerBookForOffering(actor.userId, String(payment.offering_id));
   const { data: accounts } = await db()
     .from("chart_of_accounts")
@@ -1729,12 +2052,12 @@ export async function reconcileDistributionPayment(
     .from("bank_reconciliations")
     .upsert(
       {
-        bank_transaction_id: input.bankTransactionId,
+        bank_transaction_id: String(selected.id),
         offering_id: payment.offering_id,
         book_id: book.id,
-        status: "reconciled",
+        status: "harmonious_reviewed",
         transaction_type: "distribution",
-        confidence: "high",
+        confidence: result.outcome === "EXACT" ? "high" : "medium",
         investor_user_id: line?.investor_user_id ?? null,
         investment_profile_id: line?.investment_profile_id ?? null,
         suggested_debit_account_id: distributions,
@@ -1742,8 +2065,6 @@ export async function reconcileDistributionPayment(
         classified_at: nowIso(),
         reconciled_by: actor.userId,
         reconciled_at: nowIso(),
-        approved_by_harmonious: actor.userId,
-        harmonious_approved_at: nowIso(),
         updated_at: nowIso(),
       },
       { onConflict: "bank_transaction_id" },
@@ -1752,13 +2073,72 @@ export async function reconcileDistributionPayment(
     .single();
   if (error) fail(error.message);
 
-  const journal = await prepareReconciliationJournal(actor.userId, String(rec.id));
+  await db()
+    .from("distribution_payments")
+    .update({
+      bank_transaction_id: String(selected.id),
+      reconciliation_id: rec.id,
+      reconciled_by: actor.userId,
+      reconciled_at: nowIso(),
+    })
+    .eq("id", payment.id);
+  await db()
+    .from("distribution_lines")
+    .update({ reconciliation_state: "pending_approval" })
+    .eq("id", payment.distribution_line_id);
+
+  await recordEvent({
+    offeringId: payment.offering_id,
+    batchId: payment.batch_id,
+    distributionLineId: payment.distribution_line_id,
+    paymentId: String(payment.id),
+    bankTransactionId: String(selected.id),
+    reconciliationId: String(rec.id),
+    event: "distribution_reconciliation_prepared",
+    toStatus: "pending_approval",
+    detail: { outcome: result.outcome, reason: result.reason, evidence: result.evidence },
+    actorUserId: actor.userId,
+    actorRole: "harmonious",
+  });
+  return { reconciliationId: String(rec.id), outcome: result.outcome, evidence: result.evidence };
+}
+
+/** Step 2 (a different person): approve the reconciliation and prepare the journal. */
+export async function approveDistributionReconciliation(userId: string, paymentId: string) {
+  const actor = await assertStaff(userId, "approve_reconciliation");
+  const { data: payment } = await db()
+    .from("distribution_payments")
+    .select("*")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!payment) fail("That payment was not found.");
+  if (!payment.reconciliation_id) fail("This payment has not been reconciled.");
+  if (payment.reconciliation_approved_by) fail("This reconciliation is already approved.");
+  if (!matchAdvancesSettlement(String(payment.match_outcome ?? "UNMATCHED") as any)) {
+    fail("Only an EXACT or STRONG match can be approved.");
+  }
+  const chainError = makerCheckerError(paymentChain(payment), {
+    step: "reconciliation_approved",
+    actor: { userId: actor.userId, role: "harmonious" },
+  });
+  if (chainError) fail(chainError);
+
+  await db()
+    .from("bank_reconciliations")
+    .update({
+      status: "reconciled",
+      approved_by_harmonious: actor.userId,
+      harmonious_approved_at: nowIso(),
+      updated_at: nowIso(),
+    })
+    .eq("id", payment.reconciliation_id);
+  const journal = await prepareReconciliationJournal(actor.userId, String(payment.reconciliation_id));
 
   await db()
     .from("distribution_payments")
     .update({
-      bank_transaction_id: input.bankTransactionId,
-      reconciliation_id: rec.id,
+      reconciliation_approved_by: actor.userId,
+      reconciliation_approved_at: nowIso(),
       journal_entry_id: journal.entryId,
     })
     .eq("id", payment.id);
@@ -1772,15 +2152,34 @@ export async function reconcileDistributionPayment(
     batchId: payment.batch_id,
     distributionLineId: payment.distribution_line_id,
     paymentId: String(payment.id),
-    bankTransactionId: input.bankTransactionId,
-    reconciliationId: String(rec.id),
+    bankTransactionId: payment.bank_transaction_id,
+    reconciliationId: String(payment.reconciliation_id),
     journalEntryId: journal.entryId,
     event: "distribution_reconciled",
     toStatus: "reconciled",
     actorUserId: actor.userId,
     actorRole: "harmonious",
   });
-  return { reconciliationId: String(rec.id), journalEntryId: journal.entryId };
+  return { reconciliationId: String(payment.reconciliation_id), journalEntryId: journal.entryId };
+}
+
+function paymentChain(payment: any): ApprovalChainEntry[] {
+  const chain: ApprovalChainEntry[] = Array.isArray(payment.approval_chain)
+    ? (payment.approval_chain as ApprovalChainEntry[])
+    : [];
+  const extra: ApprovalChainEntry[] = [];
+  if (payment.submitted_by && !chain.some((c) => c.step === "executed")) {
+    extra.push({ step: "executed", userId: String(payment.submitted_by), at: payment.submitted_at ?? "" });
+  }
+  if (payment.reconciled_by) extra.push({ step: "reconciled", userId: String(payment.reconciled_by), at: payment.reconciled_at ?? "" });
+  if (payment.reconciliation_approved_by) {
+    extra.push({ step: "reconciliation_approved", userId: String(payment.reconciliation_approved_by), at: payment.reconciliation_approved_at ?? "" });
+  }
+  if (payment.posted_by) extra.push({ step: "posted", userId: String(payment.posted_by), at: payment.posted_at ?? "" });
+  if (payment.reversal_requested_by) {
+    extra.push({ step: "reversal_requested", userId: String(payment.reversal_requested_by), at: payment.reversal_requested_at ?? "" });
+  }
+  return [...chain, ...extra];
 }
 
 /**
@@ -1788,7 +2187,7 @@ export async function reconcileDistributionPayment(
  * distribution reach the commitment ledger and the investor's capital account.
  */
 export async function postDistributionPayment(userId: string, paymentId: string) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "post");
   const { data: payment } = await db()
     .from("distribution_payments")
     .select("*")
@@ -1796,9 +2195,12 @@ export async function postDistributionPayment(userId: string, paymentId: string)
     .maybeSingle();
   if (!payment) fail("That payment was not found.");
   if (!payment.reconciliation_id) fail("This payment has not been reconciled.");
-  if (String(payment.submitted_by ?? "") === actor.userId) {
-    fail("Maker/checker: the person who sent the payment cannot post it to the ledger.");
-  }
+  if (payment.posted_at) fail("This payment is already posted.");
+  const postError = makerCheckerError(paymentChain(payment), {
+    step: "posted",
+    actor: { userId: actor.userId, role: "harmonious" },
+  });
+  if (postError) fail(postError);
 
   await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "reviewed");
   await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "approved");
@@ -1844,8 +2246,21 @@ export async function postDistributionPayment(userId: string, paymentId: string)
 
   await db()
     .from("distribution_payments")
-    .update({ posted_at: nowIso(), commitment_event_id: commitmentEventId })
+    .update({ posted_at: nowIso(), posted_by: actor.userId, commitment_event_id: commitmentEventId })
     .eq("id", payment.id);
+  // Settlement: only now — bank transaction, approved reconciliation, posted journal.
+  // The database refuses settled_at unless the journal is actually posted.
+  await db().from("distribution_payments").update({ settled_at: nowIso() }).eq("id", payment.id);
+  // Compatibility read projection consumed by capital statements and reports.
+  await db().from("fund_distributions").insert({
+    offering_id: payment.offering_id,
+    paid_on: today(),
+    amount_cents: Number(line?.gross_cents ?? payment.submitted_amount_cents),
+    kind: String(line?.distribution_type) === "return_of_capital" ? "return_of_capital" : "distribution",
+    note: `Distribution payment ${payment.id}`,
+    created_by: actor.userId,
+    distribution_payment_id: payment.id,
+  });
   await db()
     .from("distribution_lines")
     .update({ accounting_state: "posted" })
@@ -1877,28 +2292,83 @@ export async function postDistributionPayment(userId: string, paymentId: string)
   return { posted: true, commitmentEventId, reduceCapitalCents: effect.reduceCapitalCents };
 }
 
-/** Returns, rejections and reversals: never erased, always corrected forward. */
+/** Step 1 of a reversal: a requester records why, against the original references. */
 export async function reverseDistributionPayment(userId: string, paymentId: string, reason: string) {
-  const actor = await assertStaff(userId);
-  if (!reason || reason.trim().length < 4) fail("A reversal needs a reason.");
+  const actor = await assertStaff(userId, "request_reversal");
   const { data: payment } = await db()
     .from("distribution_payments")
     .select("*")
     .eq("id", paymentId)
     .maybeSingle();
   if (!payment) fail("That payment was not found.");
+  if (payment.reversal_requested_by) fail("A reversal has already been requested for this payment.");
+  const error = reversalRequestError({
+    reason,
+    originalPaymentId: payment.id,
+    originalJournalEntryId: payment.journal_entry_id,
+    paymentStatus: String(payment.status),
+    reconciled: Boolean(payment.reconciliation_approved_by),
+  });
+  if (error) fail(error);
 
-  if (payment.reconciliation_id) {
+  await db()
+    .from("distribution_payments")
+    .update({ reversal_requested_by: actor.userId, reversal_requested_at: nowIso(), reversal_reason: reason.trim() })
+    .eq("id", payment.id);
+  await recordEvent({
+    offeringId: payment.offering_id,
+    batchId: payment.batch_id,
+    distributionLineId: payment.distribution_line_id,
+    paymentId: String(payment.id),
+    journalEntryId: payment.journal_entry_id ?? null,
+    reconciliationId: payment.reconciliation_id ?? null,
+    event: "distribution_reversal_requested",
+    reason,
+    detail: { originalPaymentId: payment.id, originalJournalEntryId: payment.journal_entry_id ?? null },
+    actorUserId: actor.userId,
+    actorRole: "harmonious",
+  });
+  return { requested: true };
+}
+
+/**
+ * Step 2 (a different person): approve the reversal. Posted entries are never
+ * rewritten; accounting reverses and reclassifies forward.
+ */
+export async function approveDistributionReversal(userId: string, paymentId: string) {
+  const actor = await assertStaff(userId, "approve_reversal");
+  const { data: payment } = await db()
+    .from("distribution_payments")
+    .select("*")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!payment) fail("That payment was not found.");
+  if (!payment.reversal_requested_by) fail("No reversal has been requested.");
+  if (payment.reversal_approved_by) fail("This reversal is already approved.");
+  const chainError = makerCheckerError(paymentChain(payment), {
+    step: "reversal_approved",
+    actor: { userId: actor.userId, role: "harmonious" },
+  });
+  if (chainError) fail(chainError);
+  const reason = String(payment.reversal_reason ?? "Reversal");
+
+  if (payment.reconciliation_id && payment.posted_at) {
     await reverseAndCorrectReconciliation(actor.userId, String(payment.reconciliation_id), reason);
   }
 
   await db()
     .from("distribution_payments")
-    .update({ status: "reversed", failure_reason: reason, failed_at: nowIso() })
+    .update({
+      status: "reversed",
+      failure_reason: reason,
+      failed_at: nowIso(),
+      reversal_approved_by: actor.userId,
+      reversal_approved_at: nowIso(),
+    })
     .eq("id", payment.id);
   await db()
     .from("distribution_lines")
-    .update({ payment_state: "reversed", accounting_state: "reversed" })
+    .update({ payment_state: "reversed", accounting_state: payment.posted_at ? "reversed" : "not_started" })
     .eq("id", payment.distribution_line_id);
 
   await raiseException({
@@ -1914,9 +2384,12 @@ export async function reverseDistributionPayment(userId: string, paymentId: stri
     batchId: payment.batch_id,
     distributionLineId: payment.distribution_line_id,
     paymentId: String(payment.id),
+    journalEntryId: payment.journal_entry_id ?? null,
+    reconciliationId: payment.reconciliation_id ?? null,
     event: "distribution_payment_reversed",
     toStatus: "reversed",
     reason,
+    detail: { requestedBy: payment.reversal_requested_by, originalJournalEntryId: payment.journal_entry_id ?? null },
     actorUserId: actor.userId,
     actorRole: "harmonious",
   });
@@ -1925,7 +2398,7 @@ export async function reverseDistributionPayment(userId: string, paymentId: stri
 
 /** A failed or returned payment is reissued as a new attempt, never rewritten. */
 export async function reissueDistributionPayment(userId: string, paymentId: string, reason: string) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "correct");
   const { data: original } = await db()
     .from("distribution_payments")
     .select("*")
@@ -1956,7 +2429,7 @@ export async function resolveDistributionException(
   userId: string,
   input: { exceptionId: string; resolution: string },
 ) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "resolve_exception");
   if (!input.resolution || input.resolution.trim().length < 4) {
     fail("Closing an exception needs an explanation.");
   }
@@ -1991,7 +2464,7 @@ export async function resolveDistributionException(
 // ----------------------------------------------------------------- notices
 
 export async function publishDistributionNotice(userId: string, lineId: string) {
-  const actor = await assertStaff(userId);
+  const actor = await assertStaff(userId, "prepare");
   const { data: line } = await db().from("distribution_lines").select("*").eq("id", lineId).maybeSingle();
   if (!line) fail("That distribution was not found.");
   if (String(line.accounting_state) !== "posted") {
@@ -2119,6 +2592,17 @@ export async function myDistributions(userId: string, filter?: { investmentProfi
     ((notices ?? []) as any[]).map((n) => [String(n.distribution_line_id), n]),
   );
 
+  const lineIds = ((lines ?? []) as any[]).map((l) => String(l.id));
+  const { data: linePayments } = lineIds.length
+    ? await db()
+        .from("distribution_payments")
+        .select("distribution_line_id, attempt, status, bank_transaction_id, reconciliation_approved_by, posted_at, settled_at")
+        .in("distribution_line_id", lineIds)
+        .order("attempt", { ascending: true })
+    : { data: [] };
+  const latestPayment = new Map<string, any>();
+  for (const p of (linePayments ?? []) as any[]) latestPayment.set(String(p.distribution_line_id), p);
+
   const visible = ((lines ?? []) as any[]).filter((l) => {
     const batch = batchById.get(String(l.batch_id));
     return batch && ["approved", "executing", "completed", "superseded"].includes(String(batch.status));
@@ -2133,12 +2617,18 @@ export async function myDistributions(userId: string, filter?: { investmentProfi
         batchNumber: Number(batch?.batch_number ?? 0),
         title: batch?.title ?? null,
         paymentDate: batch?.payment_date ?? null,
-        status:
-          String(l.accounting_state) === "posted"
-            ? "paid"
-            : String(l.payment_state) === "submitted"
-              ? "sent"
-              : String(l.payment_state),
+        // Completed strictly requires bank evidence, approved reconciliation and a posted journal.
+        status: (() => {
+          const pay = latestPayment.get(String(l.id));
+          return investorPaymentLabel({
+            batchStatus: String(batch?.status ?? ""),
+            reviewed: true,
+            paymentStatus: pay?.status ?? null,
+            bankTransactionLinked: Boolean(pay?.bank_transaction_id),
+            reconciliationApproved: Boolean(pay?.reconciliation_approved_by),
+            journalPosted: Boolean(pay?.posted_at && pay?.settled_at),
+          });
+        })(),
         notice: noticeByLine.get(String(l.id)) ?? null,
         confirmationRequired:
           Boolean(l.investor_confirmation_required) && !l.investor_confirmed_at,
@@ -2225,7 +2715,7 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
   const { data: payments } = batchIds.length
     ? await db()
         .from("distribution_payments")
-        .select("id, distribution_line_id, attempt, status")
+        .select("id, distribution_line_id, attempt, status, bank_transaction_id, reconciled_by, reconciliation_approved_by, posted_at, settled_at, match_outcome, reversal_requested_by, submitted_by")
         .in("batch_id", batchIds)
         .order("attempt", { ascending: true })
     : { data: [] };
@@ -2269,6 +2759,26 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
         ? String(paymentByLine.get(String(l.id)).id)
         : null,
       bucket,
+      ...(() => {
+        const pay = paymentByLine.get(String(l.id));
+        const stage = operationsStage({
+          batchStatus: String(batch?.status ?? "draft"),
+          reviewed: Boolean(batch?.reviewed_by),
+          paymentStatus: pay?.status ?? null,
+          bankTransactionLinked: Boolean(pay?.bank_transaction_id),
+          reconciliationApproved: Boolean(pay?.reconciliation_approved_by),
+          journalPosted: Boolean(pay?.posted_at && pay?.settled_at),
+          hasOpenException: openByLine.has(String(l.id)),
+        });
+        return {
+          stage,
+          stageLabel: OPERATIONS_STAGE_LABELS[stage],
+          matchOutcome: pay?.match_outcome ?? null,
+          reconciliationPrepared: Boolean(pay?.reconciled_by),
+          reconciliationApproved: Boolean(pay?.reconciliation_approved_by),
+          reversalRequested: Boolean(pay?.reversal_requested_by),
+        };
+      })(),
     };
   });
 
@@ -2291,6 +2801,8 @@ export async function distributionsWorkspace(userId: string, offeringId?: string
       balanceDetail: b.balance_detail ?? {},
       managerApproved: Boolean(b.manager_approved_by),
       finalApproved: Boolean(b.final_approved_by),
+      withholdingReviewed: Boolean(b.withholding_reviewed_by),
+      economicSnapshotHash: b.economic_snapshot_hash ?? null,
     })),
     lines: rows,
     exceptions: ((exceptions ?? []) as any[]).map((e) => ({

@@ -359,17 +359,11 @@ export const saveFundDistribution = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertCanManage(context.supabase, context.userId, data.offering_id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("fund_distributions").insert({
-      offering_id: data.offering_id,
-      paid_on: data.paid_on,
-      amount_cents: data.amount_cents,
-      kind: data.kind,
-      note: data.note,
-      created_by: context.userId,
-    });
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    // D1: fund distributions are generated only by the distribution engine
+    // after bank reconciliation and posted accounting.
+    throw new Error(
+      "Distributions are recorded automatically once Harmonious reconciles the bank payment and posts the accounting.",
+    );
   });
 
 /** Remove a valuation or distribution entry. */
@@ -386,8 +380,11 @@ export const removePerformanceEntry = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertCanManage(context.supabase, context.userId, data.offering_id);
+    if (data.kind === "distribution") {
+      throw new Error("Distribution history is permanent and cannot be removed.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const table = data.kind === "valuation" ? "fund_valuations" : "fund_distributions";
+    const table = "fund_valuations";
     const { error } = await supabaseAdmin
       .from(table)
       .delete()

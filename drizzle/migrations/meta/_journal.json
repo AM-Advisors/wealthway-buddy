@@ -204,6 +204,13 @@
       "when": 1790193374829,
       "tag": "0028_protect_payment_instruction_secured_details",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790197573834,
+      "tag": "0029_phase_d1_outbound_payment_controls",
+      "breakpoints": true
     }
   ]
 }

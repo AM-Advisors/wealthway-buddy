@@ -2305,9 +2305,13 @@ export type Database = {
         Row: {
           amount_cents: number
           auto_matched: boolean
+          bank_account_id: string | null
+          counterparty_fingerprint: string | null
           created_at: string
+          currency: string | null
           dedupe_key: string | null
           description: string | null
+          direction: string | null
           id: string
           invoice_matched_at: string | null
           invoice_matched_by: string | null
@@ -2320,6 +2324,7 @@ export type Database = {
           offering_id: string
           plaid_transaction_id: string
           posted_on: string
+          reference: string | null
           updated_at: string
           wire_matched_at: string | null
           wire_matched_by: string | null
@@ -2327,9 +2332,13 @@ export type Database = {
         Insert: {
           amount_cents: number
           auto_matched?: boolean
+          bank_account_id?: string | null
+          counterparty_fingerprint?: string | null
           created_at?: string
+          currency?: string | null
           dedupe_key?: string | null
           description?: string | null
+          direction?: string | null
           id?: string
           invoice_matched_at?: string | null
           invoice_matched_by?: string | null
@@ -2342,6 +2351,7 @@ export type Database = {
           offering_id: string
           plaid_transaction_id: string
           posted_on: string
+          reference?: string | null
           updated_at?: string
           wire_matched_at?: string | null
           wire_matched_by?: string | null
@@ -2349,9 +2359,13 @@ export type Database = {
         Update: {
           amount_cents?: number
           auto_matched?: boolean
+          bank_account_id?: string | null
+          counterparty_fingerprint?: string | null
           created_at?: string
+          currency?: string | null
           dedupe_key?: string | null
           description?: string | null
+          direction?: string | null
           id?: string
           invoice_matched_at?: string | null
           invoice_matched_by?: string | null
@@ -2364,6 +2378,7 @@ export type Database = {
           offering_id?: string
           plaid_transaction_id?: string
           posted_on?: string
+          reference?: string | null
           updated_at?: string
           wire_matched_at?: string | null
           wire_matched_by?: string | null
@@ -8379,6 +8394,9 @@ export type Database = {
           currency: string
           declared_amount_cents: number
           distribution_type: string
+          economic_snapshot: Json | null
+          economic_snapshot_at: string | null
+          economic_snapshot_hash: string | null
           effective_date: string | null
           executed_at: string | null
           executed_by: string | null
@@ -8401,6 +8419,7 @@ export type Database = {
           reserve_cents: number
           reviewed_at: string | null
           reviewed_by: string | null
+          source_bank_account_id: string | null
           source_detail: Json
           source_proceeds: string | null
           status: string
@@ -8413,6 +8432,9 @@ export type Database = {
           total_withholding_cents: number
           updated_at: string
           version: number
+          withholding_basis: Json | null
+          withholding_reviewed_at: string | null
+          withholding_reviewed_by: string | null
         }
         Insert: {
           allocation_run_id?: string | null
@@ -8426,6 +8448,9 @@ export type Database = {
           currency?: string
           declared_amount_cents?: number
           distribution_type?: string
+          economic_snapshot?: Json | null
+          economic_snapshot_at?: string | null
+          economic_snapshot_hash?: string | null
           effective_date?: string | null
           executed_at?: string | null
           executed_by?: string | null
@@ -8448,6 +8473,7 @@ export type Database = {
           reserve_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source_bank_account_id?: string | null
           source_detail?: Json
           source_proceeds?: string | null
           status?: string
@@ -8460,6 +8486,9 @@ export type Database = {
           total_withholding_cents?: number
           updated_at?: string
           version?: number
+          withholding_basis?: Json | null
+          withholding_reviewed_at?: string | null
+          withholding_reviewed_by?: string | null
         }
         Update: {
           allocation_run_id?: string | null
@@ -8473,6 +8502,9 @@ export type Database = {
           currency?: string
           declared_amount_cents?: number
           distribution_type?: string
+          economic_snapshot?: Json | null
+          economic_snapshot_at?: string | null
+          economic_snapshot_hash?: string | null
           effective_date?: string | null
           executed_at?: string | null
           executed_by?: string | null
@@ -8495,6 +8527,7 @@ export type Database = {
           reserve_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source_bank_account_id?: string | null
           source_detail?: Json
           source_proceeds?: string | null
           status?: string
@@ -8507,6 +8540,9 @@ export type Database = {
           total_withholding_cents?: number
           updated_at?: string
           version?: number
+          withholding_basis?: Json | null
+          withholding_reviewed_at?: string | null
+          withholding_reviewed_by?: string | null
         }
         Relationships: [
           {
@@ -9039,19 +9075,34 @@ export type Database = {
           confirmed_at: string | null
           created_at: string
           distribution_line_id: string
+          external_reference: string | null
           failed_at: string | null
           failure_reason: string | null
           id: string
           idempotency_key: string
           journal_entry_id: string | null
+          match_evidence: Json | null
+          match_outcome: string | null
           offering_id: string
           payment_instruction_id: string | null
           payment_instruction_version: number | null
           posted_at: string | null
+          posted_by: string | null
           provider: string
           provider_payment_id: string | null
+          reconciled_at: string | null
+          reconciled_by: string | null
+          reconciliation_approved_at: string | null
+          reconciliation_approved_by: string | null
           reconciliation_id: string | null
+          recorded_as: string
           reissue_of_id: string | null
+          reversal_approved_at: string | null
+          reversal_approved_by: string | null
+          reversal_reason: string | null
+          reversal_requested_at: string | null
+          reversal_requested_by: string | null
+          settled_at: string | null
           status: string
           submitted_amount_cents: number
           submitted_at: string
@@ -9071,19 +9122,34 @@ export type Database = {
           confirmed_at?: string | null
           created_at?: string
           distribution_line_id: string
+          external_reference?: string | null
           failed_at?: string | null
           failure_reason?: string | null
           id?: string
           idempotency_key: string
           journal_entry_id?: string | null
+          match_evidence?: Json | null
+          match_outcome?: string | null
           offering_id: string
           payment_instruction_id?: string | null
           payment_instruction_version?: number | null
           posted_at?: string | null
+          posted_by?: string | null
           provider?: string
           provider_payment_id?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reconciliation_approved_at?: string | null
+          reconciliation_approved_by?: string | null
           reconciliation_id?: string | null
+          recorded_as?: string
           reissue_of_id?: string | null
+          reversal_approved_at?: string | null
+          reversal_approved_by?: string | null
+          reversal_reason?: string | null
+          reversal_requested_at?: string | null
+          reversal_requested_by?: string | null
+          settled_at?: string | null
           status?: string
           submitted_amount_cents?: number
           submitted_at?: string
@@ -9103,19 +9169,34 @@ export type Database = {
           confirmed_at?: string | null
           created_at?: string
           distribution_line_id?: string
+          external_reference?: string | null
           failed_at?: string | null
           failure_reason?: string | null
           id?: string
           idempotency_key?: string
           journal_entry_id?: string | null
+          match_evidence?: Json | null
+          match_outcome?: string | null
           offering_id?: string
           payment_instruction_id?: string | null
           payment_instruction_version?: number | null
           posted_at?: string | null
+          posted_by?: string | null
           provider?: string
           provider_payment_id?: string | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reconciliation_approved_at?: string | null
+          reconciliation_approved_by?: string | null
           reconciliation_id?: string | null
+          recorded_as?: string
           reissue_of_id?: string | null
+          reversal_approved_at?: string | null
+          reversal_approved_by?: string | null
+          reversal_reason?: string | null
+          reversal_requested_at?: string | null
+          reversal_requested_by?: string | null
+          settled_at?: string | null
           status?: string
           submitted_amount_cents?: number
           submitted_at?: string
@@ -11231,36 +11312,49 @@ export type Database = {
           amount_cents: number
           created_at: string
           created_by: string | null
+          distribution_payment_id: string | null
           id: string
           kind: string
           note: string
           offering_id: string
           paid_on: string
+          source: string
           updated_at: string
         }
         Insert: {
           amount_cents?: number
           created_at?: string
           created_by?: string | null
+          distribution_payment_id?: string | null
           id?: string
           kind?: string
           note?: string
           offering_id: string
           paid_on: string
+          source?: string
           updated_at?: string
         }
         Update: {
           amount_cents?: number
           created_at?: string
           created_by?: string | null
+          distribution_payment_id?: string | null
           id?: string
           kind?: string
           note?: string
           offering_id?: string
           paid_on?: string
+          source?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fund_distributions_distribution_payment_id_fkey"
+            columns: ["distribution_payment_id"]
+            isOneToOne: true
+            referencedRelation: "distribution_payments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fund_distributions_offering_id_fkey"
             columns: ["offering_id"]
