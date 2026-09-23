@@ -188,28 +188,13 @@ function ManagerProfilePage() {
             <Input id="phone" {...field("phone")} />
           </div>
           <div className="space-y-1 sm:col-span-2">
-            <Label htmlFor="address_line1">Address</Label>
-            <Input id="address_line1" placeholder="Street address" {...field("address_line1")} />
-          </div>
-          <div className="space-y-1 sm:col-span-2">
-            <Label htmlFor="address_line2">Address line 2 (optional)</Label>
-            <Input id="address_line2" {...field("address_line2")} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="city">City</Label>
-            <Input id="city" {...field("city")} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="region">State or region</Label>
-            <Input id="region" {...field("region")} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="postal_code">Postal code</Label>
-            <Input id="postal_code" {...field("postal_code")} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="country">Country</Label>
-            <Input id="country" {...field("country")} />
+            <AddressInput
+              idPrefix="manager-address"
+              label="Address"
+              countryMode="free"
+              value={addressFromSnake(form)}
+              onChange={(next) => setForm((f) => ({ ...f, ...addressToSnake(next) }))}
+            />
           </div>
           <div className="sm:col-span-2">
             <Button disabled={!canSave || saveMutation.isPending} onClick={() => saveMutation.mutate()}>

@@ -253,13 +253,19 @@ function KycPage() {
               <CardTitle><h2 className="font-semibold leading-none tracking-tight">Residential address</h2></CardTitle>
               <CardDescription>No P.O. boxes — a physical address is required.</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Text label="Address line 1" name="address_line1" form={form} set={set} errors={errors} />
-              <Text label="Address line 2" name="address_line2" form={form} set={set} errors={errors} />
-              <Text label="City" name="city" form={form} set={set} errors={errors} />
-              <Text label="State / region" name="region" form={form} set={set} errors={errors} />
-              <Text label="Postal code" name="postal_code" form={form} set={set} errors={errors} />
-              <Text label="Country" name="country" form={form} set={set} errors={errors} />
+            <CardContent>
+              <AddressInput
+                idPrefix="kyc-address"
+                label="Residential address"
+                countryMode="free"
+                value={addressFromSnake(form)}
+                onChange={(next) =>
+                  setForm((f) => ({ ...f, ...addressToSnake(next) }))
+                }
+              />
+              {errors["address_line1"] ? (
+                <p className="mt-2 text-sm text-destructive">{errors["address_line1"]}</p>
+              ) : null}
             </CardContent>
           </Card>
 

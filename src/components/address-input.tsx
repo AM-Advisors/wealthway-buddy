@@ -276,3 +276,41 @@ export function AddressInput({
 }
 
 export default AddressInput;
+
+// ---------------------------------------------------------------------------
+// Adapters for the platform's existing snake_case address fields
+// ---------------------------------------------------------------------------
+
+export interface SnakeAddress {
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  region?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+}
+
+export function addressFromSnake(form: SnakeAddress, entryMethod: "autocomplete" | "manual" = "manual"): AddressValue {
+  return {
+    line1: form.address_line1 ?? "",
+    line2: form.address_line2 ?? "",
+    city: form.city ?? "",
+    region: form.region ?? "",
+    postalCode: form.postal_code ?? "",
+    country: form.country ?? "",
+    entryMethod,
+    providerPlaceId: null,
+    formatted: null,
+  };
+}
+
+export function addressToSnake(value: AddressValue): Required<SnakeAddress> {
+  return {
+    address_line1: value.line1,
+    address_line2: value.line2,
+    city: value.city,
+    region: value.region,
+    postal_code: value.postalCode,
+    country: value.country,
+  };
+}
