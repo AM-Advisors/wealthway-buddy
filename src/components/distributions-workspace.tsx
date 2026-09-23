@@ -16,9 +16,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DISTRIBUTION_BUCKET_LABELS, DISTRIBUTION_TYPE_LABELS } from "@/lib/distributions-model";
+import { DISTRIBUTION_TYPE_LABELS, OPERATIONS_STAGE_LABELS } from "@/lib/distributions-model";
 import {
+  approveDistributionReconciliationFn,
+  approveDistributionReversalFn,
   cancelDistributionFn,
+  reconcileDistributionPaymentFn,
+  reverseDistributionPaymentFn,
+  reviewDistributionWithholdingFn,
   distributionExecutionCheckFn,
   distributionsWorkspaceFn,
   executeDistributionPaymentFn,
@@ -46,6 +51,11 @@ export function DistributionsWorkspace() {
   const post = useServerFn(postDistributionPaymentFn);
   const notice = useServerFn(publishDistributionNoticeFn);
   const resolve = useServerFn(resolveDistributionExceptionFn);
+  const reviewWithholding = useServerFn(reviewDistributionWithholdingFn);
+  const reconcile = useServerFn(reconcileDistributionPaymentFn);
+  const approveRec = useServerFn(approveDistributionReconciliationFn);
+  const requestReversal = useServerFn(reverseDistributionPaymentFn);
+  const approveReversal = useServerFn(approveDistributionReversalFn);
 
   const [bucket, setBucket] = useState("all");
   const [search, setSearch] = useState("");
@@ -65,7 +75,12 @@ export function DistributionsWorkspace() {
   const reviewM = act(review, "Sent for approval.");
   const approveM = act(finalApprove, "Approved. Payments can now be released.");
   const cancelM = act(cancel, "Distribution cancelled.");
-  const executeM = act(execute, "Payment released to the bank.");
+  const executeM = act(execute, "Bank transfer recorded. It completes only after reconciliation and posting.");
+  const withholdingM = act(reviewWithholding, "Withholding reviewed.");
+  const reconcileM = act(reconcile, "Match prepared. A second person must approve it.");
+  const approveRecM = act(approveRec, "Reconciliation approved; journal prepared.");
+  const reversalM = act(requestReversal, "Reversal requested. A second person must approve it.");
+  const approveReversalM = act(approveReversal, "Reversal approved and recorded.");
   const postM = act(post, "Posted to the ledger and the investor's capital account.");
   const noticeM = act(notice, "Distribution notice published.");
   const resolveM = act(resolve, "Exception closed.");
@@ -74,7 +89,7 @@ export function DistributionsWorkspace() {
     const all = (data?.lines ?? []) as any[];
     const term = search.trim().toLowerCase();
     return all.filter((l) => {
-      if (bucket !== "all" && l.bucket !== bucket) return false;
+      if (bucket !== "all" && l.stage !== bucket) return false;
       if (!term) return true;
       return String(l.displayName ?? "").toLowerCase().includes(term);
     });
@@ -95,8 +110,10 @@ export function DistributionsWorkspace() {
         <CardHeader>
           <CardTitle>Distributions and payments</CardTitle>
           <CardDescription>
-            Nothing is sent until the amounts balance to the cent, the destination is verified, the
-            manager and two Harmonious people have approved it and no compliance hold is in place.
+            Harmonious never sends money from here. Once a distribution is approved for payment, a
+            finance colleague makes the transfer at the bank and records it. It only counts as
+            completed after the bank payment is matched, a second person approves the match and the
+            accounting is posted.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-end gap-3">
@@ -108,7 +125,7 @@ export function DistributionsWorkspace() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Everything</SelectItem>
-                {Object.entries(DISTRIBUTION_BUCKET_LABELS).map(([value, label]) => (
+                {Object.entries(OPERATIONS_STAGE_LABELS).map(([value, label]) => (
                   <SelectItem key={value} value={value}>
                     {label}
                   </SelectItem>
@@ -152,6 +169,14 @@ export function DistributionsWorkspace() {
             <Button size="sm" variant="outline" onClick={() => reviewM.run({ batchId: b.id })}>
               Send for approval
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={b.withholdingReviewed}
+              onClick={() => withholdingM.run({ batchId: b.id })}
+            >
+              {b.withholdingReviewed ? "Withholding reviewed" : "Review withholding"}
+            </Button>
             <Button size="sm" onClick={() => approveM.run({ batchId: b.id })}>
               Final approval
             </Button>
@@ -181,10 +206,10 @@ export function DistributionsWorkspace() {
             <div key={l.id} className="rounded-md border p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{l.displayName ?? "Investor"}</span>
-                <Badge variant="outline">
-                  {DISTRIBUTION_BUCKET_LABELS[l.bucket as keyof typeof DISTRIBUTION_BUCKET_LABELS] ??
-                    l.bucket}
+                <Badge variant={l.stage === "exception" ? "destructive" : "outline"}>
+                  {l.stageLabel ?? l.stage}
                 </Badge>
+                {l.matchOutcome ? <Badge variant="secondary">Match: {String(l.matchOutcome).toLowerCase()}</Badge> : null}
                 <span className="text-sm text-muted-foreground">
                   {money(l.grossCents)} gross · {money(l.withholdingCents)} withheld ·{" "}
                   {money(l.netCents)} net
@@ -200,7 +225,7 @@ export function DistributionsWorkspace() {
                       const res: any = await check({ data: { lineId: l.id } });
                       toast.message(
                         res.blockers.length === 0
-                          ? "Ready to send."
+                          ? "Ready: the transfer can be made at the bank and then recorded here."
                           : `Blocked: ${res.blockers.join(" ")}`,
                       );
                     } catch (e: any) {
@@ -210,13 +235,57 @@ export function DistributionsWorkspace() {
                 >
                   Check readiness
                 </Button>
-                <Button size="sm" onClick={() => executeM.run({ lineId: l.id })}>
-                  Release payment
-                </Button>
+                {l.stage === "approved_for_payment" ? (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const ref = window.prompt(
+                        "You made this transfer at the bank yourself. Enter the bank's reference for it:",
+                      );
+                      if (ref) executeM.run({ lineId: l.id, externalReference: ref });
+                    }}
+                  >
+                    Record bank transfer made outside Harmonious
+                  </Button>
+                ) : null}
+                {l.paymentId && !l.reconciliationPrepared ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const id = window.prompt("Bank transaction to match (its ID from the bank feed):");
+                      if (id) reconcileM.run({ paymentId: l.paymentId, bankTransactionId: id.trim() });
+                    }}
+                  >
+                    Match to bank transaction
+                  </Button>
+                ) : null}
+                {l.reconciliationPrepared && !l.reconciliationApproved ? (
+                  <Button size="sm" variant="outline" onClick={() => approveRecM.run({ paymentId: l.paymentId })}>
+                    Approve reconciliation
+                  </Button>
+                ) : null}
+                {l.paymentId && !l.reversalRequested ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const reason = window.prompt("Why is this payment being reversed?");
+                      if (reason) reversalM.run({ paymentId: l.paymentId, reason });
+                    }}
+                  >
+                    Request reversal
+                  </Button>
+                ) : null}
+                {l.reversalRequested ? (
+                  <Button size="sm" variant="ghost" onClick={() => approveReversalM.run({ paymentId: l.paymentId })}>
+                    Approve reversal
+                  </Button>
+                ) : null}
                 <Button size="sm" variant="outline" onClick={() => noticeM.run({ lineId: l.id })}>
                   Publish notice
                 </Button>
-                {l.paymentId ? (
+                {l.reconciliationApproved && l.stage === "accounting_required" ? (
                   <Button
                     size="sm"
                     variant="outline"
