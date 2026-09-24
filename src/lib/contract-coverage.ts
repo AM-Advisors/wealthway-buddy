@@ -95,7 +95,7 @@ export function relatedDocumentOptions(current: DocLite, docs: readonly DocLite[
   const expected = def && def.to.length ? (def.to as readonly string[]) : null;
   const typed = expected ? pool.filter((d) => expected.includes(d.doc_type)) : pool;
   const activeTyped = typed.filter((d) => ACTIVE_LIKE.has(d.review_status ?? ""));
-  const defaultId = expected && activeTyped.length === 1 ? activeTyped[0].id : null;
+  const defaultId = expected && activeTyped.length === 1 ? activeTyped[0]!.id : null;
   const rank = (d: DocLite) => (expected && expected.includes(d.doc_type) ? 0 : 1) + (ACTIVE_LIKE.has(d.review_status ?? "") ? 0 : 2);
   const options: RelatedOption[] = [...pool]
     .sort((a, b) => rank(a) - rank(b) || (b.effective_date ?? "").localeCompare(a.effective_date ?? "") || a.title.localeCompare(b.title))
@@ -179,7 +179,7 @@ export function tiersProblem(tiers: readonly PriceTier[]): string | null {
   if (!tiers.length) return "Add at least one pricing tier.";
   const sorted = [...tiers].sort((a, b) => a.minCents - b.minCents);
   for (let i = 0; i < sorted.length; i += 1) {
-    const t = sorted[i];
+    const t = sorted[i]!;
     if (![t.minCents, t.feeCents].every((n) => Number.isSafeInteger(n) && n >= 0)) return "Each tier needs a valid fee and lower bound.";
     if (t.maxCents != null && (!Number.isSafeInteger(t.maxCents) || t.maxCents < t.minCents)) return "A tier's upper bound must be above its lower bound.";
     if (t.maxCents == null && i !== sorted.length - 1) return "Only the last tier can be open-ended.";
@@ -303,12 +303,12 @@ export function resolveFundCoverage(input: {
   const executed = mine.filter((s) => !!s.executed_at && !s.amends_sow_id);
   const explicit = executed.filter((s) => sowCoversFund(s, input.offeringId));
   if (explicit.length === 1) {
-    const s = explicit[0];
+    const s = explicit[0]!;
     return { status: "covered" as const, label: `Covered — ${s.title}${s.template_version ? ` v${s.template_version}` : ""}`, sows: [s], msa: input.governingMsa };
   }
   if (explicit.length > 1) return { status: "needs_review" as const, label: "Contract review required — more than one SOW lists this Fund", sows: explicit, msa: input.governingMsa };
   const clientWide = executed.filter((s) => s.fund_scope === "client_wide");
-  if (clientWide.length === 1) return { status: "covered_client_wide" as const, label: `Covered — Client-wide SOW (${clientWide[0].title})`, sows: clientWide, msa: input.governingMsa };
+  if (clientWide.length === 1) return { status: "covered_client_wide" as const, label: `Covered — Client-wide SOW (${clientWide[0]!.title})`, sows: clientWide, msa: input.governingMsa };
   if (clientWide.length > 1) return { status: "needs_review" as const, label: COVERAGE_LABEL.needs_review, sows: clientWide, msa: input.governingMsa };
   // Executed SOWs exist but their Fund scope doesn't list this Fund, or is unknown:
   // a person decides whether the Fund can be associated under the approved scope.
@@ -441,11 +441,13 @@ export const PREDEFINED_STAFF_ROLES: Record<string, { label: string; caps: Staff
   },
 };
 
+const CLIENT_OPS_CAPS: StaffCapability[] = PREDEFINED_STAFF_ROLES["client_operations_specialist"]!.caps;
+
 /** Legacy platform roles mapped onto capabilities so existing staff keep working. */
 const LEGACY_ROLE_CAPS: Record<string, StaffCapability[]> = {
   super_admin: STAFF_CAPABILITIES,
   admin: STAFF_CAPABILITIES,
-  operations: PREDEFINED_STAFF_ROLES.client_operations_specialist.caps.concat(["upload_contracts", "map_contract_terms", "generate_draft_sow", "view_funds", "edit_fund_setup"]),
+  operations: CLIENT_OPS_CAPS.concat(["upload_contracts", "map_contract_terms", "generate_draft_sow", "view_funds", "edit_fund_setup"]),
   client_success: ["view_clients", "edit_clients", "manage_client_people", "manage_client_roles", "configure_services", "view_contracts", "upload_contracts"],
   finance: ["view_clients", "view_contracts", "configure_pricing", "view_banking"],
   legal: ["view_clients", "view_contracts", "upload_contracts", "map_contract_terms", "record_contract_relationships", "generate_draft_sow", "approve_contract_mapping", "approve_sow", "approve_amendments", "approve_precedence"],

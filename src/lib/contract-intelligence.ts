@@ -73,7 +73,7 @@ export function relationshipProblem(input: {
   scope: "client_wide" | "fund" | "service" | "provision";
   offering_ids: string[];
   service_keys: string[];
-  provision_reference?: string | null;
+  provision_reference?: string | null | undefined;
 }): string | null {
   if (input.related_document_id === input.document_id) return "A document can't relate to itself.";
   if (input.relationship_type !== "other" && !input.related_document_id)

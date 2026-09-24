@@ -266,12 +266,12 @@ export const listClientFunds = createServerFn({ method: "GET" })
           contractuallyEngaged: !!app.executed,
           coverage: (() => {
             const c = resolveFundCoverage({ clientId: data.clientId, offeringId: f.id, governingMsa: cov.governingMsa, sows: cov.sows as CoverageSow[], fundHasServices: fs.length > 0 });
-            const svc = resolveServiceCoverage(fs.map((s) => s.service_key as string), c.sows.filter((s) => !!s.executed_at));
+            const svc = resolveServiceCoverage(fs.map((s) => s.service_key as string), (c.sows as CoverageSow[]).filter((s) => !!s.executed_at));
             return {
               status: c.status,
               label: c.label,
               msa: c.msa,
-              sows: c.sows.map((s) => ({ id: s.id, title: s.title, version: s.template_version ?? null, executed: !!s.executed_at, funds: (s.covered_offering_ids ?? []).length || (s.offering_id ? 1 : 0), services: s.service_keys ?? [] })),
+              sows: (c.sows as CoverageSow[]).map((s) => ({ id: s.id, title: s.title, version: s.template_version ?? null, executed: !!s.executed_at, funds: (s.covered_offering_ids ?? []).length || (s.offering_id ? 1 : 0), services: s.service_keys ?? [] })),
               services: svc,
             };
           })(),
