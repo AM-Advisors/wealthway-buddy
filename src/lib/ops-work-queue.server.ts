@@ -773,7 +773,7 @@ async function engagementItems(s: any, lookup: Lookup, now: Date, fundId?: strin
     if (app.executed || app.draft) continue;
     if (!(sels as any[]).some((x) => x.offering_id === f.id) && !(sows as any[]).length) continue;
     if (resolveSowTemplate(templates as any[], engagementTypeFor(f), today).status === "resolved") continue;
-    out.push(base({ id: `engagement:${f.id}:no_template`, recordId: f.client_id, recordTab: "funds", title: `${NO_TEMPLATE_MESSAGE} — ${f.name}`, reason: NO_TEMPLATE_MESSAGE, workflowState: "no_template", requiredAction: "prepare", clientId: f.client_id, offeringId: f.id, at: f.created_at }));
+    out.push(base({ id: `engagement:${f.id}:no_template`, recordId: f.client_id, recordTab: "funds", title: `${NO_TEMPLATE_MESSAGE} — ${f.name}`, reason: NO_TEMPLATE_MESSAGE, workflowState: "no_template", requiredAction: "prepare", clientId: f.client_id, fundId: f.id, at: f.created_at }));
   }
   for (const w of sows as any[]) {
     if (w.executed_at || (fundId && w.offering_id !== fundId)) continue;
@@ -787,7 +787,7 @@ async function engagementItems(s: any, lookup: Lookup, now: Date, fundId?: strin
   }
   for (const r of reassign as any[]) {
     if (fundId && r.offering_id !== fundId) continue;
-    out.push(base({ id: `engagement:reassign:${r.id}`, recordId: r.to_client_id, recordTab: "funds", title: "Fund reassignment awaiting review", reason: r.reason, workflowState: "reassignment", requiredAction: "approve", clientId: r.to_client_id, offeringId: r.offering_id, at: r.requested_at }));
+    out.push(base({ id: `engagement:reassign:${r.id}`, recordId: r.to_client_id, recordTab: "funds", title: "Fund reassignment awaiting review", reason: r.reason, workflowState: "reassignment", requiredAction: "approve", clientId: r.to_client_id, fundId: r.offering_id, at: r.requested_at }));
   }
   return out;
 }
