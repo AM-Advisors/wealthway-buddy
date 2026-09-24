@@ -30,6 +30,7 @@ type Block = {
   height: number;
   block_type: SignatureBlockType;
   required: boolean;
+  signer_role: "investor" | "fund_manager";
 };
 
 const DEFAULT_SIZE: Record<SignatureBlockType, { width: number; height: number }> = {
@@ -38,6 +39,8 @@ const DEFAULT_SIZE: Record<SignatureBlockType, { width: number; height: number }
   date: { width: 0.18, height: 0.035 },
   full_name: { width: 0.28, height: 0.035 },
   title: { width: 0.24, height: 0.035 },
+  entity_name: { width: 0.3, height: 0.035 },
+  text: { width: 0.24, height: 0.035 },
 };
 
 const typeLabel = (t: SignatureBlockType) =>
@@ -64,6 +67,7 @@ export function SignatureBlockEditor({
   const [renderError, setRenderError] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [tool, setTool] = useState<SignatureBlockType>("signature");
+  const [role, setRole] = useState<"investor" | "fund_manager">("investor");
   const [saving, setSaving] = useState(false);
   const dragRef = useRef<{ key: string; dx: number; dy: number } | null>(null);
 
@@ -85,6 +89,7 @@ export function SignatureBlockEditor({
         height: b.height,
         block_type: b.block_type,
         required: b.required,
+        signer_role: b.signer_role,
       })),
     );
   }, [meta.data]);
@@ -150,6 +155,7 @@ export function SignatureBlockEditor({
         height: size.height,
         block_type: tool,
         required: true,
+        signer_role: role,
       },
     ]);
   };
@@ -168,6 +174,7 @@ export function SignatureBlockEditor({
             height: b.height,
             block_type: b.block_type,
             required: b.required,
+            signer_role: b.signer_role,
           })),
         },
       });
@@ -218,8 +225,18 @@ export function SignatureBlockEditor({
               ))}
             </SelectContent>
           </Select>
+          <Label>Signer</Label>
+          <Select value={role} onValueChange={(v) => setRole(v as "investor" | "fund_manager")}>
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="investor">Investor</SelectItem>
+              <SelectItem value="fund_manager">Fund Manager</SelectItem>
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">
-            Click a page to place it, then drag it where the investor should sign.
+            Click a page to place it, then drag it into place. Investor fields are teal, Fund Manager fields are navy.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -300,7 +317,7 @@ export function SignatureBlockEditor({
                 .map((b) => (
                   <div
                     key={b.key}
-                    className="absolute flex items-center justify-between gap-1 rounded border-2 border-primary/70 bg-primary/10 px-1 text-[10px] text-primary"
+                    className={`absolute flex items-center justify-between gap-1 rounded border-2 px-1 text-[10px] ${b.signer_role === "fund_manager" ? "border-primary/80 bg-primary/15 text-primary" : "border-accent bg-accent/20 text-accent-foreground"}`}
                     style={{
                       left: `${b.x * 100}%`,
                       top: `${b.y * 100}%`,
@@ -323,6 +340,7 @@ export function SignatureBlockEditor({
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="truncate">
+                      {b.signer_role === "fund_manager" ? "FM · " : "Inv · "}
                       {typeLabel(b.block_type)}
                       {b.required ? "" : " (optional)"}
                     </span>
