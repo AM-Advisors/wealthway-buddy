@@ -107,7 +107,9 @@ describe("server-side enforcement (source guards)", () => {
     expect(claim).toMatch(/invitationUsableError/);
   });
   it("portal detail is scoped to the investor who owns the investment", () => {
-    const detail = engine.slice(engine.indexOf("export async function onboardPortalDetail"));
+    const start = engine.indexOf("export async function onboardPortalDetail");
+    // Only the detail function itself: wire instructions live behind the separate fresh-auth reveal.
+    const detail = engine.slice(start, engine.indexOf("\n}\n", start));
     expect(detail.slice(0, 200)).toMatch(/assertInvestorOwns/);
     expect(detail).not.toMatch(/fundingInstructions|bank_/);
   });
