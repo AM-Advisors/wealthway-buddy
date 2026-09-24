@@ -34,7 +34,7 @@ export async function readDocumentText(
     const pages = (Array.isArray(text) ? text : [text]).map((p) => String(p ?? ""));
     return { pages, chars: pages.join("").replace(/\s/g, "").length };
   }
-  const files = unzipSync(bytes, { filter: (f) => f.name === "word/document.xml" });
+  const files = unzipSync(bytes, { filter: (f: { name: string }) => f.name === "word/document.xml" });
   const xml = files["word/document.xml"];
   if (!xml) throw new Error("This Word file couldn't be read.");
   const text = strFromU8(xml)

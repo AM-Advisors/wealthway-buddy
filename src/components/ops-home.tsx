@@ -355,9 +355,10 @@ export function OperationsWorkHome() {
 /** Global "+ New" — shown per granular capability; each destination re-checks on the server. */
 function OpsNewMenu({ capabilities }: { capabilities?: readonly string[] | undefined }) {
   const may = (area: string) => (capabilities ?? []).includes(`${area}:prepare`);
-  if (!may("funds") && !may("companies") && !may("investors")) return null;
+  if (!may("clients") && !may("funds") && !may("companies") && !may("investors")) return null;
   return (
     <div className="flex flex-wrap gap-2" aria-label="Create new">
+      {may("clients") && <Button asChild size="sm"><Link to="/ops/clients/new">+ New Client</Link></Button>}
       {may("funds") && <Button asChild size="sm" variant="outline"><Link to="/admin/setup">+ New Fund / SPV</Link></Button>}
       {may("companies") && <Button asChild size="sm" variant="outline"><Link to="/admin/client-cap-tables">+ New Company / Cap Table</Link></Button>}
       {may("investors") && <Button asChild size="sm" variant="outline"><Link to="/ops/funds">+ Add Investor</Link></Button>}

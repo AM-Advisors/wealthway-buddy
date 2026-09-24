@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GOVERNING_DOC_TYPES, noticeDeadline } from "@/lib/contract-ingestion";
-import { listClientContracts, uploadContract } from "@/lib/client-intake.functions";
+import { listClientContracts, uploadContract } from "@/lib/contract-intake.functions";
 
 export const REVIEW_LABEL: Record<string, string> = {
   uploaded: "Uploaded",
@@ -59,7 +59,10 @@ export function UploadContractForm({
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    if (!file) return toast.error("Choose a PDF or Word file.");
+    if (!file) {
+      toast.error("Choose a PDF or Word file.");
+      return;
+    }
     setBusy(true);
     try {
       const base64 = await fileToBase64(file);

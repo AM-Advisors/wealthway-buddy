@@ -78,41 +78,13 @@ export function ClientsBoard() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Add a client</CardTitle>
-          <CardDescription>
-            The client signs the master agreement. Each engagement then has its own statement of
-            work.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between gap-3 pb-3">
+          <div>
+            <CardTitle className="text-base">New clients</CardTitle>
+            <CardDescription>Clients are now created with the guided intake (details, contacts, services, contract).</CardDescription>
+          </div>
+          <Button asChild size="sm"><Link to="/ops/clients/new">+ New Client</Link></Button>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-4">
-          <div className="sm:col-span-2">
-            <Label htmlFor="client-name">Client name</Label>
-            <Input id="client-name" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="client-contact">Main contact email</Label>
-            <Input
-              id="client-contact"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="client-signed">Agreement signed</Label>
-            <Input
-              id="client-signed"
-              type="date"
-              value={signedOn}
-              onChange={(e) => setSignedOn(e.target.value)}
-            />
-          </div>
-          <div className="sm:col-span-4">
-            <Button disabled={name.trim().length < 2 || add.isPending} onClick={() => add.mutate()}>
-              Add client
-            </Button>
-          </div>
-        </CardContent>
       </Card>
 
       {unassigned.length ? (

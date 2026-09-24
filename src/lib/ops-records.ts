@@ -33,6 +33,8 @@ export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
   client: [
     { id: "overview", title: "Overview", area: "clients" },
     { id: "relationships", title: "Relationships", area: "clients" },
+    { id: "contacts", title: "Contacts", area: "clients" },
+    { id: "contracts", title: "Contracts", area: "clients" },
     { id: "funds", title: "Funds", area: "funds" },
     { id: "companies", title: "Companies", area: "companies" },
     { id: "investors", title: "Investors", area: "investors" },
