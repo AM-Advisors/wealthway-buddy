@@ -83,9 +83,9 @@ describe("Investor preparation", () => {
   });
   it("merge fields come from profile data", () => {
     const m = mergeFields(toPreparedFields({ legal_name: "Ann Lee", commitment_cents: 5000000 }, "fund_manager"), { name: "Fund I" }, "2026-09-24");
-    expect(m.investor_legal_name).toBe("Ann Lee");
-    expect(m.commitment_amount).toBe("$50,000.00");
-    expect(m.fund_name).toBe("Fund I");
+    expect(m['investor_legal_name']).toBe("Ann Lee");
+    expect(m['commitment_amount']).toBe("$50,000.00");
+    expect(m['fund_name']).toBe("Fund I");
   });
   it("send is blocked when a signature template isn't ready", () => {
     expect(sendBlockers({ email: "a@b.co", docs: [doc({ template_ready: false })], selected: [{ documentId: "d1", requirement: "required" }] }).length).toBe(1);

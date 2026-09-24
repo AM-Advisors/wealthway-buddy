@@ -88,7 +88,7 @@ export const saveInvestorDraft = createServerFn({ method: "POST" })
       id = (ins as any).id;
     }
     await context.supabase.from("investor_prep_events").insert({
-      draft_id: id, actor_id: context.userId, actor_capacity: capacity, action: before ? "draft_updated" : "draft_created",
+      draft_id: id as string, actor_id: context.userId, actor_capacity: capacity, action: before ? "draft_updated" : "draft_created",
       before_value: before ? { email: before.email, fields: before.fields, documents: before.documents } : null,
       after_value: { email: row.email, fields: row.fields, documents: row.documents }, reason: data.reason ?? null,
     });
