@@ -14752,6 +14752,48 @@ export type Database = {
           },
         ]
       }
+      help_content: {
+        Row: {
+          created_at: string
+          help_key: string
+          id: string
+          learn_more_url: string | null
+          long_description: string | null
+          short_description: string
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          help_key: string
+          id?: string
+          learn_more_url?: string | null
+          long_description?: string | null
+          short_description: string
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          help_key?: string
+          id?: string
+          learn_more_url?: string | null
+          long_description?: string | null
+          short_description?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       identity_check_results: {
         Row: {
           check_kind: Database["public"]["Enums"]["identity_check_kind"]

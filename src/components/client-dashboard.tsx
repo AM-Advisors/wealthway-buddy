@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { separateSignedRecords } from "@/lib/client-portal-model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -412,16 +413,16 @@ export function ClientDashboard({
           <CardHeader>
             <CardTitle className="text-base">Signed documents</CardTitle>
             <CardDescription>
-              Everything you have signed or accepted, with the date it was recorded.
+              Executed contracts and fund documents. Platform terms and policies are under Agreements & Policies.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {signedDocuments.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Nothing has been signed yet. Signed items appear here automatically.
+                No executed documents yet. Signed contracts appear here automatically.
               </p>
             )}
-            {signedDocuments.slice(0, 8).map((d: any) => (
+            {separateSignedRecords(signedDocuments).documents.slice(0, 8).map((d: any) => (
               <div key={d.id} className="rounded-md border p-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -442,6 +443,9 @@ export function ClientDashboard({
                 <Link to="/client/sign-offs">Open sign-offs</Link>
               </Button>
             )}
+            <Button asChild size="sm" variant="ghost">
+              <Link to="/account/agreements">Agreements & Policies</Link>
+            </Button>
           </CardContent>
         </Card>
 

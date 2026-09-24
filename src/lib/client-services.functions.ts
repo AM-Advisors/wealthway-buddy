@@ -7,6 +7,62 @@ import { whoIsStaff } from "@/lib/service-catalog.functions";
 /** The universal request router: what would you like to do? */
 export const REQUEST_INTENTS = [
   {
+    value: "launch_fund",
+    label: "Launch a Fund",
+    blurb: "Set up a VC, private equity, hedge, real estate or other pooled investment fund.",
+    suggests: ["fund_administration", "investor_onboarding", "kyc_aml", "registered_agent"],
+    questions: [],
+  },
+  {
+    value: "launch_spv",
+    label: "Launch an SPV",
+    blurb: "Set up a single-purpose investment vehicle for a specific investment or transaction.",
+    suggests: ["spv", "investor_onboarding", "kyc_aml"],
+    questions: [],
+  },
+  {
+    value: "move_fund_spv",
+    label: "Move an Existing Fund/SPV to Harmonious",
+    blurb: "Bring a fund or SPV that another administrator looks after today.",
+    suggests: ["migration", "fund_administration"],
+    questions: [
+      { key: "entity_name", label: "Which fund or SPV?" },
+      { key: "current_provider", label: "Who administers it today?" },
+      { key: "target_date", label: "When would you like the move finished?" },
+    ],
+  },
+  {
+    value: "add_company",
+    label: "Add a Company",
+    blurb: "Add an operating company to your relationship.",
+    suggests: ["registered_agent", "cap_table"],
+    questions: [
+      { key: "entity_name", label: "What is the company's legal name?" },
+      { key: "jurisdiction", label: "Where is it formed?" },
+    ],
+  },
+  {
+    value: "add_gp_mgmt",
+    label: "Add a GP / Management Company",
+    blurb: "Add the general partner or management company behind your funds.",
+    suggests: ["registered_agent"],
+    questions: [
+      { key: "entity_name", label: "What is the entity's legal name?" },
+      { key: "entity_role", label: "Is it a GP, a management company, or both?" },
+      { key: "jurisdiction", label: "Where is it formed?" },
+    ],
+  },
+  {
+    value: "cap_table",
+    label: "Set Up / Import Cap Table",
+    blurb: "Start a cap table with us or import one from a spreadsheet or another provider.",
+    suggests: ["cap_table"],
+    questions: [
+      { key: "entity_name", label: "Which company?" },
+      { key: "current_provider", label: "Where is the cap table kept today?" },
+    ],
+  },
+  {
     value: "launch_fund_spv",
     label: "Launch a fund or SPV",
     blurb: "Stand up a new fund, SPV or series and get it ready to take investors.",
@@ -31,8 +87,8 @@ export const REQUEST_INTENTS = [
   },
   {
     value: "add_entity",
-    label: "Add a company or entity",
-    blurb: "Bring another company, GP, management company or vehicle into your relationship.",
+    label: "Add Another Entity",
+    blurb: "Any other entity — a holding company, blocker, trust or other vehicle.",
     suggests: ["registered_agent"],
     questions: [
       { key: "entity_name", label: "What is the entity's legal name?" },
@@ -43,7 +99,7 @@ export const REQUEST_INTENTS = [
   {
     value: "move_to_harmonious",
     label: "Move to Harmonious",
-    blurb: "Move an existing fund, cap table or administrator across to us.",
+    blurb: "Move your whole relationship, several entities or records across to us.",
     suggests: ["migration", "cap_table"],
     questions: [
       { key: "current_provider", label: "Who looks after it today?" },
@@ -203,6 +259,12 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
     z
       .object({
         intent: z.enum([
+          "launch_fund",
+          "launch_spv",
+          "move_fund_spv",
+          "add_company",
+          "add_gp_mgmt",
+          "cap_table",
           "launch_fund_spv",
           "add_service",
           "add_entity",

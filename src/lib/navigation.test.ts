@@ -68,7 +68,7 @@ describe("parity: legacy ClientSidebar", () => {
   }
   it("investor menu has the required sections", () => {
     expect(getNavigation(session(["investor"]), "investor", "/home").primary.map((l) => l.title)).toEqual([
-      "Home", "Investments", "Activity", "Reports", "Documents", "Tax", "Profile",
+      "Home", "My Investments", "My Funds", "Activity", "Reports", "Documents", "Tax", "Profile",
     ]);
   });
 });

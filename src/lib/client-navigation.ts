@@ -34,7 +34,8 @@ export const INTERNAL_PATH_PREFIXES = ["/admin", "/ops", "/staff"];
 
 const INVESTOR_NAV: ClientNavLink[] = [
   { title: "Home", url: "/home", icon: "home" },
-  { title: "Investments", url: "/dashboard", icon: "briefcase" },
+  { title: "My Investments", url: "/dashboard", icon: "briefcase" },
+  { title: "My Funds", url: "/my-funds", icon: "building" },
   { title: "Activity", url: "/activity", icon: "history" },
   { title: "Reports", url: "/investor-reporting", icon: "report" },
   { title: "Documents", url: "/documents", icon: "document" },
@@ -44,7 +45,7 @@ const INVESTOR_NAV: ClientNavLink[] = [
 
 const FUND_MANAGER_NAV: ClientNavLink[] = [
   { title: "Home", url: "/manager", icon: "home" },
-  { title: "Funds", url: "/manager/funds", icon: "building" },
+  { title: "My Funds", url: "/my-funds", icon: "building" },
   { title: "Investors", url: "/manager/investors", icon: "people" },
   { title: "Capital", url: "/manager/capital", icon: "money" },
   { title: "Reports", url: "/manager/reporting", icon: "report" },

@@ -72,6 +72,7 @@ import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
+import { Route as AuthenticatedAccountAgreementsRouteImport } from './routes/_authenticated/account.agreements'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
@@ -164,6 +165,8 @@ import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authentic
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
+import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
+import { Route as AuthenticatedMyFundsFundIdRouteImport } from './routes/_authenticated/my-funds.$fundId'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
 import { Route as AuthenticatedOnboardingComplianceRouteImport } from './routes/_authenticated/onboarding.compliance'
@@ -601,6 +604,12 @@ const SharesTokenRoute = SharesTokenRouteImport.update({
   path: '/shares/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccountAgreementsRoute =
+  AuthenticatedAccountAgreementsRouteImport.update({
+    id: '/account/agreements',
+    path: '/account/agreements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -1142,6 +1151,18 @@ const AuthenticatedManagerWiresRoute =
   AuthenticatedManagerWiresRouteImport.update({
     id: '/manager/wires',
     path: '/manager/wires',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMyFundsIndexRoute =
+  AuthenticatedMyFundsIndexRouteImport.update({
+    id: '/my-funds/',
+    path: '/my-funds/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMyFundsFundIdRoute =
+  AuthenticatedMyFundsFundIdRouteImport.update({
+    id: '/my-funds/$fundId',
+    path: '/my-funds/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOnboardingAccreditationRoute =
@@ -1871,6 +1892,7 @@ export interface FileRoutesByFullPath {
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
@@ -1959,6 +1981,7 @@ export interface FileRoutesByFullPath {
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
@@ -2003,6 +2026,7 @@ export interface FileRoutesByFullPath {
   '/client/': typeof AuthenticatedClientIndexRoute
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
+  '/my-funds/': typeof AuthenticatedMyFundsIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
   '/professional/': typeof AuthenticatedProfessionalIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
@@ -2137,6 +2161,7 @@ export interface FileRoutesByTo {
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
+  '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
@@ -2223,6 +2248,7 @@ export interface FileRoutesByTo {
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
@@ -2267,6 +2293,7 @@ export interface FileRoutesByTo {
   '/client': typeof AuthenticatedClientIndexRoute
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
+  '/my-funds': typeof AuthenticatedMyFundsIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
   '/professional': typeof AuthenticatedProfessionalIndexRoute
   '/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
@@ -2405,6 +2432,7 @@ export interface FileRoutesById {
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/_authenticated/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
   '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
@@ -2493,6 +2521,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/_authenticated/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
@@ -2537,6 +2566,7 @@ export interface FileRoutesById {
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
+  '/_authenticated/my-funds/': typeof AuthenticatedMyFundsIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
   '/_authenticated/professional/': typeof AuthenticatedProfessionalIndexRoute
   '/_authenticated/admin/contracts/$clientId': typeof AuthenticatedAdminContractsClientIdRoute
@@ -2676,6 +2706,7 @@ export interface FileRouteTypes {
     | '/post/$slug'
     | '/shares/$token'
     | '/auth/'
+    | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
     | '/admin/activity'
@@ -2764,6 +2795,7 @@ export interface FileRouteTypes {
     | '/manager/timeline'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/my-funds/$fundId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/compliance'
@@ -2808,6 +2840,7 @@ export interface FileRouteTypes {
     | '/client/'
     | '/diligence/'
     | '/manager/'
+    | '/my-funds/'
     | '/ops/'
     | '/professional/'
     | '/admin/contracts/$clientId'
@@ -2942,6 +2975,7 @@ export interface FileRouteTypes {
     | '/post/$slug'
     | '/shares/$token'
     | '/auth'
+    | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
     | '/admin/activity'
@@ -3028,6 +3062,7 @@ export interface FileRouteTypes {
     | '/manager/timeline'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/my-funds/$fundId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/compliance'
@@ -3072,6 +3107,7 @@ export interface FileRouteTypes {
     | '/client'
     | '/diligence'
     | '/manager'
+    | '/my-funds'
     | '/ops'
     | '/professional'
     | '/admin/contracts/$clientId'
@@ -3209,6 +3245,7 @@ export interface FileRouteTypes {
     | '/post/$slug'
     | '/shares/$token'
     | '/auth/'
+    | '/_authenticated/account/agreements'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
     | '/_authenticated/admin/activity'
@@ -3297,6 +3334,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/timeline'
     | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
+    | '/_authenticated/my-funds/$fundId'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
     | '/_authenticated/onboarding/compliance'
@@ -3341,6 +3379,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/'
     | '/_authenticated/diligence/'
     | '/_authenticated/manager/'
+    | '/_authenticated/my-funds/'
     | '/_authenticated/ops/'
     | '/_authenticated/professional/'
     | '/_authenticated/admin/contracts/$clientId'
@@ -3902,6 +3941,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/shares/$token'
       preLoaderRoute: typeof SharesTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account/agreements': {
+      id: '/_authenticated/account/agreements'
+      path: '/account/agreements'
+      fullPath: '/account/agreements'
+      preLoaderRoute: typeof AuthenticatedAccountAgreementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -4545,6 +4591,20 @@ declare module '@tanstack/react-router' {
       path: '/manager/wires'
       fullPath: '/manager/wires'
       preLoaderRoute: typeof AuthenticatedManagerWiresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-funds/': {
+      id: '/_authenticated/my-funds/'
+      path: '/my-funds'
+      fullPath: '/my-funds/'
+      preLoaderRoute: typeof AuthenticatedMyFundsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my-funds/$fundId': {
+      id: '/_authenticated/my-funds/$fundId'
+      path: '/my-funds/$fundId'
+      fullPath: '/my-funds/$fundId'
+      preLoaderRoute: typeof AuthenticatedMyFundsFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding/accreditation': {
@@ -5581,6 +5641,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVaultRoute: typeof AuthenticatedVaultRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
   AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
+  AuthenticatedAccountAgreementsRoute: typeof AuthenticatedAccountAgreementsRoute
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedAdminActivityRoute: typeof AuthenticatedAdminActivityRoute
@@ -5660,6 +5721,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
+  AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
   AuthenticatedOnboardingComplianceRoute: typeof AuthenticatedOnboardingComplianceRoute
@@ -5683,6 +5745,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
+  AuthenticatedMyFundsIndexRoute: typeof AuthenticatedMyFundsIndexRoute
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
   AuthenticatedAdminContractsClientIdRoute: typeof AuthenticatedAdminContractsClientIdRoute
   AuthenticatedAdminEngagementsEngagementIdRoute: typeof AuthenticatedAdminEngagementsEngagementIdRoute
@@ -5755,6 +5818,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVaultRoute: AuthenticatedVaultRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
   AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
+  AuthenticatedAccountAgreementsRoute: AuthenticatedAccountAgreementsRoute,
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedAdminActivityRoute: AuthenticatedAdminActivityRoute,
@@ -5850,6 +5914,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
+  AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,
@@ -5875,6 +5940,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
+  AuthenticatedMyFundsIndexRoute: AuthenticatedMyFundsIndexRoute,
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
   AuthenticatedAdminContractsClientIdRoute:
     AuthenticatedAdminContractsClientIdRoute,
