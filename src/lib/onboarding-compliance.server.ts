@@ -223,7 +223,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
 /** Certify the resolved IRS form. Previous forms are superseded, never overwritten. */
 export async function certifyTaxForm(
   userId: string,
-  input: { onboardingId: string; formType: TaxFormType; legalName: string; tin?: string | null; certifiedName: string; acknowledgedRevision: string; userAgent?: string | null },
+  input: { onboardingId: string; formType: TaxFormType; legalName: string; tin?: string | null | undefined; certifiedName: string; acknowledgedRevision: string; userAgent?: string | null },
 ) {
   const { d, ob, profile } = await loadOwnOnboarding(userId, input.onboardingId);
   const [{ data: tax }, { data: person }] = await Promise.all([

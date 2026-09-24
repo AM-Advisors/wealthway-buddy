@@ -314,11 +314,11 @@ export interface DeterminationInput {
    * When present they are authoritative for their requirement.
    */
   compliance?: {
-    tax?: { state: RequirementState; reason?: string };
-    badActor?: { state: RequirementState; reason?: string };
-    offeringEligibility?: { state: RequirementState; reason?: string };
-    certifications?: { state: RequirementState; reason?: string };
-  };
+    tax?: { state: RequirementState; reason?: string | undefined };
+    badActor?: { state: RequirementState; reason?: string | undefined };
+    offeringEligibility?: { state: RequirementState; reason?: string | undefined };
+    certifications?: { state: RequirementState; reason?: string | undefined };
+  } | undefined;
 }
 
 /**

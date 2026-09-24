@@ -251,7 +251,7 @@ export interface EligibilityRequirementConfig {
   category: EligibilityCategory;
   mandatory: boolean;
   /** When true a "yes/flag" response routes to review instead of satisfying. */
-  reviewOnFlag?: boolean;
+  reviewOnFlag?: boolean | undefined;
 }
 
 export const ELIGIBILITY_OUTCOMES = [
