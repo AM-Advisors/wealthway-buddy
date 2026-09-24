@@ -27,6 +27,7 @@ import { revealWireInstructionsFn } from "@/lib/fund-onboarding.functions";
 import { fundStepState, WIRE_FRAUD_WARNING } from "@/lib/fund-onboarding-model";
 import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
+import { CertificationsPanel, TaxAndCompliancePanel } from "@/components/onboard-compliance-panels";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? null : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -143,7 +144,9 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
       </ol>
 
       {view === "verification" ? <VerificationStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
+      {view === "verification" && d?.onboarding?.investment_profile_id !== null ? <TaxAndCompliancePanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "accreditation" ? <AccreditationStep d={d} onboardingId={onboardingId} /> : null}
+      {view === "documents" ? <CertificationsPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <DocumentsStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <FundStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <Completed d={d} /> : null}
