@@ -236,7 +236,9 @@ import { Route as AuthenticatedClientCapTableReportsRouteImport } from './routes
 import { Route as AuthenticatedClientCapTableSecondariesRouteImport } from './routes/_authenticated/client.cap-table.secondaries'
 import { Route as AuthenticatedClientCapTableSecuritiesRouteImport } from './routes/_authenticated/client.cap-table.securities'
 import { Route as AuthenticatedClientCapTableSettingsRouteImport } from './routes/_authenticated/client.cap-table.settings'
+import { Route as AuthenticatedClientCapTableStakeholdersRouteImport } from './routes/_authenticated/client.cap-table.stakeholders'
 import { Route as AuthenticatedClientCapTableTableRouteImport } from './routes/_authenticated/client.cap-table.table'
+import { Route as AuthenticatedClientCapTableTransactionsRouteImport } from './routes/_authenticated/client.cap-table.transactions'
 import { Route as AuthenticatedClientServicesIndexRouteImport } from './routes/_authenticated/client.services.index'
 import { Route as AuthenticatedClientServicesEngagementIdRouteImport } from './routes/_authenticated/client.services.$engagementId'
 import { Route as AuthenticatedClientServicesRequestRouteImport } from './routes/_authenticated/client.services.request'
@@ -1569,10 +1571,22 @@ const AuthenticatedClientCapTableSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedClientCapTableRoute,
   } as any)
+const AuthenticatedClientCapTableStakeholdersRoute =
+  AuthenticatedClientCapTableStakeholdersRouteImport.update({
+    id: '/stakeholders',
+    path: '/stakeholders',
+    getParentRoute: () => AuthenticatedClientCapTableRoute,
+  } as any)
 const AuthenticatedClientCapTableTableRoute =
   AuthenticatedClientCapTableTableRouteImport.update({
     id: '/table',
     path: '/table',
+    getParentRoute: () => AuthenticatedClientCapTableRoute,
+  } as any)
+const AuthenticatedClientCapTableTransactionsRoute =
+  AuthenticatedClientCapTableTransactionsRouteImport.update({
+    id: '/transactions',
+    path: '/transactions',
     getParentRoute: () => AuthenticatedClientCapTableRoute,
   } as any)
 const AuthenticatedClientServicesIndexRoute =
@@ -2052,7 +2066,9 @@ export interface FileRoutesByFullPath {
   '/client/cap-table/secondaries': typeof AuthenticatedClientCapTableSecondariesRoute
   '/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/client/cap-table/settings': typeof AuthenticatedClientCapTableSettingsRoute
+  '/client/cap-table/stakeholders': typeof AuthenticatedClientCapTableStakeholdersRoute
   '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
+  '/client/cap-table/transactions': typeof AuthenticatedClientCapTableTransactionsRoute
   '/client/services/$engagementId': typeof AuthenticatedClientServicesEngagementIdRoute
   '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
@@ -2319,7 +2335,9 @@ export interface FileRoutesByTo {
   '/client/cap-table/secondaries': typeof AuthenticatedClientCapTableSecondariesRoute
   '/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/client/cap-table/settings': typeof AuthenticatedClientCapTableSettingsRoute
+  '/client/cap-table/stakeholders': typeof AuthenticatedClientCapTableStakeholdersRoute
   '/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
+  '/client/cap-table/transactions': typeof AuthenticatedClientCapTableTransactionsRoute
   '/client/services/$engagementId': typeof AuthenticatedClientServicesEngagementIdRoute
   '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
@@ -2592,7 +2610,9 @@ export interface FileRoutesById {
   '/_authenticated/client/cap-table/secondaries': typeof AuthenticatedClientCapTableSecondariesRoute
   '/_authenticated/client/cap-table/securities': typeof AuthenticatedClientCapTableSecuritiesRoute
   '/_authenticated/client/cap-table/settings': typeof AuthenticatedClientCapTableSettingsRoute
+  '/_authenticated/client/cap-table/stakeholders': typeof AuthenticatedClientCapTableStakeholdersRoute
   '/_authenticated/client/cap-table/table': typeof AuthenticatedClientCapTableTableRoute
+  '/_authenticated/client/cap-table/transactions': typeof AuthenticatedClientCapTableTransactionsRoute
   '/_authenticated/client/services/$engagementId': typeof AuthenticatedClientServicesEngagementIdRoute
   '/_authenticated/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/_authenticated/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
@@ -2866,7 +2886,9 @@ export interface FileRouteTypes {
     | '/client/cap-table/secondaries'
     | '/client/cap-table/securities'
     | '/client/cap-table/settings'
+    | '/client/cap-table/stakeholders'
     | '/client/cap-table/table'
+    | '/client/cap-table/transactions'
     | '/client/services/$engagementId'
     | '/client/services/request'
     | '/fund/$offeringId/documents'
@@ -3133,7 +3155,9 @@ export interface FileRouteTypes {
     | '/client/cap-table/secondaries'
     | '/client/cap-table/securities'
     | '/client/cap-table/settings'
+    | '/client/cap-table/stakeholders'
     | '/client/cap-table/table'
+    | '/client/cap-table/transactions'
     | '/client/services/$engagementId'
     | '/client/services/request'
     | '/fund/$offeringId/documents'
@@ -3405,7 +3429,9 @@ export interface FileRouteTypes {
     | '/_authenticated/client/cap-table/secondaries'
     | '/_authenticated/client/cap-table/securities'
     | '/_authenticated/client/cap-table/settings'
+    | '/_authenticated/client/cap-table/stakeholders'
     | '/_authenticated/client/cap-table/table'
+    | '/_authenticated/client/cap-table/transactions'
     | '/_authenticated/client/services/$engagementId'
     | '/_authenticated/client/services/request'
     | '/_authenticated/fund/$offeringId/documents'
@@ -5090,11 +5116,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientCapTableSettingsRouteImport
       parentRoute: typeof AuthenticatedClientCapTableRoute
     }
+    '/_authenticated/client/cap-table/stakeholders': {
+      id: '/_authenticated/client/cap-table/stakeholders'
+      path: '/stakeholders'
+      fullPath: '/client/cap-table/stakeholders'
+      preLoaderRoute: typeof AuthenticatedClientCapTableStakeholdersRouteImport
+      parentRoute: typeof AuthenticatedClientCapTableRoute
+    }
     '/_authenticated/client/cap-table/table': {
       id: '/_authenticated/client/cap-table/table'
       path: '/table'
       fullPath: '/client/cap-table/table'
       preLoaderRoute: typeof AuthenticatedClientCapTableTableRouteImport
+      parentRoute: typeof AuthenticatedClientCapTableRoute
+    }
+    '/_authenticated/client/cap-table/transactions': {
+      id: '/_authenticated/client/cap-table/transactions'
+      path: '/transactions'
+      fullPath: '/client/cap-table/transactions'
+      preLoaderRoute: typeof AuthenticatedClientCapTableTransactionsRouteImport
       parentRoute: typeof AuthenticatedClientCapTableRoute
     }
     '/_authenticated/client/services/': {
@@ -5438,7 +5478,9 @@ interface AuthenticatedClientCapTableRouteChildren {
   AuthenticatedClientCapTableSecondariesRoute: typeof AuthenticatedClientCapTableSecondariesRoute
   AuthenticatedClientCapTableSecuritiesRoute: typeof AuthenticatedClientCapTableSecuritiesRoute
   AuthenticatedClientCapTableSettingsRoute: typeof AuthenticatedClientCapTableSettingsRoute
+  AuthenticatedClientCapTableStakeholdersRoute: typeof AuthenticatedClientCapTableStakeholdersRoute
   AuthenticatedClientCapTableTableRoute: typeof AuthenticatedClientCapTableTableRoute
+  AuthenticatedClientCapTableTransactionsRoute: typeof AuthenticatedClientCapTableTransactionsRoute
   AuthenticatedClientCapTableIndexRoute: typeof AuthenticatedClientCapTableIndexRoute
 }
 
@@ -5468,8 +5510,12 @@ const AuthenticatedClientCapTableRouteChildren: AuthenticatedClientCapTableRoute
       AuthenticatedClientCapTableSecuritiesRoute,
     AuthenticatedClientCapTableSettingsRoute:
       AuthenticatedClientCapTableSettingsRoute,
+    AuthenticatedClientCapTableStakeholdersRoute:
+      AuthenticatedClientCapTableStakeholdersRoute,
     AuthenticatedClientCapTableTableRoute:
       AuthenticatedClientCapTableTableRoute,
+    AuthenticatedClientCapTableTransactionsRoute:
+      AuthenticatedClientCapTableTransactionsRoute,
     AuthenticatedClientCapTableIndexRoute:
       AuthenticatedClientCapTableIndexRoute,
   }

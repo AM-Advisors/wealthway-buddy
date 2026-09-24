@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 export const CAP_TABLE_SECTIONS = [
   { to: "/client/cap-table", label: "Overview", exact: true },
   { to: "/client/cap-table/table", label: "Cap table" },
+  { to: "/client/cap-table/stakeholders", label: "Stakeholders" },
+  { to: "/client/cap-table/transactions", label: "Transactions" },
   { to: "/client/cap-table/securities", label: "Securities" },
   { to: "/client/cap-table/employees", label: "Employees" },
   { to: "/client/cap-table/investors", label: "Investors" },
