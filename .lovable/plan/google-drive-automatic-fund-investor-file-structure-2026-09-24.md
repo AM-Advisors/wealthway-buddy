@@ -1,17 +1,19 @@
 # Google Drive — automatic Fund & Investor file structure
 
 ## What I found (read-only, nothing changed in Drive)
+
 - **Connection:** the workspace Google Drive connection "Harmonious Technology" can reach the root folder. It isn't linked to this app yet.
 - **Root folder:** "Funds", inside the shared drive "Harmonious Team". It already holds about 50 real fund folders plus "*Archived Funds".
 - **Who can open it:** 10 people get access from the shared drive itself. Two are organizers (info@, alyssa@) and eight are file organizers, including sales@. Anything filed under Funds is visible to all 10. Shared-drive members can't be removed from a subfolder.
 - **Shared drive settings:** no domain-only or members-only limit, and downloads aren't restricted.
 
 ## Key decisions
-1. **Signed W-9/W-8 forms stay out of Drive.** Everyone in the shared drive would see them, including sales@, so I can't lock them down to Tax-role staff. They stay in the existing private tax store, and the Investor "02 - Tax" folder stays empty on purpose. The same goes for government IDs, Didit data, AML/sanctions results, full TINs and bank credentials. Accreditation evidence is filed only when a policy flag allows it (off by default).
-2. **Fund managers and investors get no direct Drive sharing.** "Open Folder" buttons check the app's own permissions first. Managers get only the Fund folder and non-sensitive investor subfolders for funds they manage, and only when they already have Drive access. Nobody is added to Drive automatically.
-3. **Existing folders are never matched by name alone.** If a folder with the same name already exists, sync records a "conflict — review" item. Operations can link the existing folder ID explicitly or create a new one. Nothing is moved, renamed or deleted.
+
+1. **Fund managers and investors get no direct Drive sharing.** "Open Folder" buttons check the app's own permissions first. Managers get only the Fund folder and non-sensitive investor subfolders for funds they manage, and only when they already have Drive access. Nobody is added to Drive automatically.
+2. **Existing folders are never matched by name alone.** If a folder with the same name already exists, sync records a "conflict — review" item. Operations can link the existing folder ID explicitly or create a new one. Nothing is moved, renamed or deleted.
 
 ## What gets built
+
 - **Linked records:** each Fund, and each Fund + Investment Profile, stores its Drive folder ID and subfolder IDs, along with status (active / archived / needs attention) and the last sync error.
 - **Folder creation, safe to retry:** new folders get an app-generated tag. Before creating anything, the app looks up the tag, so a retry reuses the folder instead of making "Fund (1)".
 - **Folder layout:**
@@ -30,6 +32,7 @@
 - **No bulk creation** for production funds.
 
 ## Technical details
+
 - Link the google_drive connection to the project. Calls go through the connector gateway using `supportsAllDrives=true`, and the root ID is a server setting.
 - The migration adds `drive_folder_mappings` (entity_kind, offering_id, investment_profile_id, folder_id, subfolders jsonb, status, is_test, last_error), `drive_filed_documents` (source_table, source_id, version, drive_file_id, folder_id) and `drive_sync_events`. All three are RLS: staff-only reads, service-role writes, plus unique constraints on (offering) and (offering, profile).
 - The tag uses Drive `appProperties` (`harmonious_key`), and lookups query appProperties inside the parent folder.
@@ -38,6 +41,7 @@
 - Live check: one test fund under the real root, then removed from the app mapping only (the Drive folder is kept per the no-delete rule, or you remove it).
 
 ## Needs you / Google Workspace
+
 - Confirm that tax forms staying out of Drive is acceptable. The alternative is a separate restricted shared drive for tax that only Tax staff belong to.
 - Decide whether sales@ and the other members should keep access to all investor subscription and compliance files.
 - Existing fund folders need a one-time review to link them to their funds.
