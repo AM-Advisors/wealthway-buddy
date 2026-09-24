@@ -232,6 +232,13 @@
       "when": 1790205420492,
       "tag": "0032_marketing_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790250338343,
+      "tag": "0033_fund_onboarding_dual_signature",
+      "breakpoints": true
     }
   ]
 }

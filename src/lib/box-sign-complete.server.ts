@@ -80,6 +80,9 @@ export async function syncBoxSignRequest(
     patch["box_error"] = null;
   }
 
+  // Per-signer truth from Box (dual signature). Idempotent: replays write the same values.
+  await syncSignerRows(signature.id, signRequestId).catch((e) => console.error("[box-sign] signer rows", e));
+
   const { error: updateError } = await supabaseAdmin
     .from("document_signatures")
     .update(patch as never)
@@ -234,5 +237,38 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
       .eq("id", signatureId);
   } catch (e) {
     console.error("[box-sign] manager notification failed", e);
+  }
+}
+
+
+async function syncSignerRows(signatureId: string, signRequestId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: rows } = await supabaseAdmin
+    .from("document_signature_signers")
+    .select("id, signer_email, role_key, signing_order, status, signed_at")
+    .eq("signature_id", signatureId);
+  if (!rows?.length) return;
+  const { getSignRequestDetail } = await import("@/lib/box.server");
+  const detail = await getSignRequestDetail(signRequestId);
+  const now = new Date().toISOString();
+  const byEmail = new Map(detail.signers.map((s) => [s.email, s]));
+  const investorSigned = rows.some((r: any) => r.role_key === "investor" && (r.status === "signed" || byEmail.get(String(r.signer_email).toLowerCase())?.decision === "signed"));
+  for (const r of rows as any[]) {
+    const remote = byEmail.get(String(r.signer_email ?? "").toLowerCase());
+    let status = r.status as string;
+    if (remote?.decision === "signed") status = "signed";
+    else if (remote?.decision === "declined") status = "declined";
+    else if (r.role_key === "fund_manager" && investorSigned && status === "waiting") status = "sent";
+    if (status === r.status) continue;
+    await supabaseAdmin
+      .from("document_signature_signers")
+      .update({
+        status,
+        last_event_at: now,
+        ...(status === "signed" && !r.signed_at ? { signed_at: remote?.signedAt ?? now } : {}),
+        ...(status === "declined" ? { declined_at: now } : {}),
+        ...(status === "sent" ? { sent_at: now } : {}),
+      } as never)
+      .eq("id", r.id);
   }
 }

@@ -9530,6 +9530,7 @@ export type Database = {
           provider_status: string | null
           provider_viewed_at: string | null
           sent_by: string | null
+          signature_template_version: number | null
           signature_type: string
           signature_value: string
           signed_at: string
@@ -9537,6 +9538,7 @@ export type Database = {
           signer_capacity: string | null
           signer_email: string | null
           signer_name: string
+          signing_mode: string | null
           source_file_version_id: string | null
           superseded_by: string | null
           template_version_id: string | null
@@ -9576,6 +9578,7 @@ export type Database = {
           provider_status?: string | null
           provider_viewed_at?: string | null
           sent_by?: string | null
+          signature_template_version?: number | null
           signature_type?: string
           signature_value: string
           signed_at?: string
@@ -9583,6 +9586,7 @@ export type Database = {
           signer_capacity?: string | null
           signer_email?: string | null
           signer_name: string
+          signing_mode?: string | null
           source_file_version_id?: string | null
           superseded_by?: string | null
           template_version_id?: string | null
@@ -9622,6 +9626,7 @@ export type Database = {
           provider_status?: string | null
           provider_viewed_at?: string | null
           sent_by?: string | null
+          signature_template_version?: number | null
           signature_type?: string
           signature_value?: string
           signed_at?: string
@@ -9629,6 +9634,7 @@ export type Database = {
           signer_capacity?: string | null
           signer_email?: string | null
           signer_name?: string
+          signing_mode?: string | null
           source_file_version_id?: string | null
           superseded_by?: string | null
           template_version_id?: string | null
@@ -17365,6 +17371,7 @@ export type Database = {
       offering_documents: {
         Row: {
           body: string
+          countersigner_user_id: string | null
           created_at: string
           current_version: number
           doc_type: string
@@ -17373,8 +17380,11 @@ export type Database = {
           file_size_bytes: number | null
           file_updated_at: string | null
           id: string
+          investor_required: boolean
           offering_id: string
           requires_signature: boolean
+          signature_template_version: number
+          signing_mode: string
           sort_order: number
           template_key: string | null
           template_pack: string | null
@@ -17382,6 +17392,7 @@ export type Database = {
         }
         Insert: {
           body: string
+          countersigner_user_id?: string | null
           created_at?: string
           current_version?: number
           doc_type: string
@@ -17390,8 +17401,11 @@ export type Database = {
           file_size_bytes?: number | null
           file_updated_at?: string | null
           id?: string
+          investor_required?: boolean
           offering_id: string
           requires_signature?: boolean
+          signature_template_version?: number
+          signing_mode?: string
           sort_order?: number
           template_key?: string | null
           template_pack?: string | null
@@ -17399,6 +17413,7 @@ export type Database = {
         }
         Update: {
           body?: string
+          countersigner_user_id?: string | null
           created_at?: string
           current_version?: number
           doc_type?: string
@@ -17407,8 +17422,11 @@ export type Database = {
           file_size_bytes?: number | null
           file_updated_at?: string | null
           id?: string
+          investor_required?: boolean
           offering_id?: string
           requires_signature?: boolean
+          signature_template_version?: number
+          signing_mode?: string
           sort_order?: number
           template_key?: string | null
           template_pack?: string | null

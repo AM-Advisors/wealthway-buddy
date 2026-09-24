@@ -676,6 +676,41 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     );
   }
 
+  // Countersignatures: only after Box confirms the investor signed, only for
+  // the named signatory who is still assigned to that fund.
+  const managedIds = new Set((managed as any[]).map((m) => m.offering_id));
+  const countersign = await safely(async () =>
+    rows(
+      await s
+        .from("document_signature_signers")
+        .select("id, offering_id, status, updated_at, application_id")
+        .eq("signer_user_id", ctx.userId)
+        .eq("role_key", "fund_manager")
+        .eq("status", "sent")
+        .limit(LIMIT),
+    ),
+  );
+  for (const c of countersign as any[]) {
+    if (!managedIds.has(c.offering_id)) continue;
+    out.push(
+      buildAttentionItem({
+        id: `manager-countersign:${c.id}`,
+        source: "manager.countersign",
+        workspace: "fund_manager",
+        group: "needs_you",
+        severity: "action",
+        title: `Signature required — ${fundName(c.offering_id) ?? "Fund"}`,
+        workflowState: "awaiting_fund_manager",
+        status: "The investor has signed. Review & countersign.",
+        sourceTable: "document_signature_signers",
+        sourceId: c.id,
+        href: `/manager/countersign/${c.id}`,
+        at: c.updated_at ?? null,
+        fundName: fundName(c.offering_id),
+      }),
+    );
+  }
+
   return out;
 }
 

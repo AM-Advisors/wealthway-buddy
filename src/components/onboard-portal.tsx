@@ -21,7 +21,10 @@ import {
   recordSubscriptionSignatureFn,
   saveQuestionnaireFn,
   startPortalVerificationFn,
+  investorReportsFundsSentFn,
 } from "@/lib/investor-onboarding.functions";
+import { revealWireInstructionsFn } from "@/lib/fund-onboarding.functions";
+import { fundStepState, WIRE_FRAUD_WARNING } from "@/lib/fund-onboarding-model";
 import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
 
@@ -130,11 +133,19 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
             </li>
           );
         })}
+        <li className="flex-1">
+          <div className={cn("flex w-full flex-col items-center gap-1 rounded-md border p-2 text-center text-xs sm:text-sm", d.complete ? "border-primary bg-primary/5" : "opacity-50")}>
+            {d.fundingStatus === "funded" ? <Check className="h-4 w-4 text-primary" /> : d.complete ? <span className="text-muted-foreground">4</span> : <Lock className="h-4 w-4" />}
+            <span className="font-medium">Fund</span>
+            <span className="text-muted-foreground">{d.fundingStatus === "funded" ? "Received" : d.complete ? "To do" : "Later"}</span>
+          </div>
+        </li>
       </ol>
 
       {view === "verification" ? <VerificationStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "accreditation" ? <AccreditationStep d={d} onboardingId={onboardingId} /> : null}
       {view === "documents" ? <DocumentsStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
+      {view === "completed" ? <FundStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <Completed d={d} /> : null}
     </div>
   );
@@ -317,10 +328,14 @@ function DocumentsStep({ d, onboardingId, done }: { d: any; onboardingId: string
                 {doc.signed ? <Check className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
                 {doc.title}
               </span>
-              {!doc.signed && doc.requiresSignature && !qNeeded ? (
+              {!doc.signed && doc.requiresSignature && !qNeeded && (d.signing ?? []).find((x: any) => x.documentId === doc.id)?.stage !== "awaiting_fund_manager" ? (
                 <Button size="sm" disabled={sign.isPending} onClick={() => sign.mutate(doc.id)}>Review &amp; Sign Documents</Button>
               ) : (
-                <span className="text-xs text-muted-foreground">{doc.signed ? "Signed" : doc.requiresSignature ? "To sign" : "For review"}</span>
+                <span className="text-xs text-muted-foreground">
+                  {(d.signing ?? []).find((x: any) => x.documentId === doc.id)?.stage === "awaiting_fund_manager"
+                    ? "Waiting for Fund Manager signature"
+                    : doc.signed ? "Fully executed" : doc.requiresSignature ? "To sign" : "For review"}
+                </span>
               )}
             </li>
           ))}
@@ -350,13 +365,130 @@ function Completed({ d }: { d: any }) {
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <ul className="space-y-1">
-          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Identity verification</li>
-          {acc !== "not_applicable" ? <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Accreditation</li> : null}
-          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Fund documents</li>
+          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Verification complete</li>
+          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> {acc === "not_applicable" ? "Accreditation not required" : "Accreditation complete"}</li>
+          <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Documents fully executed</li>
+          <li className="flex items-center gap-2">
+            {d.fundingStatus === "funded" ? <Check className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+            {d.fundingStatus === "funded" ? "Funding received" : "Funding not yet received"}
+          </li>
         </ul>
         <p className="text-muted-foreground">
           Harmonious will review your information and the fund manager will be able to see that your onboarding is complete.
         </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FundStep({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
+  const revealFn = useServerFn(revealWireInstructionsFn);
+  const sentFn = useServerFn(investorReportsFundsSentFn);
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [wire, setWire] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
+  const state = fundStepState({ onboardingComplete: d.complete, fundingUnlocked: d.fundingUnlocked, fundingStatus: d.fundingStatus, investorReportsSent: d.investorReportsSent });
+
+  const reveal = async () => {
+    const r: any = await revealFn({ data: { onboardingId } });
+    if (r.status === "revealed") setWire(r);
+    else if (r.status === "not_ready") toast.error(r.reasons?.[0] ?? "Wire instructions aren't available yet.");
+    else toast.error("Please confirm it's you first.");
+  };
+  const confirmPassword = async () => {
+    setBusy(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase.auth.signInWithPassword({ email: u.user?.email ?? "", password });
+      if (error) throw error;
+      setPassword("");
+      await reveal();
+    } catch (e) { toast.error(errText(e)); } finally { setBusy(false); }
+  };
+  const sendCode = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.auth.signInWithOtp({ email: u.user?.email ?? "", options: { shouldCreateUser: false } });
+    if (error) toast.error(errText(error)); else { setCodeSent(true); toast.success("We emailed you a code."); }
+  };
+  const confirmCode = async () => {
+    setBusy(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase.auth.verifyOtp({ email: u.user?.email ?? "", token: code.trim(), type: "email" });
+      if (error) throw error;
+      await reveal();
+    } catch (e) { toast.error(errText(e)); } finally { setBusy(false); }
+  };
+  const copy = (v: string) => void navigator.clipboard.writeText(v).then(() => toast.success("Copied"));
+  const sent = useMutation({ mutationFn: () => sentFn({ data: { onboardingId } }), onSuccess: done, onError: (e) => toast.error(errText(e)) });
+
+  if (state === "funded") return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Fund Your Investment</CardTitle>
+        <CardDescription>
+          {d.fundName}{money(d.amountCents) ? ` · ${money(d.amountCents)}` : ""}{d.profileLabel ? ` · Investing as ${d.profileLabel}` : ""}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm">
+        {state === "not_ready" ? (
+          <p className="text-muted-foreground">Harmonious is reviewing your information. Wire instructions will appear here once your investment is approved to fund.</p>
+        ) : null}
+        {state !== "not_ready" ? (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+            <p className="font-medium">Protect against wire fraud</p>
+            <p className="text-muted-foreground">{WIRE_FRAUD_WARNING}</p>
+          </div>
+        ) : null}
+        {state !== "not_ready" && !wire ? (
+          <div className="space-y-3 rounded-md border p-4">
+            <p>To view wire instructions, confirm it's you.</p>
+            <Label htmlFor="ob-pw">Password</Label>
+            <Input id="ob-pw" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Button className="w-full sm:w-auto" disabled={!password || busy} onClick={confirmPassword}>View Wire Instructions</Button>
+            <div className="pt-2">
+              {!codeSent ? (
+                <button type="button" className="text-xs underline" onClick={sendCode}>No password? Email me a code instead</button>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="ob-code">Code from your email</Label>
+                  <Input id="ob-code" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} />
+                  <Button size="sm" disabled={code.trim().length < 6 || busy} onClick={confirmCode}>Confirm code</Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+        {wire ? (
+          <div className="space-y-2 rounded-md border p-4">
+            <p className="text-xs text-muted-foreground">For: {wire.investingAs ?? "You"} · Investment: {d.fundName}</p>
+            {([
+              ["Bank name", wire.instructions?.bankName ?? wire.instructions?.details?.bank_name],
+              ["Bank address", wire.instructions?.details?.bank_address],
+              ["Routing / ABA", wire.instructions?.details?.routing_number],
+              ["Account number", wire.instructions?.details?.account_number],
+              ["Account name", wire.instructions?.details?.account_name],
+              ["SWIFT", wire.instructions?.details?.swift],
+              ["Reference / memo", wire.instructions?.reference],
+              ["Amount", money(wire.instructions?.expectedAmountCents)],
+            ] as [string, string | null | undefined][]).filter(([, v]) => v).map(([label, v]) => (
+              <div key={label} className="flex items-start justify-between gap-2 border-b py-2 last:border-0">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="break-all font-medium">{v}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => copy(String(v))}>Copy</Button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {wire && state === "available" ? (
+          <Button className="w-full sm:w-auto" disabled={sent.isPending} onClick={() => sent.mutate()}>I've Sent My Wire</Button>
+        ) : null}
+        {state === "investor_sent" ? <p className="text-muted-foreground">Waiting for funds to be received and reconciled.</p> : null}
       </CardContent>
     </Card>
   );
