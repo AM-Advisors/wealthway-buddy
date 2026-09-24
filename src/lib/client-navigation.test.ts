@@ -25,7 +25,8 @@ describe("client navigation by workspace", () => {
   it("gives an investor exactly the investor menu", () => {
     expect(titles("investor")).toEqual([
       "Home",
-      "Investments",
+      "My Investments",
+      "My Funds",
       "Activity",
       "Reports",
       "Documents",
@@ -37,7 +38,7 @@ describe("client navigation by workspace", () => {
   it("gives a fund manager exactly the manager menu", () => {
     expect(titles("fund_manager")).toEqual([
       "Home",
-      "Funds",
+      "My Funds",
       "Investors",
       "Capital",
       "Reports",
