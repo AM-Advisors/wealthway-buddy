@@ -46,9 +46,9 @@ function TaxReviewPage() {
       </div>
       <Tabs defaultValue="tax">
         <TabsList className="h-auto flex-wrap justify-start">
-          <TabsTrigger value="tax">Investor tax review</TabsTrigger>
-          <TabsTrigger value="policy">Compliance policy</TabsTrigger>
-          <TabsTrigger value="wording">Legal wording</TabsTrigger>
+          <TabsTrigger value="tax" className="min-h-10 sm:min-h-0">Investor tax review</TabsTrigger>
+          <TabsTrigger value="policy" className="min-h-10 sm:min-h-0">Compliance policy</TabsTrigger>
+          <TabsTrigger value="wording" className="min-h-10 sm:min-h-0">Legal wording</TabsTrigger>
         </TabsList>
         <TabsContent value="tax"><TaxList /></TabsContent>
         <TabsContent value="policy"><PolicyBoard /></TabsContent>
