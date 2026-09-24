@@ -96,7 +96,6 @@ describe("cross-fund authority", () => {
 
 import { missingRelatedRoles } from "@/lib/identity-model";
 import { determineOnboardingRequirements } from "@/lib/investor-onboarding-model";
-import { readFileSync } from "node:fs";
 
 describe("requirements engine — profile-specific roles", () => {
   const offering = { accreditationRequired: false, kycRequired: true, kybRequired: true, amlRequired: true, taxDocumentRequired: false, subscriptionQuestionnaireRequired: false } as any;
