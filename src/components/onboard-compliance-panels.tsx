@@ -146,7 +146,7 @@ function AmlCard({ onboardingId, d, refresh }: { onboardingId: string; d: any; r
     return <Card><CardContent className="pt-6 text-sm"><strong>Compliance Review Required.</strong> Harmonious is reviewing your financial background answers.</CardContent></Card>;
   }
   const fields: string[] = [...d.aml.fields];
-  if (a.sourceOfFunds === "other" && !fields.includes("sourceOfFundsDetail")) fields.splice(fields.indexOf("sourceOfFunds") + 1, 0, "sourceOfFundsDetail");
+  if (a["sourceOfFunds"] === "other" && !fields.includes("sourceOfFundsDetail")) fields.splice(fields.indexOf("sourceOfFunds") + 1, 0, "sourceOfFundsDetail");
   return (
     <Card>
       <CardHeader>

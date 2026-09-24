@@ -17,7 +17,7 @@ import {
 import { ELIGIBILITY_REQUIREMENT_TYPES } from "@/lib/onboarding-compliance-model";
 
 const CATEGORY_LABEL = { regulatory: "Regulatory", fund: "Fund Requirement", representation: "Investor Representation" } as const;
-type Row = { key: string; mandatory: boolean; params: Record<string, any> };
+type Row = { key: string; mandatory: boolean; params: any };
 
 /**
  * Harmonious-only Investor Eligibility Requirements. Writes a draft of the
@@ -53,7 +53,7 @@ export function FundEligibilitySetup({ fundId }: { fundId: string }) {
   }
   const base = (d.draft?.requirements ?? d.approved?.requirements ?? []) as any[];
   const current: Row[] = rows ?? base.map((r) => ({ key: r.key, mandatory: r.mandatory, params: r.params ?? {} }));
-  const locked = new Set(d.mandatory);
+  const locked = new Set<string>(d.mandatory as string[]);
   const set = (next: Row[]) => setRows(next);
   const toggle = (key: string, on: boolean) =>
     set(on ? [...current, { key, mandatory: true, params: {} }] : current.filter((r) => r.key !== key || locked.has(key)));
