@@ -463,6 +463,8 @@ export const reviewTerm = createServerFn({ method: "POST" })
     if ((data.status === "corrected" || valueChanged || data.serviceKey !== undefined) && !contractCaps.includes("correct_terms"))
       throw new Error('Forbidden: changing a term needs the "correct_terms" contract permission.');
     if (valueChanged && data.status === "confirmed") throw new Error("A changed value must be marked Corrected.");
+    if (data.pricingModel && pricingNeedsAmount(data.pricingModel) && data.amountCents == null && (data.status === "confirmed" || data.status === "corrected"))
+      throw new Error("Enter a valid service price or select another pricing method.");
     const update = {
       status: data.status,
       current_value: nextValue ?? null,
