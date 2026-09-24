@@ -250,6 +250,9 @@ import { Route as AuthenticatedOpsClientsNewRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsCompaniesIndexRouteImport } from './routes/_authenticated/ops.companies.index'
 import { Route as AuthenticatedOpsCompaniesCompanyIdRouteImport } from './routes/_authenticated/ops.companies.$companyId'
 import { Route as AuthenticatedOpsContractsDocumentIdRouteImport } from './routes/_authenticated/ops.contracts.$documentId'
+import { Route as AuthenticatedOpsContractsCompareRouteImport } from './routes/_authenticated/ops.contracts.compare'
+import { Route as AuthenticatedOpsContractsPermissionsRouteImport } from './routes/_authenticated/ops.contracts.permissions'
+import { Route as AuthenticatedOpsContractsStandardRouteImport } from './routes/_authenticated/ops.contracts.standard'
 import { Route as AuthenticatedOpsFundFundIdRouteImport } from './routes/_authenticated/ops.fund.$fundId'
 import { Route as AuthenticatedOpsFundsIndexRouteImport } from './routes/_authenticated/ops.funds.index'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
@@ -1646,6 +1649,24 @@ const AuthenticatedOpsContractsDocumentIdRoute =
     path: '/ops/contracts/$documentId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsContractsCompareRoute =
+  AuthenticatedOpsContractsCompareRouteImport.update({
+    id: '/ops/contracts/compare',
+    path: '/ops/contracts/compare',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsContractsPermissionsRoute =
+  AuthenticatedOpsContractsPermissionsRouteImport.update({
+    id: '/ops/contracts/permissions',
+    path: '/ops/contracts/permissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsContractsStandardRoute =
+  AuthenticatedOpsContractsStandardRouteImport.update({
+    id: '/ops/contracts/standard',
+    path: '/ops/contracts/standard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFundFundIdRoute =
   AuthenticatedOpsFundFundIdRouteImport.update({
     id: '/ops/fund/$fundId',
@@ -2014,6 +2035,9 @@ export interface FileRoutesByFullPath {
   '/ops/clients/new': typeof AuthenticatedOpsClientsNewRoute
   '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
   '/ops/contracts/$documentId': typeof AuthenticatedOpsContractsDocumentIdRoute
+  '/ops/contracts/compare': typeof AuthenticatedOpsContractsCompareRoute
+  '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
+  '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2273,6 +2297,9 @@ export interface FileRoutesByTo {
   '/ops/clients/new': typeof AuthenticatedOpsClientsNewRoute
   '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
   '/ops/contracts/$documentId': typeof AuthenticatedOpsContractsDocumentIdRoute
+  '/ops/contracts/compare': typeof AuthenticatedOpsContractsCompareRoute
+  '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
+  '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2540,6 +2567,9 @@ export interface FileRoutesById {
   '/_authenticated/ops/clients/new': typeof AuthenticatedOpsClientsNewRoute
   '/_authenticated/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
   '/_authenticated/ops/contracts/$documentId': typeof AuthenticatedOpsContractsDocumentIdRoute
+  '/_authenticated/ops/contracts/compare': typeof AuthenticatedOpsContractsCompareRoute
+  '/_authenticated/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
+  '/_authenticated/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2807,6 +2837,9 @@ export interface FileRouteTypes {
     | '/ops/clients/new'
     | '/ops/companies/$companyId'
     | '/ops/contracts/$documentId'
+    | '/ops/contracts/compare'
+    | '/ops/contracts/permissions'
+    | '/ops/contracts/standard'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
@@ -3066,6 +3099,9 @@ export interface FileRouteTypes {
     | '/ops/clients/new'
     | '/ops/companies/$companyId'
     | '/ops/contracts/$documentId'
+    | '/ops/contracts/compare'
+    | '/ops/contracts/permissions'
+    | '/ops/contracts/standard'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
@@ -3332,6 +3368,9 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/clients/new'
     | '/_authenticated/ops/companies/$companyId'
     | '/_authenticated/ops/contracts/$documentId'
+    | '/_authenticated/ops/contracts/compare'
+    | '/_authenticated/ops/contracts/permissions'
+    | '/_authenticated/ops/contracts/standard'
     | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
     | '/_authenticated/ops/investors/$investorId'
@@ -5097,6 +5136,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsContractsDocumentIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/contracts/compare': {
+      id: '/_authenticated/ops/contracts/compare'
+      path: '/ops/contracts/compare'
+      fullPath: '/ops/contracts/compare'
+      preLoaderRoute: typeof AuthenticatedOpsContractsCompareRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/contracts/permissions': {
+      id: '/_authenticated/ops/contracts/permissions'
+      path: '/ops/contracts/permissions'
+      fullPath: '/ops/contracts/permissions'
+      preLoaderRoute: typeof AuthenticatedOpsContractsPermissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/contracts/standard': {
+      id: '/_authenticated/ops/contracts/standard'
+      path: '/ops/contracts/standard'
+      fullPath: '/ops/contracts/standard'
+      preLoaderRoute: typeof AuthenticatedOpsContractsStandardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/fund/$fundId': {
       id: '/_authenticated/ops/fund/$fundId'
       path: '/ops/fund/$fundId'
@@ -5624,6 +5684,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsClientsNewRoute: typeof AuthenticatedOpsClientsNewRoute
   AuthenticatedOpsCompaniesCompanyIdRoute: typeof AuthenticatedOpsCompaniesCompanyIdRoute
   AuthenticatedOpsContractsDocumentIdRoute: typeof AuthenticatedOpsContractsDocumentIdRoute
+  AuthenticatedOpsContractsCompareRoute: typeof AuthenticatedOpsContractsCompareRoute
+  AuthenticatedOpsContractsPermissionsRoute: typeof AuthenticatedOpsContractsPermissionsRoute
+  AuthenticatedOpsContractsStandardRoute: typeof AuthenticatedOpsContractsStandardRoute
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -5827,6 +5890,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsCompaniesCompanyIdRoute,
   AuthenticatedOpsContractsDocumentIdRoute:
     AuthenticatedOpsContractsDocumentIdRoute,
+  AuthenticatedOpsContractsCompareRoute: AuthenticatedOpsContractsCompareRoute,
+  AuthenticatedOpsContractsPermissionsRoute:
+    AuthenticatedOpsContractsPermissionsRoute,
+  AuthenticatedOpsContractsStandardRoute:
+    AuthenticatedOpsContractsStandardRoute,
   AuthenticatedOpsFundFundIdRoute: AuthenticatedOpsFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
   AuthenticatedOpsInvestorsInvestorIdRoute:

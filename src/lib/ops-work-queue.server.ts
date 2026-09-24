@@ -751,7 +751,61 @@ async function contractItems(s: any, lookup: Lookup, now: Date, fundId?: string)
         at: d.updated_at ?? null,
       } as any),
     ),
-  );
+  ).concat(await contractIntelligenceItems(s, lookup, now, docs as any[]));
+}
+
+/** Scope conflicts and renewal reminders — derived, one row per conflict / document. */
+async function contractIntelligenceItems(s: any, lookup: Lookup, now: Date, docs: any[]) {
+  if (!docs.length) return [];
+  const { detectConflicts, computeLifecycle, renewalReminder, CONFLICT_TASK_TITLE } = await import("@/lib/contract-intelligence");
+  const today = now.toISOString().slice(0, 10);
+  const ids = docs.map((d) => d.id);
+  const [terms, rels] = await Promise.all([
+    safely(async () => rows(await s.from("contract_terms").select("document_id, term_key, current_value, amount_cents, service_key, status, source_page, source_section, source_quote").in("document_id", ids))),
+    safely(async () => rows(await s.from("contract_document_relationships").select("*").eq("status", "active"))),
+  ]);
+  const withTerms = docs.map((d) => ({ ...d, applies_to_service_keys: d.applies_to_service_keys ?? [], terms: (terms as any[]).filter((t) => t.document_id === d.id) }));
+  const byClient = new Map<string, any[]>();
+  withTerms.forEach((d) => byClient.set(d.client_id, [...(byClient.get(d.client_id) ?? []), d]));
+  const out: any[] = [];
+  for (const [clientId, list] of byClient) {
+    for (const c of detectConflicts(list, (rels as any[]).filter((r) => r.client_id === clientId), today)) {
+      out.push(build(lookup, now, {
+        id: `contract-conflict:${c.key}`,
+        source: "clients.contracts",
+        area: "clients",
+        recordType: "client",
+        recordId: clientId,
+        recordTab: "contracts",
+        title: `${CONFLICT_TASK_TITLE} — ${c.title}`,
+        reason: c.title,
+        workflowState: c.kind,
+        requiredAction: "approve",
+        clientId,
+        at: null,
+      } as any));
+    }
+  }
+  for (const d of withTerms) {
+    if (d.review_status !== "approved") continue;
+    const r = renewalReminder(computeLifecycle(d, d.terms, today), today);
+    if (r)
+      out.push(build(lookup, now, {
+        id: `contract:${d.id}:renewal`,
+        source: "clients.contracts",
+        area: "clients",
+        recordType: "client",
+        recordId: d.client_id,
+        recordTab: "contracts",
+        title: `Renewal in ${r.daysLeft} days (${r.bucket}-day reminder) — ${d.title}`,
+        reason: "Renewal reminder — nothing renews or is sent automatically",
+        workflowState: "renewal",
+        requiredAction: "prepare",
+        clientId: d.client_id,
+        at: null,
+      } as any));
+  }
+  return out;
 }
 
 /** Google Drive problems. One open row per problem (deduplicated at the source). */
