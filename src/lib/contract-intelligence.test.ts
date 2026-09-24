@@ -186,7 +186,7 @@ describe("Granular contract permissions", () => {
     expect(mayApproveTerms(contractCapabilitiesFor(["legal"]))).toBe(true);
     expect(contractCapabilitiesFor(["finance"])).toContain("configure_pricing");
     expect(mayApproveTerms(contractCapabilitiesFor(["client_success"]))).toBe(false);
-    expect(contractCapabilitiesFor(["super_admin"])).toHaveLength(10);
+    expect(contractCapabilitiesFor(["super_admin"])).toHaveLength(11);
   });
 });
 
