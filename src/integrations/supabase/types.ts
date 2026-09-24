@@ -15385,6 +15385,70 @@ export type Database = {
           },
         ]
       }
+      investor_tax_facts: {
+        Row: {
+          answers: Json
+          classification: string | null
+          created_at: string
+          form_type: string | null
+          id: string
+          investment_profile_id: string
+          investor_user_id: string
+          onboarding_id: string | null
+          review_reason: string | null
+          routing_status: string
+          superseded_by: string | null
+        }
+        Insert: {
+          answers: Json
+          classification?: string | null
+          created_at?: string
+          form_type?: string | null
+          id?: string
+          investment_profile_id: string
+          investor_user_id: string
+          onboarding_id?: string | null
+          review_reason?: string | null
+          routing_status: string
+          superseded_by?: string | null
+        }
+        Update: {
+          answers?: Json
+          classification?: string | null
+          created_at?: string
+          form_type?: string | null
+          id?: string
+          investment_profile_id?: string
+          investor_user_id?: string
+          onboarding_id?: string | null
+          review_reason?: string | null
+          routing_status?: string
+          superseded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_tax_facts_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_tax_facts_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_tax_facts_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "investor_tax_facts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_tax_forms: {
         Row: {
           certification_evidence: Json
@@ -15393,7 +15457,10 @@ export type Database = {
           classification: string
           country: string | null
           created_at: string
+          document_path: string | null
+          document_sha256: string | null
           expires_on: string | null
+          form_data: Json
           form_type: Database["public"]["Enums"]["tax_documentation_form"]
           id: string
           investment_profile_id: string
@@ -15405,8 +15472,11 @@ export type Database = {
           status: string
           superseded_at: string | null
           superseded_by: string | null
+          tax_facts_id: string | null
+          template_sha256: string | null
           tin_fingerprint: string | null
           tin_last4: string | null
+          tin_retained: boolean
         }
         Insert: {
           certification_evidence?: Json
@@ -15415,7 +15485,10 @@ export type Database = {
           classification: string
           country?: string | null
           created_at?: string
+          document_path?: string | null
+          document_sha256?: string | null
           expires_on?: string | null
+          form_data?: Json
           form_type: Database["public"]["Enums"]["tax_documentation_form"]
           id?: string
           investment_profile_id: string
@@ -15427,8 +15500,11 @@ export type Database = {
           status?: string
           superseded_at?: string | null
           superseded_by?: string | null
+          tax_facts_id?: string | null
+          template_sha256?: string | null
           tin_fingerprint?: string | null
           tin_last4?: string | null
+          tin_retained?: boolean
         }
         Update: {
           certification_evidence?: Json
@@ -15437,7 +15513,10 @@ export type Database = {
           classification?: string
           country?: string | null
           created_at?: string
+          document_path?: string | null
+          document_sha256?: string | null
           expires_on?: string | null
+          form_data?: Json
           form_type?: Database["public"]["Enums"]["tax_documentation_form"]
           id?: string
           investment_profile_id?: string
@@ -15449,8 +15528,11 @@ export type Database = {
           status?: string
           superseded_at?: string | null
           superseded_by?: string | null
+          tax_facts_id?: string | null
+          template_sha256?: string | null
           tin_fingerprint?: string | null
           tin_last4?: string | null
+          tin_retained?: boolean
         }
         Relationships: [
           {
@@ -24381,6 +24463,47 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_evidence_access_events: {
+        Row: {
+          access_kind: string
+          actor_role: string
+          actor_user_id: string
+          created_at: string
+          id: string
+          investment_profile_id: string
+          purpose: string
+          tax_form_id: string
+        }
+        Insert: {
+          access_kind: string
+          actor_role: string
+          actor_user_id: string
+          created_at?: string
+          id?: string
+          investment_profile_id: string
+          purpose: string
+          tax_form_id: string
+        }
+        Update: {
+          access_kind?: string
+          actor_role?: string
+          actor_user_id?: string
+          created_at?: string
+          id?: string
+          investment_profile_id?: string
+          purpose?: string
+          tax_form_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_evidence_access_events_tax_form_id_fkey"
+            columns: ["tax_form_id"]
+            isOneToOne: false
+            referencedRelation: "investor_tax_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_filings: {
         Row: {
           accounting_closed: boolean
@@ -25868,6 +25991,14 @@ export type Database = {
           updated_at: string
         }[]
       }
+      read_tax_identifier: {
+        Args: { _form: string }
+        Returns: {
+          ciphertext: string
+          iv: string
+          key_version: number
+        }[]
+      }
       register_stepup_attempt: {
         Args: { p_id: string; p_max: number; p_user_id: string }
         Returns: number
@@ -25922,6 +26053,16 @@ export type Database = {
           _grant: boolean
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: undefined
+      }
+      store_tax_identifier: {
+        Args: {
+          _ciphertext: string
+          _form: string
+          _iv: string
+          _key_version: number
+          _profile: string
         }
         Returns: undefined
       }

@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { BulkAddInvestors } from "@/components/bulk-add-investors";
 import { FundOnboardingSettings } from "@/components/fund-onboarding-settings";
+import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { FundInvestorProgress, ManagerAddInvestor } from "@/components/manager-add-investor";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
@@ -47,6 +48,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
       {panel === "one" && <div className="mt-5"><ManagerAddInvestor fundId={fundId} /></div>}
       {panel === "many" && <div className="mt-5"><BulkAddInvestors fundId={fundId} existingEmails={(data?.applications ?? []).map((a: any) => String(a.email ?? "")).filter(Boolean)} /></div>}
       <div className="mt-5"><FundOnboardingSettings fundId={fundId} /></div>
+      <div className="mt-5"><FundEligibilitySetup fundId={fundId} /></div>
       <div className="mt-5"><FundInvestorProgress fundId={fundId} /></div>
       <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {Object.entries(data.counts).map(([label, value]) => <Stat key={label} label={prettyStatus(label)} value={String(value)} />)}

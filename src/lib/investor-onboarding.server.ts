@@ -327,6 +327,8 @@ async function gatherFacts(row: any) {
     compliance: stage2
       ? {
           tax: stage2.taxState,
+          taxClassification: stage2.taxClassificationState,
+          bsaAml: stage2.amlState,
           badActor: stage2.badActorState,
           offeringEligibility: stage2.eligibilityState,
           certifications: stage2.certificationState,

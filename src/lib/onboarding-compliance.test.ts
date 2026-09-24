@@ -52,7 +52,7 @@ describe("tax routing", () => {
   });
   it("TIN is never stored in full and never returned to managers", () => {
     const srv = readFileSync("src/lib/onboarding-compliance.server.ts", "utf8");
-    expect(srv).not.toMatch(/tin:\s*input\.tin[,\s]/);
+    expect(srv).toMatch(/encryptTin\(input\.tin\)/); expect(srv).not.toMatch(/\btin: input\.tin,/);
     expect(srv).toMatch(/tin_last4/);
     const mgr = readFileSync("src/lib/investor-onboarding.server.ts", "utf8");
     const board = mgr.slice(mgr.indexOf("export async function managerOnboardingBoard"), mgr.indexOf("export async function inviteInvestor"));
