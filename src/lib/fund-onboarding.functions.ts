@@ -172,3 +172,64 @@ export const revealWireInstructionsFn = createServerFn({ method: "POST" })
     const engine = await import("@/lib/investor-onboarding.server");
     return engine.revealWireInstructions(context.userId, data.onboardingId, context.claims);
   });
+
+/**
+ * Countersign: the named signatory, still assigned to the fund, after Box
+ * confirmed the investor's signature. Shows only the document and the
+ * investor's display name — no compliance material.
+ */
+export const countersignDetailFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ signerId: z.string().uuid(), open: z.boolean().optional() }).parse)
+  .handler(async ({ data, context }) => {
+    const db = await admin();
+    const { data: me } = await db
+      .from("document_signature_signers")
+      .select("id, signature_id, offering_id, offering_document_id, signer_user_id, role_key, status")
+      .eq("id", data.signerId)
+      .maybeSingle();
+    if (!me || me.signer_user_id !== context.userId || me.role_key !== "fund_manager") {
+      throw new Error("Forbidden: this signature is not assigned to you.");
+    }
+    const { data: rel } = await db
+      .from("fund_managers")
+      .select("id")
+      .eq("offering_id", me.offering_id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!rel) throw new Error("Forbidden: you are no longer assigned to this fund.");
+
+    const [{ data: sig }, { data: doc }, { data: offering }, { data: investorRow }] = await Promise.all([
+      db.from("document_signatures").select("provider_agreement_id, provider_status, signing_mode").eq("id", me.signature_id).maybeSingle(),
+      db.from("offering_documents").select("title").eq("id", me.offering_document_id).maybeSingle(),
+      db.from("offerings").select("name").eq("id", me.offering_id).maybeSingle(),
+      db.from("document_signature_signers").select("signer_name, status").eq("signature_id", me.signature_id).eq("role_key", "investor").maybeSingle(),
+    ]);
+    const { canCountersign, signingStage } = await import("@/lib/fund-onboarding-model");
+    const stage = signingStage({
+      mode: "dual",
+      providerStatus: sig?.provider_status ?? null,
+      signers: [
+        { role: "investor", order: 1, status: String(investorRow?.status ?? "") },
+        { role: "fund_manager", order: 2, status: String(me.status ?? "") },
+      ],
+    });
+    const gate = canCountersign({ mode: (sig?.signing_mode ?? "dual") as any, stage, hasFundAuthority: true });
+    let url: string | null = null;
+    if (data.open && gate.allowed && sig?.provider_agreement_id) {
+      const { data: profile } = await db.from("profiles").select("email").eq("user_id", context.userId).maybeSingle();
+      const { getSignRequestDetail } = await import("@/lib/box.server");
+      const detail = await getSignRequestDetail(sig.provider_agreement_id);
+      url = detail.signers.find((s) => s.email === String(profile?.email ?? "").toLowerCase())?.embedUrl ?? null;
+      if (!url) throw new Error("Box hasn't opened your signing step yet. Try again in a moment.");
+    }
+    return {
+      fundName: offering?.name ?? "Fund",
+      documentTitle: doc?.title ?? "Fund document",
+      investorName: investorRow?.signer_name ?? "Investor",
+      stage,
+      canSign: gate.allowed,
+      reason: gate.reason ?? null,
+      url,
+    };
+  });
