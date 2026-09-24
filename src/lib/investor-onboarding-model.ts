@@ -12,6 +12,8 @@
 
 import {
   ENTITY_PROFILE_TYPES,
+  GATING_RELATIONSHIP_ROLES,
+  missingRelatedRoles,
   type InvestmentProfileType,
 } from "@/lib/identity-model";
 

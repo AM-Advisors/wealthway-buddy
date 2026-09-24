@@ -93,3 +93,39 @@ describe("cross-fund authority", () => {
     expect(src("./box-sign.functions.ts")).toMatch(/fund_managers"\)\.select\("id"\)\.eq\("offering_id", doc\.offering_id\)/);
   });
 });
+
+import { missingRelatedRoles } from "@/lib/identity-model";
+import { determineOnboardingRequirements } from "@/lib/investor-onboarding-model";
+import { readFileSync } from "node:fs";
+
+describe("requirements engine — profile-specific roles", () => {
+  const offering = { accreditationRequired: false, kycRequired: true, kybRequired: true, amlRequired: true, taxDocumentRequired: false, subscriptionQuestionnaireRequired: false } as any;
+  const run = (profileType: string, relatedPeople: any[]) =>
+    determineOnboardingRequirements({ offering, person: { personId: "p", kycStatus: "verified", amlStatus: "clear" }, profile: { profileId: "x", profileType, kybStatus: "verified", entityAmlStatus: "clear", relatedPeople }, subscription: {}, nowIso: new Date().toISOString() })
+      .find((r) => r.key === "beneficial_owners")!;
+  it("trust needs a trustee, not beneficial owners", () => {
+    expect(missingRelatedRoles("trust", ["beneficial_owner"]).length).toBeGreaterThan(0);
+    expect(missingRelatedRoles("trust", ["trustee"])).toEqual([]);
+    expect(run("trust", [{ role: "beneficial_owner", kycStatus: "verified" }]).state).toBe("missing");
+    expect(run("trust", [{ role: "trustee", kycStatus: "verified" }]).state).toBe("valid");
+  });
+  it("LLC needs owner, control person and signer", () => {
+    expect(run("llc", [{ role: "beneficial_owner", kycStatus: "verified" }]).state).toBe("missing");
+    expect(run("llc", [{ role: "owner", kycStatus: "verified" }, { role: "manager", kycStatus: "verified" }]).state).toBe("valid");
+  });
+  it("unverified related people block", () => {
+    expect(run("trust", [{ role: "trustee", kycStatus: "pending" }]).state).toBe("missing");
+  });
+  it("joint profile requires a verified joint owner", () => {
+    expect(run("joint", []).state).toBe("missing");
+    expect(run("joint", [{ role: "joint_owner", kycStatus: "verified" }]).state).toBe("valid");
+  });
+  it("individual has no related-person requirement", () => {
+    expect(run("individual", []).state).toBe("not_applicable");
+  });
+  it("Box send path enforces preparation server-side", () => {
+    const src = readFileSync("src/lib/box-sign.functions.ts", "utf8");
+    expect(src).toMatch(/signingConfigComplete\(/);
+    expect(src).toMatch(/isn't prepared for signature yet/);
+  });
+});
