@@ -49,7 +49,17 @@ import {
   type AmlPolicy,
   type TaxIntakeAnswers,
   type TaxPermission,
+  missingTaxFormFacts,
 } from "@/lib/onboarding-intake-model";
+import {
+  INVESTOR_PREFLIGHT_MESSAGE,
+  WORDING_KEYS,
+  approvedWording,
+  productionPreflight,
+  resolveAmlPolicy,
+  type PolicyEntry,
+  type WordingRow,
+} from "@/lib/onboarding-production-model";
 
 async function db() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -258,13 +268,65 @@ async function loadFacts(d: any, ob: any, userId: string) {
   return { tax, person };
 }
 
+/** The centrally approved compliance policy. Nothing approved → no country or amount trigger. */
+async function amlPolicyFull(offeringId: string) {
+  const d = await db();
+  const { data } = await d
+    .from("compliance_policy_entries")
+    .select("id, kind, country_code, risk_classification, threshold_cents, currency, scope, offering_id, effective_date, status, approved_by")
+    .eq("status", "approved");
+  return resolveAmlPolicy((data ?? []) as PolicyEntry[], offeringId, new Date().toISOString().slice(0, 10));
+}
 async function amlPolicy(offeringId: string): Promise<AmlPolicy> {
-  const { rules } = await offeringRules(offeringId);
-  const p = rules['aml'] ?? {};
-  return {
-    eddThresholdCents: Number.isFinite(Number(p.eddThresholdCents)) && p.eddThresholdCents !== null ? Number(p.eddThresholdCents) : null,
-    highRiskCountries: Array.isArray(p.highRiskCountries) ? p.highRiskCountries.map(String) : [],
-  };
+  const p = await amlPolicyFull(offeringId);
+  return { eddThresholdCents: p.eddThresholdCents ?? null, highRiskCountries: p.highRiskCountries ?? [] };
+}
+
+async function wordingMap() {
+  const d = await db();
+  const { data } = await d
+    .from("legal_wording_versions")
+    .select("id, requirement_key, title, wording, version, effective_date, status, approved_by")
+    .eq("status", "approved");
+  return approvedWording((data ?? []) as WordingRow[], new Date().toISOString().slice(0, 10));
+}
+
+/**
+ * Production preflight for ONE investment. Returns precise internal reasons;
+ * callers show investors only INVESTOR_PREFLIGHT_MESSAGE.
+ */
+export async function onboardingPreflight(onboardingId: string, opts: { signatureTemplateReady?: boolean } = {}) {
+  const d = await db();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id").eq("id", onboardingId).maybeSingle();
+  if (!ob) fail("Onboarding not found.");
+  const { data: profile } = ob.investment_profile_id
+    ? await d.from("investment_profiles").select("id, profile_type, legal_name").eq("id", ob.investment_profile_id).maybeSingle()
+    : { data: null };
+  const { tax, person } = await loadFacts(d, ob, ob.investor_user_id);
+  const r = await resolveStage2({ onboarding: ob, profileType: profile?.profile_type ?? null, tax, person, nowIso: new Date().toISOString(), taxRequired: true });
+  const wording = await wordingMap();
+  const policy = await amlPolicyFull(ob.offering_id);
+  const { rules } = await offeringRules(ob.offering_id);
+  let missingFacts: string[] = [];
+  if (r.routing.status === "determined") {
+    const fill = await buildFill(ob, profile ?? {}, person, r.routing, { legalName: profile?.legal_name ?? "x", certifiedName: "x" }, "");
+    // TIN is supplied by the investor at signing; do not block W-9/W-8 on it here.
+    missingFacts = missingTaxFormFacts(r.routing.formType, { ...fill, tin: r.routing.formType === "w8eci" ? null : fill.tin }).filter((m) => !m.startsWith("Legal name"));
+    const signed = await d.from("investor_tax_forms").select("id").eq("investment_profile_id", ob.investment_profile_id).eq("form_type", r.routing.formType).neq("status", "superseded").limit(1);
+    if (signed.data?.length) missingFacts = [];
+  }
+  return productionPreflight({
+    badActorApplies: r.badActorApplies,
+    certificationKeys: r.requiredCertifications,
+    representationEligibilityKeys: r.eligibility.filter((e) => e.category === "representation" && e.asked).map((e) => e.key),
+    approvedWordingKeys: new Set(wording.keys()),
+    taxRequired: true,
+    taxRouting: r.routing as any,
+    taxFormMissingFacts: missingFacts,
+    policyRequired: { countries: Boolean(rules['aml']?.requireHighRiskPolicy), threshold: Boolean(rules['aml']?.requireEddThreshold) },
+    policyConfigured: policy.configured,
+    signatureTemplateReady: opts.signatureTemplateReady ?? true,
+  });
 }
 
 /** Investor view: what they need to do. No other person's data, TIN never returned. */
@@ -282,6 +344,8 @@ export async function investorComplianceView(userId: string, onboardingId: strin
     .order("certified_at", { ascending: false })
     .limit(1);
   const policy = await amlPolicy(ob.offering_id);
+  const wording = await wordingMap();
+  const preflight = await onboardingPreflight(ob.id);
   const known = { citizenship: person?.citizenship_country ?? null, residence: person?.residence_country ?? null, occupation: null, businessNature: null };
   const { data: amlLatest } = await d
     .from("compliance_questionnaire_responses")
@@ -317,17 +381,26 @@ export async function investorComplianceView(userId: string, onboardingId: strin
       submitted: Boolean(amlLatest?.[0]),
     },
     demographics: { submitted: Boolean(demo?.[0]) },
-    badActor: { applies: r.badActorApplies, state: r.badActorState.state, version: BAD_ACTOR_QUESTIONNAIRE_VERSION, wordingStatus: BAD_ACTOR_WORDING_STATUS },
+    badActor: {
+      applies: r.badActorApplies, state: r.badActorState.state, version: BAD_ACTOR_QUESTIONNAIRE_VERSION,
+      wordingStatus: wording.has(WORDING_KEYS.badActor) ? "approved" : BAD_ACTOR_WORDING_STATUS,
+      approvedWording: wording.get(WORDING_KEYS.badActor)?.wording ?? null,
+    },
     eligibility: r.eligibility.map((e) => ({
       key: e.key,
       outcome: e.outcome,
       category: e.category,
       asked: e.asked,
-      prompt: e.key === "custom_representation" ? (e.params?.customText ?? "") : (ELIGIBILITY_PROMPTS[e.key] ?? null),
+      prompt: wording.get(WORDING_KEYS.eligibility(e.key))?.wording
+        ?? (e.key === "custom_representation" ? (e.params?.customText ?? "") : (ELIGIBILITY_PROMPTS[e.key] ?? null)),
     })),
     eligibilityWordingStatus: ELIGIBILITY_WORDING_STATUS,
+    setupBlocked: preflight.length > 0 ? INVESTOR_PREFLIGHT_MESSAGE : null,
     certifications: {
-      required: r.requiredCertifications.map((k) => ({ key: k, heading: CERTIFICATIONS[k].heading, version: CERTIFICATIONS[k].version })),
+      required: r.requiredCertifications.map((k) => ({
+        key: k, heading: CERTIFICATIONS[k].heading, version: CERTIFICATIONS[k].version,
+        approvedWording: wording.get(WORDING_KEYS.certification(k))?.wording ?? null,
+      })),
       missing: r.missingCertifications,
       wordingStatus: CERTIFICATION_WORDING_STATUS,
     },
@@ -386,6 +459,14 @@ async function buildFill(ob: any, profile: any, person: any, routing: { formType
   };
 }
 
+/** Stop the form at Needs Information instead of leaving required boxes blank. */
+async function requireFormFacts(userId: string, ob: any, formType: string, fill: any) {
+  const missing = missingTaxFormFacts(formType, fill);
+  if (!missing.length) return;
+  await raiseOpsException(ob.id, "tax_form_needs_information", `Form ${formType} needs information: ${missing.join(", ")}`, userId);
+  fail(`Needs Information: ${INVESTOR_PREFLIGHT_MESSAGE}`);
+}
+
 async function requireDeterminedRouting(userId: string, ob: any, profile: any) {
   const facts = await latestTaxFacts(ob.investment_profile_id);
   if (!facts) fail("Answer the tax questions first.");
@@ -409,6 +490,7 @@ export async function previewTaxForm(
   const { loadOfficialTemplate, renderOfficialTaxForm } = await import("@/lib/irs-forms.server");
   const tpl = await loadOfficialTemplate(routing.formType, input.origin);
   const fill = await buildFill(ob, profile, person, routing, { ...input, certifiedName: input.legalName }, new Date().toISOString().slice(0, 10));
+  await requireFormFacts(userId, ob, routing.formType, { ...fill, tin: routing.formType === "w8eci" ? fill.tin : "000000000" });
   const bytes = await renderOfficialTaxForm({ formType: routing.formType, template: tpl.bytes, templateSha256: tpl.sha256, fill, signature: null });
   return { pdfBase64: Buffer.from(bytes).toString("base64"), revision: IRS_FORM_REVISIONS[routing.formType].revision };
 }
@@ -433,6 +515,7 @@ export async function certifyTaxForm(
   const { loadOfficialTemplate, renderOfficialTaxForm, sha256Hex, encryptTin } = await import("@/lib/irs-forms.server");
   const tpl = await loadOfficialTemplate(routing.formType, input.origin);
   const fill = await buildFill(ob, profile, person, routing, input, now.slice(0, 10));
+  await requireFormFacts(userId, ob, routing.formType, fill);
   const pdf = await renderOfficialTaxForm({
     formType: routing.formType, template: tpl.bytes, templateSha256: tpl.sha256, fill,
     signature: { signerName: input.certifiedName.trim(), signedAtIso: now, profileLabel: input.legalName, classification: routing.classification, certificationMethod: "Typed-name electronic signature after review" },
@@ -685,6 +768,8 @@ export async function submitBadActor(userId: string, input: { onboardingId: stri
   const { rules } = await offeringRules(ob.offering_id);
   const roles = await coveredRoles(userId, ob.offering_id, rules['badActor']);
   if (!badActorApplies(rules['badActor'] ?? null, roles)) fail("This questionnaire does not apply to this investment.");
+  const baText = (await wordingMap()).get(WORDING_KEYS.badActor);
+  if (!baText) fail(INVESTOR_PREFLIGHT_MESSAGE);
   const ev = evaluateBadActor(input.answers);
   if (!ev.complete) fail("Answer every question.");
   if (input.certifiedName.trim().length < 2) fail("Type your full name to certify.");
@@ -698,7 +783,8 @@ export async function submitBadActor(userId: string, input: { onboardingId: stri
     .from("compliance_questionnaire_responses")
     .insert({
       kind: "bad_actor",
-      questionnaire_version: BAD_ACTOR_QUESTIONNAIRE_VERSION,
+      questionnaire_version: `${BAD_ACTOR_QUESTIONNAIRE_VERSION}/w${baText.version}`,
+      wording_version_id: baText.id,
       onboarding_id: ob.id,
       offering_id: ob.offering_id,
       investment_profile_id: ob.investment_profile_id,
@@ -724,6 +810,9 @@ export async function submitBadActor(userId: string, input: { onboardingId: stri
 export async function certify(userId: string, input: { onboardingId: string; key: CertificationKey; certifiedName: string }) {
   const { d, ob } = await loadOwnOnboarding(userId, input.onboardingId);
   if (!(input.key in CERTIFICATIONS)) fail("Unknown certification.");
+  // Only approved legal wording can be certified; the record pins that exact version.
+  const approvedText = (await wordingMap()).get(WORDING_KEYS.certification(input.key));
+  if (!approvedText) fail(INVESTOR_PREFLIGHT_MESSAGE);
   if (input.certifiedName.trim().length < 2) fail("Type your full name to certify.");
   const { data: existing } = await d
     .from("investor_certifications")
@@ -739,7 +828,8 @@ export async function certify(userId: string, input: { onboardingId: string; key
     investor_user_id: userId,
     certification_key: input.key,
     certification_version: CERTIFICATIONS[input.key].version,
-    wording_status: CERTIFICATION_WORDING_STATUS,
+    wording_status: "approved",
+    wording_version_id: approvedText.id,
     certified_name: input.certifiedName.trim(),
   });
   if (error) fail(error.message);

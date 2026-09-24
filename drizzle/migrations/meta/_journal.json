@@ -260,6 +260,13 @@
       "when": 1790257152061,
       "tag": "0036_stage3_tax_intake_official_forms",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1790259841669,
+      "tag": "0037_stage4_compliance_policy_legal_wording",
+      "breakpoints": true
     }
   ]
 }

@@ -685,6 +685,16 @@ export async function recordSubscriptionSignature(
     questionnaireVersion: row.questionnaire_version,
   };
 
+  // Production preflight: never reach Harmonious review with an unresolved dependency.
+  const { onboardingPreflight } = await import("@/lib/onboarding-compliance.server");
+  const blockers = await onboardingPreflight(row.id);
+  if (blockers.length) {
+    await recordEvent({
+      onboardingId: row.id, offeringId: row.offering_id, event: "preflight_blocked",
+      detail: { blockers }, actorUserId: actor.userId, actorRole: "investor",
+    });
+    fail("Harmonious needs to complete part of the setup before you can continue.");
+  }
   await touch(row.id, { executed_snapshot: snapshot, stage: "harmonious_review" });
   await recordEvent({
     onboardingId: row.id,

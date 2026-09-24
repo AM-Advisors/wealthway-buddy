@@ -206,7 +206,10 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
   },
   {
     id: "tax", title: "Tax", url: "/ops/tax-documents", icon: "tax", group: "work",
-    screens: [{ title: "Tax documents", url: "/ops/tax-documents", description: "K-1s and investor tax documents" }],
+    screens: [
+      { title: "Tax documents", url: "/ops/tax-documents", description: "K-1s and investor tax documents" },
+      { title: "Investor tax review", url: "/ops/tax-review", description: "IRS form status, compliance policy and legal wording" },
+    ],
   },
   {
     id: "regulatory", title: "Regulatory & Filings", url: "/ops/ss4", icon: "shield", group: "work",

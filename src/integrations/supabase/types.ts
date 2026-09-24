@@ -5220,6 +5220,84 @@ export type Database = {
           },
         ]
       }
+      compliance_policy_entries: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          country_code: string | null
+          created_at: string
+          created_by: string
+          currency: string | null
+          effective_date: string
+          id: string
+          kind: string
+          offering_id: string | null
+          reason: string | null
+          reviewed_by: string | null
+          risk_classification: string | null
+          scope: string
+          source_reference: string
+          status: string
+          superseded_by: string | null
+          threshold_cents: number | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          country_code?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string | null
+          effective_date: string
+          id?: string
+          kind: string
+          offering_id?: string | null
+          reason?: string | null
+          reviewed_by?: string | null
+          risk_classification?: string | null
+          scope?: string
+          source_reference: string
+          status?: string
+          superseded_by?: string | null
+          threshold_cents?: number | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          country_code?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string | null
+          effective_date?: string
+          id?: string
+          kind?: string
+          offering_id?: string | null
+          reason?: string | null
+          reviewed_by?: string | null
+          risk_classification?: string | null
+          scope?: string
+          source_reference?: string
+          status?: string
+          superseded_by?: string | null
+          threshold_cents?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_policy_entries_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_policy_entries_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "compliance_policy_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_questionnaire_responses: {
         Row: {
           answers: Json
@@ -5240,6 +5318,7 @@ export type Database = {
           reviewed_by: string | null
           superseded_by: string | null
           version_id: string | null
+          wording_version_id: string | null
         }
         Insert: {
           answers: Json
@@ -5260,6 +5339,7 @@ export type Database = {
           reviewed_by?: string | null
           superseded_by?: string | null
           version_id?: string | null
+          wording_version_id?: string | null
         }
         Update: {
           answers?: Json
@@ -5280,6 +5360,7 @@ export type Database = {
           reviewed_by?: string | null
           superseded_by?: string | null
           version_id?: string | null
+          wording_version_id?: string | null
         }
         Relationships: [
           {
@@ -5308,6 +5389,13 @@ export type Database = {
             columns: ["version_id"]
             isOneToOne: false
             referencedRelation: "compliance_questionnaire_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_questionnaire_responses_wording_version_id_fkey"
+            columns: ["wording_version_id"]
+            isOneToOne: false
+            referencedRelation: "legal_wording_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -13993,6 +14081,7 @@ export type Database = {
           investor_user_id: string
           onboarding_id: string
           wording_status: string
+          wording_version_id: string | null
         }
         Insert: {
           certification_key: string
@@ -14006,6 +14095,7 @@ export type Database = {
           investor_user_id: string
           onboarding_id: string
           wording_status: string
+          wording_version_id?: string | null
         }
         Update: {
           certification_key?: string
@@ -14019,6 +14109,7 @@ export type Database = {
           investor_user_id?: string
           onboarding_id?: string
           wording_status?: string
+          wording_version_id?: string | null
         }
         Relationships: [
           {
@@ -14033,6 +14124,13 @@ export type Database = {
             columns: ["onboarding_id"]
             isOneToOne: false
             referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_certifications_wording_version_id_fkey"
+            columns: ["wording_version_id"]
+            isOneToOne: false
+            referencedRelation: "legal_wording_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -16499,6 +16597,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      legal_wording_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string
+          effective_date: string
+          id: string
+          requirement_key: string
+          retired_at: string | null
+          status: string
+          title: string
+          version: number
+          wording: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by: string
+          effective_date: string
+          id?: string
+          requirement_key: string
+          retired_at?: string | null
+          status?: string
+          title: string
+          version: number
+          wording: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          effective_date?: string
+          id?: string
+          requirement_key?: string
+          retired_at?: string | null
+          status?: string
+          title?: string
+          version?: number
+          wording?: string
+        }
+        Relationships: []
       }
       login_attempts: {
         Row: {

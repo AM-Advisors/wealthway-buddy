@@ -103,6 +103,10 @@ export interface TaxFormFill {
   tin?: string | null | undefined;
   foreignTin?: string | null | undefined;
   dateOfBirth?: string | null | undefined;
+  /** Not collected today; when absent the dependent W-8 forms stop at Needs Information. */
+  chapter3Status?: string | null | undefined;
+  chapter4Status?: string | null | undefined;
+  eciIncomeItems?: string | null | undefined;
   signerName: string;
   signedDate: string;
 }
@@ -143,10 +147,84 @@ export function irsFieldValues(formType: string, f: TaxFormFill): { text: Record
     text[`${P}f_21[0]`] = f.signerName;
     return { text, checks };
   }
-  // W-8BEN-E, W-8ECI, W-8EXP, W-8IMY: Part I line 1 name and line 2 country.
+  // W-8BEN-E, W-8ECI, W-8EXP, W-8IMY: identification fields, mapped to the
+  // exact AcroForm names of the pinned official PDFs (verified by rendering).
   text[`${P}f1_1[0]`] = f.legalName;
   if (f.country) text[`${P}f1_2[0]`] = f.country;
+  const foreignTin = f.foreignTin ? String(f.foreignTin) : null;
+  if (formType === "w8bene") {
+    if (f.addressLine) text[`${P}f1_4[0]`] = f.addressLine; // line 6 permanent residence
+    if (f.cityStateZip) text[`${P}f1_5[0]`] = f.cityStateZip;
+    if (f.country) text[`${P}f1_6[0]`] = f.country;
+    const P2 = "topmostSubform[0].Page2[0].";
+    if (tin.length === 9) text[`${P2}f2_1[0]`] = tin; // line 8 U.S. TIN
+    if (foreignTin) text[`${P2}Line9b_ReadOrder[0].f2_3[0]`] = foreignTin; // line 9b
+    const P8 = "topmostSubform[0].Page8[0].";
+    text[`${P8}f8_31[0]`] = f.signerName; // Part XXX print name
+    text[`${P8}f8_32[0]`] = f.signedDate;
+    return { text, checks };
+  }
+  if (formType === "w8eci") {
+    if (f.addressLine) text[`${P}f1_4[0]`] = f.addressLine; // line 5
+    if (f.cityStateZip) text[`${P}f1_5[0]`] = f.cityStateZip;
+    if (f.country) text[`${P}f1_6[0]`] = f.country;
+    if (tin.length === 9) text[`${P}f1_9[0]`] = tin; // line 7
+    if (foreignTin) text[`${P}f1_10[0]`] = foreignTin; // line 8a
+    if (f.dateOfBirth) text[`${P}f1_12[0]`] = f.dateOfBirth; // line 10
+    if (f.eciIncomeItems) text[`${P}f1_13[0]`] = f.eciIncomeItems; // line 11
+    text[`${P}f1_16[0]`] = f.signerName;
+    text[`${P}f1_17[0]`] = f.signedDate;
+    return { text, checks };
+  }
+  if (formType === "w8exp") {
+    if (f.addressLine) text[`${P}f1_3[0]`] = f.addressLine; // line 5
+    if (f.cityStateZip) text[`${P}f1_4[0]`] = f.cityStateZip;
+    if (f.country) text[`${P}f1_5[0]`] = f.country;
+    if (tin.length === 9) text[`${P}f1_9[0]`] = tin; // line 7
+    if (foreignTin) text[`${P}f1_11[0]`] = foreignTin; // line 8b
+    const P3 = "topmostSubform[0].Page3[0].";
+    text[`${P3}f3_3[0]`] = f.signerName;
+    text[`${P3}f3_4[0]`] = f.signedDate;
+    return { text, checks };
+  }
+  if (formType === "w8imy") {
+    if (f.addressLine) text[`${P}f1_4[0]`] = f.addressLine; // line 6
+    if (f.cityStateZip) text[`${P}f1_5[0]`] = f.cityStateZip;
+    if (f.country) text[`${P}f1_6[0]`] = f.country;
+    if (tin.length === 9) text[`${P}f1_10[0]`] = tin; // line 8
+    if (foreignTin) text[`${P}f1_10[2]`] = foreignTin; // line 9b
+    const P8 = "topmostSubform[0].Page8[0].";
+    text[`${P8}PrintName[0]`] = f.signerName;
+    text[`${P8}Date[0]`] = f.signedDate;
+    return { text, checks };
+  }
   return { text, checks };
+}
+
+/**
+ * Facts each official form requires that the platform must hold before the
+ * form can be populated. Anything missing stops the form at Needs Information
+ * — required boxes are never left blank and never guessed.
+ */
+export function missingTaxFormFacts(formType: string, f: Partial<TaxFormFill>): string[] {
+  const missing: string[] = [];
+  const need = (ok: unknown, label: string) => { if (!ok) missing.push(label); };
+  need(f.legalName, "Legal name");
+  if (formType === "w9") return missing;
+  need(f.country, "Country");
+  need(f.addressLine, "Permanent residence address");
+  need(f.cityStateZip, "City and postal code");
+  if (formType === "w8ben") return missing;
+  if (formType === "w8bene" || formType === "w8imy" || formType === "w8exp") {
+    need(f.chapter3Status, "Chapter 3 status (entity type)");
+    need(f.chapter4Status, "Chapter 4 (FATCA) status");
+  }
+  if (formType === "w8eci") {
+    need(f.chapter3Status, "Entity type (line 4)");
+    need(String(f.tin ?? "").replace(/\D/g, "").length === 9, "U.S. taxpayer identification number (line 7)");
+    need(f.eciIncomeItems, "Effectively connected income items (line 11)");
+  }
+  return missing;
 }
 
 /** Which W-9 federal tax classification box a profile type implies. */
