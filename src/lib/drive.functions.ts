@@ -44,7 +44,7 @@ export const syncFundDrive = createServerFn({ method: "POST" })
     await s.from("offerings").update({ drive_sync_enabled: true }).eq("id", data.offeringId);
     const drive = await import("@/lib/drive.server");
     const mapping = data.linkFolderId
-      ? await drive.linkExistingFolder({ offeringId: data.offeringId, folderId: data.linkFolderId, reason: data.reason }, { userId })
+      ? await drive.linkExistingFolder({ offeringId: data.offeringId, folderId: data.linkFolderId, reason: data.reason ?? null }, { userId })
       : await drive.ensureFundStructure(data.offeringId, { userId });
     return { status: String(mapping?.status ?? "needs_attention"), error: (mapping?.last_error as string | null) ?? null };
   });
@@ -102,7 +102,7 @@ export const syncInvestorDrive = createServerFn({ method: "POST" })
     if (!ob?.length) throw new Error("That profile has no investment in this fund.");
     const drive = await import("@/lib/drive.server");
     const mapping = data.linkFolderId
-      ? await drive.linkExistingFolder({ offeringId: data.offeringId, profileId: data.profileId, folderId: data.linkFolderId, reason: data.reason }, { userId })
+      ? await drive.linkExistingFolder({ offeringId: data.offeringId, profileId: data.profileId, folderId: data.linkFolderId, reason: data.reason ?? null }, { userId })
       : await drive.ensureInvestorStructure(data.offeringId, data.profileId, { userId });
     if (!mapping) return { status: "needs_attention", error: "Create the fund's Google Drive folder first." };
     return { status: String(mapping.status), error: (mapping.last_error as string | null) ?? null };

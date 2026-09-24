@@ -82,7 +82,7 @@ export function DriveInvestorCard({ investorUserId }: { investorUserId: string }
                     className="h-9 w-full sm:w-64"
                   />
                   <Button size="sm" variant="outline" disabled={!linkIds[key] || mutation.isPending}
-                    onClick={() => mutation.mutate({ offeringId: r.offeringId, profileId: r.profileId, linkFolderId: linkIds[key] })}>
+                    onClick={() => mutation.mutate({ offeringId: r.offeringId, profileId: r.profileId, linkFolderId: linkIds[key] ?? "" })}>
                     Link existing folder
                   </Button>
                 </div>
