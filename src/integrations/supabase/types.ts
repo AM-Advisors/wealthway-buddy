@@ -4123,45 +4123,119 @@ export type Database = {
           },
         ]
       }
+      client_contact_scopes: {
+        Row: {
+          client_id: string
+          company_id: string | null
+          contact_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          offering_id: string | null
+          role: string
+        }
+        Insert: {
+          client_id: string
+          company_id?: string | null
+          contact_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offering_id?: string | null
+          role: string
+        }
+        Update: {
+          client_id?: string
+          company_id?: string | null
+          contact_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          offering_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contact_scopes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contact_scopes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contact_scopes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contact_scopes_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_contacts: {
         Row: {
           client_id: string
           created_at: string
           created_by: string | null
+          deactivated_at: string | null
+          deactivated_by: string | null
           designations: string[]
           email: string | null
           full_name: string
           id: string
           notes: string | null
           phone: string | null
+          status: string
           title: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           client_id: string
           created_at?: string
           created_by?: string | null
+          deactivated_at?: string | null
+          deactivated_by?: string | null
           designations?: string[]
           email?: string | null
           full_name: string
           id?: string
           notes?: string | null
           phone?: string | null
+          status?: string
           title?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           client_id?: string
           created_at?: string
           created_by?: string | null
+          deactivated_at?: string | null
+          deactivated_by?: string | null
           designations?: string[]
           email?: string | null
           full_name?: string
           id?: string
           notes?: string | null
           phone?: string | null
+          status?: string
           title?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -4917,8 +4991,123 @@ export type Database = {
           },
         ]
       }
+      client_service_selections: {
+        Row: {
+          client_id: string
+          contracted_at: string | null
+          contracted_snapshot: Json | null
+          contracted_sow_id: string | null
+          created_at: string
+          created_by: string | null
+          custom_price_cents: number | null
+          id: string
+          notes: string | null
+          offering_id: string | null
+          override_approved_at: string | null
+          override_approved_by: string | null
+          override_at: string | null
+          override_by: string | null
+          override_original_cents: number | null
+          override_reason: string | null
+          override_status: string | null
+          pending_change: string | null
+          service_id: string | null
+          service_key: string
+          sow_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          contracted_at?: string | null
+          contracted_snapshot?: Json | null
+          contracted_sow_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_price_cents?: number | null
+          id?: string
+          notes?: string | null
+          offering_id?: string | null
+          override_approved_at?: string | null
+          override_approved_by?: string | null
+          override_at?: string | null
+          override_by?: string | null
+          override_original_cents?: number | null
+          override_reason?: string | null
+          override_status?: string | null
+          pending_change?: string | null
+          service_id?: string | null
+          service_key: string
+          sow_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          contracted_at?: string | null
+          contracted_snapshot?: Json | null
+          contracted_sow_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_price_cents?: number | null
+          id?: string
+          notes?: string | null
+          offering_id?: string | null
+          override_approved_at?: string | null
+          override_approved_by?: string | null
+          override_at?: string | null
+          override_by?: string | null
+          override_original_cents?: number | null
+          override_reason?: string | null
+          override_status?: string | null
+          pending_change?: string | null
+          service_id?: string | null
+          service_key?: string
+          sow_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_service_selections_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_service_selections_contracted_sow_id_fkey"
+            columns: ["contracted_sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_service_selections_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_service_selections_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_service_selections_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_sows: {
         Row: {
+          amends_sow_id: string | null
           approval_note: string | null
           approval_status: string
           approved_at: string | null
@@ -4942,12 +5131,15 @@ export type Database = {
           eligibility: Json
           executed_at: string | null
           fund_request_id: string | null
+          generated_automatically: boolean
+          generated_lines: Json
           id: string
           locked: boolean
           msa_version_id: string | null
           notes: string | null
           notice_days: number
           offering_id: string | null
+          review_blockers: Json
           signed_by: string | null
           signed_on: string | null
           sow_type: string
@@ -4955,11 +5147,17 @@ export type Database = {
           special_terms: string | null
           stage: string
           status: string
+          template_id: string | null
+          template_override_at: string | null
+          template_override_by: string | null
+          template_override_reason: string | null
+          template_version: number | null
           termination_date: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          amends_sow_id?: string | null
           approval_note?: string | null
           approval_status?: string
           approved_at?: string | null
@@ -4983,12 +5181,15 @@ export type Database = {
           eligibility?: Json
           executed_at?: string | null
           fund_request_id?: string | null
+          generated_automatically?: boolean
+          generated_lines?: Json
           id?: string
           locked?: boolean
           msa_version_id?: string | null
           notes?: string | null
           notice_days?: number
           offering_id?: string | null
+          review_blockers?: Json
           signed_by?: string | null
           signed_on?: string | null
           sow_type?: string
@@ -4996,11 +5197,17 @@ export type Database = {
           special_terms?: string | null
           stage?: string
           status?: string
+          template_id?: string | null
+          template_override_at?: string | null
+          template_override_by?: string | null
+          template_override_reason?: string | null
+          template_version?: number | null
           termination_date?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          amends_sow_id?: string | null
           approval_note?: string | null
           approval_status?: string
           approved_at?: string | null
@@ -5024,12 +5231,15 @@ export type Database = {
           eligibility?: Json
           executed_at?: string | null
           fund_request_id?: string | null
+          generated_automatically?: boolean
+          generated_lines?: Json
           id?: string
           locked?: boolean
           msa_version_id?: string | null
           notes?: string | null
           notice_days?: number
           offering_id?: string | null
+          review_blockers?: Json
           signed_by?: string | null
           signed_on?: string | null
           sow_type?: string
@@ -5037,11 +5247,23 @@ export type Database = {
           special_terms?: string | null
           stage?: string
           status?: string
+          template_id?: string | null
+          template_override_at?: string | null
+          template_override_by?: string | null
+          template_override_reason?: string | null
+          template_version?: number | null
           termination_date?: string | null
           title?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "client_sows_amends_sow_id_fkey"
+            columns: ["amends_sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "client_sows_client_id_fkey"
             columns: ["client_id"]
@@ -5068,6 +5290,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sows_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "sow_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -12301,6 +12530,70 @@ export type Database = {
             columns: ["setup_id"]
             isOneToOne: true
             referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_client_reassignments: {
+        Row: {
+          from_client_id: string | null
+          id: string
+          offering_id: string
+          reason: string
+          requested_at: string
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          to_client_id: string
+        }
+        Insert: {
+          from_client_id?: string | null
+          id?: string
+          offering_id: string
+          reason: string
+          requested_at?: string
+          requested_by: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          to_client_id: string
+        }
+        Update: {
+          from_client_id?: string | null
+          id?: string
+          offering_id?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          to_client_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_client_reassignments_from_client_id_fkey"
+            columns: ["from_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_client_reassignments_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_client_reassignments_to_client_id_fkey"
+            columns: ["to_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -23741,6 +24034,7 @@ export type Database = {
           required_documents: string[]
           required_information: string[]
           service_code: string | null
+          service_group: string | null
           sort_order: number
           standard_deliverables: string[]
           standard_exclusions: string[]
@@ -23776,6 +24070,7 @@ export type Database = {
           required_documents?: string[]
           required_information?: string[]
           service_code?: string | null
+          service_group?: string | null
           sort_order?: number
           standard_deliverables?: string[]
           standard_exclusions?: string[]
@@ -23811,6 +24106,7 @@ export type Database = {
           required_documents?: string[]
           required_information?: string[]
           service_code?: string | null
+          service_group?: string | null
           sort_order?: number
           standard_deliverables?: string[]
           standard_exclusions?: string[]
@@ -23821,7 +24117,15 @@ export type Database = {
           third_party_handles?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_catalog_service_group_fkey"
+            columns: ["service_group"]
+            isOneToOne: false
+            referencedRelation: "service_groups"
+            referencedColumns: ["key"]
+          },
+        ]
       }
       service_entitlements: {
         Row: {
@@ -23926,6 +24230,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_groups: {
+        Row: {
+          active: boolean
+          created_at: string
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       service_package_items: {
         Row: {
@@ -24587,6 +24915,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sow_templates: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          body: string | null
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          engagement_type: string
+          id: string
+          name: string
+          retired_at: string | null
+          source_document_path: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          engagement_type: string
+          id?: string
+          name: string
+          retired_at?: string | null
+          source_document_path?: string | null
+          status?: string
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          engagement_type?: string
+          id?: string
+          name?: string
+          retired_at?: string | null
+          source_document_path?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
       }
       staff_invitations: {
         Row: {

@@ -19,6 +19,8 @@ export type OpsRecordTab = {
   title: string;
   /** The capability area the backend checks before serving this tab. */
   area: OpsArea;
+  /** Reachable by deep link but not shown in the tab bar. */
+  hidden?: boolean;
 };
 
 /** The area that owns the record itself (its header and existence check). */
@@ -32,15 +34,17 @@ export const RECORD_AREA: Record<OpsRecordType, OpsArea> = {
 export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
   client: [
     { id: "overview", title: "Overview", area: "clients" },
-    { id: "relationships", title: "Relationships", area: "clients" },
-    { id: "contacts", title: "Contacts", area: "clients" },
-    { id: "contracts", title: "Contracts", area: "clients" },
-    { id: "funds", title: "Funds", area: "funds" },
-    { id: "companies", title: "Companies", area: "companies" },
-    { id: "investors", title: "Investors", area: "investors" },
+    { id: "contacts", title: "People", area: "clients" },
+    { id: "services", title: "Services & Pricing", area: "clients" },
+    { id: "funds", title: "Funds & SPVs", area: "funds" },
+    { id: "companies", title: "Companies / Cap Tables", area: "companies" },
+    { id: "contracts", title: "Contracts & SOWs", area: "clients" },
     { id: "documents", title: "Documents", area: "documents" },
-    { id: "tasks", title: "Tasks", area: "tasks" },
-    { id: "activity", title: "Activity", area: "clients" },
+    { id: "tasks", title: "Tasks & Activity", area: "tasks" },
+    // Kept so existing deep links still open; not shown in the tab bar.
+    { id: "relationships", title: "Relationships", area: "clients", hidden: true },
+    { id: "investors", title: "Investors", area: "investors", hidden: true },
+    { id: "activity", title: "Activity", area: "clients", hidden: true },
   ],
   fund: [
     { id: "overview", title: "Overview", area: "funds" },
