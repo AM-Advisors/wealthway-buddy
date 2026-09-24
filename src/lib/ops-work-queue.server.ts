@@ -800,7 +800,7 @@ async function contractIntelligenceItems(s: any, lookup: Lookup, now: Date, docs
   const ids = docs.map((d) => d.id);
   const [terms, rels] = await Promise.all([
     safely(async () => rows(await s.from("contract_terms").select("document_id, term_key, current_value, amount_cents, service_key, status, source_page, source_section, source_quote").in("document_id", ids))),
-    safely(async () => rows(await s.from("contract_document_relationships").select("*").eq("status", "active"))),
+    safely(async () => rows(await s.from("contract_document_relationships").select("*").eq("status", "active").eq("approval_status", "approved"))),
   ]);
   const withTerms = docs.map((d) => ({ ...d, applies_to_service_keys: d.applies_to_service_keys ?? [], terms: (terms as any[]).filter((t) => t.document_id === d.id) }));
   const byClient = new Map<string, any[]>();
