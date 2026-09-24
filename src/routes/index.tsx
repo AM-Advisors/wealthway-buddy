@@ -70,7 +70,7 @@ function Index() {
               </h1>
               <p className="mt-6 max-w-lg text-lg text-primary-foreground/75">
                 Move at the speed of the deal. We form the entity, run compliant investor
-                onboarding and administer the fund — so the difference between closing an
+                onboarding and administer the fund, so the difference between closing an
                 opportunity and missing it is never paperwork.
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
