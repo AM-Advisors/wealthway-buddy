@@ -179,7 +179,10 @@ export async function buildPreview(db: any, clientId: string, offeringId: string
     governing: terms.governing,
     specialTerms: terms.special,
     executedSow: applicable.executed ? { id: applicable.executed.id, version: applicable.executed.template_version ?? null } : null,
-    draftSow: (amendment ? applicable.amendmentDraft : applicable.draft) ?? null,
+    draftSow: (() => {
+      const d = amendment ? applicable.amendmentDraft : applicable.draft;
+      return d ? { id: d.id, template_version: d.template_version ?? null } : null;
+    })(),
     mode: amendment ? ("amendment" as const) : ("draft" as const),
   };
 }
