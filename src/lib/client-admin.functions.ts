@@ -229,8 +229,9 @@ export const listClientFunds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ clientId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
-    const { clientGate, loadContractTerms } = await import("@/lib/client-admin.server");
+    const { clientGate, loadContractTerms, loadCoverageInputs } = await import("@/lib/client-admin.server");
     const { db, caps } = await clientGate(context);
+    const cov = await loadCoverageInputs(db, data.clientId);
     const [{ data: funds }, { data: sows }, { data: sels }, { data: scopes }, { data: people }, { data: drive }, { data: reassign }, terms] = await Promise.all([
       db.from("offerings").select("id, name, fund_type, entity_type, reg_type, is_open, legal_entity_name").eq("client_id", data.clientId),
       db.from("client_sows").select("id, client_id, offering_id, status, executed_at, locked, client_status, approval_status, amends_sow_id, template_version, review_blockers, generated_automatically").eq("client_id", data.clientId),
@@ -263,6 +264,17 @@ export const listClientFunds = createServerFn({ method: "GET" })
           pricingSources: [...new Set((lines as any[]).map((l) => l.pricingSource).filter(Boolean))],
           driveStatus: ((drive ?? []) as any[]).find((d) => d.offering_id === f.id)?.status ?? "not created",
           contractuallyEngaged: !!app.executed,
+          coverage: (() => {
+            const c = resolveFundCoverage({ clientId: data.clientId, offeringId: f.id, governingMsa: cov.governingMsa, sows: cov.sows as CoverageSow[], fundHasServices: fs.length > 0 });
+            const svc = resolveServiceCoverage(fs.map((s) => s.service_key as string), c.sows.filter((s) => !!s.executed_at));
+            return {
+              status: c.status,
+              label: c.label,
+              msa: c.msa,
+              sows: c.sows.map((s) => ({ id: s.id, title: s.title, version: s.template_version ?? null, executed: !!s.executed_at, funds: (s.covered_offering_ids ?? []).length || (s.offering_id ? 1 : 0), services: s.service_keys ?? [] })),
+              services: svc,
+            };
+          })(),
         };
       }),
     };
@@ -316,7 +328,7 @@ export const createClientFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => createFundInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { clientGate, audit, ensureDraftSow } = await import("@/lib/client-admin.server");
+    const { clientGate, audit, loadCoverageInputs } = await import("@/lib/client-admin.server");
     const { db, caps, userId } = await clientGate(context, "link_funds");
     const { data: client } = await db.from("clients").select("id").eq("id", data.clientId).maybeSingle();
     if (!client) throw new Error("Client not found.");
@@ -351,10 +363,10 @@ export const createClientFund = createServerFn({ method: "POST" })
     if (data.serviceKeys.length && caps.includes("manage_services")) {
       await addSelections(db, userId, data.clientId, offeringId, data.serviceKeys);
     }
-    const sow = caps.includes("manage_sows")
-      ? await ensureDraftSow(db, userId, data.clientId, offeringId, { trigger: "fund_created" })
-      : null;
-    return { offeringId, sowOutcome: sow?.outcome ?? "not_permitted" };
+    // Fund creation and contractual engagement are separate: never create or attach a SOW here.
+    const cov = await loadCoverageInputs(db, data.clientId);
+    const coverage = resolveFundCoverage({ clientId: data.clientId, offeringId, governingMsa: cov.governingMsa, sows: cov.sows as CoverageSow[], fundHasServices: data.serviceKeys.length > 0 });
+    return { offeringId, coverage: { status: coverage.status, label: coverage.label } };
   });
 
 /** Link an unassigned fund, or open a reviewed reassignment — never a silent move. */
@@ -362,8 +374,8 @@ export const linkFundToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ clientId: uuid, offeringId: uuid, reason: z.string().trim().max(1000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { clientGate, audit, ensureDraftSow } = await import("@/lib/client-admin.server");
-    const { db, caps, userId } = await clientGate(context, "link_funds");
+    const { clientGate, audit, loadCoverageInputs } = await import("@/lib/client-admin.server");
+    const { db, userId } = await clientGate(context, "link_funds");
     const { data: fund } = await db.from("offerings").select("id, client_id, name").eq("id", data.offeringId).maybeSingle();
     if (!fund) throw new Error("Fund not found.");
     const plan = planFundLink(fund, data.clientId);
@@ -378,8 +390,9 @@ export const linkFundToClient = createServerFn({ method: "POST" })
     const { error } = await db.from("offerings").update({ client_id: data.clientId }).eq("id", fund.id).is("client_id", null);
     if (error) throw new Error(error.message);
     await audit(db, { actor: userId, clientId: data.clientId, offeringId: fund.id, action: "fund_linked", before: { client_id: null }, after: { client_id: data.clientId } });
-    const sow = caps.includes("manage_sows") ? await ensureDraftSow(db, userId, data.clientId, fund.id, { trigger: "fund_linked" }) : null;
-    return { outcome: "linked" as const, sowOutcome: sow?.outcome ?? "not_permitted" };
+    const cov = await loadCoverageInputs(db, data.clientId);
+    const coverage = resolveFundCoverage({ clientId: data.clientId, offeringId: fund.id, governingMsa: cov.governingMsa, sows: cov.sows as CoverageSow[], fundHasServices: cov.selections.some((x) => x.offering_id === fund.id) });
+    return { outcome: "linked" as const, coverage: { status: coverage.status, label: coverage.label } };
   });
 
 /** A different person approves or rejects a reassignment. */
