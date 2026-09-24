@@ -5105,6 +5105,70 @@ export type Database = {
           },
         ]
       }
+      client_sow_funds: {
+        Row: {
+          added_at: string
+          added_by: string
+          client_id: string
+          id: string
+          offering_id: string
+          reason: string | null
+          removed_at: string | null
+          removed_by: string | null
+          removed_reason: string | null
+          sow_id: string
+          status: string
+        }
+        Insert: {
+          added_at?: string
+          added_by: string
+          client_id: string
+          id?: string
+          offering_id: string
+          reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
+          sow_id: string
+          status?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string
+          client_id?: string
+          id?: string
+          offering_id?: string
+          reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
+          sow_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sow_funds_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sow_funds_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sow_funds_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_sows: {
         Row: {
           amends_sow_id: string | null
@@ -5131,8 +5195,10 @@ export type Database = {
           eligibility: Json
           executed_at: string | null
           fund_request_id: string | null
+          fund_scope: string | null
           generated_automatically: boolean
           generated_lines: Json
+          governing_document_id: string | null
           id: string
           locked: boolean
           msa_version_id: string | null
@@ -5181,8 +5247,10 @@ export type Database = {
           eligibility?: Json
           executed_at?: string | null
           fund_request_id?: string | null
+          fund_scope?: string | null
           generated_automatically?: boolean
           generated_lines?: Json
+          governing_document_id?: string | null
           id?: string
           locked?: boolean
           msa_version_id?: string | null
@@ -5231,8 +5299,10 @@ export type Database = {
           eligibility?: Json
           executed_at?: string | null
           fund_request_id?: string | null
+          fund_scope?: string | null
           generated_automatically?: boolean
           generated_lines?: Json
+          governing_document_id?: string | null
           id?: string
           locked?: boolean
           msa_version_id?: string | null
@@ -5276,6 +5346,13 @@ export type Database = {
             columns: ["fund_request_id"]
             isOneToOne: false
             referencedRelation: "fund_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_sows_governing_document_id_fkey"
+            columns: ["governing_document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
             referencedColumns: ["id"]
           },
           {
@@ -6116,10 +6193,16 @@ export type Database = {
       }
       contract_document_relationships: {
         Row: {
+          approval_note: string | null
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           client_id: string
           document_id: string
           id: string
           offering_ids: string[]
+          proposed_from_contract: boolean
+          provision_reference: string | null
           reason: string | null
           recorded_at: string
           recorded_by: string
@@ -6134,10 +6217,16 @@ export type Database = {
           status: string
         }
         Insert: {
+          approval_note?: string | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           client_id: string
           document_id: string
           id?: string
           offering_ids?: string[]
+          proposed_from_contract?: boolean
+          provision_reference?: string | null
           reason?: string | null
           recorded_at?: string
           recorded_by: string
@@ -6152,10 +6241,16 @@ export type Database = {
           status?: string
         }
         Update: {
+          approval_note?: string | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           client_id?: string
           document_id?: string
           id?: string
           offering_ids?: string[]
+          proposed_from_contract?: boolean
+          provision_reference?: string | null
           reason?: string | null
           recorded_at?: string
           recorded_by?: string
@@ -6362,6 +6457,9 @@ export type Database = {
           id: string
           label: string
           material: boolean
+          pricing_model: string | null
+          pricing_tiers: Json | null
+          rate_bps: number | null
           reviewed_at: string | null
           reviewed_by: string | null
           service_key: string | null
@@ -6385,6 +6483,9 @@ export type Database = {
           id?: string
           label: string
           material?: boolean
+          pricing_model?: string | null
+          pricing_tiers?: Json | null
+          rate_bps?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           service_key?: string | null
@@ -6408,6 +6509,9 @@ export type Database = {
           id?: string
           label?: string
           material?: boolean
+          pricing_model?: string | null
+          pricing_tiers?: Json | null
+          rate_bps?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           service_key?: string | null
@@ -22375,6 +22479,8 @@ export type Database = {
           label: string
           pass_through: boolean
           pricing_model: string
+          pricing_tiers: Json | null
+          rate_bps: number | null
           service_key: string | null
           sort_order: number
           unit: string | null
@@ -22389,6 +22495,8 @@ export type Database = {
           label: string
           pass_through?: boolean
           pricing_model?: string
+          pricing_tiers?: Json | null
+          rate_bps?: number | null
           service_key?: string | null
           sort_order?: number
           unit?: string | null
@@ -22403,6 +22511,8 @@ export type Database = {
           label?: string
           pass_through?: boolean
           pricing_model?: string
+          pricing_tiers?: Json | null
+          rate_bps?: number | null
           service_key?: string | null
           sort_order?: number
           unit?: string | null
@@ -24967,6 +25077,72 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_capability_grants: {
+        Row: {
+          capability: string | null
+          granted_at: string
+          granted_by: string
+          id: string
+          reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          role_key: string | null
+          user_id: string
+        }
+        Insert: {
+          capability?: string | null
+          granted_at?: string
+          granted_by: string
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_key?: string | null
+          user_id: string
+        }
+        Update: {
+          capability?: string | null
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_key?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      staff_custom_roles: {
+        Row: {
+          active: boolean
+          capabilities: string[]
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          role_key: string
+        }
+        Insert: {
+          active?: boolean
+          capabilities?: string[]
+          created_at?: string
+          created_by: string
+          id?: string
+          label: string
+          role_key: string
+        }
+        Update: {
+          active?: boolean
+          capabilities?: string[]
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          role_key?: string
+        }
+        Relationships: []
+      }
       staff_invitations: {
         Row: {
           accepted_at: string | null
@@ -25006,6 +25182,92 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      standard_agreement_components: {
+        Row: {
+          component_key: string
+          created_at: string
+          fee_structure: Json | null
+          id: string
+          kind: string
+          level: string
+          package_id: string
+          part_of_key: string | null
+          source_pages: string | null
+          title: string
+        }
+        Insert: {
+          component_key: string
+          created_at?: string
+          fee_structure?: Json | null
+          id?: string
+          kind: string
+          level: string
+          package_id: string
+          part_of_key?: string | null
+          source_pages?: string | null
+          title: string
+        }
+        Update: {
+          component_key?: string
+          created_at?: string
+          fee_structure?: Json | null
+          id?: string
+          kind?: string
+          level?: string
+          package_id?: string
+          part_of_key?: string | null
+          source_pages?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standard_agreement_components_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "standard_agreement_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standard_agreement_packages: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          id: string
+          package_key: string
+          prepared_at: string
+          prepared_by: string
+          source_file_path: string | null
+          source_sha256: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          package_key: string
+          prepared_at?: string
+          prepared_by: string
+          source_file_path?: string | null
+          source_sha256?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          package_key?: string
+          prepared_at?: string
+          prepared_by?: string
+          source_file_path?: string | null
+          source_sha256?: string | null
+          status?: string
+          title?: string
         }
         Relationships: []
       }
