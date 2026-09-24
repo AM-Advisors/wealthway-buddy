@@ -168,7 +168,9 @@ export const REQUIREMENT_KEYS = [
   "aml",
   "eligibility",
   "accreditation",
+  "tax_classification",
   "tax_documentation",
+  "bsa_aml",
   "bad_actor",
   "investment_amount",
   "subscription_questionnaire",
@@ -188,7 +190,9 @@ export const REQUIREMENT_LABELS: Record<RequirementKey, string> = {
   aml: "Compliance screening",
   eligibility: "Eligibility",
   accreditation: "Accreditation",
-  tax_documentation: "Tax documentation",
+  tax_classification: "Tax classification",
+  tax_documentation: "Tax form",
+  bsa_aml: "Financial background",
   bad_actor: "Compliance questionnaire",
   certifications: "Review & certify",
   investment_amount: "Investment amount",
@@ -315,6 +319,8 @@ export interface DeterminationInput {
    */
   compliance?: {
     tax?: { state: RequirementState; reason?: string | undefined };
+    taxClassification?: { state: RequirementState; reason?: string | undefined };
+    bsaAml?: { state: RequirementState; reason?: string | undefined };
     badActor?: { state: RequirementState; reason?: string | undefined };
     offeringEligibility?: { state: RequirementState; reason?: string | undefined };
     certifications?: { state: RequirementState; reason?: string | undefined };
@@ -433,6 +439,11 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
   else if (input.compliance?.tax) add("tax_documentation", input.compliance.tax.state, input.compliance.tax.reason);
   else add("tax_documentation", reuseState(profile.taxFormStatus, profile.taxFormExpiresOn, nowIso));
 
+  const tc = input.compliance?.taxClassification;
+  add("tax_classification", offering.taxDocumentRequired ? (tc?.state ?? "not_applicable") : "not_applicable", tc?.reason);
+  const bsa = input.compliance?.bsaAml;
+  add("bsa_aml", bsa?.state ?? "not_applicable", bsa?.reason);
+
   const ba = input.compliance?.badActor;
   add("bad_actor", ba?.state ?? "not_applicable", ba?.reason);
 
@@ -475,7 +486,9 @@ const PRE_REVIEW: readonly RequirementKey[] = [
   "aml",
   "eligibility",
   "accreditation",
+  "tax_classification",
   "tax_documentation",
+  "bsa_aml",
   "bad_actor",
   "investment_amount",
   "subscription_questionnaire",

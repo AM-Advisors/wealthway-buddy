@@ -14,22 +14,37 @@ export interface IrsFormRevision {
   title: string;
   revision: string;
   sourceUrl: string;
+  /** SHA-256 of the exact official PDF used as the template. */
+  templateSha256: string;
+  status: "current" | "retired";
+  verifiedOn: string;
 }
 
 /**
- * Official IRS forms. Stored on every completed record so a future revision
- * never changes a completed form. Revisions must be re-confirmed against
- * irs.gov before production (see TAX_REVISIONS_VERIFIED).
+ * Official IRS forms, versioned configuration. Verified against irs.gov on
+ * 2026-09-24. Each completed record stores revision + template hash, so a
+ * future revision is added here (and the old one marked retired) without
+ * touching completed records.
  */
-export const IRS_FORM_REVISIONS: Record<TaxFormType, IrsFormRevision> = {
-  w9: { formType: "w9", title: "Form W-9", revision: "Rev. March 2024", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw9.pdf" },
-  w8ben: { formType: "w8ben", title: "Form W-8BEN", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8ben.pdf" },
-  w8bene: { formType: "w8bene", title: "Form W-8BEN-E", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8bene.pdf" },
-  w8eci: { formType: "w8eci", title: "Form W-8ECI", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8eci.pdf" },
-  w8exp: { formType: "w8exp", title: "Form W-8EXP", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8exp.pdf" },
-  w8imy: { formType: "w8imy", title: "Form W-8IMY", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8imy.pdf" },
-};
-export const TAX_REVISIONS_VERIFIED = false;
+export const IRS_FORM_CATALOG: IrsFormRevision[] = [
+  { formType: "w9", title: "Form W-9", revision: "Rev. March 2024", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw9.pdf", templateSha256: "2d420cbb4123dcf1fb82595b2359cfbb5d81f00b9df9d359fcc7af361d093f53", status: "current", verifiedOn: "2026-09-24" },
+  { formType: "w8ben", title: "Form W-8BEN", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8ben.pdf", templateSha256: "b821dc1172c91b348a65675529cc792782f11fc1ae8579df92d627113203f918", status: "current", verifiedOn: "2026-09-24" },
+  { formType: "w8bene", title: "Form W-8BEN-E", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8bene.pdf", templateSha256: "d67fc5abae5af11df5d6168a60f7a7e7f27044efa63f660cb76c0e47a241ef6e", status: "current", verifiedOn: "2026-09-24" },
+  { formType: "w8eci", title: "Form W-8ECI", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8eci.pdf", templateSha256: "e8fd980376228d3636498889c4ace387055190226fffafcdbfc2e9c88c8b1f31", status: "current", verifiedOn: "2026-09-24" },
+  { formType: "w8exp", title: "Form W-8EXP", revision: "Rev. October 2023", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8exp.pdf", templateSha256: "c3d48afbd34a08aeb81cee280e1645a84bc06f0351c20704f7dd98694d736475", status: "current", verifiedOn: "2026-09-24" },
+  { formType: "w8imy", title: "Form W-8IMY", revision: "Rev. October 2021", sourceUrl: "https://www.irs.gov/pub/irs-pdf/fw8imy.pdf", templateSha256: "2d3048e7d83485dde66e8d7904411cf577e5d2f73c71541c804d9dcb1bfb0493", status: "current", verifiedOn: "2026-09-24" },
+];
+
+export function currentIrsForm(formType: TaxFormType): IrsFormRevision {
+  const f = IRS_FORM_CATALOG.find((r) => r.formType === formType && r.status === "current");
+  if (!f) throw new Error(`No current IRS revision configured for ${formType}`);
+  return f;
+}
+
+export const IRS_FORM_REVISIONS: Record<TaxFormType, IrsFormRevision> = Object.fromEntries(
+  (["w9", "w8ben", "w8bene", "w8eci", "w8exp", "w8imy"] as TaxFormType[]).map((t) => [t, currentIrsForm(t)]),
+) as Record<TaxFormType, IrsFormRevision>;
+export const TAX_REVISIONS_VERIFIED = true;
 
 export interface TaxFacts {
   profileType: string | null | undefined;
@@ -243,6 +258,7 @@ export const ELIGIBILITY_REQUIREMENT_TYPES = {
   minimum_investment: { label: "Minimum investment", category: "fund" },
   investor_type_restriction: { label: "Investor-type restriction", category: "fund" },
   jurisdiction_restriction: { label: "Jurisdiction restriction", category: "fund" },
+  custom_representation: { label: "Approved custom representation", category: "representation" },
 } as const satisfies Record<string, { label: string; category: EligibilityCategory }>;
 export type EligibilityRequirementType = keyof typeof ELIGIBILITY_REQUIREMENT_TYPES;
 
@@ -252,6 +268,13 @@ export interface EligibilityRequirementConfig {
   mandatory: boolean;
   /** When true a "yes/flag" response routes to review instead of satisfying. */
   reviewOnFlag?: boolean | undefined;
+  params?: {
+    minimumCents?: number | null;
+    allowedProfileTypes?: string[];
+    blockedCountries?: string[];
+    allowedCountries?: string[];
+    customText?: string;
+  } | undefined;
 }
 
 export const ELIGIBILITY_OUTCOMES = [
@@ -292,16 +315,28 @@ export function effectiveEligibility(input: {
   return [...byKey.values()].filter((r) => r.key in ELIGIBILITY_REQUIREMENT_TYPES);
 }
 
+const strList = (v: unknown) => (Array.isArray(v) ? v.filter((x) => typeof x === "string").map((x) => String(x).trim()).filter(Boolean).slice(0, 200) : undefined);
+
 export function parseEligibilityConfig(raw: unknown): EligibilityRequirementConfig[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((r: any) => r && typeof r.key === "string" && r.key in ELIGIBILITY_REQUIREMENT_TYPES)
-    .map((r: any) => ({
-      key: r.key,
-      category: (ELIGIBILITY_REQUIREMENT_TYPES as any)[r.key].category,
-      mandatory: r.mandatory !== false,
-      reviewOnFlag: Boolean(r.reviewOnFlag),
-    }));
+    .map((r: any) => {
+      const p = r.params ?? {};
+      const params: NonNullable<EligibilityRequirementConfig["params"]> = {};
+      if (Number.isFinite(Number(p.minimumCents)) && p.minimumCents !== null && p.minimumCents !== "") params.minimumCents = Math.max(0, Math.round(Number(p.minimumCents)));
+      const apt = strList(p.allowedProfileTypes); if (apt) params.allowedProfileTypes = apt;
+      const bc = strList(p.blockedCountries); if (bc) params.blockedCountries = bc.map((c) => c.toUpperCase());
+      const ac = strList(p.allowedCountries); if (ac) params.allowedCountries = ac.map((c) => c.toUpperCase());
+      if (typeof p.customText === "string" && p.customText.trim()) params.customText = p.customText.trim().slice(0, 1000);
+      return {
+        key: r.key,
+        category: (ELIGIBILITY_REQUIREMENT_TYPES as any)[r.key].category,
+        mandatory: r.mandatory !== false,
+        reviewOnFlag: Boolean(r.reviewOnFlag),
+        params,
+      };
+    });
 }
 
 /** "accredited_investor" is resolved by the accreditation requirement itself. */

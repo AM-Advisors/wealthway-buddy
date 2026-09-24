@@ -26,12 +26,12 @@ export const PORTAL_STEP_REQUIREMENTS: Record<PortalStep, readonly RequirementKe
     "identity_verification",
     "entity_verification",
     "aml",
-    "eligibility",
-    "tax_documentation",
+    "tax_classification",
+    "bsa_aml",
     "bad_actor",
   ],
-  accreditation: ["accreditation"],
-  documents: ["subscription_questionnaire", "certifications", "subscription_documents", "signature"],
+  accreditation: ["accreditation", "eligibility"],
+  documents: ["tax_documentation", "subscription_questionnaire", "certifications", "subscription_documents", "signature"],
 };
 
 export type PortalStepState = "complete" | "not_applicable" | "action_required" | "in_review" | "locked";
