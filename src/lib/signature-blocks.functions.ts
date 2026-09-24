@@ -8,6 +8,8 @@ export const BLOCK_TYPES = [
   { value: "date", label: "Date signed" },
   { value: "full_name", label: "Full legal name" },
   { value: "title", label: "Title / capacity" },
+  { value: "entity_name", label: "Entity name" },
+  { value: "text", label: "Text" },
 ] as const;
 
 export type SignatureBlockType = (typeof BLOCK_TYPES)[number]["value"];
@@ -18,7 +20,8 @@ const blockSchema = z.object({
   y: z.number().min(0).max(1),
   width: z.number().min(0.01).max(1),
   height: z.number().min(0.005).max(1),
-  block_type: z.enum(["signature", "initials", "date", "full_name", "title"]),
+  block_type: z.enum(["signature", "initials", "date", "full_name", "title", "entity_name", "text"]),
+  signer_role: z.enum(["investor", "fund_manager"]).default("investor"),
   required: z.boolean().default(true),
 });
 
@@ -60,7 +63,7 @@ export const listSignatureBlocks = createServerFn({ method: "POST" })
 
     const { data: rows, error } = await context.supabase
       .from("offering_document_signature_blocks")
-      .select("id, page_number, x, y, width, height, block_type, required, sort_order")
+      .select("id, page_number, x, y, width, height, block_type, required, sort_order, signer_role")
       .eq("offering_document_id", data.documentId)
       .order("page_number", { ascending: true })
       .order("sort_order", { ascending: true });
@@ -79,6 +82,7 @@ export const listSignatureBlocks = createServerFn({ method: "POST" })
         height: Number(r.height),
         block_type: r.block_type as SignatureBlockType,
         required: Boolean(r.required),
+        signer_role: (r.signer_role === "fund_manager" ? "fund_manager" : "investor") as "investor" | "fund_manager",
       })),
     };
   });
@@ -118,6 +122,7 @@ export const saveSignatureBlocks = createServerFn({ method: "POST" })
         height: b.height,
         block_type: b.block_type,
         required: b.required,
+        signer_role: b.signer_role,
         sort_order: index,
         created_by: context.userId,
       }));
@@ -126,6 +131,14 @@ export const saveSignatureBlocks = createServerFn({ method: "POST" })
         .insert(rows);
       if (error) throw new Error(error.message);
     }
+
+    // Template changes never alter documents already sent: new sends pin the new version.
+    const { data: current } = await context.supabase
+      .from("offering_documents").select("signature_template_version").eq("id", data.documentId).maybeSingle();
+    await context.supabase
+      .from("offering_documents")
+      .update({ signature_template_version: Number((current as any)?.signature_template_version ?? 1) + 1 })
+      .eq("id", data.documentId);
 
     try {
       const { data: profile } = await context.supabase
