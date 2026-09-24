@@ -1,13 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PhasePlaceholder } from "@/components/captable/captable-states";
+import { DocumentsScreen } from "@/components/captable/company-360-screens";
 
 export const Route = createFileRoute("/_authenticated/client/cap-table/documents")({
-  component: () => (
-    <PhasePlaceholder
-      title="Document vault"
-      description="Signed agreements, board consents and certificates, each matched to the position it evidences."
-      phase="Phase 6"
-    />
-  ),
+  head: () => ({ meta: [{ title: "Company Documents — Harmonious" }, { name: "description", content: "Company documents grouped by purpose." }] }),
+  component: DocumentsScreen,
 });

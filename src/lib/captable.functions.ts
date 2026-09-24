@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { planReversal } from "./company-360-views";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeVesting } from "@/lib/vesting";
@@ -110,6 +111,7 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
       { data: securities },
       { data: transactions },
       { data: events },
+      { data: documents },
     ] = await Promise.all([
       context.supabase.from("ct_stakeholders").select("*").eq("company_id", companyId).order("name"),
       context.supabase.from("ct_security_classes").select("*").eq("company_id", companyId).order("seniority"),
@@ -127,7 +129,13 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
         .select("*")
         .eq("company_id", companyId)
         .order("occurred_at", { ascending: false })
-        .limit(50),
+        .limit(300),
+      context.supabase
+        .from("ct_documents")
+        .select("id, title, doc_type, purpose, status, stakeholder_id, security_id, transaction_id, round_id, uploaded_by, created_at, updated_at")
+        .eq("company_id", companyId)
+        .order("created_at", { ascending: false })
+        .limit(500),
     ]);
 
     let canManage = false;
@@ -383,8 +391,23 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
         id: e.id as string,
         action: e.action as string,
         entityType: e.entity_type as string | null,
+        entityId: e.entity_id as string | null,
         reason: e.reason as string | null,
         occurredAt: e.occurred_at as string,
+      })),
+      documents: ((documents ?? []) as any[]).map((d) => ({
+        id: d.id as string,
+        title: d.title as string,
+        docType: d.doc_type as string,
+        purpose: d.purpose as string | null,
+        status: d.status as string,
+        stakeholderId: d.stakeholder_id as string | null,
+        securityId: d.security_id as string | null,
+        transactionId: d.transaction_id as string | null,
+        roundId: d.round_id as string | null,
+        uploadedBy: d.uploaded_by as string | null,
+        createdAt: d.created_at as string,
+        updatedAt: d.updated_at as string,
       })),
       metrics,
     };
@@ -674,6 +697,48 @@ export const recordCapTransaction = createServerFn({ method: "POST" })
       entityId: row.id,
       next: { ...data, quantity: signed },
       reason: data.reason,
+    });
+    return { id: row.id as string };
+  });
+
+/** Records a linked reversal of a finalized transaction. The original row is never edited. */
+export const reverseCapTransaction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        companyId: z.string().uuid(),
+        originalId: z.string().uuid(),
+        correctionType: z.enum(["full_reversal", "partial_reversal"]),
+        quantity: z.number().positive().optional(),
+        effectiveDate: z.string().trim().min(4),
+        reason: z.string().trim().min(5).max(500),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertManage(context, data.companyId);
+    const { data: orig, error } = await context.supabase
+      .from("ct_transactions")
+      .select("*")
+      .eq("id", data.originalId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    const plan = planReversal(orig as any, data);
+    if (!plan.ok) throw new Error(plan.error);
+    const { data: existing } = await context.supabase
+      .from("ct_transactions").select("id, quantity").eq("reverses_transaction_id", data.originalId);
+    const already = ((existing ?? []) as any[]).reduce((a, r) => a + Math.abs(Number(r.quantity)), 0);
+    if (already + Math.abs(plan.row.quantity) > Math.abs(Number((orig as any).quantity)) + 1e-9)
+      throw new Error("This transaction has already been reversed for that quantity.");
+    const { data: row, error: insErr } = await context.supabase
+      .from("ct_transactions")
+      .insert({ ...plan.row, created_by: context.userId, status: "recorded" } as any)
+      .select("id").single();
+    if (insErr) throw new Error(insErr.message);
+    await recordEvent(context, {
+      companyId: data.companyId, action: "transaction.reversal", entityType: "transaction",
+      entityId: row.id, previous: { originalId: data.originalId }, next: plan.row, reason: data.reason,
     });
     return { id: row.id as string };
   });

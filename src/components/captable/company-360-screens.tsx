@@ -8,7 +8,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HelpTip } from "@/components/help-tip";
 import { toCsv } from "@/lib/company-360-model";
-import { ownershipView, reportHeader, stakeholderTransactions, toModelTxs, type WsTx } from "@/lib/company-360-views";
+import { activityLabel, DOC_GROUPS, docGroup, groupDocuments, ownershipView, reportHeader, stakeholderActivity, stakeholderDocuments, stakeholderTransactions, toModelTxs, type WsDoc, type WsEvent, type WsTx } from "@/lib/company-360-views";
+import { reverseCapTransaction } from "@/lib/captable.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 import { fmtDate, fmtMoney, fmtNumber, fmtPercent, useCapTable } from "./captable-context";
 import { CapTableEmpty, CapTableSection } from "./captable-states";
@@ -119,10 +124,139 @@ function Stakeholder360({ id }: { id: string }) {
           )}
         </TabsContent>
         <TabsContent value="transactions"><TxTable txs={txs} /></TabsContent>
-        <TabsContent value="documents"><p className="text-sm text-muted-foreground">Documents linked to this stakeholder appear in the Documents tab of the company.</p></TabsContent>
-        <TabsContent value="activity"><p className="text-sm text-muted-foreground">{txs.length} recorded equity events involve this stakeholder.</p></TabsContent>
+        <TabsContent value="documents"><StakeholderDocs id={sh.id} txs={txs} /></TabsContent>
+        <TabsContent value="activity"><StakeholderActivity id={sh.id} txs={txs} /></TabsContent>
       </Tabs>
     </>
+  );
+}
+
+function useDocs(): WsDoc[] {
+  const { workspace } = useCapTable();
+  return ((workspace as any)?.documents ?? []) as WsDoc[];
+}
+function StakeholderDocs({ id, txs }: { id: string; txs: WsTx[] }) {
+  const docs = stakeholderDocuments(id, useDocs(), txs);
+  if (docs.length === 0) return <p className="text-sm text-muted-foreground">No documents are linked to this stakeholder yet.</p>;
+  return <DocList docs={docs} />;
+}
+function StakeholderActivity({ id, txs }: { id: string; txs: WsTx[] }) {
+  const { workspace } = useCapTable();
+  const docs = stakeholderDocuments(id, useDocs(), txs);
+  const events = stakeholderActivity(id, (workspace?.events ?? []) as WsEvent[], txs.map((t) => t.id), docs.map((d) => d.id),
+    txs.map((t) => t.securityId).filter(Boolean) as string[]);
+  if (events.length === 0) return <p className="text-sm text-muted-foreground">No activity recorded for this stakeholder yet.</p>;
+  return (
+    <ol className="space-y-2 text-sm">
+      {events.map((e) => (
+        <li key={e.id} className="rounded border p-2">
+          <p className="font-medium capitalize">{activityLabel(e.action)}</p>
+          <p className="text-xs text-muted-foreground">{fmtDate(e.occurredAt)}{e.reason ? ` · ${e.reason}` : ""}</p>
+        </li>
+      ))}
+    </ol>
+  );
+}
+function DocList({ docs }: { docs: WsDoc[] }) {
+  const { workspace } = useCapTable();
+  const name = (sid: string | null) => (sid ? workspace?.stakeholders.find((s) => s.id === sid)?.name : null);
+  return (
+    <ul className="space-y-2 text-sm">
+      {docs.map((d) => {
+        const links = [name(d.stakeholderId) && `Stakeholder: ${name(d.stakeholderId)}`, d.securityId && "Security", d.transactionId && "Transaction", d.roundId && "Round"].filter(Boolean);
+        return (
+          <li key={d.id} className="rounded border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-medium">{d.title}</span>
+              <Badge variant="secondary" className="capitalize">{d.status.replace(/_/g, " ")}</Badge>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {docGroup(d)} · <span className="capitalize">{d.docType.replace(/_/g, " ")}</span> · Added {fmtDate(d.createdAt)} · Version 1
+              {d.uploadedBy ? " · Uploaded by a team member" : " · Generated"}
+            </p>
+            {links.length ? <p className="mt-1 text-xs">{links.join(" · ")}</p> : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/* ------------------------------------------------------------ Documents */
+export function DocumentsScreen() {
+  return <CapTableSection><DocumentsInner /></CapTableSection>;
+}
+function DocumentsInner() {
+  const docs = useDocs();
+  const [q, setQ] = useState("");
+  const [cat, setCat] = useState<string>("all");
+  const [status, setStatus] = useState<string>("all");
+  const [rel, setRel] = useState<string>("all");
+  const statuses = [...new Set(docs.map((d) => d.status))];
+  const filtered = docs.filter((d) =>
+    (!q || d.title.toLowerCase().includes(q.toLowerCase()) || d.docType.toLowerCase().includes(q.toLowerCase())) &&
+    (cat === "all" || docGroup(d) === cat) && (status === "all" || d.status === status) &&
+    (rel === "all" || (rel === "stakeholder" ? d.stakeholderId : rel === "security" ? d.securityId : rel === "transaction" ? d.transactionId : d.roundId)));
+  const groups = groupDocuments(filtered);
+  const sel = "h-9 rounded-md border bg-background px-2 text-sm";
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <Input className="max-w-xs" placeholder="Search documents" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select aria-label="Category" className={sel} value={cat} onChange={(e) => setCat(e.target.value)}>
+          <option value="all">All categories</option>{DOC_GROUPS.map((g) => <option key={g}>{g}</option>)}
+        </select>
+        <select aria-label="Status" className={sel} value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="all">All statuses</option>{statuses.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+        </select>
+        <select aria-label="Related record" className={sel} value={rel} onChange={(e) => setRel(e.target.value)}>
+          <option value="all">Any related record</option><option value="stakeholder">Stakeholder</option>
+          <option value="security">Security</option><option value="transaction">Transaction</option><option value="round">Round</option>
+        </select>
+      </div>
+      {docs.length === 0 ? <CapTableEmpty title="No company documents yet" body="Documents you upload or generate will appear here, grouped by purpose." /> : null}
+      {DOC_GROUPS.filter((g) => groups[g].length).map((g) => (
+        <Card key={g}>
+          <CardHeader className="pb-2"><CardTitle className="text-base">{g} <span className="text-sm font-normal text-muted-foreground">({groups[g].length})</span></CardTitle></CardHeader>
+          <CardContent><DocList docs={groups[g]} /></CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Reversal */
+function ReverseDialog({ tx, onClose }: { tx: WsTx; onClose: () => void }) {
+  const { workspace, refetch } = useCapTable() as any;
+  const run = useServerFn(reverseCapTransaction);
+  const [reason, setReason] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await run({ data: { companyId: workspace.company.id, originalId: tx.id, correctionType: "full_reversal", effectiveDate: date, reason } });
+      toast.success("Reversal recorded. The original stays on file, linked to this reversal.");
+      refetch(); onClose();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Could not record the reversal."); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Record correction / reversal <HelpTip helpKey="reversal" /></DialogTitle></DialogHeader>
+        <div className="space-y-3 text-sm">
+          <p className="rounded border bg-muted/40 p-2">Original: <span className="capitalize">{tx.kind.replace(/_/g, " ")}</span> of {fmtNumber(Math.abs(tx.quantity))} on {fmtDate(tx.effectiveDate)}</p>
+          <p className="text-muted-foreground">The original is never changed. A full reversal is recorded and linked to it; if the numbers were wrong, record the corrected transaction afterwards.</p>
+          <label className="block">Effective date<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+          <label className="block">Reason<Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why is this being reversed?" /></label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button disabled={busy || reason.trim().length < 5} onClick={submit}>Record reversal</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -134,13 +268,15 @@ function TxTable({ txs }: { txs: WsTx[] }) {
     const s = id ? workspace?.securities.find((x) => x.id === id) : null;
     return s ? s.className ?? s.securityLabel : "—";
   };
+  const [reversing, setReversing] = useState<WsTx | null>(null);
+  const canManage = Boolean((workspace as any)?.canManage);
   const reversedBy = new Map(txs.filter((t) => t.reversesTransactionId).map((t) => [t.reversesTransactionId!, t.id]));
   if (txs.length === 0) return <p className="text-sm text-muted-foreground">No equity transactions recorded.</p>;
   return (
     <div className="overflow-x-auto rounded-md border">
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
-          <tr><th className="p-2">Date</th><th className="p-2">Type</th><th className="p-2">From</th><th className="p-2">To</th><th className="p-2">Security</th><th className="p-2 text-right">Quantity</th><th className="p-2 text-right">Amount</th><th className="p-2">Status</th></tr>
+          <tr><th className="p-2">Date</th><th className="p-2">Type</th><th className="p-2">From</th><th className="p-2">To</th><th className="p-2">Security</th><th className="p-2 text-right">Quantity</th><th className="p-2 text-right">Amount</th><th className="p-2">Status</th>{canManage ? <th className="p-2" /> : null}</tr>
         </thead>
         <tbody>
           {txs.map((t) => (
@@ -157,10 +293,12 @@ function TxTable({ txs }: { txs: WsTx[] }) {
               <td className="p-2 text-right">{fmtNumber(t.quantity)}</td>
               <td className="p-2 text-right">{fmtMoney(t.amount)}</td>
               <td className="p-2"><Badge variant={t.postingStatus === "posted" ? "default" : "secondary"}>{STATUS_LABEL[t.postingStatus] ?? t.postingStatus}</Badge></td>
+              {canManage ? <td className="p-2">{t.postingStatus === "posted" && !t.reversesTransactionId && !reversedBy.has(t.id) ? <Button size="sm" variant="ghost" onClick={() => setReversing(t)}>Reverse</Button> : null}</td> : null}
             </tr>
           ))}
         </tbody>
       </table>
+      {reversing ? <ReverseDialog tx={reversing} onClose={() => setReversing(null)} /> : null}
     </div>
   );
 }

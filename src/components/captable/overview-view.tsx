@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { HelpTip } from "@/components/help-tip";
 
 import { fmtDate, fmtMoney, fmtNumber, fmtPercent, useCapTable } from "./captable-context";
 import { CapTableSection } from "./captable-states";
@@ -12,14 +13,16 @@ function Stat({
   label,
   value,
   hint,
+  help,
 }: {
   label: string;
   value: string;
   hint?: string;
+  help?: string;
 }) {
   return (
     <div className="rounded-lg border bg-card p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label} {help ? <HelpTip helpKey={help} /> : null}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
       {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
@@ -71,19 +74,29 @@ function OverviewBody() {
               .join(" · ") || "Company details not recorded yet"}
           </p>
         </div>
-        <Button asChild size="sm" variant="outline">
-          <Link to="/client/cap-table/table">Open cap table</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {workspace!.canManage ? (
+            <>
+              <Button asChild size="sm"><Link to="/client/cap-table/stakeholders">+ Add Stakeholder</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/client/cap-table/securities">+ Issue Security</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/client/cap-table/transactions">+ Record Transaction</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/client/cap-table/documents">Upload Document</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/client/cap-table/migration">Import Cap Table</Link></Button>
+            </>
+          ) : null}
+          <Button asChild size="sm" variant="outline"><Link to="/client/cap-table/reports">Generate Report</Link></Button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Fully diluted shares"
+          help="fully_diluted"
           value={fmtNumber(m.fullyDiluted)}
           hint="Includes granted equity and the unallocated option pool"
         />
-        <Stat label="Outstanding shares" value={fmtNumber(m.outstandingShares)} hint={`${fmtPercent(issuedPct)} of authorised`} />
-        <Stat label="Authorised shares" value={fmtNumber(m.authorizedShares)} />
+        <Stat label="Issued & outstanding" help="outstanding_shares" value={fmtNumber(m.outstandingShares)} hint={`${fmtPercent(issuedPct)} of authorised`} />
+        <Stat label="Authorized shares" help="authorized_shares" value={fmtNumber(m.authorizedShares)} />
         <Stat
           label="Options available"
           value={fmtNumber(m.poolAvailable)}
