@@ -27,6 +27,7 @@ import { revealWireInstructionsFn } from "@/lib/fund-onboarding.functions";
 import { fundStepState, WIRE_FRAUD_WARNING } from "@/lib/fund-onboarding-model";
 import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
+import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
 import { CertificationsPanel, EligibilityPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 
 const money = (cents: number | null | undefined) =>
@@ -109,6 +110,8 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
         {d.profileLabel ? <p className="text-sm text-muted-foreground">Investing as {d.profileLabel}</p> : null}
       </header>
 
+      <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
+
       <ol className="flex items-stretch gap-2" aria-label="Progress">
         {steps.map((s, i) => {
           const done = s.state === "complete" || s.state === "not_applicable";
@@ -149,6 +152,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
       {view === "accreditation" ? <EligibilityPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <TaxSignPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <CertificationsPanel onboardingId={onboardingId} done={refresh} /> : null}
+      {view === "documents" ? <ReviewPreparedDocuments onboardingId={onboardingId} /> : null}
       {view === "documents" ? <DocumentsStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <FundStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <Completed d={d} /> : null}
