@@ -55,7 +55,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const { data: doc } = await supabase
       .from("offering_documents")
-      .select("id, title, body, doc_type, requires_signature, offering_id")
+      .select("id, title, body, doc_type, requires_signature, offering_id, signing_mode, countersigner_user_id, signature_template_version")
       .eq("id", data.offering_document_id)
       .maybeSingle();
     if (!doc || doc.offering_id !== application.offering_id) {
@@ -123,7 +123,43 @@ export const startBoxSigning = createServerFn({ method: "POST" })
     const fileName = `${safeTitle} — ${profile.legal_name ?? profile.email} — ${application.id.slice(0, 8)}.pdf`;
     const fileId = await uploadFile(fileName, pdfBytes);
 
-    const request = await createSignRequest({
+    // Dual-signature documents: investor signs first (order 1), then the fund's
+    // CURRENTLY assigned signatory (order 2). Box enforces the order and only
+    // reports the request complete once every signer has signed.
+    const dual = (doc as any).signing_mode === "dual";
+    let countersigner: { user_id: string; email: string; name: string } | null = null;
+    if (dual) {
+      const csId = (doc as any).countersigner_user_id as string | null;
+      const { data: rel } = csId
+        ? await supabaseAdmin.from("fund_managers").select("id").eq("offering_id", doc.offering_id).eq("user_id", csId).maybeSingle()
+        : { data: null };
+      const { data: cs } = csId
+        ? await supabaseAdmin.from("profiles").select("legal_name, email").eq("user_id", csId).maybeSingle()
+        : { data: null };
+      if (!rel || !(cs as any)?.email) {
+        throw new Error("This document isn't ready to sign yet — the fund's countersigner hasn't been set up.");
+      }
+      countersigner = { user_id: csId as string, email: (cs as any).email, name: (cs as any).legal_name ?? (cs as any).email };
+    }
+
+    const request = dual && countersigner
+      ? await (async () => {
+          const { createMultiSignerRequest } = await import("@/lib/box.server");
+          const detail = await createMultiSignerRequest({
+            fileId,
+            documentName: `${offering?.name ?? "Harmonious"} — ${doc.title}`,
+            message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
+            externalId: `${application.id}:${doc.id}`,
+            redirectUrl,
+            signers: [
+              { email: profile.email as string, name: profile.legal_name ?? profile.email, order: 1, externalUserId: `${application.id}:${doc.id}:investor` },
+              { email: countersigner.email, name: countersigner.name, order: 2, externalUserId: `${application.id}:${doc.id}:fund_manager` },
+            ],
+          });
+          const inv = detail.signers.find((x) => x.email === String(profile.email).toLowerCase());
+          return { id: detail.id, signingUrl: inv?.embedUrl ?? null };
+        })()
+      : await createSignRequest({
       fileId,
       signerEmail: profile.email,
       signerName: profile.legal_name ?? profile.email,
@@ -152,6 +188,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       provider_sent_at: now,
       provider_viewed_at: null,
       signed_at: now,
+      signing_mode: dual ? "dual" : "investor_only",
+      signature_template_version: Number((doc as any).signature_template_version ?? 1),
     };
 
     let signatureId = existing?.id ?? null;
@@ -169,6 +207,14 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         .single();
       if (error) throw new Error(error.message);
       signatureId = inserted.id;
+    }
+
+    if (signatureId) {
+      await supabaseAdmin.from("document_signature_signers").delete().eq("signature_id", signatureId).neq("status", "signed");
+      const base = { signature_id: signatureId, application_id: application.id, offering_document_id: doc.id, offering_id: doc.offering_id, required: true, status: "sent", sent_at: now };
+      const rows: any[] = [{ ...base, role_key: "investor", signing_order: 1, signer_user_id: userId, signer_email: profile.email, signer_name: profile.legal_name ?? profile.email }];
+      if (countersigner) rows.push({ ...base, role_key: "fund_manager", signing_order: 2, status: "waiting", sent_at: null, signer_user_id: countersigner.user_id, signer_email: countersigner.email, signer_name: countersigner.name });
+      await supabaseAdmin.from("document_signature_signers").insert(rows);
     }
 
     await supabaseAdmin
