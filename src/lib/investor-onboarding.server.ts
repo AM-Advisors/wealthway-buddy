@@ -1,3 +1,4 @@
+import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 /**
  * Fund Administration Phase B — server-only investor onboarding engine.
  *
@@ -1436,6 +1437,12 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
           acceptedAt: row.accepted_at,
         }),
         fundingStatus: row.funding_status,
+        fundingLabel: managerFundingLabel({
+          approvedToFund: Boolean(row.approved_to_fund_at),
+          instructionsReleased: true,
+          fundingStatus: row.funding_status,
+          investorReportsSent: Boolean(row.investor_reports_sent_at),
+        }),
         acceptedAt: row.accepted_at,
         closedAt: row.closed_at,
         // High-level only: no provider data, no identifiers, no tax records.
