@@ -14,11 +14,11 @@ const prov = initialProvenance({
 
 describe("prepared investor workflow", () => {
   it("confirmation preserves preparer provenance", () => {
-    const r = reviewField(prov.legal_name!, { confirm: true }, "t");
+    const r = reviewField(prov["legal_name"]!, { confirm: true }, "t");
     expect(r.status).toBe("investor_confirmed"); expect(r.preparedBy).toBe("fund_manager"); expect(r.preparedValue).toBe("Jane Smith");
   });
   it("correction keeps old and new values", () => {
-    const r = reviewField(prov.legal_name!, { correct: "Jane A. Smith" }, "t");
+    const r = reviewField(prov["legal_name"]!, { correct: "Jane A. Smith" }, "t");
     expect(r.history).toEqual([{ at: "t", from: "Jane Smith", to: "Jane A. Smith" }]); expect(r.preparedValue).toBe("Jane Smith");
   });
   it("internal-only fields are hidden from the investor", () => {
