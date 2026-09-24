@@ -1,3 +1,4 @@
+import { safeOnboardReturnPath } from "@/lib/onboard-portal-model";
 import { regTypeLabel, requiresVerifiedAccreditation } from "@/lib/reg-types";
 import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -169,7 +170,7 @@ function SelfCertificationForm() {
     try {
       await submit({ data: parsed.data });
       toast.success("Accreditation recorded.");
-      navigate({ to: "/onboarding/documents" });
+      if (!returnToPortal()) navigate({ to: "/onboarding/documents" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save your certification");
     } finally {
@@ -384,7 +385,7 @@ function VerificationForm({
     try {
       await submit({ data: parsed.data });
       toast.success("Verification submitted for review.");
-      navigate({ to: "/onboarding/documents" });
+      if (!returnToPortal()) navigate({ to: "/onboarding/documents" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not submit verification");
     } finally {
@@ -542,4 +543,12 @@ function VerificationForm({
       </div>
     </form>
   );
+}
+
+/** Sent here from onboard.harmonious.co: go back to that exact investment. */
+function returnToPortal(): boolean {
+  const back = safeOnboardReturnPath(new URLSearchParams(window.location.search).get("return"));
+  if (!back) return false;
+  window.location.assign(back);
+  return true;
 }
