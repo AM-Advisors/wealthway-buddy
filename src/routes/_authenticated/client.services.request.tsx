@@ -19,6 +19,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { REQUEST_INTENTS, getMyServices, submitIntakeRequest } from "@/lib/client-services.functions";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
+import { Link } from "@tanstack/react-router";
+import { HelpTip } from "@/components/help-tip";
+import { FUND_TYPES, PROFESSIONAL_DETERMINATION_NOTE, REQUEST_GROUPS, setupSchemaFor } from "@/lib/client-portal-model";
 
 export const Route = createFileRoute("/_authenticated/client/services/request")({
   head: () => ({
@@ -91,19 +94,24 @@ function RequestRouter() {
             Pick the closest option. We'll ask a few questions and suggest the right services.
           </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {REQUEST_INTENTS.map((i) => (
-            <button
-              key={i.value}
-              type="button"
-              onClick={() => setIntent(i.value)}
-              className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-muted"
-            >
-              <p className="font-medium">{i.label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{i.blurb}</p>
-            </button>
-          ))}
-        </div>
+        {REQUEST_GROUPS.map((g) => (
+          <section key={g.key} className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {g.intents.map((v) => REQUEST_INTENTS.find((i) => i.value === v)).filter(Boolean).map((i) => (
+                <button
+                  key={i!.value}
+                  type="button"
+                  onClick={() => { setIntent(i!.value); setAnswers({}); }}
+                  className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <p className="font-medium">{i!.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{i!.blurb}</p>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     );
   }
@@ -152,12 +160,41 @@ function RequestRouter() {
               </Select>
             </div>
           )}
-          {chosen.questions.map((q) => (
+          {chosen.value === "launch_fund" || chosen.value === "launch_spv" ? (
+            <div className="rounded-md border border-dashed p-3 text-sm">
+              <p className="font-medium">I already have an MSA/SOW</p>
+              <p className="text-xs text-muted-foreground">
+                Pick an agreement we already hold, or upload one. Anything read from it is marked "Found in agreement" and must be confirmed.
+              </p>
+              <Button asChild size="sm" variant="outline" className="mt-2">
+                <Link to="/client/agreements">Choose or upload an agreement</Link>
+              </Button>
+            </div>
+          ) : null}
+          {chosen.value === "launch_fund" ? (
+            <div>
+              <Label className="text-xs">What type of fund are you setting up?</Label>
+              <Select value={answers["fund_type"] ?? ""} onValueChange={(v) => setAnswers({ ...answers, fund_type: v })}>
+                <SelectTrigger><SelectValue placeholder="Choose a fund type" /></SelectTrigger>
+                <SelectContent>
+                  {FUND_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
+          {(chosen.value === "launch_spv" || (chosen.value === "launch_fund" && answers["fund_type"])
+            ? setupSchemaFor(chosen.value === "launch_spv" ? "spv" : "fund", answers["fund_type"])
+            : chosen.questions
+          ).map((q: any) => (
             <div key={q.key}>
-              <Label className="text-xs">{q.label}</Label>
+              <Label className="text-xs">
+                {q.label}
+                {q.helpKey ? <HelpTip helpKey={q.helpKey} label={q.label} /> : null}
+              </Label>
               <Input
                 value={answers[q.key] ?? ""}
                 onChange={(e) => setAnswers({ ...answers, [q.key]: e.target.value })}
+                placeholder={q.professional ? PROFESSIONAL_DETERMINATION_NOTE : undefined}
               />
             </div>
           ))}
