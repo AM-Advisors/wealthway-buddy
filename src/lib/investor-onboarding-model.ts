@@ -169,8 +169,10 @@ export const REQUIREMENT_KEYS = [
   "eligibility",
   "accreditation",
   "tax_documentation",
+  "bad_actor",
   "investment_amount",
   "subscription_questionnaire",
+  "certifications",
   "subscription_documents",
   "signature",
   "funding",
@@ -187,6 +189,8 @@ export const REQUIREMENT_LABELS: Record<RequirementKey, string> = {
   eligibility: "Eligibility",
   accreditation: "Accreditation",
   tax_documentation: "Tax documentation",
+  bad_actor: "Compliance questionnaire",
+  certifications: "Review & certify",
   investment_amount: "Investment amount",
   subscription_questionnaire: "Subscription information",
   subscription_documents: "Subscription documents",
@@ -305,6 +309,16 @@ export interface DeterminationInput {
   profile: ProfileFacts | null;
   subscription: SubscriptionFacts;
   nowIso: string;
+  /**
+   * Stage 2 results, resolved server-side from onboarding-compliance-model.
+   * When present they are authoritative for their requirement.
+   */
+  compliance?: {
+    tax?: { state: RequirementState; reason?: string | undefined };
+    badActor?: { state: RequirementState; reason?: string | undefined };
+    offeringEligibility?: { state: RequirementState; reason?: string | undefined };
+    certifications?: { state: RequirementState; reason?: string | undefined };
+  } | undefined;
 }
 
 /**
@@ -390,11 +404,10 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
     if (!where) eligibilityProblems.push("We still need to know where you are resident.");
     else if (!jurisdictions.includes(where)) eligibilityProblems.push("This fund is not offered in your location.");
   }
-  add(
-    "eligibility",
-    eligibilityProblems.length === 0 ? "valid" : "review_required",
-    eligibilityProblems[0],
-  );
+  const oe = input.compliance?.offeringEligibility;
+  if (eligibilityProblems.length) add("eligibility", "review_required", eligibilityProblems[0]);
+  else if (oe && oe.state !== "valid" && oe.state !== "not_applicable") add("eligibility", oe.state, oe.reason);
+  else add("eligibility", "valid");
 
   if (!offering.accreditationRequired) {
     add("accreditation", "not_applicable");
@@ -416,12 +429,12 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
     }
   }
 
-  add(
-    "tax_documentation",
-    offering.taxDocumentRequired
-      ? reuseState(profile.taxFormStatus, profile.taxFormExpiresOn, nowIso)
-      : "not_applicable",
-  );
+  if (!offering.taxDocumentRequired) add("tax_documentation", "not_applicable");
+  else if (input.compliance?.tax) add("tax_documentation", input.compliance.tax.state, input.compliance.tax.reason);
+  else add("tax_documentation", reuseState(profile.taxFormStatus, profile.taxFormExpiresOn, nowIso));
+
+  const ba = input.compliance?.badActor;
+  add("bad_actor", ba?.state ?? "not_applicable", ba?.reason);
 
   const amount = Number(subscription.requestedAmountCents ?? 0);
   add(
@@ -438,6 +451,9 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
         ? "valid"
         : "missing",
   );
+
+  const cert = input.compliance?.certifications;
+  add("certifications", cert?.state ?? "not_applicable", cert?.reason);
 
   add("subscription_documents", subscription.documentsPrepared ? "valid" : "missing");
 
@@ -460,8 +476,10 @@ const PRE_REVIEW: readonly RequirementKey[] = [
   "eligibility",
   "accreditation",
   "tax_documentation",
+  "bad_actor",
   "investment_amount",
   "subscription_questionnaire",
+  "certifications",
   "subscription_documents",
   "signature",
 ];

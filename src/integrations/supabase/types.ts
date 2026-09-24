@@ -5220,6 +5220,131 @@ export type Database = {
           },
         ]
       }
+      compliance_questionnaire_responses: {
+        Row: {
+          answers: Json
+          certified_at: string
+          certified_name: string
+          created_at: string
+          id: string
+          investment_profile_id: string
+          kind: string
+          offering_id: string
+          onboarding_id: string | null
+          questionnaire_version: number
+          relationship_roles: string[]
+          responder_user_id: string
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          superseded_by: string | null
+          version_id: string | null
+        }
+        Insert: {
+          answers: Json
+          certified_at?: string
+          certified_name: string
+          created_at?: string
+          id?: string
+          investment_profile_id: string
+          kind: string
+          offering_id: string
+          onboarding_id?: string | null
+          questionnaire_version: number
+          relationship_roles?: string[]
+          responder_user_id: string
+          review_note?: string | null
+          review_status: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          superseded_by?: string | null
+          version_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          certified_at?: string
+          certified_name?: string
+          created_at?: string
+          id?: string
+          investment_profile_id?: string
+          kind?: string
+          offering_id?: string
+          onboarding_id?: string | null
+          questionnaire_version?: number
+          relationship_roles?: string[]
+          responder_user_id?: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          superseded_by?: string | null
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_questionnaire_responses_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_questionnaire_responses_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_questionnaire_responses_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "compliance_questionnaire_responses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_questionnaire_responses_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_questionnaire_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_questionnaire_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          kind: string
+          questions: Json
+          version: number
+          wording_status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          questions: Json
+          version: number
+          wording_status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          questions?: Json
+          version?: number
+          wording_status?: string
+        }
+        Relationships: []
+      }
       compliance_submissions: {
         Row: {
           action: string
@@ -13855,6 +13980,63 @@ export type Database = {
           },
         ]
       }
+      investor_certifications: {
+        Row: {
+          certification_key: string
+          certification_version: number
+          certified_at: string
+          certified_name: string
+          created_at: string
+          evidence: Json
+          id: string
+          investment_profile_id: string
+          investor_user_id: string
+          onboarding_id: string
+          wording_status: string
+        }
+        Insert: {
+          certification_key: string
+          certification_version: number
+          certified_at?: string
+          certified_name: string
+          created_at?: string
+          evidence?: Json
+          id?: string
+          investment_profile_id: string
+          investor_user_id: string
+          onboarding_id: string
+          wording_status: string
+        }
+        Update: {
+          certification_key?: string
+          certification_version?: number
+          certified_at?: string
+          certified_name?: string
+          created_at?: string
+          evidence?: Json
+          id?: string
+          investment_profile_id?: string
+          investor_user_id?: string
+          onboarding_id?: string
+          wording_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_certifications_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_certifications_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_classes: {
         Row: {
           carry_bps: number | null
@@ -15199,6 +15381,97 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "investor_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_tax_forms: {
+        Row: {
+          certification_evidence: Json
+          certified_at: string
+          certified_name: string
+          classification: string
+          country: string | null
+          created_at: string
+          expires_on: string | null
+          form_type: Database["public"]["Enums"]["tax_documentation_form"]
+          id: string
+          investment_profile_id: string
+          investor_user_id: string
+          irs_revision: string
+          irs_source_url: string
+          legal_name: string
+          onboarding_id: string | null
+          status: string
+          superseded_at: string | null
+          superseded_by: string | null
+          tin_fingerprint: string | null
+          tin_last4: string | null
+        }
+        Insert: {
+          certification_evidence?: Json
+          certified_at?: string
+          certified_name: string
+          classification: string
+          country?: string | null
+          created_at?: string
+          expires_on?: string | null
+          form_type: Database["public"]["Enums"]["tax_documentation_form"]
+          id?: string
+          investment_profile_id: string
+          investor_user_id: string
+          irs_revision: string
+          irs_source_url: string
+          legal_name: string
+          onboarding_id?: string | null
+          status?: string
+          superseded_at?: string | null
+          superseded_by?: string | null
+          tin_fingerprint?: string | null
+          tin_last4?: string | null
+        }
+        Update: {
+          certification_evidence?: Json
+          certified_at?: string
+          certified_name?: string
+          classification?: string
+          country?: string | null
+          created_at?: string
+          expires_on?: string | null
+          form_type?: Database["public"]["Enums"]["tax_documentation_form"]
+          id?: string
+          investment_profile_id?: string
+          investor_user_id?: string
+          irs_revision?: string
+          irs_source_url?: string
+          legal_name?: string
+          onboarding_id?: string | null
+          status?: string
+          superseded_at?: string | null
+          superseded_by?: string | null
+          tin_fingerprint?: string | null
+          tin_last4?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_tax_forms_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_tax_forms_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_tax_forms_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "investor_tax_forms"
             referencedColumns: ["id"]
           },
         ]
@@ -25547,6 +25820,7 @@ export type Database = {
       is_any_staff: { Args: never; Returns: boolean }
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
+      is_platform_admin: { Args: { _uid: string }; Returns: boolean }
       list_admin_review: {
         Args: never
         Returns: {

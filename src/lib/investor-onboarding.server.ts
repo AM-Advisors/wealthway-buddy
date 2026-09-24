@@ -1,3 +1,4 @@
+import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 /**
  * Fund Administration Phase B — server-only investor onboarding engine.
@@ -310,7 +311,27 @@ async function gatherFacts(row: any) {
       kycStatus: String(r.verification_status ?? ""),
     }));
 
+  const { resolveStage2 } = await import("@/lib/onboarding-compliance.server");
+  const stage2 = row.investment_profile_id
+    ? await resolveStage2({
+        onboarding: row,
+        profileType: profile?.profile_type ?? null,
+        tax,
+        person,
+        nowIso: nowIso(),
+        taxRequired: offering.taxDocumentRequired,
+      })
+    : null;
+
   const requirements = determineOnboardingRequirements({
+    compliance: stage2
+      ? {
+          tax: stage2.taxState,
+          badActor: stage2.badActorState,
+          offeringEligibility: stage2.eligibilityState,
+          certifications: stage2.certificationState,
+        }
+      : undefined,
     offering,
     person: {
       personId: person?.id ?? null,
@@ -1443,6 +1464,8 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
           fundingStatus: row.funding_status,
           investorReportsSent: Boolean(row.investor_reports_sent_at),
         }),
+        taxLabel: managerTaxLabel(facts.requirements.find((r: RequirementResult) => r.key === "tax_documentation")?.state ?? "missing"),
+        complianceLabel: managerComplianceLabel(facts.requirements.find((r: RequirementResult) => r.key === "bad_actor")?.state ?? "not_applicable"),
         acceptedAt: row.accepted_at,
         closedAt: row.closed_at,
         // High-level only: no provider data, no identifiers, no tax records.
