@@ -9,7 +9,7 @@ import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { FundInvestorProgress, ManagerAddInvestor } from "@/components/manager-add-investor";
 import { PrepareInvestor } from "@/components/prepare-investor";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
-import { managerSafeRow } from "@/lib/prepared-investor-workflow";
+import { managerRowFromApplication } from "@/lib/prepared-investor-workflow";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -87,15 +87,6 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   );
 }
 
-function safe(row: any) {
-  return managerSafeRow({
-    name: row.name, investingAs: row.accountLabel, commitmentCents: row.commitmentCents ?? 0,
-    kycStatus: row.kycStatus, amlStatus: row.amlStatus, accreditationStatus: row.accreditationStatus,
-    documentsStatus: row.documentsStatus, fundingStatus: row.fundingStatus, stage: row.stage,
-    investorSigned: (row.signedCount ?? 0) > 0, fullyExecuted: row.documentsStatus === "approved",
-    managerSignatureRequired: false, approvedToFund: row.stage === "funding",
-    harmoniousReview: row.managerReviewStatus === "in_review",
-  });
-}
+const safe = managerRowFromApplication;
 
 function Stat({ label, value }: { label: string; value: string }) { return <div className="border-l-2 border-primary bg-card px-3 py-2"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-medium">{value}</p></div>; }

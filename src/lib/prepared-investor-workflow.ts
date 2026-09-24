@@ -336,3 +336,15 @@ export function reconcileActions(existingOpenKeys: string[], derived: DerivedAct
   const have = new Set(existingOpenKeys);
   return { create: derived.filter((d) => !have.has(d.key)), resolve: existingOpenKeys.filter((k) => !want.has(k)) };
 }
+
+/** Adapts a manager application row to coarse, manager-safe statuses. */
+export function managerRowFromApplication(row: any) {
+  return managerSafeRow({
+    name: row.name, investingAs: row.accountLabel, commitmentCents: row.commitmentCents ?? 0,
+    kycStatus: row.kycStatus, amlStatus: row.amlStatus, accreditationStatus: row.accreditationStatus,
+    documentsStatus: row.documentsStatus, fundingStatus: row.fundingStatus, stage: row.stage,
+    investorSigned: (row.signedCount ?? 0) > 0, fullyExecuted: row.documentsStatus === "approved",
+    managerSignatureRequired: false, approvedToFund: row.stage === "funding",
+    harmoniousReview: row.managerReviewStatus === "in_review",
+  });
+}
