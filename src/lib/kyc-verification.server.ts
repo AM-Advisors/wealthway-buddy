@@ -197,6 +197,8 @@ export async function startVerificationSession(input: {
   applicationId: string;
   userId: string;
   origin: string;
+  /** In-portal return path; validated by the caller. Defaults to the client portal. */
+  returnPath?: string;
 }): Promise<StartResult> {
   const key = diditKey();
   const workflowId = diditWorkflowId();
@@ -226,7 +228,7 @@ export async function startVerificationSession(input: {
       // Opaque Harmonious correlation id — never the email address.
       vendor_data: verification.verification_ref,
       metadata: { verification_ref: verification.verification_ref },
-      callback: `${input.origin}/portal`,
+      callback: `${input.origin}${input.returnPath ?? "/portal"}`,
       ...(Object.keys(prefill).length ? { contact_details: prefill, expected_details: prefill } : {}),
     }),
   });

@@ -51,6 +51,8 @@ const SHARED_PREFIXES = [
   "/sitemap.xml",
   "/favicon",
   "/og-",
+  // onboard.harmonious.co investor onboarding portal: served on its own address.
+  "/onboard/",
 ];
 
 export type PathSurface = AppSurface | "shared";

@@ -275,3 +275,38 @@ export const startInvestmentVerificationFn = createServerFn({ method: "POST" })
     }
     return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin);
   });
+
+// ------------------------------------------- onboard.harmonious.co portal
+
+export const claimOnboardInvitationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ reference: z.string().regex(/^[A-Za-z0-9]{16,64}$/) }).parse)
+  .handler(async ({ data, context }) => (await engine()).claimOnboardInvitation(context.userId, data.reference));
+
+export const onboardPortalDetailFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(onboardingInput.parse)
+  .handler(async ({ data, context }) => (await engine()).onboardPortalDetail(context.userId, data.onboardingId));
+
+export const resendOnboardInvitationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ invitationId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await engine()).resendOnboardInvitation(context.userId, data.invitationId));
+
+/** Didit session that returns the investor to this exact investment in the portal. */
+export const startPortalVerificationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(onboardingInput.parse)
+  .handler(async ({ data, context }) => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    let origin = "https://onboard.harmonious.co";
+    try {
+      const url = getRequest()?.url;
+      if (url) origin = new URL(url).origin;
+    } catch {
+      /* production origin */
+    }
+    const { safeOnboardReturnPath } = await import("@/lib/onboard-portal-model");
+    const returnPath = safeOnboardReturnPath(`/onboard/i/${data.onboardingId}`);
+    return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin, returnPath);
+  });

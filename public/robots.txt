@@ -1,15 +1,20 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /onboard/
 
 User-agent: Bingbot
 Allow: /
+Disallow: /onboard/
 
 User-agent: Twitterbot
 Allow: /
+Disallow: /onboard/
 
 User-agent: facebookexternalhit
 Allow: /
+Disallow: /onboard/
 
 User-agent: *
 Allow: /
+Disallow: /onboard/
 

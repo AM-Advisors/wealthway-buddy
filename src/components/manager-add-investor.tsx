@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { inviteInvestorFn, managerOnboardingBoardFn } from "@/lib/investor-onboarding.functions";
+import { inviteInvestorFn, managerOnboardingBoardFn, resendOnboardInvitationFn } from "@/lib/investor-onboarding.functions";
+import { managerPortalStatus } from "@/lib/onboard-portal-model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,8 +54,8 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
         },
       }),
     onSuccess: (r: any) => {
-      toast.success("Invitation created.");
-      setLink(`${window.location.origin}${r.link}`);
+      toast.success(r.emailSent ? "Invitation sent." : "Invitation created. The email could not be sent — use Resend.");
+      setLink(null);
       window.sessionStorage.removeItem(`harmonious.invite-draft.${fundId}`);
       setEmail("");
       setName("");
@@ -121,6 +122,12 @@ export function FundInvestorProgress({ fundId }: { fundId: string }) {
     queryFn: () => load({ data: { offeringId: fundId } }),
   });
   const items: any[] = (data as any)?.items ?? [];
+  const resendFn = useServerFn(resendOnboardInvitationFn);
+  const resend = useMutation({
+    mutationFn: (invitationId: string) => resendFn({ data: { invitationId } }),
+    onSuccess: (r: any) => (r?.sent ? toast.success("Invitation resent.") : toast.error("The email could not be sent.")),
+    onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
+  });
   return (
     <Card>
       <CardHeader>
@@ -138,7 +145,23 @@ export function FundInvestorProgress({ fundId }: { fundId: string }) {
                 {i.profileLabel ? `${i.profileLabel} · ` : ""}{money(i.acceptedAmountCents ?? i.requestedAmountCents)}
               </p>
             </div>
-            <Badge variant={i.status === "Funded" ? "default" : "outline"}>{i.status}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={i.status === "Funded" ? "default" : "outline"}>
+                {["Funded", "Funding pending", "Funding required", "Admitted", "Closed", "Declined"].includes(i.status)
+                  ? i.status
+                  : managerPortalStatus({
+                      invitedOnly: String(i.id).startsWith("invite:"),
+                      requirements: i.progress ?? [],
+                      stage: i.stage,
+                      acceptedAt: i.acceptedAt,
+                    })}
+              </Badge>
+              {String(i.id).startsWith("invite:") ? (
+                <Button size="sm" variant="outline" disabled={resend.isPending} onClick={() => resend.mutate(String(i.id).slice(7))}>
+                  Resend Invitation
+                </Button>
+              ) : null}
+            </div>
           </div>
         ))}
       </CardContent>

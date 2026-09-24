@@ -105,7 +105,7 @@ export const INVITATION_STATUSES = [
 ] as const;
 export type InvitationStatus = (typeof INVITATION_STATUSES)[number];
 
-const TERMINAL_INVITATION: ReadonlySet<string> = new Set(["expired", "declined", "cancelled"]);
+const TERMINAL_INVITATION: ReadonlySet<string> = new Set(["expired", "declined", "cancelled", "revoked"]);
 
 /**
  * An invitation is a pointer, never an authorization. It can be usable or not;

@@ -37,6 +37,8 @@ function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [registerNext, setRegisterNext] = useState<string | null>(null);
+  useEffect(() => setRegisterNext(intendedPathFromLocation(window.location.search)), []);
 
   useEffect(() => {
     if (loading || !session) return;
@@ -170,7 +172,11 @@ function SignInPage() {
 
       <p className="mt-2 text-sm text-muted-foreground">
         Have an invitation?{" "}
-        <Link to="/auth/register" className="font-medium text-foreground hover:underline">
+        <Link
+          to="/auth/register"
+          search={(registerNext ? { next: registerNext } : {}) as never}
+          className="font-medium text-foreground hover:underline"
+        >
           Create your account
         </Link>
       </p>

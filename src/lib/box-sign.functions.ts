@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { activeApplicationId } from "@/lib/active-application";
 
-const startSchema = z.object({ offering_document_id: z.string().uuid() });
+const startSchema = z.object({ offering_document_id: z.string().uuid(), onboarding_id: z.string().uuid().optional() });
 
 /** Is real e-signing available (Box credentials present)? */
 export const getSigningProvider = createServerFn({ method: "GET" }).handler(async () => {
@@ -26,11 +26,30 @@ export const startBoxSigning = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
+    // From onboard.harmonious.co the investment is explicit and must belong
+    // to the caller; the signing return lands back on that same investment.
+    let applicationId: string | null = null;
+    let redirectUrl = "https://app.harmonious.co/portal";
+    if (data.onboarding_id) {
+      const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+      const { data: ob } = await admin
+        .from("investor_onboardings")
+        .select("id, application_id, investor_user_id")
+        .eq("id", data.onboarding_id)
+        .maybeSingle();
+      if (!ob || (ob as any).investor_user_id !== userId || !(ob as any).application_id) {
+        throw new Error("This investment is not ready for signing yet.");
+      }
+      applicationId = (ob as any).application_id as string;
+      redirectUrl = `https://onboard.harmonious.co/onboard/i/${(ob as any).id}`;
+    } else {
+      applicationId = await activeApplicationId(supabase, userId);
+    }
     const { data: application } = await supabase
       .from("investor_applications")
       .select("id, offering_id")
       .eq("user_id", userId)
-      .eq("id", await activeApplicationId(supabase, userId))
+      .eq("id", applicationId as string)
       .maybeSingle();
     if (!application) throw new Error("No application found.");
 
@@ -111,7 +130,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       documentName: `${offering?.name ?? "Harmonious"} — ${doc.title}`,
       message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
       externalId: `${application.id}:${doc.id}`,
-      redirectUrl: "https://app.harmonious.co/portal",
+      redirectUrl,
     });
 
     const now = new Date().toISOString();

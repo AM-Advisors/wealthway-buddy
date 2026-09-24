@@ -69,6 +69,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
+import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -203,6 +204,7 @@ import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/publi
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as ApiPublicPlaidWebhookRouteImport } from './routes/api/public/plaid-webhook'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
+import { Route as OnboardIOnboardingIdRouteImport } from './routes/onboard.i.$onboardingId'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
 import { Route as AuthenticatedAdminEngagementsEngagementIdRouteImport } from './routes/_authenticated/admin.engagements.$engagementId'
@@ -574,6 +576,11 @@ const FundSlugRoute = FundSlugRouteImport.update({
 const InvestSlugRoute = InvestSlugRouteImport.update({
   id: '/invest/$slug',
   path: '/invest/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardRefRoute = OnboardRefRouteImport.update({
+  id: '/onboard/$ref',
+  path: '/onboard/$ref',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostSlugRoute = PostSlugRouteImport.update({
@@ -1360,6 +1367,11 @@ const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardIOnboardingIdRoute = OnboardIOnboardingIdRouteImport.update({
+  id: '/onboard/i/$onboardingId',
+  path: '/onboard/i/$onboardingId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminContractsIndexRoute =
   AuthenticatedAdminContractsIndexRouteImport.update({
     id: '/admin/contracts/',
@@ -1799,6 +1811,7 @@ export interface FileRoutesByFullPath {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
@@ -1928,6 +1941,7 @@ export interface FileRoutesByFullPath {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
+  '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/client/': typeof AuthenticatedClientIndexRoute
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
@@ -2055,6 +2069,7 @@ export interface FileRoutesByTo {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
@@ -2182,6 +2197,7 @@ export interface FileRoutesByTo {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
+  '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/client': typeof AuthenticatedClientIndexRoute
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
@@ -2313,6 +2329,7 @@ export interface FileRoutesById {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
@@ -2442,6 +2459,7 @@ export interface FileRoutesById {
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
+  '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
@@ -2574,6 +2592,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
     | '/auth/'
@@ -2703,6 +2722,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
     | '/lovable/email/events'
+    | '/onboard/i/$onboardingId'
     | '/admin/'
     | '/client/'
     | '/diligence/'
@@ -2830,6 +2850,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
     | '/auth'
@@ -2957,6 +2978,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
     | '/lovable/email/events'
+    | '/onboard/i/$onboardingId'
     | '/admin'
     | '/client'
     | '/diligence'
@@ -3087,6 +3109,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
     | '/auth/'
@@ -3216,6 +3239,7 @@ export interface FileRouteTypes {
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
     | '/lovable/email/events'
+    | '/onboard/i/$onboardingId'
     | '/_authenticated/admin/'
     | '/_authenticated/client/'
     | '/_authenticated/diligence/'
@@ -3313,6 +3337,7 @@ export interface RootRouteChildren {
   CapClaimTokenRoute: typeof CapClaimTokenRoute
   FundSlugRoute: typeof FundSlugRoute
   InvestSlugRoute: typeof InvestSlugRoute
+  OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
@@ -3320,6 +3345,7 @@ export interface RootRouteChildren {
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   ApiPublicPlaidWebhookRoute: typeof ApiPublicPlaidWebhookRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
+  OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
@@ -3750,6 +3776,13 @@ declare module '@tanstack/react-router' {
       path: '/invest/$slug'
       fullPath: '/invest/$slug'
       preLoaderRoute: typeof InvestSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboard/$ref': {
+      id: '/onboard/$ref'
+      path: '/onboard/$ref'
+      fullPath: '/onboard/$ref'
+      preLoaderRoute: typeof OnboardRefRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/post/$slug': {
@@ -4688,6 +4721,13 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/events'
       fullPath: '/lovable/email/events'
       preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboard/i/$onboardingId': {
+      id: '/onboard/i/$onboardingId'
+      path: '/onboard/i/$onboardingId'
+      fullPath: '/onboard/i/$onboardingId'
+      preLoaderRoute: typeof OnboardIOnboardingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/contracts/': {
@@ -5753,6 +5793,7 @@ const rootRouteChildren: RootRouteChildren = {
   CapClaimTokenRoute: CapClaimTokenRoute,
   FundSlugRoute: FundSlugRoute,
   InvestSlugRoute: InvestSlugRoute,
+  OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
   SharesTokenRoute: SharesTokenRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
@@ -5760,6 +5801,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   ApiPublicPlaidWebhookRoute: ApiPublicPlaidWebhookRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
+  OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
