@@ -427,6 +427,7 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     );
   }
 
+  out.push(...(await safely(() => preparedInvestorItems(ctx, investments as any[], n))));
   return out;
 }
 
@@ -711,6 +712,8 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     );
   }
 
+  // Prepared-investor workflow: drafts to send and exact-signatory countersigning.
+  out.push(...(await safely(() => preparedManagerItems(ctx, fundIds, fundName))));
   return out;
 }
 
@@ -1063,4 +1066,67 @@ export async function attentionFor(ctx: Ctx, workspace: WorkspaceKind): Promise<
     gaps,
     generatedAt: new Date().toISOString(),
   };
+}
+
+
+/* ------------------------------------------------ prepared investor workflow */
+
+async function preparedInvestorItems(ctx: Ctx, investments: any[], n: Names): Promise<AttentionItem[]> {
+  if (!investments.length) return [];
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const { loadProvenance } = await import("@/lib/prepared-investor.server");
+  const out: AttentionItem[] = [];
+  for (const inv of investments) {
+    const { data: ob } = await db.from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id").eq("id", inv.id).maybeSingle();
+    if (!ob || (ob as any).investor_user_id !== ctx.userId) continue;
+    const fundName = n.funds.get((ob as any).offering_id) ?? null;
+    const { prov } = await loadProvenance(db, ob as any);
+    if (Object.values(prov).some((p) => p.status === "prepared")) {
+      out.push(buildAttentionItem({
+        id: `investor-confirm-info:${inv.id}`, source: "investor.prepared_info", workspace: "investor" as WorkspaceKind,
+        group: "needs_you", severity: "action", title: `Confirm your investment information${fundName ? ` — ${fundName}` : ""}`,
+        workflowState: "prepared", status: "Some information was provided for you. Please review it.",
+        sourceTable: "investor_prep_drafts", sourceId: inv.id, href: `/onboard/i/${inv.id}#confirm`, at: inv.updated_at ?? null, fundName,
+      }));
+    }
+    const { data: snaps } = await db.from("investor_document_snapshots").select("id, document_id, version, status").eq("onboarding_id", inv.id).eq("status", "prepared");
+    for (const sn of (snaps ?? []) as any[]) {
+      out.push(buildAttentionItem({
+        id: `investor-review-doc:${inv.id}:${sn.document_id}`, source: "investor.document_review", workspace: "investor" as WorkspaceKind,
+        group: "needs_you", severity: "action", title: `Review investment document${fundName ? ` — ${fundName}` : ""}`,
+        workflowState: "prepared", status: `Version ${sn.version} is ready for your review`,
+        sourceTable: "investor_document_snapshots", sourceId: sn.id, href: `/onboard/i/${inv.id}#documents-review`, at: inv.updated_at ?? null, fundName,
+      }));
+    }
+  }
+  return out;
+}
+
+async function preparedManagerItems(ctx: Ctx, fundIds: string[], fundName: (id: string | null) => string | null): Promise<AttentionItem[]> {
+  const s = ctx.supabase;
+  const out: AttentionItem[] = [];
+  const drafts = rows(await s.from("investor_prep_drafts").select("id, offering_id, display_name, email, updated_at").in("offering_id", fundIds).eq("status", "draft").limit(LIMIT));
+  for (const d of drafts as any[]) {
+    out.push(buildAttentionItem({
+      id: `manager-prep-draft:${d.id}`, source: "manager.prepared_draft", workspace: "fund_manager", group: "needs_you", severity: "action",
+      title: `Investor draft ready to send — ${d.display_name || d.email}`, workflowState: "draft", status: "Prepared but not sent",
+      sourceTable: "investor_prep_drafts", sourceId: d.id, href: `/manager/funds/${d.offering_id}?tab=investors`, at: d.updated_at ?? null, fundName: fundName(d.offering_id),
+    }));
+  }
+  // Countersign: only rows naming this exact user as the configured fund signatory, in a fund they still manage.
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const { data: mine } = await db.from("document_signature_signers").select("id, signature_id, application_id, offering_id, offering_document_id, status")
+    .eq("signer_user_id", ctx.userId).eq("role_key", "fund_manager").in("status", ["waiting", "sent"]).in("offering_id", fundIds).limit(LIMIT);
+  for (const m of (mine ?? []) as any[]) {
+    const { data: inv } = await db.from("document_signature_signers").select("status").eq("signature_id", m.signature_id).eq("role_key", "investor").maybeSingle();
+    if ((inv as any)?.status !== "signed") continue;
+    const { data: doc } = await db.from("offering_documents").select("title, countersigner_user_id").eq("id", m.offering_document_id).maybeSingle();
+    if ((doc as any)?.countersigner_user_id !== ctx.userId) continue;
+    out.push(buildAttentionItem({
+      id: `manager-countersign:${m.signature_id}`, source: "manager.countersign", workspace: "fund_manager", group: "needs_you", severity: "action",
+      title: `Countersign ${(doc as any)?.title ?? "investment document"}`, workflowState: "awaiting_fund_manager", status: "The investor has signed. Your signature is required.",
+      sourceTable: "document_signatures", sourceId: m.signature_id, href: `/manager/${m.application_id}`, at: null, fundName: fundName(m.offering_id),
+    }));
+  }
+  return out;
 }
