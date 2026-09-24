@@ -5,6 +5,7 @@ import { AgreementsPipeline } from "@/components/agreements-pipeline";
 import { OpsSignatureRequests } from "@/components/ops-signature-requests";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityPanel } from "@/components/activity-panel";
+import { DriveExceptions } from "@/components/drive-exceptions";
 
 export const Route = createFileRoute("/_authenticated/ops/documents")({
   head: () => ({
@@ -39,10 +40,11 @@ function OpsDocuments() {
       </p>
 
       <Tabs defaultValue="signatures" className="mt-6">
-        <TabsList>
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="prepare">Prepare</TabsTrigger>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="signatures">Signature requests</TabsTrigger>
+          <TabsTrigger value="drive">Drive exceptions</TabsTrigger>
           <TabsTrigger value="activity">Audit trail</TabsTrigger>
         </TabsList>
         <TabsContent value="prepare" className="mt-6">
@@ -53,6 +55,9 @@ function OpsDocuments() {
         </TabsContent>
         <TabsContent value="signatures" className="mt-6">
           <OpsSignatureRequests />
+        </TabsContent>
+        <TabsContent value="drive" className="mt-6">
+          <DriveExceptions />
         </TabsContent>
         <TabsContent value="activity" className="mt-6">
           <ActivityPanel
