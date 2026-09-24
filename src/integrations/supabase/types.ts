@@ -15558,6 +15558,57 @@ export type Database = {
           },
         ]
       }
+      investor_document_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_id: string
+          id: string
+          merge_sources: Json
+          merge_values: Json
+          offering_id: string
+          onboarding_id: string
+          profile_fingerprint: string
+          reviewed_at: string | null
+          signing_mode: string
+          status: string
+          template_ref: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          document_id: string
+          id?: string
+          merge_sources: Json
+          merge_values: Json
+          offering_id: string
+          onboarding_id: string
+          profile_fingerprint: string
+          reviewed_at?: string | null
+          signing_mode: string
+          status?: string
+          template_ref: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          id?: string
+          merge_sources?: Json
+          merge_values?: Json
+          offering_id?: string
+          onboarding_id?: string
+          profile_fingerprint?: string
+          reviewed_at?: string | null
+          signing_mode?: string
+          status?: string
+          template_ref?: string
+          version?: number
+        }
+        Relationships: []
+      }
       investor_documents: {
         Row: {
           application_id: string
@@ -16737,6 +16788,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "investor_prep_events_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "investor_prep_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_prep_field_reviews: {
+        Row: {
+          action: string
+          actor_id: string
+          affected_requirements: string[]
+          created_at: string
+          draft_id: string
+          field_key: string
+          id: string
+          material: boolean
+          new_value: Json | null
+          onboarding_id: string
+          prepared_by_capacity: string
+          prepared_value: Json | null
+          previous_value: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          affected_requirements?: string[]
+          created_at?: string
+          draft_id: string
+          field_key: string
+          id?: string
+          material?: boolean
+          new_value?: Json | null
+          onboarding_id: string
+          prepared_by_capacity: string
+          prepared_value?: Json | null
+          previous_value?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          affected_requirements?: string[]
+          created_at?: string
+          draft_id?: string
+          field_key?: string
+          id?: string
+          material?: boolean
+          new_value?: Json | null
+          onboarding_id?: string
+          prepared_by_capacity?: string
+          prepared_value?: Json | null
+          previous_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_prep_field_reviews_draft_id_fkey"
             columns: ["draft_id"]
             isOneToOne: false
             referencedRelation: "investor_prep_drafts"
