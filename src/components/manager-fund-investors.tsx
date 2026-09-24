@@ -98,5 +98,4 @@ function safe(row: any) {
   });
 }
 
-function Status({ value }: { value: string }) { return <td className="px-3 py-3"><Badge variant={statusTone(value)}>{prettyStatus(value)}</Badge></td>; }
 function Stat({ label, value }: { label: string; value: string }) { return <div className="border-l-2 border-primary bg-card px-3 py-2"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-medium">{value}</p></div>; }

@@ -152,6 +152,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
       {view === "accreditation" ? <EligibilityPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <TaxSignPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <CertificationsPanel onboardingId={onboardingId} done={refresh} /> : null}
+      {view === "documents" ? <ReviewPreparedDocuments onboardingId={onboardingId} /> : null}
       {view === "documents" ? <DocumentsStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <FundStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <Completed d={d} /> : null}
