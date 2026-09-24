@@ -70,7 +70,7 @@ export function usPersonFrom(tax: any, person: any): boolean | null {
   const c = String(tax?.classification ?? "").toLowerCase();
   if (c === "foreign" || c.startsWith("foreign_")) return false;
   if (c.startsWith("us_") || c === "domestic" || c === "us_person") return true;
-  const residency = String(tax?.tax_residency_country ?? "").toUpperCase();
+  const residency = String(tax?.tax_residency_country ?? person?.tax_residency_country ?? "").toUpperCase();
   if (residency) return residency === "US";
   return null;
 }
@@ -157,7 +157,7 @@ async function loadOwnOnboarding(userId: string, onboardingId: string) {
     .maybeSingle();
   if (!ob || ob.investor_user_id !== userId) fail("Forbidden: this investment is not yours.");
   if (!ob.investment_profile_id) fail("Choose who is making this investment first.");
-  const { data: profile } = await d.from("investment_profiles").select("id, profile_type, legal_name, display_name").eq("id", ob.investment_profile_id).maybeSingle();
+  const { data: profile } = await d.from("investment_profiles").select("id, profile_type, legal_name, display_label").eq("id", ob.investment_profile_id).maybeSingle();
   if (!profile) fail("Investment profile not found.");
   return { d, ob, profile };
 }
@@ -188,7 +188,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
   const { d, ob, profile } = await loadOwnOnboarding(userId, onboardingId);
   const [{ data: tax }, { data: person }] = await Promise.all([
     d.from("investor_tax_profiles").select("classification, tax_residency_country").eq("investment_profile_id", ob.investment_profile_id).maybeSingle(),
-    d.from("persons").select("legal_name, residence_country").eq("user_id", userId).maybeSingle(),
+    d.from("persons").select("tax_residency_country, residence_country").eq("user_id", userId).maybeSingle(),
   ]);
   const r = await resolveStage2({
     onboarding: ob, profileType: profile.profile_type, tax, person, nowIso: new Date().toISOString(), taxRequired: true,
@@ -201,7 +201,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
     .order("certified_at", { ascending: false })
     .limit(1);
   return {
-    profileName: profile.legal_name ?? profile.display_name ?? "",
+    profileName: profile.legal_name ?? profile.display_label ?? "",
     tax: {
       state: r.taxState.state,
       reason: r.taxState.reason ?? null,
@@ -228,7 +228,7 @@ export async function certifyTaxForm(
   const { d, ob, profile } = await loadOwnOnboarding(userId, input.onboardingId);
   const [{ data: tax }, { data: person }] = await Promise.all([
     d.from("investor_tax_profiles").select("classification, tax_residency_country").eq("investment_profile_id", ob.investment_profile_id).maybeSingle(),
-    d.from("persons").select("residence_country").eq("user_id", userId).maybeSingle(),
+    d.from("persons").select("tax_residency_country, residence_country").eq("user_id", userId).maybeSingle(),
   ]);
   const routing = resolveTaxForm({ profileType: profile.profile_type, usPerson: usPersonFrom(tax, person) });
   if (routing.status !== "determined") {
@@ -275,7 +275,7 @@ export async function certifyTaxForm(
     .neq("id", inserted.id)
     .neq("status", "superseded");
   await d.from("investor_onboarding_events").insert({
-    onboarding_id: ob.id, event_type: "tax_form_certified", actor_id: userId,
+    onboarding_id: ob.id, offering_id: ob.offering_id, event: "tax_form_certified", actor_user_id: userId, actor_role: "investor",
     detail: { form_type: routing.formType, revision: rev.revision },
   }).then(() => null, () => null);
   return { ok: true };
