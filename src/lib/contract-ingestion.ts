@@ -380,3 +380,10 @@ export function contractAlerts(
   }
   return out;
 }
+
+/** An amendment/new version may only reference a document of the same client. */
+export function parentProblem(ref: { id: string; client_id: string } | null | undefined, clientId: string): string | null {
+  if (!ref) return "The referenced agreement doesn't exist.";
+  if (ref.client_id !== clientId) return "That agreement belongs to a different client.";
+  return null;
+}

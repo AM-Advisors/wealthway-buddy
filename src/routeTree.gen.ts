@@ -246,8 +246,10 @@ import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_au
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
 import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
+import { Route as AuthenticatedOpsClientsNewRouteImport } from './routes/_authenticated/ops.clients.new'
 import { Route as AuthenticatedOpsCompaniesIndexRouteImport } from './routes/_authenticated/ops.companies.index'
 import { Route as AuthenticatedOpsCompaniesCompanyIdRouteImport } from './routes/_authenticated/ops.companies.$companyId'
+import { Route as AuthenticatedOpsContractsDocumentIdRouteImport } from './routes/_authenticated/ops.contracts.$documentId'
 import { Route as AuthenticatedOpsFundFundIdRouteImport } from './routes/_authenticated/ops.fund.$fundId'
 import { Route as AuthenticatedOpsFundsIndexRouteImport } from './routes/_authenticated/ops.funds.index'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
@@ -1620,6 +1622,12 @@ const AuthenticatedOpsClientsClientIdRoute =
     path: '/ops/clients/$clientId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsClientsNewRoute =
+  AuthenticatedOpsClientsNewRouteImport.update({
+    id: '/ops/clients/new',
+    path: '/ops/clients/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsCompaniesIndexRoute =
   AuthenticatedOpsCompaniesIndexRouteImport.update({
     id: '/ops/companies/',
@@ -1630,6 +1638,12 @@ const AuthenticatedOpsCompaniesCompanyIdRoute =
   AuthenticatedOpsCompaniesCompanyIdRouteImport.update({
     id: '/ops/companies/$companyId',
     path: '/ops/companies/$companyId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsContractsDocumentIdRoute =
+  AuthenticatedOpsContractsDocumentIdRouteImport.update({
+    id: '/ops/contracts/$documentId',
+    path: '/ops/contracts/$documentId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsFundFundIdRoute =
@@ -1997,7 +2011,9 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
+  '/ops/clients/new': typeof AuthenticatedOpsClientsNewRoute
   '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  '/ops/contracts/$documentId': typeof AuthenticatedOpsContractsDocumentIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2254,7 +2270,9 @@ export interface FileRoutesByTo {
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
+  '/ops/clients/new': typeof AuthenticatedOpsClientsNewRoute
   '/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  '/ops/contracts/$documentId': typeof AuthenticatedOpsContractsDocumentIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2519,7 +2537,9 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
+  '/_authenticated/ops/clients/new': typeof AuthenticatedOpsClientsNewRoute
   '/_authenticated/ops/companies/$companyId': typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  '/_authenticated/ops/contracts/$documentId': typeof AuthenticatedOpsContractsDocumentIdRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2784,7 +2804,9 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
+    | '/ops/clients/new'
     | '/ops/companies/$companyId'
+    | '/ops/contracts/$documentId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
@@ -3041,7 +3063,9 @@ export interface FileRouteTypes {
     | '/manager/fund-setup/$requestId'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
+    | '/ops/clients/new'
     | '/ops/companies/$companyId'
+    | '/ops/contracts/$documentId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
@@ -3305,7 +3329,9 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/clients/$clientId'
+    | '/_authenticated/ops/clients/new'
     | '/_authenticated/ops/companies/$companyId'
+    | '/_authenticated/ops/contracts/$documentId'
     | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
     | '/_authenticated/ops/investors/$investorId'
@@ -5043,6 +5069,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsClientsClientIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/clients/new': {
+      id: '/_authenticated/ops/clients/new'
+      path: '/ops/clients/new'
+      fullPath: '/ops/clients/new'
+      preLoaderRoute: typeof AuthenticatedOpsClientsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/companies/': {
       id: '/_authenticated/ops/companies/'
       path: '/ops/companies'
@@ -5055,6 +5088,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/companies/$companyId'
       fullPath: '/ops/companies/$companyId'
       preLoaderRoute: typeof AuthenticatedOpsCompaniesCompanyIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/contracts/$documentId': {
+      id: '/_authenticated/ops/contracts/$documentId'
+      path: '/ops/contracts/$documentId'
+      fullPath: '/ops/contracts/$documentId'
+      preLoaderRoute: typeof AuthenticatedOpsContractsDocumentIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/fund/$fundId': {
@@ -5581,7 +5621,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
+  AuthenticatedOpsClientsNewRoute: typeof AuthenticatedOpsClientsNewRoute
   AuthenticatedOpsCompaniesCompanyIdRoute: typeof AuthenticatedOpsCompaniesCompanyIdRoute
+  AuthenticatedOpsContractsDocumentIdRoute: typeof AuthenticatedOpsContractsDocumentIdRoute
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -5780,8 +5822,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundFundIdRouteWithChildren,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
+  AuthenticatedOpsClientsNewRoute: AuthenticatedOpsClientsNewRoute,
   AuthenticatedOpsCompaniesCompanyIdRoute:
     AuthenticatedOpsCompaniesCompanyIdRoute,
+  AuthenticatedOpsContractsDocumentIdRoute:
+    AuthenticatedOpsContractsDocumentIdRoute,
   AuthenticatedOpsFundFundIdRoute: AuthenticatedOpsFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
   AuthenticatedOpsInvestorsInvestorIdRoute:

@@ -726,6 +726,34 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
   );
 }
 
+/** Contract ingestion alerts — derived per document, so never duplicated. */
+async function contractItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
+  if (fundId) return [];
+  const { contractAlerts } = await import("@/lib/contract-ingestion");
+  const docs = await safely(async () =>
+    rows(await s.from("client_governing_documents").select("*").neq("review_status", "superseded").limit(SOURCE_LIMIT)),
+  );
+  const today = now.toISOString().slice(0, 10);
+  return (docs as any[]).flatMap((d) =>
+    contractAlerts(d, today).map((a) =>
+      build(lookup, now, {
+        id: `contract:${d.id}:${a.kind}`,
+        source: "clients.contracts",
+        area: "clients",
+        recordType: "client",
+        recordId: d.client_id,
+        recordTab: "contracts",
+        title: `${a.title} — ${d.title}`,
+        reason: a.title,
+        workflowState: a.kind,
+        requiredAction: a.kind === "awaiting_review" || a.kind === "amendment_review" ? "approve" : "prepare",
+        clientId: d.client_id,
+        at: d.updated_at ?? null,
+      } as any),
+    ),
+  );
+}
+
 /** Google Drive problems. One open row per problem (deduplicated at the source). */
 async function driveExceptionItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
   let q = s
@@ -999,6 +1027,7 @@ const COLLECTORS: {
   { area: "reports", load: reportingItems },
   { area: "documents", load: documentItems },
   { area: "documents", load: driveExceptionItems },
+  { area: "clients", load: contractItems },
   { area: "capital", load: distributionItems },
 
 

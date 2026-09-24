@@ -1,3 +1,4 @@
+import { ClientContactsPanel, ClientContractsPanel } from "@/components/client-contracts";
 import { useMemo } from "react";
 
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -362,7 +363,13 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         ))}
       </div>
 
-      <TabBody type={type} id={id} tab={active} />
+      {type === "client" && active === "contracts" ? (
+        <ClientContractsPanel clientId={id} />
+      ) : type === "client" && active === "contacts" ? (
+        <ClientContactsPanel clientId={id} />
+      ) : (
+        <TabBody type={type} id={id} tab={active} />
+      )}
     </div>
   );
 }
@@ -377,7 +384,12 @@ export function OpsRecordList({ type }: { type: OpsRecordType }) {
   return (
     <div className="space-y-4 p-6">
       <header>
-        <h1 className="font-heading text-2xl font-semibold">{LABELS[type].plural}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="font-heading text-2xl font-semibold">{LABELS[type].plural}</h1>
+          {type === "client" ? (
+            <Button asChild size="sm"><Link to="/ops/clients/new">+ New Client</Link></Button>
+          ) : null}
+        </div>
         <p className="text-sm text-muted-foreground">
           Open a record to see everything Harmonious holds for it.
         </p>
