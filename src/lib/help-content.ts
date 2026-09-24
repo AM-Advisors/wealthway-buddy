@@ -7,10 +7,10 @@ export type HelpEntry = {
   help_key: string;
   title: string;
   short_description: string;
-  long_description?: string;
-  learn_more_url?: string;
+  long_description?: string | undefined;
+  learn_more_url?: string | undefined;
   /** Selection needs a professional determination — show the review note. */
-  professional?: boolean;
+  professional?: boolean | undefined;
   version: number;
 };
 

@@ -61,7 +61,7 @@ export const getInvestorFundView = createServerFn({ method: "GET" })
       context.supabase.from("investor_applications").select("id, status, commitment_cents, submitted_at").eq("user_id", context.userId).eq("offering_id", data.offeringId),
     ]);
     if (!fund) throw new Error("Fund not found.");
-    return investorFundView({ fund, myPositions: [...((positions ?? []) as any[]), ...((apps ?? []) as any[]).map((a) => ({ ...a, kind: "application" }))], myDocuments: [] });
+    return JSON.parse(JSON.stringify(investorFundView({ fund, myPositions: [...((positions ?? []) as any[]), ...((apps ?? []) as any[]).map((a) => ({ ...a, kind: "application" }))], myDocuments: [] }))) as { fund: Record<string, any>; myInvestments: any[]; documents: any[]; notices: any[] };
   });
 
 /** Workspace categories from relationships (My Company / My Funds / My Investments). */
