@@ -373,6 +373,11 @@ export const getCapTableWorkspace = createServerFn({ method: "GET" })
           ? (holderById.get(t.counterparty_stakeholder_id)?.name ?? null)
           : null,
         securityId: t.security_id as string | null,
+        stakeholderId: t.stakeholder_id as string | null,
+        counterpartyId: t.counterparty_stakeholder_id as string | null,
+        postingStatus: ((t.posting_status as string) ?? "draft") as "draft" | "review" | "posted",
+        reversesTransactionId: t.reverses_transaction_id as string | null,
+        postedAt: t.posted_at as string | null,
       })),
       events: ((events ?? []) as any[]).map((e) => ({
         id: e.id as string,
