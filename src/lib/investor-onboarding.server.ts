@@ -934,6 +934,14 @@ export async function reviewQueue(
   const { data } = await query;
   const rows = (data ?? []) as any[];
 
+  // Investor corrections of prepared material facts get surfaced for Harmonious review.
+  const { data: corr } = rows.length
+    ? await db().from("investor_prep_field_reviews").select("onboarding_id").eq("action", "corrected").eq("material", true)
+        .in("onboarding_id", rows.map((r) => r.id))
+    : { data: [] as any[] };
+  const correctionCount = new Map<string, number>();
+  for (const c of (corr ?? []) as any[]) correctionCount.set(c.onboarding_id, (correctionCount.get(c.onboarding_id) ?? 0) + 1);
+
   const items = [] as any[];
   for (const row of rows) {
     const facts = await gatherFacts(row);
@@ -957,6 +965,7 @@ export async function reviewQueue(
       requestedAmountCents: row.requested_amount_cents,
       acceptedAmountCents: row.accepted_amount_cents,
       exceptions: exceptions.length,
+      materialCorrections: correctionCount.get(row.id) ?? 0,
       assignedTo: row.assigned_to,
       ageDays: Math.floor(
         (Date.now() - new Date(row.last_activity_at ?? row.created_at).getTime()) / 86_400_000,
