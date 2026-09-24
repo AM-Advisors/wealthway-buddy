@@ -5,19 +5,17 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   type DocSnapshot, type FieldProvenance, affectedRequirements, allReviewed, assertConfirmable, fingerprint,
   investorReviewView, requirementDelta, isMaterial, isStale, mergeDocument, requiredMergeFields, reviewField,
-  signatureConfig, signingHandoffBlocker, docApplies,
+  signatureConfig, signingHandoffBlocker,
 } from "@/lib/prepared-investor-workflow";
 import { PORTAL_STEP_REQUIREMENTS, type PortalStep } from "@/lib/onboard-portal-model";
 
-/** Loads the investor's own onboarding + the prepared draft. Anyone else is rejected. */
 async function ownContext(userId: string, onboardingId: string) {
-  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-  const { data: ob } = await db.from("investor_onboardings").select("id, offering_id, investor_user_id, invitation_id, requested_amount_cents, application_id")
-    .eq("id", onboardingId).maybeSingle();
-  if (!ob || (ob as any).investor_user_id !== userId) throw new Error("This investment isn't available.");
-  const { loadProvenance } = await import("@/lib/prepared-investor.server");
-  const { draft, prov } = await loadProvenance(db, ob as any);
-  return { db, ob: ob as any, draft, prov };
+  const m = await import("@/lib/prepared-investor.server");
+  return m.ownContext(userId, onboardingId);
+}
+async function docContext(userId: string, onboardingId: string) {
+  const m = await import("@/lib/prepared-investor.server");
+  return m.docContext(userId, onboardingId);
 }
 
 function stepFor(req: string | null): PortalStep | null {
@@ -72,32 +70,6 @@ export const reviewPreparedField = createServerFn({ method: "POST" })
     const changedReqs = delta.added.length + delta.reopened.length > 0;
     return { material, requirementsUpdated: changedReqs, goTo: stepFor(delta.firstAffected) };
   });
-
-export async function docContext(userId: string, onboardingId: string) {
-  const c = await ownContext(userId, onboardingId);
-  const { db, ob, draft, prov } = c;
-  const { data: fund } = await db.from("offerings").select("id, name, legal_entity_name").eq("id", ob.offering_id).maybeSingle();
-  const selectedIds: string[] = ((draft?.documents ?? []) as any[]).map((s) => s.documentId);
-  const { data: docs } = await db.from("offering_documents")
-    .select("id, offering_id, title, investor_required, requires_signature, signing_mode, template_key, file_path, applies_to")
-    .eq("offering_id", ob.offering_id);
-  const pt = String(prov["profile_type"]?.currentValue ?? draft?.profile_type ?? "unknown");
-  const chosen = ((docs ?? []) as any[]).filter((d) => docApplies(d.applies_to, pt) && (d.investor_required || (d.applies_to ?? []).length > 0 || selectedIds.includes(d.id)));
-  const profile: Record<string, unknown> = {};
-  const { data: me } = await db.from("profiles").select("legal_name, email").eq("user_id", ob.investor_user_id).maybeSingle();
-  if ((me as any)?.legal_name) profile["legal_name"] = (me as any).legal_name;
-  if ((me as any)?.email) profile["email"] = (me as any).email;
-  for (const [k, p] of Object.entries(prov)) profile[k] = p.currentValue;
-  const profileType = String(profile["profile_type"] ?? draft?.profile_type ?? "unknown");
-  const commitment = (profile["commitment_cents"] as number | undefined) ?? ob.requested_amount_cents ?? null;
-  return { ...c, fund: fund as any, chosen, profile, profileType, commitment };
-}
-
-/** Fresh merge values for one document (used by the signing gate). */
-export async function currentMerge(x: Awaited<ReturnType<typeof docContext>>, d: any) {
-  const cfg = signatureConfig({ ...d, template_ready: true });
-  return mergeDocument({ profile: { ...x.profile }, investment: { commitment_cents: x.commitment }, fund: { name: x.fund?.name ?? "", legal_entity_name: x.fund?.legal_entity_name ?? null }, effectiveDate: new Date().toISOString().slice(0, 10) }, requiredMergeFields(x.profileType, cfg.mode));
-}
 
 export const getMyDocumentsForReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
