@@ -238,6 +238,7 @@ import { Route as AuthenticatedClientServicesEngagementIdRouteImport } from './r
 import { Route as AuthenticatedClientServicesRequestRouteImport } from './routes/_authenticated/client.services.request'
 import { Route as AuthenticatedFundOfferingIdDocumentsRouteImport } from './routes/_authenticated/fund.$offeringId.documents'
 import { Route as AuthenticatedFundOfferingIdFundingRouteImport } from './routes/_authenticated/fund.$offeringId.funding'
+import { Route as AuthenticatedManagerCountersignSignerIdRouteImport } from './routes/_authenticated/manager.countersign.$signerId'
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './routes/_authenticated/manager.fund-setup.$requestId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
@@ -1570,6 +1571,12 @@ const AuthenticatedFundOfferingIdFundingRoute =
     path: '/fund/$offeringId/funding',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerCountersignSignerIdRoute =
+  AuthenticatedManagerCountersignSignerIdRouteImport.update({
+    id: '/manager/countersign/$signerId',
+    path: '/manager/countersign/$signerId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerFundBankingFundIdRoute =
   AuthenticatedManagerFundBankingFundIdRouteImport.update({
     id: '/manager/fund-banking/$fundId',
@@ -1976,6 +1983,7 @@ export interface FileRoutesByFullPath {
   '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
+  '/manager/countersign/$signerId': typeof AuthenticatedManagerCountersignSignerIdRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
@@ -2232,6 +2240,7 @@ export interface FileRoutesByTo {
   '/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
+  '/manager/countersign/$signerId': typeof AuthenticatedManagerCountersignSignerIdRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
@@ -2494,6 +2503,7 @@ export interface FileRoutesById {
   '/_authenticated/client/services/request': typeof AuthenticatedClientServicesRequestRoute
   '/_authenticated/fund/$offeringId/documents': typeof AuthenticatedFundOfferingIdDocumentsRoute
   '/_authenticated/fund/$offeringId/funding': typeof AuthenticatedFundOfferingIdFundingRoute
+  '/_authenticated/manager/countersign/$signerId': typeof AuthenticatedManagerCountersignSignerIdRoute
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
@@ -2757,6 +2767,7 @@ export interface FileRouteTypes {
     | '/client/services/request'
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
+    | '/manager/countersign/$signerId'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
     | '/manager/fund/$fundId'
@@ -3013,6 +3024,7 @@ export interface FileRouteTypes {
     | '/client/services/request'
     | '/fund/$offeringId/documents'
     | '/fund/$offeringId/funding'
+    | '/manager/countersign/$signerId'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
     | '/ops/areas/$area'
@@ -3274,6 +3286,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/services/request'
     | '/_authenticated/fund/$offeringId/documents'
     | '/_authenticated/fund/$offeringId/funding'
+    | '/_authenticated/manager/countersign/$signerId'
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund-setup/$requestId'
     | '/_authenticated/manager/fund/$fundId'
@@ -4961,6 +4974,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFundOfferingIdFundingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/countersign/$signerId': {
+      id: '/_authenticated/manager/countersign/$signerId'
+      path: '/manager/countersign/$signerId'
+      fullPath: '/manager/countersign/$signerId'
+      preLoaderRoute: typeof AuthenticatedManagerCountersignSignerIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/fund-banking/$fundId': {
       id: '/_authenticated/manager/fund-banking/$fundId'
       path: '/manager/fund-banking/$fundId'
@@ -5534,6 +5554,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPacketFundIdRoute: typeof AuthenticatedAdminPacketFundIdRoute
   AuthenticatedFundOfferingIdDocumentsRoute: typeof AuthenticatedFundOfferingIdDocumentsRoute
   AuthenticatedFundOfferingIdFundingRoute: typeof AuthenticatedFundOfferingIdFundingRoute
+  AuthenticatedManagerCountersignSignerIdRoute: typeof AuthenticatedManagerCountersignSignerIdRoute
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundSetupRequestIdRoute: typeof AuthenticatedManagerFundSetupRequestIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
@@ -5727,6 +5748,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedFundOfferingIdDocumentsRoute,
   AuthenticatedFundOfferingIdFundingRoute:
     AuthenticatedFundOfferingIdFundingRoute,
+  AuthenticatedManagerCountersignSignerIdRoute:
+    AuthenticatedManagerCountersignSignerIdRoute,
   AuthenticatedManagerFundBankingFundIdRoute:
     AuthenticatedManagerFundBankingFundIdRoute,
   AuthenticatedManagerFundSetupRequestIdRoute:
