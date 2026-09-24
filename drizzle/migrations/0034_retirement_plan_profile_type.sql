@@ -1,0 +1,1 @@
+ALTER TYPE public.investment_profile_type ADD VALUE IF NOT EXISTS 'retirement_plan';

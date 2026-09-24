@@ -239,6 +239,13 @@
       "when": 1790250338343,
       "tag": "0033_fund_onboarding_dual_signature",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790253708723,
+      "tag": "0034_retirement_plan_profile_type",
+      "breakpoints": true
     }
   ]
 }
