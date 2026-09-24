@@ -9,6 +9,7 @@ import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { FundInvestorProgress, ManagerAddInvestor } from "@/components/manager-add-investor";
 import { PrepareInvestor } from "@/components/prepare-investor";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
+import { managerSafeRow } from "@/lib/prepared-investor-workflow";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,12 +64,20 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
             <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search investors" />
             <Select value={stage} onValueChange={setStage}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{stages.map((value) => <SelectItem key={value} value={value}>{value === "all" ? "Every stage" : prettyStatus(value)}</SelectItem>)}</SelectContent></Select>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="border-y bg-muted/50 text-xs text-muted-foreground"><tr><th className="px-3 py-2.5 font-medium">Investor</th><th className="px-3 py-2.5 font-medium">Commitment</th><th className="px-3 py-2.5 font-medium">Progress</th><th className="px-3 py-2.5 font-medium">Documents</th><th className="px-3 py-2.5 font-medium">Funding</th><th className="px-3 py-2.5" /></tr></thead>
+          <div className="divide-y rounded-md border md:hidden">
+            {rows.map((row: any) => { const r = safe(row); return (
+              <Link key={row.applicationId} to="/manager/$applicationId" params={{ applicationId: row.applicationId }} className="block p-3 hover:bg-muted/30">
+                <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-medium">{r.investor}</p><p className="text-xs text-muted-foreground">{prettyStatus(r.investingAs)} · {money(r.commitmentCents)}</p></div><Badge variant="secondary" className="shrink-0">{r.nextAction}</Badge></div>
+                <p className="mt-1 text-xs text-muted-foreground">Verification: {r.verification} · Accreditation: {r.accreditation} · Documents: {r.documents} · Funding: {r.funding}</p>
+              </Link>); })}
+            {rows.length === 0 ? <p className="p-6 text-center text-sm text-muted-foreground">No investors match these filters.</p> : null}
+          </div>
+          <div className="hidden md:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-y bg-muted/50 text-xs text-muted-foreground"><tr>{["Investor", "Investing As", "Commitment", "Onboarding", "Verification", "Accreditation / Eligibility", "Documents", "Funding", "Next Action"].map((h) => <th key={h} className="px-2 py-2.5 font-medium">{h}</th>)}</tr></thead>
               <tbody className="divide-y">
-                {rows.map((row: any) => <tr key={row.applicationId} className="hover:bg-muted/30"><td className="px-3 py-3"><p className="font-medium">{row.name}</p><p className="text-xs text-muted-foreground">{row.email ?? prettyStatus(row.accountLabel)}</p></td><td className="px-3 py-3">{money(row.commitmentCents)}</td><Status value={row.stage} /><Status value={row.documentsStatus} /><Status value={row.fundingStatus} /><td className="px-3 py-3 text-right"><Button asChild size="sm" variant="outline"><Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }}>Review</Link></Button></td></tr>)}
-                {rows.length === 0 ? <tr><td colSpan={6} className="px-3 py-10 text-center text-muted-foreground">No investors match these filters.</td></tr> : null}
+                {rows.map((row: any) => { const r = safe(row); return <tr key={row.applicationId} className="hover:bg-muted/30"><td className="px-2 py-3"><Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }} className="font-medium hover:underline">{r.investor}</Link></td><td className="px-2 py-3">{prettyStatus(r.investingAs)}</td><td className="px-2 py-3">{money(r.commitmentCents)}</td><td className="px-2 py-3">{prettyStatus(row.stage)}</td><td className="px-2 py-3">{r.verification}</td><td className="px-2 py-3">{r.accreditation}</td><td className="px-2 py-3">{r.documents}</td><td className="px-2 py-3">{r.funding}</td><td className="px-2 py-3"><Badge variant="secondary">{r.nextAction}</Badge></td></tr>; })}
+                {rows.length === 0 ? <tr><td colSpan={9} className="px-3 py-10 text-center text-muted-foreground">No investors match these filters.</td></tr> : null}
               </tbody>
             </table>
           </div>
@@ -76,6 +85,17 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
       </Card>
     </section>
   );
+}
+
+function safe(row: any) {
+  return managerSafeRow({
+    name: row.name, investingAs: row.accountLabel, commitmentCents: row.commitmentCents ?? 0,
+    kycStatus: row.kycStatus, amlStatus: row.amlStatus, accreditationStatus: row.accreditationStatus,
+    documentsStatus: row.documentsStatus, fundingStatus: row.fundingStatus, stage: row.stage,
+    investorSigned: (row.signedCount ?? 0) > 0, fullyExecuted: row.documentsStatus === "approved",
+    managerSignatureRequired: false, approvedToFund: row.stage === "funding",
+    harmoniousReview: row.managerReviewStatus === "in_review",
+  });
 }
 
 function Status({ value }: { value: string }) { return <td className="px-3 py-3"><Badge variant={statusTone(value)}>{prettyStatus(value)}</Badge></td>; }

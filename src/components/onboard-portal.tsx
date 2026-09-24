@@ -27,6 +27,7 @@ import { revealWireInstructionsFn } from "@/lib/fund-onboarding.functions";
 import { fundStepState, WIRE_FRAUD_WARNING } from "@/lib/fund-onboarding-model";
 import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
+import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
 import { CertificationsPanel, EligibilityPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 
 const money = (cents: number | null | undefined) =>
@@ -108,6 +109,8 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
         {money(d.amountCents) ? <p className="text-lg">{money(d.amountCents)}</p> : null}
         {d.profileLabel ? <p className="text-sm text-muted-foreground">Investing as {d.profileLabel}</p> : null}
       </header>
+
+      <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
 
       <ol className="flex items-stretch gap-2" aria-label="Progress">
         {steps.map((s, i) => {
