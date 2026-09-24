@@ -262,6 +262,9 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       signatureId = inserted.id;
     }
+    if (gateSnapshot) {
+      await supabaseAdmin.from("investor_document_snapshots").update({ status: "sent_for_signature", provider_request_id: request.id }).eq("id", gateSnapshot.id);
+    }
 
     if (signatureId) {
       await supabaseAdmin.from("document_signature_signers").delete().eq("signature_id", signatureId).neq("status", "signed");
