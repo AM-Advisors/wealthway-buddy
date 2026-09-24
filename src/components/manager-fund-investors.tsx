@@ -41,11 +41,13 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Identity, eligibility, signing, and funding for this fund.</p></div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button size="sm" onClick={() => setPanel(panel === "one" ? null : "one")}>+ Add Investor</Button>
+          <Button size="sm" onClick={() => setPanel(panel === "one" ? null : "one")}>+ Quick Invite</Button>
+          <Button size="sm" variant="secondary" onClick={() => setPanel(panel === "prep" ? null : "prep")}>Prepare Investor</Button>
           <Button size="sm" variant="outline" onClick={() => setPanel(panel === "many" ? null : "many")}>Add Multiple Investors</Button>
         </div>
       </div>
       {panel === "one" && <div className="mt-5"><ManagerAddInvestor fundId={fundId} /></div>}
+      {panel === "prep" && <div className="mt-5"><PrepareInvestor fundId={fundId} /></div>}
       {panel === "many" && <div className="mt-5"><BulkAddInvestors fundId={fundId} existingEmails={(data?.applications ?? []).map((a: any) => String(a.email ?? "")).filter(Boolean)} /></div>}
       <div className="mt-5"><FundOnboardingSettings fundId={fundId} /></div>
       <div className="mt-5"><FundEligibilitySetup fundId={fundId} /></div>
