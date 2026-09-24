@@ -66,6 +66,18 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
                         <Badge variant={doc.readiness.ready ? "secondary" : "outline"}>{doc.readiness.ready ? `Ready · v${doc.templateVersion}` : "Needs preparation"}</Badge>
                       ) : <Badge variant="outline">For review only</Badge>}
                     </div>
+                    <div className="flex flex-wrap items-center gap-1 text-xs">
+                      <span className="text-muted-foreground">Applies to:</span>
+                      {q.data.canConfigureApplicability ? (
+                        <>
+                          <Button size="sm" variant={doc.appliesTo.length === 0 ? "default" : "outline"} className="h-6 px-2 text-xs" onClick={() => update(doc, { appliesTo: [] })}>All investors</Button>
+                          {APPLIES_TO_OPTIONS.map(([v, l]) => {
+                            const on = doc.appliesTo.includes(v);
+                            return <Button key={v} size="sm" variant={on ? "default" : "outline"} className="h-6 px-2 text-xs" onClick={() => update(doc, { appliesTo: on ? doc.appliesTo.filter((x: string) => x !== v) : [...doc.appliesTo, v] })}>{l}</Button>;
+                          })}
+                        </>
+                      ) : <span>{doc.appliesTo.length ? doc.appliesTo.map((v: string) => APPLIES_TO_OPTIONS.find((o) => o[0] === v)?.[1] ?? v).join(", ") : "All investors"} (set by Harmonious)</span>}
+                    </div>
                     {doc.requiresSignature && (
                       <div className="flex flex-wrap gap-2">
                         <Select value={doc.signingMode} onValueChange={(v) => update(doc, { signingMode: v as any })}>
