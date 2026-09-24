@@ -9876,6 +9876,153 @@ export type Database = {
           },
         ]
       }
+      drive_filed_documents: {
+        Row: {
+          drive_file_id: string
+          file_name: string
+          filed_at: string
+          folder_id: string
+          id: string
+          source_id: string
+          source_table: string
+          target: string
+          version: string
+        }
+        Insert: {
+          drive_file_id: string
+          file_name: string
+          filed_at?: string
+          folder_id: string
+          id?: string
+          source_id: string
+          source_table: string
+          target: string
+          version?: string
+        }
+        Update: {
+          drive_file_id?: string
+          file_name?: string
+          filed_at?: string
+          folder_id?: string
+          id?: string
+          source_id?: string
+          source_table?: string
+          target?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      drive_folder_mappings: {
+        Row: {
+          created_at: string
+          entity_kind: string
+          folder_id: string | null
+          folder_name: string | null
+          harmonious_key: string
+          id: string
+          investment_profile_id: string | null
+          last_error: string | null
+          last_synced_at: string | null
+          offering_id: string
+          status: string
+          subfolders: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_kind: string
+          folder_id?: string | null
+          folder_name?: string | null
+          harmonious_key: string
+          id?: string
+          investment_profile_id?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          offering_id: string
+          status?: string
+          subfolders?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_kind?: string
+          folder_id?: string | null
+          folder_name?: string | null
+          harmonious_key?: string
+          id?: string
+          investment_profile_id?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          offering_id?: string
+          status?: string
+          subfolders?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_folder_mappings_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_folder_mappings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drive_sync_events: {
+        Row: {
+          actor: string
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          mapping_id: string | null
+          offering_id: string | null
+        }
+        Insert: {
+          actor?: string
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          mapping_id?: string | null
+          offering_id?: string | null
+        }
+        Update: {
+          actor?: string
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          mapping_id?: string | null
+          offering_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_sync_events_mapping_id_fkey"
+            columns: ["mapping_id"]
+            isOneToOne: false
+            referencedRelation: "drive_folder_mappings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_sync_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eligibility_rules: {
         Row: {
           active: boolean
@@ -18312,6 +18459,7 @@ export type Database = {
           closing_cost_source: string
           created_at: string
           date_formed: string | null
+          drive_sync_enabled: boolean
           entity_type: string | null
           fund_type: string | null
           fund_type_other: string | null
@@ -18343,6 +18491,7 @@ export type Database = {
           closing_cost_source?: string
           created_at?: string
           date_formed?: string | null
+          drive_sync_enabled?: boolean
           entity_type?: string | null
           fund_type?: string | null
           fund_type_other?: string | null
@@ -18374,6 +18523,7 @@ export type Database = {
           closing_cost_source?: string
           created_at?: string
           date_formed?: string | null
+          drive_sync_enabled?: boolean
           entity_type?: string | null
           fund_type?: string | null
           fund_type_other?: string | null

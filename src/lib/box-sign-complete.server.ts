@@ -101,6 +101,9 @@ export async function syncBoxSignRequest(
     if (!signature.provider_completed_at) {
       await notifyManagers(signature.id, signature.application_id, signature.offering_document_id);
     }
+    // Google Drive copy (repository only). Idempotent; never blocks completion.
+    const { fileExecutedSignature } = await import("@/lib/drive.server");
+    await fileExecutedSignature(signature.id);
   }
 
   return { status: mapped, completed: mapped === "completed", signatureId: signature.id };
