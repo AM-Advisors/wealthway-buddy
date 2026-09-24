@@ -37,6 +37,8 @@ function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [registerNext, setRegisterNext] = useState<string | null>(null);
+  useEffect(() => setRegisterNext(intendedPathFromLocation(window.location.search)), []);
 
   useEffect(() => {
     if (loading || !session) return;
@@ -172,9 +174,7 @@ function SignInPage() {
         Have an invitation?{" "}
         <Link
           to="/auth/register"
-          search={(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("next")
-            ? { next: new URLSearchParams(window.location.search).get("next") }
-            : {}) as never}
+          search={(registerNext ? { next: registerNext } : {}) as never}
           className="font-medium text-foreground hover:underline"
         >
           Create your account
