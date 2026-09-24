@@ -144,7 +144,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
       </ol>
 
       {view === "verification" ? <VerificationStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
-      {view === "verification" && d?.onboarding?.investment_profile_id !== null ? <TaxAndCompliancePanel onboardingId={onboardingId} done={refresh} /> : null}
+      {view === "verification" ? <TaxAndCompliancePanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "accreditation" ? <AccreditationStep d={d} onboardingId={onboardingId} /> : null}
       {view === "documents" ? <CertificationsPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <DocumentsStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
