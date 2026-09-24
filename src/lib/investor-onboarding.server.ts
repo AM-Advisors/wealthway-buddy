@@ -302,7 +302,12 @@ async function gatherFacts(row: any) {
     investmentProfileId: (row.investment_profile_id ?? null) as string | null,
     applicationId: (row.application_id ?? null) as string | null,
   };
-  const completedSignatures = ((signatures ?? []) as any[]).filter((sig) => isAuthoritativeSignature(sig, docScope));
+  // A completion only counts for the document version that is still current.
+  const { data: snapRows } = await db().from("investor_document_snapshots").select("id, status").eq("onboarding_id", row.id);
+  const deadSnaps = new Set(((snapRows ?? []) as any[]).filter((x) => x.status === "stale" || x.status === "superseded").map((x) => x.id));
+  const completedSignatures = ((signatures ?? []) as any[]).filter(
+    (sig) => isAuthoritativeSignature(sig, docScope) && !(sig.snapshot_id && deadSnaps.has(sig.snapshot_id)),
+  );
   const requiredToSign = applicableDocs.filter((d) => d.requires_signature);
   const signedIds = new Set(completedSignatures.map((sig) => sig.offering_document_id).filter(Boolean));
   const allSigned =

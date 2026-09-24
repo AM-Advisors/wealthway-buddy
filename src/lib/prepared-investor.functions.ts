@@ -61,7 +61,7 @@ export const reviewPreparedField = createServerFn({ method: "POST" })
     if (material) {
       // Mark generated documents stale; the authoritative engine re-evaluates requirements on next read.
       await db.from("investor_document_snapshots").update({ status: "stale" })
-        .eq("onboarding_id", data.onboardingId).in("status", ["prepared", "reviewed"]);
+        .eq("onboarding_id", data.onboardingId).in("status", ["prepared", "reviewed", "sent_for_signature"]);
     }
     if (!material) return { material, requirementsUpdated: false, goTo: null };
     // Re-run the authoritative engine (it now reads the corrected value) and compare.
