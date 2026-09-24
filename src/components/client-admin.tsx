@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { parseMoneyToCents, PRICE_INPUT_MESSAGE } from "@/lib/contract-coverage";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -464,7 +465,7 @@ function OverrideDialog({ clientId, sel, onClose }: { clientId: string; sel: any
         <div className="space-y-1"><Label htmlFor="ov-r">Reason</Label><Textarea id="ov-r" value={reason} onChange={(e) => setReason(e.target.value)} /></div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!amount || reason.trim().length < 5} onClick={() => save({ data: { clientId, selectionId: sel.id, cents: Math.round(Number(amount) * 100), reason } }).then(() => { toast.success("Custom price proposed."); onClose(); }, err)}>Propose price</Button>
+          <Button disabled={parseMoneyToCents(amount) == null || reason.trim().length < 5} onClick={() => { const cents = parseMoneyToCents(amount); if (cents == null) { toast.error(PRICE_INPUT_MESSAGE); return; } return save({ data: { clientId, selectionId: sel.id, cents, reason } }).then(() => { toast.success("Custom price proposed."); onClose(); }, err); }}>Propose price</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

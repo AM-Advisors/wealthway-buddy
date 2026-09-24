@@ -19,6 +19,7 @@ import {
   updateContractDocument,
 } from "@/lib/contract-intake.functions";
 import { RELATIONSHIP_TYPES } from "@/lib/contract-intelligence";
+import { docLabel, parseMoneyToCents, PRICE_INPUT_MESSAGE, relatedDocumentOptions } from "@/lib/contract-coverage";
 import { recordContractRelationship, retireContractRelationship } from "@/lib/contract-intelligence.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/contracts/$documentId")({
@@ -190,7 +191,8 @@ function TermRow({ t, editable, services, onDone }: { t: any; editable: boolean;
   const [reason, setReason] = useState("");
   const isPricing = t.category === "Pricing";
   const save = async (status: string) => {
-    const amountCents = amount.trim() ? Math.round(Number(amount) * 100) : null;
+    const amountCents = amount.trim() ? parseMoneyToCents(amount) : null;
+    if (isPricing && amount.trim() && amountCents == null) { toast.error(PRICE_INPUT_MESSAGE); return; }
     try {
       await review({ data: { termId: t.id, status: status as any, value: value.trim() || null, amountCents: isPricing ? amountCents : undefined, serviceKey: isPricing ? svc || null : undefined, reason } });
       toast.success(STATUS[status]); onDone();
@@ -279,9 +281,14 @@ function PrecedenceField({ doc, disabled, onSave }: { doc: any; disabled: boolea
 function RelationshipsCard({ d, documentId, onDone }: { d: any; documentId: string; onDone: () => void }) {
   const record = useServerFn(recordContractRelationship);
   const retire = useServerFn(retireContractRelationship);
-  const [type, setType] = useState<string>("amends");
-  const [related, setRelated] = useState<string>("");
-  const [scope, setScope] = useState<"client_wide" | "fund" | "service">("client_wide");
+  const decide = useServerFn(decideContractRelationship);
+  const initialType = d.doc.doc_type === "sow" ? "sow_governed_by_msa" : d.doc.doc_type === "msa" ? "msa_governs_sow" : d.doc.doc_type === "pricing_schedule" ? "fee_schedule_supplements" : "amends";
+  const [type, setType] = useState<string>(initialType);
+  const rel = relatedDocumentOptions(d.doc, d.related, type);
+  const [related, setRelated] = useState<string>(rel.defaultId ?? "");
+  useEffect(() => { setRelated(relatedDocumentOptions(d.doc, d.related, type).defaultId ?? ""); }, [type, d.doc.id]);
+  const [provision, setProvision] = useState("");
+  const [scope, setScope] = useState<"client_wide" | "fund" | "service" | "provision">("client_wide");
   const [fund, setFund] = useState("");
   const [svc, setSvc] = useState("");
   const [reason, setReason] = useState("");
@@ -290,21 +297,29 @@ function RelationshipsCard({ d, documentId, onDone }: { d: any; documentId: stri
   const typeLabel = (t: string) => RELATIONSHIP_TYPES.find((r) => r.value === t)?.label ?? t;
   const submit = async () => {
     try {
-      await record({ data: { documentId, relatedDocumentId: related || null, relationshipType: type as any, scope, offeringIds: scope === "fund" && fund ? [fund] : [], serviceKeys: scope === "service" && svc ? [svc] : [], reason: reason || null, sourceReference: source || null } });
-      toast.success("Relationship recorded"); setReason(""); setSource(""); onDone();
+      await record({ data: { documentId, relatedDocumentId: related || null, relationshipType: type as any, scope, offeringIds: scope === "fund" && fund ? [fund] : [], serviceKeys: scope === "service" && svc ? [svc] : [], reason: reason || null, sourceReference: source || null, provisionReference: scope === "provision" ? provision || null : null } });
+      toast.success("Relationship recorded — awaiting approval by a different reviewer"); setReason(""); setSource(""); onDone();
     } catch (e) { toast.error((e as Error).message); }
   };
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">Relationships & precedence history</CardTitle>
-        <CardDescription>Recorded by a reviewer. Previous determinations are kept permanently.</CardDescription></CardHeader>
+        <CardDescription>For: <span className="font-medium text-foreground">{docLabel(d.doc)}</span>. Recorded by one reviewer, approved by another. Previous determinations are kept permanently.</CardDescription></CardHeader>
       <CardContent className="space-y-3 text-sm">
         {d.relationships.length === 0 ? <p className="text-muted-foreground">No relationships recorded.</p> : (
           <ul className="space-y-1">
             {d.relationships.map((r: any) => (
               <li key={r.id} className={r.status === "retired" ? "text-muted-foreground line-through" : ""}>
                 {titleOf(r.document_id)} — {typeLabel(r.relationship_type)} {r.related_document_id ? titleOf(r.related_document_id) : ""} · {r.scope.replace("_", "-")}
+                {r.provision_reference ? ` · provision ${r.provision_reference}` : ""}
                 {r.reason ? ` · ${r.reason}` : ""}{r.source_reference ? ` (${r.source_reference})` : ""}
+                {r.approval_status === "pending_approval" ? <Badge variant="secondary" className="ml-2">Awaiting approval</Badge> : r.approval_status === "rejected" ? <Badge variant="outline" className="ml-2">Rejected</Badge> : null}
+                {r.status === "active" && r.approval_status === "pending_approval" && d.mayApprovePrecedence && r.recorded_by !== d.me ? (
+                  <span className="ml-2 space-x-2 text-xs">
+                    <button className="underline" onClick={async () => { try { await decide({ data: { id: r.id, approve: true } }); onDone(); } catch (e) { toast.error((e as Error).message); } }}>Approve</button>
+                    <button className="underline" onClick={async () => { const n = window.prompt("Why reject?"); if (!n) return; try { await decide({ data: { id: r.id, approve: false, note: n } }); onDone(); } catch (e) { toast.error((e as Error).message); } }}>Reject</button>
+                  </span>
+                ) : null}
                 {r.status === "active" && d.mayReviewPrecedence ? (
                   <button className="ml-2 text-xs underline" onClick={async () => {
                     const why = window.prompt("Why retire this relationship?");
@@ -322,13 +337,15 @@ function RelationshipsCard({ d, documentId, onDone }: { d: any; documentId: stri
               {RELATIONSHIP_TYPES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
             <select className="h-10 rounded-md border bg-background px-3" value={related} onChange={(e) => setRelated(e.target.value)}>
-              <option value="">Related document…</option>
-              {d.related.map((x: any) => <option key={x.id} value={x.id}>{x.title} · v{x.version}</option>)}
+              <option value="">{rel.options.length ? "Choose the related document…" : "No other documents for this client"}</option>
+              {rel.options.map((o) => <option key={o.id} value={o.id}>{o.label}{o.suggested ? " (suggested)" : ""}</option>)}
             </select>
+            {rel.hint ? <p className="text-xs text-muted-foreground sm:col-span-2">{rel.hint}</p> : null}
             <select className="h-10 rounded-md border bg-background px-3" value={scope} onChange={(e) => setScope(e.target.value as any)}>
               <option value="client_wide">Client-wide</option>
               <option value="fund">Only a Fund</option>
               <option value="service">Only a Service</option>
+              <option value="provision">Only a Provision</option>
             </select>
             {scope === "fund" ? (
               <select className="h-10 rounded-md border bg-background px-3" value={fund} onChange={(e) => setFund(e.target.value)}>
@@ -340,6 +357,8 @@ function RelationshipsCard({ d, documentId, onDone }: { d: any; documentId: stri
                 <option value="">Service…</option>
                 {d.services.map((s: any) => <option key={s.key} value={s.key}>{s.name}</option>)}
               </select>
+            ) : scope === "provision" ? (
+              <Input value={provision} onChange={(e) => setProvision(e.target.value)} placeholder="Provision (e.g. Section 4.2)" />
             ) : <span />}
             <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason" />
             <Input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Source provision" />
