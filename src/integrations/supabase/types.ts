@@ -10766,6 +10766,8 @@ export type Database = {
           signer_email: string | null
           signer_name: string
           signing_mode: string | null
+          snapshot_id: string | null
+          snapshot_version: number | null
           source_file_version_id: string | null
           superseded_by: string | null
           template_version_id: string | null
@@ -10814,6 +10816,8 @@ export type Database = {
           signer_email?: string | null
           signer_name: string
           signing_mode?: string | null
+          snapshot_id?: string | null
+          snapshot_version?: number | null
           source_file_version_id?: string | null
           superseded_by?: string | null
           template_version_id?: string | null
@@ -10862,6 +10866,8 @@ export type Database = {
           signer_email?: string | null
           signer_name?: string
           signing_mode?: string | null
+          snapshot_id?: string | null
+          snapshot_version?: number | null
           source_file_version_id?: string | null
           superseded_by?: string | null
           template_version_id?: string | null
@@ -15569,7 +15575,10 @@ export type Database = {
           offering_id: string
           onboarding_id: string
           profile_fingerprint: string
+          provider_request_id: string | null
           reviewed_at: string | null
+          reviewed_by: string | null
+          reviewed_fingerprint: string | null
           signing_mode: string
           status: string
           template_ref: string
@@ -15585,7 +15594,10 @@ export type Database = {
           offering_id: string
           onboarding_id: string
           profile_fingerprint: string
+          provider_request_id?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_fingerprint?: string | null
           signing_mode: string
           status?: string
           template_ref: string
@@ -15601,7 +15613,10 @@ export type Database = {
           offering_id?: string
           onboarding_id?: string
           profile_fingerprint?: string
+          provider_request_id?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_fingerprint?: string | null
           signing_mode?: string
           status?: string
           template_ref?: string
@@ -19442,6 +19457,7 @@ export type Database = {
       }
       offering_documents: {
         Row: {
+          applies_to: string[]
           body: string
           countersigner_user_id: string | null
           created_at: string
@@ -19463,6 +19479,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          applies_to?: string[]
           body: string
           countersigner_user_id?: string | null
           created_at?: string
@@ -19484,6 +19501,7 @@ export type Database = {
           title: string
         }
         Update: {
+          applies_to?: string[]
           body?: string
           countersigner_user_id?: string | null
           created_at?: string

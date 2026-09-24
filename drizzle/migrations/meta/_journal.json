@@ -330,6 +330,13 @@
       "when": 1790289985206,
       "tag": "0046_prepared_investor_review_and_doc_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1790290889010,
+      "tag": "0047_signing_enforcement_and_doc_applicability",
+      "breakpoints": true
     }
   ]
 }
