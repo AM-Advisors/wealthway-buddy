@@ -726,6 +726,35 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
   );
 }
 
+/** Google Drive problems. One open row per problem (deduplicated at the source). */
+async function driveExceptionItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
+  let q = s
+    .from("drive_exceptions")
+    .select("id, offering_id, issue_type, updated_at")
+    .eq("status", "open")
+    .limit(SOURCE_LIMIT);
+  if (fundId) q = q.eq("offering_id", fundId);
+  const rowsOut = await safely(async () => rows(await q));
+  return (rowsOut as any[])
+    .filter((r) => r.offering_id)
+    .map((r) =>
+      build(lookup, now, {
+        id: `drive-exception:${r.id}`,
+        source: "documents.drive",
+        area: "documents",
+        recordType: "fund",
+        recordId: r.offering_id,
+        recordTab: "documents",
+        title: `Google Drive — ${String(r.issue_type).replace(/_/g, " ")}`,
+        reason: "Google Drive filing needs attention",
+        workflowState: String(r.issue_type),
+        requiredAction: "prepare",
+        fundId: r.offering_id,
+        at: r.updated_at ?? null,
+      }),
+    );
+}
+
 /**
  * Distributions and outbound payments (Phase D).
  *
@@ -969,7 +998,9 @@ const COLLECTORS: {
   { area: "accounting", load: accountingItems },
   { area: "reports", load: reportingItems },
   { area: "documents", load: documentItems },
+  { area: "documents", load: driveExceptionItems },
   { area: "capital", load: distributionItems },
+
 
 ];
 

@@ -9876,8 +9876,88 @@ export type Database = {
           },
         ]
       }
+      drive_exceptions: {
+        Row: {
+          attempts: number
+          created_at: string
+          dedupe_key: string
+          detail: string | null
+          id: string
+          investment_profile_id: string | null
+          issue_type: string
+          last_action: string | null
+          mapping_id: string | null
+          offering_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          dedupe_key: string
+          detail?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          issue_type: string
+          last_action?: string | null
+          mapping_id?: string | null
+          offering_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          dedupe_key?: string
+          detail?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          issue_type?: string
+          last_action?: string | null
+          mapping_id?: string | null
+          offering_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_exceptions_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_exceptions_mapping_id_fkey"
+            columns: ["mapping_id"]
+            isOneToOne: false
+            referencedRelation: "drive_folder_mappings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_exceptions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drive_filed_documents: {
         Row: {
+          classification: string
           drive_file_id: string
           file_name: string
           filed_at: string
@@ -9889,6 +9969,7 @@ export type Database = {
           version: string
         }
         Insert: {
+          classification?: string
           drive_file_id: string
           file_name: string
           filed_at?: string
@@ -9900,6 +9981,7 @@ export type Database = {
           version?: string
         }
         Update: {
+          classification?: string
           drive_file_id?: string
           file_name?: string
           filed_at?: string
@@ -9916,6 +9998,7 @@ export type Database = {
         Row: {
           created_at: string
           entity_kind: string
+          environment: string
           folder_id: string | null
           folder_name: string | null
           harmonious_key: string
@@ -9924,6 +10007,7 @@ export type Database = {
           last_error: string | null
           last_synced_at: string | null
           offering_id: string
+          permission_audit: Json | null
           status: string
           subfolders: Json
           updated_at: string
@@ -9931,6 +10015,7 @@ export type Database = {
         Insert: {
           created_at?: string
           entity_kind: string
+          environment?: string
           folder_id?: string | null
           folder_name?: string | null
           harmonious_key: string
@@ -9939,6 +10024,7 @@ export type Database = {
           last_error?: string | null
           last_synced_at?: string | null
           offering_id: string
+          permission_audit?: Json | null
           status?: string
           subfolders?: Json
           updated_at?: string
@@ -9946,6 +10032,7 @@ export type Database = {
         Update: {
           created_at?: string
           entity_kind?: string
+          environment?: string
           folder_id?: string | null
           folder_name?: string | null
           harmonious_key?: string
@@ -9954,6 +10041,7 @@ export type Database = {
           last_error?: string | null
           last_synced_at?: string | null
           offering_id?: string
+          permission_audit?: Json | null
           status?: string
           subfolders?: Json
           updated_at?: string
