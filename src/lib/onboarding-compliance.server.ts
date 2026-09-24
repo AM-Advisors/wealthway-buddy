@@ -107,12 +107,12 @@ export async function resolveStage2(input: Stage2Input) {
     usPerson: usPersonFrom(input.tax, input.person),
     claimsEffectivelyConnectedIncome: rules['taxFacts']?.eci ?? null,
   });
-  const [{ data: forms }, { data: responses }, { data: certs }, { data: eligResponses }] = await Promise.all([
+  const [{ data: forms }, { data: responses }, { data: certs }] = await Promise.all([
     profileId ? d.from("investor_tax_forms").select("id, investment_profile_id, form_type, classification, status, tin_fingerprint, legal_name, expires_on, certified_at").eq("investment_profile_id", profileId) : { data: [] },
     d.from("compliance_questionnaire_responses").select("id, review_status, superseded_by, created_at").eq("onboarding_id", input.onboarding.id).eq("kind", "bad_actor").is("superseded_by", null).order("created_at", { ascending: false }).limit(1),
-    d.from("investor_certifications").select("certification_key, certification_version").eq("onboarding_id", input.onboarding.id),
-    d.from("investor_certifications").select("certification_key, evidence").eq("onboarding_id", input.onboarding.id).like("certification_key", "eligibility:%"),
+    d.from("investor_certifications").select("certification_key, certification_version, evidence").eq("onboarding_id", input.onboarding.id),
   ]);
+  const eligResponses = ((certs ?? []) as any[]).filter((c) => String(c.certification_key ?? "").startsWith("eligibility:"));
 
   const tax = taxRequirementState({ required: input.taxRequired, routing, profileId, forms: (forms ?? []) as any[], nowIso: input.nowIso });
 
