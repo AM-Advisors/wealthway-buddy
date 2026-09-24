@@ -13,7 +13,7 @@ export const STAFF_ROLES = [
   { value: "finance", label: "Finance", note: "Contract authority, invoices and payments." },
   { value: "operations", label: "Operations", note: "Reviews fund formation records." },
   { value: "fund_administration", label: "Fund administration", note: "Fund records and reporting." },
-  { value: "tax", label: "Tax", note: "Tax records and filings." },
+  { value: "tax", label: "Tax", note: "Opens signed tax forms and full tax IDs (audited). Only a super administrator can grant or remove it." },
 ] as const;
 
 const ROLE_VALUES = STAFF_ROLES.map((r) => r.value) as unknown as [string, ...string[]];

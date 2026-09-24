@@ -182,6 +182,7 @@ import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
+import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authenticated/ops.tax-review'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as AuthenticatedOpsValuationsRouteImport } from './routes/_authenticated/ops.valuations'
 import { Route as AuthenticatedProfessionalIndexRouteImport } from './routes/_authenticated/professional.index'
@@ -1241,6 +1242,12 @@ const AuthenticatedOpsTaxDocumentsRoute =
     path: '/ops/tax-documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsTaxReviewRoute =
+  AuthenticatedOpsTaxReviewRouteImport.update({
+    id: '/ops/tax-review',
+    path: '/ops/tax-review',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsTeamRoute = AuthenticatedOpsTeamRouteImport.update({
   id: '/ops/team',
   path: '/ops/team',
@@ -1927,6 +1934,7 @@ export interface FileRoutesByFullPath {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
+  '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
@@ -2184,6 +2192,7 @@ export interface FileRoutesByTo {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
+  '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
@@ -2447,6 +2456,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
+  '/_authenticated/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/_authenticated/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/_authenticated/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
@@ -2711,6 +2721,7 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/ss4'
     | '/ops/tax-documents'
+    | '/ops/tax-review'
     | '/ops/team'
     | '/ops/valuations'
     | '/professional/acceptance'
@@ -2968,6 +2979,7 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/ss4'
     | '/ops/tax-documents'
+    | '/ops/tax-review'
     | '/ops/team'
     | '/ops/valuations'
     | '/professional/acceptance'
@@ -3230,6 +3242,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/tax-documents'
+    | '/_authenticated/ops/tax-review'
     | '/_authenticated/ops/team'
     | '/_authenticated/ops/valuations'
     | '/_authenticated/professional/acceptance'
@@ -4582,6 +4595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsTaxDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/tax-review': {
+      id: '/_authenticated/ops/tax-review'
+      path: '/ops/tax-review'
+      fullPath: '/ops/tax-review'
+      preLoaderRoute: typeof AuthenticatedOpsTaxReviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/team': {
       id: '/_authenticated/ops/team'
       path: '/ops/team'
@@ -5537,6 +5557,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
+  AuthenticatedOpsTaxReviewRoute: typeof AuthenticatedOpsTaxReviewRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -5722,6 +5743,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
+  AuthenticatedOpsTaxReviewRoute: AuthenticatedOpsTaxReviewRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
