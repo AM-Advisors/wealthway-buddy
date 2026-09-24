@@ -7026,9 +7026,14 @@ export type Database = {
           id: string
           linked_id: string | null
           linked_type: string | null
+          purpose: string | null
+          round_id: string | null
+          security_id: string | null
+          stakeholder_id: string | null
           status: string
           storage_path: string | null
           title: string
+          transaction_id: string | null
           updated_at: string
           uploaded_by: string | null
         }
@@ -7039,9 +7044,14 @@ export type Database = {
           id?: string
           linked_id?: string | null
           linked_type?: string | null
+          purpose?: string | null
+          round_id?: string | null
+          security_id?: string | null
+          stakeholder_id?: string | null
           status?: string
           storage_path?: string | null
           title: string
+          transaction_id?: string | null
           updated_at?: string
           uploaded_by?: string | null
         }
@@ -7052,9 +7062,14 @@ export type Database = {
           id?: string
           linked_id?: string | null
           linked_type?: string | null
+          purpose?: string | null
+          round_id?: string | null
+          security_id?: string | null
+          stakeholder_id?: string | null
           status?: string
           storage_path?: string | null
           title?: string
+          transaction_id?: string | null
           updated_at?: string
           uploaded_by?: string | null
         }
@@ -8169,8 +8184,12 @@ export type Database = {
           id: string
           kind: string
           metadata: Json
+          posted_at: string | null
+          posted_by: string | null
+          posting_status: string
           quantity: number
           reason: string | null
+          reverses_transaction_id: string | null
           round_id: string | null
           security_id: string | null
           stakeholder_id: string | null
@@ -8187,8 +8206,12 @@ export type Database = {
           id?: string
           kind: string
           metadata?: Json
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_status?: string
           quantity?: number
           reason?: string | null
+          reverses_transaction_id?: string | null
           round_id?: string | null
           security_id?: string | null
           stakeholder_id?: string | null
@@ -8205,8 +8228,12 @@ export type Database = {
           id?: string
           kind?: string
           metadata?: Json
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_status?: string
           quantity?: number
           reason?: string | null
+          reverses_transaction_id?: string | null
           round_id?: string | null
           security_id?: string | null
           stakeholder_id?: string | null
@@ -8226,6 +8253,13 @@ export type Database = {
             columns: ["counterparty_stakeholder_id"]
             isOneToOne: false
             referencedRelation: "ct_stakeholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_transactions_reverses_transaction_id_fkey"
+            columns: ["reverses_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "ct_transactions"
             referencedColumns: ["id"]
           },
           {
@@ -16594,6 +16628,118 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_prep_drafts: {
+        Row: {
+          commitment_cents: number | null
+          created_at: string
+          created_by: string
+          display_name: string | null
+          documents: Json
+          email: string
+          fields: Json
+          id: string
+          invitation_id: string | null
+          offering_id: string
+          preparer_capacity: string
+          profile_type: string
+          related_people: Json
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          commitment_cents?: number | null
+          created_at?: string
+          created_by: string
+          display_name?: string | null
+          documents?: Json
+          email: string
+          fields?: Json
+          id?: string
+          invitation_id?: string | null
+          offering_id: string
+          preparer_capacity: string
+          profile_type?: string
+          related_people?: Json
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          commitment_cents?: number | null
+          created_at?: string
+          created_by?: string
+          display_name?: string | null
+          documents?: Json
+          email?: string
+          fields?: Json
+          id?: string
+          invitation_id?: string | null
+          offering_id?: string
+          preparer_capacity?: string
+          profile_type?: string
+          related_people?: Json
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_prep_drafts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_prep_events: {
+        Row: {
+          action: string
+          actor_capacity: string
+          actor_id: string
+          after_value: Json | null
+          before_value: Json | null
+          created_at: string
+          draft_id: string
+          field_key: string | null
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_capacity: string
+          actor_id: string
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          draft_id: string
+          field_key?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_capacity?: string
+          actor_id?: string
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          draft_id?: string
+          field_key?: string | null
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_prep_events_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "investor_prep_drafts"
             referencedColumns: ["id"]
           },
         ]
@@ -27514,6 +27660,7 @@ export type Database = {
         Returns: undefined
       }
       can_manage_diligence: { Args: { _offering_id: string }; Returns: boolean }
+      can_prepare_investor: { Args: { _offering_id: string }; Returns: boolean }
       can_read_wire_instructions: {
         Args: { _offering_id: string }
         Returns: boolean
