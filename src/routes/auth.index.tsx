@@ -170,7 +170,13 @@ function SignInPage() {
 
       <p className="mt-2 text-sm text-muted-foreground">
         Have an invitation?{" "}
-        <Link to="/auth/register" className="font-medium text-foreground hover:underline">
+        <Link
+          to="/auth/register"
+          search={(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("next")
+            ? { next: new URLSearchParams(window.location.search).get("next") }
+            : {}) as never}
+          className="font-medium text-foreground hover:underline"
+        >
           Create your account
         </Link>
       </p>

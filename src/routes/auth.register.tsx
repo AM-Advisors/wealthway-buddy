@@ -72,7 +72,10 @@ function RegisterPage() {
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { emailRedirectTo: `${window.location.origin}/onboarding/kyc` },
+        options: {
+          // An investor who arrived from their onboarding link returns straight to it.
+          emailRedirectTo: `${window.location.origin}${portalNext() ?? "/onboarding/kyc"}`,
+        },
       });
       if (error) throw error;
       setSent(true);
@@ -165,4 +168,10 @@ function RegisterPage() {
       </p>
     </div>
   );
+}
+
+/** Only an onboard.harmonious.co invitation path is carried through sign-up. */
+function portalNext(): string | null {
+  const next = new URLSearchParams(window.location.search).get("next") ?? "";
+  return /^\/onboard\/[A-Za-z0-9]{16,64}$/.test(next) || /^\/onboard\/i\/[0-9a-f-]{36}$/i.test(next) ? next : null;
 }
