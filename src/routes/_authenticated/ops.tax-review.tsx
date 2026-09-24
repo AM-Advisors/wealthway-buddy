@@ -45,7 +45,7 @@ function TaxReviewPage() {
         <p className="text-sm text-muted-foreground">Each tab re-checks your permissions on every request.</p>
       </div>
       <Tabs defaultValue="tax">
-        <TabsList className="flex-wrap">
+        <TabsList className="h-auto flex-wrap justify-start">
           <TabsTrigger value="tax">Investor tax review</TabsTrigger>
           <TabsTrigger value="policy">Compliance policy</TabsTrigger>
           <TabsTrigger value="wording">Legal wording</TabsTrigger>
