@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -20,7 +20,7 @@ import {
 } from "@/lib/contract-intake.functions";
 import { RELATIONSHIP_TYPES } from "@/lib/contract-intelligence";
 import { docLabel, parseMoneyToCents, PRICE_INPUT_MESSAGE, relatedDocumentOptions } from "@/lib/contract-coverage";
-import { recordContractRelationship, retireContractRelationship } from "@/lib/contract-intelligence.functions";
+import { decideContractRelationship, recordContractRelationship, retireContractRelationship } from "@/lib/contract-intelligence.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/contracts/$documentId")({
   head: () => ({
