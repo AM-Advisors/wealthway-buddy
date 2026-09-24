@@ -6,6 +6,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { centsSchema, friendlyParse, PRICING_MODEL_VALUES, pricingNeedsAmount } from "@/lib/contract-coverage";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -400,7 +401,7 @@ export const getContractReview = createServerFn({ method: "GET" })
       db.from("contract_extractions").select("id, model, prompt_version, status, text_chars, page_count, error, created_at").eq("document_id", doc.id).order("created_at", { ascending: false }),
       db.from("offerings").select("id, name").eq("client_id", doc.client_id),
       db.from("service_catalog").select("key, name").eq("active", true).order("sort_order"),
-      db.from("client_governing_documents").select("id, title, doc_type, version, review_status").eq("client_id", doc.client_id).neq("id", doc.id),
+      db.from("client_governing_documents").select("id, title, doc_type, version, review_status, effective_date, standard_status").eq("client_id", doc.client_id).neq("id", doc.id),
       doc.source === "standard_template" ? Promise.resolve(null as any) : db.storage.from("client-contracts").createSignedUrl(doc.file_path, 300),
     ]);
     const [{ data: rels }, { data: precedenceHistory }] = await Promise.all([
@@ -429,6 +430,8 @@ export const getContractReview = createServerFn({ method: "GET" })
       mayCorrect: contractCaps.includes("correct_terms"),
       mayConfirmExecution: contractCaps.includes("confirm_execution"),
       mayReviewPrecedence: contractCaps.includes("review_precedence"),
+      mayApprovePrecedence: contractCaps.includes("approve_precedence"),
+      me: context.userId as string,
       mayApprove: contractCaps.includes("approve_terms"),
       mayConfigurePricing: contractCaps.includes("configure_pricing"),
     };
@@ -438,14 +441,15 @@ const termReview = z.object({
   termId: z.string().uuid(),
   status: z.enum(["confirmed", "corrected", "not_applicable", "needs_review"]),
   value: z.string().max(4000).nullable().optional(),
-  amountCents: z.number().int().min(0).max(10_000_000_000).nullable().optional(),
+  amountCents: centsSchema.nullable().optional(),
+  pricingModel: z.enum(PRICING_MODEL_VALUES).nullable().optional(),
   serviceKey: z.string().max(80).nullable().optional(),
   reason: z.string().trim().max(1000).optional().default(""),
 });
 
 export const reviewTerm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => termReview.parse(d))
+  .inputValidator((d: unknown) => friendlyParse(termReview, d))
   .handler(async ({ data, context }) => {
     const { roles, contractCaps } = await contractGate(context, "review_terms");
     const db = await admin();
@@ -459,11 +463,14 @@ export const reviewTerm = createServerFn({ method: "POST" })
     if ((data.status === "corrected" || valueChanged || data.serviceKey !== undefined) && !contractCaps.includes("correct_terms"))
       throw new Error('Forbidden: changing a term needs the "correct_terms" contract permission.');
     if (valueChanged && data.status === "confirmed") throw new Error("A changed value must be marked Corrected.");
+    if (data.pricingModel && pricingNeedsAmount(data.pricingModel) && data.amountCents == null && (data.status === "confirmed" || data.status === "corrected"))
+      throw new Error("Enter a valid service price or select another pricing method.");
     const update = {
       status: data.status,
       current_value: nextValue ?? null,
       amount_cents: data.amountCents === undefined ? term.amount_cents : data.amountCents,
       service_key: data.serviceKey === undefined ? term.service_key : data.serviceKey,
+      ...(data.pricingModel !== undefined ? { pricing_model: data.pricingModel } : {}),
       reviewed_by: context.userId,
       reviewed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

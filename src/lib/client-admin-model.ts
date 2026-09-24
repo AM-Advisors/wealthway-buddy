@@ -74,6 +74,7 @@ export const CLIENT_CAPABILITIES = [
   { value: "manage_pricing", label: "Manage Pricing" },
   { value: "manage_sows", label: "Manage Contracts / SOWs" },
   { value: "approve_terms", label: "Approve Contract Terms" },
+  { value: "approve_pricing", label: "Approve Pricing Overrides" },
 ] as const;
 export type ClientCapability = (typeof CLIENT_CAPABILITIES)[number]["value"];
 const ALL: ClientCapability[] = CLIENT_CAPABILITIES.map((c) => c.value);
@@ -83,7 +84,7 @@ const CLIENT_ROLE_BASELINE: Record<string, ClientCapability[]> = {
   admin: ALL,
   operations: ["view_client", "edit_client", "manage_people", "manage_roles", "link_funds", "manage_services", "manage_sows"],
   client_success: ["view_client", "edit_client", "manage_people", "manage_roles", "manage_services"],
-  finance: ["view_client", "manage_pricing"],
+  finance: ["view_client", "manage_pricing", "approve_pricing"],
   legal: ["view_client", "manage_sows", "approve_terms"],
   compliance: ["view_client"],
   executive: ["view_client"],

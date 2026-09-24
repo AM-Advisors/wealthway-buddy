@@ -14,7 +14,13 @@ export async function contractGate(context: any, need: ContractCapability | Cont
     .select("capability")
     .eq("user_id", context.userId)
     .is("revoked_at", null);
-  const contractCaps = contractCapabilitiesFor(roles, ((data ?? []) as any[]).map((r) => String(r.capability)));
+  const { loadStaffCapabilities } = await import("@/lib/staff-rbac.server");
+  const { mapStaffCaps, STAFF_TO_CONTRACT_CAPS } = await import("@/lib/contract-coverage");
+  const staffCaps = await loadStaffCapabilities(context.userId, roles);
+  const contractCaps = contractCapabilitiesFor(roles, [
+    ...((data ?? []) as any[]).map((r) => String(r.capability)),
+    ...mapStaffCaps(staffCaps, STAFF_TO_CONTRACT_CAPS),
+  ]);
   const needed = Array.isArray(need) ? need : [need];
   const missing = needed.filter((c) => !contractCaps.includes(c));
   if (missing.length) throw new Error(`Forbidden: this needs the "${missing.join(", ")}" contract permission.`);

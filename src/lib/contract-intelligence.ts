@@ -1,3 +1,4 @@
+import { EXTENDED_RELATIONSHIP_TYPES } from "@/lib/contract-coverage";
 /**
  * Contract intelligence — pure, deterministic rules (browser-safe, no I/O).
  *
@@ -53,16 +54,8 @@ export type Relationship = {
   status: "active" | "retired";
 };
 
-export const RELATIONSHIP_TYPES = [
-  { value: "amends", label: "Amendment modifies the related agreement" },
-  { value: "supplements", label: "Supplements the related agreement" },
-  { value: "supersedes", label: "New version supersedes the related agreement" },
-  { value: "controls_fund_scope", label: "Controls for Fund-specific scope" },
-  { value: "controls_service_scope", label: "Controls for Service-specific scope" },
-  { value: "msa_controls_except_override", label: "MSA controls except where this document expressly overrides" },
-  { value: "other", label: "Other / manual relationship" },
-] as const;
-export type RelationshipType = (typeof RELATIONSHIP_TYPES)[number]["value"];
+export const RELATIONSHIP_TYPES = EXTENDED_RELATIONSHIP_TYPES.map((r) => ({ value: r.value, label: r.label })) as unknown as readonly { value: (typeof EXTENDED_RELATIONSHIP_TYPES)[number]["value"]; label: string }[];
+export type RelationshipType = (typeof EXTENDED_RELATIONSHIP_TYPES)[number]["value"];
 
 /** Relationship types where the reviewer must give a reason. */
 export const RELATIONSHIP_NEEDS_REASON: RelationshipType[] = [
@@ -77,9 +70,10 @@ export function relationshipProblem(input: {
   related_document_id: string | null;
   document_id: string;
   reason: string | null | undefined;
-  scope: "client_wide" | "fund" | "service";
+  scope: "client_wide" | "fund" | "service" | "provision";
   offering_ids: string[];
   service_keys: string[];
+  provision_reference?: string | null | undefined;
 }): string | null {
   if (input.related_document_id === input.document_id) return "A document can't relate to itself.";
   if (input.relationship_type !== "other" && !input.related_document_id)
@@ -88,6 +82,7 @@ export function relationshipProblem(input: {
     return "Give the reason or source provision for this relationship.";
   if (input.scope === "fund" && input.offering_ids.length === 0) return "Choose the Fund this applies to.";
   if (input.scope === "service" && input.service_keys.length === 0) return "Choose the Service this applies to.";
+  if (input.scope === "provision" && !(input.provision_reference ?? "").trim()) return "Name the provision this applies to.";
   return null;
 }
 
@@ -644,6 +639,7 @@ export const CONTRACT_CAPABILITIES = [
   { value: "configure_pricing", label: "Configure Contract Pricing" },
   { value: "view_pricing", label: "View Contract Pricing" },
   { value: "generate_standard", label: "Generate Standard Agreement" },
+  { value: "approve_precedence", label: "Approve Precedence Determinations" },
 ] as const;
 export type ContractCapability = (typeof CONTRACT_CAPABILITIES)[number]["value"];
 const ALL_CC = CONTRACT_CAPABILITIES.map((c) => c.value) as ContractCapability[];
@@ -652,7 +648,7 @@ const ALL_CC = CONTRACT_CAPABILITIES.map((c) => c.value) as ContractCapability[]
 const CONTRACT_ROLE_BASELINE: Record<string, ContractCapability[]> = {
   super_admin: ALL_CC,
   admin: ALL_CC,
-  legal: ["view_contracts", "upload_contracts", "review_terms", "correct_terms", "confirm_execution", "review_precedence", "approve_terms", "view_pricing", "generate_standard"],
+  legal: ["view_contracts", "upload_contracts", "review_terms", "correct_terms", "confirm_execution", "review_precedence", "approve_terms", "view_pricing", "generate_standard", "approve_precedence"],
   finance: ["view_contracts", "view_pricing", "configure_pricing"],
   operations: ["view_contracts", "upload_contracts", "review_terms", "correct_terms"],
   client_success: ["view_contracts", "upload_contracts", "review_terms"],

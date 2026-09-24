@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { parseMoneyToCents } from "@/lib/contract-coverage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -94,7 +95,7 @@ export function PricingCatalogBoard({
           service_key: draft.service_key === "none" ? "" : draft.service_key,
           category: draft.category,
           pricing_model: draft.pricing_model,
-          amount_cents: draft.amount.trim() === "" ? null : Math.round(Number(draft.amount) * 100),
+          amount_cents: parseMoneyToCents(draft.amount),
           unit: draft.unit,
           condition: draft.condition,
           pass_through: draft.pass_through,

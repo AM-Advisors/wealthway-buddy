@@ -57,7 +57,11 @@ async function loadClientContracts(db: any, clientId: string) {
   const ids = ((docs ?? []) as any[]).map((d) => d.id);
   const { data: terms } = ids.length ? await db.from("contract_terms").select("*").in("document_id", ids) : { data: [] };
   const withTerms = ((docs ?? []) as any[]).map((d) => ({ ...d, terms: ((terms ?? []) as any[]).filter((t) => t.document_id === d.id) }));
-  return { docs: withTerms, rels: (rels ?? []) as any[] };
+  // Only approved determinations take effect; pending/rejected ones never drive resolution.
+  const effective = ((rels ?? []) as any[]).map((r) =>
+    r.approval_status && r.approval_status !== "approved" ? { ...r, status: r.approval_status === "rejected" ? "retired" : "pending" } : r,
+  );
+  return { docs: withTerms, rels: effective };
 }
 
 /** Client → documents graph, lifecycle, termination summary, conflicts. */
@@ -122,7 +126,8 @@ const relInput = z.object({
   documentId: z.string().uuid(),
   relatedDocumentId: z.string().uuid().nullable(),
   relationshipType: z.enum(RELATIONSHIP_TYPES.map((r) => r.value) as [string, ...string[]]),
-  scope: z.enum(["client_wide", "fund", "service"]).default("client_wide"),
+  scope: z.enum(["client_wide", "fund", "service", "provision"]).default("client_wide"),
+  provisionReference: z.string().trim().max(500).nullable().optional(),
   offeringIds: z.array(z.string().uuid()).max(100).default([]),
   serviceKeys: z.array(z.string().max(80)).max(50).default([]),
   reason: z.string().trim().max(2000).nullable().optional(),
@@ -143,6 +148,7 @@ export const recordContractRelationship = createServerFn({ method: "POST" })
       scope: data.scope,
       offering_ids: data.offeringIds,
       service_keys: data.serviceKeys,
+      provision_reference: data.provisionReference,
     });
     if (problem) throw new Error(problem);
     const db = await admin();
@@ -167,13 +173,39 @@ export const recordContractRelationship = createServerFn({ method: "POST" })
         service_keys: data.serviceKeys,
         reason: data.reason ?? null,
         source_reference: data.sourceReference ?? null,
+        provision_reference: data.provisionReference ?? null,
         recorded_by: context.userId,
+        // Maker/checker: a recorded determination takes effect only after a different approver.
+        approval_status: "pending_approval",
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
     await audit(context, roles, { clientId, action: "document relationship recorded", target: data.documentId, next: data });
     return { id: row.id as string };
+  });
+
+/** A different person with Approve Precedence approves or rejects a pending determination. */
+export const decideContractRelationship = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), approve: z.boolean(), note: z.string().trim().max(1000).nullable().optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { roles } = await gate(context, "approve_precedence");
+    const db = await admin();
+    const { data: rel } = await db.from("contract_document_relationships").select("*").eq("id", data.id).maybeSingle();
+    if (!rel) throw new Error("Not found.");
+    const { approvalProblem } = await import("@/lib/contract-coverage");
+    const problem = approvalProblem(rel.recorded_by, context.userId, rel.approval_status);
+    if (problem) throw new Error(problem);
+    const now = new Date().toISOString();
+    const { error } = await db
+      .from("contract_document_relationships")
+      .update({ approval_status: data.approve ? "approved" : "rejected", approved_by: context.userId, approved_at: now, approval_note: data.note ?? null })
+      .eq("id", rel.id)
+      .eq("approval_status", "pending_approval");
+    if (error) throw new Error(error.message);
+    await audit(context, roles, { clientId: rel.client_id, action: data.approve ? "document relationship approved" : "document relationship rejected", target: rel.document_id, previous: { approval_status: "pending_approval", prepared_by: rel.recorded_by }, next: { approved_by: context.userId, note: data.note ?? null } });
+    return { ok: true };
   });
 
 export const retireContractRelationship = createServerFn({ method: "POST" })

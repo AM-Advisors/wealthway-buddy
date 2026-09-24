@@ -22,12 +22,15 @@ import {
 export async function clientGate(context: any, need?: ClientCapability | ClientCapability[]) {
   const { requireOperations } = await import("@/lib/ops-access.functions");
   const { roles } = await requireOperations(context, "clients", "see");
-  const caps = clientCapabilitiesFor(roles);
+  const { loadStaffCapabilities } = await import("@/lib/staff-rbac.server");
+  const { mapStaffCaps, STAFF_TO_CLIENT_CAP } = await import("@/lib/contract-coverage");
+  const staffCaps = await loadStaffCapabilities(context.userId, roles);
+  const caps = [...new Set([...clientCapabilitiesFor(roles), ...(mapStaffCaps(staffCaps, STAFF_TO_CLIENT_CAP) as ClientCapability[])])].sort();
   const needed = need ? (Array.isArray(need) ? need : [need]) : ["view_client" as const];
   const missing = needed.filter((c) => !caps.includes(c));
   if (missing.length) throw new Error(`Forbidden: this needs the "${missing.join(", ")}" permission.`);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return { roles, caps, db: supabaseAdmin as any, userId: context.userId as string };
+  return { roles, caps, staffCaps, db: supabaseAdmin as any, userId: context.userId as string };
 }
 
 export async function audit(
@@ -133,6 +136,30 @@ export async function loadContractTerms(db: any, clientId: string) {
   }
   const main = approved.find((d) => /msa|master|main/i.test(String(d.doc_type))) ?? null;
   return { excluded: excluded.trim() || null, special, governing: main ? { id: main.id, title: main.title, effectiveDate: main.effective_date } : null };
+}
+
+/**
+ * Coverage inputs: SOWs with their Fund coverage (junction ∪ legacy column) and
+ * contracted services, plus the governing MSA. Read-only.
+ */
+export async function loadCoverageInputs(db: any, clientId: string) {
+  const [{ data: sows }, { data: links }, { data: sels }, terms] = await Promise.all([
+    db.from("client_sows").select("id, title, client_id, offering_id, fund_scope, status, executed_at, amends_sow_id, template_version, governing_document_id, generated_lines").eq("client_id", clientId),
+    db.from("client_sow_funds").select("sow_id, offering_id").eq("client_id", clientId).eq("status", "active"),
+    db.from("client_service_selections").select("offering_id, service_key, status, contracted_sow_id").eq("client_id", clientId).not("status", "in", "(removed,terminated)"),
+    loadContractTerms(db, clientId),
+  ]);
+  const coverage: any[] = ((sows ?? []) as any[]).map((s) => ({
+    ...s,
+    covered_offering_ids: ((links ?? []) as any[]).filter((l) => l.sow_id === s.id).map((l) => l.offering_id),
+    service_keys: [
+      ...new Set([
+        ...(((s.generated_lines ?? []) as any[]).map((l) => l.serviceKey).filter(Boolean) as string[]),
+        ...((sels ?? []) as any[]).filter((x) => x.contracted_sow_id === s.id).map((x) => x.service_key as string),
+      ]),
+    ],
+  }));
+  return { sows: coverage, selections: (sels ?? []) as any[], governingMsa: terms.governing ? { id: terms.governing.id, title: terms.governing.title } : null };
 }
 
 /**

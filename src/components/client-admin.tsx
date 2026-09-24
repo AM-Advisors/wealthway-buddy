@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { parseMoneyToCents, PRICE_INPUT_MESSAGE } from "@/lib/contract-coverage";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -464,7 +465,7 @@ function OverrideDialog({ clientId, sel, onClose }: { clientId: string; sel: any
         <div className="space-y-1"><Label htmlFor="ov-r">Reason</Label><Textarea id="ov-r" value={reason} onChange={(e) => setReason(e.target.value)} /></div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={!amount || reason.trim().length < 5} onClick={() => save({ data: { clientId, selectionId: sel.id, cents: Math.round(Number(amount) * 100), reason } }).then(() => { toast.success("Custom price proposed."); onClose(); }, err)}>Propose price</Button>
+          <Button disabled={parseMoneyToCents(amount) == null || reason.trim().length < 5} onClick={() => { const cents = parseMoneyToCents(amount); if (cents == null) { toast.error(PRICE_INPUT_MESSAGE); return; } return save({ data: { clientId, selectionId: sel.id, cents, reason } }).then(() => { toast.success("Custom price proposed."); onClose(); }, err); }}>Propose price</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -574,7 +575,7 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
         <CardContent className="overflow-x-auto">
           {!d.funds.length ? <p className="text-sm text-muted-foreground">No funds yet.</p> : (
             <table className="w-full text-sm">
-              <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">Fund</th><th>Type</th><th>Fund manager(s)</th><th>Setup</th><th>Services</th><th>SOW</th><th>Version</th><th>Pricing source</th><th>Drive</th><th>Engaged</th></tr></thead>
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">Fund</th><th>Type</th><th>Fund manager(s)</th><th>Setup</th><th>Services</th><th>Contract coverage</th><th>SOW</th><th>Version</th><th>Pricing source</th><th>Drive</th><th>Engaged</th></tr></thead>
               <tbody>
                 {d.funds.map((f: any) => (
                   <tr key={f.id} className="border-t align-top">
@@ -583,6 +584,16 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
                     <td>{f.managers.join(", ") || "—"}</td>
                     <td>{f.setupStatus}</td>
                     <td>{f.services.length}</td>
+                    <td className="min-w-48">
+                      <details>
+                        <summary className="cursor-pointer"><Badge variant={f.coverage?.status?.startsWith("covered") ? "default" : f.coverage?.status === "needs_review" || f.coverage?.status === "msa_only" ? "secondary" : "outline"}>{f.coverage?.label ?? "—"}</Badge></summary>
+                        <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+                          <p>MSA: {f.coverage?.msa?.title ?? "none on file"}</p>
+                          {(f.coverage?.sows ?? []).map((s: any) => <p key={s.id}>{s.executed ? "Executed" : "Draft"}: {s.title}{s.version ? ` v${s.version}` : ""} · {s.funds} fund(s) · {s.services.length} service(s)</p>)}
+                          {f.coverage?.services ? <p>{f.coverage.services.message}{f.coverage.services.uncovered.length ? ` Uncovered: ${f.coverage.services.uncovered.join(", ")}` : ""}</p> : null}
+                        </div>
+                      </details>
+                    </td>
                     <td><Badge variant={f.sowStatus === "Executed" ? "default" : f.sowStatus === "No SOW" ? "destructive" : "secondary"}>{f.sowStatus}</Badge></td>
                     <td>{f.sowVersion ? `v${f.sowVersion}` : "—"}</td>
                     <td className="text-xs">{f.pricingSources.map((s: string) => PRICING_SOURCES[s as keyof typeof PRICING_SOURCES] ?? s).join(", ") || "—"}</td>
@@ -642,7 +653,7 @@ function CreateFundDialog({ clientId, onClose }: { clientId: string; onClose: ()
         <p className="text-xs text-muted-foreground">Add services for this fund afterwards on Services & Pricing.</p>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [] } }).then((r) => { toast.success(r.sowOutcome === "no_template" ? "Fund created. SOW required — no approved current template available." : "Fund created in setup."); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
+          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [] } }).then((r) => { toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
