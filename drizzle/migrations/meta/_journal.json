@@ -274,6 +274,13 @@
       "when": 1790268985124,
       "tag": "0038_google_drive_folder_structure",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1790269762125,
+      "tag": "0039_drive_security_operations",
+      "breakpoints": true
     }
   ]
 }
