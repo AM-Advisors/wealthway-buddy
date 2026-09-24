@@ -5,6 +5,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { centsSchema, friendlyParse, resolveFundCoverage, resolveServiceCoverage, type CoverageSow } from "@/lib/contract-coverage";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -498,7 +499,7 @@ export const setServiceSelections = createServerFn({ method: "POST" })
 /** Custom price for one selection only; global pricing is never changed. Needs a second approver. */
 export const overrideServicePrice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, selectionId: uuid, cents: z.number().int().min(0).max(1_000_000_000), reason: z.string().trim().min(5).max(1000) }).parse(d))
+  .inputValidator((d: unknown) => friendlyParse(z.object({ clientId: uuid, selectionId: uuid, cents: centsSchema, reason: z.string({ required_error: "Give a reason (at least 5 characters)." }).trim().min(5, "Give a reason (at least 5 characters).").max(1000) }), d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit, loadCatalog, loadPricingInputs, priceSelections } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "manage_pricing");
@@ -522,7 +523,7 @@ export const decideServicePrice = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ clientId: uuid, selectionId: uuid, approve: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit } = await import("@/lib/client-admin.server");
-    const { db, userId } = await clientGate(context, "manage_pricing");
+    const { db, userId } = await clientGate(context, "approve_pricing");
     const { data: s } = await db.from("client_service_selections").select("*").eq("id", data.selectionId).maybeSingle();
     if (!s || s.client_id !== data.clientId || s.override_status !== "pending_approval") throw new Error("No custom price is waiting for approval.");
     if (s.override_by === userId) throw new Error("Someone other than the person who proposed it must approve custom pricing.");

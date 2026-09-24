@@ -22,12 +22,15 @@ import {
 export async function clientGate(context: any, need?: ClientCapability | ClientCapability[]) {
   const { requireOperations } = await import("@/lib/ops-access.functions");
   const { roles } = await requireOperations(context, "clients", "see");
-  const caps = clientCapabilitiesFor(roles);
+  const { loadStaffCapabilities } = await import("@/lib/staff-rbac.server");
+  const { mapStaffCaps, STAFF_TO_CLIENT_CAP } = await import("@/lib/contract-coverage");
+  const staffCaps = await loadStaffCapabilities(context.userId, roles);
+  const caps = [...new Set([...clientCapabilitiesFor(roles), ...(mapStaffCaps(staffCaps, STAFF_TO_CLIENT_CAP) as ClientCapability[])])].sort();
   const needed = need ? (Array.isArray(need) ? need : [need]) : ["view_client" as const];
   const missing = needed.filter((c) => !caps.includes(c));
   if (missing.length) throw new Error(`Forbidden: this needs the "${missing.join(", ")}" permission.`);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return { roles, caps, db: supabaseAdmin as any, userId: context.userId as string };
+  return { roles, caps, staffCaps, db: supabaseAdmin as any, userId: context.userId as string };
 }
 
 export async function audit(
