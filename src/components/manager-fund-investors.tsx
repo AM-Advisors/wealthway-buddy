@@ -7,6 +7,7 @@ import { BulkAddInvestors } from "@/components/bulk-add-investors";
 import { FundOnboardingSettings } from "@/components/fund-onboarding-settings";
 import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { FundInvestorProgress, ManagerAddInvestor } from "@/components/manager-add-investor";
+import { PrepareInvestor } from "@/components/prepare-investor";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { money, prettyStatus, statusTone } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   });
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("all");
-  const [panel, setPanel] = useState<"one" | "many" | null>(null);
+  const [panel, setPanel] = useState<"one" | "prep" | "many" | null>(null);
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (data?.applications ?? []).filter((row: any) =>
