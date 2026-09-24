@@ -15,7 +15,6 @@ import {
   GOVERNING_DOC_TYPES,
   MAX_CONTRACT_BYTES,
   approvalBlockers,
-  canApproveContract,
   contractAlerts,
   einLast4,
   findDuplicateClients,
@@ -23,6 +22,7 @@ import {
   parseDays,
   planPricingApplication,
 } from "@/lib/contract-ingestion";
+import type { ContractCapability } from "@/lib/contract-intelligence";
 
 type Area = "see" | "prepare" | "approve";
 
@@ -46,6 +46,10 @@ async function audit(context: any, roles: string[], e: { clientId: string | null
     new_value: (e.next ?? null) as any,
     source: "web",
   });
+}
+
+async function contractGate(context: any, need: ContractCapability | ContractCapability[]) {
+  return (await import("@/lib/contract-access.server")).contractGate(context, need);
 }
 
 /* ---------------------------------------------------------------- intake */
@@ -252,7 +256,7 @@ export const uploadContract = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => uploadInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { roles } = await gate(context, "prepare");
+    const { roles } = await contractGate(context, "upload_contracts");
     const kind = CONTRACT_MIME_TYPES[data.mimeType];
     if (!kind) throw new Error("Upload a PDF or Word (.docx) file.");
     const bytes = Uint8Array.from(Buffer.from(data.base64, "base64"));
@@ -376,7 +380,7 @@ export const rereadContract = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ documentId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { roles } = await gate(context, "prepare");
+    const { roles } = await contractGate(context, "upload_contracts");
     await runExtraction(context, roles, data.documentId);
     return { ok: true };
   });
@@ -385,7 +389,7 @@ export const getContractReview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ documentId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { roles, capabilities } = await gate(context, "see");
+    const { roles, contractCaps } = await contractGate(context, "view_contracts");
     const db = await admin();
     const { data: doc } = await db.from("client_governing_documents").select("*").eq("id", data.documentId).maybeSingle();
     if (!doc) throw new Error("Not found.");
@@ -397,7 +401,11 @@ export const getContractReview = createServerFn({ method: "GET" })
       db.from("offerings").select("id, name").eq("client_id", doc.client_id),
       db.from("service_catalog").select("key, name").eq("active", true).order("sort_order"),
       db.from("client_governing_documents").select("id, title, doc_type, version, review_status").eq("client_id", doc.client_id).neq("id", doc.id),
-      db.storage.from("client-contracts").createSignedUrl(doc.file_path, 300),
+      doc.source === "standard_template" ? Promise.resolve(null as any) : db.storage.from("client-contracts").createSignedUrl(doc.file_path, 300),
+    ]);
+    const [{ data: rels }, { data: precedenceHistory }] = await Promise.all([
+      db.from("contract_document_relationships").select("*").or(`document_id.eq.${doc.id},related_document_id.eq.${doc.id}`).order("recorded_at", { ascending: false }),
+      db.from("contract_precedence_determinations").select("*").eq("document_id", doc.id).order("decided_at", { ascending: false }),
     ]);
     await audit(context, roles, { clientId: doc.client_id, action: "contract viewed", target: doc.id });
     const order = new Map<string, number>();
@@ -413,9 +421,16 @@ export const getContractReview = createServerFn({ method: "GET" })
       services: services ?? [],
       related: related ?? [],
       fileUrl: signed?.data?.signedUrl ?? null,
+      relationships: rels ?? [],
+      precedenceHistory: precedenceHistory ?? [],
       blockers: approvalBlockers(doc, (terms ?? []) as any[]),
-      mayEdit: capabilities.includes("clients:prepare" as any),
-      mayApprove: capabilities.includes("clients:approve" as any) && canApproveContract(roles),
+      caps: contractCaps,
+      mayEdit: contractCaps.includes("review_terms"),
+      mayCorrect: contractCaps.includes("correct_terms"),
+      mayConfirmExecution: contractCaps.includes("confirm_execution"),
+      mayReviewPrecedence: contractCaps.includes("review_precedence"),
+      mayApprove: contractCaps.includes("approve_terms"),
+      mayConfigurePricing: contractCaps.includes("configure_pricing"),
     };
   });
 
@@ -432,7 +447,7 @@ export const reviewTerm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => termReview.parse(d))
   .handler(async ({ data, context }) => {
-    const { roles } = await gate(context, "prepare");
+    const { roles, contractCaps } = await contractGate(context, "review_terms");
     const db = await admin();
     const { data: term } = await db.from("contract_terms").select("*, client_governing_documents(client_id, review_status)").eq("id", data.termId).maybeSingle();
     if (!term) throw new Error("Not found.");
@@ -441,6 +456,8 @@ export const reviewTerm = createServerFn({ method: "POST" })
     const nextValue = data.value === undefined ? term.current_value : data.value;
     const valueChanged = (nextValue ?? null) !== (term.current_value ?? null) || (data.amountCents !== undefined && data.amountCents !== term.amount_cents);
     if (data.status === "corrected" && !data.reason) throw new Error("Give a reason for the correction.");
+    if ((data.status === "corrected" || valueChanged || data.serviceKey !== undefined) && !contractCaps.includes("correct_terms"))
+      throw new Error('Forbidden: changing a term needs the "correct_terms" contract permission.');
     if (valueChanged && data.status === "confirmed") throw new Error("A changed value must be marked Corrected.");
     const update = {
       status: data.status,
@@ -479,17 +496,24 @@ const docReview = z.object({
   expirationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   noticeDays: z.number().int().min(0).max(3650).nullable().optional(),
   appliesToOfferingIds: z.array(z.string().uuid()).max(100).optional(),
+  appliesToServiceKeys: z.array(z.string().max(80)).max(50).optional(),
+  precedenceSource: z.string().trim().max(500).nullable().optional(),
 });
 
 export const updateContractDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => docReview.parse(d))
   .handler(async ({ data, context }) => {
-    const { roles } = await gate(context, "prepare");
+    const need: ContractCapability[] = ["review_terms"];
+    if (data.executionStatus !== undefined) need.push("confirm_execution");
+    if (data.precedenceStatus !== undefined || data.precedenceNote !== undefined) need.push("review_precedence");
+    const { roles } = await contractGate(context, need);
     const db = await admin();
     const { data: doc } = await db.from("client_governing_documents").select("*").eq("id", data.documentId).maybeSingle();
     if (!doc) throw new Error("Not found.");
     if (doc.review_status === "approved" || doc.review_status === "superseded") throw new Error("Approved documents can't change — upload an amendment.");
+    if (data.precedenceStatus === "confirmed" && !(data.precedenceNote ?? doc.precedence_note ?? "").trim())
+      throw new Error("Record the reason or source for the precedence determination.");
     if (data.appliesToOfferingIds?.length) {
       const { data: owned } = await db.from("offerings").select("id").eq("client_id", doc.client_id).in("id", data.appliesToOfferingIds);
       if ((owned ?? []).length !== data.appliesToOfferingIds.length) throw new Error("A selected fund doesn't belong to this client.");
@@ -504,8 +528,19 @@ export const updateContractDocument = createServerFn({ method: "POST" })
     if (data.expirationDate !== undefined) patch["expiration_date"] = data.expirationDate;
     if (data.noticeDays !== undefined) patch["notice_days"] = data.noticeDays;
     if (data.appliesToOfferingIds !== undefined) patch["applies_to_offering_ids"] = data.appliesToOfferingIds;
+    if (data.appliesToServiceKeys !== undefined) patch["applies_to_service_keys"] = data.appliesToServiceKeys;
     const { error } = await db.from("client_governing_documents").update(patch).eq("id", doc.id);
     if (error) throw new Error(error.message);
+    if (data.precedenceStatus !== undefined && data.precedenceStatus !== doc.precedence_status) {
+      await db.from("contract_precedence_determinations").insert({
+        document_id: doc.id,
+        previous_status: doc.precedence_status,
+        new_status: data.precedenceStatus,
+        note: data.precedenceNote ?? doc.precedence_note ?? null,
+        source_reference: data.precedenceSource ?? null,
+        decided_by: context.userId,
+      });
+    }
     const previous = Object.fromEntries(Object.keys(patch).map((k) => [k, doc[k]]));
     await audit(context, roles, { clientId: doc.client_id, action: "contract details reviewed", target: doc.id, previous, next: patch });
     return { ok: true };
@@ -516,8 +551,7 @@ export const approveContractTerms = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ documentId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { roles } = await gate(context, "approve");
-    if (!canApproveContract(roles)) throw new Error("Forbidden: approving contract terms needs legal, compliance, finance, client success or admin authority.");
+    const { roles, contractCaps } = await contractGate(context, "approve_terms");
     const db = await admin();
     const { data: doc } = await db.from("client_governing_documents").select("*").eq("id", data.documentId).maybeSingle();
     if (!doc) throw new Error("Not found.");
@@ -535,8 +569,32 @@ export const approveContractTerms = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await audit(context, roles, { clientId: doc.client_id, action: "contract terms approved", target: doc.id });
 
+    if (!contractCaps.includes("configure_pricing")) {
+      await audit(context, roles, { clientId: doc.client_id, action: "contract pricing awaiting configuration", target: doc.id });
+      return { applied: 0, skipped: [{ termId: "*", reason: "Pricing waits for someone with Configure Contract Pricing" }] };
+    }
+    return applyApprovedPricing(context, roles, doc, (terms ?? []) as any[]);
+  });
+
+/** Configure Contract Pricing — applies an approved document's reviewed prices (idempotent). */
+export const applyContractPricing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ documentId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { roles } = await contractGate(context, "configure_pricing");
+    const db = await admin();
+    const { data: doc } = await db.from("client_governing_documents").select("*").eq("id", data.documentId).maybeSingle();
+    if (!doc) throw new Error("Not found.");
+    if (doc.review_status !== "approved") throw new Error("Only approved contract terms can drive pricing.");
+    const { data: terms } = await db.from("contract_terms").select("*").eq("document_id", doc.id);
+    return applyApprovedPricing(context, roles, doc, (terms ?? []) as any[]);
+  });
+
+async function applyApprovedPricing(context: any, roles: string[], doc: any, terms: any[]) {
+    const db = await admin();
+    const now = new Date().toISOString();
     // Apply: client/engagement pricing as contract-specific rows (standard pricing untouched).
-    const plan = planPricingApplication({ ...doc, review_status: "approved" }, (terms ?? []) as any[]);
+    const plan = planPricingApplication({ ...doc, review_status: "approved" }, terms);
     for (const row of plan.rows) {
       const { data: std } = await db.from("service_catalog").select("standard_price_cents").eq("key", row.service_key).maybeSingle();
       await db.from("client_pricing").upsert(
@@ -566,13 +624,13 @@ export const approveContractTerms = createServerFn({ method: "POST" })
     await db.from("client_governing_documents").update({ applied_at: now }).eq("id", doc.id);
     await audit(context, roles, { clientId: doc.client_id, action: "approved terms applied", target: doc.id, next: { pricingRows: plan.rows.length, skipped: plan.skipped } });
     return { applied: plan.rows.length, skipped: plan.skipped };
-  });
+}
 
 export const listClientContracts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { roles, capabilities } = await gate(context, "see");
+    const { contractCaps } = await contractGate(context, "view_contracts");
     const db = await admin();
     const [{ data: docs }, { data: pricing }, { data: offerings }, { data: contacts }, { data: client }] = await Promise.all([
       db.from("client_governing_documents").select("*").eq("client_id", data.clientId).order("uploaded_at", { ascending: false }),
@@ -591,13 +649,15 @@ export const listClientContracts = createServerFn({ method: "GET" })
       client,
       contacts: contacts ?? [],
       offerings: offerings ?? [],
-      pricing: pricing ?? [],
+      pricing: contractCaps.includes("view_pricing") ? pricing ?? [] : [],
       documents: ((docs ?? []) as any[]).map((d) => ({
         ...d,
         alerts: contractAlerts(d, today),
         keyTerms: ((keyTerms ?? []) as any[]).filter((t) => t.document_id === d.id && t.status !== "not_applicable"),
       })),
-      mayUpload: capabilities.includes("clients:prepare" as any),
-      mayApprove: capabilities.includes("clients:approve" as any) && canApproveContract(roles),
+      mayUpload: contractCaps.includes("upload_contracts"),
+      mayApprove: contractCaps.includes("approve_terms"),
+      mayGenerateStandard: contractCaps.includes("generate_standard"),
+      mayViewPricing: contractCaps.includes("view_pricing"),
     };
   });

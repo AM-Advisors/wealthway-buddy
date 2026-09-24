@@ -4392,9 +4392,11 @@ export type Database = {
         Row: {
           applied_at: string | null
           applies_to_offering_ids: string[]
+          applies_to_service_keys: string[]
           approved_at: string | null
           approved_by: string | null
           client_id: string
+          client_msa_agreement_id: string | null
           created_at: string
           doc_type: string
           effective_date: string | null
@@ -4403,6 +4405,7 @@ export type Database = {
           file_path: string
           id: string
           mime_type: string
+          msa_version_id: string | null
           notice_days: number | null
           original_filename: string
           parent_document_id: string | null
@@ -4411,8 +4414,17 @@ export type Database = {
           review_status: string
           sha256: string
           size_bytes: number
+          source: string
+          standard_fields: Json | null
+          standard_prepared_by: string | null
+          standard_reviewed_at: string | null
+          standard_reviewed_by: string | null
+          standard_sent_at: string | null
+          standard_status: string | null
           superseded_at: string | null
           supersedes_id: string | null
+          terminated_note: string | null
+          terminated_on: string | null
           title: string
           updated_at: string
           uploaded_at: string
@@ -4422,9 +4434,11 @@ export type Database = {
         Insert: {
           applied_at?: string | null
           applies_to_offering_ids?: string[]
+          applies_to_service_keys?: string[]
           approved_at?: string | null
           approved_by?: string | null
           client_id: string
+          client_msa_agreement_id?: string | null
           created_at?: string
           doc_type: string
           effective_date?: string | null
@@ -4433,6 +4447,7 @@ export type Database = {
           file_path: string
           id?: string
           mime_type: string
+          msa_version_id?: string | null
           notice_days?: number | null
           original_filename: string
           parent_document_id?: string | null
@@ -4441,8 +4456,17 @@ export type Database = {
           review_status?: string
           sha256: string
           size_bytes: number
+          source?: string
+          standard_fields?: Json | null
+          standard_prepared_by?: string | null
+          standard_reviewed_at?: string | null
+          standard_reviewed_by?: string | null
+          standard_sent_at?: string | null
+          standard_status?: string | null
           superseded_at?: string | null
           supersedes_id?: string | null
+          terminated_note?: string | null
+          terminated_on?: string | null
           title: string
           updated_at?: string
           uploaded_at?: string
@@ -4452,9 +4476,11 @@ export type Database = {
         Update: {
           applied_at?: string | null
           applies_to_offering_ids?: string[]
+          applies_to_service_keys?: string[]
           approved_at?: string | null
           approved_by?: string | null
           client_id?: string
+          client_msa_agreement_id?: string | null
           created_at?: string
           doc_type?: string
           effective_date?: string | null
@@ -4463,6 +4489,7 @@ export type Database = {
           file_path?: string
           id?: string
           mime_type?: string
+          msa_version_id?: string | null
           notice_days?: number | null
           original_filename?: string
           parent_document_id?: string | null
@@ -4471,8 +4498,17 @@ export type Database = {
           review_status?: string
           sha256?: string
           size_bytes?: number
+          source?: string
+          standard_fields?: Json | null
+          standard_prepared_by?: string | null
+          standard_reviewed_at?: string | null
+          standard_reviewed_by?: string | null
+          standard_sent_at?: string | null
+          standard_status?: string | null
           superseded_at?: string | null
           supersedes_id?: string | null
+          terminated_note?: string | null
+          terminated_on?: string | null
           title?: string
           updated_at?: string
           uploaded_at?: string
@@ -4485,6 +4521,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_governing_documents_client_msa_agreement_id_fkey"
+            columns: ["client_msa_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "client_msa_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_governing_documents_msa_version_id_fkey"
+            columns: ["msa_version_id"]
+            isOneToOne: false
+            referencedRelation: "msa_versions"
             referencedColumns: ["id"]
           },
           {
@@ -5802,6 +5852,118 @@ export type Database = {
           },
         ]
       }
+      contract_capability_grants: {
+        Row: {
+          capability: string
+          granted_at: string
+          granted_by: string
+          id: string
+          reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          capability: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          capability?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contract_document_relationships: {
+        Row: {
+          client_id: string
+          document_id: string
+          id: string
+          offering_ids: string[]
+          reason: string | null
+          recorded_at: string
+          recorded_by: string
+          related_document_id: string | null
+          relationship_type: string
+          retired_at: string | null
+          retired_by: string | null
+          retired_reason: string | null
+          scope: string
+          service_keys: string[]
+          source_reference: string | null
+          status: string
+        }
+        Insert: {
+          client_id: string
+          document_id: string
+          id?: string
+          offering_ids?: string[]
+          reason?: string | null
+          recorded_at?: string
+          recorded_by: string
+          related_document_id?: string | null
+          relationship_type: string
+          retired_at?: string | null
+          retired_by?: string | null
+          retired_reason?: string | null
+          scope?: string
+          service_keys?: string[]
+          source_reference?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          document_id?: string
+          id?: string
+          offering_ids?: string[]
+          reason?: string | null
+          recorded_at?: string
+          recorded_by?: string
+          related_document_id?: string | null
+          relationship_type?: string
+          retired_at?: string | null
+          retired_by?: string | null
+          retired_reason?: string | null
+          scope?: string
+          service_keys?: string[]
+          source_reference?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_document_relationships_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_document_relationships_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_document_relationships_related_document_id_fkey"
+            columns: ["related_document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_extractions: {
         Row: {
           created_at: string
@@ -5845,6 +6007,57 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_precedence_determinations: {
+        Row: {
+          decided_at: string
+          decided_by: string
+          document_id: string
+          id: string
+          new_status: string
+          note: string | null
+          previous_status: string | null
+          relationship_id: string | null
+          source_reference: string | null
+        }
+        Insert: {
+          decided_at?: string
+          decided_by: string
+          document_id: string
+          id?: string
+          new_status: string
+          note?: string | null
+          previous_status?: string | null
+          relationship_id?: string | null
+          source_reference?: string | null
+        }
+        Update: {
+          decided_at?: string
+          decided_by?: string
+          document_id?: string
+          id?: string
+          new_status?: string
+          note?: string | null
+          previous_status?: string | null
+          relationship_id?: string | null
+          source_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_precedence_determinations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_precedence_determinations_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "contract_document_relationships"
             referencedColumns: ["id"]
           },
         ]

@@ -11,12 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EXEC_LABEL, REVIEW_LABEL } from "@/components/client-contracts";
 import {
+  applyContractPricing,
   approveContractTerms,
   getContractReview,
   rereadContract,
   reviewTerm,
   updateContractDocument,
 } from "@/lib/contract-intake.functions";
+import { RELATIONSHIP_TYPES } from "@/lib/contract-intelligence";
+import { recordContractRelationship, retireContractRelationship } from "@/lib/contract-intelligence.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/contracts/$documentId")({
   head: () => ({
@@ -44,6 +47,7 @@ function ContractReview() {
   const updateDoc = useServerFn(updateContractDocument);
   const approve = useServerFn(approveContractTerms);
   const reread = useServerFn(rereadContract);
+  const applyPricing = useServerFn(applyContractPricing);
 
   if (q.isPending) return <Skeleton className="m-6 h-96" />;
   if (q.error) return <p className="p-6 text-sm text-muted-foreground">{(q.error as Error).message}</p>;
@@ -68,7 +72,10 @@ function ContractReview() {
           </div>
         </div>
         <div className="flex gap-2">
-          {editable && <Button variant="outline" onClick={() => act(() => reread({ data: { documentId } }), "Re-read")}>Re-read terms</Button>}
+          {doc.review_status === "approved" && d.mayConfigurePricing && !doc.applied_at && (
+            <Button variant="outline" onClick={() => act(() => applyPricing({ data: { documentId } }), "Contract pricing applied")}>Apply contract pricing</Button>
+          )}
+          {editable && doc.source !== "standard_template" && <Button variant="outline" onClick={() => act(() => reread({ data: { documentId } }), "Re-read")}>Re-read terms</Button>}
           {d.mayApprove && !locked && (
             <Button disabled={d.blockers.length > 0} onClick={() => act(() => approve({ data: { documentId } }), "Contract terms approved and applied")}>Approve Contract Terms</Button>
           )}
@@ -96,12 +103,11 @@ function ContractReview() {
             <CardHeader><CardTitle className="text-base">Document details</CardTitle>
               <CardDescription>Execution and precedence are always decided by a person.</CardDescription></CardHeader>
             <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
-              <Sel label="Execution" disabled={!editable} value={doc.execution_status}
+              <Sel label="Execution" disabled={!editable || !d.mayConfirmExecution} value={doc.execution_status}
                 options={[["needs_review", "Not confirmed"], ["executed_confirmed", "Fully executed — I checked every signature"], ["not_executed", "Not executed"]]}
                 onChange={(v) => act(() => updateDoc({ data: { documentId, executionStatus: v as any } }), "Saved")} />
-              <Sel label="Precedence" disabled={!editable} value={doc.precedence_status}
-                options={[["requires_review", "Precedence requires review"], ["confirmed", "Confirmed from clause"], ["not_applicable", "Not applicable"]]}
-                onChange={(v) => act(() => updateDoc({ data: { documentId, precedenceStatus: v as any } }), "Saved")} />
+              <PrecedenceField doc={doc} disabled={!editable || !d.mayReviewPrecedence}
+                onSave={(status, note, source) => act(() => updateDoc({ data: { documentId, precedenceStatus: status as any, precedenceNote: note, precedenceSource: source } }), "Precedence recorded")} />
               <DateField label="Effective date" disabled={!editable} value={doc.effective_date} onSave={(v) => act(() => updateDoc({ data: { documentId, effectiveDate: v } }), "Saved")} />
               <DateField label="Expiration" disabled={!editable} value={doc.expiration_date} onSave={(v) => act(() => updateDoc({ data: { documentId, expirationDate: v } }), "Saved")} />
               <div className="sm:col-span-2">
@@ -119,8 +125,26 @@ function ContractReview() {
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">Nothing ticked = whole client. A fund-specific SOW never applies to other funds.</p>
               </div>
+              <div className="sm:col-span-2">
+                <p className="mb-1 font-medium">Applies to services</p>
+                <div className="flex flex-wrap gap-3">
+                  {d.services.map((s: any) => {
+                    const keys: string[] = doc.applies_to_service_keys ?? [];
+                    return (
+                      <label key={s.key} className="flex items-center gap-1">
+                        <input type="checkbox" disabled={!editable} checked={keys.includes(s.key)}
+                          onChange={(e) => act(() => updateDoc({ data: { documentId, appliesToServiceKeys: e.target.checked ? [...keys, s.key] : keys.filter((x) => x !== s.key) } }), "Saved")} />
+                        {s.name}
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Nothing ticked = all contracted services.</p>
+              </div>
             </CardContent>
           </Card>
+
+          <RelationshipsCard d={d} documentId={documentId} onDone={refresh} />
 
           {doc.review_status === "manual_review_required" && (
             <Card><CardHeader><CardTitle className="text-base">Document requires manual review</CardTitle>
@@ -226,5 +250,110 @@ function DateField({ label, value, onSave, disabled }: { label: string; value: s
     <label className="space-y-1"><span className="font-medium">{label}</span>
       <Input type="date" disabled={disabled} defaultValue={value ?? ""} onBlur={(e) => { const v = e.target.value || null; if (v !== value) onSave(v); }} />
     </label>
+  );
+}
+
+function PrecedenceField({ doc, disabled, onSave }: { doc: any; disabled: boolean; onSave: (status: string, note: string | null, source: string | null) => void }) {
+  const [status, setStatus] = useState<string>(doc.precedence_status);
+  const [note, setNote] = useState<string>(doc.precedence_note ?? "");
+  const [source, setSource] = useState("");
+  return (
+    <div className="space-y-1 sm:col-span-2">
+      <span className="font-medium">Precedence (decided by a person, never by AI)</span>
+      <select disabled={disabled} className="h-10 w-full rounded-md border bg-background px-3" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <option value="requires_review">Precedence requires review</option>
+        <option value="confirmed">Confirmed by reviewer</option>
+        <option value="not_applicable">Not applicable</option>
+      </select>
+      {!disabled && (
+        <>
+          <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason / determination (required to confirm)" />
+          <Input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Source provision, e.g. MSA §14.2" />
+          <Button size="sm" variant="outline" onClick={() => onSave(status, note.trim() || null, source.trim() || null)}>Record precedence</Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function RelationshipsCard({ d, documentId, onDone }: { d: any; documentId: string; onDone: () => void }) {
+  const record = useServerFn(recordContractRelationship);
+  const retire = useServerFn(retireContractRelationship);
+  const [type, setType] = useState<string>("amends");
+  const [related, setRelated] = useState<string>("");
+  const [scope, setScope] = useState<"client_wide" | "fund" | "service">("client_wide");
+  const [fund, setFund] = useState("");
+  const [svc, setSvc] = useState("");
+  const [reason, setReason] = useState("");
+  const [source, setSource] = useState("");
+  const titleOf = (id: string | null) => (id === documentId ? d.doc.title : d.related.find((x: any) => x.id === id)?.title ?? "—");
+  const typeLabel = (t: string) => RELATIONSHIP_TYPES.find((r) => r.value === t)?.label ?? t;
+  const submit = async () => {
+    try {
+      await record({ data: { documentId, relatedDocumentId: related || null, relationshipType: type as any, scope, offeringIds: scope === "fund" && fund ? [fund] : [], serviceKeys: scope === "service" && svc ? [svc] : [], reason: reason || null, sourceReference: source || null } });
+      toast.success("Relationship recorded"); setReason(""); setSource(""); onDone();
+    } catch (e) { toast.error((e as Error).message); }
+  };
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Relationships & precedence history</CardTitle>
+        <CardDescription>Recorded by a reviewer. Previous determinations are kept permanently.</CardDescription></CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {d.relationships.length === 0 ? <p className="text-muted-foreground">No relationships recorded.</p> : (
+          <ul className="space-y-1">
+            {d.relationships.map((r: any) => (
+              <li key={r.id} className={r.status === "retired" ? "text-muted-foreground line-through" : ""}>
+                {titleOf(r.document_id)} — {typeLabel(r.relationship_type)} {r.related_document_id ? titleOf(r.related_document_id) : ""} · {r.scope.replace("_", "-")}
+                {r.reason ? ` · ${r.reason}` : ""}{r.source_reference ? ` (${r.source_reference})` : ""}
+                {r.status === "active" && d.mayReviewPrecedence ? (
+                  <button className="ml-2 text-xs underline" onClick={async () => {
+                    const why = window.prompt("Why retire this relationship?");
+                    if (!why) return;
+                    try { await retire({ data: { id: r.id, reason: why } }); onDone(); } catch (e) { toast.error((e as Error).message); }
+                  }}>Retire</button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+        {d.mayReviewPrecedence && (
+          <div className="grid gap-2 rounded-md border p-3 sm:grid-cols-2">
+            <select className="h-10 rounded-md border bg-background px-3" value={type} onChange={(e) => setType(e.target.value)}>
+              {RELATIONSHIP_TYPES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
+            <select className="h-10 rounded-md border bg-background px-3" value={related} onChange={(e) => setRelated(e.target.value)}>
+              <option value="">Related document…</option>
+              {d.related.map((x: any) => <option key={x.id} value={x.id}>{x.title} · v{x.version}</option>)}
+            </select>
+            <select className="h-10 rounded-md border bg-background px-3" value={scope} onChange={(e) => setScope(e.target.value as any)}>
+              <option value="client_wide">Client-wide</option>
+              <option value="fund">Only a Fund</option>
+              <option value="service">Only a Service</option>
+            </select>
+            {scope === "fund" ? (
+              <select className="h-10 rounded-md border bg-background px-3" value={fund} onChange={(e) => setFund(e.target.value)}>
+                <option value="">Fund…</option>
+                {d.offerings.map((o: any) => <option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+            ) : scope === "service" ? (
+              <select className="h-10 rounded-md border bg-background px-3" value={svc} onChange={(e) => setSvc(e.target.value)}>
+                <option value="">Service…</option>
+                {d.services.map((s: any) => <option key={s.key} value={s.key}>{s.name}</option>)}
+              </select>
+            ) : <span />}
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason" />
+            <Input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Source provision" />
+            <Button size="sm" className="sm:col-span-2" onClick={submit}>Record relationship</Button>
+          </div>
+        )}
+        {d.precedenceHistory.length > 0 && (
+          <div className="space-y-1 text-xs text-muted-foreground">
+            {d.precedenceHistory.map((h: any) => (
+              <p key={h.id}>{new Date(h.decided_at).toLocaleString()} · precedence {h.previous_status} → {h.new_status}{h.note ? ` · ${h.note}` : ""}{h.source_reference ? ` (${h.source_reference})` : ""}</p>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

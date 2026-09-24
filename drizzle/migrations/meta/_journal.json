@@ -288,6 +288,13 @@
       "when": 1790270689008,
       "tag": "0040_client_intake_contract_ingestion",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790273199844,
+      "tag": "0041_contract_intelligence_completion",
+      "breakpoints": true
     }
   ]
 }

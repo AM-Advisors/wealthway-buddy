@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GOVERNING_DOC_TYPES, noticeDeadline } from "@/lib/contract-ingestion";
 import { listClientContracts, uploadContract } from "@/lib/contract-intake.functions";
+import { ContractFamilyPanel } from "@/components/contract-family";
 
 export const REVIEW_LABEL: Record<string, string> = {
   uploaded: "Uploaded",
@@ -159,11 +160,18 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
                 : "No approved master agreement yet."}
             </CardDescription>
           </div>
-          {d.mayUpload ? (
-            <Button size="sm" onClick={() => setUploading({ type: "msa" })}>
-              Upload Existing Contract
-            </Button>
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {d.mayUpload ? (
+              <Button size="sm" onClick={() => setUploading({ type: "msa" })}>
+                Import Existing Agreement
+              </Button>
+            ) : null}
+            {d.mayGenerateStandard ? (
+              <Button asChild size="sm" variant="outline">
+                <Link to="/ops/contracts/standard" search={{ clientId }}>Use Harmonious Standard Agreement</Link>
+              </Button>
+            ) : null}
+          </div>
         </CardHeader>
         {uploading ? (
           <CardContent>
@@ -181,6 +189,8 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
           </CardContent>
         ) : null}
       </Card>
+
+      {d.documents.length ? <ContractFamilyPanel clientId={clientId} /> : null}
 
       {d.documents.length === 0 ? (
         <p className="text-sm text-muted-foreground">No governing documents uploaded.</p>
@@ -241,6 +251,18 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
                         : "Review terms"}
                     </Link>
                   </Button>
+                  {doc.parent_document_id || doc.supersedes_id ? (
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/ops/contracts/compare" search={{ before: doc.supersedes_id ?? doc.parent_document_id, after: doc.id }}>
+                        Compare Versions
+                      </Link>
+                    </Button>
+                  ) : null}
+                  {doc.source === "standard_template" ? (
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/ops/contracts/standard" search={{ clientId, draftId: doc.id }}>Standard agreement status</Link>
+                    </Button>
+                  ) : null}
                   {d.mayUpload && doc.review_status === "approved" ? (
                     <>
                       <Button size="sm" variant="ghost" onClick={() => setUploading({ parent: doc.id, type: "amendment" })}>
@@ -261,7 +283,7 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
         </div>
       )}
 
-      <Card>
+      {d.mayViewPricing ? <Card>
         <CardHeader>
           <CardTitle className="text-base">Client contract pricing</CardTitle>
           <CardDescription>
@@ -295,7 +317,7 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
             </ul>
           )}
         </CardContent>
-      </Card>
+      </Card> : null}
     </div>
   );
 }
