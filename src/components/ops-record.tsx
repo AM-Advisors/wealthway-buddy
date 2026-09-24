@@ -1,4 +1,5 @@
-import { ClientContactsPanel, ClientContractsPanel } from "@/components/client-contracts";
+import { ClientContractsPanel } from "@/components/client-contracts";
+import { ClientFundsPanel, ClientOverviewActions, ClientPeoplePanel, ClientServicesPricingPanel } from "@/components/client-admin";
 import { useMemo } from "react";
 
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -342,6 +343,9 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
           </p>
         ) : null}
         <Summary items={summaryFor(type, record)} />
+        {type === "client" ? (
+          <ClientOverviewActions clientId={id} goTo={(tab) => navigate({ to: ".", search: { tab } as any })} />
+        ) : null}
         {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}
         {type === "investor" ? <DriveInvestorCard investorUserId={id} /> : null}
         <p className="text-xs text-muted-foreground">
@@ -351,7 +355,7 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
       </header>
 
       <div className="flex flex-wrap gap-2 border-b pb-2">
-        {tabs.map((tab) => (
+        {tabs.filter((tab) => !tab.hidden).map((tab) => (
           <Button
             key={tab.id}
             size="sm"
@@ -366,7 +370,11 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
       {type === "client" && active === "contracts" ? (
         <ClientContractsPanel clientId={id} />
       ) : type === "client" && active === "contacts" ? (
-        <ClientContactsPanel clientId={id} />
+        <ClientPeoplePanel clientId={id} />
+      ) : type === "client" && active === "services" ? (
+        <ClientServicesPricingPanel clientId={id} />
+      ) : type === "client" && active === "funds" ? (
+        <ClientFundsPanel clientId={id} />
       ) : (
         <TabBody type={type} id={id} tab={active} />
       )}
