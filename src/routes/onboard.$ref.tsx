@@ -40,8 +40,12 @@ function ClaimPage() {
   useEffect(() => {
     let live = true;
     claim({ data: { reference: ref } })
-      .then((r: any) => live && navigate({ to: "/onboard/i/$onboardingId", params: { onboardingId: r.onboardingId }, replace: true }))
-      .catch((e: any) => live && setError(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")));
+      .then((r: any) => {
+        if (live) void navigate({ to: "/onboard/i/$onboardingId", params: { onboardingId: r.onboardingId }, replace: true });
+      })
+      .catch((e: any) => {
+        if (live) setError(String(e?.message ?? e).replace(/^Forbidden:\s*/, ""));
+      });
     return () => { live = false; };
   }, [ref, claim, navigate]);
 
