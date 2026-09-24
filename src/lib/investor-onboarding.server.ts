@@ -1652,6 +1652,10 @@ export async function onboardPortalDetail(userId: string, onboardingId: string) 
     questionnaire: detail.questionnaire ?? null,
     questionnaireResponses: detail.questionnaireResponses ?? null,
     executed: Boolean(detail.executedSnapshot),
+    fundingUnlocked: Boolean(detail.fundingUnlocked),
+    fundingStatus: (detail.fundingStatus ?? null) as string | null,
+    investorReportsSent: Boolean(detail.investorReportsSent),
+    signing: await portalSigningStages(row),
     steps,
     resume: portalResumeStep(steps),
     complete: portalComplete(steps),
@@ -1693,4 +1697,85 @@ export async function startInvestmentVerification(userId: string, onboardingId: 
     actorRole: "investor",
   });
   return { url: result.url as string };
+}
+
+
+// ------------------------------------ dual signature + secure wire reveal
+
+/** Provider-derived signing stage per document for one investment. */
+async function portalSigningStages(row: any) {
+  const { signingStage } = await import("@/lib/fund-onboarding-model");
+  if (!row.application_id) return [] as { documentId: string; mode: string; stage: string }[];
+  const { data: docs } = await db()
+    .from("offering_documents")
+    .select("id, signing_mode, requires_signature")
+    .eq("offering_id", row.offering_id);
+  const { data: sigs } = await db()
+    .from("document_signatures")
+    .select("id, offering_document_id, provider_status")
+    .eq("application_id", row.application_id);
+  const { data: signers } = await db()
+    .from("document_signature_signers")
+    .select("signature_id, role_key, signing_order, status")
+    .eq("application_id", row.application_id);
+  return ((docs ?? []) as any[])
+    .filter((d) => d.requires_signature)
+    .map((d) => {
+      const sig = ((sigs ?? []) as any[]).find((s) => s.offering_document_id === d.id);
+      const mine = ((signers ?? []) as any[]).filter((s) => sig && s.signature_id === sig.id);
+      return {
+        documentId: d.id as string,
+        mode: (d.signing_mode ?? "investor_only") as string,
+        stage: signingStage({
+          mode: (d.signing_mode ?? "investor_only") as any,
+          providerStatus: sig?.provider_status ?? null,
+          signers: mine.map((s) => ({
+            role: s.role_key === "fund_manager" ? "fund_manager" : "investor",
+            order: Number(s.signing_order ?? 1),
+            status: String(s.status ?? ""),
+          })),
+        }),
+      };
+    });
+}
+
+/**
+ * Reveal the released wire instructions for one investment. Requires a fresh
+ * sign-in (checked from the verified token, never the URL), is tied to the
+ * caller, the investment and the current released instruction version, and
+ * is audited every time.
+ */
+export async function revealWireInstructions(userId: string, onboardingId: string, claims: unknown) {
+  const { isFreshAuth } = await import("@/lib/fund-onboarding-model");
+  const { row } = await assertInvestorOwns(userId, onboardingId);
+  if (!isFreshAuth(claims, Math.floor(Date.now() / 1000))) {
+    return { status: "reauth_required" as const, instructions: null, reasons: [] as string[] };
+  }
+  const result = await fundingInstructions(userId, onboardingId);
+  if (!result.unlocked || !result.instructions) {
+    return { status: "not_ready" as const, instructions: null, reasons: result.reasons };
+  }
+  const { data: setup } = await db().from("fund_setups").select("id").eq("offering_id", row.offering_id).maybeSingle();
+  const { data: banking } = setup?.id
+    ? await db().from("fund_banking_setups").select("id, updated_at").eq("setup_id", setup.id).maybeSingle()
+    : { data: null };
+  const version = String((banking as any)?.updated_at ?? "");
+  await recordEvent({
+    onboardingId: row.id,
+    offeringId: row.offering_id,
+    event: "wire_instructions_revealed",
+    actorUserId: userId,
+    actorRole: "investor",
+    detail: { instruction_version: version, banking_setup_id: (banking as any)?.id ?? null },
+  } as any);
+  const { data: profile } = row.investment_profile_id
+    ? await db().from("investment_profiles").select("display_label").eq("id", row.investment_profile_id).maybeSingle()
+    : { data: null };
+  return {
+    status: "revealed" as const,
+    reasons: [] as string[],
+    instructionVersion: version,
+    investingAs: ((profile as any)?.display_label ?? null) as string | null,
+    instructions: result.instructions,
+  };
 }
