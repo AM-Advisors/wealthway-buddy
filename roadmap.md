@@ -95,3 +95,9 @@
 - [ ] Pages required before cutover: /kyc-aml, /careers; REVIEW-list decisions
 - [ ] Approved metrics, prices, disclosure wording, Salesforce connection
 - [ ] Cutover: DNS, Wix 301s, robots Sitemap directive
+
+## Client 360 — editable client, people, funds, services, pricing & SOW (2026-09-24)
+- [x] Edit Client, People & roles, fund create/link/reassign, grouped services, pricing hierarchy, overrides, SOW preview/draft generation, template registry, contracted-on-execution
+- [ ] Approve first SOW template (needs a real Harmonious template + a second approver)
+- [ ] Invite-to-Harmonious from People (uses existing invitation flow; not wired yet)
+- [ ] Live browser pass of the new Client 360 tabs
