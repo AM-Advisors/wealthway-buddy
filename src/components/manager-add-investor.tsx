@@ -156,6 +156,7 @@ export function FundInvestorProgress({ fundId }: { fundId: string }) {
                       acceptedAt: i.acceptedAt,
                     })}
               </Badge>
+              {i.fundingLabel ? <Badge variant="secondary">Funding: {i.fundingLabel}</Badge> : null}
               {String(i.id).startsWith("invite:") ? (
                 <Button size="sm" variant="outline" disabled={resend.isPending} onClick={() => resend.mutate(String(i.id).slice(7))}>
                   Resend Invitation
