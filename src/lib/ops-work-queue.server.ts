@@ -754,6 +754,44 @@ async function contractItems(s: any, lookup: Lookup, now: Date, fundId?: string)
   ).concat(await contractIntelligenceItems(s, lookup, now, docs as any[]));
 }
 
+/** Client 360 engagement tasks: missing SOW template, SOW blockers, custom pricing and reassignments. */
+async function engagementItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
+  const { resolveSowTemplate, engagementTypeFor, findApplicableSow, NO_TEMPLATE_MESSAGE } = await import("@/lib/client-admin-model");
+  const [funds, sows, templates, sels, reassign] = await Promise.all([
+    safely(async () => rows(await s.from("offerings").select("id, name, fund_type, client_id, created_at").not("client_id", "is", null).limit(SOURCE_LIMIT))),
+    safely(async () => rows(await s.from("client_sows").select("id, client_id, offering_id, status, executed_at, locked, amends_sow_id, review_blockers, title, updated_at").limit(SOURCE_LIMIT))),
+    safely(async () => rows(await s.from("sow_templates").select("*"))),
+    safely(async () => rows(await s.from("client_service_selections").select("id, client_id, offering_id, service_key, status, override_status, updated_at").not("status", "in", "(removed,terminated)").limit(SOURCE_LIMIT))),
+    safely(async () => rows(await s.from("fund_client_reassignments").select("*").eq("status", "pending"))),
+  ]);
+  const today = now.toISOString().slice(0, 10);
+  const out: any[] = [];
+  const base = (o: any) => build(lookup, now, { source: "clients.engagements", area: "clients", recordType: "client", ...o } as any);
+  for (const f of funds as any[]) {
+    if (fundId && f.id !== fundId) continue;
+    const app = findApplicableSow(sows as any[], f.client_id, f.id);
+    if (app.executed || app.draft) continue;
+    if (!(sels as any[]).some((x) => x.offering_id === f.id) && !(sows as any[]).length) continue;
+    if (resolveSowTemplate(templates as any[], engagementTypeFor(f), today).status === "resolved") continue;
+    out.push(base({ id: `engagement:${f.id}:no_template`, recordId: f.client_id, recordTab: "funds", title: `${NO_TEMPLATE_MESSAGE} — ${f.name}`, reason: NO_TEMPLATE_MESSAGE, workflowState: "no_template", requiredAction: "prepare", clientId: f.client_id, offeringId: f.id, at: f.created_at }));
+  }
+  for (const w of sows as any[]) {
+    if (w.executed_at || (fundId && w.offering_id !== fundId)) continue;
+    const b = Array.isArray(w.review_blockers) ? w.review_blockers : [];
+    if (!b.length) continue;
+    out.push(base({ id: `engagement:sow:${w.id}:blocked`, recordId: w.client_id, recordTab: "services", title: `SOW needs attention — ${w.title}`, reason: b.map((x: any) => x.message).join(" "), workflowState: "sow_blocked", requiredAction: "prepare", clientId: w.client_id, at: w.updated_at }));
+  }
+  for (const x of sels as any[]) {
+    if (x.override_status !== "pending_approval" || (fundId && x.offering_id !== fundId)) continue;
+    out.push(base({ id: `engagement:price:${x.id}`, recordId: x.client_id, recordTab: "services", title: `Custom pricing awaiting approval — ${x.service_key}`, reason: "Custom pricing must be approved by a second person.", workflowState: "pricing_override", requiredAction: "approve", clientId: x.client_id, at: x.updated_at }));
+  }
+  for (const r of reassign as any[]) {
+    if (fundId && r.offering_id !== fundId) continue;
+    out.push(base({ id: `engagement:reassign:${r.id}`, recordId: r.to_client_id, recordTab: "funds", title: "Fund reassignment awaiting review", reason: r.reason, workflowState: "reassignment", requiredAction: "approve", clientId: r.to_client_id, offeringId: r.offering_id, at: r.requested_at }));
+  }
+  return out;
+}
+
 /** Scope conflicts and renewal reminders — derived, one row per conflict / document. */
 async function contractIntelligenceItems(s: any, lookup: Lookup, now: Date, docs: any[]) {
   if (!docs.length) return [];
@@ -1082,6 +1120,7 @@ const COLLECTORS: {
   { area: "documents", load: documentItems },
   { area: "documents", load: driveExceptionItems },
   { area: "clients", load: contractItems },
+  { area: "clients", load: engagementItems },
   { area: "capital", load: distributionItems },
 
 
