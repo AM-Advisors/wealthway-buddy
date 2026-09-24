@@ -184,7 +184,7 @@ export function tiersProblem(tiers: readonly PriceTier[]): string | null {
     if (t.maxCents != null && (!Number.isSafeInteger(t.maxCents) || t.maxCents < t.minCents)) return "A tier's upper bound must be above its lower bound.";
     if (t.maxCents == null && i !== sorted.length - 1) return "Only the last tier can be open-ended.";
     const next = sorted[i + 1];
-    if (next && t.maxCents != null && next.minCents <= t.maxCents - 1 && next.minCents < t.maxCents) return "Pricing tiers overlap.";
+    if (next && t.maxCents != null && next.minCents <= t.maxCents) return "Pricing tiers overlap.";
   }
   return null;
 }
