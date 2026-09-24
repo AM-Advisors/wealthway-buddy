@@ -19,7 +19,7 @@ function fakeDrive() {
   const files: (DriveFile & { parent: string })[] = [];
   let n = 0;
   const client: DriveClient = {
-    async findByKey(p, k) { return files.find((f) => f.parent === p && f.appProperties?.harmonious_key === k) ?? null; },
+    async findByKey(p, k) { return files.find((f) => f.parent === p && f.appProperties?.["harmonious_key"] === k) ?? null; },
     async findByName(p, name) { return files.filter((f) => f.parent === p && f.name === name); },
     async createFolder(p, name, key) { const f = { id: `f${++n}`, name, parent: p, appProperties: { harmonious_key: key } }; files.push(f); return f; },
     async renameFolder(id, name) { const f = files.find((x) => x.id === id); if (f) f.name = name; },
