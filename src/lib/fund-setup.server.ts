@@ -1299,6 +1299,9 @@ export async function launchFund(userId: string, setupId: string) {
     actorRole: "harmonious",
   });
 
+  const { onFundLaunched } = await import("@/lib/drive.server");
+  await onFundLaunched(offering.id, userId);
+
   return {
     setup: updated,
     investorOnboardingUrl: url,

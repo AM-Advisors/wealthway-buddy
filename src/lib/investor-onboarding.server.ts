@@ -1314,6 +1314,8 @@ export async function acceptSubscription(
     actorRole: "harmonious",
   });
   await syncInvitation(row);
+  const { onInvestmentAccepted } = await import("@/lib/drive.server");
+  await onInvestmentAccepted(row.id, actor.userId);
   return { accepted: true };
 }
 

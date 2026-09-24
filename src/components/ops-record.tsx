@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { Badge } from "@/components/ui/badge";
+import { DriveStatusCard } from "@/components/drive-status-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -339,6 +340,7 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
           </p>
         ) : null}
         <Summary items={summaryFor(type, record)} />
+        {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}
         <p className="text-xs text-muted-foreground">
           You may {Object.entries(actions).filter(([, ok]) => ok).map(([name]) => name).join(", ")} in this
           area. Every action is checked again by the backend.
