@@ -1,3 +1,4 @@
+import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 /**
  * Fund Administration Phase B — server-only investor onboarding engine.
