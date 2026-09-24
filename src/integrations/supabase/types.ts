@@ -4123,6 +4123,56 @@ export type Database = {
           },
         ]
       }
+      client_contacts: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          designations: string[]
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          designations?: string[]
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          designations?: string[]
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_engagements: {
         Row: {
           billing_frequency: string
@@ -4334,6 +4384,121 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_governing_documents: {
+        Row: {
+          applied_at: string | null
+          applies_to_offering_ids: string[]
+          approved_at: string | null
+          approved_by: string | null
+          client_id: string
+          created_at: string
+          doc_type: string
+          effective_date: string | null
+          execution_status: string
+          expiration_date: string | null
+          file_path: string
+          id: string
+          mime_type: string
+          notice_days: number | null
+          original_filename: string
+          parent_document_id: string | null
+          precedence_note: string | null
+          precedence_status: string
+          review_status: string
+          sha256: string
+          size_bytes: number
+          superseded_at: string | null
+          supersedes_id: string | null
+          title: string
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          applied_at?: string | null
+          applies_to_offering_ids?: string[]
+          approved_at?: string | null
+          approved_by?: string | null
+          client_id: string
+          created_at?: string
+          doc_type: string
+          effective_date?: string | null
+          execution_status?: string
+          expiration_date?: string | null
+          file_path: string
+          id?: string
+          mime_type: string
+          notice_days?: number | null
+          original_filename: string
+          parent_document_id?: string | null
+          precedence_note?: string | null
+          precedence_status?: string
+          review_status?: string
+          sha256: string
+          size_bytes: number
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          title: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by: string
+          version?: number
+        }
+        Update: {
+          applied_at?: string | null
+          applies_to_offering_ids?: string[]
+          approved_at?: string | null
+          approved_by?: string | null
+          client_id?: string
+          created_at?: string
+          doc_type?: string
+          effective_date?: string | null
+          execution_status?: string
+          expiration_date?: string | null
+          file_path?: string
+          id?: string
+          mime_type?: string
+          notice_days?: number | null
+          original_filename?: string
+          parent_document_id?: string | null
+          precedence_note?: string | null
+          precedence_status?: string
+          review_status?: string
+          sha256?: string
+          size_bytes?: number
+          superseded_at?: string | null
+          supersedes_id?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_governing_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_governing_documents_parent_document_id_fkey"
+            columns: ["parent_document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_governing_documents_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -4601,10 +4766,15 @@ export type Database = {
           effective_date: string | null
           id: string
           label: string
+          offering_id: string | null
           pricing_model: string
+          pricing_source: string
           service_key: string | null
+          source_document_id: string | null
+          source_term_id: string | null
           sow_id: string | null
           standard_cents: number | null
+          superseded_at: string | null
           updated_at: string
           version_id: string | null
         }
@@ -4618,10 +4788,15 @@ export type Database = {
           effective_date?: string | null
           id?: string
           label: string
+          offering_id?: string | null
           pricing_model?: string
+          pricing_source?: string
           service_key?: string | null
+          source_document_id?: string | null
+          source_term_id?: string | null
           sow_id?: string | null
           standard_cents?: number | null
+          superseded_at?: string | null
           updated_at?: string
           version_id?: string | null
         }
@@ -4635,10 +4810,15 @@ export type Database = {
           effective_date?: string | null
           id?: string
           label?: string
+          offering_id?: string | null
           pricing_model?: string
+          pricing_source?: string
           service_key?: string | null
+          source_document_id?: string | null
+          source_term_id?: string | null
           sow_id?: string | null
           standard_cents?: number | null
+          superseded_at?: string | null
           updated_at?: string
           version_id?: string | null
         }
@@ -4648,6 +4828,27 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_pricing_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_pricing_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_pricing_source_term_id_fkey"
+            columns: ["source_term_id"]
+            isOneToOne: false
+            referencedRelation: "contract_terms"
             referencedColumns: ["id"]
           },
           {
@@ -4858,14 +5059,24 @@ export type Database = {
       }
       clients: {
         Row: {
+          address: Json | null
           billing_contact_email: string | null
           billing_contact_name: string | null
+          client_type: string | null
+          contract_choice: string | null
           created_at: string
           created_by: string | null
+          dba_name: string | null
           default_billing_frequency: string
           default_discount_kind: string | null
           default_discount_value: number | null
+          ein_last4: string | null
+          entity_type: string | null
+          expected_services: string[]
           id: string
+          intake_status: string
+          intake_step: number
+          jurisdiction: string | null
           legal_name: string | null
           msa_document_path: string | null
           msa_signed_on: string | null
@@ -4873,20 +5084,34 @@ export type Database = {
           name: string
           notes: string | null
           payment_terms_days: number
+          phone: string | null
           primary_contact_email: string | null
           primary_contact_name: string | null
+          referral_source: string | null
+          relationship_owner_id: string | null
           status: string
           updated_at: string
+          website: string | null
         }
         Insert: {
+          address?: Json | null
           billing_contact_email?: string | null
           billing_contact_name?: string | null
+          client_type?: string | null
+          contract_choice?: string | null
           created_at?: string
           created_by?: string | null
+          dba_name?: string | null
           default_billing_frequency?: string
           default_discount_kind?: string | null
           default_discount_value?: number | null
+          ein_last4?: string | null
+          entity_type?: string | null
+          expected_services?: string[]
           id?: string
+          intake_status?: string
+          intake_step?: number
+          jurisdiction?: string | null
           legal_name?: string | null
           msa_document_path?: string | null
           msa_signed_on?: string | null
@@ -4894,20 +5119,34 @@ export type Database = {
           name: string
           notes?: string | null
           payment_terms_days?: number
+          phone?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
+          referral_source?: string | null
+          relationship_owner_id?: string | null
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          address?: Json | null
           billing_contact_email?: string | null
           billing_contact_name?: string | null
+          client_type?: string | null
+          contract_choice?: string | null
           created_at?: string
           created_by?: string | null
+          dba_name?: string | null
           default_billing_frequency?: string
           default_discount_kind?: string | null
           default_discount_value?: number | null
+          ein_last4?: string | null
+          entity_type?: string | null
+          expected_services?: string[]
           id?: string
+          intake_status?: string
+          intake_step?: number
+          jurisdiction?: string | null
           legal_name?: string | null
           msa_document_path?: string | null
           msa_signed_on?: string | null
@@ -4915,10 +5154,14 @@ export type Database = {
           name?: string
           notes?: string | null
           payment_terms_days?: number
+          phone?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
+          referral_source?: string | null
+          relationship_owner_id?: string | null
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
@@ -5555,6 +5798,197 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_extractions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_id: string
+          error: string | null
+          id: string
+          model: string
+          page_count: number | null
+          prompt_version: string
+          status: string
+          text_chars: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          error?: string | null
+          id?: string
+          model: string
+          page_count?: number | null
+          prompt_version: string
+          status: string
+          text_chars?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          error?: string | null
+          id?: string
+          model?: string
+          page_count?: number | null
+          prompt_version?: string
+          status?: string
+          text_chars?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_extractions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_term_changes: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          document_id: string
+          id: string
+          new_status: string | null
+          new_value: string | null
+          previous_status: string | null
+          previous_value: string | null
+          reason: string | null
+          source_reference: string | null
+          term_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          document_id: string
+          id?: string
+          new_status?: string | null
+          new_value?: string | null
+          previous_status?: string | null
+          previous_value?: string | null
+          reason?: string | null
+          source_reference?: string | null
+          term_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          document_id?: string
+          id?: string
+          new_status?: string | null
+          new_value?: string | null
+          previous_status?: string | null
+          previous_value?: string | null
+          reason?: string | null
+          source_reference?: string | null
+          term_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_term_changes_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_term_changes_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "contract_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_terms: {
+        Row: {
+          amount_cents: number | null
+          basis: string
+          category: string
+          confidence: number | null
+          created_at: string
+          current_value: string | null
+          document_id: string
+          extracted_value: string | null
+          extraction_id: string | null
+          id: string
+          label: string
+          material: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          service_key: string | null
+          source_page: string | null
+          source_quote: string | null
+          source_section: string | null
+          status: string
+          term_key: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          basis?: string
+          category: string
+          confidence?: number | null
+          created_at?: string
+          current_value?: string | null
+          document_id: string
+          extracted_value?: string | null
+          extraction_id?: string | null
+          id?: string
+          label: string
+          material?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_key?: string | null
+          source_page?: string | null
+          source_quote?: string | null
+          source_section?: string | null
+          status?: string
+          term_key: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number | null
+          basis?: string
+          category?: string
+          confidence?: number | null
+          created_at?: string
+          current_value?: string | null
+          document_id?: string
+          extracted_value?: string | null
+          extraction_id?: string | null
+          id?: string
+          label?: string
+          material?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_key?: string | null
+          source_page?: string | null
+          source_quote?: string | null
+          source_section?: string | null
+          status?: string
+          term_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_terms_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "client_governing_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_terms_extraction_id_fkey"
+            columns: ["extraction_id"]
+            isOneToOne: false
+            referencedRelation: "contract_extractions"
             referencedColumns: ["id"]
           },
         ]
