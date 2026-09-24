@@ -264,11 +264,13 @@ export type ManagerRowInput = {
   needsInvestorInfo?: boolean; harmoniousReview?: boolean;
   investorSigned?: boolean; managerSignatureRequired?: boolean; fullyExecuted?: boolean;
   approvedToFund?: boolean;
+  /** True only when the viewer is the exact configured fund signatory. */
+  managerIsViewer?: boolean;
 };
 
 export type NextAction =
   | "Send onboarding" | "Waiting for investor" | "Investor needs information" | "Harmonious review"
-  | "Investor signature required" | "Your signature required" | "Approved to fund" | "Waiting for funding" | "Complete";
+  | "Investor signature required" | "Your signature required" | "Awaiting Fund Manager signature" | "Approved to fund" | "Waiting for funding" | "Complete";
 
 export function nextAction(r: ManagerRowInput): NextAction {
   if (r.draftOnly) return "Send onboarding";
@@ -276,7 +278,7 @@ export function nextAction(r: ManagerRowInput): NextAction {
   if (r.invitedOnly) return "Waiting for investor";
   if (r.approvedToFund) return ["bank_transaction_detected", "reconciliation_pending", "partially_funded", "awaiting_wire"].includes(String(r.fundingStatus)) ? "Waiting for funding" : "Approved to fund";
   if (r.needsInvestorInfo) return "Investor needs information";
-  if (r.investorSigned && r.managerSignatureRequired && !r.fullyExecuted) return "Your signature required";
+  if (r.investorSigned && r.managerSignatureRequired && !r.fullyExecuted) return r.managerIsViewer === false ? "Awaiting Fund Manager signature" : "Your signature required";
   if (r.harmoniousReview || r.stage === "harmonious_review") return "Harmonious review";
   const verified = r.kycStatus === "approved" && r.amlStatus === "approved";
   if (verified && r.accreditationStatus === "approved" && !r.investorSigned) return "Investor signature required";
@@ -344,7 +346,9 @@ export function managerRowFromApplication(row: any) {
     kycStatus: row.kycStatus, amlStatus: row.amlStatus, accreditationStatus: row.accreditationStatus,
     documentsStatus: row.documentsStatus, fundingStatus: row.fundingStatus, stage: row.stage,
     investorSigned: (row.signedCount ?? 0) > 0, fullyExecuted: row.documentsStatus === "approved",
-    managerSignatureRequired: false, approvedToFund: row.stage === "funding",
+    managerSignatureRequired: row.countersign === "your_signature_required" || row.countersign === "awaiting_fund_manager",
+    managerIsViewer: row.countersign === "your_signature_required",
+    approvedToFund: row.stage === "funding",
     harmoniousReview: row.managerReviewStatus === "in_review",
   });
 }
