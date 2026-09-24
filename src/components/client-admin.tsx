@@ -515,6 +515,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
             {p.blockers.map((b: any, i: number) => <li key={i}>• {b.message}</li>)}
           </ul>
         ) : <p className="text-muted-foreground">No problems found.</p>}
+        <Link to="/ops/contracts/sow-templates" className="text-xs text-primary hover:underline">Manage SOW templates</Link>
         {canGenerate ? (
           <div className="space-y-2 border-t pt-3">
             <div className="flex flex-wrap items-center gap-2">
