@@ -81,6 +81,13 @@ describe("Drive access decisions", () => {
     expect(can(capabilitiesFor([]), "documents", "prepare")).toBe(false);
   });
 
+  it("staff without documents:prepare cannot create, retry or link folders", () => {
+    for (const role of ["client_success", "compliance", "executive", "tax", "finance"]) {
+      expect(can(capabilitiesFor([role]), "documents", "prepare")).toBe(false);
+    }
+    expect(can(capabilitiesFor(["operations"]), "documents", "prepare")).toBe(true);
+  });
+
   it("fund managers and investors never get Drive folders", () => {
     expect(managerMayOpenDriveFolder()).toBe(false);
     expect(investorMayOpenDriveFolder()).toBe(false);
