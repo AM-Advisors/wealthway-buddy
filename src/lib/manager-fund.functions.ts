@@ -425,6 +425,31 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
       );
     }
 
+    // Countersign state from the authoritative signer rows; "yours" only for the exact configured signatory.
+    const countersignByApp = new Map<string, string>();
+    {
+      const { countersignState } = await import("@/lib/prepared-investor-workflow");
+      const { data: cs } = await supabase.from("document_signature_signers")
+        .select("application_id, signature_id, role_key, status, signer_user_id, offering_document_id")
+        .eq("offering_id", offeringId).in("application_id", appIds.length ? appIds : ["00000000-0000-0000-0000-000000000000"]);
+      const { data: odocs } = await supabase.from("offering_documents").select("id, countersigner_user_id, signing_mode").eq("offering_id", offeringId);
+      const docMap = new Map(((odocs ?? []) as any[]).map((d) => [d.id, d]));
+      const { data: iManage } = await supabase.from("fund_managers").select("id").eq("offering_id", offeringId).eq("user_id", userId).maybeSingle();
+      const bySig = new Map<string, any[]>();
+      for (const r of (cs ?? []) as any[]) bySig.set(r.signature_id, [...(bySig.get(r.signature_id) ?? []), r]);
+      const rank: Record<string, number> = { your_signature_required: 3, awaiting_fund_manager: 2, investor_not_signed: 1, fully_executed: 0, not_dual: 0 };
+      for (const list of bySig.values()) {
+        const inv = list.find((r) => r.role_key === "investor"); const fm = list.find((r) => r.role_key === "fund_manager");
+        if (!fm) continue;
+        const d = docMap.get(fm.offering_document_id);
+        const st = countersignState({ mode: "dual", providerStatus: inv?.status === "signed" && fm.status === "signed" ? "completed" : "in_progress",
+          investorSigned: inv?.status === "signed", managerSigned: fm.status === "signed", countersignerUserId: d?.countersigner_user_id ?? null,
+          viewerUserId: userId, viewerManagesFund: !!iManage });
+        const prev = countersignByApp.get(fm.application_id);
+        if (!prev || rank[st]! > rank[prev]!) countersignByApp.set(fm.application_id, st);
+      }
+    }
+
     function stageOf(app: any) {
       if (app.funding_status === "settled") return "complete";
       if (app.kyc_status !== "approved" || app.aml_status !== "approved") return "identity";
@@ -469,6 +494,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
         fundingStatus: app.funding_status as string,
         managerReviewStatus: (app.manager_review_status as string | null) ?? "not_started",
         signedCount: signedByApp.get(app.id as string) ?? 0,
+        countersign: countersignByApp.get(app.id as string) ?? null,
         requiredSignatures: signable.length,
         wireStatus: (latestWire?.status as string | null) ?? null,
         receivedCents: settled,

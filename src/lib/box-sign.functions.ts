@@ -83,6 +83,36 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       }
     }
 
+    // Review gate: the exact current, reviewed document version — never a browser flag.
+    let gateSnapshot: { id: string; version: number } | null = null;
+    {
+      const { supabaseAdmin: g } = await import("@/integrations/supabase/client.server");
+      const { data: ob } = await g.from("investor_onboardings").select("id, investor_user_id, offering_id")
+        .eq("application_id", application.id).not("stage", "in", "(closed,declined,cancelled)").maybeSingle();
+      if (ob) {
+        if ((ob as any).investor_user_id !== userId || (ob as any).offering_id !== doc.offering_id) throw new Error("This document isn't available.");
+        const pis = await import("@/lib/prepared-investor.server");
+        const { signingGate } = await import("@/lib/prepared-investor-workflow");
+        const x = await pis.docContext(userId, (ob as any).id);
+        const docRow = x.chosen.find((d: any) => d.id === doc.id);
+        if (!docRow) throw new Error("Signing unavailable — this document doesn't apply to your investment.");
+        const merged = await pis.currentMerge(x, docRow);
+        const { data: snaps } = await g.from("investor_document_snapshots").select("*")
+          .eq("onboarding_id", (ob as any).id).eq("document_id", doc.id).order("version", { ascending: false }).limit(1);
+        const latest = ((snaps ?? []) as any[])[0] ?? null;
+        const { onboardPortalDetail } = await import("@/lib/investor-onboarding.server");
+        const portal: any = await onboardPortalDetail(userId, (ob as any).id).catch(() => null);
+        const docsStep = (portal?.steps ?? []).find((st: any) => st.key === "documents");
+        const verdict = signingGate({
+          investorUserId: userId, onboardingId: (ob as any).id, offeringId: doc.offering_id, documentId: doc.id, latest,
+          currentMergeValues: { ...merged.values, effective_date: latest?.merge_values?.effective_date ?? merged.values["effective_date"] ?? "" },
+          missing: merged.missing, templateReady: true, signerConfigReady: true, prerequisitesMet: !!docsStep && docsStep.state !== "locked",
+        });
+        if (!verdict.ok) throw new Error(verdict.error);
+        gateSnapshot = { id: verdict.snapshotId, version: verdict.version };
+      }
+    }
+
     const { data: offering } = await supabase
       .from("offerings")
       .select("name, reg_type")
@@ -107,7 +137,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const { data: existing } = await supabaseAdmin
       .from("document_signatures")
-      .select("id, provider, provider_agreement_id, provider_status")
+      .select("id, provider, provider_agreement_id, provider_status, snapshot_id")
       .eq("application_id", application.id)
       .eq("offering_document_id", doc.id)
       .maybeSingle();
@@ -118,7 +148,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
     if (
       existing?.provider === "box_sign" &&
       existing.provider_agreement_id &&
-      existing.provider_status === "out_for_signature"
+      existing.provider_status === "out_for_signature" &&
+      (!gateSnapshot || (existing as any).snapshot_id === gateSnapshot.id)
     ) {
       const live = await getSignRequest(existing.provider_agreement_id).catch(() => null);
       if (live?.signingUrl) {
@@ -211,6 +242,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       signed_at: now,
       signing_mode: dual ? "dual" : "investor_only",
       signature_template_version: Number((doc as any).signature_template_version ?? 1),
+      snapshot_id: gateSnapshot?.id ?? null,
+      snapshot_version: gateSnapshot?.version ?? null,
     };
 
     let signatureId = existing?.id ?? null;
@@ -228,6 +261,9 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         .single();
       if (error) throw new Error(error.message);
       signatureId = inserted.id;
+    }
+    if (gateSnapshot) {
+      await supabaseAdmin.from("investor_document_snapshots").update({ status: "sent_for_signature", provider_request_id: request.id }).eq("id", gateSnapshot.id);
     }
 
     if (signatureId) {

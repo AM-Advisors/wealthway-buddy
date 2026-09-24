@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { APPLIES_TO_OPTIONS } from "@/lib/prepared-investor-workflow";
 import { getFundOnboardingSettings, saveDocumentSigningConfig } from "@/lib/fund-onboarding.functions";
 
 /** Investor Onboarding Settings for one fund. Verification and accreditation are read-only. */
@@ -19,7 +20,7 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
   const [preparing, setPreparing] = useState<string | null>(null);
   const q = useQuery({ queryKey: ["fund-onboarding-settings", fundId], queryFn: () => load({ data: { offeringId: fundId } }), enabled: open, retry: false });
 
-  const update = async (doc: any, patch: Partial<{ signingMode: "investor_only" | "dual"; countersignerUserId: string | null; investorRequired: boolean }>) => {
+  const update = async (doc: any, patch: Partial<{ signingMode: "investor_only" | "dual"; countersignerUserId: string | null; investorRequired: boolean; appliesTo: string[] }>) => {
     try {
       await save({
         data: {
@@ -27,6 +28,7 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
           signingMode: patch.signingMode ?? doc.signingMode,
           countersignerUserId: patch.countersignerUserId !== undefined ? patch.countersignerUserId : doc.countersignerUserId,
           investorRequired: patch.investorRequired ?? doc.investorRequired,
+          ...(patch.appliesTo ? { appliesTo: patch.appliesTo as any } : {}),
         },
       });
       toast.success("Saved");
@@ -63,6 +65,18 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
                       {doc.requiresSignature ? (
                         <Badge variant={doc.readiness.ready ? "secondary" : "outline"}>{doc.readiness.ready ? `Ready · v${doc.templateVersion}` : "Needs preparation"}</Badge>
                       ) : <Badge variant="outline">For review only</Badge>}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1 text-xs">
+                      <span className="text-muted-foreground">Applies to:</span>
+                      {q.data.canConfigureApplicability ? (
+                        <>
+                          <Button size="sm" variant={doc.appliesTo.length === 0 ? "default" : "outline"} className="h-6 px-2 text-xs" onClick={() => update(doc, { appliesTo: [] })}>All investors</Button>
+                          {APPLIES_TO_OPTIONS.map(([v, l]) => {
+                            const on = doc.appliesTo.includes(v);
+                            return <Button key={v} size="sm" variant={on ? "default" : "outline"} className="h-6 px-2 text-xs" onClick={() => update(doc, { appliesTo: on ? doc.appliesTo.filter((x: string) => x !== v) : [...doc.appliesTo, v] })}>{l}</Button>;
+                          })}
+                        </>
+                      ) : <span>{doc.appliesTo.length ? doc.appliesTo.map((v: string) => APPLIES_TO_OPTIONS.find((o) => o[0] === v)?.[1] ?? v).join(", ") : "All investors"} (set by Harmonious)</span>}
                     </div>
                     {doc.requiresSignature && (
                       <div className="flex flex-wrap gap-2">

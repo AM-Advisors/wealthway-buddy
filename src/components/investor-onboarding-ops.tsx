@@ -94,6 +94,9 @@ export function InvestorOnboardingOps() {
               <div className="text-muted-foreground">
                 {item.offeringName ?? item.offeringId} · {money(item.requestedAmountCents)}
               </div>
+              {item.materialCorrections > 0 ? (
+                <div className="mt-1 text-xs font-medium text-destructive">Investor corrected {item.materialCorrections} prepared detail{item.materialCorrections === 1 ? "" : "s"} — review requirements</div>
+              ) : null}
             </button>
           ))}
         </CardContent>

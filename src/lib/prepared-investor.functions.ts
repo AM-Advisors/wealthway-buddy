@@ -2,34 +2,20 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { PreparedField } from "@/lib/investor-prep-model";
 import {
   type DocSnapshot, type FieldProvenance, affectedRequirements, allReviewed, assertConfirmable, fingerprint,
-  initialProvenance, investorReviewView, isMaterial, isStale, mergeDocument, requiredMergeFields, reviewField,
+  investorReviewView, requirementDelta, isMaterial, isStale, mergeDocument, requiredMergeFields, reviewField,
   signatureConfig, signingHandoffBlocker,
 } from "@/lib/prepared-investor-workflow";
 import { PORTAL_STEP_REQUIREMENTS, type PortalStep } from "@/lib/onboard-portal-model";
 
-/** Loads the investor's own onboarding + the prepared draft. Anyone else is rejected. */
 async function ownContext(userId: string, onboardingId: string) {
-  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-  const { data: ob } = await db.from("investor_onboardings").select("id, offering_id, investor_user_id, invitation_id, requested_amount_cents")
-    .eq("id", onboardingId).maybeSingle();
-  if (!ob || (ob as any).investor_user_id !== userId) throw new Error("This investment isn't available.");
-  const inv = (ob as any).invitation_id as string | null;
-  const { data: draft } = inv
-    ? await db.from("investor_prep_drafts").select("*").eq("invitation_id", inv).eq("offering_id", (ob as any).offering_id).eq("status", "sent").maybeSingle()
-    : { data: null };
-  let prov: Record<string, FieldProvenance> = {};
-  if (draft) {
-    prov = initialProvenance(((draft as any).fields ?? {}) as Record<string, PreparedField>, (draft as any).sent_at ?? (draft as any).updated_at);
-    const { data: reviews } = await db.from("investor_prep_field_reviews").select("*").eq("onboarding_id", onboardingId).order("created_at");
-    for (const r of (reviews ?? []) as any[]) {
-      const p = prov[r.field_key]; if (!p) continue;
-      prov[r.field_key] = reviewField(p, r.action === "confirm" ? { confirm: true } : { correct: r.new_value }, r.created_at);
-    }
-  }
-  return { db, ob: ob as any, draft: draft as any, prov };
+  const m = await import("@/lib/prepared-investor.server");
+  return m.ownContext(userId, onboardingId);
+}
+async function docContext(userId: string, onboardingId: string) {
+  const m = await import("@/lib/prepared-investor.server");
+  return m.docContext(userId, onboardingId);
 }
 
 function stepFor(req: string | null): PortalStep | null {
@@ -64,6 +50,8 @@ export const reviewPreparedField = createServerFn({ method: "POST" })
     const changed = next.history.length > p.history.length;
     const material = changed && isMaterial(data.key);
     const affected = material ? affectedRequirements([data.key]) : [];
+    const engine = await import("@/lib/investor-onboarding.server");
+    const before: any = material ? await engine.onboardPortalDetail(context.userId, data.onboardingId).catch(() => null) : null;
     const { error } = await db.from("investor_prep_field_reviews").insert({
       draft_id: draft.id, onboarding_id: data.onboardingId, field_key: data.key, action: data.action,
       prepared_value: p.preparedValue as any, previous_value: p.currentValue as any, new_value: (changed ? data.value : p.currentValue) as any,
@@ -73,26 +61,15 @@ export const reviewPreparedField = createServerFn({ method: "POST" })
     if (material) {
       // Mark generated documents stale; the authoritative engine re-evaluates requirements on next read.
       await db.from("investor_document_snapshots").update({ status: "stale" })
-        .eq("onboarding_id", data.onboardingId).in("status", ["prepared", "reviewed"]);
+        .eq("onboarding_id", data.onboardingId).in("status", ["prepared", "reviewed", "sent_for_signature"]);
     }
-    return { material, requirementsUpdated: affected.length > 0, goTo: stepFor(affected.find((a) => a !== "investment_profile") ?? affected[0] ?? null) };
+    if (!material) return { material, requirementsUpdated: false, goTo: null };
+    // Re-run the authoritative engine (it now reads the corrected value) and compare.
+    const after: any = await engine.onboardPortalDetail(context.userId, data.onboardingId).catch(() => null);
+    const delta = requirementDelta(before?.requirements ?? [], after?.requirements ?? []);
+    const changedReqs = delta.added.length + delta.reopened.length > 0;
+    return { material, requirementsUpdated: changedReqs, goTo: stepFor(delta.firstAffected) };
   });
-
-async function docContext(userId: string, onboardingId: string) {
-  const c = await ownContext(userId, onboardingId);
-  const { db, ob, draft, prov } = c;
-  const { data: fund } = await db.from("offerings").select("id, name, legal_entity_name").eq("id", ob.offering_id).maybeSingle();
-  const selectedIds: string[] = ((draft?.documents ?? []) as any[]).map((s) => s.documentId);
-  const { data: docs } = await db.from("offering_documents")
-    .select("id, offering_id, title, investor_required, requires_signature, signing_mode, template_key, file_path")
-    .eq("offering_id", ob.offering_id);
-  const chosen = ((docs ?? []) as any[]).filter((d) => d.investor_required || selectedIds.includes(d.id));
-  const profile: Record<string, unknown> = {};
-  for (const [k, p] of Object.entries(prov)) profile[k] = p.currentValue;
-  const profileType = String(profile["profile_type"] ?? draft?.profile_type ?? "unknown");
-  const commitment = (profile["commitment_cents"] as number | undefined) ?? ob.requested_amount_cents ?? null;
-  return { ...c, fund: fund as any, chosen, profile, profileType, commitment };
-}
 
 export const getMyDocumentsForReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -134,9 +111,9 @@ export const markDocumentReviewed = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ onboardingId: z.string().uuid(), snapshotId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { db } = await ownContext(context.userId, data.onboardingId);
-    const { data: s } = await db.from("investor_document_snapshots").select("id, status, onboarding_id").eq("id", data.snapshotId).maybeSingle();
+    const { data: s } = await db.from("investor_document_snapshots").select("id, status, onboarding_id, merge_values").eq("id", data.snapshotId).maybeSingle();
     if (!s || (s as any).onboarding_id !== data.onboardingId) throw new Error("That document isn't available.");
     if ((s as any).status !== "prepared") throw new Error((s as any).status === "reviewed" ? "Already reviewed." : "Document needs to be regenerated");
-    await db.from("investor_document_snapshots").update({ status: "reviewed", reviewed_at: new Date().toISOString() }).eq("id", data.snapshotId);
+    await db.from("investor_document_snapshots").update({ status: "reviewed", reviewed_at: new Date().toISOString(), reviewed_by: context.userId, reviewed_fingerprint: fingerprint((s as any).merge_values) }).eq("id", data.snapshotId);
     return { ok: true };
   });

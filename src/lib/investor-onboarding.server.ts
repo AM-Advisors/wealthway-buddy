@@ -281,26 +281,41 @@ async function gatherFacts(row: any) {
   ]);
   const { data: offeringDocs } = await db()
     .from("offering_documents")
-    .select("id, title, doc_type, requires_signature")
+    .select("id, title, doc_type, requires_signature, applies_to")
     .eq("offering_id", row.offering_id);
+
+  // Investor-confirmed facts outrank prepared values; unreviewed prepared values never drive requirements.
+  const { loadConfirmedFacts } = await import("@/lib/prepared-investor.server");
+  const { effectiveResolverFacts, docApplies } = await import("@/lib/prepared-investor-workflow");
+  const confirmed = await loadConfirmedFacts(db(), row).catch(() => ({}));
+  const eff = effectiveResolverFacts(
+    { profileType: profile?.profile_type ?? null, requestedAmountCents: row.requested_amount_cents ?? null, country: person?.residence_country ?? null },
+    confirmed,
+  );
+  const applicableDocs = ((offeringDocs ?? []) as any[]).filter((d) => docApplies(d.applies_to, eff.profileType));
 
   const accreditation = ((accreditations ?? []) as any[])[0] ?? null;
   const tax = ((taxProfiles ?? []) as any[])[0] ?? null;
   // Only completion evidence written by the verified signing webhook counts.
   const docScope = {
-    offeringDocumentIds: ((offeringDocs ?? []) as any[]).map((d) => String(d.id)),
+    offeringDocumentIds: applicableDocs.map((d) => String(d.id)),
     investmentProfileId: (row.investment_profile_id ?? null) as string | null,
     applicationId: (row.application_id ?? null) as string | null,
   };
-  const completedSignatures = ((signatures ?? []) as any[]).filter((sig) => isAuthoritativeSignature(sig, docScope));
-  const requiredToSign = ((offeringDocs ?? []) as any[]).filter((d) => d.requires_signature);
+  // A completion only counts for the document version that is still current.
+  const { data: snapRows } = await db().from("investor_document_snapshots").select("id, status").eq("onboarding_id", row.id);
+  const deadSnaps = new Set(((snapRows ?? []) as any[]).filter((x) => x.status === "stale" || x.status === "superseded").map((x) => x.id));
+  const completedSignatures = ((signatures ?? []) as any[]).filter(
+    (sig) => isAuthoritativeSignature(sig, docScope) && !(sig.snapshot_id && deadSnaps.has(sig.snapshot_id)),
+  );
+  const requiredToSign = applicableDocs.filter((d) => d.requires_signature);
   const signedIds = new Set(completedSignatures.map((sig) => sig.offering_document_id).filter(Boolean));
   const allSigned =
     completedSignatures.length > 0 &&
     (requiredToSign.length === 0 || requiredToSign.every((d) => signedIds.has(d.id)));
   const signedCount = allSigned ? completedSignatures.length : 0;
 
-  const profileType = String(profile?.profile_type ?? "");
+  const profileType = String(eff.profileType ?? "");
   const isEntity = ENTITY_PROFILE_TYPES.has(profileType as InvestmentProfileType);
 
   const gatingPeople = related
@@ -315,7 +330,7 @@ async function gatherFacts(row: any) {
   const stage2 = row.investment_profile_id
     ? await resolveStage2({
         onboarding: row,
-        profileType: profile?.profile_type ?? null,
+        profileType: eff.profileType,
         tax,
         person,
         nowIso: nowIso(),
@@ -341,12 +356,12 @@ async function gatherFacts(row: any) {
       kycExpiresAt: person?.reverification_due_at ?? null,
       amlStatus: person?.aml_status ?? null,
       amlCompletedAt: person?.aml_screened_at ?? null,
-      countryOfResidence: person?.residence_country ?? null,
+      countryOfResidence: eff.country,
     },
     profile: profile
       ? {
           profileId: profile.id,
-          profileType: profile.profile_type,
+          profileType: eff.profileType,
           kybStatus: entity?.kyb_status ?? null,
           entityAmlStatus: entity?.entity_aml_status ?? null,
           entityVerificationExpiresAt: entity?.expires_at ?? null,
@@ -362,7 +377,7 @@ async function gatherFacts(row: any) {
         }
       : null,
     subscription: {
-      requestedAmountCents: row.requested_amount_cents,
+      requestedAmountCents: eff.requestedAmountCents,
       questionnaireVersion: row.questionnaire_version,
       questionnaireComplete: Boolean(row.questionnaire_version),
       documentsPrepared: Boolean(row.document_template_version),
@@ -372,7 +387,7 @@ async function gatherFacts(row: any) {
     nowIso: nowIso(),
   });
 
-  const documents = ((offeringDocs ?? []) as any[]).map((d) => ({
+  const documents = applicableDocs.map((d) => ({
     id: String(d.id),
     title: String(d.title ?? d.doc_type ?? "Document"),
     requiresSignature: Boolean(d.requires_signature),
@@ -919,6 +934,14 @@ export async function reviewQueue(
   const { data } = await query;
   const rows = (data ?? []) as any[];
 
+  // Investor corrections of prepared material facts get surfaced for Harmonious review.
+  const { data: corr } = rows.length
+    ? await db().from("investor_prep_field_reviews").select("onboarding_id").eq("action", "corrected").eq("material", true)
+        .in("onboarding_id", rows.map((r) => r.id))
+    : { data: [] as any[] };
+  const correctionCount = new Map<string, number>();
+  for (const c of (corr ?? []) as any[]) correctionCount.set(c.onboarding_id, (correctionCount.get(c.onboarding_id) ?? 0) + 1);
+
   const items = [] as any[];
   for (const row of rows) {
     const facts = await gatherFacts(row);
@@ -942,6 +965,7 @@ export async function reviewQueue(
       requestedAmountCents: row.requested_amount_cents,
       acceptedAmountCents: row.accepted_amount_cents,
       exceptions: exceptions.length,
+      materialCorrections: correctionCount.get(row.id) ?? 0,
       assignedTo: row.assigned_to,
       ageDays: Math.floor(
         (Date.now() - new Date(row.last_activity_at ?? row.created_at).getTime()) / 86_400_000,
