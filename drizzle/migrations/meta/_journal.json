@@ -309,6 +309,13 @@
       "when": 1790280563062,
       "tag": "0043_contract_coverage_multifund_rbac",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1790282081268,
+      "tag": "0044_help_content_registry",
+      "breakpoints": true
     }
   ]
 }
