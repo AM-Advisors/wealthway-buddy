@@ -25830,6 +25830,7 @@ export type Database = {
         | "family_office"
         | "foundation"
         | "other_entity"
+        | "retirement_plan"
       investor_type: "individual" | "joint" | "entity" | "trust" | "ira"
       invitation_role: "investor" | "fund_manager"
       journal_source:
@@ -26317,6 +26318,7 @@ export const Constants = {
         "family_office",
         "foundation",
         "other_entity",
+        "retirement_plan",
       ],
       investor_type: ["individual", "joint", "entity", "trust", "ira"],
       invitation_role: ["investor", "fund_manager"],

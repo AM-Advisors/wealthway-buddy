@@ -54,6 +54,7 @@ export const INVESTMENT_PROFILE_TYPES = [
   "partnership",
   "trust",
   "ira",
+  "retirement_plan",
   "family_office",
   "foundation",
   "other_entity",
@@ -67,7 +68,8 @@ export const INVESTMENT_PROFILE_LABELS: Record<InvestmentProfileType, string> = 
   corporation: "Corporation",
   partnership: "Partnership",
   trust: "Trust",
-  ira: "IRA / retirement account",
+  ira: "IRA / SDIRA",
+  retirement_plan: "Retirement plan",
   family_office: "Family office",
   foundation: "Foundation / nonprofit",
   other_entity: "Other entity",
@@ -77,6 +79,36 @@ export const INVESTMENT_PROFILE_LABELS: Record<InvestmentProfileType, string> = 
 export const ENTITY_PROFILE_TYPES: ReadonlySet<InvestmentProfileType> = new Set<
   InvestmentProfileType
 >(["llc", "corporation", "partnership", "trust", "family_office", "foundation", "other_entity"]);
+
+/**
+ * Which related-person roles must be on file (and verified) before a given
+ * profile type can invest. Trusts, LLCs and retirement accounts differ; they
+ * are never forced through one identical form. Returned groups are "any of":
+ * at least one person in each group must hold one of the listed roles.
+ */
+export const REQUIRED_RELATED_ROLES: Record<InvestmentProfileType, readonly (readonly string[])[]> = {
+  individual: [],
+  joint: [["joint_owner"]],
+  llc: [["beneficial_owner", "owner"], ["control_person", "manager"], ["authorized_signer", "manager"]],
+  corporation: [["beneficial_owner", "owner"], ["control_person", "officer", "director"], ["authorized_signer", "officer"]],
+  partnership: [["beneficial_owner", "owner"], ["control_person", "manager"], ["authorized_signer", "manager"]],
+  trust: [["trustee"], ["authorized_signer", "trustee"]],
+  ira: [["authorized_signer", "owner"]],
+  retirement_plan: [["trustee", "authorized_signer"]],
+  family_office: [["beneficial_owner", "owner"], ["control_person", "manager", "officer"], ["authorized_signer"]],
+  foundation: [["control_person", "director", "officer", "trustee"], ["authorized_signer"]],
+  other_entity: [["beneficial_owner", "owner"], ["control_person"], ["authorized_signer"]],
+};
+
+export function missingRelatedRoles(
+  type: unknown,
+  roles: readonly string[],
+): string[][] {
+  if (!isInvestmentProfileType(type)) return [];
+  return REQUIRED_RELATED_ROLES[type]
+    .filter((group) => !group.some((r) => roles.includes(r)))
+    .map((g) => [...g]);
+}
 
 export function isEntityProfileType(type: unknown): boolean {
   return (

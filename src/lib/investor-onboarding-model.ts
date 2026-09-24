@@ -12,6 +12,8 @@
 
 import {
   ENTITY_PROFILE_TYPES,
+  GATING_RELATIONSHIP_ROLES,
+  missingRelatedRoles,
   type InvestmentProfileType,
 } from "@/lib/identity-model";
 
@@ -337,7 +339,13 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
 
   if (!isEntity) {
     add("entity_verification", "not_applicable");
-    add("beneficial_owners", "not_applicable");
+    const gaps = missingRelatedRoles(profileType, (profile.relatedPeople ?? []).map((p) => p.role));
+    const pending = (profile.relatedPeople ?? []).filter(
+      (p) => GATING_RELATIONSHIP_ROLES.has(p.role as any) && reuseState(p.kycStatus, null, nowIso) !== "valid",
+    );
+    if (gaps.length === 0 && (profile.relatedPeople ?? []).length === 0) add("beneficial_owners", "not_applicable");
+    else if (gaps.length) add("beneficial_owners", "missing", `We still need: ${gaps.map((g) => g[0]!.replace(/_/g, " ")).join(", ")}.`);
+    else add("beneficial_owners", pending.length ? "missing" : "valid", pending.length ? `${pending.length} person(s) still need to verify their identity.` : undefined);
   } else if (!offering.kybRequired) {
     add("entity_verification", "not_applicable");
     add("beneficial_owners", "not_applicable");
@@ -347,7 +355,14 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
       reuseState(profile.kybStatus, profile.entityVerificationExpiresAt, nowIso),
     );
     const gating = profile.relatedPeople ?? [];
-    if (gating.length === 0) {
+    const gaps = missingRelatedRoles(profileType, gating.map((p) => p.role));
+    if (gaps.length > 0) {
+      add(
+        "beneficial_owners",
+        "missing",
+        `We still need: ${gaps.map((g) => g[0]!.replace(/_/g, " ")).join(", ")}.`,
+      );
+    } else if (gating.length === 0) {
       add("beneficial_owners", "missing", "We still need the people who own or control this entity.");
     } else {
       const unverified = gating.filter(
