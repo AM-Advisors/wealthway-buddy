@@ -1529,7 +1529,132 @@ export async function inviteInvestor(
     token: data.token as string,
     // Derived from the offering's configuration — never chosen at invite time.
     exemption: ((invitedOffering as any).reg_type ?? null) as string | null,
-    link: `/invest/${(invitedOffering as any).slug ?? input.offeringId}?invite=${data.token}`,
+    link: `/onboard/${data.token}`,
+    emailSent: await sendOnboardInvitationEmail(data, invitedOffering, actor.userId),
+  };
+}
+
+/**
+ * The one onboarding email. Only the opaque invitation reference travels in
+ * the link — never KYC, profile, bank or document identifiers.
+ */
+export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string) {
+  try {
+    const { onboardInvitationUrl } = await import("@/lib/onboard-portal-model");
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const { data: manager } = await db()
+      .from("profiles")
+      .select("legal_name")
+      .eq("user_id", actorUserId)
+      .maybeSingle();
+    const result = await sendTemplateEmail("investment-onboarding", invitation.email, {
+      templateData: {
+        investorName: invitation.invited_name || "",
+        fundName: offering?.name ?? "the fund",
+        managerName: (manager as any)?.legal_name ?? offering?.name ?? "Your fund manager",
+        amountCents: invitation.intended_amount_cents ?? null,
+        ctaUrl: onboardInvitationUrl(String(invitation.token)),
+      },
+    });
+    await db().from("fund_invitations").update({ last_sent_at: nowIso() }).eq("id", invitation.id);
+    return Boolean((result as any)?.sent);
+  } catch (e) {
+    console.error("[onboard] invitation email failed", (e as Error).message);
+    return false;
+  }
+}
+
+/** Manager/staff resend of an investment onboarding invitation. */
+export async function resendOnboardInvitation(userId: string, invitationId: string) {
+  const actor = await onboardingActor(userId);
+  const { data: inv } = await db().from("fund_invitations").select("*").eq("id", invitationId).maybeSingle();
+  if (!inv) fail("That invitation was not found.");
+  if (!actor.isStaff && !actor.managedOfferingIds.includes(inv.offering_id)) forbid("you do not manage that fund.");
+  const problem = invitationUsableError(inv, nowIso());
+  if (problem) fail(problem);
+  const { data: offering } = await db().from("offerings").select("id, name").eq("id", inv.offering_id).maybeSingle();
+  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId);
+  await recordEvent({
+    onboardingId: null,
+    offeringId: inv.offering_id,
+    event: "investor_invitation_resent",
+    subjectTable: "fund_invitations",
+    subjectId: inv.id,
+    actorUserId: actor.userId,
+    actorRole: actor.isStaff ? "harmonious" : "manager",
+  });
+  return { sent };
+}
+
+// ------------------------------------------- onboard.harmonious.co portal
+
+/**
+ * Claim (or resume) the investment behind an opaque invitation reference.
+ * The reference is never a bearer credential: the caller must be signed in
+ * with a VERIFIED email equal to the invitation email, and an invitation
+ * already bound to another person can never be taken over.
+ */
+export async function claimOnboardInvitation(userId: string, reference: string) {
+  if (!/^[A-Za-z0-9]{16,64}$/.test(reference)) fail("That invitation was not found.");
+  const { data: inv } = await db().from("fund_invitations").select("*").eq("token", reference).maybeSingle();
+  const problem = invitationUsableError(inv, nowIso());
+  if (problem) fail(problem);
+  if (String(inv.invite_role ?? inv.role ?? "investor") !== "investor") fail("That invitation was not found.");
+  const { data: me } = await db().auth.admin.getUserById(userId);
+  if (!me?.user?.email_confirmed_at) fail("Please verify your email address first.");
+  if (!inv.email) fail("That invitation was not found.");
+  const wrong = invitationRecipientError(inv.email, me.user.email ?? null);
+  if (wrong) fail(wrong);
+  const { data: bound } = await db()
+    .from("investor_onboardings")
+    .select("id, investor_user_id")
+    .eq("invitation_id", inv.id)
+    .limit(5);
+  const others = ((bound ?? []) as any[]).filter((b) => b.investor_user_id !== userId);
+  if (others.length) fail("This invitation has already been used.");
+  const mine = ((bound ?? []) as any[]).find((b) => b.investor_user_id === userId);
+  if (mine) return { onboardingId: mine.id as string };
+  const started = await startOnboarding(userId, { slugOrId: inv.offering_id, invitationToken: reference });
+  return { onboardingId: started.onboardingId };
+}
+
+function accreditationNeedsVerification(req: OfferingRequirements): boolean {
+  if (!req.accreditationRequired) return false;
+  const method = String(req.accreditationMethod ?? "").toLowerCase();
+  return Boolean(method) && method !== "self_certification";
+}
+
+/** Presentation for one investment, derived only from authoritative records. */
+export async function onboardPortalDetail(userId: string, onboardingId: string) {
+  const { row } = await assertInvestorOwns(userId, onboardingId);
+  const detail: any = await onboardingDetail(userId, onboardingId);
+  const { portalSteps, portalResumeStep, portalComplete } = await import("@/lib/onboard-portal-model");
+  const steps = portalSteps(detail.requirements ?? []);
+  const accreditation = (detail.requirements ?? []).find((r: any) => r.key === "accreditation");
+  return {
+    onboardingId,
+    fundName: detail.offering?.name ?? "Your investment",
+    offeringId: detail.offering?.id ?? row.offering_id,
+    amountCents: detail.acceptedAmountCents ?? detail.requestedAmountCents ?? null,
+    profileLabel: detail.profileLabel ?? null,
+    hasProfile: Boolean(detail.investmentProfileId),
+    exemption: detail.exemption ?? null,
+    // 506(c) or offering-configured independent verification: self-certification never satisfies it.
+    accreditationVerified: accreditationNeedsVerification(await offeringRequirements(row.offering_id)),
+    accreditationReason: accreditation?.reason ?? null,
+    requirements: (detail.requirements ?? []).map((r: any) => ({ key: r.key, label: r.label, state: r.state, reason: r.reason ?? null })),
+    documents: (detail.documents ?? []).map((d: any) => ({
+      id: d.id,
+      title: d.title,
+      requiresSignature: Boolean(d.requiresSignature),
+      signed: Boolean(d.signed),
+    })),
+    questionnaire: detail.questionnaire ?? null,
+    questionnaireResponses: detail.questionnaireResponses ?? null,
+    executed: Boolean(detail.executedSnapshot),
+    steps,
+    resume: portalResumeStep(steps),
+    complete: portalComplete(steps),
   };
 }
 
@@ -1540,7 +1665,7 @@ export async function inviteInvestor(
  * application behind this investment. Same session, webhook and
  * reconciliation paths — no second verification system.
  */
-export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string) {
+export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string, returnPath?: string | null) {
   const { row } = await assertInvestorOwns(userId, onboardingId);
   let applicationId = row.application_id as string | null;
   if (!applicationId) {
@@ -1558,7 +1683,7 @@ export async function startInvestmentVerification(userId: string, onboardingId: 
     fail("Harmonious is setting up verification for this investment. We'll email you when it's ready.");
   }
   const { startVerificationSession } = await import("@/lib/kyc-verification.server");
-  const result = await startVerificationSession({ applicationId, userId: row.investor_user_id, origin });
+  const result = await startVerificationSession({ applicationId, userId: row.investor_user_id, origin, ...(returnPath ? { returnPath } : {}) });
   if (String(row.stage) === "profile_selected") await touch(row.id, { stage: "verification" });
   await recordEvent({
     onboardingId: row.id,
