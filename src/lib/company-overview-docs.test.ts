@@ -26,7 +26,7 @@ describe("reversal", () => {
   it("creates a linked new record and leaves the original untouched", () => {
     const snapshot = JSON.stringify(orig);
     const r = planReversal(orig, req);
-    expect(r.ok && r.row.reverses_transaction_id).toBe("o");
+    expect(r.ok && r.row['reverses_transaction_id']).toBe("o");
     expect(JSON.stringify(orig)).toBe(snapshot);
   });
   it("refuses drafts, other companies and reversals of reversals", () => {
