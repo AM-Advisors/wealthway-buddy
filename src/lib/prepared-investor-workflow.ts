@@ -348,3 +348,96 @@ export function managerRowFromApplication(row: any) {
     harmoniousReview: row.managerReviewStatus === "in_review",
   });
 }
+
+/* ---------- Final integration: authoritative facts, applicability, gates ---------- */
+
+/** Investor-confirmed/corrected values win over prepared values. Unreviewed prepared values never drive requirements. */
+export function confirmedFacts(prov: Record<string, FieldProvenance>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const p of Object.values(prov)) if (p.status !== "prepared") out[p.key] = p.currentValue;
+  return out;
+}
+
+/** Overlay confirmed facts onto the stored facts used by the requirements engine. Provider/tax records stay authoritative. */
+export function effectiveResolverFacts(
+  stored: { profileType: string | null; requestedAmountCents: number | null; country: string | null },
+  confirmed: Record<string, unknown>,
+) {
+  const s = (k: string) => (typeof confirmed[k] === "string" && confirmed[k] ? String(confirmed[k]) : null);
+  const n = Number(confirmed["commitment_cents"]);
+  return {
+    profileType: s("profile_type") ?? stored.profileType,
+    requestedAmountCents: Number.isFinite(n) && n > 0 ? n : stored.requestedAmountCents,
+    country: s("country") ?? stored.country,
+  };
+}
+
+/** Empty applies_to = All Investors. */
+export function docApplies(appliesTo: string[] | null | undefined, profileType: string | null | undefined): boolean {
+  if (!appliesTo || appliesTo.length === 0) return true;
+  return !!profileType && appliesTo.includes(profileType);
+}
+
+export const APPLIES_TO_OPTIONS = [
+  ["individual", "Individual"], ["joint", "Joint"], ["llc", "LLC"], ["corporation", "Corporation"],
+  ["partnership", "Partnership"], ["trust", "Trust"], ["ira", "IRA / SDIRA"], ["retirement_plan", "Retirement plan"],
+] as const;
+
+export type SnapshotRow = {
+  id: string; onboarding_id: string; offering_id: string; document_id: string; version: number;
+  status: string; merge_values: Record<string, string>; reviewed_by: string | null; reviewed_fingerprint: string | null;
+};
+
+export const SIGNING_UNAVAILABLE = "Signing unavailable — this document needs to be reviewed again.";
+
+/**
+ * Server-side gate before any Box session is created. Never trusts a browser flag:
+ * only the stored snapshot, its review record and freshly computed merge values count.
+ */
+export function signingGate(input: {
+  investorUserId: string; onboardingId: string; offeringId: string; documentId: string;
+  latest: SnapshotRow | null; currentMergeValues: Record<string, string>; missing: { message: string }[];
+  templateReady: boolean; signerConfigReady: boolean; prerequisitesMet: boolean;
+}): { ok: true; snapshotId: string; version: number } | { ok: false; error: string; next: "complete_information" | "review_document" | "regenerate" | "wait" } {
+  const s = input.latest;
+  if (input.missing.length) return { ok: false, error: `${SIGNING_UNAVAILABLE} ${input.missing.map((m) => m.message).join(" ")}`, next: "complete_information" };
+  if (!input.templateReady || !input.signerConfigReady) return { ok: false, error: "Signing unavailable — this document isn't prepared for signature yet.", next: "wait" };
+  if (!input.prerequisitesMet) return { ok: false, error: "Signing unavailable — finish the earlier steps first.", next: "wait" };
+  if (!s || s.onboarding_id !== input.onboardingId || s.offering_id !== input.offeringId || s.document_id !== input.documentId) return { ok: false, error: SIGNING_UNAVAILABLE, next: "review_document" };
+  if (["stale", "superseded"].includes(s.status)) return { ok: false, error: SIGNING_UNAVAILABLE, next: "regenerate" };
+  if (fingerprint(s.merge_values) !== fingerprint(input.currentMergeValues)) return { ok: false, error: SIGNING_UNAVAILABLE, next: "regenerate" };
+  const reviewed = (s.status === "reviewed" || s.status === "sent_for_signature") && s.reviewed_by === input.investorUserId && s.reviewed_fingerprint === fingerprint(s.merge_values);
+  if (!reviewed) return { ok: false, error: SIGNING_UNAVAILABLE, next: "review_document" };
+  return { ok: true, snapshotId: s.id, version: s.version };
+}
+
+/** A Box completion counts only for the current snapshot version. */
+export function completionSatisfiesCurrent(sig: { snapshot_id?: string | null } | null, currentSnapshotId: string | null): boolean {
+  if (!sig) return false;
+  if (!currentSnapshotId) return !sig.snapshot_id; // legacy documents with no generated version
+  return sig.snapshot_id === currentSnapshotId;
+}
+
+export type CountersignState = "investor_not_signed" | "your_signature_required" | "awaiting_fund_manager" | "fully_executed" | "not_dual";
+
+/** Only the exact configured signatory who is still a manager of that fund gets "Your signature required". */
+export function countersignState(input: {
+  mode: string; providerStatus: string | null; investorSigned: boolean; managerSigned: boolean;
+  countersignerUserId: string | null; viewerUserId: string; viewerManagesFund: boolean;
+}): CountersignState {
+  if (input.mode !== "dual") return "not_dual";
+  if (String(input.providerStatus).toLowerCase() === "completed" && input.investorSigned && input.managerSigned) return "fully_executed";
+  if (!input.investorSigned) return "investor_not_signed";
+  if (input.countersignerUserId && input.countersignerUserId === input.viewerUserId && input.viewerManagesFund && !input.managerSigned) return "your_signature_required";
+  return "awaiting_fund_manager";
+}
+
+/** Access is re-checked when an action is opened, not only when it was generated. */
+export function actionAccessible(a: DerivedAction, access: { ownOnboardings: string[]; managedFunds: string[]; staff: boolean }): boolean {
+  if (a.persona === "investor") return access.ownOnboardings.includes(a.subjectId);
+  if (a.persona === "fund_manager") return access.managedFunds.includes(a.fundId);
+  return access.staff;
+}
+
+const SENSITIVE_WORDS = /\b(ssn|tin|passport|sanction|ofac|pep|w-?9|w-?8|bad actor|didit|id image)\b/i;
+export function titleIsSafe(title: string): boolean { return !SENSITIVE_WORDS.test(title); }
