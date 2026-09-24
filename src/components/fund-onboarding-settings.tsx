@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { APPLIES_TO_OPTIONS } from "@/lib/prepared-investor-workflow";
 import { getFundOnboardingSettings, saveDocumentSigningConfig } from "@/lib/fund-onboarding.functions";
 
 /** Investor Onboarding Settings for one fund. Verification and accreditation are read-only. */
@@ -19,7 +20,7 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
   const [preparing, setPreparing] = useState<string | null>(null);
   const q = useQuery({ queryKey: ["fund-onboarding-settings", fundId], queryFn: () => load({ data: { offeringId: fundId } }), enabled: open, retry: false });
 
-  const update = async (doc: any, patch: Partial<{ signingMode: "investor_only" | "dual"; countersignerUserId: string | null; investorRequired: boolean }>) => {
+  const update = async (doc: any, patch: Partial<{ signingMode: "investor_only" | "dual"; countersignerUserId: string | null; investorRequired: boolean; appliesTo: string[] }>) => {
     try {
       await save({
         data: {
@@ -27,6 +28,7 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
           signingMode: patch.signingMode ?? doc.signingMode,
           countersignerUserId: patch.countersignerUserId !== undefined ? patch.countersignerUserId : doc.countersignerUserId,
           investorRequired: patch.investorRequired ?? doc.investorRequired,
+          ...(patch.appliesTo ? { appliesTo: patch.appliesTo as any } : {}),
         },
       });
       toast.success("Saved");

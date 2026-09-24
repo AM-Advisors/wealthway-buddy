@@ -47,7 +47,7 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
       db.from("offerings").select("id, name, reg_type").eq("id", data.offeringId).maybeSingle(),
       db
         .from("offering_documents")
-        .select("id, title, requires_signature, signing_mode, countersigner_user_id, investor_required, signature_template_version, sort_order")
+        .select("id, title, requires_signature, signing_mode, countersigner_user_id, investor_required, signature_template_version, sort_order, applies_to")
         .eq("offering_id", data.offeringId)
         .order("sort_order", { ascending: true }),
       db.from("fund_managers").select("user_id").eq("offering_id", data.offeringId),
@@ -80,6 +80,7 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
           ? "Rule 506(c): independent accreditation verification is required for every investor."
           : "Rule 506(b): investors complete the fund's accreditation questionnaire.",
       verification: "Identity verification (KYC), entity verification and beneficial owners (KYB) where applicable, and AML screening.",
+      canConfigureApplicability: Boolean((await context.supabase.rpc("is_any_staff")).data),
       countersigners: ((people ?? []) as any[]).map((p) => ({ userId: p.user_id, name: p.legal_name ?? p.email })),
       documents: ((docs ?? []) as any[]).map((d) => {
         const mine = ((blocks ?? []) as any[]).filter((b) => b.offering_document_id === d.id);
@@ -88,6 +89,7 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
           title: d.title as string,
           requiresSignature: Boolean(d.requires_signature),
           investorRequired: d.investor_required !== false,
+          appliesTo: ((d.applies_to ?? []) as string[]),
           signingMode: (d.signing_mode ?? "investor_only") as "investor_only" | "dual",
           countersignerUserId: (d.countersigner_user_id ?? null) as string | null,
           templateVersion: Number(d.signature_template_version ?? 1),
@@ -119,18 +121,24 @@ export const saveDocumentSigningConfig = createServerFn({ method: "POST" })
       signingMode: z.enum(["investor_only", "dual"]),
       countersignerUserId: z.string().uuid().nullable(),
       investorRequired: z.boolean(),
+      appliesTo: z.array(z.enum(["individual", "joint", "llc", "corporation", "partnership", "trust", "ira", "retirement_plan"])).max(8).optional(),
     }).parse,
   )
   .handler(async ({ data, context }) => {
     const db = await admin();
     const { data: doc } = await db
       .from("offering_documents")
-      .select("id, offering_id, signature_template_version")
+      .select("id, offering_id, signature_template_version, investor_required, applies_to")
       .eq("id", data.documentId)
       .maybeSingle();
     if (!doc) throw new Error("That document no longer exists.");
     const auth = await fundAuthority(context.supabase, context.userId, doc.offering_id);
     if (!auth.allowed) throw new Error("Forbidden: you are not assigned to this fund.");
+    // Required/applicability rules are Harmonious-controlled; managers can't loosen them.
+    const { data: isStaff } = await context.supabase.rpc("is_any_staff");
+    const reqChanged = (doc as any).investor_required !== false ? !data.investorRequired : data.investorRequired;
+    const appliesChanged = data.appliesTo !== undefined && JSON.stringify([...data.appliesTo].sort()) !== JSON.stringify([...(((doc as any).applies_to ?? []) as string[])].sort());
+    if ((reqChanged || appliesChanged) && !isStaff) throw new Error("Only Harmonious can change whether a document is required or which investors it applies to.");
     let countersigner: string | null = null;
     if (data.signingMode === "dual") {
       if (!data.countersignerUserId) throw new Error("Choose the authorized fund signatory.");
@@ -149,6 +157,7 @@ export const saveDocumentSigningConfig = createServerFn({ method: "POST" })
         signing_mode: data.signingMode,
         countersigner_user_id: countersigner,
         investor_required: data.investorRequired,
+        ...(appliesChanged ? { applies_to: data.appliesTo } : {}),
         signature_template_version: Number(doc.signature_template_version ?? 1) + 1,
       })
       .eq("id", doc.id);
