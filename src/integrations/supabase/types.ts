@@ -10908,6 +10908,7 @@ export type Database = {
           last_action: string | null
           mapping_id: string | null
           offering_id: string | null
+          repository: string
           resolved_at: string | null
           resolved_by: string | null
           source_id: string | null
@@ -10926,6 +10927,7 @@ export type Database = {
           last_action?: string | null
           mapping_id?: string | null
           offering_id?: string | null
+          repository?: string
           resolved_at?: string | null
           resolved_by?: string | null
           source_id?: string | null
@@ -10944,6 +10946,7 @@ export type Database = {
           last_action?: string | null
           mapping_id?: string | null
           offering_id?: string | null
+          repository?: string
           resolved_at?: string | null
           resolved_by?: string | null
           source_id?: string | null
@@ -11028,6 +11031,7 @@ export type Database = {
           last_synced_at: string | null
           offering_id: string
           permission_audit: Json | null
+          repository: string
           status: string
           subfolders: Json
           updated_at: string
@@ -11045,6 +11049,7 @@ export type Database = {
           last_synced_at?: string | null
           offering_id: string
           permission_audit?: Json | null
+          repository?: string
           status?: string
           subfolders?: Json
           updated_at?: string
@@ -11062,6 +11067,7 @@ export type Database = {
           last_synced_at?: string | null
           offering_id?: string
           permission_audit?: Json | null
+          repository?: string
           status?: string
           subfolders?: Json
           updated_at?: string
