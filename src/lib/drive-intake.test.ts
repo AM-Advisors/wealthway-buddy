@@ -57,7 +57,7 @@ function harness(files: Record<string, FileFacts>, bytes: Record<string, string>
     async mappings() { return mappings; },
     async investment(o, p) { return (o === F1 && (p === P1 || p === P2)) ? `ob-${p}` : null; },
     async putFile(path, b) { stored.set(path, b); },
-    async insertDocument(row) { docs.push(row); return { id: row.id as string }; },
+    async insertDocument(row) { docs.push(row); return { id: row["id"] as string }; },
     async insertAssociation(row) { assoc.push(row); return "created"; },
     async hasAssociation(d, o, p) { return assoc.some((a) => a.document_id === d && a.offering_id === o && a.investment_profile_id === p); },
     async log(e) { events.push(e); },
@@ -152,7 +152,7 @@ describe("importOne", () => {
   it("a changed Drive file becomes an explicit new version, never a silent overwrite", async () => {
     const h = harness({ FILE000001: file() });
     await h.run(fundRow());
-    h.files.FILE000001 = file({ md5Checksum: "md5b", modifiedTime: "2025-01-01T00:00:00.000Z" });
+    h.files["FILE000001"] = file({ md5Checksum: "md5b", modifiedTime: "2025-01-01T00:00:00.000Z" });
     const blocked = await h.run(fundRow());
     expect(blocked).toMatchObject({ ok: false, outcome: "changed_source" });
     const v2 = await h.run({ ...fundRow(), importAsNewVersion: true });
@@ -164,7 +164,7 @@ describe("importOne", () => {
   it("imported copy remains if the Drive source disappears", async () => {
     const h = harness({ FILE000001: file() });
     await h.run(fundRow());
-    delete h.files.FILE000001;
+    delete h.files["FILE000001"];
     const r = await h.run(fundRow());
     expect(r).toMatchObject({ ok: false, outcome: "unavailable" });
     expect(h.stored.size).toBe(1);

@@ -226,7 +226,7 @@ export type DuplicateDecision =
 export function duplicateBeforeDownload(fileId: string, modifiedTime: string | null, md5: string | null, prior: PriorImport[]): DuplicateDecision {
   const same = prior.filter((p) => p.drive_file_id === fileId).sort((a, b) => b.version_number - a.version_number);
   if (!same.length) return { kind: "new" };
-  const latest = same[0];
+  const latest = same[0]!;
   const iso = (v: string | null) => (v ? new Date(v).toISOString() : null);
   const unchanged = md5 && latest.drive_md5 ? md5 === latest.drive_md5 : iso(modifiedTime) === iso(latest.drive_modified_at);
   return unchanged ? { kind: "already_imported", existing: latest } : { kind: "changed_source", latest };
@@ -239,7 +239,7 @@ export function duplicateByHash(sha256: string, prior: PriorImport[]): PriorImpo
 
 export function nextVersion(fileId: string, prior: PriorImport[]): { version: number; previousId: string | null } {
   const same = prior.filter((p) => p.drive_file_id === fileId).sort((a, b) => b.version_number - a.version_number);
-  return same.length ? { version: same[0].version_number + 1, previousId: same[0].id } : { version: 1, previousId: null };
+  return same[0] ? { version: same[0].version_number + 1, previousId: same[0].id } : { version: 1, previousId: null };
 }
 
 /** Importing evidence never approves anything; it only queues review. */

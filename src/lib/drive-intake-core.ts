@@ -62,7 +62,7 @@ export async function importOne(
   const base = { repository: req.repository, drive_file_id: req.driveFileId, offering_id: req.offeringId, investment_profile_id: req.profileId ?? null };
   const fail = async (outcome: Exclude<ImportResult, { ok: true }>["outcome"], message: string, extra: Record<string, unknown> = {}) => {
     await store.log(outcome === "restricted_evidence" ? "restricted_evidence_rejected" : outcome === "already_imported" ? "duplicate_prevented" : outcome === "unavailable" ? "source_unavailable" : "import_failed", outcome, { ...base, message, ...extra });
-    return { driveFileId: req.driveFileId, ok: false as const, outcome, message, ...(extra.existingDocumentId ? { existingDocumentId: String(extra.existingDocumentId) } : {}) };
+    return { driveFileId: req.driveFileId, ok: false as const, outcome, message, ...(extra["existingDocumentId"] ? { existingDocumentId: String(extra["existingDocumentId"]) } : {}) };
   };
   try {
     let facts: FileFacts | null;
