@@ -133,7 +133,6 @@ describe("importOne", () => {
     expect(r).toMatchObject({ ok: true, outcome: "imported" });
     expect(h.docs[0]).toMatchObject({ offering_id: F1, drive_file_id: "FILE000001", drive_id: "FUNDDRIVE00", source_repository: "fund", source_mapping_id: "m1", original_filename: "LPA.pdf", imported_by: "u1", execution_evidence: "none" });
     expect(h.driveCalls.every((c) => c.startsWith("facts:") || c.startsWith("download:"))).toBe(true);
-    expect(Object.keys({} as DriveReadPort)).toEqual([]);
   });
   it("prevents duplicate import", async () => {
     const h = harness({ FILE000001: file() });
