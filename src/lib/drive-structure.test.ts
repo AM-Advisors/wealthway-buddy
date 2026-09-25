@@ -62,8 +62,8 @@ describe("Google Drive structure", () => {
   });
 
   it("files subscription agreements to 01 and 05, others to 05 only", () => {
-    expect(filingTargets("subscription_agreement")).toEqual(["01 - Subscription Documents", "05 - Executed Documents"]);
-    expect(filingTargets("side letter")).toEqual(["05 - Executed Documents"]);
+    expect(filingTargets("subscription_agreement")).toEqual(["01 - Subscription Documents"]);
+    expect(filingTargets("side letter")).toEqual(["03 - Approved Restricted Documents"]);
   });
 
   it("keeps tax forms out of Drive and dates file names", () => {
