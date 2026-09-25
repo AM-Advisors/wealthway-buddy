@@ -123,12 +123,12 @@ export function linkProblem(input: LinkCheckInput): string | null {
   if (!DRIVE_ID_PATTERN.test(f.id)) return "That is not a valid Drive folder ID.";
   if (f.trashed) return "That folder is in the trash.";
   if (f.mimeType !== "application/vnd.google-apps.folder") return "That ID is a file, not a folder.";
-  if (f.driveId !== input.expectedDriveId) return "That folder is not in the Harmonious Team shared drive.";
+  if (f.driveId !== input.expectedDriveId) return "That folder is not in the expected shared drive.";
   if (f.id === input.root) return "The root folder itself cannot be linked to a fund.";
   if (input.otherRoot && (f.id === input.otherRoot || f.ancestors.includes(input.otherRoot))) {
     return "That folder belongs to the other environment's root.";
   }
-  if (!f.ancestors.includes(input.root)) return "That folder is not inside the expected Funds root.";
+  if (!f.ancestors.includes(input.root)) return "That folder is not inside the expected repository root.";
   const elsewhere = input.mappedTo.filter((k) => k !== input.targetKey);
   if (elsewhere.length) return "That folder is already linked to another fund or investor.";
   return null;
