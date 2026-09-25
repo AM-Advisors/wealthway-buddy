@@ -1,4 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getDriveIntakeAccess } from "@/lib/drive-intake.functions";
+import { ImportedDocumentsList } from "@/components/imported-documents-list";
 
 import { AgreementPreparation } from "@/components/agreement-preparation";
 import { AgreementsPipeline } from "@/components/agreements-pipeline";
@@ -32,6 +36,10 @@ export const Route = createFileRoute("/_authenticated/ops/documents")({
 });
 
 function OpsDocuments() {
+  const access = useServerFn(getDriveIntakeAccess);
+  // UX only: the server refuses every import call from anyone else.
+  const { data } = useQuery({ queryKey: ["drive-intake-access"], queryFn: () => access() });
+  const canImport = data?.allowed === true;
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8">
       <h1 className="text-2xl font-semibold">Documents and signatures</h1>
@@ -46,7 +54,8 @@ function OpsDocuments() {
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="signatures">Signature requests</TabsTrigger>
           <TabsTrigger value="drive">Drive exceptions</TabsTrigger>
-          <TabsTrigger value="drive-import">Import from Google Drive</TabsTrigger>
+          <TabsTrigger value="library">Historical records</TabsTrigger>
+          {canImport ? <TabsTrigger value="drive-import">Import from Google Drive</TabsTrigger> : null}
           <TabsTrigger value="activity">Audit trail</TabsTrigger>
         </TabsList>
         <TabsContent value="prepare" className="mt-6">
@@ -61,9 +70,14 @@ function OpsDocuments() {
         <TabsContent value="drive" className="mt-6">
           <DriveExceptions />
         </TabsContent>
-        <TabsContent value="drive-import" className="mt-6">
-          <DriveImportsCard />
+        <TabsContent value="library" className="mt-6">
+          <ImportedDocumentsList title="Historical records" />
         </TabsContent>
+        {canImport ? (
+          <TabsContent value="drive-import" className="mt-6">
+            <DriveImportsCard />
+          </TabsContent>
+        ) : null}
         <TabsContent value="activity" className="mt-6">
           <ActivityPanel
             areas={["document"]}

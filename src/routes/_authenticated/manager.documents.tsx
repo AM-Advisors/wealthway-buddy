@@ -1,3 +1,4 @@
+import { ImportedDocumentsList } from "@/components/imported-documents-list";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -177,6 +178,7 @@ function ManagerDocumentsPage() {
       {activeFund && (
         <div className="mt-8">
           <DocumentVersionHistory offeringId={activeFund.id} />
+          <ImportedDocumentsList offeringId={activeFund.id} />
         </div>
       )}
 
