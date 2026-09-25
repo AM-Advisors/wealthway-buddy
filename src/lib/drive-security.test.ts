@@ -106,7 +106,7 @@ describe("Manual folder linking", () => {
     expect(linkProblem({ ...base, folder: folder({ mimeType: "application/pdf" }) })).toMatch(/not a folder/);
     expect(linkProblem({ ...base, folder: folder({ driveId: "OtherDrive" }) })).toMatch(/shared drive/);
     expect(linkProblem({ ...base, folder: folder({ id: ROOT }) })).toMatch(/root folder/);
-    expect(linkProblem({ ...base, folder: folder({ ancestors: [DRIVE] }) })).toMatch(/Funds root/);
+    expect(linkProblem({ ...base, folder: folder({ ancestors: [DRIVE] }) })).toMatch(/repository root/);
   });
 
   it("Fund A's folder cannot be linked to Fund B; Investor A's cannot map to Investor B", () => {

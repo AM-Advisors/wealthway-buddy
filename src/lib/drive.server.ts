@@ -5,6 +5,7 @@ import {
   DriveConflictError,
   FOLDER_MIME,
   FUND_SUBFOLDERS,
+  INVESTOR_FUND_SUBFOLDERS,
   INVESTOR_SUBFOLDERS,
   ensureSubfolders,
   ensureTaggedFolder,
@@ -12,34 +13,61 @@ import {
   filingTargets,
   fundKey,
   investorFolderName,
+  investorFundKey,
   investorKey,
   safeName,
   type DriveClient,
   type DriveFile,
 } from "@/lib/drive-structure";
 import {
+  INVESTOR_UNAVAILABLE,
+  TEST_UNAVAILABLE,
   classifyDocument,
   destinationDecision,
   exceptionKey,
   issueAfterAttempts,
   linkProblem,
-  neverInDrive,
-  rootFor,
+  repositoryAuditProblems,
+  repositoryConfigProblem,
+  repositoryFor,
+  routeDocument,
   type DestinationAudit,
   type DriveEnvironment,
   type DrivePrincipal,
+  type DriveRepository,
   type FolderFacts,
+  type RepositoryAudit,
+  type RepositoryConfig,
+  type RepositoryRoot,
 } from "@/lib/drive-policy";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_drive";
+/** Harmonious Team shared drive → Funds. Fund General records only. */
 export const PRODUCTION_ROOT = "1ObGXOWYDm0XGgf0YyTqA8YTc6A3aS0Ak";
 export const SHARED_DRIVE_ID = "0APbA-DxnxQINUk9PVA";
 
-export const driveRoots = () => ({
-  production: process.env["GOOGLE_DRIVE_ROOT_FOLDER_ID"] || PRODUCTION_ROOT,
-  test: process.env["GOOGLE_DRIVE_QA_ROOT_FOLDER_ID"] || null,
-});
-export const driveRootId = (env: DriveEnvironment = "production") => rootFor(env, driveRoots());
+const env = (k: string) => (process.env[k] ?? "").trim() || null;
+const pair = (root: string | null, drive: string | null): RepositoryRoot | null => (root && drive ? { rootId: root, driveId: drive } : null);
+
+/** Three separately configured roots. None is ever derived from another. */
+export function repositoryConfig(): RepositoryConfig {
+  return {
+    fund: pair(env("GOOGLE_DRIVE_FUND_ROOT_FOLDER_ID") ?? env("GOOGLE_DRIVE_ROOT_FOLDER_ID") ?? PRODUCTION_ROOT, env("GOOGLE_DRIVE_FUND_DRIVE_ID") ?? SHARED_DRIVE_ID),
+    investor: pair(env("GOOGLE_DRIVE_INVESTOR_ROOT_FOLDER_ID"), env("GOOGLE_DRIVE_INVESTOR_DRIVE_ID")),
+    test: pair(env("GOOGLE_DRIVE_QA_ROOT_FOLDER_ID"), env("GOOGLE_DRIVE_QA_DRIVE_ID")),
+  };
+}
+
+function rootOf(repo: DriveRepository): RepositoryRoot {
+  const c = repositoryConfig();
+  const problem = repositoryConfigProblem(c);
+  const r = c[repo];
+  if (repo === "test" && (!r || problem)) throw new Error(TEST_UNAVAILABLE);
+  if (repo === "investor" && (!r || problem)) throw new Error(INVESTOR_UNAVAILABLE);
+  if (!r || problem) throw new Error(problem ?? "Fund Drive repository unavailable");
+  return r;
+}
+
 const approvedRestrictedAudience = () =>
   String(process.env["GOOGLE_DRIVE_RESTRICTED_AUDIENCE"] ?? "")
     .split(",")
@@ -77,6 +105,7 @@ async function list(query: string): Promise<DriveFile[]> {
 export interface DriveInspector {
   folderFacts(id: string): Promise<FolderFacts | null>;
   audit(id: string): Promise<DestinationAudit>;
+  repositoryAudit(driveId: string): Promise<RepositoryAudit | null>;
 }
 
 export const gatewayDrive: DriveClient & DriveInspector = {
@@ -147,7 +176,7 @@ export const gatewayDrive: DriveClient & DriveInspector = {
     const facts = await this.folderFacts(id);
     let limitedAccess = false;
     for (const fid of [id, ...(facts?.ancestors ?? [])]) {
-      if (fid === SHARED_DRIVE_ID) break;
+      if (fid === facts?.driveId) break;
       const meta = await call(`/drive/v3/files/${encodeURIComponent(fid)}?supportsAllDrives=true&fields=inheritedPermissionsDisabled`);
       if (meta.inheritedPermissionsDisabled) {
         limitedAccess = true;
@@ -165,7 +194,34 @@ export const gatewayDrive: DriveClient & DriveInspector = {
     }));
     return { limitedAccess, principals };
   },
+  async repositoryAudit(driveId) {
+    try {
+      const drive = await call(`/drive/v3/drives/${encodeURIComponent(driveId)}?fields=restrictions`);
+      const perms = await call(
+        `/drive/v3/files/${encodeURIComponent(driveId)}/permissions?supportsAllDrives=true&fields=permissions(type,role,emailAddress,domain)`,
+      );
+      const r = drive.restrictions ?? {};
+      return {
+        domainUsersOnly: Boolean(r.domainUsersOnly),
+        driveMembersOnly: Boolean(r.driveMembersOnly),
+        sharingFoldersRequiresOrganizerPermission: Boolean(r.sharingFoldersRequiresOrganizerPermission),
+        members: (perms.permissions ?? []).map((p: any) => ({ type: p.type, role: p.role, email: p.emailAddress ?? null, domain: p.domain ?? null })),
+      };
+    } catch {
+      return null;
+    }
+  },
 };
+
+/** Problems with the repository that would hold investor-level records. Empty = safe. */
+export async function investorRepositoryProblems(envName: DriveEnvironment, inspector: DriveInspector = gatewayDrive): Promise<string[]> {
+  const c = repositoryConfig();
+  const r = envName === "test" ? c.test : c.investor;
+  if (!r) return [envName === "test" ? TEST_UNAVAILABLE : INVESTOR_UNAVAILABLE];
+  const problem = repositoryConfigProblem(c);
+  if (problem) return [problem];
+  return repositoryAuditProblems(await inspector.repositoryAudit(r.driveId), approvedRestrictedAudience());
+}
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -207,6 +263,7 @@ export async function raiseDriveException(input: {
   sourceId?: string | null;
   detail: string;
   action: string;
+  repository?: DriveRepository;
 }) {
   const db = await admin();
   const now = new Date().toISOString();
@@ -224,6 +281,7 @@ export async function raiseDriveException(input: {
     .insert({
       dedupe_key: input.key,
       issue_type: input.issue,
+      repository: input.repository ?? "fund",
       offering_id: input.offeringId ?? null,
       investment_profile_id: input.profileId ?? null,
       mapping_id: input.mappingId ?? null,
@@ -255,7 +313,14 @@ async function stillThere(inspector: DriveInspector, folderId: string) {
 
 type Deps = { drive?: DriveClient; inspector?: DriveInspector };
 
-/** Create (or re-find) the fund folder and its subfolders. Idempotent. */
+/** A fund's environment comes from its stored mappings; production unless marked test. */
+async function environmentOf(offeringId: string): Promise<DriveEnvironment> {
+  const db = await admin();
+  const { data } = await db.from("drive_folder_mappings").select("environment").eq("offering_id", offeringId).limit(1);
+  return data?.[0]?.environment === "test" ? "test" : "production";
+}
+
+/** Fund Records: the fund folder in the Fund repository (or the QA root). Idempotent. */
 export async function ensureFundStructure(offeringId: string, who: Actor = {}, deps: Deps = {}) {
   const drive = deps.drive ?? gatewayDrive;
   const inspector = deps.inspector ?? gatewayDrive;
@@ -266,51 +331,105 @@ export async function ensureFundStructure(offeringId: string, who: Actor = {}, d
   const exKey = exceptionKey("fund", offeringId);
   const { data: existing } = await db.from("drive_folder_mappings").select("*").eq("harmonious_key", key).maybeSingle();
   if (existing?.status === "archived") return existing;
-  const env: DriveEnvironment = existing?.environment ?? "production";
+  const envName: DriveEnvironment = existing?.environment ?? (await environmentOf(offeringId));
+  const repository = repositoryFor("fund", envName);
   const name = safeName(offering.name ?? offering.legal_entity_name ?? "Fund");
+  const base = { entity_kind: "fund", offering_id: offeringId, harmonious_key: key, environment: envName, repository };
   try {
     let folderId: string = existing?.folder_id;
     if (folderId && !(await stillThere(inspector, folderId))) {
-      const mapping = await upsertMapping({ entity_kind: "fund", offering_id: offeringId, harmonious_key: key, status: "needs_attention", last_error: "The linked Drive folder no longer exists." });
-      await raiseDriveException({ key: exKey, issue: "mapping_missing", offeringId, mappingId: mapping.id, detail: mapping.last_error, action: "sync" });
-      await logEvent(offeringId, mapping.id, "mapping_missing", { folder_id: folderId }, who);
+      const mapping = await upsertMapping({ ...base, status: "needs_attention", last_error: "The linked Drive folder no longer exists." });
+      await raiseDriveException({ key: exKey, issue: "mapping_missing", offeringId, mappingId: mapping.id, detail: mapping.last_error, action: "sync", repository });
+      await logEvent(offeringId, mapping.id, "mapping_missing", { folder_id: folderId, repository }, who);
       return mapping;
     }
     if (!folderId) {
-      const res = await ensureTaggedFolder(drive, driveRootId(env), name, key);
+      const res = await ensureTaggedFolder(drive, rootOf(repository).rootId, name, key);
       folderId = res.folder.id;
-      if (res.created) await logEvent(offeringId, existing?.id ?? null, "folder_created", { folder_id: folderId, name }, who);
+      if (res.created) await logEvent(offeringId, existing?.id ?? null, "folder_created", { folder_id: folderId, name, repository }, who);
     } else if (existing.folder_name && existing.folder_name !== name) {
       await drive.renameFolder(folderId, name);
       await logEvent(offeringId, existing.id, "folder_renamed", { folder_id: folderId, from: existing.folder_name, to: name }, who);
     }
     const { subfolders, created } = await ensureSubfolders(drive, folderId, key, FUND_SUBFOLDERS, existing?.subfolders ?? {});
-    const mapping = await upsertMapping({
-      entity_kind: "fund", offering_id: offeringId, harmonious_key: key, folder_id: folderId, folder_name: name,
-      subfolders, status: "active", last_error: null, last_synced_at: new Date().toISOString(), environment: env,
-    });
+    const mapping = await upsertMapping({ ...base, folder_id: folderId, folder_name: name, subfolders, status: "active", last_error: null, last_synced_at: new Date().toISOString() });
     for (const s of created) await logEvent(offeringId, mapping.id, "subfolder_created", { name: s, folder_id: subfolders[s] }, who);
     await resolveDriveException(exKey, who.userId);
     return mapping;
   } catch (e: any) {
     const conflict = e instanceof DriveConflictError;
     const message = String(e?.message ?? e).slice(0, 500);
-    const mapping = await upsertMapping({
-      entity_kind: "fund", offering_id: offeringId, harmonious_key: key, folder_name: name,
-      status: conflict ? "conflict" : "needs_attention", last_error: message,
-    });
+    const mapping = await upsertMapping({ ...base, folder_name: name, status: conflict ? "conflict" : "needs_attention", last_error: message });
     await logEvent(offeringId, mapping.id, conflict ? "conflict" : "sync_failed", {
-      error: message.slice(0, 300), ...(conflict ? { existing_ids: e.existingIds } : {}),
+      error: message.slice(0, 300), repository, ...(conflict ? { existing_ids: e.existingIds } : {}),
     }, who);
-    await raiseDriveException({ key: exKey, issue: conflict ? "conflict" : "needs_attention", offeringId, mappingId: mapping.id, detail: message, action: "create fund folder" });
+    await raiseDriveException({ key: exKey, issue: conflict ? "conflict" : "needs_attention", offeringId, mappingId: mapping.id, detail: message, action: "create fund folder", repository });
+    return mapping;
+  }
+}
+
+/**
+ * Investor Records: the fund's folder inside the Restricted Investor Records
+ * drive (or QA root). Never inferred from the Fund Records folder. Fails
+ * closed until the restricted repository has been configured and audited.
+ */
+export async function ensureInvestorFundFolder(offeringId: string, who: Actor = {}, deps: Deps = {}) {
+  const drive = deps.drive ?? gatewayDrive;
+  const inspector = deps.inspector ?? gatewayDrive;
+  const db = await admin();
+  const { data: offering } = await db.from("offerings").select("id,name,legal_entity_name").eq("id", offeringId).maybeSingle();
+  if (!offering) throw new Error("Fund not found.");
+  const key = investorFundKey(offeringId);
+  const exKey = exceptionKey("investor", offeringId, "fund");
+  const { data: existing } = await db.from("drive_folder_mappings").select("*").eq("harmonious_key", key).maybeSingle();
+  if (existing?.status === "archived") return existing;
+  const envName: DriveEnvironment = existing?.environment ?? (await environmentOf(offeringId));
+  const repository = repositoryFor("investor_fund", envName);
+  const fundName = safeName(offering.name ?? offering.legal_entity_name ?? "Fund");
+  // In the QA root both folders share a parent, so the investor one is suffixed.
+  const name = envName === "test" ? safeName(`${fundName} - Investor Records`) : fundName;
+  const base = { entity_kind: "investor_fund", offering_id: offeringId, harmonious_key: key, environment: envName, repository };
+  const problems = await investorRepositoryProblems(envName, inspector);
+  if (problems.length) {
+    const unavailable = problems.includes(TEST_UNAVAILABLE) || problems.includes(INVESTOR_UNAVAILABLE);
+    const message: string = unavailable ? (problems[0] ?? INVESTOR_UNAVAILABLE) : `${INVESTOR_UNAVAILABLE}: ${problems.join(" ")}`.slice(0, 500);
+    const mapping = await upsertMapping({ ...base, folder_name: name, status: "needs_attention", last_error: message });
+    await raiseDriveException({ key: exKey, issue: unavailable ? "repository_unavailable" : "permission_review", offeringId, mappingId: mapping.id, detail: message ?? INVESTOR_UNAVAILABLE, action: "check investor repository", repository });
+    await logEvent(offeringId, mapping.id, "repository_blocked", { repository, problems: problems.slice(0, 10) }, who);
+    return mapping;
+  }
+  try {
+    let folderId: string = existing?.folder_id;
+    if (folderId && !(await stillThere(inspector, folderId))) {
+      const mapping = await upsertMapping({ ...base, status: "needs_attention", last_error: "The linked Drive folder no longer exists." });
+      await raiseDriveException({ key: exKey, issue: "mapping_missing", offeringId, mappingId: mapping.id, detail: mapping.last_error, action: "sync", repository });
+      return mapping;
+    }
+    if (!folderId) {
+      const res = await ensureTaggedFolder(drive, rootOf(repository).rootId, name, key);
+      folderId = res.folder.id;
+      if (res.created) await logEvent(offeringId, existing?.id ?? null, "folder_created", { folder_id: folderId, kind: "investor_fund", repository }, who);
+    } else if (existing.folder_name && existing.folder_name !== name) {
+      await drive.renameFolder(folderId, name);
+    }
+    const { subfolders } = await ensureSubfolders(drive, folderId, key, INVESTOR_FUND_SUBFOLDERS, existing?.subfolders ?? {});
+    const mapping = await upsertMapping({ ...base, folder_id: folderId, folder_name: name, subfolders, status: "active", last_error: null, last_synced_at: new Date().toISOString() });
+    await resolveDriveException(exKey, who.userId);
+    return mapping;
+  } catch (e: any) {
+    const conflict = e instanceof DriveConflictError;
+    const message = String(e?.message ?? e).slice(0, 500);
+    const mapping = await upsertMapping({ ...base, folder_name: name, status: conflict ? "conflict" : "needs_attention", last_error: message });
+    await logEvent(offeringId, mapping.id, conflict ? "conflict" : "sync_failed", { error: message.slice(0, 300), repository }, who);
+    await raiseDriveException({ key: exKey, issue: conflict ? "conflict" : "needs_attention", offeringId, mappingId: mapping.id, detail: message, action: "create investor records folder", repository });
     return mapping;
   }
 }
 
 /**
  * Link an existing folder by pasted ID. The ID is never trusted: the server
- * confirms it exists, is a folder, sits in the Harmonious shared drive under
- * the right root, and is not already linked to anything else.
+ * confirms it exists, is a folder, sits in the right repository's shared drive
+ * under the right parent, and is not already linked to anything else.
  */
 export async function linkExistingFolder(
   input: { offeringId: string; profileId?: string | null; folderId: string; reason?: string | null },
@@ -321,26 +440,32 @@ export async function linkExistingFolder(
   const db = await admin();
   const key = input.profileId ? investorKey(input.offeringId, input.profileId) : fundKey(input.offeringId);
   const { data: previous } = await db.from("drive_folder_mappings").select("*").eq("harmonious_key", key).maybeSingle();
-  const env: DriveEnvironment = previous?.environment ?? "production";
-  const roots = driveRoots();
+  const envName: DriveEnvironment = previous?.environment ?? (await environmentOf(input.offeringId));
+  const repository = repositoryFor(input.profileId ? "investor" : "fund", envName);
+  const repo = rootOf(repository);
+  const config = repositoryConfig();
+  const others = (Object.keys(config) as DriveRepository[]).filter((r) => r !== repository).map((r) => config[r]?.rootId).filter(Boolean) as string[];
   const { data: holders } = await db.from("drive_folder_mappings").select("harmonious_key").eq("folder_id", input.folderId);
-  let root = driveRootId(env);
+  let root = repo.rootId;
   if (input.profileId) {
-    const { data: fund } = await db.from("drive_folder_mappings").select("folder_id,subfolders,status").eq("harmonious_key", fundKey(input.offeringId)).maybeSingle();
-    if (!fund?.folder_id || fund.status !== "active") throw new Error("Link or create this fund's folder first.");
-    root = fund.subfolders?.["Investors"] ?? fund.folder_id;
+    const parent = await ensureInvestorFundFolder(input.offeringId, who, deps);
+    if (!parent?.folder_id || parent.status !== "active") throw new Error(parent?.last_error ?? INVESTOR_UNAVAILABLE);
+    root = parent.subfolders?.["Investors"] ?? parent.folder_id;
   }
   const facts = await inspector.folderFacts(input.folderId);
-  const problem = linkProblem({
+  let problem = linkProblem({
     folder: facts,
-    expectedDriveId: SHARED_DRIVE_ID,
+    expectedDriveId: repo.driveId,
     root,
-    otherRoot: env === "production" ? roots.test : roots.production,
+    otherRoot: others[0] ?? null,
     mappedTo: (holders ?? []).map((h: any) => h.harmonious_key),
     targetKey: key,
   });
+  if (!problem && facts && others.slice(1).some((o) => facts.id === o || facts.ancestors.includes(o))) {
+    problem = "That folder belongs to the other environment's root.";
+  }
   if (problem) {
-    await logEvent(input.offeringId, previous?.id ?? null, "link_rejected", { folder_id: input.folderId.slice(0, 100), reason: problem }, who);
+    await logEvent(input.offeringId, previous?.id ?? null, "link_rejected", { folder_id: input.folderId.slice(0, 100), reason: problem, repository }, who);
     throw new Error(problem);
   }
   const permissionAudit = await inspector.audit(input.folderId).catch(() => null);
@@ -352,13 +477,15 @@ export async function linkExistingFolder(
     folder_id: input.folderId,
     status: "pending",
     last_error: null,
-    environment: env,
+    environment: envName,
+    repository,
     permission_audit: permissionAudit,
     subfolders: previous?.folder_id === input.folderId ? previous.subfolders : {},
   });
   await logEvent(input.offeringId, mapping.id, "folder_linked", {
     previous_folder_id: previous?.folder_id ?? null,
     folder_id: input.folderId,
+    repository,
     reason: input.reason?.slice(0, 300) ?? null,
   }, who);
   return input.profileId
@@ -366,51 +493,46 @@ export async function linkExistingFolder(
     : ensureFundStructure(input.offeringId, who, deps);
 }
 
-/** Investor folder for one Investment Profile within one fund. */
+/** Investor folder for one Investment Profile within one fund, in the restricted repository. */
 export async function ensureInvestorStructure(offeringId: string, profileId: string, who: Actor = {}, deps: Deps = {}) {
   const drive = deps.drive ?? gatewayDrive;
   const inspector = deps.inspector ?? gatewayDrive;
   const db = await admin();
   const exKey = exceptionKey("investor", offeringId, profileId);
-  const fund = await ensureFundStructure(offeringId, who, deps);
-  if (fund.status !== "active") return null;
+  const parent = await ensureInvestorFundFolder(offeringId, who, deps);
+  if (!parent || parent.status !== "active") return parent ?? null;
+  const repository: DriveRepository = parent.repository === "test" ? "test" : "investor";
   const { data: profile } = await db.from("investment_profiles").select("id,profile_type,legal_name,display_label").eq("id", profileId).maybeSingle();
   if (!profile) throw new Error("Investment profile not found.");
   const key = investorKey(offeringId, profileId);
   const name = investorFolderName(profile.legal_name ?? profile.display_label ?? "Investor", profile.profile_type);
   const { data: existing } = await db.from("drive_folder_mappings").select("*").eq("harmonious_key", key).maybeSingle();
   if (existing?.status === "archived") return existing;
+  const base = { entity_kind: "investor", offering_id: offeringId, investment_profile_id: profileId, harmonious_key: key, environment: parent.environment ?? "production", repository };
   try {
     let folderId: string = existing?.folder_id;
     if (folderId && !(await stillThere(inspector, folderId))) {
-      const mapping = await upsertMapping({ entity_kind: "investor", offering_id: offeringId, investment_profile_id: profileId, harmonious_key: key, status: "needs_attention", last_error: "The linked Drive folder no longer exists." });
-      await raiseDriveException({ key: exKey, issue: "mapping_missing", offeringId, profileId, mappingId: mapping.id, detail: mapping.last_error, action: "sync" });
+      const mapping = await upsertMapping({ ...base, status: "needs_attention", last_error: "The linked Drive folder no longer exists." });
+      await raiseDriveException({ key: exKey, issue: "mapping_missing", offeringId, profileId, mappingId: mapping.id, detail: mapping.last_error, action: "sync", repository });
       return mapping;
     }
     if (!folderId) {
-      const res = await ensureTaggedFolder(drive, fund.subfolders["Investors"], name, key);
+      const res = await ensureTaggedFolder(drive, parent.subfolders["Investors"], name, key);
       folderId = res.folder.id;
-      if (res.created) await logEvent(offeringId, existing?.id ?? null, "folder_created", { folder_id: folderId, kind: "investor" }, who);
+      if (res.created) await logEvent(offeringId, existing?.id ?? null, "folder_created", { folder_id: folderId, kind: "investor", repository }, who);
     } else if (existing.folder_name && existing.folder_name !== name) {
       await drive.renameFolder(folderId, name);
     }
     const { subfolders } = await ensureSubfolders(drive, folderId, key, INVESTOR_SUBFOLDERS, existing?.subfolders ?? {});
-    const mapping = await upsertMapping({
-      entity_kind: "investor", offering_id: offeringId, investment_profile_id: profileId, harmonious_key: key,
-      folder_id: folderId, folder_name: name, subfolders, status: "active", last_error: null,
-      last_synced_at: new Date().toISOString(), environment: fund.environment ?? "production",
-    });
+    const mapping = await upsertMapping({ ...base, folder_id: folderId, folder_name: name, subfolders, status: "active", last_error: null, last_synced_at: new Date().toISOString() });
     await resolveDriveException(exKey, who.userId);
     return mapping;
   } catch (e: any) {
     const conflict = e instanceof DriveConflictError;
     const message = String(e?.message ?? e).slice(0, 500);
-    const mapping = await upsertMapping({
-      entity_kind: "investor", offering_id: offeringId, investment_profile_id: profileId, harmonious_key: key,
-      folder_name: name, status: conflict ? "conflict" : "needs_attention", last_error: message,
-    });
-    await logEvent(offeringId, mapping.id, conflict ? "conflict" : "sync_failed", { error: message.slice(0, 300) }, who);
-    await raiseDriveException({ key: exKey, issue: conflict ? "conflict" : "needs_attention", offeringId, profileId, mappingId: mapping.id, detail: message, action: "create investor folder" });
+    const mapping = await upsertMapping({ ...base, folder_name: name, status: conflict ? "conflict" : "needs_attention", last_error: message });
+    await logEvent(offeringId, mapping.id, conflict ? "conflict" : "sync_failed", { error: message.slice(0, 300), repository }, who);
+    await raiseDriveException({ key: exKey, issue: conflict ? "conflict" : "needs_attention", offeringId, profileId, mappingId: mapping.id, detail: message, action: "create investor folder", repository });
     return mapping;
   }
 }
@@ -453,6 +575,7 @@ export async function fileExecutedSignature(signatureId: string, deps: Deps = {}
   const inspector = deps.inspector ?? gatewayDrive;
   const exKey = exceptionKey("file", signatureId);
   let offeringId: string | null = null;
+  let repository: DriveRepository = "investor";
   try {
     const db = await admin();
     const { data: sig } = await db
@@ -462,31 +585,65 @@ export async function fileExecutedSignature(signatureId: string, deps: Deps = {}
       .maybeSingle();
     if (!sig || sig.provider_status !== "completed" || sig.cancelled_at || sig.superseded_by || !sig.pdf_path) return { filed: 0 };
     const { data: doc } = await db.from("offering_documents").select("offering_id,title,doc_type,current_version").eq("id", sig.offering_document_id).maybeSingle();
-    if (!doc || neverInDrive(`${doc.doc_type ?? ""} ${doc.title ?? ""}`) || !(await enabled(doc.offering_id))) return { filed: 0 };
+    if (!doc || !(await enabled(doc.offering_id))) return { filed: 0 };
     offeringId = doc.offering_id;
-    let profileId = sig.investment_profile_id as string | null;
-    if (!profileId) {
-      const { data: ob } = await db.from("investor_onboardings").select("investment_profile_id").eq("application_id", sig.application_id).maybeSingle();
-      profileId = ob?.investment_profile_id ?? null;
-    }
-    if (!profileId) return { filed: 0 };
-    const mapping = await ensureInvestorStructure(doc.offering_id, profileId, { actor: "box_completion" }, deps);
-    if (!mapping || mapping.status !== "active") return { filed: 0 };
+    const text = `${doc.doc_type ?? ""} ${doc.title ?? ""}`;
     const classification = classifyDocument(doc.doc_type, doc.title);
+    const envName = await environmentOf(doc.offering_id);
+    const route = routeDocument({
+      classification,
+      text,
+      environment: envName,
+      config: repositoryConfig(),
+      investorRepositoryProblems: classification === "fund_general" ? [] : await investorRepositoryProblems(envName, inspector),
+    });
+    if (route.kind === "excluded") return { filed: 0 };
+    repository = route.repository;
+    if (route.kind === "unavailable") {
+      await raiseDriveException({
+        key: exKey, issue: route.reason === INVESTOR_UNAVAILABLE ? "permission_review" : "repository_unavailable", offeringId,
+        sourceTable: "document_signatures", sourceId: sig.id, detail: route.reason, action: "route executed document", repository,
+      });
+      await logEvent(doc.offering_id, null, "filing_withheld", { signature_id: sig.id, classification, repository, reason: route.reason }, { actor: "box_completion" });
+      return { filed: 0, withheld: route.reason };
+    }
+
+    let mapping: any;
+    let targets: string[];
+    let profileId = sig.investment_profile_id as string | null;
+    if (classification === "fund_general") {
+      mapping = await ensureFundStructure(doc.offering_id, { actor: "box_completion" }, deps);
+      targets = ["01 - Fund Documents"];
+    } else {
+      if (!profileId) {
+        const { data: ob } = await db.from("investor_onboardings").select("investment_profile_id").eq("application_id", sig.application_id).maybeSingle();
+        profileId = ob?.investment_profile_id ?? null;
+      }
+      if (!profileId) return { filed: 0 };
+      mapping = await ensureInvestorStructure(doc.offering_id, profileId, { actor: "box_completion" }, deps);
+      targets = filingTargets(text);
+    }
+    if (!mapping || mapping.status !== "active") return { filed: 0 };
+    // Defence in depth: the mapping must sit in the repository the router chose.
+    if ((mapping.repository ?? "fund") !== route.repository) {
+      throw new Error(`Refusing to file: destination is in the ${mapping.repository} repository, expected ${route.repository}.`);
+    }
     const version = String(sig.signed_file_version_id ?? doc.current_version ?? "1");
     const { data: already } = await db.from("drive_filed_documents").select("target").eq("source_table", "document_signatures").eq("source_id", sig.id).eq("version", version);
     const done = new Set((already ?? []).map((r: any) => r.target));
-    const targets = filingTargets(`${doc.doc_type ?? ""} ${doc.title ?? ""}`).filter((t) => !done.has(t));
+    targets = targets.filter((t) => !done.has(t));
     if (!targets.length) return { filed: 0 };
 
+    const repoApproved = route.repository !== "fund";
     for (const target of targets) {
-      const decision = destinationDecision(classification, await inspector.audit(mapping.subfolders[target]), approvedRestrictedAudience());
+      const audit = await inspector.audit(mapping.subfolders[target]);
+      const decision = destinationDecision(classification, { ...audit, limitedAccess: audit.limitedAccess || repoApproved }, approvedRestrictedAudience());
       if (!decision.allowed) {
         await raiseDriveException({
           key: exKey, issue: "permission_too_broad", offeringId, profileId, mappingId: mapping.id,
-          sourceTable: "document_signatures", sourceId: sig.id, detail: decision.reason, action: `file to ${target}`,
+          sourceTable: "document_signatures", sourceId: sig.id, detail: decision.reason, action: `file to ${target}`, repository,
         });
-        await logEvent(doc.offering_id, mapping.id, "filing_withheld", { signature_id: sig.id, target, classification }, { actor: "box_completion" });
+        await logEvent(doc.offering_id, mapping.id, "filing_withheld", { signature_id: sig.id, target, classification, repository }, { actor: "box_completion" });
         return { filed: 0, withheld: decision.reason };
       }
     }
@@ -505,7 +662,7 @@ export async function fileExecutedSignature(signatureId: string, deps: Deps = {}
         { source_table: "document_signatures", source_id: sig.id, version, target, drive_file_id: up.id, folder_id: folderId, file_name: name, classification },
         { onConflict: "source_table,source_id,version,target" },
       );
-      await logEvent(doc.offering_id, mapping.id, "document_filed", { signature_id: sig.id, version, target, drive_file_id: up.id, classification }, { actor: "box_completion" });
+      await logEvent(doc.offering_id, mapping.id, "document_filed", { signature_id: sig.id, version, target, drive_file_id: up.id, classification, repository }, { actor: "box_completion" });
       filed++;
     }
     await resolveDriveException(exKey);
@@ -513,7 +670,7 @@ export async function fileExecutedSignature(signatureId: string, deps: Deps = {}
   } catch (e: any) {
     const message = String(e?.message ?? e);
     console.error("[drive] filing failed", e);
-    await raiseDriveException({ key: exKey, issue: "upload_failed", offeringId, sourceTable: "document_signatures", sourceId: signatureId, detail: message, action: "file executed document" }).catch(() => {});
+    await raiseDriveException({ key: exKey, issue: "upload_failed", offeringId, sourceTable: "document_signatures", sourceId: signatureId, detail: message, action: "file executed document", repository }).catch(() => {});
     await logEvent(offeringId, null, "filing_failed", { signature_id: signatureId, error: message.slice(0, 300) }, { actor: "box_completion" }).catch(() => {});
     return { filed: 0, error: message };
   }

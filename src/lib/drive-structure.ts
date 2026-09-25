@@ -10,15 +10,15 @@ export const FUND_SUBFOLDERS = [
   "03 - Banking",
   "04 - Accounting & Tax",
   "05 - Reports",
-  "Investors",
 ] as const;
+
+/** The Restricted Investor Records drive holds one folder per fund with only this subfolder. */
+export const INVESTOR_FUND_SUBFOLDERS = ["Investors"] as const;
 
 export const INVESTOR_SUBFOLDERS = [
   "01 - Subscription Documents",
-  "02 - Tax",
-  "03 - Compliance",
-  "04 - Accreditation",
-  "05 - Executed Documents",
+  "02 - Accreditation",
+  "03 - Approved Restricted Documents",
 ] as const;
 
 export const FOLDER_MIME = "application/vnd.google-apps.folder";
@@ -51,6 +51,7 @@ export function investorFolderName(displayName: string, profileType: string | nu
 }
 
 export const fundKey = (offeringId: string) => `fund:${offeringId}`;
+export const investorFundKey = (offeringId: string) => `investor-fund:${offeringId}`;
 export const investorKey = (offeringId: string, profileId: string) => `investor:${offeringId}:${profileId}`;
 export const subKey = (parentKey: string, name: string) => `${parentKey}/${name}`;
 
@@ -116,11 +117,12 @@ export async function ensureSubfolders(
   return { subfolders: out, created };
 }
 
-/** Which investor subfolders an executed document is filed into. */
+/** The single investor subfolder an executed document is filed into (one copy only). */
 export function filingTargets(docKind: string | null | undefined): string[] {
-  const targets = ["05 - Executed Documents"];
-  if (/subscription/i.test(String(docKind ?? ""))) targets.unshift("01 - Subscription Documents");
-  return targets;
+  const t = String(docKind ?? "");
+  if (/subscription/i.test(t)) return ["01 - Subscription Documents"];
+  if (/accredit/i.test(t)) return ["02 - Accreditation"];
+  return ["03 - Approved Restricted Documents"];
 }
 
 /** Tax forms (W-9 / W-8) never go to Drive: shared-drive members cannot be excluded. */

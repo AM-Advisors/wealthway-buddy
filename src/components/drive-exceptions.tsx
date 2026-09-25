@@ -16,7 +16,11 @@ const ISSUE: Record<string, string> = {
   upload_failed: "Upload failed",
   mapping_missing: "Mapping missing",
   retry_failed: "Retry failed",
+  permission_review: "Permission review",
+  repository_unavailable: "Repository not configured",
 };
+
+const REPO: Record<string, string> = { fund: "Fund Repository", investor: "Investor Repository", test: "Test Repository" };
 
 const when = (v: string) => new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
@@ -50,6 +54,7 @@ export function DriveExceptions() {
             <div className="min-w-0 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="destructive">{ISSUE[r.issue_type] ?? r.issue_type}</Badge>
+                <Badge variant="outline">{REPO[r.repository] ?? "Fund Repository"}</Badge>
                 <span className="text-sm">{r.fundName ?? "Unknown fund"}{r.profileLabel ? ` · ${r.profileLabel}` : ""}</span>
               </div>
               <p className="text-xs text-muted-foreground">{r.detail}</p>

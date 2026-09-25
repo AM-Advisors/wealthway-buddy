@@ -49,9 +49,9 @@ describe("Google Drive structure", () => {
     const { client, files } = fakeDrive();
     const first = await ensureSubfolders(client, "fund", fundKey("o1"), FUND_SUBFOLDERS);
     const again = await ensureSubfolders(client, "fund", fundKey("o1"), FUND_SUBFOLDERS);
-    expect(first.created).toHaveLength(6);
+    expect(first.created).toHaveLength(5);
     expect(again.created).toHaveLength(0);
-    expect(files).toHaveLength(6);
+    expect(files).toHaveLength(5);
   });
 
   it("separate profiles of the same person never share a folder", () => {
@@ -62,8 +62,8 @@ describe("Google Drive structure", () => {
   });
 
   it("files subscription agreements to 01 and 05, others to 05 only", () => {
-    expect(filingTargets("subscription_agreement")).toEqual(["01 - Subscription Documents", "05 - Executed Documents"]);
-    expect(filingTargets("side letter")).toEqual(["05 - Executed Documents"]);
+    expect(filingTargets("subscription_agreement")).toEqual(["01 - Subscription Documents"]);
+    expect(filingTargets("side letter")).toEqual(["03 - Approved Restricted Documents"]);
   });
 
   it("keeps tax forms out of Drive and dates file names", () => {
