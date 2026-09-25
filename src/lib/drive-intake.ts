@@ -227,9 +227,9 @@ export function duplicateBeforeDownload(fileId: string, modifiedTime: string | n
   const same = prior.filter((p) => p.drive_file_id === fileId).sort((a, b) => b.version_number - a.version_number);
   if (!same.length) return { kind: "new" };
   const latest = same[0];
-  const unchanged = (md5 && latest.drive_md5 ? md5 === latest.drive_md5 : true) && (modifiedTime ?? null) === (latest.drive_modified_at ? new Date(latest.drive_modified_at).toISOString() : null);
-  const unchangedLoose = md5 && latest.drive_md5 ? md5 === latest.drive_md5 : unchanged;
-  return unchangedLoose ? { kind: "already_imported", existing: latest } : { kind: "changed_source", latest };
+  const iso = (v: string | null) => (v ? new Date(v).toISOString() : null);
+  const unchanged = md5 && latest.drive_md5 ? md5 === latest.drive_md5 : iso(modifiedTime) === iso(latest.drive_modified_at);
+  return unchanged ? { kind: "already_imported", existing: latest } : { kind: "changed_source", latest };
 }
 
 /** After hashing: identical bytes anywhere in this environment are never stored twice. */
