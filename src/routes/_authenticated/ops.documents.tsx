@@ -6,6 +6,7 @@ import { OpsSignatureRequests } from "@/components/ops-signature-requests";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityPanel } from "@/components/activity-panel";
 import { DriveExceptions } from "@/components/drive-exceptions";
+import { DriveImportsCard } from "@/components/drive-import";
 
 export const Route = createFileRoute("/_authenticated/ops/documents")({
   head: () => ({
@@ -45,6 +46,7 @@ function OpsDocuments() {
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="signatures">Signature requests</TabsTrigger>
           <TabsTrigger value="drive">Drive exceptions</TabsTrigger>
+          <TabsTrigger value="drive-import">Import from Google Drive</TabsTrigger>
           <TabsTrigger value="activity">Audit trail</TabsTrigger>
         </TabsList>
         <TabsContent value="prepare" className="mt-6">
@@ -58,6 +60,9 @@ function OpsDocuments() {
         </TabsContent>
         <TabsContent value="drive" className="mt-6">
           <DriveExceptions />
+        </TabsContent>
+        <TabsContent value="drive-import" className="mt-6">
+          <DriveImportsCard />
         </TabsContent>
         <TabsContent value="activity" className="mt-6">
           <ActivityPanel

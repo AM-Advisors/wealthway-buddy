@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Badge } from "@/components/ui/badge";
 import { DriveStatusCard } from "@/components/drive-status-card";
 import { DriveInvestorCard } from "@/components/drive-investor-card";
+import { DriveImportsCard } from "@/components/drive-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -348,6 +349,8 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         ) : null}
         {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}
         {type === "investor" ? <DriveInvestorCard investorUserId={id} /> : null}
+        {type === "fund" ? <DriveImportsCard offeringId={id} /> : null}
+        {type === "investor" ? <DriveImportsCard investorUserId={id} /> : null}
         <p className="text-xs text-muted-foreground">
           You may {Object.entries(actions).filter(([, ok]) => ok).map(([name]) => name).join(", ")} in this
           area. Every action is checked again by the backend.

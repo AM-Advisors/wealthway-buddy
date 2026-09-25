@@ -11089,6 +11089,245 @@ export type Database = {
           },
         ]
       }
+      drive_import_associations: {
+        Row: {
+          associated_by: string
+          created_at: string
+          document_id: string
+          id: string
+          investment_profile_id: string | null
+          offering_id: string
+          onboarding_id: string | null
+        }
+        Insert: {
+          associated_by: string
+          created_at?: string
+          document_id: string
+          id?: string
+          investment_profile_id?: string | null
+          offering_id: string
+          onboarding_id?: string | null
+        }
+        Update: {
+          associated_by?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          investment_profile_id?: string | null
+          offering_id?: string
+          onboarding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_import_associations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "drive_imported_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_import_associations_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_import_associations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_import_associations_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drive_import_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          document_id: string | null
+          drive_file_id: string | null
+          event: string
+          id: string
+          investment_profile_id: string | null
+          offering_id: string | null
+          outcome: string
+          repository: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          document_id?: string | null
+          drive_file_id?: string | null
+          event: string
+          id?: string
+          investment_profile_id?: string | null
+          offering_id?: string | null
+          outcome?: string
+          repository?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          document_id?: string | null
+          drive_file_id?: string | null
+          event?: string
+          id?: string
+          investment_profile_id?: string | null
+          offering_id?: string | null
+          outcome?: string
+          repository?: string | null
+        }
+        Relationships: []
+      }
+      drive_imported_documents: {
+        Row: {
+          broad_source_acknowledged: boolean
+          category: string
+          classification: string
+          description: string | null
+          document_date: string | null
+          document_type: string
+          drive_file_id: string
+          drive_id: string
+          drive_md5: string | null
+          drive_modified_at: string | null
+          environment: string
+          execution_evidence: string
+          id: string
+          imported_at: string
+          imported_by: string
+          investment_profile_id: string | null
+          mime_type: string
+          offering_id: string
+          onboarding_id: string | null
+          original_filename: string
+          previous_version_id: string | null
+          provenance: string
+          record_status: string
+          review_state: string
+          sha256: string
+          size_bytes: number | null
+          source_mapping_id: string | null
+          source_parent_id: string | null
+          source_repository: string
+          storage_path: string
+          version_number: number
+        }
+        Insert: {
+          broad_source_acknowledged?: boolean
+          category: string
+          classification: string
+          description?: string | null
+          document_date?: string | null
+          document_type: string
+          drive_file_id: string
+          drive_id: string
+          drive_md5?: string | null
+          drive_modified_at?: string | null
+          environment: string
+          execution_evidence?: string
+          id?: string
+          imported_at?: string
+          imported_by: string
+          investment_profile_id?: string | null
+          mime_type: string
+          offering_id: string
+          onboarding_id?: string | null
+          original_filename: string
+          previous_version_id?: string | null
+          provenance?: string
+          record_status: string
+          review_state?: string
+          sha256: string
+          size_bytes?: number | null
+          source_mapping_id?: string | null
+          source_parent_id?: string | null
+          source_repository: string
+          storage_path: string
+          version_number?: number
+        }
+        Update: {
+          broad_source_acknowledged?: boolean
+          category?: string
+          classification?: string
+          description?: string | null
+          document_date?: string | null
+          document_type?: string
+          drive_file_id?: string
+          drive_id?: string
+          drive_md5?: string | null
+          drive_modified_at?: string | null
+          environment?: string
+          execution_evidence?: string
+          id?: string
+          imported_at?: string
+          imported_by?: string
+          investment_profile_id?: string | null
+          mime_type?: string
+          offering_id?: string
+          onboarding_id?: string | null
+          original_filename?: string
+          previous_version_id?: string | null
+          provenance?: string
+          record_status?: string
+          review_state?: string
+          sha256?: string
+          size_bytes?: number | null
+          source_mapping_id?: string | null
+          source_parent_id?: string | null
+          source_repository?: string
+          storage_path?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_imported_documents_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_imported_documents_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_imported_documents_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_imported_documents_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "drive_imported_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_imported_documents_source_mapping_id_fkey"
+            columns: ["source_mapping_id"]
+            isOneToOne: false
+            referencedRelation: "drive_folder_mappings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drive_sync_events: {
         Row: {
           actor: string
