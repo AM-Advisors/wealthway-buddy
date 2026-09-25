@@ -36,7 +36,7 @@ type Row = AssociationRow & { name: string; importAsNewVersion?: boolean; addAss
 const sel = "h-9 w-full rounded-md border bg-background px-2 text-sm";
 
 /** Import from Google Drive — Super Administrators only (checked again on the server). */
-export function DriveImportButton({ offeringId, investorUserId, label = "Import from Google Drive" }: { offeringId?: string; investorUserId?: string; label?: string }) {
+export function DriveImportButton({ offeringId, investorUserId, label = "Import from Google Drive" }: { offeringId?: string | undefined; investorUserId?: string | undefined; label?: string }) {
   const access = useServerFn(getDriveIntakeAccess);
   const q = useQuery({ queryKey: ["drive-intake-access"], queryFn: () => access(), retry: false });
   const [open, setOpen] = useState(false);
@@ -49,7 +49,7 @@ export function DriveImportButton({ offeringId, investorUserId, label = "Import 
   );
 }
 
-function DriveImportDialog({ onClose, repositories, offeringId, investorUserId }: { onClose: () => void; repositories: { key: DriveRepository; label: string; configured: boolean }[]; offeringId?: string; investorUserId?: string }) {
+function DriveImportDialog({ onClose, repositories, offeringId, investorUserId }: { onClose: () => void; repositories: { key: DriveRepository; label: string; configured: boolean }[]; offeringId?: string | undefined; investorUserId?: string | undefined }) {
   const browse = useServerFn(browseDrive);
   const optionsFn = useServerFn(getAssociationOptions);
   const importFn = useServerFn(importDriveFiles);
@@ -97,7 +97,7 @@ function DriveImportDialog({ onClose, repositories, offeringId, investorUserId }
   });
 
   const update = (i: number, patch: Partial<Row>) => setRows((rs) => rs!.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-  const problems = useMemo(() => (rows ?? []).map((r) => rowProblems(r, r.name)), [rows]);
+  const problems: string[][] = useMemo(() => (rows ?? []).map((r) => rowProblems(r, r.name)), [rows]);
   const readyIdx = problems.map((p, i) => (p.length ? -1 : i)).filter((i) => i >= 0);
 
   return (
@@ -180,7 +180,7 @@ function DriveImportDialog({ onClose, repositories, offeringId, investorUserId }
                             <option value="">Choose Fund…</option>
                             {(options.data?.funds ?? []).map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
                           </select>
-                          <select className={`${sel} mt-1`} value={r.category ?? ""} onChange={(e) => update(i, { category: (e.target.value || null) as any, documentType: null, profileId: e.target.value === "fund" ? null : r.profileId })}>
+                          <select className={`${sel} mt-1`} value={r.category ?? ""} onChange={(e) => update(i, { category: (e.target.value || null) as any, documentType: null, profileId: e.target.value === "fund" ? null : r.profileId ?? null })}>
                             <option value="">Category…</option><option value="fund">Fund</option><option value="investor">Investor</option>
                           </select>
                         </td>
@@ -218,7 +218,7 @@ function DriveImportDialog({ onClose, repositories, offeringId, investorUserId }
                           {r.recordStatus === "historical" ? (
                             <label className="mt-1 flex gap-1 text-xs"><input type="checkbox" checked={Boolean(r.historicalExecuted)} onChange={(e) => update(i, { historicalExecuted: e.target.checked })} />Historical executed document (not Box-verified)</label>
                           ) : null}
-                          {problems[i].length ? <p className="mt-1 text-xs text-destructive">{problems[i].join(" ")}</p> : <Badge className="mt-1" variant="secondary">Ready</Badge>}
+                          {problems[i]?.length ? <p className="mt-1 text-xs text-destructive">{problems[i]?.join(" ")}</p> : <Badge className="mt-1" variant="secondary">Ready</Badge>}
                           {result ? (
                             <div className="mt-1 text-xs">
                               {result.ok ? <Badge>{result.outcome === "new_version" ? "Imported as new version" : result.outcome === "associated" ? "Association added" : "Imported"}</Badge> : <p className="text-destructive">{result.message}</p>}
@@ -235,7 +235,7 @@ function DriveImportDialog({ onClose, repositories, offeringId, investorUserId }
             </div>
             <div className="flex flex-wrap justify-between gap-2">
               <Button variant="ghost" onClick={() => { setRows(null); setResults(null); }}>Back to files</Button>
-              <Button disabled={!readyIdx.length || run.isPending} onClick={() => run.mutate(readyIdx.map((i) => rows[i]))}>
+              <Button disabled={!readyIdx.length || run.isPending} onClick={() => run.mutate(readyIdx.map((i) => rows[i]!))}>
                 {run.isPending ? "Importing…" : `Import ${readyIdx.length} ready row(s)`}
               </Button>
             </div>
@@ -248,7 +248,7 @@ function DriveImportDialog({ onClose, repositories, offeringId, investorUserId }
 }
 
 /** Imported documents with provenance. Shown only to Super Administrators. */
-export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: string; investorUserId?: string }) {
+export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: string | undefined; investorUserId?: string | undefined }) {
   const list = useServerFn(listDriveImports);
   const open = useServerFn(openDriveImport);
   const access = useServerFn(getDriveIntakeAccess);
