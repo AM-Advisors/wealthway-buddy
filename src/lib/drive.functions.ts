@@ -3,13 +3,22 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireOperations } from "@/lib/ops-access.functions";
-import { DRIVE_ID_PATTERN } from "@/lib/drive-policy";
+import { DRIVE_ID_PATTERN, INVESTOR_UNAVAILABLE } from "@/lib/drive-policy";
 
 const folderUrl = (id?: string | null) => (id ? `https://drive.google.com/drive/folders/${id}` : null);
 const linkSchema = z.string().regex(DRIVE_ID_PATTERN, "That is not a valid Drive folder ID.");
 
 async function db() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+}
+
+/** Staff-facing status words only; no Drive IDs or internals. */
+function recordsStatus(m: any, kind: "fund" | "investor"): string {
+  if (!m) return "not_connected";
+  if (m.status === "active") return "connected";
+  if (m.status === "archived") return "archived";
+  if (kind === "investor" && typeof m.last_error === "string" && m.last_error.startsWith(INVESTOR_UNAVAILABLE)) return "permission_review";
+  return "needs_attention";
 }
 
 export const getFundDriveStatus = createServerFn({ method: "GET" })
@@ -20,14 +29,22 @@ export const getFundDriveStatus = createServerFn({ method: "GET" })
     const s = await db();
     const [{ data: offering }, { data: mappings }] = await Promise.all([
       s.from("offerings").select("drive_sync_enabled").eq("id", data.offeringId).maybeSingle(),
-      s.from("drive_folder_mappings").select("id,entity_kind,folder_id,folder_name,status,last_error,last_synced_at").eq("offering_id", data.offeringId),
+      s.from("drive_folder_mappings").select("id,entity_kind,folder_id,folder_name,status,last_error,last_synced_at,repository").eq("offering_id", data.offeringId),
     ]);
     const fund = (mappings ?? []).find((m: any) => m.entity_kind === "fund") ?? null;
+    const investorFund = (mappings ?? []).find((m: any) => m.entity_kind === "investor_fund") ?? null;
     const investors = (mappings ?? []).filter((m: any) => m.entity_kind === "investor");
     return {
       enabled: Boolean(offering?.drive_sync_enabled),
       canSync: capabilities.includes("documents:prepare"),
-      fund: fund ? { ...fund, url: folderUrl(fund.folder_id) } : null,
+      fund: fund ? { status: fund.status as string, last_error: fund.last_error as string | null, url: fund.status === "active" ? folderUrl(fund.folder_id) : null } : null,
+      fundRecords: { status: recordsStatus(fund, "fund"), error: (fund?.last_error as string | null) ?? null, url: fund?.status === "active" ? folderUrl(fund.folder_id) : null },
+      investorRecords: {
+        status: recordsStatus(investorFund, "investor"),
+        error: (investorFund?.last_error as string | null) ?? null,
+        url: investorFund?.status === "active" ? folderUrl(investorFund.folder_id) : null,
+        folders: investors.length,
+      },
       investors: investors.map((m: any) => ({ id: m.id, name: m.folder_name, status: m.status })),
     };
   });
@@ -72,14 +89,15 @@ export const getInvestorDrive = createServerFn({ method: "GET" })
     ]);
     const rows = [...pairs.values()].map(({ offeringId, profileId }) => {
       const m = (mappings ?? []).find((x: any) => x.entity_kind === "investor" && x.offering_id === offeringId && x.investment_profile_id === profileId);
-      const fund = (mappings ?? []).find((x: any) => x.entity_kind === "fund" && x.offering_id === offeringId);
+      const fund = (mappings ?? []).find((x: any) => x.entity_kind === "investor_fund" && x.offering_id === offeringId);
       const p = (profiles ?? []).find((x: any) => x.id === profileId);
       return {
         offeringId,
         profileId,
         fundName: (offerings ?? []).find((x: any) => x.id === offeringId)?.name ?? "Fund",
         profileLabel: p?.display_label ?? p?.legal_name ?? "Profile",
-        fundReady: fund?.status === "active",
+        // Investor folders live in the restricted repository; its fund folder is created on demand.
+        fundReady: fund?.status !== "archived",
         status: (m?.status as string) ?? "not_created",
         error: (m?.last_error as string | null) ?? null,
         url: m?.status === "active" ? folderUrl(m.folder_id) : null,
@@ -104,7 +122,7 @@ export const syncInvestorDrive = createServerFn({ method: "POST" })
     const mapping = data.linkFolderId
       ? await drive.linkExistingFolder({ offeringId: data.offeringId, profileId: data.profileId, folderId: data.linkFolderId, reason: data.reason ?? null }, { userId })
       : await drive.ensureInvestorStructure(data.offeringId, data.profileId, { userId });
-    if (!mapping) return { status: "needs_attention", error: "Create the fund's Google Drive folder first." };
+    if (!mapping) return { status: "needs_attention", error: INVESTOR_UNAVAILABLE };
     return { status: String(mapping.status), error: (mapping.last_error as string | null) ?? null };
   });
 
@@ -114,7 +132,7 @@ export const listDriveExceptions = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { capabilities } = await requireOperations(context, "documents", "see");
     const s = await db();
-    let q = s.from("drive_exceptions").select("id,issue_type,offering_id,investment_profile_id,detail,last_action,attempts,status,created_at,updated_at").order("updated_at", { ascending: false }).limit(200);
+    let q = s.from("drive_exceptions").select("id,repository,issue_type,offering_id,investment_profile_id,detail,last_action,attempts,status,created_at,updated_at").order("updated_at", { ascending: false }).limit(200);
     if (!data.includeResolved) q = q.eq("status", "open");
     const { data: rows } = await q;
     const oIds = [...new Set((rows ?? []).map((r: any) => r.offering_id).filter(Boolean))];
@@ -149,6 +167,10 @@ export const retryDriveException = createServerFn({ method: "POST" })
     if (ex.source_table === "document_signatures" && ex.source_id) {
       const res = await drive.fileExecutedSignature(ex.source_id);
       return { ok: res.filed > 0, message: (res as any).withheld ?? (res as any).error ?? null };
+    }
+    if (ex.repository !== "fund" && !ex.investment_profile_id && ex.offering_id) {
+      const m = await drive.ensureInvestorFundFolder(ex.offering_id, { userId });
+      return { ok: m?.status === "active", message: m?.last_error ?? null };
     }
     if (ex.investment_profile_id && ex.offering_id) {
       const m = await drive.ensureInvestorStructure(ex.offering_id, ex.investment_profile_id, { userId });
