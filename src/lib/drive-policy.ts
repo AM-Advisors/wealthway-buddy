@@ -142,3 +142,117 @@ export function exceptionKey(kind: "fund" | "investor" | "file", ...ids: string[
 export function issueAfterAttempts(issue: string, attempts: number): string {
   return attempts >= 3 && issue !== "conflict" && issue !== "permission_too_broad" ? "retry_failed" : issue;
 }
+
+// ---------------------------------------------------------------------------
+// Two-repository model. The broad Harmonious Team "Funds" root holds Fund
+// General records only; investor-level records go to a separate Restricted
+// Investor Records shared drive; QA uses its own root. The server picks.
+// ---------------------------------------------------------------------------
+
+export type DriveRepository = "fund" | "investor" | "test";
+
+export const REPOSITORY_LABELS: Record<DriveRepository, string> = {
+  fund: "Fund Repository",
+  investor: "Investor Repository",
+  test: "Test Repository",
+};
+
+export type RepositoryRoot = { rootId: string; driveId: string };
+export type RepositoryConfig = {
+  fund: RepositoryRoot | null;
+  investor: RepositoryRoot | null;
+  test: RepositoryRoot | null;
+};
+
+export const INVESTOR_UNAVAILABLE = "Investor Drive filing unavailable — repository permissions require review";
+export const TEST_UNAVAILABLE = "Test Drive configuration unavailable";
+export const FUND_UNAVAILABLE = "Fund Drive repository unavailable";
+export const HARMONIOUS_STORAGE = "Kept in private Harmonious storage — never filed to Google Drive";
+
+/** Roots that overlap in any way are treated as misconfigured, never guessed. */
+export function repositoryConfigProblem(c: RepositoryConfig): string | null {
+  const roots = [c.fund, c.investor, c.test].filter(Boolean) as RepositoryRoot[];
+  const ids = roots.map((r) => r.rootId);
+  if (new Set(ids).size !== ids.length) return "Two Drive repositories point at the same root folder.";
+  if (c.fund && c.investor && c.fund.driveId === c.investor.driveId) {
+    return "The Investor repository must be a separate shared drive from the Fund repository.";
+  }
+  if (c.test && ((c.fund && c.test.driveId === c.fund.driveId) || (c.investor && c.test.driveId === c.investor.driveId))) {
+    return "The QA repository must be separate from both production repositories.";
+  }
+  return null;
+}
+
+/** Shared-drive level settings + actual membership, as read from Google. */
+export type RepositoryAudit = {
+  domainUsersOnly: boolean;
+  driveMembersOnly: boolean;
+  /** Only organizers may share folders (editors cannot reshare). */
+  sharingFoldersRequiresOrganizerPermission: boolean;
+  members: DrivePrincipal[];
+};
+
+/** Every reason the restricted repository is not yet safe. Empty = safe. */
+export function repositoryAuditProblems(audit: RepositoryAudit | null, approvedAudience: readonly string[]): string[] {
+  if (!audit) return ["The repository could not be inspected."];
+  const out: string[] = [];
+  if (!audit.domainUsersOnly) out.push("External users can be added.");
+  if (!audit.driveMembersOnly) out.push("Files can be shared with people outside the drive.");
+  if (!audit.sharingFoldersRequiresOrganizerPermission) out.push("Editors can reshare folders.");
+  const approved = new Set(approvedAudience.map((e) => e.toLowerCase()));
+  if (!approved.size) out.push("No approved audience is configured.");
+  for (const m of audit.members) {
+    if (m.type === "anyone" || m.type === "domain") out.push("Link or domain access is enabled.");
+    else if (m.type === "group") out.push(`Group ${m.email ?? ""} is a member; groups cannot be verified.`.replace("  ", " "));
+    else if (!m.email || !approved.has(m.email.toLowerCase())) out.push(`${m.email ?? "An unknown member"} is not approved.`);
+  }
+  return [...new Set(out)];
+}
+
+export type RouteInput = {
+  classification: DriveClassification;
+  text: string;
+  environment: DriveEnvironment;
+  config: RepositoryConfig;
+  /** Result of repositoryAuditProblems for the investor (or test) repository. */
+  investorRepositoryProblems: string[];
+};
+
+export type RouteDecision =
+  | { kind: "drive"; repository: DriveRepository; root: RepositoryRoot }
+  | { kind: "excluded"; reason: string }
+  | { kind: "unavailable"; repository: DriveRepository; reason: string };
+
+/**
+ * Where a document may go. Content comes first (tax forms, KYC/ID evidence and
+ * Harmonious Restricted never go to Drive), then environment (test never falls
+ * back to production), then classification.
+ */
+export function routeDocument(input: RouteInput): RouteDecision {
+  if (neverInDrive(input.text) || input.classification === "harmonious_restricted") {
+    return { kind: "excluded", reason: HARMONIOUS_STORAGE };
+  }
+  const configProblem = repositoryConfigProblem(input.config);
+  const investorLevel = input.classification !== "fund_general";
+  if (input.environment === "test") {
+    if (!input.config.test || configProblem) return { kind: "unavailable", repository: "test", reason: TEST_UNAVAILABLE };
+    if (investorLevel && input.investorRepositoryProblems.length) {
+      return { kind: "unavailable", repository: "test", reason: INVESTOR_UNAVAILABLE };
+    }
+    return { kind: "drive", repository: "test", root: input.config.test };
+  }
+  if (!investorLevel) {
+    if (!input.config.fund || configProblem) return { kind: "unavailable", repository: "fund", reason: FUND_UNAVAILABLE };
+    return { kind: "drive", repository: "fund", root: input.config.fund };
+  }
+  if (!input.config.investor || configProblem || input.investorRepositoryProblems.length) {
+    return { kind: "unavailable", repository: "investor", reason: INVESTOR_UNAVAILABLE };
+  }
+  return { kind: "drive", repository: "investor", root: input.config.investor };
+}
+
+/** Which repository holds a given kind of folder for a given environment. */
+export function repositoryFor(kind: "fund" | "investor" | "investor_fund", env: DriveEnvironment): DriveRepository {
+  if (env === "test") return "test";
+  return kind === "fund" ? "fund" : "investor";
+}
