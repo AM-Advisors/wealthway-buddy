@@ -392,9 +392,9 @@ export async function ensureInvestorFundFolder(offeringId: string, who: Actor = 
   const problems = await investorRepositoryProblems(envName, inspector);
   if (problems.length) {
     const unavailable = problems.includes(TEST_UNAVAILABLE) || problems.includes(INVESTOR_UNAVAILABLE);
-    const message = unavailable ? problems[0] : `${INVESTOR_UNAVAILABLE}: ${problems.join(" ")}`.slice(0, 500);
+    const message: string = unavailable ? (problems[0] ?? INVESTOR_UNAVAILABLE) : `${INVESTOR_UNAVAILABLE}: ${problems.join(" ")}`.slice(0, 500);
     const mapping = await upsertMapping({ ...base, folder_name: name, status: "needs_attention", last_error: message });
-    await raiseDriveException({ key: exKey, issue: unavailable ? "repository_unavailable" : "permission_review", offeringId, mappingId: mapping.id, detail: message, action: "check investor repository", repository });
+    await raiseDriveException({ key: exKey, issue: unavailable ? "repository_unavailable" : "permission_review", offeringId, mappingId: mapping.id, detail: message ?? INVESTOR_UNAVAILABLE, action: "check investor repository", repository });
     await logEvent(offeringId, mapping.id, "repository_blocked", { repository, problems: problems.slice(0, 10) }, who);
     return mapping;
   }
