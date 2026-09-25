@@ -5,6 +5,7 @@ import {
   DriveConflictError,
   FOLDER_MIME,
   FUND_SUBFOLDERS,
+  INVESTOR_FUND_SUBFOLDERS,
   INVESTOR_SUBFOLDERS,
   ensureSubfolders,
   ensureTaggedFolder,
@@ -12,34 +13,61 @@ import {
   filingTargets,
   fundKey,
   investorFolderName,
+  investorFundKey,
   investorKey,
   safeName,
   type DriveClient,
   type DriveFile,
 } from "@/lib/drive-structure";
 import {
+  INVESTOR_UNAVAILABLE,
+  TEST_UNAVAILABLE,
   classifyDocument,
   destinationDecision,
   exceptionKey,
   issueAfterAttempts,
   linkProblem,
-  neverInDrive,
-  rootFor,
+  repositoryAuditProblems,
+  repositoryConfigProblem,
+  repositoryFor,
+  routeDocument,
   type DestinationAudit,
   type DriveEnvironment,
   type DrivePrincipal,
+  type DriveRepository,
   type FolderFacts,
+  type RepositoryAudit,
+  type RepositoryConfig,
+  type RepositoryRoot,
 } from "@/lib/drive-policy";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_drive";
+/** Harmonious Team shared drive → Funds. Fund General records only. */
 export const PRODUCTION_ROOT = "1ObGXOWYDm0XGgf0YyTqA8YTc6A3aS0Ak";
 export const SHARED_DRIVE_ID = "0APbA-DxnxQINUk9PVA";
 
-export const driveRoots = () => ({
-  production: process.env["GOOGLE_DRIVE_ROOT_FOLDER_ID"] || PRODUCTION_ROOT,
-  test: process.env["GOOGLE_DRIVE_QA_ROOT_FOLDER_ID"] || null,
-});
-export const driveRootId = (env: DriveEnvironment = "production") => rootFor(env, driveRoots());
+const env = (k: string) => (process.env[k] ?? "").trim() || null;
+const pair = (root: string | null, drive: string | null): RepositoryRoot | null => (root && drive ? { rootId: root, driveId: drive } : null);
+
+/** Three separately configured roots. None is ever derived from another. */
+export function repositoryConfig(): RepositoryConfig {
+  return {
+    fund: pair(env("GOOGLE_DRIVE_FUND_ROOT_FOLDER_ID") ?? env("GOOGLE_DRIVE_ROOT_FOLDER_ID") ?? PRODUCTION_ROOT, env("GOOGLE_DRIVE_FUND_DRIVE_ID") ?? SHARED_DRIVE_ID),
+    investor: pair(env("GOOGLE_DRIVE_INVESTOR_ROOT_FOLDER_ID"), env("GOOGLE_DRIVE_INVESTOR_DRIVE_ID")),
+    test: pair(env("GOOGLE_DRIVE_QA_ROOT_FOLDER_ID"), env("GOOGLE_DRIVE_QA_DRIVE_ID")),
+  };
+}
+
+function rootOf(repo: DriveRepository): RepositoryRoot {
+  const c = repositoryConfig();
+  const problem = repositoryConfigProblem(c);
+  const r = c[repo];
+  if (repo === "test" && (!r || problem)) throw new Error(TEST_UNAVAILABLE);
+  if (repo === "investor" && (!r || problem)) throw new Error(INVESTOR_UNAVAILABLE);
+  if (!r || problem) throw new Error(problem ?? "Fund Drive repository unavailable");
+  return r;
+}
+
 const approvedRestrictedAudience = () =>
   String(process.env["GOOGLE_DRIVE_RESTRICTED_AUDIENCE"] ?? "")
     .split(",")
@@ -77,6 +105,7 @@ async function list(query: string): Promise<DriveFile[]> {
 export interface DriveInspector {
   folderFacts(id: string): Promise<FolderFacts | null>;
   audit(id: string): Promise<DestinationAudit>;
+  repositoryAudit(driveId: string): Promise<RepositoryAudit | null>;
 }
 
 export const gatewayDrive: DriveClient & DriveInspector = {
@@ -147,7 +176,7 @@ export const gatewayDrive: DriveClient & DriveInspector = {
     const facts = await this.folderFacts(id);
     let limitedAccess = false;
     for (const fid of [id, ...(facts?.ancestors ?? [])]) {
-      if (fid === SHARED_DRIVE_ID) break;
+      if (fid === facts?.driveId) break;
       const meta = await call(`/drive/v3/files/${encodeURIComponent(fid)}?supportsAllDrives=true&fields=inheritedPermissionsDisabled`);
       if (meta.inheritedPermissionsDisabled) {
         limitedAccess = true;
@@ -165,7 +194,34 @@ export const gatewayDrive: DriveClient & DriveInspector = {
     }));
     return { limitedAccess, principals };
   },
+  async repositoryAudit(driveId) {
+    try {
+      const drive = await call(`/drive/v3/drives/${encodeURIComponent(driveId)}?fields=restrictions`);
+      const perms = await call(
+        `/drive/v3/files/${encodeURIComponent(driveId)}/permissions?supportsAllDrives=true&fields=permissions(type,role,emailAddress,domain)`,
+      );
+      const r = drive.restrictions ?? {};
+      return {
+        domainUsersOnly: Boolean(r.domainUsersOnly),
+        driveMembersOnly: Boolean(r.driveMembersOnly),
+        sharingFoldersRequiresOrganizerPermission: Boolean(r.sharingFoldersRequiresOrganizerPermission),
+        members: (perms.permissions ?? []).map((p: any) => ({ type: p.type, role: p.role, email: p.emailAddress ?? null, domain: p.domain ?? null })),
+      };
+    } catch {
+      return null;
+    }
+  },
 };
+
+/** Problems with the repository that would hold investor-level records. Empty = safe. */
+export async function investorRepositoryProblems(envName: DriveEnvironment, inspector: DriveInspector = gatewayDrive): Promise<string[]> {
+  const c = repositoryConfig();
+  const r = envName === "test" ? c.test : c.investor;
+  if (!r) return [envName === "test" ? TEST_UNAVAILABLE : INVESTOR_UNAVAILABLE];
+  const problem = repositoryConfigProblem(c);
+  if (problem) return [problem];
+  return repositoryAuditProblems(await inspector.repositoryAudit(r.driveId), approvedRestrictedAudience());
+}
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
