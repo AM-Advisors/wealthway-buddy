@@ -41,7 +41,7 @@ import {
   type RepositoryRoot,
 } from "@/lib/drive-policy";
 
-const GATEWAY = "https://connector-gateway.lovable.dev/google_drive";
+export const GATEWAY = "https://connector-gateway.lovable.dev/google_drive";
 /** Harmonious Team shared drive → Funds. Fund General records only. */
 export const PRODUCTION_ROOT = "1ObGXOWYDm0XGgf0YyTqA8YTc6A3aS0Ak";
 export const SHARED_DRIVE_ID = "0APbA-DxnxQINUk9PVA";
@@ -76,14 +76,14 @@ const approvedRestrictedAudience = () =>
 
 const q = (s: string) => s.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 
-function headers(extra: Record<string, string> = {}) {
+export function headers(extra: Record<string, string> = {}) {
   const lovable = process.env["LOVABLE_API_KEY"];
   const conn = process.env["GOOGLE_DRIVE_API_KEY"];
   if (!lovable || !conn) throw new Error("Google Drive is not connected.");
   return { Authorization: `Bearer ${lovable}`, "X-Connection-Api-Key": conn, ...extra };
 }
 
-async function call(path: string, init: RequestInit = {}) {
+export async function call(path: string, init: RequestInit = {}) {
   const res = await fetch(`${GATEWAY}${path}`, { ...init, headers: headers(init.headers as any) });
   if (!res.ok) {
     const body = await res.text();
