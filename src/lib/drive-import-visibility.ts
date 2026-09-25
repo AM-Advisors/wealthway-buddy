@@ -166,7 +166,7 @@ export function presentImport(doc: ImportedDoc, audience: Audience, all: Importe
 }
 
 /** The single visibility pipeline used by lists and search alike. */
-export function visibleImports(v: Viewer, docs: ImportedDoc[], opts: { offeringId?: string; search?: string } = {}) {
+export function visibleImports(v: Viewer, docs: ImportedDoc[], opts: { offeringId?: string | undefined; search?: string | undefined } = {}) {
   const term = (opts.search ?? "").trim().toLowerCase();
   return currentVersions(docs)
     .filter((d) => !opts.offeringId || d.offering_id === opts.offeringId)
