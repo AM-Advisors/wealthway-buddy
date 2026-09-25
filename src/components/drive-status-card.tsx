@@ -10,13 +10,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 
 const LABEL: Record<string, string> = {
-  active: "Connected",
-  needs_attention: "Needs attention",
-  conflict: "Conflict — review",
-  pending: "Pending",
+  connected: "Connected",
+  not_connected: "Not Connected",
+  needs_attention: "Needs Attention",
+  permission_review: "Permission Review",
   archived: "Archived",
 };
 
+function Row({ title, status, note, url, openLabel }: { title: string; status: string; note: string; url: string | null; openLabel: string }) {
+  const bad = status === "needs_attention" || status === "permission_review";
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+      <div className="min-w-0">
+        <p className="text-sm font-medium">{title}</p>
+        <p className="text-xs text-muted-foreground">{note}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant={status === "connected" ? "default" : bad ? "destructive" : "secondary"}>{LABEL[status] ?? status}</Badge>
+        {url && (
+          <Button asChild size="sm" variant="outline">
+            <a href={url} target="_blank" rel="noopener noreferrer">{openLabel}</a>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Fund 360 → Google Drive. Two separate repositories, shown without technical IDs. */
 export function DriveStatusCard({ offeringId }: { offeringId: string }) {
   const load = useServerFn(getFundDriveStatus);
   const sync = useServerFn(syncFundDrive);
@@ -26,7 +47,7 @@ export function DriveStatusCard({ offeringId }: { offeringId: string }) {
   const mutation = useMutation({
     mutationFn: (link?: string) => sync({ data: { offeringId, ...(link ? { linkFolderId: link } : {}) } }),
     onSuccess: (r) => {
-      if (r.status === "active") toast.success("Google Drive folders are ready.");
+      if (r.status === "active") toast.success("Fund Records folder is ready.");
       else toast.error(r.error ?? "Google Drive needs attention.");
       setLinkId("");
       void qc.invalidateQueries({ queryKey: ["fund-drive", offeringId] });
@@ -36,51 +57,50 @@ export function DriveStatusCard({ offeringId }: { offeringId: string }) {
 
   if (query.isError) return null;
   const d = query.data;
-  const fund = d?.fund;
-  const status = fund?.status ?? "not_set_up";
-  const attention = status === "needs_attention" || status === "conflict";
+  const fundStatus = d?.fundRecords.status ?? "not_connected";
+  const inv = d?.investorRecords;
+  const conflict = d?.fund?.status === "conflict";
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <CardTitle className="text-base">Google Drive</CardTitle>
-          <Badge variant={status === "active" ? "default" : attention ? "destructive" : "secondary"}>
-            {LABEL[status] ?? "Not set up"}
-          </Badge>
-        </div>
+        <CardTitle className="text-base">Google Drive</CardTitle>
         <CardDescription>
-          {query.isLoading
-            ? "Checking…"
-            : fund?.last_error
-              ? fund.last_error
-              : d?.enabled
-                ? `${d.investors.length} investor folder${d.investors.length === 1 ? "" : "s"}. Executed documents file automatically.`
-                : "Not set up for this fund yet. Tax forms are never filed to Drive."}
+          {query.isLoading ? "Checking…" : "Fund and investor records are kept in separate places. Tax forms and identity evidence never go to Drive."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-2">
-        {fund?.url && (
-          <Button asChild size="sm" variant="outline">
-            <a href={fund.url} target="_blank" rel="noopener noreferrer">Open Fund Folder</a>
-          </Button>
-        )}
+      <CardContent className="space-y-3">
+        <Row
+          title="Fund Records"
+          status={fundStatus}
+          note={d?.fundRecords.error ?? "Approved fund-level documents."}
+          url={d?.fundRecords.url ?? null}
+          openLabel="Open Fund Folder"
+        />
+        <Row
+          title="Investor Records"
+          status={inv?.status ?? "not_connected"}
+          note={
+            inv?.status === "permission_review"
+              ? "Investor Drive filing unavailable — repository permissions require review."
+              : inv?.error ?? (inv?.status === "connected" ? `${inv.folders} investor folder${inv.folders === 1 ? "" : "s"}. Executed documents file automatically.` : "Kept in a separate restricted drive. Not set up yet.")
+          }
+          url={inv?.url ?? null}
+          openLabel="Open Investor Records"
+        />
         {d?.canSync && (
-          <Button size="sm" onClick={() => mutation.mutate(undefined)} disabled={mutation.isPending}>
-            {status === "not_set_up" ? "Create Google Drive Structure" : attention ? "Retry" : "Sync Google Drive Structure"}
-          </Button>
-        )}
-        {d?.canSync && status === "conflict" && (
-          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-            <Input
-              value={linkId}
-              onChange={(e) => setLinkId(e.target.value.trim())}
-              placeholder="Existing folder ID to link"
-              className="h-9 w-full sm:w-64"
-            />
-            <Button size="sm" variant="outline" disabled={!linkId || mutation.isPending} onClick={() => mutation.mutate(linkId)}>
-              Link existing folder
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => mutation.mutate(undefined)} disabled={mutation.isPending}>
+              {fundStatus === "not_connected" ? "Create Fund Records Folder" : fundStatus === "needs_attention" ? "Retry" : "Sync Fund Records"}
             </Button>
+            {conflict && (
+              <>
+                <Input value={linkId} onChange={(e) => setLinkId(e.target.value.trim())} placeholder="Existing folder ID to link" className="h-9 w-full sm:w-64" />
+                <Button size="sm" variant="outline" disabled={!linkId || mutation.isPending} onClick={() => mutation.mutate(linkId)}>
+                  Link existing folder
+                </Button>
+              </>
+            )}
           </div>
         )}
       </CardContent>
