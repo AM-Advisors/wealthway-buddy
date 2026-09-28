@@ -236,12 +236,12 @@ export function InvestmentChecklist({ onboardingId, viewAs = false }: { onboardi
   if (q.isError || !q.data) return null;
   const d = q.data as any;
   const r = d.readiness;
-  const subtitle = [d.fundName, r?.amountCents ?? d.amountCents ? `${money(d.amountCents)} investment` : null, d.profileLabel].filter(Boolean).join(" · ");
+  const subtitle = [d.fundName, d.amountCents ? `${money(d.amountCents)} investment` : null].filter(Boolean).join(" · ");
   return (
     <ReadinessSurface
       r={r}
       viewer={d.viewer}
-      title={d.investorName ?? "Investment Readiness"}
+      title={d.profileLabel ?? "Investment Readiness"}
       subtitle={subtitle}
       action={!viewAs && d.viewer === "staff" ? <ViewAsPicker onboardingId={onboardingId} label="View client perspective" /> : undefined}
     />
