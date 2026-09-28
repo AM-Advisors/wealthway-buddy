@@ -1961,6 +1961,7 @@ export async function investmentReadiness(userId: string, onboardingId: string) 
     onboardingId,
     fundName: offering?.name ?? "Fund",
     profileLabel: facts.profile?.display_label ?? null,
+    amountCents: access.row.accepted_amount_cents ?? access.row.requested_amount_cents ?? null,
     viewer: access.role,
     readiness: readinessView(result, access.role),
   };
@@ -1989,6 +1990,7 @@ export async function fundReadiness(userId: string, offeringId: string) {
       percentComplete: v.percentComplete,
       nextAction: v.nextAction,
       closeReady: v.closeReady,
+      updatedAt: row.updated_at ?? null,
       readiness: v,
     });
   }
