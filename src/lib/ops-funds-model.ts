@@ -78,3 +78,17 @@ export function matchesFilter(r: { isOpen: boolean; targetClose: string | null; 
     }
   }
 }
+
+/** Investors-tab totals from canonical fund readiness rows. */
+export function rosterSummary(rows: { closeReady: boolean; readiness: any }[]) {
+  const s = { total: rows.length, onboarding: 0, ready: 0, needsAttention: 0, funded: 0 };
+  for (const r of rows) {
+    const items = r.readiness?.items ?? [];
+    if (items.some((i: any) => i.key === "funding" && i.status === "complete")) s.funded++;
+    if (r.readiness?.terminal === "closed") continue;
+    if (r.closeReady) { s.ready++; continue; }
+    s.onboarding++;
+    if (items.some((i: any) => i.status === "blocked" || i.status === "needs_harmonious" || i.status === "needs_fund_manager")) s.needsAttention++;
+  }
+  return s;
+}

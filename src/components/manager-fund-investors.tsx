@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MoreHorizontal } from "lucide-react";
 import { AddExistingInvestor } from "@/components/add-existing-investor";
+import { FundRosterSummary } from "@/components/fund-roster-summary";
 import { getFundInvestorActions, removeFundAccess, resendInvitation } from "@/lib/invitations.functions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useServerFn } from "@tanstack/react-start";
@@ -74,6 +75,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
           <Button size="sm" variant="outline" onClick={() => setPanel(panel === "many" ? null : "many")}>Bulk Invite</Button>
         </div>
       </div>
+      <div className="mt-5"><FundRosterSummary fundId={fundId} /></div>
       {panel === "existing" && <div className="mt-5"><AddExistingInvestor fundId={fundId} /></div>}
       {panel === "one" && <div className="mt-5"><ManagerAddInvestor fundId={fundId} /></div>}
       {panel === "prep" && <div className="mt-5"><PrepareInvestor fundId={fundId} /></div>}
