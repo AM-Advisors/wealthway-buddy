@@ -1,70 +1,227 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
+import { AlertCircle, Check, ChevronDown, Circle, Inbox, Search } from "lucide-react";
 import { fundReadinessFn, investmentReadinessFn, readinessQueueFn } from "@/lib/investor-onboarding.functions";
 import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
 import { ViewAsPicker } from "@/components/view-as";
-import { OWNER_LABELS, STATUS_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { OWNER_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+
+type Viewer = "staff" | "investor" | "manager";
 
 const money = (c: number | null | undefined) => (c ? `$${(c / 100).toLocaleString("en-US")}` : "—");
 const ownerText = (o: string | null | undefined) => (o ? OWNER_LABELS[o as keyof typeof OWNER_LABELS] : "—");
+const ACTIVE = new Set(["needs_investor", "needs_fund_manager", "needs_harmonious", "under_review", "blocked"]);
 
-function StatusBadge({ status, label }: { status: ReadinessStatus; label?: string }) {
-  const v = status === "complete" ? "secondary" : status === "blocked" ? "destructive" : "outline";
-  return <Badge variant={v as any}>{label ?? STATUS_LABELS[status]}</Badge>;
+/** Plain-language presentation of the nine internal statuses. The model itself is unchanged. */
+function plainStatus(s: ReadinessStatus, viewer: Viewer): string {
+  switch (s) {
+    case "complete": return "Complete";
+    case "needs_investor": return viewer === "investor" ? "Needs your attention" : "Waiting on investor";
+    case "needs_fund_manager": return viewer === "manager" ? "Needs your attention" : "Waiting on fund manager";
+    case "needs_harmonious": return "Waiting on Harmonious";
+    case "under_review": return "Under review";
+    case "blocked": return "Blocked";
+    case "in_progress": return "In progress";
+    case "not_started": return "Not started";
+    case "not_applicable": return "Not applicable";
+  }
 }
 
-function Checklist({ r, showReasons }: { r: any; showReasons: boolean }) {
+function tone(s: ReadinessStatus) {
+  if (s === "complete") return "text-muted-foreground";
+  if (s === "blocked") return "text-destructive";
+  if (ACTIVE.has(s)) return "text-primary";
+  return "text-muted-foreground";
+}
+
+function closeHeadline(r: any) {
+  if (r.terminal === "closed") return "Closed";
+  if (r.terminal) return r.terminal === "declined" ? "Declined" : "Cancelled";
+  return r.closeReady ? "Ready to Close" : "Not Ready to Close";
+}
+
+function ago(iso: string | null | undefined) {
+  if (!iso) return "—";
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (m < 60) return `${m}m ago`;
+  if (m < 1440) return `${Math.round(m / 60)}h ago`;
+  return `${Math.round(m / 1440)}d ago`;
+}
+
+function fmtDate(d: string | null | undefined) {
+  if (!d) return "Not scheduled";
+  const dt = new Date(d.length === 10 ? `${d}T12:00:00` : d);
+  return isNaN(dt.getTime()) ? d : dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function Kv({ label, value, strong }: { label: string; value: React.ReactNode; strong?: boolean }) {
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div>
-          <p className="text-2xl font-semibold">{r.percentComplete}% Complete</p>
-          <Progress value={r.percentComplete} className="mt-1" />
-          <p className="mt-1 text-xs text-muted-foreground">{r.completeCount} of {r.requiredCount} required items. Not-applicable items are excluded.</p>
+    <div className="min-w-0">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className={cn("truncate", strong ? "font-heading text-base font-semibold" : "text-sm")}>{value}</p>
+    </div>
+  );
+}
+
+function blockersOf(r: any) {
+  return (r.items ?? []).filter((i: any) => i.required !== false && ACTIVE.has(i.status));
+}
+
+/** Header: close readiness first, then Next Action, Owner, Progress and Target Close. */
+function ReadinessHeader({ r, title, subtitle, action }: { r: any; title: string; subtitle: string; action?: React.ReactNode }) {
+  const n = blockersOf(r).length;
+  const ready = r.closeReady || r.terminal === "closed";
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="font-heading text-xl font-semibold">{title}</h2>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Next step</p>
-          <p className="font-medium">{r.nextAction?.label ?? "Nothing outstanding"}</p>
-          <p className="text-xs text-muted-foreground">Action required from: {ownerText(r.nextAction?.owner)}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Close readiness</p>
-          <p className="font-medium">{r.terminal === "closed" ? "Closed" : r.closeReady ? "Ready to Close" : "Not Ready to Close"}</p>
-          {!r.closeReady && r.closeBlockers?.length ? <p className="text-xs text-muted-foreground">Still needed: {r.closeBlockers.slice(0, 3).join(", ")}{r.closeBlockers.length > 3 ? "…" : ""}</p> : null}
-          {r.requestedCloseDate ? <p className="text-xs text-muted-foreground">Requested close: {r.requestedCloseDate}</p> : null}
-        </div>
+        {action}
       </div>
-      {!r.closeReady && r.percentComplete >= 90 && !r.terminal ? (
-        <p className="text-xs text-muted-foreground">A nearly complete investment is still not ready to close while any blocking item remains.</p>
-      ) : null}
-      <ol className="space-y-2">
-        {r.stages.map((s: any, idx: number) => (
-          <li key={s.stage} className="rounded-md border p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-medium">{idx + 1}. {s.title}{r.currentStage === s.stage ? <span className="ml-2 text-xs text-muted-foreground">Current stage</span> : null}</p>
-              <StatusBadge status={s.status} label={s.safeLabel} />
+      <div>
+        <p className={cn("font-heading text-2xl font-semibold sm:text-3xl", ready ? "text-accent-foreground" : "text-foreground")}>
+          <span className={cn("mr-2 inline-block h-3 w-3 rounded-full align-middle", ready ? "bg-accent" : n ? "bg-destructive/80" : "bg-muted-foreground/40")} />
+          {closeHeadline(r)}
+        </p>
+        {!r.terminal ? <p className="text-sm text-muted-foreground">{n ? `${n} item${n === 1 ? "" : "s"} still need${n === 1 ? "s" : ""} attention` : ready ? "All required items are complete" : "No action needed right now"}</p> : null}
+      </div>
+      <div className="grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-4">
+        <Kv label="Next Action" value={r.nextAction?.label ?? (ready ? "Ready to close" : "Nothing outstanding")} strong />
+        <Kv label="Owner" value={ownerText(r.nextAction?.owner)} strong />
+        <Kv label="Progress" value={`${r.percentComplete}% · ${r.completeCount} of ${r.requiredCount}`} />
+        <Kv label="Target Close" value={fmtDate(r.requestedCloseDate)} />
+      </div>
+    </div>
+  );
+}
+
+function AttentionNeeded({ r, viewer }: { r: any; viewer: Viewer }) {
+  const list = blockersOf(r);
+  if (!list.length || r.terminal) return null;
+  return (
+    <section className="space-y-2">
+      <h3 className="flex items-center gap-2 text-sm font-semibold"><AlertCircle className="h-4 w-4 text-destructive" />Attention Needed</h3>
+      <ul className="divide-y rounded-lg border-l-4 border-l-destructive/70 bg-muted/40">
+        {list.map((i: any) => (
+          <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{i.owner ? `${ownerText(i.owner)} action` : "Action"}</p>
+              <p className="text-sm font-medium">{i.action ?? i.label}</p>
             </div>
-            <ul className="mt-2 space-y-1">
-              {r.items.filter((i: any) => i.stage === s.stage && i.status !== "not_applicable").map((i: any) => (
-                <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <span>{i.label}{showReasons && i.reason ? <span className="text-muted-foreground"> — {i.reason}</span> : null}</span>
-                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {i.owner ? <span>{ownerText(i.owner)}</span> : null}
-                    <StatusBadge status={i.status} />
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <span className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</span>
           </li>
         ))}
+      </ul>
+    </section>
+  );
+}
+
+function StageIcon({ s, current }: { s: ReadinessStatus; current: boolean }) {
+  if (s === "complete") return <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/30"><Check className="h-3.5 w-3.5" /></span>;
+  if (s === "blocked") return <span className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive/15"><AlertCircle className="h-3.5 w-3.5 text-destructive" /></span>;
+  if (ACTIVE.has(s) || current) return <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"><Circle className="h-2.5 w-2.5 fill-current" /></span>;
+  return <span className="flex h-6 w-6 items-center justify-center rounded-full border"><Circle className="h-2 w-2 text-muted-foreground" /></span>;
+}
+
+/** Eight stages as a compact vertical journey; detail on demand. */
+function StageJourney({ r, viewer }: { r: any; viewer: Viewer }) {
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <section className="space-y-1">
+      <h3 className="text-sm font-semibold">Journey</h3>
+      <ol className="relative">
+        {r.stages.map((s: any, idx: number) => {
+          const items = r.items.filter((i: any) => i.stage === s.stage && i.status !== "not_applicable");
+          const pending = items.filter((i: any) => ACTIVE.has(i.status)).length;
+          const current = r.currentStage === s.stage;
+          const isOpen = open === s.stage;
+          const label = s.safeLabel ?? plainStatus(s.status, viewer);
+          return (
+            <li key={s.stage} className="relative pl-9">
+              {idx < r.stages.length - 1 ? <span className="absolute left-3 top-8 h-[calc(100%-1.5rem)] w-px bg-border" /> : null}
+              <span className="absolute left-0 top-2.5"><StageIcon s={s.status} current={current} /></span>
+              <button type="button" onClick={() => setOpen(isOpen ? null : s.stage)} aria-expanded={isOpen} className="flex w-full items-center justify-between gap-2 rounded-md py-2.5 text-left hover:bg-muted/40">
+                <span className={cn("text-sm", s.status === "complete" ? "text-muted-foreground" : "font-medium", current && "font-semibold")}>
+                  {s.title}{current ? <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary">Current</span> : null}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className={cn("text-xs", tone(s.status))}>{label}{pending ? ` · ${pending} item${pending === 1 ? "" : "s"}` : ""}</span>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                </span>
+              </button>
+              {isOpen ? (
+                <ul className="mb-2 space-y-1.5 border-l-2 border-muted pl-3">
+                  {items.length ? items.map((i: any) => (
+                    <li key={i.key} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="min-w-0">{i.label}{viewer !== "manager" && i.reason ? <span className="block text-xs text-muted-foreground">{i.reason}</span> : null}</span>
+                      <span className="flex items-center gap-2 text-xs">
+                        {i.owner && i.status !== "complete" ? <span className="text-muted-foreground">{ownerText(i.owner)}</span> : null}
+                        <span className={tone(i.status)}>{plainStatus(i.status, viewer)}</span>
+                      </span>
+                    </li>
+                  )) : <li className="text-xs text-muted-foreground">Nothing required at this stage.</li>}
+                </ul>
+              ) : null}
+            </li>
+          );
+        })}
       </ol>
+    </section>
+  );
+}
+
+/** Staff-only operational detail. Never rendered for investor or fund manager viewers. */
+function AuditDetails({ r }: { r: any }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="border-t pt-3">
+      <button type="button" onClick={() => setOpen(!open)} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />Audit & Details
+      </button>
+      {open ? (
+        <div className="mt-2 space-y-2 text-xs text-muted-foreground">
+          <p>Rule version {r.ruleVersion}. Not-applicable items are excluded from progress. A nearly complete investment stays Not Ready to Close while any blocking item remains.</p>
+          {r.closeBlockers?.length ? <p>Close blockers: {r.closeBlockers.join(", ")}</p> : null}
+          <table className="w-full">
+            <thead><tr className="text-left"><th className="py-1 font-medium">Item</th><th className="font-medium">Source</th><th className="font-medium">Status</th></tr></thead>
+            <tbody>
+              {r.items.map((i: any) => (
+                <tr key={i.key} className="border-t align-top"><td className="py-1 pr-2">{i.label}{i.reason ? ` — ${i.reason}` : ""}</td><td className="pr-2">{i.source ?? "—"}</td><td>{i.status}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function ReadinessSurface({ r, viewer, title, subtitle, action }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode }) {
+  return (
+    <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
+      <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
+      <AttentionNeeded r={r} viewer={viewer} />
+      <StageJourney r={r} viewer={viewer} />
+      {viewer === "staff" ? <AuditDetails r={r} /> : null}
+    </div>
+  );
+}
+
+function Empty({ title, body, icon }: { title: string; body: string; icon?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed px-6 py-12 text-center">
+      {icon ?? <Inbox className="h-6 w-6 text-muted-foreground" />}
+      <p className="font-heading font-semibold">{title}</p>
+      <p className="max-w-sm text-sm text-muted-foreground">{body}</p>
     </div>
   );
 }
@@ -75,104 +232,184 @@ export function InvestmentChecklist({ onboardingId, viewAs = false }: { onboardi
   const loadAs = useServerFn(viewAsInvestmentFn);
   // In View As the server resolves the investment from the live perspective; no ID is sent.
   const q = useQuery({ queryKey: viewAs ? ["view-as", "investment"] : ["investment-readiness", onboardingId], queryFn: () => (viewAs ? loadAs() : load({ data: { onboardingId } })), retry: false });
-  if (q.isPending) return <Skeleton className="h-40 w-full" />;
+  if (q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
   if (q.isError || !q.data) return null;
   const d = q.data as any;
+  const r = d.readiness;
+  const subtitle = [d.fundName, r?.amountCents ?? d.amountCents ? `${money(d.amountCents)} investment` : null, d.profileLabel].filter(Boolean).join(" · ");
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{d.fundName} — Investment Readiness</CardTitle>
-        <CardDescription>Investment Checklist{d.profileLabel ? ` · ${d.profileLabel}` : ""}. Updated automatically from verification, signing, tax and banking records.</CardDescription>
-        {!viewAs && d.viewer === "staff" ? <div className="pt-1"><ViewAsPicker onboardingId={onboardingId} label="See Client View" /></div> : null}
-      </CardHeader>
-      <CardContent><Checklist r={d.readiness} showReasons={d.viewer !== "manager"} /></CardContent>
-    </Card>
+    <ReadinessSurface
+      r={r}
+      viewer={d.viewer}
+      title={d.investorName ?? "Investment Readiness"}
+      subtitle={subtitle}
+      action={!viewAs && d.viewer === "staff" ? <ViewAsPicker onboardingId={onboardingId} label="View client perspective" /> : undefined}
+    />
   );
 }
 
-/** Fund → Readiness: one row per Investment, from the same engine. */
+type Bucket = "all" | "ready" | "needs_investor" | "needs_fund_manager" | "needs_harmonious" | "blocked";
+const BUCKET_LABEL: Record<Bucket, string> = { all: "All", ready: "Ready", needs_investor: "Needs Investor", needs_fund_manager: "Needs Fund Manager", needs_harmonious: "Needs Harmonious", blocked: "Blocked" };
+
+function bucketOf(row: any): Bucket {
+  const r = row.readiness;
+  if (row.closeReady || r?.terminal === "closed") return "ready";
+  if ((r?.items ?? []).some((i: any) => i.status === "blocked")) return "blocked";
+  const o = row.nextAction?.owner;
+  if (o === "investor") return "needs_investor";
+  if (o === "fund_manager") return "needs_fund_manager";
+  if (o === "harmonious") return "needs_harmonious";
+  return "all";
+}
+
+function FilterChips<T extends string>({ value, options, labels, counts, onChange }: { value: T; options: T[]; labels: Record<T, string>; counts?: Partial<Record<T, number>>; onChange: (v: T) => void }) {
+  return (
+    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+      {options.map((o) => (
+        <button key={o} type="button" onClick={() => onChange(o)} className={cn("whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition-colors", value === o ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}>
+          {labels[o]}{counts?.[o] != null ? <span className="ml-1 opacity-70">{counts[o]}</span> : null}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Fund → Readiness: operations dashboard over the same engine. */
 export function FundReadiness({ fundId, viewAs = false }: { fundId: string; viewAs?: boolean }) {
   const load = useServerFn(fundReadinessFn);
   const loadAs = useServerFn(viewAsFundFn);
   const q = useQuery({ queryKey: viewAs ? ["view-as", "fund"] : ["fund-readiness", fundId], queryFn: () => (viewAs ? loadAs() : load({ data: { offeringId: fundId } })), retry: false });
   const [open, setOpen] = useState<string | null>(null);
-  if (q.isPending) return <Skeleton className="h-40 w-full" />;
+  const [bucket, setBucket] = useState<Bucket>("all");
+  const [term, setTerm] = useState("");
+  const rows = ((q.data as any)?.rows ?? []) as any[];
+  const counts = useMemo(() => {
+    const c: Record<Bucket, number> = { all: rows.length, ready: 0, needs_investor: 0, needs_fund_manager: 0, needs_harmonious: 0, blocked: 0 };
+    for (const r of rows) { const b = bucketOf(r); if (b !== "all") c[b]++; }
+    return c;
+  }, [rows]);
+  if (q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
   if (q.isError) return <p className="text-sm text-muted-foreground">Investor readiness is available to Harmonious staff and managers of this fund.</p>;
   const d = q.data as any;
-  const sel = d.rows.find((r: any) => r.onboardingId === open);
+  const shown = rows.filter((r) => (bucket === "all" || bucketOf(r) === bucket) && (!term || String(r.investorName).toLowerCase().includes(term.toLowerCase())));
+  const sel = rows.find((r) => r.onboardingId === open);
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Investor Readiness</CardTitle>
-          <CardDescription>Each investment's progress, next action and who owns it. Statuses are high level; underlying verification, tax and identity evidence is not shown here.</CardDescription>
-          {!viewAs && d.viewer === "staff" ? <div className="pt-2"><ViewAsPicker offeringId={fundId} label="See Client View" /></div> : null}
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          {!d.rows.length ? <p className="text-sm text-muted-foreground">No investments in progress for this fund yet.</p> : (
-            <table className="w-full text-sm">
-              <thead><tr className="text-left text-muted-foreground"><th className="py-2">Investor</th><th>Profile</th><th>Investment</th><th>Progress</th><th>Next Action</th><th>Owner</th><th>Close Ready</th></tr></thead>
-              <tbody>
-                {d.rows.map((r: any) => (
-                  <tr key={r.onboardingId} className="border-t">
-                    <td className="py-2"><Button variant="link" className="h-auto p-0" onClick={() => setOpen(r.onboardingId === open ? null : r.onboardingId)}>{r.investorName}</Button></td>
-                    <td>{r.profileLabel ?? r.profileType ?? "—"}</td>
-                    <td>{money(r.amountCents)}</td>
-                    <td>{r.percentComplete}%</td>
-                    <td>{r.nextAction?.label ?? "None"}</td>
-                    <td>{ownerText(r.nextAction?.owner)}</td>
-                    <td>{r.closeReady ? "Yes" : "No"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-heading text-xl font-semibold">Investor Readiness</h2>
+          <p className="text-sm text-muted-foreground">Who is ready, who is not, and why.</p>
+        </div>
+        {!viewAs && d.viewer === "staff" ? <ViewAsPicker offeringId={fundId} label="View client perspective" /> : null}
+      </div>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
+        {(["all", "ready", "needs_investor", "needs_harmonious", "blocked"] as Bucket[]).map((b) => (
+          <div key={b} className="bg-card p-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{b === "all" ? "Total Investors" : b === "ready" ? "Ready to Close" : BUCKET_LABEL[b]}</p>
+            <p className={cn("font-heading text-2xl font-semibold", b === "blocked" && counts.blocked ? "text-destructive" : "")}>{counts[b]}</p>
+          </div>
+        ))}
+      </div>
+      {!rows.length ? (
+        <Empty title="No investments to review yet" body="Investments will appear here as investors begin onboarding for this fund." />
+      ) : (
+        <div className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <FilterChips value={bucket} options={Object.keys(BUCKET_LABEL) as Bucket[]} labels={BUCKET_LABEL} counts={counts} onChange={setBucket} />
+            <div className="relative sm:w-56"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search investor" className="h-9 pl-8" /></div>
+          </div>
+          <div className="overflow-hidden rounded-xl border">
+            <div className="hidden grid-cols-[1.4fr_0.8fr_0.9fr_1.6fr_0.8fr_0.6fr] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground md:grid">
+              <span>Investor</span><span>Investment</span><span>Readiness</span><span>Next Action</span><span>Owner</span><span>Updated</span>
+            </div>
+            {!shown.length ? <p className="px-4 py-6 text-sm text-muted-foreground">No investors match this filter.</p> : shown.map((r) => (
+              <button key={r.onboardingId} type="button" onClick={() => setOpen(r.onboardingId === open ? null : r.onboardingId)}
+                className={cn("grid w-full grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-left text-sm last:border-b-0 hover:bg-muted/40 md:grid-cols-[1.4fr_0.8fr_0.9fr_1.6fr_0.8fr_0.6fr] md:items-center", open === r.onboardingId && "bg-muted/60")}>
+                <span className="font-medium">{r.investorName}<span className="block text-xs font-normal text-muted-foreground">{r.profileLabel ?? r.profileType ?? ""}</span></span>
+                <span className="text-right md:text-left">{money(r.amountCents)}</span>
+                <span className={cn("text-xs font-semibold", r.closeReady ? "text-accent-foreground" : bucketOf(r) === "blocked" ? "text-destructive" : "")}>{r.closeReady ? "Ready" : bucketOf(r) === "blocked" ? "Blocked" : "Not Ready"}<span className="ml-1 font-normal text-muted-foreground">{r.percentComplete}%</span></span>
+                <span className="col-span-2 md:col-span-1">{r.nextAction?.label ?? "Nothing outstanding"}</span>
+                <span className="text-xs text-muted-foreground md:text-sm md:text-foreground">{ownerText(r.nextAction?.owner)}</span>
+                <span className="text-right text-xs text-muted-foreground md:text-left">{ago(r.updatedAt)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {sel ? (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{sel.investorName} — Investment Checklist</CardTitle></CardHeader>
-          <CardContent><Checklist r={sel.readiness} showReasons={d.viewer === "staff"} /></CardContent>
-        </Card>
+        <ReadinessSurface r={sel.readiness} viewer={d.viewer} title={sel.investorName} subtitle={[money(sel.amountCents), sel.profileLabel].filter(Boolean).join(" · ")}
+          action={!viewAs && d.viewer === "staff" ? <ViewAsPicker onboardingId={sel.onboardingId} label="View client perspective" /> : undefined} />
       ) : null}
     </div>
   );
 }
 
-/** Operations → readiness queue: open internal tasks owned by Harmonious, oldest first. */
+type QTab = "harmonious" | "investor" | "fund_manager" | "all";
+const QTAB_LABEL: Record<QTab, string> = { harmonious: "Needs Harmonious", investor: "Waiting on Investor", fund_manager: "Waiting on Fund Manager", all: "All" };
+
+function TriageDrawer({ item, onClose }: { item: any | null; onClose: () => void }) {
+  return (
+    <Sheet open={!!item} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
+        {item ? (
+          <>
+            <SheetHeader className="mb-4">
+              <SheetTitle className="font-heading">{item.investorName}</SheetTitle>
+              <SheetDescription>{item.fundName} · Waiting {item.ageDays === 0 ? "today" : `${item.ageDays} day${item.ageDays === 1 ? "" : "s"}`}</SheetDescription>
+            </SheetHeader>
+            <div className="space-y-4">
+              {item.onboardingId ? <InvestmentChecklist onboardingId={item.onboardingId} /> : null}
+              <div className="flex flex-wrap gap-3">
+                {item.offeringId ? <Button asChild size="sm"><Link to="/manager/fund/$fundId/readiness" params={{ fundId: item.offeringId }}>Open Investment</Link></Button> : null}
+              </div>
+            </div>
+          </>
+        ) : null}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/** Operations → readiness queue: an inbox of open work items, oldest first. */
 export function ReadinessQueue() {
   const load = useServerFn(readinessQueueFn);
   const q = useQuery({ queryKey: ["readiness-queue"], queryFn: () => load(), retry: false });
-  const [owner, setOwner] = useState<string>("harmonious");
-  if (q.isPending) return <Skeleton className="h-40 w-full" />;
+  const [tab, setTab] = useState<QTab>("harmonious");
+  const [sel, setSel] = useState<any | null>(null);
+  if (q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
   if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
-  const rows = ((q.data ?? []) as any[]).filter((r) => owner === "all" || r.owner === owner);
+  const all = (q.data ?? []) as any[];
+  const counts = { harmonious: 0, investor: 0, fund_manager: 0, all: all.length } as Record<QTab, number>;
+  for (const r of all) if (r.owner in counts) counts[r.owner as QTab]++;
+  const rows = all.filter((r) => tab === "all" || r.owner === tab);
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Investment readiness queue</CardTitle>
-        <CardDescription>Open work items created automatically from each investment's checklist. They resolve on their own when the underlying record changes. No emails are sent from here.</CardDescription>
-        <div className="flex gap-2 pt-2">
-          {["harmonious", "investor", "fund_manager", "all"].map((o) => (
-            <Button key={o} size="sm" variant={owner === o ? "default" : "outline"} onClick={() => setOwner(o)}>{o === "all" ? "All" : ownerText(o)}</Button>
+    <div className="space-y-4">
+      <div>
+        <h2 className="font-heading text-xl font-semibold">Investment readiness</h2>
+        <p className="text-sm text-muted-foreground">What needs Harmonious attention now.</p>
+      </div>
+      <FilterChips value={tab} options={Object.keys(QTAB_LABEL) as QTab[]} labels={QTAB_LABEL} counts={counts} onChange={setTab} />
+      {!rows.length ? (
+        <Empty title="You're caught up" body="There are no investment readiness items requiring attention." icon={<Check className="h-6 w-6 text-accent-foreground" />} />
+      ) : (
+        <ul className="divide-y overflow-hidden rounded-xl border bg-card">
+          {rows.map((r) => (
+            <li key={r.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+              <button type="button" onClick={() => setSel(r)} className="grid min-w-0 flex-1 grid-cols-2 gap-x-4 gap-y-0.5 text-left sm:grid-cols-[1.2fr_1fr_1.6fr_0.5fr]">
+                <span className="font-medium">{r.investorName}</span>
+                <span className="text-right text-sm text-muted-foreground sm:text-left">{r.fundName}</span>
+                <span className="col-span-2 text-sm sm:col-span-1">{r.title}<span className="ml-2 text-xs text-muted-foreground">{ownerText(r.owner)}</span></span>
+                <span className={cn("text-xs sm:text-sm", r.ageDays >= 3 ? "font-semibold text-destructive" : "text-muted-foreground")}>{r.ageDays === 0 ? "Today" : `${r.ageDays}d`}</span>
+              </button>
+              <div className="flex items-center gap-3">
+                <Button size="sm" variant="outline" onClick={() => setSel(r)}>Open</Button>
+                {r.onboardingId ? <ViewAsPicker onboardingId={r.onboardingId} label="View as…" /> : null}
+              </div>
+            </li>
           ))}
-        </div>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        {!rows.length ? <p className="text-sm text-muted-foreground">Nothing waiting.</p> : (
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-muted-foreground"><th className="py-2">Fund</th><th>Investor</th><th>Action</th><th>Owner</th><th>Age</th><th /></tr></thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-t">
-                  <td className="py-2">{r.fundName}</td><td>{r.investorName}</td><td>{r.title}</td><td>{ownerText(r.owner)}</td><td>{r.ageDays}d</td>
-                  <td className="space-x-3 whitespace-nowrap">{r.offeringId ? <Link to="/manager/fund/$fundId/readiness" params={{ fundId: r.offeringId }} className="text-primary underline">Open</Link> : null}{r.onboardingId ? <ViewAsPicker onboardingId={r.onboardingId} label="View as…" /> : null}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </CardContent>
-    </Card>
+        </ul>
+      )}
+      <TriageDrawer item={sel} onClose={() => setSel(null)} />
+    </div>
   );
 }

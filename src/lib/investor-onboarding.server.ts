@@ -1989,6 +1989,7 @@ export async function fundReadiness(userId: string, offeringId: string) {
       percentComplete: v.percentComplete,
       nextAction: v.nextAction,
       closeReady: v.closeReady,
+      updatedAt: row.updated_at ?? null,
       readiness: v,
     });
   }
