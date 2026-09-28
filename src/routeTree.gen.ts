@@ -285,6 +285,7 @@ import { Route as AuthenticatedManagerFundFundIdAssetsRouteImport } from './rout
 import { Route as AuthenticatedManagerFundFundIdComplianceRouteImport } from './routes/_authenticated/manager.fund.$fundId.compliance'
 import { Route as AuthenticatedManagerFundFundIdDocumentsRouteImport } from './routes/_authenticated/manager.fund.$fundId.documents'
 import { Route as AuthenticatedManagerFundFundIdInvestorsRouteImport } from './routes/_authenticated/manager.fund.$fundId.investors'
+import { Route as AuthenticatedManagerFundFundIdOnboardingLinkRouteImport } from './routes/_authenticated/manager.fund.$fundId.onboarding-link'
 import { Route as AuthenticatedManagerFundFundIdReadinessRouteImport } from './routes/_authenticated/manager.fund.$fundId.readiness'
 import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './routes/_authenticated/manager.fund.$fundId.settings'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
@@ -1865,6 +1866,12 @@ const AuthenticatedManagerFundFundIdInvestorsRoute =
     path: '/investors',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedManagerFundFundIdOnboardingLinkRoute =
+  AuthenticatedManagerFundFundIdOnboardingLinkRouteImport.update({
+    id: '/onboarding-link',
+    path: '/onboarding-link',
+    getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdReadinessRoute =
   AuthenticatedManagerFundFundIdReadinessRouteImport.update({
     id: '/readiness',
@@ -2165,6 +2172,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -2440,6 +2448,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -2723,6 +2732,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/_authenticated/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/_authenticated/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  '/_authenticated/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/_authenticated/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/_authenticated/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -3006,6 +3016,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/compliance'
     | '/manager/fund/$fundId/documents'
     | '/manager/fund/$fundId/investors'
+    | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
@@ -3281,6 +3292,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/compliance'
     | '/manager/fund/$fundId/documents'
     | '/manager/fund/$fundId/investors'
+    | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
@@ -3563,6 +3575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/compliance'
     | '/_authenticated/manager/fund/$fundId/documents'
     | '/_authenticated/manager/fund/$fundId/investors'
+    | '/_authenticated/manager/fund/$fundId/onboarding-link'
     | '/_authenticated/manager/fund/$fundId/readiness'
     | '/_authenticated/manager/fund/$fundId/settings'
     | '/_authenticated/manager/fund/$fundId/team'
@@ -5549,6 +5562,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdInvestorsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/manager/fund/$fundId/onboarding-link': {
+      id: '/_authenticated/manager/fund/$fundId/onboarding-link'
+      path: '/onboarding-link'
+      fullPath: '/manager/fund/$fundId/onboarding-link'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdOnboardingLinkRouteImport
+      parentRoute: typeof AuthenticatedManagerFundFundIdRoute
+    }
     '/_authenticated/manager/fund/$fundId/readiness': {
       id: '/_authenticated/manager/fund/$fundId/readiness'
       path: '/readiness'
@@ -5764,6 +5784,7 @@ interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdComplianceRoute: typeof AuthenticatedManagerFundFundIdComplianceRoute
   AuthenticatedManagerFundFundIdDocumentsRoute: typeof AuthenticatedManagerFundFundIdDocumentsRoute
   AuthenticatedManagerFundFundIdInvestorsRoute: typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  AuthenticatedManagerFundFundIdOnboardingLinkRoute: typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   AuthenticatedManagerFundFundIdReadinessRoute: typeof AuthenticatedManagerFundFundIdReadinessRoute
   AuthenticatedManagerFundFundIdSettingsRoute: typeof AuthenticatedManagerFundFundIdSettingsRoute
   AuthenticatedManagerFundFundIdTeamRoute: typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -5781,6 +5802,8 @@ const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundI
       AuthenticatedManagerFundFundIdDocumentsRoute,
     AuthenticatedManagerFundFundIdInvestorsRoute:
       AuthenticatedManagerFundFundIdInvestorsRoute,
+    AuthenticatedManagerFundFundIdOnboardingLinkRoute:
+      AuthenticatedManagerFundFundIdOnboardingLinkRoute,
     AuthenticatedManagerFundFundIdReadinessRoute:
       AuthenticatedManagerFundFundIdReadinessRoute,
     AuthenticatedManagerFundFundIdSettingsRoute:

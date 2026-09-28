@@ -1,0 +1,129 @@
+import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { MoreHorizontal, Search } from "lucide-react";
+import { toast } from "sonner";
+import { opsFundsDashboardFn } from "@/lib/ops-funds.functions";
+import { getFundLinkFn } from "@/lib/fund-onboarding-link.functions";
+import { attentionLines, matchesFilter, type FundFilter } from "@/lib/ops-funds-model";
+import { copyText } from "@/components/fund-onboarding-link";
+import { ViewAsPicker } from "@/components/view-as";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
+const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "Blocked"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"]];
+const fmt = (d: string | null) => (d ? new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—");
+
+function RowActions({ f }: { f: any }) {
+  const load = useServerFn(getFundLinkFn);
+  const copy = async () => {
+    try { const d = await load({ data: { offeringId: f.id } }); if (d.url) await copyText(d.url, "Onboarding link copied"); else toast.message("No active onboarding link. Open the fund's Onboarding Link tab to set one up."); }
+    catch (e) { toast.error((e as Error).message); }
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${f.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }}>Open Fund</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }}>View Investors</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/readiness" params={{ fundId: f.id }}>View Readiness</Link></DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }} search={{ add: "existing" } as never}>Add Existing Investor</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }} search={{ add: "invite" } as never}>Invite Investor</Link></DropdownMenuItem>
+        <DropdownMenuItem onClick={copy}>Copy Investor Onboarding Link</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Operations → Funds: which funds need attention, and what's next. */
+export function OpsFundsDashboard() {
+  const load = useServerFn(opsFundsDashboardFn);
+  const q = useQuery({ queryKey: ["ops-funds-dashboard"], queryFn: () => load(), retry: false });
+  const [filter, setFilter] = useState<FundFilter>("all");
+  const [term, setTerm] = useState("");
+  const [client, setClient] = useState("any");
+  const [owner, setOwner] = useState("any");
+  const [manager, setManager] = useState("any");
+  const rows = ((q.data as any)?.rows ?? []) as any[];
+  const opts = useMemo(() => {
+    const c = new Map<string, string>(), o = new Map<string, string>(), m = new Map<string, string>();
+    for (const r of rows) { if (r.clientId) c.set(r.clientId, r.clientName ?? "Client"); if (r.owner) o.set(r.owner.id, r.owner.name); for (const x of r.managers) m.set(x.id, x.name); }
+    const sort = (x: Map<string, string>) => [...x.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    return { clients: sort(c), owners: sort(o), managers: sort(m) };
+  }, [rows]);
+  if (q.isPending) return <Skeleton className="h-96 w-full rounded-xl" />;
+  if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
+  const t = (q.data as any).totals;
+  const shown = rows
+    .filter((r) => matchesFilter(r, filter))
+    .filter((r) => !term || r.name.toLowerCase().includes(term.toLowerCase()))
+    .filter((r) => client === "any" || r.clientId === client)
+    .filter((r) => owner === "any" || r.owner?.id === owner)
+    .filter((r) => manager === "any" || r.managers.some((m: any) => m.id === manager))
+    .sort((a, b) => (b.metrics.blocked + b.metrics.needsHarmonious) - (a.metrics.blocked + a.metrics.needsHarmonious));
+  const metric: [string, number, boolean?][] = [["Active Funds", t.activeFunds], ["Investors Onboarding", t.onboarding], ["Ready to Close", t.ready], ["Needs Harmonious", t.needsHarmonious], ["Blocked", t.blocked, true]];
+  return (
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold">Funds &amp; SPVs</h1>
+        <p className="text-sm text-muted-foreground">Which funds need attention, who is onboarding, and what's next.</p>
+      </div>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
+        {metric.map(([l, v, warn]) => (
+          <div key={l} className="bg-card p-4"><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className={cn("font-heading text-2xl font-semibold", warn && v ? "text-destructive" : "")}>{v}</p></div>
+        ))}
+      </div>
+      <div className="space-y-3">
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+          {FILTERS.map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setFilter(k)} className={cn("whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium", filter === k ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}>{l}</button>
+          ))}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-4">
+          <div className="relative"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search fund" className="h-9 pl-8" /></div>
+          {([["Client", client, setClient, opts.clients], ["Harmonious owner", owner, setOwner, opts.owners], ["Fund manager", manager, setManager, opts.managers]] as const).map(([label, v, set, list]) => (
+            <Select key={label} value={v} onValueChange={set as (x: string) => void}>
+              <SelectTrigger className="h-9"><SelectValue placeholder={label} /></SelectTrigger>
+              <SelectContent><SelectItem value="any">Any {label.toLowerCase()}</SelectItem>{list.map(([id, n]) => <SelectItem key={id} value={id}>{n}</SelectItem>)}</SelectContent>
+            </Select>
+          ))}
+        </div>
+      </div>
+      {!rows.length ? (
+        <div className="rounded-xl border border-dashed px-6 py-12 text-center"><p className="font-heading font-semibold">No funds yet</p><p className="text-sm text-muted-foreground">Funds appear here once they are set up.</p></div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border bg-card">
+          <div className="hidden grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_auto] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground lg:grid">
+            <span>Fund</span><span>Client</span><span>Investors</span><span>Onboarding</span><span>Ready</span><span>Needs Attention</span><span>Next Close</span><span>Owner</span><span />
+          </div>
+          {!shown.length ? <p className="px-4 py-6 text-sm text-muted-foreground">No funds match these filters.</p> : shown.map((f) => {
+            const lines = attentionLines(f.metrics);
+            return (
+              <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 lg:grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_auto] lg:items-center">
+                <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}</Link>
+                <span className="text-right text-muted-foreground lg:text-left">{f.clientName ?? "—"}</span>
+                <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.investors}</span>
+                <span className="text-right lg:text-left"><span className="lg:hidden text-muted-foreground">Onboarding </span>{f.metrics.onboarding}</span>
+                <span><span className="lg:hidden text-muted-foreground">Ready </span>{f.metrics.ready}</span>
+                <span className={cn("col-span-2 text-xs lg:col-span-1", f.metrics.blocked ? "text-destructive" : f.metrics.needsAttention ? "font-medium" : "text-muted-foreground")}>{lines.filter((l) => !l.includes("ready")).join(" · ") || "Nothing needs attention"}</span>
+                <span className="text-xs text-muted-foreground lg:text-sm lg:text-foreground"><span className="lg:hidden">Next close </span>{fmt(f.targetClose)}</span>
+                <span className="text-right text-xs text-muted-foreground lg:text-left lg:text-sm lg:text-foreground">{f.owner?.name ?? "Unassigned"}</span>
+                <span className="col-span-2 flex items-center justify-end gap-2 lg:col-span-1">
+                  <ViewAsPicker offeringId={f.id} label="View as Fund Manager" />
+                  <RowActions f={f} />
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">Counts come from each investment's readiness checklist and open work items. Close Requests will appear here once that feature exists.</p>
+    </div>
+  );
+}
