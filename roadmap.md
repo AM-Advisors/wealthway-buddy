@@ -110,3 +110,10 @@
 - [ ] Investor Drive: extracted-value suggestions (Suggested update from document) — not built
 - [ ] Investors tab Drive status indicator — not built
 - [ ] Live investor document import — waits for explicit approval of a specific Fund/Investor/Profile
+
+## Investment Readiness & Close Requests (2026-09-28)
+- [x] Readiness engine (8 stages, 9 statuses), Fund → Readiness tab, investor Investment Checklist, Ops readiness queue, append-only audit, deduped auto-tasks, tests
+- [ ] Automated reminders & Fund Manager alerts (spec §12–13) — not built; must never email without separate authorization
+- [ ] SLA/aging targets (spec §15) — ages shown; no contractual SLAs invented
+- [ ] Close Request workflow (Fund → Closes, 8-step wizard) — next pass; consumes closeReadinessFor
+- [ ] Built-in NASAA Blue Sky fee table (July 1 2026 matrix), fixed fees only; variable → Needs Review
