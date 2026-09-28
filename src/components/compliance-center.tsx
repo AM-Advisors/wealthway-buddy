@@ -15,7 +15,7 @@ import {
 } from "@/lib/compliance.functions";
 import { CONTROL_STATUSES, CONTROL_TYPES, EVIDENCE_QUERIES, FREQUENCIES, PRIVACY_KINDS, REGISTERS, registerPermissions, STATUS_LABEL } from "@/lib/compliance-model";
 
-type Data = Awaited<ReturnType<typeof getCompliance>>;
+type Data = { perms: string[]; me: string; staff: { id: string; label: string }[]; dashboard: any; [k: string]: any };
 const sel = "h-9 rounded-md border bg-background px-2 text-sm";
 const today = () => new Date().toISOString().slice(0, 10);
 const quarterStart = () => { const d = new Date(); return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1).toISOString().slice(0, 10); };
@@ -33,7 +33,7 @@ export function ComplianceCenter() {
   const q = useQuery({ queryKey: ["compliance"], queryFn: () => load() });
   if (q.isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
   if (q.error || !q.data) return <div className="p-6"><Card><CardContent className="p-6 text-sm">Compliance & Controls is limited to authorized Harmonious administrators.</CardContent></Card></div>;
-  const d = q.data;
+  const d = q.data as unknown as Data;
   const can = (p: string) => d.perms.includes(p);
   return (
     <div className="space-y-4 p-6">
