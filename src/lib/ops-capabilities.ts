@@ -176,6 +176,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     id: "onboarding", title: "Onboarding & Checks", url: "/ops/areas/onboarding", icon: "check", group: "work",
     screens: [
       { title: "Investor onboarding", url: "/admin/investor-onboarding", description: "Investments in progress, KYC/KYB and accreditation" },
+      { title: "Investment readiness queue", url: "/ops/readiness", description: "What each investment is waiting on, who owns it, and how long" },
       { title: "Client onboarding", url: "/admin/onboarding", description: "New client setup" },
       { title: "Onboarding progress", url: "/admin/onboarding-progress", description: "Progress across open onboardings" },
       { title: "Applications", url: "/admin", description: "Fund applications queue" },

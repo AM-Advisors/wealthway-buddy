@@ -1847,3 +1847,147 @@ export async function revealWireInstructions(userId: string, onboardingId: strin
     instructions: result.instructions,
   };
 }
+
+// ------------------------------------------------ investment readiness
+
+/**
+ * Compute the canonical readiness projection for one Investment, record any status
+ * transitions (append-only) and keep internal tasks in step. Never changes the
+ * investment, its compliance facts, funding or documents; never sends email.
+ */
+async function computeAndSyncReadiness(row: any, actorUserId: string | null, closeAmountCents?: number | null) {
+  const { computeReadiness, readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
+  const facts = await gatherFacts(row);
+  const exceptions = await openExceptions(row.id);
+  const result = computeReadiness({
+    requirements: facts.requirements,
+    stage: String(row.stage ?? ""),
+    fundingStatus: row.funding_status ?? null,
+    approvedToFundAt: row.approved_to_fund_at ?? null,
+    acceptedAt: row.accepted_at ?? null,
+    acceptedAmountCents: row.accepted_amount_cents ?? null,
+    closedAt: row.closed_at ?? null,
+    exceptions: exceptions.map((e) => ({ severity: String(e.severity), owner: e.owner ?? null, type: e.exception_type ?? null })),
+    requestedCloseDate: row.requested_close_date ?? null,
+    closeAmountCents: closeAmountCents ?? null,
+  });
+  if (closeAmountCents == null) {
+    const [{ data: evs }, { data: tasks }] = await Promise.all([
+      db().from("investment_readiness_events").select("requirement_key,new_status,created_at").eq("onboarding_id", row.id).order("created_at", { ascending: true }),
+      db().from("investment_readiness_tasks").select("id,requirement_key").eq("onboarding_id", row.id).eq("status", "open"),
+    ]);
+    const prev: Record<string, string> = {};
+    for (const e of (evs ?? []) as any[]) prev[e.requirement_key] = e.new_status;
+    const transitions = readinessTransitions(prev, result);
+    if (transitions.length) {
+      await db().from("investment_readiness_events").insert(transitions.map((t) => ({
+        onboarding_id: row.id,
+        offering_id: row.offering_id,
+        investment_profile_id: row.investment_profile_id ?? null,
+        requirement_key: t.key,
+        stage: t.stage,
+        previous_status: t.from,
+        new_status: t.to,
+        source_system: t.source,
+        reason: t.from ? "Canonical record changed" : "Initial evaluation",
+        changed_by: actorUserId,
+        automatic: true,
+        rule_version: READINESS_RULE_VERSION,
+      })));
+    }
+    const open = new Map(((tasks ?? []) as any[]).map((t) => [t.requirement_key, t.id]));
+    const plan = readinessTaskPlan(new Set(open.keys()), result);
+    if (plan.create.length) {
+      // Partial unique index makes a duplicate evaluation a no-op.
+      await db().from("investment_readiness_tasks").upsert(
+        plan.create.map((c) => ({ onboarding_id: row.id, offering_id: row.offering_id, requirement_key: c.key, title: c.title, owner: c.owner, rule_version: READINESS_RULE_VERSION })),
+        { onConflict: "onboarding_id,requirement_key", ignoreDuplicates: true },
+      ).then(() => null, () => null);
+    }
+    for (const k of plan.resolve) {
+      await db().from("investment_readiness_tasks").update({ status: "resolved", resolved_at: nowIso() }).eq("id", open.get(k));
+    }
+  }
+  return { result, facts };
+}
+
+export async function investmentReadiness(userId: string, onboardingId: string) {
+  const { readinessView } = await import("@/lib/investment-readiness");
+  const access = await assertOnboardingAccess(userId, onboardingId);
+  const { result, facts } = await computeAndSyncReadiness(access.row, userId);
+  const { data: offering } = await db().from("offerings").select("name").eq("id", access.row.offering_id).maybeSingle();
+  return {
+    onboardingId,
+    fundName: offering?.name ?? "Fund",
+    profileLabel: facts.profile?.display_label ?? null,
+    viewer: access.role,
+    readiness: readinessView(result, access.role),
+  };
+}
+
+export async function fundReadiness(userId: string, offeringId: string) {
+  const { readinessView } = await import("@/lib/investment-readiness");
+  const actor = await onboardingActor(userId);
+  if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not manage that fund.");
+  const viewer = actor.isStaff ? "staff" : "manager";
+  const { data } = await db().from("investor_onboardings").select("*").eq("offering_id", offeringId).not("stage", "in", "(declined,cancelled)");
+  const rows = (data ?? []) as any[];
+  const ids = [...new Set(rows.map((r) => r.investor_user_id))];
+  const { data: people } = ids.length ? await db().from("profiles").select("user_id, legal_name").in("user_id", ids) : { data: [] as any[] };
+  const names = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p.legal_name]));
+  const out = [] as any[];
+  for (const row of rows) {
+    const { result, facts } = await computeAndSyncReadiness(row, userId);
+    const v = readinessView(result, viewer);
+    out.push({
+      onboardingId: row.id,
+      investorName: names.get(row.investor_user_id) ?? "Investor",
+      profileLabel: facts.profile?.display_label ?? null,
+      profileType: facts.profile?.profile_type ?? null,
+      amountCents: row.accepted_amount_cents ?? row.requested_amount_cents ?? null,
+      percentComplete: v.percentComplete,
+      nextAction: v.nextAction,
+      closeReady: v.closeReady,
+      readiness: v,
+    });
+  }
+  return { viewer, rows: out };
+}
+
+/** Canonical per-investment readiness for a Close Request selector (no audit writes). */
+export async function closeReadinessFor(userId: string, onboardingId: string, closeAmountCents: number) {
+  const { readinessView } = await import("@/lib/investment-readiness");
+  const access = await assertOnboardingAccess(userId, onboardingId);
+  if (access.role === "investor") forbid("close readiness is a fund view.");
+  const { result } = await computeAndSyncReadiness(access.row, userId, closeAmountCents);
+  return readinessView(result, access.role);
+}
+
+export async function readinessQueue(userId: string) {
+  await assertStaff(userId);
+  const { data } = await db().from("investment_readiness_tasks").select("*").eq("status", "open").order("created_at", { ascending: true }).limit(500);
+  const tasks = (data ?? []) as any[];
+  const offIds = [...new Set(tasks.map((t) => t.offering_id).filter(Boolean))];
+  const onbIds = [...new Set(tasks.map((t) => t.onboarding_id))];
+  const [{ data: offs }, { data: onbs }] = await Promise.all([
+    offIds.length ? db().from("offerings").select("id,name").in("id", offIds) : { data: [] },
+    onbIds.length ? db().from("investor_onboardings").select("id,investor_user_id,stage").in("id", onbIds) : { data: [] },
+  ]);
+  const uids = [...new Set(((onbs ?? []) as any[]).map((o) => o.investor_user_id))];
+  const { data: people } = uids.length ? await db().from("profiles").select("user_id, legal_name").in("user_id", uids) : { data: [] as any[] };
+  const fund = new Map(((offs ?? []) as any[]).map((o) => [o.id, o.name]));
+  const onb = new Map(((onbs ?? []) as any[]).map((o) => [o.id, o]));
+  const who = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p.legal_name]));
+  const now = Date.now();
+  return tasks.map((t) => ({
+    id: t.id,
+    onboardingId: t.onboarding_id,
+    offeringId: t.offering_id,
+    fundName: fund.get(t.offering_id) ?? "Fund",
+    investorName: who.get(onb.get(t.onboarding_id)?.investor_user_id) ?? "Investor",
+    title: t.title,
+    owner: t.owner,
+    stage: onb.get(t.onboarding_id)?.stage ?? null,
+    ageDays: Math.floor((now - new Date(t.created_at).getTime()) / 86400000),
+  }));
+}

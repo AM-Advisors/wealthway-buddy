@@ -310,3 +310,18 @@ export const startPortalVerificationFn = createServerFn({ method: "POST" })
     const returnPath = safeOnboardReturnPath(`/onboard/i/${data.onboardingId}`);
     return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin, returnPath);
   });
+
+// ------------------------------------------------ investment readiness
+export const investmentReadinessFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(onboardingInput.parse)
+  .handler(async ({ data, context }) => (await engine()).investmentReadiness(context.userId, data.onboardingId));
+
+export const fundReadinessFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await engine()).fundReadiness(context.userId, data.offeringId));
+
+export const readinessQueueFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await engine()).readinessQueue(context.userId));

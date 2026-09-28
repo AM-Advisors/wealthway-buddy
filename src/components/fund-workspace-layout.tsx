@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Building2,
   FileText,
+  ListChecks,
   Settings,
   UserCog,
   ShieldCheck,
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 const sections = [
   { slug: "", label: "Overview", icon: Building2 },
   { slug: "investors", label: "Investors", icon: Users },
+  { slug: "readiness", label: "Readiness", icon: ListChecks },
   { slug: "assets", label: "Investments", icon: Activity },
   { slug: "transactions", label: "Capital", icon: WalletCards },
   { slug: "documents", label: "Documents", icon: FileText },
