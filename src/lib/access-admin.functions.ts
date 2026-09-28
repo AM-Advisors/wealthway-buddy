@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dryRun } from "@/lib/legacy-role-compat";
 import { privilegedAccounts } from "@/lib/compliance-evidence";
+import { STAGE3A_CANDIDATES, emptyCounts, migrationStatus, mismatches } from "@/lib/authz-stage3";
 import {
   ACCOUNT_CLASSIFICATIONS,
   classificationChangeProblem,
@@ -374,4 +375,19 @@ export const getLegacyCompatibility = createServerFn({ method: "GET" })
       superAdmins,
       shadow: shadow as { allow_allow: number; deny_deny: number; legacy_allow_rbac_deny: number; legacy_deny_rbac_allow: number },
     };
+  });
+
+/** Stage 3A: read-only shadow pilot status. No cutover action exists. */
+export const getStage3Migration = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAccessViewer(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await (supabaseAdmin as any).from("authz_shadow_events").select("endpoint, category").limit(10000);
+    return STAGE3A_CANDIDATES.map((p) => {
+      const c = emptyCounts();
+      for (const e of data ?? []) if (e.endpoint === p.endpoint && e.category in c) (c as any)[e.category]++;
+      const total = Object.values(c).reduce((a, b) => a + b, 0);
+      return { ...p, counts: c, total, mismatches: mismatches(c), status: migrationStatus(p, c) };
+    });
   });

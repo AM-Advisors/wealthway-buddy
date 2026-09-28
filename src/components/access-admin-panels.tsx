@@ -8,6 +8,7 @@ import {
   assignAccessRole,
   getAccessAdminContext,
   getLegacyCompatibility,
+  getStage3Migration,
   grantAccessPermission,
   revokeAccessPermission,
   revokeAccessRole,
@@ -339,6 +340,7 @@ export function NeedsReview() {
         <h2 className="font-medium">Needs review</h2>
         {data.needsReview.length ? data.needsReview.map((n: any, i: number) => <div key={n.userId + i} className="text-sm"><p><span className="font-medium">{n.person}</span> — {n.issue}</p>{n.detail ? <p className="text-xs text-muted-foreground">{n.detail}</p> : null}</div>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
       </section>
+      <Stage3Panel />
       <section className="space-y-2">
         <h2 className="font-medium">Legacy client role migration — dry run (nobody is migrated)</h2>
         <div className="overflow-x-auto rounded-md border"><Table>
@@ -361,5 +363,30 @@ export function NeedsReview() {
         <p className="text-sm">ALLOW/ALLOW {data.shadow.allow_allow} · DENY/DENY {data.shadow.deny_deny} · legacy ALLOW / RBAC DENY {data.shadow.legacy_allow_rbac_deny} · legacy DENY / RBAC ALLOW {data.shadow.legacy_deny_rbac_allow}</p>
       </section>
     </div>
+  );
+}
+
+function Stage3Panel() {
+  const get = useServerFn(getStage3Migration);
+  const { data } = useQuery({ queryKey: ["access-stage3"], queryFn: () => get() });
+  return (
+    <section className="space-y-2">
+      <h2 className="font-medium">Stage 3 migration — shadow pilot (legacy checks stay in charge)</h2>
+      <div className="overflow-x-auto rounded-md border"><Table>
+        <TableHeader><TableRow>{["Area", "Endpoint/Function", "Legacy", "Canonical", "Match", "Shadow Count", "Mismatches", "Migration Status"].map((h) => <TableHead key={h}>{h}</TableHead>)}</TableRow></TableHeader>
+        <TableBody>{(data ?? []).map((r) => (
+          <TableRow key={r.endpoint}>
+            <TableCell>{r.area}</TableCell>
+            <TableCell className="text-xs"><div className="font-mono">{r.endpoint}</div><div className="text-muted-foreground">{r.file}</div>{r.reclassified ? <div className="mt-1 rounded bg-muted p-1">Reclassified: {r.reclassified}</div> : null}</TableCell>
+            <TableCell className="text-xs">{r.legacy}</TableCell>
+            <TableCell className="text-xs">{r.canonical ?? "—"}</TableCell>
+            <TableCell className="text-xs">{r.total ? `${r.counts.allow_allow} allow/allow · ${r.counts.deny_deny} deny/deny` : "—"}</TableCell>
+            <TableCell>{r.total}</TableCell>
+            <TableCell>{r.mismatches}</TableCell>
+            <TableCell><Badge variant={r.status === "Blocked" ? "destructive" : "secondary"}>{r.status}</Badge></TableCell>
+          </TableRow>))}</TableBody>
+      </Table></div>
+      <p className="text-xs text-muted-foreground">No cutover can be performed from this screen in Stage 3A.</p>
+    </section>
   );
 }
