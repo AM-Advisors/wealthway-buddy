@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/portal")({
       to = "/home";
     }
     if (to === "/portal" || to.startsWith("/portal/") || to === "/dashboard" || to === "/portal") to = "/home";
-    throw redirect({ to: to as never, replace: true });
+    throw redirect({ href: to, replace: true });
   },
   component: () => null,
 });
