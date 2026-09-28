@@ -29,7 +29,7 @@ function RowActions({ f }: { f: any }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${f.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }}>Open Fund</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }}>Open Fund</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }}>View Investors</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/readiness" params={{ fundId: f.id }}>View Readiness</Link></DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -106,7 +106,7 @@ export function OpsFundsDashboard() {
             const lines = attentionLines(f.metrics);
             return (
               <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 lg:grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_auto] lg:items-center">
-                <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}</Link>
+                <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}</Link>
                 <span className="text-right text-muted-foreground lg:text-left">{f.clientName ?? "—"}</span>
                 <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.investors}</span>
                 <span className="text-right lg:text-left"><span className="lg:hidden text-muted-foreground">Onboarding </span>{f.metrics.onboarding}</span>
