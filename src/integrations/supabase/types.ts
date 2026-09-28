@@ -2214,6 +2214,48 @@ export type Database = {
         }
         Relationships: []
       }
+      authz_shadow_events: {
+        Row: {
+          actor_user_id: string | null
+          canonical_allowed: boolean
+          canonical_reason: string | null
+          category: string
+          created_at: string
+          endpoint: string
+          id: string
+          legacy_allowed: boolean
+          permission: string
+          resource_id: string | null
+          resource_type: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          canonical_allowed: boolean
+          canonical_reason?: string | null
+          category: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          legacy_allowed: boolean
+          permission: string
+          resource_id?: string | null
+          resource_type: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          canonical_allowed?: boolean
+          canonical_reason?: string | null
+          category?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          legacy_allowed?: boolean
+          permission?: string
+          resource_id?: string | null
+          resource_type?: string
+        }
+        Relationships: []
+      }
       bank_accounts: {
         Row: {
           account_mask: string | null

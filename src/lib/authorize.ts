@@ -86,7 +86,9 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
   { key: "client_administrator", label: "Client Administrator", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "edit", "manage_access"]), ...p("funds", ["view"]), ...p("companies", ["view"]), ...p("documents", ["view", "edit"]), ...p("tasks", ["view", "edit"])] },
   { key: "client_operator", label: "Client Operator", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "edit"]), ...p("documents", ["view", "edit"]), ...p("tasks", ["view", "edit"])] },
   { key: "client_approver", label: "Client Approver", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "approve"]), ...p("documents", ["view"])] },
-  { key: "client_viewer", label: "Client Viewer", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view"]), ...p("documents", ["view"])] },
+  { key: "client_viewer", label: "Client Viewer", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view"]), ...p("companies", ["view"]), ...p("documents", ["view"])] },
+  // Mirrors today's client_gp behaviour exactly — no user/RBAC management, money or sensitive access.
+  { key: "client_principal", label: "Client Principal / GP", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "prepare"]), ...p("companies", ["view", "edit", "approve"]), ...p("documents", ["view"])] },
   // Fund (scoped to one fund)
   { key: "fund_manager_admin", label: "Fund Manager Administrator", category: "fund", scopeTypes: ["fund"], permissions: [...p("funds", ["view", "edit", "prepare", "manage_access"]), ...p("investors", ["view", "prepare", "manage_access"]), ...p("documents", ["view", "edit"]), ...p("capital", ["view"]), ...p("reports", ["view"])] },
   { key: "fund_operator", label: "Fund Operator", category: "fund", scopeTypes: ["fund"], permissions: [...p("funds", ["view", "edit", "prepare"]), ...p("investors", ["view", "prepare"]), ...p("documents", ["view", "edit"])] },
@@ -164,8 +166,10 @@ export function isLive(r: { effective_at: string; expires_at: string | null; rev
 }
 
 const asScope = (r: { scope_type: ScopeType; scope_id: string | null }) => ({ type: r.scope_type, id: r.scope_id });
-function scopeCovers(scope: { type: ScopeType; id: string | null }, res: Resource): boolean {
-  if (scope.type === "global") return true;
+/** A non-global scope without an id is invalid and never matches — null is never "global". */
+export function scopeCovers(scope: { type: ScopeType; id: string | null }, res: Resource): boolean {
+  if (scope.type === "global") return scope.id === null;
+  if (!scope.id) return false;
   if (scope.type === res.type && scope.id === res.id) return true;
   return (res.ancestors ?? []).some((a) => a.type === scope.type && a.id === scope.id);
 }
@@ -180,7 +184,8 @@ function latestDefinition(defs: RoleDefinition[], key: string, version: number |
 
 function permsOfAssignment(f: AuthzFacts, a: Assignment): string[] {
   const t = templateFor(a.role_key);
-  if (t) return t.permissions;
+  // Wrong or missing scope for a scoped template → nothing (never widened to global).
+  if (t) return t.scopeTypes.includes(a.scope_type) && (a.scope_type === "global" || !!a.scope_id) ? t.permissions : [];
   const def = latestDefinition(f.roleDefinitions, a.role_key, a.role_version);
   // A deactivated role stops granting; its history stays readable.
   const current = latestDefinition(f.roleDefinitions, a.role_key, null);

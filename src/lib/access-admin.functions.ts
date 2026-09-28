@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { authzFactsFor, loadBundle, recordAccessEvent, type Bundle } from "@/lib/access-control.server";
+import { dryRun } from "@/lib/legacy-role-compat";
+import { authzFactsFor, loadBundle, requireAccessViewer, recordAccessEvent, type Bundle } from "@/lib/access-control.server";
 import {
   accessChangeProblem,
   authorize,
@@ -101,8 +102,12 @@ export const assignAccessRole = createServerFn({ method: "POST" })
     if (!t && data.scope.type !== "global") throw new Error("Custom Harmonious roles are global.");
     const before = snapshot(p.b, data.targetUserId);
     const db = await admin();
-    if (t?.platformRole) {
-      if (data.effectiveAt || data.expiresAt) throw new Error("Harmonious platform roles take effect immediately and have no expiry; use a scoped role or direct grant for timed access.");
+    const timed = !!(data.effectiveAt || data.expiresAt);
+    if (t?.platformRole && timed && (t.key === "super_admin" || t.key === "admin")) {
+      throw new Error("Super Administrator and Operations Administrator are permanent explicit assignments; they can't be timed.");
+    }
+    // Timed Harmonious access → RBAC assignment (effective/expiring); legacy user_roles untouched.
+    if (t?.platformRole && !timed) {
       if (before.platformRoles.includes(t.platformRole)) throw new Error("This person already has that role.");
       await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: "Role assigned", roleKey: data.roleKey, scopeType: "global", previous: before, next: { ...before, platformRoles: [...before.platformRoles, t.platformRole] }, reason: data.reason, correlationId: p.correlationId });
       const { error } = await db.from("user_roles").insert({ user_id: data.targetUserId, role: t.platformRole });
@@ -294,4 +299,33 @@ export const explainAccess = createServerFn({ method: "GET" })
     }
     const d = authorize(authzFactsFor(p.b, data.targetUserId), data.permission, resourceFor(p.b)(data.scope));
     return { ...d, text: formatDecision(d) };
+  });
+
+/** Stage 2.5: read-only compatibility report. Migrates nobody. */
+export const getLegacyCompatibility = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAccessViewer(context);
+    const b = await loadBundle();
+    const name = (id: string) => { const u = b.users.find((x: any) => x.id === id); const pr = b.profiles.find((x: any) => x.user_id === id); return pr?.legal_name ?? u?.email ?? id.slice(0, 8); };
+    const rows: import("@/lib/legacy-role-compat").DryRunRow[] = b.roles.filter((r: any) => r.role === "client_gp" || r.role === "client_readonly").flatMap((r: any) =>
+      dryRun({
+        userId: r.user_id, person: name(r.user_id), legacyRole: r.role,
+        clients: b.cus.filter((c: any) => c.user_id === r.user_id).map((c: any) => ({ id: c.client_id, role: c.client_role, name: b.clients.find((x: any) => x.id === c.client_id)?.name ?? "Unknown client" })),
+      }));
+    const superAdmins = b.roles.filter((r: any) => r.role === "super_admin").map((r: any) => ({
+      person: name(r.user_id), userId: r.user_id as string,
+      source: "Explicit platform role row for this exact user ID",
+      active: authzFactsFor(b, r.user_id).suspended === false,
+    }));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ev } = await (supabaseAdmin as any).from("authz_shadow_events").select("category").limit(10000);
+    const shadow = { allow_allow: 0, deny_deny: 0, legacy_allow_rbac_deny: 0, legacy_deny_rbac_allow: 0 } as Record<string, number>;
+    for (const e of ev ?? []) shadow[e.category] = (shadow[e.category] ?? 0) + 1;
+    return {
+      dryRun: rows,
+      needsReview: rows.filter((r: any) => r.note).map((r: any) => ({ userId: r.userId, person: r.person, issue: r.note! })),
+      superAdmins,
+      shadow: shadow as { allow_allow: number; deny_deny: number; legacy_allow_rbac_deny: number; legacy_deny_rbac_allow: number },
+    };
   });

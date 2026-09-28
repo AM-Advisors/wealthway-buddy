@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   assignAccessRole,
   getAccessAdminContext,
+  getLegacyCompatibility,
   grantAccessPermission,
   revokeAccessPermission,
   revokeAccessRole,
@@ -137,20 +138,20 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
             const t = ctx?.templates.find((x) => x.platformRole === r);
             return (
               <li key={r} className="flex items-center justify-between gap-2">
-                <span>{t?.label ?? r} <Badge variant="outline">platform · global</Badge></span>
+                <span>{t?.label ?? r} <Badge variant="outline">Legacy platform role — no expiry</Badge></span>
                 {t ? <Button size="sm" variant="outline" disabled={run.isPending} onClick={() => run.mutate(() => revokeRole({ data: { targetUserId: userId, roleKey: t.key, assignmentId: null, reason } }))}>Remove</Button> : <span className="text-xs text-muted-foreground">not managed here</span>}
               </li>
             );
           })}
           {canonical.assignments.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-2">
-              <span className={a.live ? "" : "text-muted-foreground line-through"}>{a.label} — {a.scope} {a.expiresAt ? `· until ${fmt(a.expiresAt)}` : ""} {a.revokedAt ? "· revoked" : !a.live ? "· not in effect" : ""}</span>
+              <span className={a.live ? "" : "text-muted-foreground line-through"}><Badge variant="secondary">RBAC assignment — effective/expiring</Badge> {a.label} — {a.scope} {a.expiresAt ? `· until ${fmt(a.expiresAt)}` : ""} {a.revokedAt ? "· revoked" : !a.live ? "· not in effect" : ""}</span>
               {!a.revokedAt ? <Button size="sm" variant="outline" disabled={run.isPending} onClick={() => run.mutate(() => revokeRole({ data: { targetUserId: userId, roleKey: a.roleKey, assignmentId: a.id, reason } }))}>Revoke</Button> : null}
             </li>
           ))}
           {!platformRoles.length && !canonical.assignments.length ? <li className="text-muted-foreground">None</li> : null}
         </ul>
-        <p className="text-xs text-muted-foreground">To change a role, assign the new one and revoke the old one; both are recorded.</p>
+        <p className="text-xs text-muted-foreground">Setting a start or expiry date on a Harmonious role creates a timed RBAC assignment instead of a permanent legacy role. To change a role, assign the new one and revoke the old one; both are recorded.</p>
       </div>
 
       <div className="space-y-2">
@@ -293,6 +294,43 @@ export function RoleAdmin() {
           </CardContent>
         </Card>
       ) : <p className="text-xs text-muted-foreground">Only a Super Administrator can create or change roles.</p>}
+    </div>
+  );
+}
+
+/** Access Control → Needs Review: legacy compatibility dry run, Super Administrators, shadow summary. */
+export function NeedsReview() {
+  const get = useServerFn(getLegacyCompatibility);
+  const { data, isLoading, error } = useQuery({ queryKey: ["access-legacy-compat"], queryFn: () => get() });
+  if (isLoading) return <p className="mt-4 text-sm text-muted-foreground">Loading…</p>;
+  if (error || !data) return <p className="mt-4 text-sm text-destructive">{(error as Error)?.message ?? "Unavailable"}</p>;
+  return (
+    <div className="mt-4 space-y-6">
+      <section className="space-y-2">
+        <h2 className="font-medium">Needs review</h2>
+        {data.needsReview.length ? data.needsReview.map((n) => <p key={n.userId} className="text-sm"><span className="font-medium">{n.person}</span> — {n.issue}</p>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
+      </section>
+      <section className="space-y-2">
+        <h2 className="font-medium">Legacy client role migration — dry run (nobody is migrated)</h2>
+        <div className="overflow-x-auto rounded-md border"><Table>
+          <TableHeader><TableRow>{["Person", "Legacy role", "Current client", "Current effective actions", "Proposed role", "Proposed scope", "Added permissions", "Lost permissions", "Result"].map((h) => <TableHead key={h}>{h}</TableHead>)}</TableRow></TableHeader>
+          <TableBody>{data.dryRun.map((r, i) => (
+            <TableRow key={i}><TableCell>{r.person}</TableCell><TableCell>{r.legacyRole}</TableCell><TableCell>{r.currentClient ?? "—"}</TableCell><TableCell className="text-xs">{r.currentActions.join(", ")}</TableCell><TableCell>{r.proposedRole}</TableCell><TableCell>{r.proposedScope ?? "—"}</TableCell><TableCell className="text-xs">{r.added.join(", ") || "none"}</TableCell><TableCell className="text-xs">{r.lost.join(", ") || "none"}</TableCell><TableCell className="text-xs font-medium">{r.result}</TableCell></TableRow>
+          ))}</TableBody>
+        </Table></div>
+      </section>
+      <section className="space-y-2">
+        <h2 className="font-medium">Super Administrators</h2>
+        <div className="overflow-x-auto rounded-md border"><Table>
+          <TableHeader><TableRow><TableHead>Person</TableHead><TableHead>User ID</TableHead><TableHead>Super Administrator source</TableHead><TableHead>Active</TableHead></TableRow></TableHeader>
+          <TableBody>{data.superAdmins.map((s: any) => <TableRow key={s.userId}><TableCell>{s.person}</TableCell><TableCell className="font-mono text-xs">{s.userId}</TableCell><TableCell>{s.source}</TableCell><TableCell>{s.active ? "Yes" : "No (suspended)"}</TableCell></TableRow>)}</TableBody>
+        </Table></div>
+      </section>
+      <section className="space-y-1">
+        <h2 className="font-medium">Shadow authorization (non-enforcing)</h2>
+        <p className="text-xs text-muted-foreground">Legacy decisions stay authoritative. No endpoints are in shadow mode yet.</p>
+        <p className="text-sm">ALLOW/ALLOW {data.shadow.allow_allow} · DENY/DENY {data.shadow.deny_deny} · legacy ALLOW / RBAC DENY {data.shadow.legacy_allow_rbac_deny} · legacy DENY / RBAC ALLOW {data.shadow.legacy_deny_rbac_allow}</p>
+      </section>
     </div>
   );
 }
