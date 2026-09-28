@@ -28,6 +28,12 @@ import { AtomicDrawer, ManageAccessPanel, NeedsReview, PersonMatrix, RoleAdmin }
 import { authorize } from "@/lib/authorize";
 import { ATOMIC_PERMISSIONS } from "@/lib/atomic-permissions";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { setAccountClassification } from "@/lib/access-admin.functions";
+import { ACCOUNT_CLASSIFICATIONS, CLASSIFICATION_LABEL, type AccountClassification } from "@/lib/account-classification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -165,6 +171,8 @@ function AccessProfile({ userId }: { userId: string }) {
         <KV k="Email" v={data.identity.email} /><KV k="User ID" v={data.identity.userId} mono />
         <KV k="Status" v={data.identity.status} /><KV k="Created" v={fmt(data.identity.createdAt)} /><KV k="Last sign-in" v={fmt(data.identity.lastSignIn)} />
         <KV k="User type" v={data.identity.types.map((t: UserType) => USER_TYPE_LABEL[t]).join(", ")} />
+        <KV k="Account type" v={data.classification ? CLASSIFICATION_LABEL[data.classification as AccountClassification] : "Not classified"} />
+        <ClassificationPanel userId={userId} current={(data.classification ?? null) as AccountClassification | null} proposal={data.classificationProposal as any} />
       </Section>
       <Section n={2} title="Relationships">
         <List items={[
@@ -188,10 +196,10 @@ function AccessProfile({ userId }: { userId: string }) {
       <Section n={4} title="Resource scopes">
         <List items={[...new Set(perms.map((p) => (p.scope.type === "global" ? "Global — all resources" : `${p.scope.type.replace(/_/g, " ")}: ${p.scope.label}`)))]} />
       </Section>
-      <Section n={5} title="Effective permissions">
-        <MatrixGrid perms={perms} />
+      <Section n={5} title="Effective permissions (canonical resolver)">
+        <PersonMatrix canonical={data.canonical as any} />
         <details className="mt-2 text-xs"><summary className="cursor-pointer">Show each permission and where it comes from</summary>
-          <ul className="mt-1 space-y-0.5">{perms.map((p, i) => <li key={i}>{p.area} · {p.action} · {p.scope.label} — <span className="text-muted-foreground">{SOURCE_LABEL[p.source]}: {p.via}</span></li>)}</ul>
+          <ul className="mt-1 space-y-0.5">{(data.canonical as any).matrix.map((m: any) => <li key={m.permission}>{m.permission} — <span className="text-muted-foreground">{m.global ? `allowed everywhere · ${m.sources.join(", ")}` : m.scoped.length ? m.scoped.map((x: any) => `${x.source} (${x.scope})`).join("; ") : "not allowed"}</span></li>)}</ul>
         </details>
       </Section>
       <Section n={6} title="Direct grants"><List items={direct.map((p) => `${p.area} · ${p.action} — ${p.via}`)} /></Section>
@@ -202,8 +210,7 @@ function AccessProfile({ userId }: { userId: string }) {
         <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} — ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
       </Section>
       <Section n={9} title="Access history"><HistoryTable rows={data.history} /></Section>
-      <Section n={10} title="Person matrix (canonical resolver)"><PersonMatrix canonical={data.canonical as any} /></Section>
-      <Section n={11} title="Manage access"><ManageAccessPanel userId={userId} canonical={data.canonical as any} platformRoles={data.facts.roles} /></Section>
+      <Section n={10} title="Manage access"><ManageAccessPanel userId={userId} canonical={data.canonical as any} platformRoles={data.facts.roles} /></Section>
     </div>
   );
 }
@@ -342,4 +349,40 @@ function KV({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
 function List({ items }: { items: string[] }) {
   if (!items.length) return <p className="text-xs text-muted-foreground">None</p>;
   return <ul className="ml-4 list-disc text-sm">{items.map((i) => <li key={i}>{i}</li>)}</ul>;
+}
+
+function ClassificationPanel({ userId, current, proposal }: { userId: string; current: AccountClassification | null; proposal: { classification: AccountClassification; note: string } | null }) {
+  const save = useServerFn(setAccountClassification);
+  const qc = useQueryClient();
+  const [choice, setChoice] = useState<AccountClassification | "">(proposal?.classification ?? "");
+  const [reason, setReason] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const run = useMutation({
+    mutationFn: () => save({ data: { targetUserId: userId, classification: choice as AccountClassification, confirmed: true, reason } }),
+    onSuccess: () => { toast.success("Classification recorded in the access audit."); setConfirming(false); setReason(""); qc.invalidateQueries({ queryKey: ["access-profile", userId] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <div className="mt-2 space-y-2 rounded-md border p-2 text-xs">
+      <p className="font-medium">Account classification</p>
+      <p className="text-muted-foreground">Recorded explicitly and audited — never inferred from the email address. Privileged Harmonious roles require Individual; Shared Inbox and Integration accounts can never hold them.</p>
+      {proposal && !current ? <p className="rounded bg-muted p-1">Proposal awaiting confirmation: <span className="font-medium">{CLASSIFICATION_LABEL[proposal.classification]}</span>. {proposal.note}</p> : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <select className="h-8 rounded-md border bg-background px-2" value={choice} onChange={(e) => { setChoice(e.target.value as AccountClassification); setConfirming(false); }}>
+          <option value="">Choose…</option>
+          {ACCOUNT_CLASSIFICATIONS.map((c) => <option key={c} value={c}>{CLASSIFICATION_LABEL[c]}</option>)}
+        </select>
+        <Textarea rows={1} className="min-h-8 flex-1" placeholder="Reason (required)" value={reason} onChange={(e) => setReason(e.target.value)} />
+      </div>
+      {!confirming ? (
+        <Button size="sm" variant="outline" disabled={!choice || choice === current || reason.trim().length < 5} onClick={() => setConfirming(true)}>Review classification</Button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <span>Record this account as <span className="font-medium">{CLASSIFICATION_LABEL[choice as AccountClassification]}</span>?</span>
+          <Button size="sm" disabled={run.isPending} onClick={() => run.mutate()}>Confirm and record</Button>
+          <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
+        </div>
+      )}
+    </div>
+  );
 }
