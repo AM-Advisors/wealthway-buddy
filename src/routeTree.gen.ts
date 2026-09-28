@@ -61,6 +61,7 @@ import { Route as AuthenticatedStatementsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedTaxRouteImport } from './routes/_authenticated/tax'
 import { Route as AuthenticatedVaultRouteImport } from './routes/_authenticated/vault'
+import { Route as AuthenticatedViewAsRouteImport } from './routes/_authenticated/view-as'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
 import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_authenticated/wire-confirmation'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
@@ -553,6 +554,11 @@ const AuthenticatedTaxRoute = AuthenticatedTaxRouteImport.update({
 const AuthenticatedVaultRoute = AuthenticatedVaultRouteImport.update({
   id: '/vault',
   path: '/vault',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedViewAsRoute = AuthenticatedViewAsRouteImport.update({
+  id: '/view-as',
+  path: '/view-as',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWireRoute = AuthenticatedWireRouteImport.update({
@@ -1930,6 +1936,7 @@ export interface FileRoutesByFullPath {
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/tax': typeof AuthenticatedTaxRoute
   '/vault': typeof AuthenticatedVaultRoute
+  '/view-as': typeof AuthenticatedViewAsRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
@@ -2206,6 +2213,7 @@ export interface FileRoutesByTo {
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/tax': typeof AuthenticatedTaxRoute
   '/vault': typeof AuthenticatedVaultRoute
+  '/view-as': typeof AuthenticatedViewAsRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
@@ -2484,6 +2492,7 @@ export interface FileRoutesById {
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/tax': typeof AuthenticatedTaxRoute
   '/_authenticated/vault': typeof AuthenticatedVaultRoute
+  '/_authenticated/view-as': typeof AuthenticatedViewAsRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
   '/auth/forgot': typeof AuthForgotRoute
@@ -2765,6 +2774,7 @@ export interface FileRouteTypes {
     | '/subscription'
     | '/tax'
     | '/vault'
+    | '/view-as'
     | '/wire'
     | '/wire-confirmation'
     | '/auth/forgot'
@@ -3041,6 +3051,7 @@ export interface FileRouteTypes {
     | '/subscription'
     | '/tax'
     | '/vault'
+    | '/view-as'
     | '/wire'
     | '/wire-confirmation'
     | '/auth/forgot'
@@ -3318,6 +3329,7 @@ export interface FileRouteTypes {
     | '/_authenticated/subscription'
     | '/_authenticated/tax'
     | '/_authenticated/vault'
+    | '/_authenticated/view-as'
     | '/_authenticated/wire'
     | '/_authenticated/wire-confirmation'
     | '/auth/forgot'
@@ -3954,6 +3966,13 @@ declare module '@tanstack/react-router' {
       path: '/vault'
       fullPath: '/vault'
       preLoaderRoute: typeof AuthenticatedVaultRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/view-as': {
+      id: '/_authenticated/view-as'
+      path: '/view-as'
+      fullPath: '/view-as'
+      preLoaderRoute: typeof AuthenticatedViewAsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wire': {
@@ -5791,6 +5810,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedTaxRoute: typeof AuthenticatedTaxRoute
   AuthenticatedVaultRoute: typeof AuthenticatedVaultRoute
+  AuthenticatedViewAsRoute: typeof AuthenticatedViewAsRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
   AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
   AuthenticatedAccountAgreementsRoute: typeof AuthenticatedAccountAgreementsRoute
@@ -5971,6 +5991,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedTaxRoute: AuthenticatedTaxRoute,
   AuthenticatedVaultRoute: AuthenticatedVaultRoute,
+  AuthenticatedViewAsRoute: AuthenticatedViewAsRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
   AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
   AuthenticatedAccountAgreementsRoute: AuthenticatedAccountAgreementsRoute,
