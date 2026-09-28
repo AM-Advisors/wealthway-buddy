@@ -64,7 +64,7 @@ export function buildRbacEvidence(q: EvidenceQuery, s: AccessSnapshot, period: {
 }
 
 export type ReviewRole = { role: string; source: string; scope: string; granted_by: string; granted_at: string; expiry: string; sensitive: string };
-export type ReviewSubject = { key: string; user_id: string; person: string; role: string; roles: ReviewRole[]; scope: string; sensitive: string; source: string; granted_by: string; last_used: string; expiry: string; account_type?: string | undefined; direct_grants?: string[] };
+export type ReviewSubject = { key: string; user_id: string; person: string; role: string; roles: ReviewRole[]; scope: string; sensitive: string; source: string; granted_by: string; last_used: string; expiry: string; account_type?: string | undefined; direct_grants?: string[]; flags?: string[]; last_sign_in?: string | null; active?: boolean; email?: string };
 
 /** Grantor/date for a legacy platform role, from the authoritative audit when recorded. */
 function grantFor(s: AccessSnapshot, userId: string, role: string, fallbackAt: string | undefined, who: (id: string | null | undefined) => string) {
@@ -88,6 +88,7 @@ export function privilegedAccounts(s: AccessSnapshot, now = Date.now()) {
     return {
       user_id: id, person: who(id), account_type: cls ? CLASSIFICATION_LABEL[cls as AccountClassification] : "Not classified",
       roles, last_sign_in: u?.last_sign_in_at ?? null, state: suspended ? "suspended" : "active",
+      never_signed_in: !u?.last_sign_in_at,
       exception: cls === "shared_inbox" || cls === "integration_account" ? "Control exception: shared/integration account holds privileged access" : cls ? "" : "Needs classification",
     };
   }).sort((a, b) => a.person.localeCompare(b.person) || a.user_id.localeCompare(b.user_id));
@@ -108,7 +109,7 @@ export function accessReviewPopulation(population: "privileged" | "staff" | "sco
     account_type: accountType, direct_grants: directOf(id),
   });
   if (population === "privileged") {
-    return privilegedAccounts(s, now).map((a) => subject(a.user_id, a.roles, a.account_type)).sort((a, b) => a.person.localeCompare(b.person) || a.user_id.localeCompare(b.user_id));
+    return privilegedAccounts(s, now).map((a) => ({ ...subject(a.user_id, a.roles, a.account_type), email: who(a.user_id), last_sign_in: a.last_sign_in, active: a.state === "active", flags: [...(a.never_signed_in ? [`${a.roles.map((r) => r.role === "admin" ? "Operations Administrator" : r.role === "super_admin" ? "Super Administrator" : r.role).join(", ")} assigned but account has never signed in. Confirm current business need.`] : []), ...(a.exception ? [a.exception] : [])] })).sort((a, b) => a.person.localeCompare(b.person) || a.user_id.localeCompare(b.user_id));
   }
   if (population === "staff") {
     const by = new Map<string, ReviewRole[]>();

@@ -337,7 +337,7 @@ export function NeedsReview() {
     <div className="mt-4 space-y-6">
       <section className="space-y-2">
         <h2 className="font-medium">Needs review</h2>
-        {data.needsReview.length ? data.needsReview.map((n) => <p key={n.userId} className="text-sm"><span className="font-medium">{n.person}</span> — {n.issue}</p>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
+        {data.needsReview.length ? data.needsReview.map((n: any, i: number) => <div key={n.userId + i} className="text-sm"><p><span className="font-medium">{n.person}</span> — {n.issue}</p>{n.detail ? <p className="text-xs text-muted-foreground">{n.detail}</p> : null}</div>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
       </section>
       <section className="space-y-2">
         <h2 className="font-medium">Legacy client role migration — dry run (nobody is migrated)</h2>

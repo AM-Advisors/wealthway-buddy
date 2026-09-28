@@ -83,3 +83,45 @@ describe("Stage 2.8 privileged access cleanup", () => {
     expect(JSON.stringify(ev)).not.toMatch(/password|token|secret|encrypted|otp/i);
   });
 });
+
+describe("Stage 2.9 classification & certification", () => {
+  const J = "d6dde35f-4481-47a8-8689-529e05570659";
+  const base = () => snap({
+    users: [...snap().users, { id: J, email: "jason@harmonious.co", last_sign_in_at: null }],
+    roles: [...snap().roles, { user_id: J, role: "admin" }, { user_id: J, role: "operations" }],
+    classifications: [...snap().classifications!, { user_id: J, classification: "individual", created_at: "2026-09-28" }, { user_id: INFO, classification: "shared_inbox", created_at: "2026-09-28" }],
+  });
+  it("classification leaves existing roles untouched", () => {
+    const s = base();
+    const before = JSON.stringify(s.roles);
+    accessReviewPopulation("privileged", s);
+    expect(JSON.stringify(s.roles)).toBe(before);
+  });
+  it("Jason's never-signed-in flag is shown but his role stays", () => {
+    const row = accessReviewPopulation("privileged", base()).find((r) => r.user_id === J)!;
+    expect(row.flags?.[0]).toMatch(/never signed in/);
+    expect(row.roles.map((r) => r.role)).toEqual(["admin"]);
+    expect(row.last_sign_in).toBeNull();
+  });
+  it("AC-07 evidence marks unclassified privileged accounts", () => {
+    const ev = buildRbacEvidence("privileged_accounts", snap({ classifications: [] }), { start: "2026-01-01", end: "2026-12-31" });
+    expect(ev.items.every((i) => i["exception"] === "Needs classification")).toBe(true);
+  });
+  it("info@ as Shared Inbox is not in the privileged population", () => {
+    expect(accessReviewPopulation("privileged", base()).some((r) => r.user_id === INFO)).toBe(false);
+  });
+});
+
+describe("classification audit & self-review", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { evidenceReviewProblem } = await import("@/lib/compliance-model");
+  it("classification writes an audit event before the append-only insert", () => {
+    const src = readFileSync("src/lib/access-admin.functions.ts", "utf8");
+    const fn = src.slice(src.indexOf("export const setAccountClassification"), src.indexOf("// ------------------------------------------------------------ account state"));
+    expect(fn.indexOf('action: "Account classified"')).toBeGreaterThan(0);
+    expect(fn.indexOf('action: "Account classified"')).toBeLessThan(fn.indexOf("access_account_classifications"));
+  });
+  it("collector can't review their own evidence", () => {
+    expect(evidenceReviewProblem({ reviewerId: "a", collectedBy: "a", operatorId: null, sodRequired: true, alreadyReviewedByMe: false })).toBeTruthy();
+  });
+});
