@@ -70,6 +70,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
+import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
@@ -600,6 +601,11 @@ const FundSlugRoute = FundSlugRouteImport.update({
 const InvestSlugRoute = InvestSlugRouteImport.update({
   id: '/invest/$slug',
   path: '/invest/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardRefRoute = OnboardRefRouteImport.update({
@@ -1944,6 +1950,7 @@ export interface FileRoutesByFullPath {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
@@ -2221,6 +2228,7 @@ export interface FileRoutesByTo {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
@@ -2500,6 +2508,7 @@ export interface FileRoutesById {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
@@ -2782,6 +2791,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
@@ -3059,6 +3069,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
@@ -3337,6 +3348,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
@@ -3583,6 +3595,7 @@ export interface RootRouteChildren {
   CapClaimTokenRoute: typeof CapClaimTokenRoute
   FundSlugRoute: typeof FundSlugRoute
   InvestSlugRoute: typeof InvestSlugRoute
+  JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
@@ -4029,6 +4042,13 @@ declare module '@tanstack/react-router' {
       path: '/invest/$slug'
       fullPath: '/invest/$slug'
       preLoaderRoute: typeof InvestSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboard/$ref': {
@@ -6219,6 +6239,7 @@ const rootRouteChildren: RootRouteChildren = {
   CapClaimTokenRoute: CapClaimTokenRoute,
   FundSlugRoute: FundSlugRoute,
   InvestSlugRoute: InvestSlugRoute,
+  JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
   SharesTokenRoute: SharesTokenRoute,
