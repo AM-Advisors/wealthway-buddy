@@ -282,7 +282,7 @@ const SECRET_VALUE = /(sk_live_|sk_test_|AKIA[0-9A-Z]{12}|-----BEGIN [A-Z ]*PRIV
 const TIN = /\b\d{3}-\d{2}-\d{4}\b|\b\d{2}-\d{7}\b/;
 
 /** Validates a register entry. Returns the first problem or null. */
-export function recordProblem(kind: string, status: string, data: Record<string, unknown>, ctx: { evidenceIds?: string[] } = {}): string | null {
+export function recordProblem(kind: string, status: string, data: Record<string, any> & { [k: string]: any }, ctx: { evidenceIds?: string[] | undefined } = {}): string | null {
   const spec = REGISTERS[kind];
   if (!spec) return "Unknown register.";
   if (!spec.statuses.includes(status)) return "Pick a valid status.";
@@ -294,16 +294,16 @@ export function recordProblem(kind: string, status: string, data: Record<string,
     if (typeof v === "string" && TIN.test(v)) return "That looks like a tax ID — reference the audit record instead of copying it.";
   }
   for (const f of spec.fields) if (f.required && (data[f.key] === undefined || data[f.key] === "" || data[f.key] === null)) return `${f.label} is required.`;
-  if (kind === "risk" && (status === "accepted" || data["treatment"] === "accept") && !data.accepted_by) return "Risk acceptance must name the approving person.";
-  if (kind === "incident" && status === "closed" && (!data.notification_decision || data.notification_decision === "Pending human review" || !data.decision_owner))
+  if (kind === "risk" && (status === "accepted" || data["treatment"] === "accept") && !data["accepted_by"]) return "Risk acceptance must name the approving person.";
+  if (kind === "incident" && status === "closed" && (!data["notification_decision"] || data["notification_decision"] === "Pending human review" || !data["decision_owner"]))
     return "Record the human notification decision and its owner before closing.";
-  if (kind === "exception" && status === "closed" && (!data.closure_evidence_id || (ctx.evidenceIds && !ctx.evidenceIds.includes(String(data.closure_evidence_id)))))
+  if (kind === "exception" && status === "closed" && (!data["closure_evidence_id"] || (ctx.evidenceIds && !ctx.evidenceIds.includes(String(data["closure_evidence_id"])))))
     return "Closing an exception requires closure evidence.";
-  if (kind === "processing" && status === "approved" && (!data.lawful_basis || !data.role || data.role === "Undetermined" || !data.approved_by))
+  if (kind === "processing" && status === "approved" && (!data["lawful_basis"] || !data["role"] || data["role"] === "Undetermined" || !data["approved_by"]))
     return "An authorized privacy/legal owner must set the basis and role and approve.";
-  if (kind === "dpia" && status === "approved" && !data.approved_by) return "A DPIA needs a named human approver.";
-  if (kind === "retention" && data.disposition_requested && data.hold) return "A legal/regulatory hold blocks disposition.";
-  if (kind === "rights_request" && status === "completed" && !data.identity_verified) return "Verify identity before completing a request.";
+  if (kind === "dpia" && status === "approved" && !data["approved_by"]) return "A DPIA needs a named human approver.";
+  if (kind === "retention" && data["disposition_requested"] && data["hold"]) return "A legal/regulatory hold blocks disposition.";
+  if (kind === "rights_request" && status === "completed" && !data["identity_verified"]) return "Verify identity before completing a request.";
   return null;
 }
 
