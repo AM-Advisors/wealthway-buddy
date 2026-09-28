@@ -323,7 +323,7 @@ export function NeedsReview() {
         <h2 className="font-medium">Super Administrators</h2>
         <div className="overflow-x-auto rounded-md border"><Table>
           <TableHeader><TableRow><TableHead>Person</TableHead><TableHead>User ID</TableHead><TableHead>Super Administrator source</TableHead><TableHead>Active</TableHead></TableRow></TableHeader>
-          <TableBody>{data.superAdmins.map((s) => <TableRow key={s.userId}><TableCell>{s.person}</TableCell><TableCell className="font-mono text-xs">{s.userId}</TableCell><TableCell>{s.source}</TableCell><TableCell>{s.active ? "Yes" : "No (suspended)"}</TableCell></TableRow>)}</TableBody>
+          <TableBody>{data.superAdmins.map((s: any) => <TableRow key={s.userId}><TableCell>{s.person}</TableCell><TableCell className="font-mono text-xs">{s.userId}</TableCell><TableCell>{s.source}</TableCell><TableCell>{s.active ? "Yes" : "No (suspended)"}</TableCell></TableRow>)}</TableBody>
         </Table></div>
       </section>
       <section className="space-y-1">
