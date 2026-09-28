@@ -56,7 +56,8 @@ export async function startViewAs(staffUserId: string, authSessionId: string | n
     await recordAccessEvent({ actorUserId: staffUserId, actorIdentity: null, targetUserId: p.subjectUserId, action: "view_as.start", outcome: "denied", scopeType: "offering", scopeId: p.offeringId, reason: "no canonical relationship" });
     deny("that perspective does not exist.");
   }
-  // One perspective at a time: switching clears the previous context.
+  // One perspective at a time: switching clears the previous context (and any edit context).
+  await closeEditContext(staffUserId, "switched");
   await db().from("view_as_sessions").update({ ended_at: new Date().toISOString(), end_reason: "switched" }).eq("staff_user_id", staffUserId).is("ended_at", null);
   const { data, error } = await db().from("view_as_sessions").insert({
     staff_user_id: staffUserId, auth_session_id: authSessionId, perspective: p.perspective, subject_user_id: p.subjectUserId,
@@ -196,7 +197,8 @@ export async function exitEditContext(staffUserId: string) {
 export async function returnToClientView(staffUserId: string, authSessionId: string | null) {
   const ctx = await activeEditContext(staffUserId, authSessionId);
   if (!ctx) deny("the edit context is no longer active.");
-  await startViewAs(staffUserId, authSessionId, { perspective: ctx!.perspective, subjectUserId: (await latestEditRow(staffUserId)).subject_user_id, offeringId: ctx!.offeringId, onboardingId: ctx!.onboardingId });
+  const subjectUserId = (await latestEditRow(staffUserId)).subject_user_id as string;
   await closeEditContext(staffUserId, "edit_context_returned");
+  await startViewAs(staffUserId, authSessionId, { perspective: ctx!.perspective, subjectUserId, offeringId: ctx!.offeringId, onboardingId: ctx!.onboardingId });
   return { ok: true };
 }
