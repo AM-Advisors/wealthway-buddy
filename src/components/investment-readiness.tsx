@@ -12,39 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-
-type Viewer = "staff" | "investor" | "manager";
+import { ACTIVE, blockersOf, bucketOf, closeHeadline, isAging, plainStatus, toggleStage, waitingLabel, type Bucket, type Viewer } from "@/lib/readiness-presentation";
 
 const money = (c: number | null | undefined) => (c ? `$${(c / 100).toLocaleString("en-US")}` : "—");
 const ownerText = (o: string | null | undefined) => (o ? OWNER_LABELS[o as keyof typeof OWNER_LABELS] : "—");
-const ACTIVE = new Set(["needs_investor", "needs_fund_manager", "needs_harmonious", "under_review", "blocked"]);
-
-/** Plain-language presentation of the nine internal statuses. The model itself is unchanged. */
-function plainStatus(s: ReadinessStatus, viewer: Viewer): string {
-  switch (s) {
-    case "complete": return "Complete";
-    case "needs_investor": return viewer === "investor" ? "Needs your attention" : "Waiting on investor";
-    case "needs_fund_manager": return viewer === "manager" ? "Needs your attention" : "Waiting on fund manager";
-    case "needs_harmonious": return "Waiting on Harmonious";
-    case "under_review": return "Under review";
-    case "blocked": return "Blocked";
-    case "in_progress": return "In progress";
-    case "not_started": return "Not started";
-    case "not_applicable": return "Not applicable";
-  }
-}
 
 function tone(s: ReadinessStatus) {
   if (s === "complete") return "text-muted-foreground";
   if (s === "blocked") return "text-destructive";
   if (ACTIVE.has(s)) return "text-primary";
   return "text-muted-foreground";
-}
-
-function closeHeadline(r: any) {
-  if (r.terminal === "closed") return "Closed";
-  if (r.terminal) return r.terminal === "declined" ? "Declined" : "Cancelled";
-  return r.closeReady ? "Ready to Close" : "Not Ready to Close";
 }
 
 function ago(iso: string | null | undefined) {
@@ -68,10 +45,6 @@ function Kv({ label, value, strong }: { label: string; value: React.ReactNode; s
       <p className={cn("truncate", strong ? "font-heading text-base font-semibold" : "text-sm")}>{value}</p>
     </div>
   );
-}
-
-function blockersOf(r: any) {
-  return (r.items ?? []).filter((i: any) => i.required !== false && ACTIVE.has(i.status));
 }
 
 /** Header: close readiness first, then Next Action, Owner, Progress and Target Close. */
@@ -104,11 +77,11 @@ function ReadinessHeader({ r, title, subtitle, action }: { r: any; title: string
   );
 }
 
-function AttentionNeeded({ r, viewer }: { r: any; viewer: Viewer }) {
+export function AttentionNeeded({ r, viewer }: { r: any; viewer: Viewer }) {
   const list = blockersOf(r);
   if (!list.length || r.terminal) return null;
   return (
-    <section className="space-y-2">
+    <section className="space-y-2" data-testid="attention-needed">
       <h3 className="flex items-center gap-2 text-sm font-semibold"><AlertCircle className="h-4 w-4 text-destructive" />Attention Needed</h3>
       <ul className="divide-y rounded-lg border-l-4 border-l-destructive/70 bg-muted/40">
         {list.map((i: any) => (
@@ -133,8 +106,8 @@ function StageIcon({ s, current }: { s: ReadinessStatus; current: boolean }) {
 }
 
 /** Eight stages as a compact vertical journey; detail on demand. */
-function StageJourney({ r, viewer }: { r: any; viewer: Viewer }) {
-  const [open, setOpen] = useState<string | null>(null);
+export function StageJourney({ r, viewer, defaultOpen = null }: { r: any; viewer: Viewer; defaultOpen?: string | null }) {
+  const [open, setOpen] = useState<string | null>(defaultOpen);
   return (
     <section className="space-y-1">
       <h3 className="text-sm font-semibold">Journey</h3>
@@ -146,10 +119,10 @@ function StageJourney({ r, viewer }: { r: any; viewer: Viewer }) {
           const isOpen = open === s.stage;
           const label = s.safeLabel ?? plainStatus(s.status, viewer);
           return (
-            <li key={s.stage} className="relative pl-9">
+            <li key={s.stage} data-stage={s.stage} data-status={s.status} data-open={isOpen ? "true" : "false"} className="relative pl-9">
               {idx < r.stages.length - 1 ? <span className="absolute left-3 top-8 h-[calc(100%-1.5rem)] w-px bg-border" /> : null}
               <span className="absolute left-0 top-2.5"><StageIcon s={s.status} current={current} /></span>
-              <button type="button" onClick={() => setOpen(isOpen ? null : s.stage)} aria-expanded={isOpen} className="flex w-full items-center justify-between gap-2 rounded-md py-2.5 text-left hover:bg-muted/40">
+              <button type="button" onClick={() => setOpen(toggleStage(open, s.stage))} aria-expanded={isOpen} className="flex w-full items-center justify-between gap-2 rounded-md py-2.5 text-left hover:bg-muted/40">
                 <span className={cn("text-sm", s.status === "complete" ? "text-muted-foreground" : "font-medium", current && "font-semibold")}>
                   {s.title}{current ? <span className="ml-2 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary">Current</span> : null}
                 </span>
@@ -205,7 +178,7 @@ function AuditDetails({ r }: { r: any }) {
   );
 }
 
-function ReadinessSurface({ r, viewer, title, subtitle, action }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode }) {
+export function ReadinessSurface({ r, viewer, title, subtitle, action }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode }) {
   return (
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
@@ -248,19 +221,7 @@ export function InvestmentChecklist({ onboardingId, viewAs = false }: { onboardi
   );
 }
 
-type Bucket = "all" | "ready" | "needs_investor" | "needs_fund_manager" | "needs_harmonious" | "blocked";
 const BUCKET_LABEL: Record<Bucket, string> = { all: "All", ready: "Ready", needs_investor: "Needs Investor", needs_fund_manager: "Needs Fund Manager", needs_harmonious: "Needs Harmonious", blocked: "Blocked" };
-
-function bucketOf(row: any): Bucket {
-  const r = row.readiness;
-  if (row.closeReady || r?.terminal === "closed") return "ready";
-  if ((r?.items ?? []).some((i: any) => i.status === "blocked")) return "blocked";
-  const o = row.nextAction?.owner;
-  if (o === "investor") return "needs_investor";
-  if (o === "fund_manager") return "needs_fund_manager";
-  if (o === "harmonious") return "needs_harmonious";
-  return "all";
-}
 
 function FilterChips<T extends string>({ value, options, labels, counts, onChange }: { value: T; options: T[]; labels: Record<T, string>; counts?: Partial<Record<T, number>>; onChange: (v: T) => void }) {
   return (
@@ -355,7 +316,7 @@ function TriageDrawer({ item, onClose }: { item: any | null; onClose: () => void
           <>
             <SheetHeader className="mb-4">
               <SheetTitle className="font-heading">{item.investorName}</SheetTitle>
-              <SheetDescription>{item.fundName} · Waiting {item.ageDays === 0 ? "today" : `${item.ageDays} day${item.ageDays === 1 ? "" : "s"}`}</SheetDescription>
+              <SheetDescription>{item.fundName} · {waitingLabel(item.ageDays)}</SheetDescription>
             </SheetHeader>
             <div className="space-y-4">
               {item.onboardingId ? <InvestmentChecklist onboardingId={item.onboardingId} /> : null}
@@ -367,6 +328,15 @@ function TriageDrawer({ item, onClose }: { item: any | null; onClose: () => void
         ) : null}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** Waiting time only; emphasis at 3+ days is not an SLA and never says "overdue". */
+export function QueueAge({ days }: { days: number }) {
+  return (
+    <span data-aging={isAging(days) ? "true" : "false"} className={cn("text-xs sm:text-sm", isAging(days) ? "font-semibold text-destructive" : "text-muted-foreground")}>
+      {waitingLabel(days)}{isAging(days) ? <span className="ml-1 rounded bg-destructive/10 px-1 text-[10px] uppercase">Aging</span> : null}
+    </span>
   );
 }
 
@@ -399,7 +369,7 @@ export function ReadinessQueue() {
                 <span className="font-medium">{r.investorName}</span>
                 <span className="text-right text-sm text-muted-foreground sm:text-left">{r.fundName}</span>
                 <span className="col-span-2 text-sm sm:col-span-1">{r.title}<span className="ml-2 text-xs text-muted-foreground">{ownerText(r.owner)}</span></span>
-                <span className={cn("text-xs sm:text-sm", r.ageDays >= 3 ? "font-semibold text-destructive" : "text-muted-foreground")}>{r.ageDays === 0 ? "Today" : `${r.ageDays}d`}</span>
+                <QueueAge days={r.ageDays} />
               </button>
               <div className="flex items-center gap-3">
                 <Button size="sm" variant="outline" onClick={() => setSel(r)}>Open</Button>

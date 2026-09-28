@@ -40,3 +40,15 @@ export const viewAsFundFn = createServerFn({ method: "POST" })
 export const beginEditAsHarmoniousFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await va()).beginEditAsHarmonious(context.userId, sid(context.claims)));
+
+export const activeEditContextFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await va()).activeEditContext(context.userId, sid(context.claims)));
+
+export const exitEditContextFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await va()).exitEditContext(context.userId));
+
+export const returnToClientViewFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await va()).returnToClientView(context.userId, sid(context.claims)));

@@ -57,3 +57,24 @@ export function sessionIsLive(row: ViewAsSessionRow | null, staffUserId: string,
 export function subjectAllowed(subject: { isStaff: boolean }) {
   return !subject.isStaff;
 }
+
+export type EditContextRow = {
+  staff_user_id: string;
+  auth_session_id: string | null;
+  ended_at: string | null;
+  end_reason: string | null;
+};
+
+/** Edit-as-Harmonious context: display-only, grants nothing. Live for the same staff sign-in, within the View As window. */
+export function editContextIsLive(row: EditContextRow | null, staffUserId: string, authSessionId: string | null, now = Date.now()) {
+  if (!row || row.end_reason !== "edit_as_harmonious" || !row.ended_at) return false;
+  if (row.staff_user_id !== staffUserId) return false;
+  if ((row.auth_session_id ?? null) !== (authSessionId ?? null)) return false;
+  return now - new Date(row.ended_at).getTime() < VIEW_AS_MINUTES * 60000;
+}
+
+export const EDIT_CONTEXT_COPY = {
+  title: "Editing as Harmonious",
+  cameFrom: (name: string, role: string) => `You came from Client View for ${name} · ${role}`,
+  recorded: "Changes are recorded as Harmonious administrative actions.",
+} as const;
