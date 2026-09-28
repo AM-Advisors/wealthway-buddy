@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dryRun } from "@/lib/legacy-role-compat";
+import { privilegedAccounts } from "@/lib/compliance-evidence";
 import {
   ACCOUNT_CLASSIFICATIONS,
   classificationChangeProblem,
@@ -362,7 +363,14 @@ export const getLegacyCompatibility = createServerFn({ method: "GET" })
     for (const e of ev ?? []) shadow[e.category] = (shadow[e.category] ?? 0) + 1;
     return {
       dryRun: rows,
-      needsReview: rows.filter((r: any) => r.note).map((r: any) => ({ userId: r.userId, person: r.person, issue: r.note! })),
+      needsReview: [
+        ...rows.filter((r: any) => r.note).map((r: any) => ({ userId: r.userId, person: r.person, issue: r.note! })),
+        ...privilegedAccounts({ ...b, classifications: b.classifications } as any).filter((a) => a.never_signed_in || a.exception).map((a) => ({
+          userId: a.user_id, person: name(a.user_id),
+          issue: [a.never_signed_in ? `${a.roles.map((r) => r.role === "admin" ? "Operations Administrator" : r.role === "super_admin" ? "Super Administrator" : r.role).join(", ")} assigned but account has never signed in. Confirm current business need.` : "", a.exception].filter(Boolean).join(" "),
+          detail: `User ID ${a.user_id} · roles ${a.roles.map((r) => `${r.role} (${r.source}, granted ${String(r.granted_at).slice(0, 10)} by ${r.granted_by})`).join("; ")} · last sign-in ${a.last_sign_in ?? "Never"} · reviewer and decision: record in a Privileged access review (Keep / Reduce / Revoke / Investigate); decisions never change access by themselves.`,
+        })),
+      ],
       superAdmins,
       shadow: shadow as { allow_allow: number; deny_deny: number; legacy_allow_rbac_deny: number; legacy_deny_rbac_allow: number },
     };
