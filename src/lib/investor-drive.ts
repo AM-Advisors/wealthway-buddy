@@ -45,7 +45,8 @@ export function fileStatus(file: DriveFile, prior: PriorImport[], ctx: { offerin
     if (!mine.some((p) => p.offering_id === ctx.offeringId && p.investment_profile_id === ctx.profileId)) return "other_context";
   }
   const latest = [...mine].sort((a, b) => b.version_number - a.version_number)[0]!;
-  const same = (file.md5Checksum && latest.drive_md5 ? file.md5Checksum === latest.drive_md5 : true) && (file.modifiedTime ?? null) === (latest.drive_modified_at ? new Date(latest.drive_modified_at).toISOString() : null) ? true : Boolean(file.md5Checksum && latest.drive_md5 && file.md5Checksum === latest.drive_md5);
+  const iso = (v: string | null) => (v ? new Date(v).toISOString() : null);
+  const same = file.md5Checksum && latest.drive_md5 ? file.md5Checksum === latest.drive_md5 : iso(file.modifiedTime) === iso(latest.drive_modified_at);
   return same ? "current" : "updated";
 }
 
