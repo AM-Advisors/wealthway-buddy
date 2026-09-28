@@ -28,7 +28,32 @@ type Canonical = {
   assignments: { id: string; roleKey: string; label: string; scope: string; effectiveAt: string; expiresAt: string | null; revokedAt: string | null; live: boolean; reason: string }[];
   grants: { id: string; permission: string; effect: string; scope: string; effectiveAt: string; expiresAt: string | null; revokedAt: string | null; live: boolean; reason: string }[];
   matrix: { permission: string; global: boolean; text: string; sources: string[]; scoped: { source: string; scope: string }[] }[];
+  atomic?: AtomicRow[];
 };
+export type AtomicRow = { key: string; label: string; area: string; summary: string; destructive: boolean; global: boolean; text: string; sources: string[]; scoped: { source: string; scope: string }[] };
+
+/** Atomic permissions under one Clients/Funds matrix cell, with source and scope. */
+export function AtomicDrawer({ rows, area, summary }: { rows: AtomicRow[]; area: string; summary: string }) {
+  const list = rows.filter((r) => r.area === area && r.summary === summary);
+  if (!list.length) return null;
+  return (
+    <div className="rounded-md border p-3" data-testid="atomic-drawer">
+      <p className="mb-2 text-sm font-medium">{area === "clients" ? "Clients" : "Funds & SPVs"} → {summary.replace("_", " ")}: atomic permissions</p>
+      <ul className="space-y-1 text-sm">
+        {list.map((r) => (
+          <li key={r.key}>
+            <span className={r.global ? "font-medium" : r.scoped.length ? "" : "text-muted-foreground"}>{r.global ? "✓" : r.scoped.length ? "◐" : "·"} {r.label}</span>
+            {r.destructive ? <Badge variant="outline" className="ml-1">lifecycle — never implied</Badge> : null}
+            <span className="ml-2 text-xs text-muted-foreground">{r.key}</span>
+            <div className="text-xs text-muted-foreground">
+              {r.global ? `Source: ${r.sources.join(", ")} — scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} — scope: ${x.scope}`).join("; ") : "Not granted"}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function useAccessAdmin() {
   const get = useServerFn(getAccessAdminContext);
@@ -228,6 +253,7 @@ export function PersonMatrix({ canonical }: { canonical: Canonical }) {
           {hit.scoped.map((s, i) => <p key={i} className="text-muted-foreground">{s.source === "Direct deny" ? "✕" : "✓"} {s.source} — scope: {s.scope} (not valid outside it)</p>)}
         </CardContent></Card>
       ) : null}
+      {hit && canonical.atomic ? <AtomicDrawer rows={canonical.atomic} area={hit.permission.split(".")[0]!} summary={hit.permission.split(".")[1]!} /> : null}
     </div>
   );
 }

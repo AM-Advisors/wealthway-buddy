@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authorize, formatDecision, isLive, PERMISSIONS, templateFor } from "@/lib/authorize";
+import { ATOMIC_PERMISSIONS, covers } from "@/lib/atomic-permissions";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { authzFactsFor, factsFor, historyFor, lastChange, loadBundle, nameMap, requireAccessViewer, status } from "@/lib/access-control.server";
@@ -115,6 +116,13 @@ function canonicalView(b: any, userId: string) {
     suspended: af.suspended,
     assignments: af.assignments.map((a: any) => ({ id: a.id, roleKey: a.role_key, label: templateFor(a.role_key)?.label ?? a.role_key, version: a.role_version, scope: label(a.scope_type, a.scope_id), effectiveAt: a.effective_at, expiresAt: a.expires_at, revokedAt: a.revoked_at, live: live(a), reason: a.reason })),
     grants: af.grants.map((g: any) => ({ id: g.id, permission: g.permission, effect: g.effect, scope: label(g.scope_type, g.scope_id), effectiveAt: g.effective_at, expiresAt: g.expires_at, revokedAt: g.revoked_at, live: live(g), reason: g.reason })),
+    atomic: ATOMIC_PERMISSIONS.map((a) => {
+      const d = authorize(af, a.key, { type: "global", id: null });
+      const scoped = [...effectivePermissions(af).filter((x) => x.scope.type !== "global" && covers(`${x.area}.${x.action}`, a.key)).map((x) => ({ source: x.via, scope: x.scope.label })),
+        ...af.assignments.filter((x: any) => isLive(x) && x.scope_type !== "global" && x.scope_id && (templateFor(x.role_key)?.permissions ?? []).some((h: string) => covers(h, a.key))).map((x: any) => ({ source: `Role: ${templateFor(x.role_key)?.label ?? x.role_key}`, scope: label(x.scope_type, x.scope_id) })),
+        ...af.grants.filter((g: any) => isLive(g) && g.scope_type !== "global" && g.scope_id && covers(g.permission, a.key)).map((g: any) => ({ source: g.effect === "deny" ? "Direct deny" : "Direct grant", scope: label(g.scope_type, g.scope_id) }))];
+      return { key: a.key, label: a.label, area: a.area, summary: a.summary, destructive: !!a.destructive, global: d.allowed, text: formatDecision(d), sources: d.sources, scoped };
+    }),
     matrix: PERMISSIONS.map((perm) => {
       const d = authorize(af, perm, { type: "global", id: null });
       const scoped = [...effectivePermissions(af).filter((x) => `${x.area}.${x.action}` === perm && x.scope.type !== "global").map((x) => ({ source: x.via, scope: x.scope.label })),

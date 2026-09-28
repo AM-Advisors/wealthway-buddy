@@ -24,7 +24,9 @@ import {
   listAccessPeople,
   listAccessRoles,
 } from "@/lib/access-control.functions";
-import { ManageAccessPanel, NeedsReview, PersonMatrix, RoleAdmin } from "@/components/access-admin-panels";
+import { AtomicDrawer, ManageAccessPanel, NeedsReview, PersonMatrix, RoleAdmin } from "@/components/access-admin-panels";
+import { authorize } from "@/lib/authorize";
+import { ATOMIC_PERMISSIONS } from "@/lib/atomic-permissions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -246,6 +248,7 @@ function blank(partial: Partial<Facts>): Facts {
 
 function MatrixTab() {
   const [subject, setSubject] = useState(0);
+  const [cell, setCell] = useState<{ area: string; summary: string } | null>(null);
   const perms = effectivePermissions(blank(MATRIX_SUBJECTS[subject]!.facts));
   return (
     <div className="mt-4 space-y-3">
@@ -255,6 +258,15 @@ function MatrixTab() {
         ))}
       </div>
       <MatrixGrid perms={perms} granular />
+      <div className="flex flex-wrap gap-2 text-xs">
+        {(["clients", "funds"] as const).flatMap((ar) => (["view", "edit", "manage_access", "export"] as const).map((su) => (
+          <button key={ar + su} onClick={() => setCell({ area: ar, summary: su })} className={`rounded border px-2 py-1 ${cell?.area === ar && cell.summary === su ? "border-primary" : ""}`}>{ar === "clients" ? "Clients" : "Funds"} · {su.replace("_", " ")}</button>
+        )))}
+      </div>
+      {cell ? <AtomicDrawer area={cell.area} summary={cell.summary} rows={ATOMIC_PERMISSIONS.map((a) => {
+        const d = authorize({ ...blank(MATRIX_SUBJECTS[subject]!.facts), authenticated: true, suspended: false, assignments: [], grants: [], roleDefinitions: [] }, a.key, { type: "global", id: null });
+        return { key: a.key, label: a.label, area: a.area, summary: a.summary, destructive: !!a.destructive, global: d.allowed, text: d.reason, sources: d.sources, scoped: [] };
+      })} /> : null}
       <p className="text-xs text-muted-foreground">
         Key: R from role · Rel from relationship · G directly granted · D delegated · ✕ explicitly denied. Export isn't a separate permission in today's model.
       </p>
