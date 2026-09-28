@@ -16167,6 +16167,96 @@ export type Database = {
           },
         ]
       }
+      investment_readiness_events: {
+        Row: {
+          automatic: boolean
+          changed_by: string | null
+          created_at: string
+          id: string
+          investment_profile_id: string | null
+          new_status: string
+          offering_id: string | null
+          onboarding_id: string
+          previous_status: string | null
+          reason: string | null
+          requirement_key: string
+          rule_version: string
+          source_system: string | null
+          stage: string
+        }
+        Insert: {
+          automatic?: boolean
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          new_status: string
+          offering_id?: string | null
+          onboarding_id: string
+          previous_status?: string | null
+          reason?: string | null
+          requirement_key: string
+          rule_version: string
+          source_system?: string | null
+          stage: string
+        }
+        Update: {
+          automatic?: boolean
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          new_status?: string
+          offering_id?: string | null
+          onboarding_id?: string
+          previous_status?: string | null
+          reason?: string | null
+          requirement_key?: string
+          rule_version?: string
+          source_system?: string | null
+          stage?: string
+        }
+        Relationships: []
+      }
+      investment_readiness_tasks: {
+        Row: {
+          created_at: string
+          id: string
+          offering_id: string | null
+          onboarding_id: string
+          owner: string
+          requirement_key: string
+          resolved_at: string | null
+          rule_version: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offering_id?: string | null
+          onboarding_id: string
+          owner: string
+          requirement_key: string
+          resolved_at?: string | null
+          rule_version: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offering_id?: string | null
+          onboarding_id?: string
+          owner?: string
+          requirement_key?: string
+          resolved_at?: string | null
+          rule_version?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       investor_applications: {
         Row: {
           accreditation_status: Database["public"]["Enums"]["check_status"]
