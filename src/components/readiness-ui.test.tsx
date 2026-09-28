@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider, createRootRoute, createRouter, createMemoryHistory } from "@tanstack/react-router";
 import { AttentionNeeded, QueueAge, ReadinessSurface, StageJourney } from "@/components/investment-readiness";
 import { EditContextBannerView, PerspectiveList, ViewAsBanner } from "@/components/view-as";
 import { bucketOf, closeHeadline, isAging, plainStatus, toggleStage, waitingLabel } from "@/lib/readiness-presentation";
@@ -76,8 +78,10 @@ describe("View client perspective", () => {
 });
 
 describe("mode banners", () => {
-  it("Client View banner is present and read-only", () => {
-    const h = html(<ViewAsBanner ctx={{ subjectName: "Jane Smith", roleLabel: "Investor", fundName: "Chapter 7", amountCents: 10000000 }} />);
+  it("Client View banner is present and read-only", async () => {
+    const router = createRouter({ routeTree: createRootRoute({ component: () => <ViewAsBanner ctx={{ subjectName: "Jane Smith", roleLabel: "Investor", fundName: "Chapter 7", amountCents: 10000000 }} /> }), history: createMemoryHistory() });
+    await router.load();
+    const h = html(<QueryClientProvider client={new QueryClient()}><RouterProvider router={router} /></QueryClientProvider>);
     expect(h).toContain('data-mode="client-view"');
     expect(h).toContain('aria-readonly="true"');
     expect(h).toContain("Viewing as Jane Smith · Investor");
