@@ -38,14 +38,15 @@ export function ViewAsPicker({ onboardingId, offeringId, label = "View as…" }:
         <Button variant="link" size="sm" className="h-auto p-0"><Eye className="mr-1 h-3.5 w-3.5" />{label}</Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 space-y-2">
-        <p className="text-xs text-muted-foreground">Read-only. Only people with a real relationship to this record are listed.</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">View client perspective</p>
         {q.isPending ? <p className="text-sm">Loading…</p> : q.isError ? <p className="text-sm text-destructive">Harmonious staff access is required.</p> : !(q.data ?? []).length ? (
-          <p className="text-sm text-muted-foreground">No investor or fund manager perspective exists for this record.</p>
+          <div><p className="text-sm font-medium">No client perspective is available yet</p><p className="text-xs text-muted-foreground">This record does not currently have an investor or fund manager relationship that can be viewed.</p></div>
         ) : (
           (q.data as any[]).map((p) => (
-            <Button key={`${p.perspective}-${p.subjectUserId}`} variant="outline" size="sm" className="w-full justify-start" onClick={() => go(p)}>
-              View as {p.name} — {PERSPECTIVE_LABEL[p.perspective as keyof typeof PERSPECTIVE_LABEL]}
-            </Button>
+            <button key={`${p.perspective}-${p.subjectUserId}`} type="button" className="w-full rounded-md px-2 py-1.5 text-left hover:bg-muted" onClick={() => go(p)}>
+              <span className="block text-xs text-muted-foreground">{PERSPECTIVE_LABEL[p.perspective as keyof typeof PERSPECTIVE_LABEL]}</span>
+              <span className="text-sm font-medium">{p.name}</span>
+            </button>
           ))
         )}
       </PopoverContent>
@@ -78,19 +79,20 @@ export function ViewAsBanner({ ctx }: { ctx: any }) {
     qc.removeQueries({ queryKey: ["view-as"] });
     navigate({ to: "/ops" });
   };
-  const amount = ctx.amountCents ? ` / $${(ctx.amountCents / 100).toLocaleString("en-US")} Investment` : "";
+  const amount = ctx.amountCents ? ` · $${(ctx.amountCents / 100).toLocaleString("en-US")}` : "";
   return (
-    <div role="status" className="sticky top-0 z-40 border-b-4 border-accent bg-primary px-4 py-3 text-primary-foreground">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="font-semibold">Viewing as {ctx.subjectName} — {ctx.roleLabel}</p>
-          <p className="text-sm opacity-90">{ctx.fundName}{amount}</p>
-          <p className="text-xs opacity-80">{VIEW_AS_COPY.signedInAs} {VIEW_AS_COPY.readOnly}</p>
+    <div role="status" className="sticky top-0 z-40 border-b-2 border-accent bg-primary px-4 py-2 text-primary-foreground shadow-sm">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="rounded bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground"><Eye className="mr-1 inline h-3 w-3" />Client View</span>
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-sm font-semibold">Viewing as {ctx.subjectName} · {ctx.roleLabel}</p>
+            <p className="truncate text-xs opacity-80">{ctx.fundName}{amount} · Read-only · {VIEW_AS_COPY.signedInAs}</p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="secondary" onClick={() => exit("edit")}><Pencil className="mr-1 h-4 w-4" />Edit as Harmonious</Button>
-          <Button size="sm" variant="secondary" onClick={() => exit("/ops")}>Return to Harmonious Operations</Button>
-          <Button size="sm" variant="outline" className="border-primary-foreground bg-transparent text-primary-foreground" onClick={() => exit("/ops")}><LogOut className="mr-1 h-4 w-4" />Exit Client View</Button>
+          <Button size="sm" variant="secondary" onClick={() => exit("edit")}><Pencil className="mr-1 h-3.5 w-3.5" />Edit as Harmonious</Button>
+          <Button size="sm" variant="outline" className="border-primary-foreground/60 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={() => exit("/ops")}><LogOut className="mr-1 h-3.5 w-3.5" />Exit Client View</Button>
         </div>
       </div>
     </div>
@@ -100,7 +102,7 @@ export function ViewAsBanner({ ctx }: { ctx: any }) {
 export function NoActiveViewAs() {
   return (
     <div className="mx-auto max-w-xl space-y-3 p-8 text-center">
-      <p className="font-medium">No client view is active.</p>
+      <p className="font-heading font-semibold">No client view is active</p>
       <p className="text-sm text-muted-foreground">Start one from an investment, a fund's Readiness tab or the readiness queue. Client views end on sign-out, after 60 minutes, or when you switch to another record.</p>
       <Link to="/ops" className="text-primary underline">Return to Harmonious Operations</Link>
     </div>
