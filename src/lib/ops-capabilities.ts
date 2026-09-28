@@ -247,6 +247,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
   {
     id: "administration", title: "Administration", url: "/ops/areas/administration", icon: "settings", group: "admin",
     screens: [
+      { title: "Access Control", url: "/ops/access-control", description: "People, roles, permission matrix and access audit" },
       { title: "Operations team", url: "/ops/team", description: "Staff and their roles" },
       { title: "Permissions", url: "/admin/permissions", description: "Permission configuration" },
       { title: "Audit log", url: "/admin/audit", description: "Immutable audit history" },
