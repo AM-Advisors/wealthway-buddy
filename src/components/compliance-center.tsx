@@ -15,7 +15,7 @@ import {
 } from "@/lib/compliance.functions";
 import { CONTROL_STATUSES, CONTROL_TYPES, EVIDENCE_QUERIES, FREQUENCIES, PRIVACY_KINDS, REGISTERS, registerPermissions, STATUS_LABEL } from "@/lib/compliance-model";
 
-type Data = { perms: string[]; me: string; staff: { id: string; label: string }[]; dashboard: any; [k: string]: any };
+type Data = { perms: string[]; me: string; staff: { id: string; label: string }[]; dashboard: any; controls: any[]; evidence: any[]; requirements: any[]; reviews: any[]; records: any[]; recordHistory: any[]; providers: any[]; report: any[] };
 const sel = "h-9 rounded-md border bg-background px-2 text-sm";
 const today = () => new Date().toISOString().slice(0, 10);
 const quarterStart = () => { const d = new Date(); return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1).toISOString().slice(0, 10); };
