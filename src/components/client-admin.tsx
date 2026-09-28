@@ -178,6 +178,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
   const fundName = new Map((d.funds as any[]).map((f) => [f.id, f.name]));
   const refresh = () => qc.invalidateQueries({ queryKey: ["client-people", clientId] });
   return (
+    <div className="space-y-4">
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
         <div>
@@ -229,6 +230,28 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
         {edit ? <PersonDialog clientId={clientId} person={edit} canRoles={caps.includes("manage_roles")} onClose={() => { setEdit(null); refresh(); }} /> : null}
       </CardContent>
     </Card>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Connected through funds and delegations</CardTitle>
+        <CardDescription>People who appear because of a real record: a fund manager assignment, an investment in this client's funds, or an active delegation. Never inferred from email or domain. Private investor records stay in their own workflows.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {!(d as any).relationships?.length ? <p className="text-sm text-muted-foreground">No one yet.</p> : null}
+        {((d as any).relationships ?? []).map((r: any) => (
+          <div key={r.userId} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+            <div>
+              <p className="font-medium">{r.name}</p>
+              <p className="text-xs text-muted-foreground">{r.email}</p>
+              <div className="mt-1 flex flex-wrap gap-1">{r.relationships.map((x: any) => <Badge key={x.label} variant="secondary">{x.label}</Badge>)}</div>
+            </div>
+            {r.relationships.some((x: any) => x.kind === "investor") ? (
+              <Link to="/ops/investors/$investorId" params={{ investorId: r.userId }} className="text-xs text-primary hover:underline">Open investor</Link>
+            ) : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+    </div>
   );
 }
 
