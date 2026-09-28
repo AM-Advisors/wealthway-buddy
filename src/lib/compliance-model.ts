@@ -362,9 +362,9 @@ export function dashboard(i: DashInput) {
     controls: { operating: i.controls.filter((c) => c.status === "operating" || c.status === "tested").length, overdue: i.controls.filter((c) => over(c.nextDue ?? undefined)).length, exceptions: i.controls.filter((c) => c.status === "exception" || c.status === "remediation").length },
     evidence: { dueThisMonth: i.controls.filter((c) => c.nextDue?.startsWith(month)).length, awaitingReview: i.evidence.filter((e) => !e.reviewed).length },
     accessReviews: { open: i.reviews.filter((x) => !x.completed).length, overdue: i.reviews.filter((x) => !x.completed && over(x.period_end)).length },
-    privacy: { openRights: r("rights_request").filter((x) => !["completed", "rejected"].includes(x.status)).length, dpiasAwaiting: r("dpia").filter((x) => x.status === "in_review").length, retentionDue: r("retention").filter((x) => over(x.data.next_review)).length },
-    vendors: { reviewsDue: r("vendor").filter((x) => over(x.data.next_review)).length, dpaMissing: r("vendor").filter((x) => !x.data.dpa_status || ["Missing", "Pending"].includes(x.data.dpa_status)).length },
-    risks: { highResidual: r("risk").filter((x) => x.data.residual === "High" && x.status !== "closed").length, overdue: r("risk").filter((x) => x.status !== "closed" && over(x.data.due)).length },
+    privacy: { openRights: r("rights_request").filter((x) => !["completed", "rejected"].includes(x.status)).length, dpiasAwaiting: r("dpia").filter((x) => x.status === "in_review").length, retentionDue: r("retention").filter((x) => over(x.data["next_review"])).length },
+    vendors: { reviewsDue: r("vendor").filter((x) => over(x.data["next_review"])).length, dpaMissing: r("vendor").filter((x) => !x.data["dpa_status"] || ["Missing", "Pending"].includes(x.data["dpa_status"])).length },
+    risks: { highResidual: r("risk").filter((x) => x.data["residual"] === "High" && x.status !== "closed").length, overdue: r("risk").filter((x) => x.status !== "closed" && over(x.data["due"])).length },
     incidents: { open: r("incident").filter((x) => x.status !== "closed").length, correctiveOutstanding: r("incident").filter((x) => x.status === "corrective_action").length },
   };
 }
