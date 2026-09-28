@@ -108,10 +108,10 @@ describe("destructive-action policy", () => {
     expect(fundDeleteDraftProblem(fundDeps({}))).toBeNull();
   });
   it("closing and archiving are distinct; restore doesn't reopen", () => {
-    expect(FUND_TRANSITIONS.close!.permission).not.toBe(FUND_TRANSITIONS.archive!.permission);
+    expect(FUND_TRANSITIONS["close"]!.permission).not.toBe(FUND_TRANSITIONS["archive"]!.permission);
     expect(fundTransitionProblem("close", "active")).toBeNull();
     expect(fundTransitionProblem("archive", "active")).toBeTruthy();
-    expect(FUND_TRANSITIONS.restore!.to).not.toBe("active");
+    expect(FUND_TRANSITIONS["restore"]!.to).not.toBe("active");
     expect(fundTransitionProblem("reopen", "archived")).toBeTruthy();
   });
   it("lifecycle audit events need reason and correlation ID", () => {
