@@ -19,8 +19,6 @@ import { OPS_HOME, activeOpsSection, opsNavigation, type OpsCapability } from "@
 import type { WorkspaceKind } from "@/lib/session-resolution";
 
 export type NavBadgeKey = "signOff" | "applications" | "unpaidInvoices" | "serviceRequests" | "myClients";
-export type LegacyNavItem = { title: string; url: string; icon: string; badge?: NavBadgeKey };
-export type LegacyNavGroup = { id: string; label: string; items: LegacyNavItem[] };
 
 /** The session fields navigation may read — all produced by resolveSession. */
 export type NavigationSession = {
