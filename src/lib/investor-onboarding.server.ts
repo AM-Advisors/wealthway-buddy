@@ -1940,6 +1940,11 @@ export async function reconcileReadinessForSubjects(subject: { applicationId?: s
   await reconcileAfter(((data ?? []) as any[]).map((r) => r.id), { actorUserId: null, trigger });
 }
 
+export async function reconcileForException(exceptionId: string, userId: string) {
+  const { data } = await db().from("investor_onboarding_exceptions").select("onboarding_id").eq("id", exceptionId).maybeSingle();
+  await reconcileAfter([(data as any)?.onboarding_id], { actorUserId: userId, trigger: "resolveException" });
+}
+
 /** Explicitly authorized, audited staff reconciliation for one investment (no production-wide backfill). */
 export async function staffReconcileReadiness(userId: string, onboardingId: string) {
   await assertStaff(userId);
