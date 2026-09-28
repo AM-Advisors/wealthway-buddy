@@ -53,6 +53,7 @@ export const listAccessPeople = createServerFn({ method: "GET" })
         status: status(u),
         lastSignIn: (u.last_sign_in_at ?? null) as string | null,
         lastPermissionChange: lastChange(b, u.id),
+        accountType: currentClassification(b.classifications, u.id),
       };
     });
   });

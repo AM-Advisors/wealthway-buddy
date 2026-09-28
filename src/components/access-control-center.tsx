@@ -122,7 +122,7 @@ function PeopleTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Person/user ID</TableHead>
-              <TableHead>User type</TableHead><TableHead>Organization</TableHead><TableHead>Effective role(s)</TableHead>
+              <TableHead>User type</TableHead><TableHead>Account type</TableHead><TableHead>Organization</TableHead><TableHead>Effective role(s)</TableHead>
               <TableHead>Effective scope(s)</TableHead><TableHead>Sensitive-data access</TableHead><TableHead>Account status</TableHead>
               <TableHead>Last sign-in</TableHead><TableHead>Last permission change</TableHead>
             </TableRow>
@@ -134,6 +134,7 @@ function PeopleTab() {
                 <TableCell>{p.email}</TableCell>
                 <TableCell className="font-mono text-xs">{p.userId.slice(0, 8)}…</TableCell>
                 <TableCell>{p.types.map((t) => USER_TYPE_LABEL[t]).join(", ")}</TableCell>
+                <TableCell className="text-xs">{p.accountType ? CLASSIFICATION_LABEL[p.accountType as AccountClassification] : "Not classified"}</TableCell>
                 <TableCell>{p.organizations.join(", ") || "—"}</TableCell>
                 <TableCell>{p.roles.join(", ") || "—"}</TableCell>
                 <TableCell className="text-xs">{p.scopes.join("; ") || "—"}{p.scopeCount > p.scopes.length ? ` +${p.scopeCount - p.scopes.length}` : ""}</TableCell>
