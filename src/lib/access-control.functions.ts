@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authorize, formatDecision, isLive, PERMISSIONS, templateFor } from "@/lib/authorize";
 import { ATOMIC_PERMISSIONS, covers } from "@/lib/atomic-permissions";
+import { CLASSIFICATION_PROPOSALS, currentClassification } from "@/lib/account-classification";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { authzFactsFor, factsFor, historyFor, lastChange, loadBundle, nameMap, requireAccessViewer, status } from "@/lib/access-control.server";
@@ -83,6 +84,8 @@ export const getAccessProfile = createServerFn({ method: "GET" })
       permissions: perms,
       history: historyFor(b, names, u.id),
       canonical: canonicalView(b, u.id),
+      classification: currentClassification(b.classifications, u.id),
+      classificationProposal: currentClassification(b.classifications, u.id) ? null : CLASSIFICATION_PROPOSALS[u.id] ?? null,
     };
   });
 

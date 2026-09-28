@@ -3,6 +3,14 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dryRun } from "@/lib/legacy-role-compat";
+import {
+  ACCOUNT_CLASSIFICATIONS,
+  classificationChangeProblem,
+  currentClassification,
+  isPrivilegedRole,
+  PRIVILEGED_PLATFORM_ROLES,
+  privilegedAssignmentProblem,
+} from "@/lib/account-classification";
 import { authzFactsFor, loadBundle, requireAccessViewer, recordAccessEvent, type Bundle } from "@/lib/access-control.server";
 import {
   accessChangeProblem,
@@ -94,6 +102,12 @@ export const assignAccessRole = createServerFn({ method: "POST" })
     const p = await prepare(context);
     const change: AccessChange = { kind: "assign_role", targetUserId: data.targetUserId, roleKey: data.roleKey, scope: data.scope as any };
     await gate(p, change, data.reason);
+    const cls = currentClassification(p.b.classifications, data.targetUserId);
+    const clsProblem = privilegedAssignmentProblem(data.roleKey, data.scope.type, cls);
+    if (clsProblem) {
+      await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: "Refused: assign_role", outcome: "denied", roleKey: data.roleKey, scopeType: data.scope.type, scopeId: data.scope.id, next: { attempted: change, classification: cls, refusal: clsProblem }, reason: data.reason, correlationId: p.correlationId });
+      throw new Error(clsProblem);
+    }
     const t = templateFor(data.roleKey);
     const custom = p.b.roleDefs.filter((r: any) => r.role_key === data.roleKey).sort((a: any, b: any) => b.version - a.version)[0];
     if (!t && !custom) throw new Error("Unknown role.");
@@ -186,6 +200,30 @@ export const revokeAccessPermission = createServerFn({ method: "POST" })
     await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: g.effect === "deny" ? "Permission deny revoked" : "Permission revoked", permission: g.permission, scopeType: g.scope_type, scopeId: g.scope_id, previous: snapshot(p.b, data.targetUserId), next: { revoked: g.id }, reason: data.reason, correlationId: p.correlationId });
     const { error } = await (await admin()).from("access_permission_grants").update({ revoked_at: new Date().toISOString(), revoked_by: p.actorId, revoke_reason: data.reason }).eq("id", g.id);
     if (error) throw new Error("Could not revoke.");
+    return { ok: true };
+  });
+
+// ------------------------------------------------------------ account classification (Stage 2.8)
+
+export const setAccountClassification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), classification: z.enum(ACCOUNT_CLASSIFICATIONS), confirmed: z.literal(true), reason }).parse(d))
+  .handler(async ({ context, data }) => {
+    const p = await prepare(context);
+    // Same authority as suspending/restoring: global access administration, never self.
+    await gate(p, { kind: "account_state", targetUserId: data.targetUserId, suspended: false }, data.reason, { classification: data.classification });
+    if (!p.b.users.some((u: any) => u.id === data.targetUserId)) throw new Error("Account not found.");
+    const previous = currentClassification(p.b.classifications, data.targetUserId);
+    if (previous === data.classification) throw new Error("The account already has that classification.");
+    const held = [
+      ...p.b.roles.filter((r: any) => r.user_id === data.targetUserId && PRIVILEGED_PLATFORM_ROLES.includes(r.role)).map((r: any) => r.role as string),
+      ...p.b.assignments.filter((a: any) => a.user_id === data.targetUserId && !a.revoked_at && isPrivilegedRole(a.role_key, a.scope_type)).map((a: any) => a.role_key as string),
+    ];
+    const problem = classificationChangeProblem(data.classification, held);
+    if (problem) throw new Error(problem);
+    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: "Account classified", previous: { classification: previous }, next: { classification: data.classification }, reason: data.reason, correlationId: p.correlationId });
+    const { error } = await (await admin()).from("access_account_classifications").insert({ user_id: data.targetUserId, classification: data.classification, reason: data.reason, recorded_by: p.actorId, correlation_id: p.correlationId });
+    if (error) throw new Error("Could not record the classification.");
     return { ok: true };
   });
 
