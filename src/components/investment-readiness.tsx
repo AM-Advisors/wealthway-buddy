@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { fundReadinessFn, investmentReadinessFn, readinessQueueFn } from "@/lib/investor-onboarding.functions";
+import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
+import { ViewAsPicker } from "@/components/view-as";
 import { OWNER_LABELS, STATUS_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,9 +70,11 @@ function Checklist({ r, showReasons }: { r: any; showReasons: boolean }) {
 }
 
 /** Investor / manager / staff view of one Investment's canonical checklist. */
-export function InvestmentChecklist({ onboardingId }: { onboardingId: string }) {
+export function InvestmentChecklist({ onboardingId, viewAs = false }: { onboardingId: string; viewAs?: boolean }) {
   const load = useServerFn(investmentReadinessFn);
-  const q = useQuery({ queryKey: ["investment-readiness", onboardingId], queryFn: () => load({ data: { onboardingId } }), retry: false });
+  const loadAs = useServerFn(viewAsInvestmentFn);
+  // In View As the server resolves the investment from the live perspective; no ID is sent.
+  const q = useQuery({ queryKey: viewAs ? ["view-as", "investment"] : ["investment-readiness", onboardingId], queryFn: () => (viewAs ? loadAs() : load({ data: { onboardingId } })), retry: false });
   if (q.isPending) return <Skeleton className="h-40 w-full" />;
   if (q.isError || !q.data) return null;
   const d = q.data as any;
@@ -86,9 +90,10 @@ export function InvestmentChecklist({ onboardingId }: { onboardingId: string }) 
 }
 
 /** Fund → Readiness: one row per Investment, from the same engine. */
-export function FundReadiness({ fundId }: { fundId: string }) {
+export function FundReadiness({ fundId, viewAs = false }: { fundId: string; viewAs?: boolean }) {
   const load = useServerFn(fundReadinessFn);
-  const q = useQuery({ queryKey: ["fund-readiness", fundId], queryFn: () => load({ data: { offeringId: fundId } }), retry: false });
+  const loadAs = useServerFn(viewAsFundFn);
+  const q = useQuery({ queryKey: viewAs ? ["view-as", "fund"] : ["fund-readiness", fundId], queryFn: () => (viewAs ? loadAs() : load({ data: { offeringId: fundId } })), retry: false });
   const [open, setOpen] = useState<string | null>(null);
   if (q.isPending) return <Skeleton className="h-40 w-full" />;
   if (q.isError) return <p className="text-sm text-muted-foreground">Investor readiness is available to Harmonious staff and managers of this fund.</p>;
@@ -100,6 +105,7 @@ export function FundReadiness({ fundId }: { fundId: string }) {
         <CardHeader>
           <CardTitle className="text-base">Investor Readiness</CardTitle>
           <CardDescription>Each investment's progress, next action and who owns it. Statuses are high level; underlying verification, tax and identity evidence is not shown here.</CardDescription>
+          {!viewAs && d.viewer === "staff" ? <div className="pt-2"><ViewAsPicker offeringId={fundId} label="See Client View" /></div> : null}
         </CardHeader>
         <CardContent className="overflow-x-auto">
           {!d.rows.length ? <p className="text-sm text-muted-foreground">No investments in progress for this fund yet.</p> : (
@@ -159,7 +165,7 @@ export function ReadinessQueue() {
               {rows.map((r) => (
                 <tr key={r.id} className="border-t">
                   <td className="py-2">{r.fundName}</td><td>{r.investorName}</td><td>{r.title}</td><td>{ownerText(r.owner)}</td><td>{r.ageDays}d</td>
-                  <td>{r.offeringId ? <Link to="/manager/fund/$fundId/readiness" params={{ fundId: r.offeringId }} className="text-primary underline">Open</Link> : null}</td>
+                  <td className="space-x-3 whitespace-nowrap">{r.offeringId ? <Link to="/manager/fund/$fundId/readiness" params={{ fundId: r.offeringId }} className="text-primary underline">Open</Link> : null}{r.onboardingId ? <ViewAsPicker onboardingId={r.onboardingId} label="View as…" /> : null}</td>
                 </tr>
               ))}
             </tbody>

@@ -400,6 +400,13 @@
       "when": 1790635832206,
       "tag": "0056_readiness_task_became_actionable",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1790636432447,
+      "tag": "0057_view_as_sessions",
+      "breakpoints": true
     }
   ]
 }

@@ -28442,6 +28442,48 @@ export type Database = {
           },
         ]
       }
+      view_as_sessions: {
+        Row: {
+          auth_session_id: string | null
+          created_at: string
+          end_reason: string | null
+          ended_at: string | null
+          expires_at: string
+          id: string
+          offering_id: string | null
+          onboarding_id: string | null
+          perspective: string
+          staff_user_id: string
+          subject_user_id: string
+        }
+        Insert: {
+          auth_session_id?: string | null
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          expires_at?: string
+          id?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          perspective: string
+          staff_user_id: string
+          subject_user_id: string
+        }
+        Update: {
+          auth_session_id?: string | null
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          expires_at?: string
+          id?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          perspective?: string
+          staff_user_id?: string
+          subject_user_id?: string
+        }
+        Relationships: []
+      }
       waterfall_terms: {
         Row: {
           carry_pct: number
