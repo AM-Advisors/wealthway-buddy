@@ -45,7 +45,7 @@ export async function loadBundle() {
     q("client_users", "user_id, client_id, client_role, can_approve, created_at"),
     q("clients", "id, name, legal_name"),
     q("ct_companies", "id, client_id, name, legal_name"),
-    q("offerings", "id, name"),
+    q("offerings", "id, name, client_id"),
     q("professional_memberships", "user_id, organization_id, seat_role, status, activated_at, suspended_at, removed_at"),
     q("professional_organizations", "id, name, legal_name"),
     q("delegations", "id, principal_user_id, delegate_user_id, scope_type, scope_id, authority_level, status, acceptance_state, expires_at, revoked_at, revoked_by, revoke_reason, granted_by, created_at, updated_at"),
