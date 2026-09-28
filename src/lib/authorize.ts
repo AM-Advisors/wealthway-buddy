@@ -6,6 +6,7 @@
  * (Stage 3 migrates them). Relationship tables stay the source of truth; this
  * module only consumes them.
  */
+import { ATOMIC_KEYS, covers, isAtomic } from "@/lib/atomic-permissions";
 import { capabilitiesFor, OPS_AREAS, type OpsArea } from "@/lib/ops-capabilities";
 import {
   effectivePermissions,
@@ -18,7 +19,8 @@ import {
 export const PERMISSION_ACTIONS = ["view", "edit", "prepare", "review", "approve", "execute", "manage_access", "export"] as const;
 export type PermissionKey = `${OpsArea}.${AccessAction}`;
 export const PERMISSIONS: PermissionKey[] = OPS_AREAS.flatMap((a) => PERMISSION_ACTIONS.map((x) => `${a}.${x}` as PermissionKey));
-export const isPermission = (k: string): k is PermissionKey => (PERMISSIONS as string[]).includes(k);
+/** Summary keys (area.action) or Stage 2.6 atomic Client/Fund keys. */
+export const isPermission = (k: string): k is PermissionKey => (PERMISSIONS as string[]).includes(k) || isAtomic(k);
 
 /**
  * Sensitive powers that live in dedicated systems. They are never produced by a
@@ -62,6 +64,7 @@ function fromPlatformRole(role: string): PermissionKey[] {
   }
   if (role === "super_admin" || role === "admin") out.add("administration.manage_access");
   if (role === "super_admin") for (const a of OPS_AREAS) out.add(`${a}.manage_access`), out.add(`${a}.export`);
+  if (role === "super_admin") for (const k of ATOMIC_KEYS) out.add(k as PermissionKey);
   return [...out].sort();
 }
 const p = (area: OpsArea, actions: AccessAction[]) => actions.map((a) => `${area}.${a}` as PermissionKey);
@@ -214,26 +217,28 @@ export function authorize(
   if (!isPermission(permission)) return deny("Unknown permission");
 
   // Explicit deny wins over everything ordinary.
-  const denied = f.grants.find((g) => g.effect === "deny" && g.permission === permission && isLive(g, now) && scopeCovers(asScope(g), resource));
+  const denied = f.grants.find((g) => g.effect === "deny" && covers(g.permission, permission) && isLive(g, now) && scopeCovers(asScope(g), resource));
   if (denied) return { ...deny(`Explicitly denied (${denied.scope_type === "global" ? "global" : `${denied.scope_type} scope`})`), sources: ["Direct deny"] };
 
   const [area, action] = permission.split(".") as [OpsArea, AccessAction];
   const hits: { source: string; scope: string }[] = [];
 
   for (const lp of legacyPerms(f)) {
-    if (lp.area === area && lp.action === action && scopeCovers(lp.scope, resource)) hits.push({ source: lp.via, scope: lp.scope.label });
+    if (covers(`${lp.area}.${lp.action}`, permission) && scopeCovers(lp.scope, resource)) hits.push({ source: lp.via, scope: lp.scope.label });
   }
   for (const a of f.assignments) {
     if (!isLive(a, now) || !scopeCovers(asScope(a), resource)) continue;
-    if (permsOfAssignment(f, a).includes(permission)) {
+    if (permsOfAssignment(f, a).some((h) => covers(h, permission))) {
       hits.push({ source: `Role: ${templateFor(a.role_key)?.label ?? a.role_key}`, scope: a.scope_type === "global" ? "All resources" : `${a.scope_type} ${a.scope_id}` });
     }
   }
   for (const g of f.grants) {
-    if (g.effect === "allow" && g.permission === permission && isLive(g, now) && scopeCovers(asScope(g), resource)) {
+    if (g.effect === "allow" && covers(g.permission, permission) && isLive(g, now) && scopeCovers(asScope(g), resource)) {
       hits.push({ source: "Direct grant", scope: g.scope_type === "global" ? "All resources" : `${g.scope_type} ${g.scope_id}` });
     }
   }
+  // Super Administrator: every ordinary Client/Fund atomic permission, globally (protected systems excluded above).
+  if (isAtomic(permission) && f.roles.includes("super_admin")) hits.push({ source: "Platform role: super_admin", scope: "All resources" });
   if (!hits.length) {
     return deny(resource.type === "global" ? `No source grants ${permission}` : `${resLabel(resource)} is outside assigned scope`);
   }
