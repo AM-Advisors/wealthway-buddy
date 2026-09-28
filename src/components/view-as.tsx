@@ -39,18 +39,24 @@ export function ViewAsPicker({ onboardingId, offeringId, label = "View as…" }:
       </PopoverTrigger>
       <PopoverContent className="w-72 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">View client perspective</p>
-        {q.isPending ? <p className="text-sm">Loading…</p> : q.isError ? <p className="text-sm text-destructive">Harmonious staff access is required.</p> : !(q.data ?? []).length ? (
-          <div><p className="text-sm font-medium">No client perspective is available yet</p><p className="text-xs text-muted-foreground">This record does not currently have an investor or fund manager relationship that can be viewed.</p></div>
-        ) : (
-          (q.data as any[]).map((p) => (
-            <button key={`${p.perspective}-${p.subjectUserId}`} type="button" className="w-full rounded-md px-2 py-1.5 text-left hover:bg-muted" onClick={() => go(p)}>
-              <span className="block text-xs text-muted-foreground">{PERSPECTIVE_LABEL[p.perspective as keyof typeof PERSPECTIVE_LABEL]}</span>
-              <span className="text-sm font-medium">{p.name}</span>
-            </button>
-          ))
-        )}
+        {q.isPending ? <p className="text-sm">Loading…</p> : q.isError ? <p className="text-sm text-destructive">Harmonious staff access is required.</p> : <PerspectiveList items={(q.data ?? []) as any[]} onPick={go} />}
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** Only the server-confirmed related people; no roles are listed that don't exist. */
+export function PerspectiveList({ items, onPick }: { items: any[]; onPick: (p: any) => void }) {
+  if (!items.length) return <div><p className="text-sm font-medium">No client perspective is available yet</p><p className="text-xs text-muted-foreground">This record does not currently have an investor or fund manager relationship that can be viewed.</p></div>;
+  return (
+    <>
+      {items.map((p) => (
+        <button key={`${p.perspective}-${p.subjectUserId}`} type="button" data-perspective={p.perspective} className="w-full rounded-md px-2 py-1.5 text-left hover:bg-muted" onClick={() => onPick(p)}>
+          <span className="block text-xs text-muted-foreground">{PERSPECTIVE_LABEL[p.perspective as keyof typeof PERSPECTIVE_LABEL]}</span>
+          <span className="text-sm font-medium">{p.name}</span>
+        </button>
+      ))}
+    </>
   );
 }
 
