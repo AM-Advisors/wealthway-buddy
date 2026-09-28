@@ -24,6 +24,7 @@ import {
   listAccessPeople,
   listAccessRoles,
 } from "@/lib/access-control.functions";
+import { ManageAccessPanel, PersonMatrix, RoleAdmin } from "@/components/access-admin-panels";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -56,8 +57,8 @@ export function AccessControlCenter() {
     <main className="mx-auto w-full max-w-7xl px-4 py-8">
       <h1 className="text-2xl font-semibold">Access Control</h1>
       <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-        One read-only view of who can do what, and why. It explains the access records that already
-        exist; it doesn't grant or remove anything. Every request is still checked on the server.
+        Who can do what, and why. Authorized administrators can assign roles, grants and denies from a
+        person's profile; every change needs a reason and is permanently audited. Every request is still checked on the server.
       </p>
       <Tabs defaultValue="people" className="mt-6">
         <TabsList>
@@ -197,6 +198,8 @@ function AccessProfile({ userId }: { userId: string }) {
         <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} — ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
       </Section>
       <Section n={9} title="Access history"><HistoryTable rows={data.history} /></Section>
+      <Section n={10} title="Person matrix (canonical resolver)"><PersonMatrix canonical={data.canonical as any} /></Section>
+      <Section n={11} title="Manage access"><ManageAccessPanel userId={userId} canonical={data.canonical as any} platformRoles={data.facts.roles} /></Section>
     </div>
   );
 }
@@ -206,6 +209,7 @@ function RolesTab() {
   const { data } = useQuery({ queryKey: ["access-roles"], queryFn: () => get() });
   return (
     <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="md:col-span-2"><RoleAdmin /></div>
       <Card><CardHeader><CardTitle className="text-base">Harmonious platform roles</CardTitle></CardHeader>
         <CardContent className="space-y-1 text-sm">
           {OPS_STAFF_ROLES.map((r) => <p key={r}><span className="font-medium">{r}</span>{r === "super_admin" ? " — highest; assigned to an exact user ID, never by email domain" : ""}</p>)}
@@ -293,7 +297,7 @@ function AuditTab() {
   const { data, isLoading } = useQuery({ queryKey: ["access-audit"], queryFn: () => get() });
   return (
     <div className="mt-4 space-y-2">
-      <p className="text-xs text-muted-foreground">Built from the existing access records (roles, staff grants and revocations, fund access, delegations). Read-only.</p>
+      <p className="text-xs text-muted-foreground">Authoritative access-change events (with before/after state, reason and refused attempts) plus history reconstructed from earlier records. Nothing here can be edited or deleted.</p>
       {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : <HistoryTable rows={data ?? []} />}
     </div>
   );
