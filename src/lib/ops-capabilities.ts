@@ -297,3 +297,9 @@ export function activeOpsSection(pathname: string): string | null {
 
 /** Operations pages must never appear in a client menu, and the reverse. */
 export const OPS_PATH_PREFIXES = ["/ops", "/admin", "/staff"];
+
+/** Screens gated by a server-checked flag beyond area access (UX only; the server re-checks). */
+export const GATED_SCREENS: Record<string, "accessControl"> = { "/ops/access-control": "accessControl" };
+export function visibleScreens<T extends { url: string }>(screens: readonly T[], flags: { accessControl: boolean }): T[] {
+  return screens.filter((s) => !GATED_SCREENS[s.url] || flags[GATED_SCREENS[s.url]!]);
+}
