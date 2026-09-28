@@ -1,3 +1,4 @@
+import { DRIVE_LABELS } from "@/lib/drive-labels";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -267,8 +268,9 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
         <div>
-          <CardTitle className="text-base">Documents imported from Google Drive</CardTitle>
-          <CardDescription>Harmonious copies with their Drive provenance. Visible to Super Administrators only.</CardDescription>
+          <CardTitle className="text-base">{DRIVE_LABELS.imported.title}</CardTitle>
+          <p className="text-xs font-medium text-muted-foreground">{DRIVE_LABELS.imported.direction}</p>
+          <CardDescription>{DRIVE_LABELS.imported.copy} Visible to Super Administrators only.</CardDescription>
         </div>
         <DriveImportButton offeringId={offeringId} investorUserId={investorUserId} label="Import from Drive" />
       </CardHeader>
