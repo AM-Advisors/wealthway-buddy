@@ -8,7 +8,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, assertStaff, investmentReadiness, fundReadiness } from "@/lib/investor-onboarding.server";
 import { recordAccessEvent } from "@/lib/access-control.server";
-import { sessionIsLive, subjectAllowed, VIEW_AS_MINUTES, PERSPECTIVE_LABEL, type Perspective } from "@/lib/view-as";
+import { editContextIsLive, sessionIsLive, subjectAllowed, VIEW_AS_MINUTES, PERSPECTIVE_LABEL, type Perspective } from "@/lib/view-as";
 
 const db = () => supabaseAdmin as any;
 const deny = (m: string): never => { throw new Error(`View As refused: ${m}`); };
@@ -136,4 +136,67 @@ export async function beginEditAsHarmonious(staffUserId: string, authSessionId: 
   await recordAccessEvent({ actorUserId: staffUserId, actorIdentity: null, targetUserId: p!.subjectUserId, action: "view_as.edit_as_harmonious", scopeType: p!.onboardingId ? "investment" : "offering", scopeId: p!.onboardingId ?? p!.offeringId, previous: { perspective: p!.perspective, mode: "read_only" }, next: { mode: "edit_as_harmonious", attributed_to: "staff" }, correlationId: p!.sessionId });
   await endViewAs(staffUserId, "edit_as_harmonious");
   return { onboardingId: p!.onboardingId, offeringId: p!.offeringId };
+}
+
+/**
+ * Edit-as-Harmonious context banner. Display only: grants no permission and is
+ * never used by any save path. Re-validated on every call; a stale or no-longer
+ * authorized context is closed (end_reason edit_context_stale) and hidden.
+ */
+async function latestEditRow(staffUserId: string) {
+  const { data } = await db().from("view_as_sessions").select("*").eq("staff_user_id", staffUserId).eq("end_reason", "edit_as_harmonious").order("ended_at", { ascending: false }).limit(1).maybeSingle();
+  return data as any;
+}
+
+async function closeEditContext(staffUserId: string, reason: string) {
+  const { data } = await db().from("view_as_sessions").update({ end_reason: reason }).eq("staff_user_id", staffUserId).eq("end_reason", "edit_as_harmonious").select("id, subject_user_id");
+  for (const s of (data ?? []) as any[]) {
+    await recordAccessEvent({ actorUserId: staffUserId, actorIdentity: null, targetUserId: s.subject_user_id, action: "view_as.edit_context_end", correlationId: s.id, reason });
+  }
+}
+
+export async function activeEditContext(staffUserId: string, authSessionId: string | null) {
+  const actor = await onboardingActor(staffUserId);
+  if (!actor.isStaff) return null;
+  const row = await latestEditRow(staffUserId);
+  if (!row) return null;
+  const p = { perspective: row.perspective as Perspective, subjectUserId: row.subject_user_id, offeringId: row.offering_id, onboardingId: row.onboarding_id };
+  if (!editContextIsLive(row, staffUserId, authSessionId) || !(await relationshipHolds(p))) {
+    await closeEditContext(staffUserId, "edit_context_stale");
+    return null;
+  }
+  const [{ data: off }, name, { data: onb }] = await Promise.all([
+    db().from("offerings").select("name, client_id").eq("id", p.offeringId).maybeSingle(),
+    nameOf(p.subjectUserId),
+    p.onboardingId ? db().from("investor_onboardings").select("requested_amount_cents, accepted_amount_cents, investment_profile_id").eq("id", p.onboardingId).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  const [{ data: client }, { data: profile }] = await Promise.all([
+    off?.client_id ? db().from("clients").select("name").eq("id", off.client_id).maybeSingle() : Promise.resolve({ data: null }),
+    (onb as any)?.investment_profile_id ? db().from("investment_profiles").select("display_label").eq("id", (onb as any).investment_profile_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  return {
+    perspective: p.perspective,
+    roleLabel: PERSPECTIVE_LABEL[p.perspective],
+    subjectName: name,
+    clientName: ((client as any)?.name ?? null) as string | null,
+    fundName: (off?.name as string | null) ?? "Fund",
+    offeringId: p.offeringId as string,
+    onboardingId: p.onboardingId as string | null,
+    investmentProfileLabel: ((profile as any)?.display_label ?? null) as string | null,
+    amountCents: ((onb as any)?.accepted_amount_cents ?? (onb as any)?.requested_amount_cents ?? null) as number | null,
+  };
+}
+
+export async function exitEditContext(staffUserId: string) {
+  await closeEditContext(staffUserId, "edit_context_exited");
+  return { ok: true };
+}
+
+/** Return to the originating Client View; startViewAs re-checks staff and relationship. */
+export async function returnToClientView(staffUserId: string, authSessionId: string | null) {
+  const ctx = await activeEditContext(staffUserId, authSessionId);
+  if (!ctx) deny("the edit context is no longer active.");
+  await startViewAs(staffUserId, authSessionId, { perspective: ctx!.perspective, subjectUserId: (await latestEditRow(staffUserId)).subject_user_id, offeringId: ctx!.offeringId, onboardingId: ctx!.onboardingId });
+  await closeEditContext(staffUserId, "edit_context_returned");
+  return { ok: true };
 }
