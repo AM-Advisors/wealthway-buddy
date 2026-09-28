@@ -477,7 +477,15 @@ export async function startOnboarding(
     })
     .select("*")
     .single();
-  if (error) fail(error.message);
+  if (error) {
+    // A concurrent retry already opened it: return that one (idempotent).
+    if ((error as any).code === "23505") {
+      const { data: again } = await db().from("investor_onboardings").select("id").eq("offering_id", offering.id).eq("investor_user_id", actor.userId).not("stage", "in", "(closed,declined,cancelled)").order("created_at", { ascending: false }).limit(1);
+      const row = ((again ?? []) as any[])[0];
+      if (row) return { onboardingId: row.id as string, resumed: true };
+    }
+    fail(error.message);
+  }
 
   if (invitation) {
     await db()
