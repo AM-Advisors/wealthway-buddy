@@ -10,8 +10,6 @@ import { describe, expect, it } from "vitest";
 import {
   getNavigation,
   HOME_ROUTE_MAP,
-  internalNavigationGroups,
-  onboardingItems,
   operationsNavItemIsActive,
   surfaceLabelForPath,
   workspaceKindForPath,
@@ -27,7 +25,7 @@ const NONE = { isAdmin: false, isReviewer: false, legacyOperationsAllowed: false
 const urls = (groups) => groups.flatMap((g) => g.items.map((i) => i.url));
 
 const ws = {
-  investor: { kind: "investor", id: "investor", label: "My investments", path: "/dashboard", surface: "client" },
+  investor: { kind: "investor", id: "investor", label: "My investments", path: "/home", surface: "client" },
   fund_manager: { kind: "fund_manager", id: "fund-manager", label: "Fund management", path: "/manager", surface: "client" },
   company: { kind: "company", id: "company", label: "My company", path: "/client", surface: "client" },
   professional: { kind: "professional", id: "professional", label: "Acting for clients", path: "/professional", surface: "client" },
@@ -40,24 +38,6 @@ const session = (kinds, extra = {}) => ({
   navigation: extra.navigation ?? NONE,
 });
 
-describe("parity: legacy AppSidebar (internal menu)", () => {
-  it("every legacy destination is still generated for a fully-privileged session", () => {
-    const generated = new Set([...urls(internalNavigationGroups(ALL, "/manager/fund/F1")), ...onboardingItems.map((i) => i.url)]);
-    for (const url of LEGACY_APP_SIDEBAR_URLS) expect(generated, url).toContain(url);
-  });
-
-  it("groups follow the same flag gates as before", () => {
-    const ids = (nav, p = "/home") => internalNavigationGroups(nav, p).map((g) => g.id);
-    expect(ids(NONE)).toEqual(["application", "cap-table"]);
-    expect(ids({ ...NONE, isReviewer: true })).toEqual(["application", "cap-table", "funds"]);
-    expect(ids({ ...NONE, isReviewer: true }, "/manager/fund/F1")).toContain("selected-fund");
-    expect(ids({ ...NONE, isProfessional: true })).toEqual(["application", "cap-table", "professional"]);
-    expect(ids({ ...NONE, legacyOperationsAllowed: true })).toEqual(["application", "cap-table", "operations"]);
-    expect(ids({ ...NONE, isAdmin: true })).toEqual(["application", "cap-table", "clients-money", "applications-funds", "records"]);
-    expect(urls(internalNavigationGroups(NONE, "/"))).not.toContain("/admin/client-cap-tables");
-  });
-});
-
 describe("parity: legacy ClientSidebar", () => {
   for (const kind of ["investor", "fund_manager", "company", "professional"]) {
     it(`${kind} primary menu is identical to the previous client menu`, () => {
@@ -68,7 +48,7 @@ describe("parity: legacy ClientSidebar", () => {
   }
   it("investor menu has the required sections", () => {
     expect(getNavigation(session(["investor"]), "investor", "/home").primary.map((l) => l.title)).toEqual([
-      "Home", "My Investments", "My Funds", "Activity", "Reports", "Documents", "Tax", "Profile",
+      "Home", "My Funds", "Activity", "Reports", "Documents", "Tax", "Profile",
     ]);
   });
 });
@@ -95,7 +75,7 @@ describe("workspace projection", () => {
     expect(getNavigation(s, "investor", "/manager").activeKind).toBe("fund_manager");
     expect(getNavigation(s, "investor", "/client/services").activeKind).toBe("company");
     expect(getNavigation(s, "investor", "/professional/tasks").activeKind).toBe("professional");
-    expect(workspaceKindForPath("/dashboard")).toBe("investor");
+    expect(workspaceKindForPath("/my-funds")).toBe("investor");
   });
 
   it("does not let a compatibility route invent a workspace", () => {
@@ -171,7 +151,6 @@ describe("visual route cues", () => {
 describe("no independent relationship queries in navigation", () => {
   const files = [
     "src/lib/navigation.ts",
-    "src/components/app-sidebar.tsx",
     "src/components/client-sidebar.tsx",
     "src/components/ops-sidebar.tsx",
     "src/components/portal-topbar.tsx",

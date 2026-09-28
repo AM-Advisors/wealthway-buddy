@@ -189,7 +189,7 @@ describe("returning someone to where they were heading", () => {
     const result = resolveDestination(investor, "/ops/funds/abc");
     expect(result.reason).toBe("denied");
     expect(isInternalDestination(result.path)).toBe(false);
-    expect(result.path).toBe("/dashboard");
+    expect(result.path).toBe("/home");
   });
 
   it("sends a person with nothing at all somewhere safe rather than into operations", () => {
@@ -228,8 +228,8 @@ describe("the workspace switcher points at operations without granting it", () =
 
   it("only offers operations when the resolver found a staff record", () => {
     const investor = { ...emptyFacts(), investmentCount: 1 };
-    expect(resolveDestination(investor).path).toBe("/dashboard");
-    expect(resolveDestination(staff).path).toBe("/dashboard");
+    expect(resolveDestination(investor).path).toBe("/home");
+    expect(resolveDestination(staff).path).toBe("/home");
   });
 
   it("keeps operations in place on a preview address", () => {
