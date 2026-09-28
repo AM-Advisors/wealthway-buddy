@@ -71,7 +71,7 @@ export function availableWorkspaces(facts: RelationshipFacts): Workspace[] {
       kind: "investor",
       id: "investor",
       label: "My investments",
-      path: "/dashboard",
+      path: "/home",
       surface: "client",
     });
   }
@@ -149,7 +149,7 @@ export function nextRequirementPath(requirements: string[]): string | null {
     SIGNATURE: "/subscription",
     FUNDING: "/onboarding/funding",
   };
-  return map[first] ?? "/dashboard";
+  return map[first] ?? "/home";
 }
 
 /**

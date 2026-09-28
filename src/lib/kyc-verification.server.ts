@@ -228,7 +228,7 @@ export async function startVerificationSession(input: {
       // Opaque Harmonious correlation id — never the email address.
       vendor_data: verification.verification_ref,
       metadata: { verification_ref: verification.verification_ref },
-      callback: `${input.origin}${input.returnPath ?? "/portal"}`,
+      callback: `${input.origin}${input.returnPath ?? "/home"}`,
       ...(Object.keys(prefill).length ? { contact_details: prefill, expected_details: prefill } : {}),
     }),
   });

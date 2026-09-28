@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/onboarding/funding")({
     const funding = await getFunding({ data: {} });
     const offeringId = funding.offering?.id ?? funding.application?.offering_id;
     throw redirect(
-      offeringId ? { to: "/fund/$offeringId/funding", params: { offeringId } } : { to: "/portal" },
+      offeringId ? { to: "/fund/$offeringId/funding", params: { offeringId } } : { to: "/home" },
     );
   },
   component: () => null,

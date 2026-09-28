@@ -78,7 +78,7 @@ function AdminQueue() {
           contact the fund administrator.
         </p>
         <Button asChild variant="outline" className="mt-6">
-          <Link to="/dashboard">Back to your application</Link>
+          <Link to="/home">Back to your application</Link>
         </Button>
       </main>
     );

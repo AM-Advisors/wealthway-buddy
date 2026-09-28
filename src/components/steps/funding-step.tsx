@@ -295,7 +295,7 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <ScopeNotice offeringId={data?.offering?.id ?? null} section="funding" label="Funding" />
       <p className="mt-6 text-xs uppercase tracking-wide text-muted-foreground">
-        <Link to="/portal" className="underline-offset-4 hover:underline">
+        <Link to="/home" className="underline-offset-4 hover:underline">
           Your funds
         </Link>{" "}
         · {data?.offering?.name ?? "Fund"}
@@ -318,7 +318,7 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" size="sm">
-              <Link to="/dashboard">Back to status</Link>
+              <Link to="/home">Back to status</Link>
             </Button>
           </CardContent>
         </Card>
@@ -640,7 +640,7 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
           )}
 
           <Button asChild variant="outline" size="sm">
-            <Link to="/dashboard">Back to status</Link>
+            <Link to="/home">Back to status</Link>
           </Button>
         </div>
       )}

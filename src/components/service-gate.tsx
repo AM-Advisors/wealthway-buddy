@@ -147,7 +147,7 @@ export function RequestServiceCard({
               {STAGE_NOTE[latest.status] ?? "Harmonious is reviewing this request."}
             </p>
             <Button asChild size="sm" variant="outline">
-              <Link to="/portal">View in your portal</Link>
+              <Link to="/home">View in your portal</Link>
             </Button>
           </div>
         ) : !clientId ? (

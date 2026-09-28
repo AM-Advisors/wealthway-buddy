@@ -144,7 +144,7 @@ function WireConfirmationPage() {
               You don't have an active application yet, so there's nothing to confirm.
             </p>
             <Button asChild>
-              <Link to="/dashboard">Go to your dashboard</Link>
+              <Link to="/home">Go to your dashboard</Link>
             </Button>
           </CardContent>
         </Card>
@@ -321,7 +321,7 @@ function WireConfirmationPage() {
           <div className="flex flex-wrap gap-3">
             <Badge variant="secondary">Reviewed by your Harmonious contact</Badge>
             <Button asChild variant="ghost">
-              <Link to="/dashboard">Back to dashboard</Link>
+              <Link to="/home">Back to dashboard</Link>
             </Button>
           </div>
         </>

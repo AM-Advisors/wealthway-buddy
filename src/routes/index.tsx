@@ -75,7 +75,7 @@ function Index() {
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Button asChild size="lg" variant="secondary">
-                  <Link to={session ? "/portal" : "/auth/register"}>
+                  <Link to={session ? "/home" : "/auth/register"}>
                     {session ? "Go to your portal" : "Start your fund"}
                   </Link>
                 </Button>

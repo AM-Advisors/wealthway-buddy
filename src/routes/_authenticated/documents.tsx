@@ -257,7 +257,7 @@ function DocumentsPage() {
 
       <p className="mt-8 text-xs text-muted-foreground">
         Download links expire after a few minutes for your security.{" "}
-        <Link to="/dashboard" className="underline">
+        <Link to="/home" className="underline">
           Back to your dashboard
         </Link>
       </p>

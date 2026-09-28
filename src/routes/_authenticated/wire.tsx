@@ -90,7 +90,7 @@ function WirePage() {
               You don't have an active application yet, so there are no bank details to show.
             </p>
             <Button asChild>
-              <Link to="/dashboard">Go to your dashboard</Link>
+              <Link to="/home">Go to your dashboard</Link>
             </Button>
           </CardContent>
         </Card>
@@ -190,7 +190,7 @@ function WirePage() {
               <Link to="/wire-confirmation">Confirm your transfer</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/dashboard">Back to dashboard</Link>
+              <Link to="/home">Back to dashboard</Link>
             </Button>
           </div>
         </>

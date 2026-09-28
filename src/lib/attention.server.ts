@@ -121,7 +121,7 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
       workspace: "investor" as WorkspaceKind,
       sourceTable: "investor_applications",
       sourceId: a.id,
-      href: "/dashboard",
+      href: "/my-funds",
       at: a.updated_at ?? null,
       fundName,
     };

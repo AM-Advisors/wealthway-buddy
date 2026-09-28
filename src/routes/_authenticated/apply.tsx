@@ -146,7 +146,7 @@ function ApplyPage() {
             </ol>
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => navigate({ to: "/onboarding/kyc" })}>Start the first step</Button>
-              <Button variant="outline" onClick={() => navigate({ to: "/portal" })}>
+              <Button variant="outline" onClick={() => navigate({ to: "/home" })}>
                 Go to your portal
               </Button>
             </div>
@@ -222,7 +222,7 @@ function ApplyPage() {
                 {joined.map((f) => (
                   <li key={f.id}>
                     {f.name} — {String(f.application.status).replace(/_/g, " ")} ·{" "}
-                    <Link to="/portal" className="underline">
+                    <Link to="/home" className="underline">
                       open in your portal
                     </Link>
                   </li>

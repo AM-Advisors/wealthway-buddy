@@ -1905,7 +1905,7 @@ function InvestingPath({ offeringId }: { offeringId: string }) {
             </Button>
           ) : d.otherOfferingId ? (
             <Button asChild variant="outline">
-              <Link to="/dashboard">Go to your application</Link>
+              <Link to="/home">Go to your application</Link>
             </Button>
           ) : d.invited ? (
             <Button
@@ -1920,7 +1920,7 @@ function InvestingPath({ offeringId }: { offeringId: string }) {
             </p>
           )}
           <Button asChild variant="ghost">
-            <Link to="/dashboard">Your dashboard</Link>
+            <Link to="/home">Your dashboard</Link>
           </Button>
         </div>
       </CardContent>

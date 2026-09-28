@@ -48,7 +48,7 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 lg:flex">
           {session ? (
             <Button asChild size="sm" variant="ghost">
-              <Link to="/portal">Go to your portal</Link>
+              <Link to="/home">Go to your portal</Link>
             </Button>
           ) : (
             <Button asChild size="sm" variant="ghost">
@@ -100,7 +100,7 @@ export function SiteHeader() {
             <div className="flex flex-col gap-2 py-4">
               <CtaLink cta="schedule_demo" onClick={() => setOpen(false)} />
               <Button asChild variant="outline">
-                <Link to={session ? "/portal" : "/client-login"} onClick={() => setOpen(false)}>
+                <Link to={session ? "/home" : "/client-login"} onClick={() => setOpen(false)}>
                   {session ? "Go to your portal" : "Client Login"}
                 </Link>
               </Button>

@@ -352,7 +352,7 @@ function AccountsPage() {
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setForm({ ...EMPTY })}>Add an account</Button>
           <Button asChild variant="outline">
-            <Link to="/portal">Back to your portal</Link>
+            <Link to="/home">Back to your portal</Link>
           </Button>
         </div>
       )}

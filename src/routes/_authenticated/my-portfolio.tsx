@@ -83,7 +83,7 @@ function MyPortfolio() {
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/portal">Back to your portal</Link>
+          <Link to="/home">Back to your portal</Link>
         </Button>
       </div>
 
@@ -99,7 +99,7 @@ function MyPortfolio() {
           </CardHeader>
           <CardContent>
             <Button asChild size="sm">
-              <Link to="/portal">Go to your portal</Link>
+              <Link to="/home">Go to your portal</Link>
             </Button>
           </CardContent>
         </Card>
