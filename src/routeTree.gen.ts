@@ -70,6 +70,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
+import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
@@ -284,6 +285,7 @@ import { Route as AuthenticatedManagerFundFundIdAssetsRouteImport } from './rout
 import { Route as AuthenticatedManagerFundFundIdComplianceRouteImport } from './routes/_authenticated/manager.fund.$fundId.compliance'
 import { Route as AuthenticatedManagerFundFundIdDocumentsRouteImport } from './routes/_authenticated/manager.fund.$fundId.documents'
 import { Route as AuthenticatedManagerFundFundIdInvestorsRouteImport } from './routes/_authenticated/manager.fund.$fundId.investors'
+import { Route as AuthenticatedManagerFundFundIdOnboardingLinkRouteImport } from './routes/_authenticated/manager.fund.$fundId.onboarding-link'
 import { Route as AuthenticatedManagerFundFundIdReadinessRouteImport } from './routes/_authenticated/manager.fund.$fundId.readiness'
 import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './routes/_authenticated/manager.fund.$fundId.settings'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
@@ -600,6 +602,11 @@ const FundSlugRoute = FundSlugRouteImport.update({
 const InvestSlugRoute = InvestSlugRouteImport.update({
   id: '/invest/$slug',
   path: '/invest/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardRefRoute = OnboardRefRouteImport.update({
@@ -1859,6 +1866,12 @@ const AuthenticatedManagerFundFundIdInvestorsRoute =
     path: '/investors',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedManagerFundFundIdOnboardingLinkRoute =
+  AuthenticatedManagerFundFundIdOnboardingLinkRouteImport.update({
+    id: '/onboarding-link',
+    path: '/onboarding-link',
+    getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdReadinessRoute =
   AuthenticatedManagerFundFundIdReadinessRouteImport.update({
     id: '/readiness',
@@ -1944,6 +1957,7 @@ export interface FileRoutesByFullPath {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
@@ -2158,6 +2172,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -2221,6 +2236,7 @@ export interface FileRoutesByTo {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
@@ -2432,6 +2448,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -2500,6 +2517,7 @@ export interface FileRoutesById {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
   '/shares/$token': typeof SharesTokenRoute
@@ -2714,6 +2732,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/_authenticated/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/_authenticated/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  '/_authenticated/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/_authenticated/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/_authenticated/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -2782,6 +2801,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
@@ -2996,6 +3016,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/compliance'
     | '/manager/fund/$fundId/documents'
     | '/manager/fund/$fundId/investors'
+    | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
@@ -3059,6 +3080,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
@@ -3270,6 +3292,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/compliance'
     | '/manager/fund/$fundId/documents'
     | '/manager/fund/$fundId/investors'
+    | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
@@ -3337,6 +3360,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
     | '/shares/$token'
@@ -3551,6 +3575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/compliance'
     | '/_authenticated/manager/fund/$fundId/documents'
     | '/_authenticated/manager/fund/$fundId/investors'
+    | '/_authenticated/manager/fund/$fundId/onboarding-link'
     | '/_authenticated/manager/fund/$fundId/readiness'
     | '/_authenticated/manager/fund/$fundId/settings'
     | '/_authenticated/manager/fund/$fundId/team'
@@ -3583,6 +3608,7 @@ export interface RootRouteChildren {
   CapClaimTokenRoute: typeof CapClaimTokenRoute
   FundSlugRoute: typeof FundSlugRoute
   InvestSlugRoute: typeof InvestSlugRoute
+  JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
   SharesTokenRoute: typeof SharesTokenRoute
@@ -4029,6 +4055,13 @@ declare module '@tanstack/react-router' {
       path: '/invest/$slug'
       fullPath: '/invest/$slug'
       preLoaderRoute: typeof InvestSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboard/$ref': {
@@ -5529,6 +5562,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdInvestorsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/manager/fund/$fundId/onboarding-link': {
+      id: '/_authenticated/manager/fund/$fundId/onboarding-link'
+      path: '/onboarding-link'
+      fullPath: '/manager/fund/$fundId/onboarding-link'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdOnboardingLinkRouteImport
+      parentRoute: typeof AuthenticatedManagerFundFundIdRoute
+    }
     '/_authenticated/manager/fund/$fundId/readiness': {
       id: '/_authenticated/manager/fund/$fundId/readiness'
       path: '/readiness'
@@ -5744,6 +5784,7 @@ interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdComplianceRoute: typeof AuthenticatedManagerFundFundIdComplianceRoute
   AuthenticatedManagerFundFundIdDocumentsRoute: typeof AuthenticatedManagerFundFundIdDocumentsRoute
   AuthenticatedManagerFundFundIdInvestorsRoute: typeof AuthenticatedManagerFundFundIdInvestorsRoute
+  AuthenticatedManagerFundFundIdOnboardingLinkRoute: typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   AuthenticatedManagerFundFundIdReadinessRoute: typeof AuthenticatedManagerFundFundIdReadinessRoute
   AuthenticatedManagerFundFundIdSettingsRoute: typeof AuthenticatedManagerFundFundIdSettingsRoute
   AuthenticatedManagerFundFundIdTeamRoute: typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -5761,6 +5802,8 @@ const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundI
       AuthenticatedManagerFundFundIdDocumentsRoute,
     AuthenticatedManagerFundFundIdInvestorsRoute:
       AuthenticatedManagerFundFundIdInvestorsRoute,
+    AuthenticatedManagerFundFundIdOnboardingLinkRoute:
+      AuthenticatedManagerFundFundIdOnboardingLinkRoute,
     AuthenticatedManagerFundFundIdReadinessRoute:
       AuthenticatedManagerFundFundIdReadinessRoute,
     AuthenticatedManagerFundFundIdSettingsRoute:
@@ -6219,6 +6262,7 @@ const rootRouteChildren: RootRouteChildren = {
   CapClaimTokenRoute: CapClaimTokenRoute,
   FundSlugRoute: FundSlugRoute,
   InvestSlugRoute: InvestSlugRoute,
+  JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
   SharesTokenRoute: SharesTokenRoute,

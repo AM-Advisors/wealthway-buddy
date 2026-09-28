@@ -8,6 +8,7 @@ import {
   FileText,
   ListChecks,
   Settings,
+  Link2,
   UserCog,
   ShieldCheck,
   Users,
@@ -30,6 +31,7 @@ const sections = [
   { slug: "documents", label: "Documents", icon: FileText },
   { slug: "compliance", label: "Compliance", icon: ShieldCheck },
   { slug: "team", label: "Team", icon: UserCog },
+  { slug: "onboarding-link", label: "Onboarding Link", icon: Link2 },
   { slug: "settings", label: "Fund Settings", icon: Settings },
 ] as const;
 

@@ -170,7 +170,7 @@ async function touch(onboardingId: string, patch: Record<string, unknown>) {
 // ------------------------------------------------------------ the offering
 
 /** A fund may only take investors once Phase A has launched it. */
-async function launchedOffering(offeringIdOrSlug: string) {
+export async function launchedOffering(offeringIdOrSlug: string) {
   const byId = await db()
     .from("offerings")
     .select("*")
@@ -477,7 +477,15 @@ export async function startOnboarding(
     })
     .select("*")
     .single();
-  if (error) fail(error.message);
+  if (error) {
+    // A concurrent retry already opened it: return that one (idempotent).
+    if ((error as any).code === "23505") {
+      const { data: again } = await db().from("investor_onboardings").select("id").eq("offering_id", offering.id).eq("investor_user_id", actor.userId).not("stage", "in", "(closed,declined,cancelled)").order("created_at", { ascending: false }).limit(1);
+      const row = ((again ?? []) as any[])[0];
+      if (row) return { onboardingId: row.id as string, resumed: true };
+    }
+    fail(error.message);
+  }
 
   if (invitation) {
     await db()
@@ -1851,7 +1859,7 @@ export async function revealWireInstructions(userId: string, onboardingId: strin
 // ------------------------------------------------ investment readiness
 
 /** Read-only: compute the canonical readiness projection. Never writes anything. */
-async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
+export async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
   const { computeReadiness } = await import("@/lib/investment-readiness");
   const facts = await gatherFacts(row);
   const exceptions = await openExceptions(row.id);

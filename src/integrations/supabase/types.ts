@@ -14346,6 +14346,110 @@ export type Database = {
           },
         ]
       }
+      fund_onboarding_link_attempts: {
+        Row: {
+          caller_hash: string
+          created_at: string
+          id: number
+          ok: boolean
+        }
+        Insert: {
+          caller_hash: string
+          created_at?: string
+          id?: number
+          ok: boolean
+        }
+        Update: {
+          caller_hash?: string
+          created_at?: string
+          id?: number
+          ok?: boolean
+        }
+        Relationships: []
+      }
+      fund_onboarding_link_starts: {
+        Row: {
+          created_at: string
+          id: string
+          link_id: string
+          offering_id: string
+          onboarding_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link_id: string
+          offering_id: string
+          onboarding_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link_id?: string
+          offering_id?: string
+          onboarding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_onboarding_link_starts_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "fund_onboarding_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_onboarding_link_starts_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: true
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_onboarding_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          disabled_at: string | null
+          id: string
+          last_used_at: string | null
+          offering_id: string
+          status: string
+          superseded_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          disabled_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          offering_id: string
+          status?: string
+          superseded_at?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          disabled_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          offering_id?: string
+          status?: string
+          superseded_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_onboarding_links_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_onboarding_requirements: {
         Row: {
           config: Json
