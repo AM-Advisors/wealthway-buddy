@@ -407,6 +407,13 @@
       "when": 1790636432447,
       "tag": "0057_view_as_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1790638470042,
+      "tag": "0058_fund_onboarding_links",
+      "breakpoints": true
     }
   ]
 }
