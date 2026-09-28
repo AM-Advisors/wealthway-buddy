@@ -1,0 +1,2 @@
+ALTER TABLE public.investment_readiness_tasks ADD COLUMN IF NOT EXISTS became_actionable_at timestamptz NOT NULL DEFAULT now();
+UPDATE public.investment_readiness_tasks SET became_actionable_at = created_at;

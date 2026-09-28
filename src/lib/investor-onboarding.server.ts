@@ -1850,13 +1850,9 @@ export async function revealWireInstructions(userId: string, onboardingId: strin
 
 // ------------------------------------------------ investment readiness
 
-/**
- * Compute the canonical readiness projection for one Investment, record any status
- * transitions (append-only) and keep internal tasks in step. Never changes the
- * investment, its compliance facts, funding or documents; never sends email.
- */
-async function computeAndSyncReadiness(row: any, actorUserId: string | null, closeAmountCents?: number | null) {
-  const { computeReadiness, readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
+/** Read-only: compute the canonical readiness projection. Never writes anything. */
+async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
+  const { computeReadiness } = await import("@/lib/investment-readiness");
   const facts = await gatherFacts(row);
   const exceptions = await openExceptions(row.id);
   const result = computeReadiness({
@@ -1871,50 +1867,95 @@ async function computeAndSyncReadiness(row: any, actorUserId: string | null, clo
     requestedCloseDate: row.requested_close_date ?? null,
     closeAmountCents: closeAmountCents ?? null,
   });
-  if (closeAmountCents == null) {
-    const [{ data: evs }, { data: tasks }] = await Promise.all([
-      db().from("investment_readiness_events").select("requirement_key,new_status,created_at").eq("onboarding_id", row.id).order("created_at", { ascending: true }),
-      db().from("investment_readiness_tasks").select("id,requirement_key").eq("onboarding_id", row.id).eq("status", "open"),
-    ]);
-    const prev: Record<string, string> = {};
-    for (const e of (evs ?? []) as any[]) prev[e.requirement_key] = e.new_status;
-    const transitions = readinessTransitions(prev, result);
-    if (transitions.length) {
-      await db().from("investment_readiness_events").insert(transitions.map((t) => ({
-        onboarding_id: row.id,
-        offering_id: row.offering_id,
-        investment_profile_id: row.investment_profile_id ?? null,
-        requirement_key: t.key,
-        stage: t.stage,
-        previous_status: t.from,
-        new_status: t.to,
-        source_system: t.source,
-        reason: t.from ? "Canonical record changed" : "Initial evaluation",
-        changed_by: actorUserId,
-        automatic: true,
-        rule_version: READINESS_RULE_VERSION,
-      })));
-    }
-    const open = new Map(((tasks ?? []) as any[]).map((t) => [t.requirement_key, t.id]));
-    const plan = readinessTaskPlan(new Set(open.keys()), result);
-    if (plan.create.length) {
-      // Partial unique index makes a duplicate evaluation a no-op.
-      await db().from("investment_readiness_tasks").upsert(
-        plan.create.map((c) => ({ onboarding_id: row.id, offering_id: row.offering_id, requirement_key: c.key, title: c.title, owner: c.owner, rule_version: READINESS_RULE_VERSION })),
-        { onConflict: "onboarding_id,requirement_key", ignoreDuplicates: true },
-      ).then(() => null, () => null);
-    }
-    for (const k of plan.resolve) {
-      await db().from("investment_readiness_tasks").update({ status: "resolved", resolved_at: nowIso() }).eq("id", open.get(k));
+  return { result, facts };
+}
+
+/**
+ * reconcileInvestmentReadiness — the one canonical, idempotent reconciliation.
+ * Called after a canonical record changes (mutation completion, provider webhook,
+ * or an explicitly authorized staff reconciliation) — never by rendering a page.
+ * Writes only readiness history (real transitions) and work items.
+ */
+export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { actorUserId: string | null; trigger: string }) {
+  const { readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
+  const row = await onboardingRow(onboardingId);
+  const { result } = await computeReadinessFor(row);
+  const [{ data: evs }, { data: tasks }] = await Promise.all([
+    db().from("investment_readiness_events").select("requirement_key,new_status,created_at").eq("onboarding_id", row.id).order("created_at", { ascending: true }),
+    db().from("investment_readiness_tasks").select("id,requirement_key").eq("onboarding_id", row.id).eq("status", "open"),
+  ]);
+  const prev: Record<string, string> = {};
+  for (const e of (evs ?? []) as any[]) prev[e.requirement_key] = e.new_status;
+  const initial = !(evs ?? []).length;
+  const transitions = readinessTransitions(prev, result);
+  const at = nowIso();
+  if (transitions.length) {
+    await db().from("investment_readiness_events").insert(transitions.map((t) => ({
+      onboarding_id: row.id,
+      offering_id: row.offering_id,
+      investment_profile_id: row.investment_profile_id ?? null,
+      requirement_key: t.key,
+      stage: t.stage,
+      previous_status: t.from,
+      new_status: t.to,
+      source_system: t.source,
+      reason: initial ? `Initialization (${ctx.trigger})` : `Canonical record changed (${ctx.trigger})`,
+      changed_by: ctx.actorUserId,
+      automatic: true,
+      rule_version: READINESS_RULE_VERSION,
+      created_at: at,
+    })));
+  }
+  const open = new Map(((tasks ?? []) as any[]).map((t) => [t.requirement_key, t.id]));
+  const plan = readinessTaskPlan(new Set(open.keys()), result);
+  if (plan.create.length) {
+    // Partial unique index makes a concurrent/duplicate reconciliation a no-op.
+    // The partial unique index (one open item per requirement) turns a concurrent or
+    // duplicate reconciliation into a no-op; insert one by one so duplicates are ignored.
+    for (const c of plan.create) {
+      await db().from("investment_readiness_tasks").insert({ onboarding_id: row.id, offering_id: row.offering_id, requirement_key: c.key, title: c.title, owner: c.owner, rule_version: READINESS_RULE_VERSION, became_actionable_at: at });
     }
   }
-  return { result, facts };
+  for (const k of plan.resolve) {
+    await db().from("investment_readiness_tasks").update({ status: "resolved", resolved_at: at }).eq("id", open.get(k));
+  }
+  return { result, transitions: transitions.length, created: plan.create.length, resolved: plan.resolve.length };
+}
+
+/** Best-effort reconciliation after a successful mutation; never fails the mutation. */
+export async function reconcileAfter(onboardingIds: (string | null | undefined)[], ctx: { actorUserId: string | null; trigger: string }) {
+  for (const id of [...new Set(onboardingIds.filter(Boolean) as string[])]) {
+    try { await reconcileInvestmentReadiness(id, ctx); } catch (e) { console.error("[readiness] reconcile failed", ctx.trigger, e instanceof Error ? e.message : e); }
+  }
+}
+
+/** Provider-change entry point: resolve affected investments by application / profile / investor. */
+export async function reconcileReadinessForSubjects(subject: { applicationId?: string | null; investmentProfileId?: string | null; investorUserId?: string | null }, trigger: string) {
+  const ors: string[] = [];
+  if (subject.applicationId) ors.push(`application_id.eq.${subject.applicationId}`);
+  if (subject.investmentProfileId) ors.push(`investment_profile_id.eq.${subject.investmentProfileId}`);
+  if (subject.investorUserId) ors.push(`investor_user_id.eq.${subject.investorUserId}`);
+  if (!ors.length) return;
+  const { data } = await db().from("investor_onboardings").select("id").or(ors.join(",")).not("stage", "in", "(declined,cancelled)");
+  await reconcileAfter(((data ?? []) as any[]).map((r) => r.id), { actorUserId: null, trigger });
+}
+
+export async function reconcileForException(exceptionId: string, userId: string) {
+  const { data } = await db().from("investor_onboarding_exceptions").select("onboarding_id").eq("id", exceptionId).maybeSingle();
+  await reconcileAfter([(data as any)?.onboarding_id], { actorUserId: userId, trigger: "resolveException" });
+}
+
+/** Explicitly authorized, audited staff reconciliation for one investment (no production-wide backfill). */
+export async function staffReconcileReadiness(userId: string, onboardingId: string) {
+  await assertStaff(userId);
+  const r = await reconcileInvestmentReadiness(onboardingId, { actorUserId: userId, trigger: "staff_reconciliation" });
+  return { transitions: r.transitions, created: r.created, resolved: r.resolved };
 }
 
 export async function investmentReadiness(userId: string, onboardingId: string) {
   const { readinessView } = await import("@/lib/investment-readiness");
   const access = await assertOnboardingAccess(userId, onboardingId);
-  const { result, facts } = await computeAndSyncReadiness(access.row, userId);
+  const { result, facts } = await computeReadinessFor(access.row);
   const { data: offering } = await db().from("offerings").select("name").eq("id", access.row.offering_id).maybeSingle();
   return {
     onboardingId,
@@ -1937,7 +1978,7 @@ export async function fundReadiness(userId: string, offeringId: string) {
   const names = new Map(((people ?? []) as any[]).map((p) => [p.user_id, p.legal_name]));
   const out = [] as any[];
   for (const row of rows) {
-    const { result, facts } = await computeAndSyncReadiness(row, userId);
+    const { result, facts } = await computeReadinessFor(row);
     const v = readinessView(result, viewer);
     out.push({
       onboardingId: row.id,
@@ -1954,12 +1995,12 @@ export async function fundReadiness(userId: string, offeringId: string) {
   return { viewer, rows: out };
 }
 
-/** Canonical per-investment readiness for a Close Request selector (no audit writes). */
+/** Canonical per-investment readiness for a Close Request selector (read-only). */
 export async function closeReadinessFor(userId: string, onboardingId: string, closeAmountCents: number) {
   const { readinessView } = await import("@/lib/investment-readiness");
   const access = await assertOnboardingAccess(userId, onboardingId);
   if (access.role === "investor") forbid("close readiness is a fund view.");
-  const { result } = await computeAndSyncReadiness(access.row, userId, closeAmountCents);
+  const { result } = await computeReadinessFor(access.row, closeAmountCents);
   return readinessView(result, access.role);
 }
 
@@ -1988,6 +2029,6 @@ export async function readinessQueue(userId: string) {
     title: t.title,
     owner: t.owner,
     stage: onb.get(t.onboarding_id)?.stage ?? null,
-    ageDays: Math.floor((now - new Date(t.created_at).getTime()) / 86400000),
+    ageDays: Math.floor((now - new Date(t.became_actionable_at ?? t.created_at).getTime()) / 86400000),
   }));
 }

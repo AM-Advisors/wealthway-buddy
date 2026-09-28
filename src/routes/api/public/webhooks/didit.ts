@@ -151,6 +151,16 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           })
           .eq("event_id", eventId);
 
+        if (applicationId) {
+          try {
+            const { data: app } = await supabaseAdmin.from("investor_applications").select("user_id").eq("id", applicationId).maybeSingle();
+            const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+            await reconcileReadinessForSubjects({ applicationId, investorUserId: (app as any)?.user_id ?? null }, "didit_webhook");
+          } catch (e) {
+            console.error("[didit] readiness reconcile failed", e);
+          }
+        }
+
         try {
           const { drainManagerAlerts } = await import("@/lib/manager-alerts.server");
           await drainManagerAlerts();

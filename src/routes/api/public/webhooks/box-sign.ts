@@ -93,6 +93,11 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
             console.log("[box-sign] webhook nda", trigger, signRequestId, nda.status);
           } else {
             console.log("[box-sign] webhook", trigger, signRequestId, result.status);
+            if (result.signatureId) {
+              const { data: sig } = await supabaseAdmin.from("document_signatures").select("application_id, investment_profile_id").eq("id", result.signatureId).maybeSingle();
+              const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
+              await reconcileReadinessForSubjects({ applicationId: (sig as any)?.application_id ?? null, investmentProfileId: (sig as any)?.investment_profile_id ?? null }, "box_sign_webhook");
+            }
           }
         } catch (e) {
           console.error("[box-sign] webhook processing failed", e);
