@@ -5984,6 +5984,311 @@ export type Database = {
           },
         ]
       }
+      compliance_access_review_decisions: {
+        Row: {
+          created_at: string
+          decision: string
+          id: string
+          item_key: string
+          note: string
+          review_id: string
+          reviewer_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          id?: string
+          item_key: string
+          note?: string
+          review_id: string
+          reviewer_user_id: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          id?: string
+          item_key?: string
+          note?: string
+          review_id?: string
+          reviewer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_access_review_decisions_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_access_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_access_reviews: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          fingerprint: string
+          id: string
+          period_end: string
+          period_start: string
+          population: string
+          reviewer_user_id: string
+          snapshot: Json
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          fingerprint: string
+          id?: string
+          period_end: string
+          period_start: string
+          population: string
+          reviewer_user_id: string
+          snapshot: Json
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          fingerprint?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          population?: string
+          reviewer_user_id?: string
+          snapshot?: Json
+          title?: string
+        }
+        Relationships: []
+      }
+      compliance_control_mappings: {
+        Row: {
+          control_key: string
+          created_at: string
+          created_by: string | null
+          id: string
+          requirement_id: string
+        }
+        Insert: {
+          control_key: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          requirement_id: string
+        }
+        Update: {
+          control_key?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          requirement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_control_mappings_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_control_status_events: {
+        Row: {
+          actor_user_id: string | null
+          control_key: string
+          created_at: string
+          evidence_id: string | null
+          id: string
+          note: string
+          status: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          control_key: string
+          created_at?: string
+          evidence_id?: string | null
+          id?: string
+          note?: string
+          status: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          control_key?: string
+          created_at?: string
+          evidence_id?: string | null
+          id?: string
+          note?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      compliance_controls: {
+        Row: {
+          change_reason: string
+          control_key: string
+          control_type: string
+          created_at: string
+          created_by: string | null
+          description: string
+          effective_at: string
+          evidence_requirements: string
+          frequency: string
+          id: string
+          implementation: string
+          name: string
+          objective: string
+          operator_user_id: string | null
+          owner_label: string
+          reviewer_user_id: string | null
+          sod_required: boolean
+          system_process: string
+          version: number
+        }
+        Insert: {
+          change_reason?: string
+          control_key: string
+          control_type: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          effective_at?: string
+          evidence_requirements?: string
+          frequency: string
+          id?: string
+          implementation?: string
+          name: string
+          objective?: string
+          operator_user_id?: string | null
+          owner_label?: string
+          reviewer_user_id?: string | null
+          sod_required?: boolean
+          system_process?: string
+          version?: number
+        }
+        Update: {
+          change_reason?: string
+          control_key?: string
+          control_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          effective_at?: string
+          evidence_requirements?: string
+          frequency?: string
+          id?: string
+          implementation?: string
+          name?: string
+          objective?: string
+          operator_user_id?: string | null
+          owner_label?: string
+          reviewer_user_id?: string | null
+          sod_required?: boolean
+          system_process?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      compliance_evidence: {
+        Row: {
+          artifact_reference: string | null
+          collected_at: string
+          collected_by: string | null
+          control_key: string
+          created_at: string
+          evidence_type: string
+          fingerprint: string | null
+          id: string
+          period_end: string | null
+          period_start: string | null
+          query_version: string | null
+          record_count: number | null
+          source: string
+          summary: Json
+          supersedes_id: string | null
+          system_generated: boolean
+        }
+        Insert: {
+          artifact_reference?: string | null
+          collected_at?: string
+          collected_by?: string | null
+          control_key: string
+          created_at?: string
+          evidence_type: string
+          fingerprint?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          query_version?: string | null
+          record_count?: number | null
+          source: string
+          summary?: Json
+          supersedes_id?: string | null
+          system_generated?: boolean
+        }
+        Update: {
+          artifact_reference?: string | null
+          collected_at?: string
+          collected_by?: string | null
+          control_key?: string
+          created_at?: string
+          evidence_type?: string
+          fingerprint?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          query_version?: string | null
+          record_count?: number | null
+          source?: string
+          summary?: Json
+          supersedes_id?: string | null
+          system_generated?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_evidence_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_evidence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_evidence_reviews: {
+        Row: {
+          created_at: string
+          decision: string
+          evidence_id: string
+          id: string
+          note: string
+          reviewer_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          evidence_id: string
+          id?: string
+          note?: string
+          reviewer_user_id: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          evidence_id?: string
+          id?: string
+          note?: string
+          reviewer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_evidence_reviews_evidence_id_fkey"
+            columns: ["evidence_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_evidence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_holds: {
         Row: {
           cleared_at: string | null
@@ -6269,6 +6574,80 @@ export type Database = {
           questions?: Json
           version?: number
           wording_status?: string
+        }
+        Relationships: []
+      }
+      compliance_records: {
+        Row: {
+          change_reason: string
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          kind: string
+          record_ref: string
+          status: string
+          supersedes_id: string | null
+          title: string
+          version: number
+        }
+        Insert: {
+          change_reason?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          kind: string
+          record_ref: string
+          status: string
+          supersedes_id?: string | null
+          title: string
+          version?: number
+        }
+        Update: {
+          change_reason?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          kind?: string
+          record_ref?: string
+          status?: string
+          supersedes_id?: string | null
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_records_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_requirements: {
+        Row: {
+          code: string
+          created_at: string
+          framework: string
+          id: string
+          title: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          framework: string
+          id?: string
+          title: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          framework?: string
+          id?: string
+          title?: string
         }
         Relationships: []
       }

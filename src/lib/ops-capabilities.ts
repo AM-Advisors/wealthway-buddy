@@ -248,6 +248,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     id: "administration", title: "Administration", url: "/ops/areas/administration", icon: "settings", group: "admin",
     screens: [
       { title: "Access Control", url: "/ops/access-control", description: "People, roles, permission matrix and access audit" },
+      { title: "Compliance & Controls", url: "/ops/compliance", description: "Controls, evidence, access reviews, privacy, vendors, risks, incidents" },
       { title: "Operations team", url: "/ops/team", description: "Staff and their roles" },
       { title: "Permissions", url: "/admin/permissions", description: "Permission configuration" },
       { title: "Audit log", url: "/admin/audit", description: "Immutable audit history" },
@@ -299,7 +300,7 @@ export function activeOpsSection(pathname: string): string | null {
 export const OPS_PATH_PREFIXES = ["/ops", "/admin", "/staff"];
 
 /** Screens gated by a server-checked flag beyond area access (UX only; the server re-checks). */
-export const GATED_SCREENS: Record<string, "accessControl"> = { "/ops/access-control": "accessControl" };
+export const GATED_SCREENS: Record<string, "accessControl"> = { "/ops/access-control": "accessControl", "/ops/compliance": "accessControl" };
 export function visibleScreens<T extends { url: string }>(screens: readonly T[], flags: { accessControl: boolean }): T[] {
   return screens.filter((s) => !GATED_SCREENS[s.url] || flags[GATED_SCREENS[s.url]!]);
 }
