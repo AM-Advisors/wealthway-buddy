@@ -1859,7 +1859,7 @@ export async function revealWireInstructions(userId: string, onboardingId: strin
 // ------------------------------------------------ investment readiness
 
 /** Read-only: compute the canonical readiness projection. Never writes anything. */
-async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
+export async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
   const { computeReadiness } = await import("@/lib/investment-readiness");
   const facts = await gatherFacts(row);
   const exceptions = await openExceptions(row.id);
