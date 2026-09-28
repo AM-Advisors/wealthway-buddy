@@ -101,3 +101,12 @@
 - [ ] Approve first SOW template (needs a real Harmonious template + a second approver)
 - [ ] Invite-to-Harmonious from People (uses existing invitation flow; not wired yet)
 - [ ] Live browser pass of the new Client 360 tabs
+
+## Workspace activation (continued)
+- [x] Fund Team tab (staff-only changes, fund-scoped removal)
+- [x] Client People: people connected through funds/investments/delegations
+- [x] Add Fund from Client: retry-safe, no downstream records
+- [x] Investor Google Drive intake card (connect/check/import, fail-closed)
+- [ ] Investor Drive: extracted-value suggestions (Suggested update from document) — not built
+- [ ] Investors tab Drive status indicator — not built
+- [ ] Live investor document import — waits for explicit approval of a specific Fund/Investor/Profile

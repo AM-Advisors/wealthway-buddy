@@ -178,6 +178,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
   const fundName = new Map((d.funds as any[]).map((f) => [f.id, f.name]));
   const refresh = () => qc.invalidateQueries({ queryKey: ["client-people", clientId] });
   return (
+    <div className="space-y-4">
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
         <div>
@@ -229,6 +230,28 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
         {edit ? <PersonDialog clientId={clientId} person={edit} canRoles={caps.includes("manage_roles")} onClose={() => { setEdit(null); refresh(); }} /> : null}
       </CardContent>
     </Card>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Connected through funds and delegations</CardTitle>
+        <CardDescription>People who appear because of a real record: a fund manager assignment, an investment in this client's funds, or an active delegation. Never inferred from email or domain. Private investor records stay in their own workflows.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {!(d as any).relationships?.length ? <p className="text-sm text-muted-foreground">No one yet.</p> : null}
+        {((d as any).relationships ?? []).map((r: any) => (
+          <div key={r.userId} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
+            <div>
+              <p className="font-medium">{r.name}</p>
+              <p className="text-xs text-muted-foreground">{r.email}</p>
+              <div className="mt-1 flex flex-wrap gap-1">{r.relationships.map((x: any) => <Badge key={x.label} variant="secondary">{x.label}</Badge>)}</div>
+            </div>
+            {r.relationships.some((x: any) => x.kind === "investor") ? (
+              <Link to="/ops/investors/$investorId" params={{ investorId: r.userId }} search={{} as any} className="text-xs text-primary hover:underline">Open investor</Link>
+            ) : null}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+    </div>
   );
 }
 
@@ -567,7 +590,7 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
           </div>
           {caps.includes("link_funds") ? (
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => setMode("create")}>+ Create New Fund/SPV</Button>
+              <Button size="sm" onClick={() => setMode("create")}>+ Add Fund</Button>
               <Button size="sm" variant="outline" onClick={() => setMode("link")}>Link Existing Fund/SPV</Button>
             </div>
           ) : null}
@@ -638,8 +661,8 @@ function CreateFundDialog({ clientId, onClose }: { clientId: string; onClose: ()
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Fund/SPV</DialogTitle>
-          <DialogDescription>Starts in setup. Compliance, banking, accounting and onboarding are not marked complete. If no executed SOW covers it, a Draft SOW is prepared from the current approved template.</DialogDescription>
+          <DialogTitle>Add Fund</DialogTitle>
+          <DialogDescription>Creates the fund for this client, closed and in setup. No investors, investments, bank accounts, accounting records, Drive folders, onboarding records, integrations or SOWs are created.</DialogDescription>
         </DialogHeader>
         {([["name", "Fund / SPV name"], ["fundType", "Structure / type (e.g. SPV, Venture Fund)"], ["entityType", "Entity type"], ["legalEntityName", "Legal entity (if formed)"], ["jurisdiction", "Jurisdiction"]] as const).map(([k, l]) => (
           <div key={k} className="space-y-1"><Label htmlFor={`cf-${k}`}>{l}</Label><Input id={`cf-${k}`} value={(f as any)[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></div>
@@ -653,7 +676,7 @@ function CreateFundDialog({ clientId, onClose }: { clientId: string; onClose: ()
         <p className="text-xs text-muted-foreground">Add services for this fund afterwards on Services & Pricing.</p>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [] } }).then((r) => { toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
+          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [] } }).then((r) => { if (r.duplicate) toast.message("This client already has a fund with that name — nothing new was created."); else toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

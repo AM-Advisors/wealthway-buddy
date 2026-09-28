@@ -1,4 +1,5 @@
 import { ClientContractsPanel } from "@/components/client-contracts";
+import { InvestorDriveIntakeCard } from "@/components/investor-drive-intake";
 import { ClientFundsPanel, ClientOverviewActions, ClientPeoplePanel, ClientServicesPricingPanel } from "@/components/client-admin";
 import { useMemo } from "react";
 
@@ -350,6 +351,7 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}
         {type === "investor" ? <DriveInvestorCard investorUserId={id} /> : null}
         {type === "fund" ? <DriveImportsCard offeringId={id} /> : null}
+        {type === "investor" ? <InvestorDriveIntakeCard investorUserId={id} /> : null}
         {type === "investor" ? <DriveImportsCard investorUserId={id} /> : null}
         <p className="text-xs text-muted-foreground">
           You may {Object.entries(actions).filter(([, ok]) => ok).map(([name]) => name).join(", ")} in this

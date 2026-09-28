@@ -16596,6 +16596,78 @@ export type Database = {
           },
         ]
       }
+      investor_drive_connections: {
+        Row: {
+          connected_at: string
+          connected_by: string
+          disconnected_at: string | null
+          disconnected_by: string | null
+          drive_id: string
+          environment: string
+          folder_id: string
+          folder_path: string
+          id: string
+          investment_profile_id: string
+          investor_user_id: string
+          last_check: Json | null
+          last_checked_at: string | null
+          offering_id: string
+          onboarding_id: string
+          status: string
+        }
+        Insert: {
+          connected_at?: string
+          connected_by: string
+          disconnected_at?: string | null
+          disconnected_by?: string | null
+          drive_id: string
+          environment?: string
+          folder_id: string
+          folder_path: string
+          id?: string
+          investment_profile_id: string
+          investor_user_id: string
+          last_check?: Json | null
+          last_checked_at?: string | null
+          offering_id: string
+          onboarding_id: string
+          status?: string
+        }
+        Update: {
+          connected_at?: string
+          connected_by?: string
+          disconnected_at?: string | null
+          disconnected_by?: string | null
+          drive_id?: string
+          environment?: string
+          folder_id?: string
+          folder_path?: string
+          id?: string
+          investment_profile_id?: string
+          investor_user_id?: string
+          last_check?: Json | null
+          last_checked_at?: string | null
+          offering_id?: string
+          onboarding_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_drive_connections_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_drive_connections_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investor_emails: {
         Row: {
           application_id: string
