@@ -351,6 +351,13 @@
       "when": 1790300300432,
       "tag": "0049_drive_file_intake",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1790623224562,
+      "tag": "0050_rbac_stage2_canonical_access",
+      "breakpoints": true
     }
   ]
 }

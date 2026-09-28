@@ -14,6 +14,204 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_audit_events: {
+        Row: {
+          action: string
+          actor_identity: string | null
+          actor_user_id: string | null
+          correlation_id: string | null
+          created_at: string
+          id: string
+          new_state: Json | null
+          outcome: string
+          permission: string | null
+          previous_state: Json | null
+          reason: string | null
+          role_key: string | null
+          scope_id: string | null
+          scope_type: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_identity?: string | null
+          actor_user_id?: string | null
+          correlation_id?: string | null
+          created_at?: string
+          id?: string
+          new_state?: Json | null
+          outcome?: string
+          permission?: string | null
+          previous_state?: Json | null
+          reason?: string | null
+          role_key?: string | null
+          scope_id?: string | null
+          scope_type?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_identity?: string | null
+          actor_user_id?: string | null
+          correlation_id?: string | null
+          created_at?: string
+          id?: string
+          new_state?: Json | null
+          outcome?: string
+          permission?: string | null
+          previous_state?: Json | null
+          reason?: string | null
+          role_key?: string | null
+          scope_id?: string | null
+          scope_type?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      access_permission_grants: {
+        Row: {
+          created_at: string
+          effect: string
+          effective_at: string
+          expires_at: string | null
+          granted_by: string
+          id: string
+          permission: string
+          reason: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          scope_id: string | null
+          scope_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          effect: string
+          effective_at?: string
+          expires_at?: string | null
+          granted_by: string
+          id?: string
+          permission: string
+          reason: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope_id?: string | null
+          scope_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          effect?: string
+          effective_at?: string
+          expires_at?: string | null
+          granted_by?: string
+          id?: string
+          permission?: string
+          reason?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scope_id?: string | null
+          scope_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      access_role_assignments: {
+        Row: {
+          created_at: string
+          effective_at: string
+          expires_at: string | null
+          granted_by: string
+          id: string
+          reason: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          role_key: string
+          role_version: number | null
+          scope_id: string | null
+          scope_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          effective_at?: string
+          expires_at?: string | null
+          granted_by: string
+          id?: string
+          reason: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_key: string
+          role_version?: number | null
+          scope_id?: string | null
+          scope_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          effective_at?: string
+          expires_at?: string | null
+          granted_by?: string
+          id?: string
+          reason?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_key?: string
+          role_version?: number | null
+          scope_id?: string | null
+          scope_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      access_role_definitions: {
+        Row: {
+          category: string
+          cloned_from: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          permissions: string[]
+          reason: string
+          role_key: string
+          status: string
+          version: number
+        }
+        Insert: {
+          category: string
+          cloned_from?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          permissions?: string[]
+          reason: string
+          role_key: string
+          status?: string
+          version?: number
+        }
+        Update: {
+          category?: string
+          cloned_from?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          permissions?: string[]
+          reason?: string
+          role_key?: string
+          status?: string
+          version?: number
+        }
+        Relationships: []
+      }
       accounting_exceptions: {
         Row: {
           bank_transaction_id: string | null
