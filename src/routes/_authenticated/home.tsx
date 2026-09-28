@@ -146,10 +146,9 @@ function RoleHome() {
 
         <QuickLinks
           links={[
-            { to: "/home", icon: ClipboardList, label: "Your dashboard" },
+            { to: "/my-funds", icon: ClipboardList, label: "My funds" },
             { to: "/documents", icon: FileText, label: "Documents" },
             { to: "/wire-confirmation", icon: Landmark, label: "Confirm a wire" },
-            { to: "/home", icon: Building2, label: "Investor portal" },
             { to: "/client", icon: Building2, label: "Client portal" },
             { to: "/diligence", icon: FolderLock, label: "Diligence rooms" },
           ]}

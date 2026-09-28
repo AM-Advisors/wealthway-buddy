@@ -167,6 +167,12 @@ export function isInternalDestination(path: string): boolean {
   );
 }
 
+/** /dashboard and /portal are retired legacy homes and never a destination. */
+export function isRetiredHomeAlias(path: string): boolean {
+  const base = (path.split(/[?#]/)[0] ?? "").replace(/\/+$/, "") || "/";
+  return ["/dashboard", "/portal"].some((p) => base === p || base.startsWith(`${p}/`));
+}
+
 export function resolveDestination(
   facts: RelationshipFacts,
   intended?: string | null,
@@ -174,7 +180,10 @@ export function resolveDestination(
   // Anything that could leave Harmonious — an absolute address, a
   // protocol-relative path, a backslash trick, an encoded scheme — is discarded
   // here rather than trusted because it arrived in a link.
-  const safe = intended ? safeInternalPath(intended, "") : "";
+  const cleaned = intended ? safeInternalPath(intended, "") : "";
+  // Retired legacy homes (old bookmarks, old email links) are never a
+  // destination; they fall through to the resolved workspace below.
+  const safe = cleaned && isRetiredHomeAlias(cleaned) ? "" : cleaned;
   if (safe) {
     // Someone who is not Harmonious staff is never returned to an Operations
     // address, however they arrived at it. They go to their own part of the
