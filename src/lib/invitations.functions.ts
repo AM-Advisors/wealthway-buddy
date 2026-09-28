@@ -539,3 +539,107 @@ export const removeFundAccess = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+// ------------------------------------------------ Fund workspace (activation)
+
+function maskEmail(email: string | null): string {
+  if (!email) return "—";
+  const [local, domain] = email.split("@");
+  if (!domain) return "—";
+  return `${(local ?? "").slice(0, 1)}•••@${domain}`;
+}
+
+/**
+ * Harmonious staff only (legacy admin role): find an existing person to attach to
+ * one exact fund. Fund managers can't browse the platform's people directory.
+ * Returns only what's needed to pick the right person.
+ */
+export const searchExistingInvestors = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), q: z.string().trim().min(2).max(80) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = await reviewerContext(context.supabase, context.userId);
+    assertFundAllowed(ctx, data.fundId);
+    if (!ctx.isAdmin) throw new Error("Forbidden: only Harmonious staff can search existing people.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const like = `%${data.q.replace(/[%_,()]/g, " ")}%`;
+    const [{ data: people }, { data: profs }] = await Promise.all([
+      db.from("profiles").select("user_id, legal_name, email").or(`legal_name.ilike.${like},email.ilike.${like}`).limit(15),
+      db.from("investment_profiles").select("owner_user_id, legal_name, display_label, profile_type").or(`legal_name.ilike.${like},display_label.ilike.${like}`).limit(15),
+    ]);
+    const ids = [...new Set([...(people ?? []).map((p: any) => p.user_id), ...(profs ?? []).map((p: any) => p.owner_user_id)].filter(Boolean))].slice(0, 15) as string[];
+    if (!ids.length) return [];
+    const [{ data: base }, { data: allProfs }, { data: access }] = await Promise.all([
+      db.from("profiles").select("user_id, legal_name, email").in("user_id", ids),
+      db.from("investment_profiles").select("owner_user_id, legal_name, display_label, profile_type").in("owner_user_id", ids),
+      db.from("investor_fund_access").select("user_id").eq("offering_id", data.fundId).in("user_id", ids),
+    ]);
+    const inFund = new Set((access ?? []).map((a: any) => a.user_id));
+    return (base ?? []).map((p: any) => ({
+      userId: p.user_id as string,
+      name: (p.legal_name as string | null) ?? "Unnamed person",
+      email: maskEmail(p.email),
+      profiles: (allProfs ?? []).filter((x: any) => x.owner_user_id === p.user_id).map((x: any) => `${x.display_label ?? x.legal_name ?? "Profile"} (${String(x.profile_type ?? "").replace(/_/g, " ")})`).slice(0, 4),
+      alreadyAdded: inFund.has(p.user_id),
+    }));
+  });
+
+/** Attach an existing person to this exact fund, via the same grant path as invitations. */
+export const addExistingInvestorToFund = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), userId: z.string().uuid(), sendEmail: z.boolean().default(false) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId, claims } = context;
+    const ctx = await reviewerContext(supabase, userId);
+    assertFundAllowed(ctx, data.fundId);
+    if (!ctx.isAdmin) throw new Error("Forbidden: only Harmonious staff can attach existing people.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: existing } = await db.from("investor_fund_access").select("id").eq("offering_id", data.fundId).eq("user_id", data.userId).maybeSingle();
+    if (existing) return { status: "already_added" as const };
+    const { data: person } = await db.from("profiles").select("legal_name, email").eq("user_id", data.userId).maybeSingle();
+    const { data: u } = await supabaseAdmin.auth.admin.getUserById(data.userId);
+    const email = String(person?.email ?? u?.user?.email ?? "").toLowerCase();
+    if (!u?.user || !email) throw new Error("That person's account couldn't be found.");
+    const { data: fund } = await supabase.from("offerings").select("name").eq("id", data.fundId).maybeSingle();
+    if (!fund) throw new Error("Fund not found.");
+    await grantFundAccess({ supabase, supabaseAdmin, actorId: userId, targetUserId: data.userId, offeringIds: [data.fundId], role: "investor" as InvitationRole, email, name: person?.legal_name ?? "", sendEmail: data.sendEmail });
+    let emailSent = false;
+    if (data.sendEmail) {
+      emailSent = await sendInvitationEmail({ supabaseAdmin, email, name: person?.legal_name ?? "", role: "investor" as InvitationRole, fundNames: [(fund as any).name], invitedByName: await actorName(supabase, userId, claims) });
+    }
+    return { status: "added" as const, emailSent };
+  });
+
+/** Row-action lookup for one fund: user id, latest invitation id and whether the caller is staff. */
+export const getFundInvestorActions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const ctx = await reviewerContext(context.supabase, context.userId);
+    assertFundAllowed(ctx, data.fundId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const [{ data: apps }, { data: invs }] = await Promise.all([
+      db.from("investor_applications").select("id, user_id").eq("offering_id", data.fundId),
+      db.from("fund_invitations").select("id, email, status, created_at").eq("offering_id", data.fundId).eq("invite_role", "investor").order("created_at", { ascending: false }),
+    ]);
+    const ids = [...new Set((apps ?? []).map((a: any) => a.user_id))] as string[];
+    const { data: profs } = ids.length ? await db.from("profiles").select("user_id, email").in("user_id", ids) : { data: [] };
+    const emailOf = new Map((profs ?? []).map((p: any) => [p.user_id, String(p.email ?? "").toLowerCase()]));
+    const rows: Record<string, { userId: string; invitationId: string | null }> = {};
+    for (const a of apps ?? []) {
+      const inv = (invs ?? []).find((i: any) => String(i.email).toLowerCase() === emailOf.get(a.user_id) && i.status !== "revoked");
+      rows[a.id] = { userId: a.user_id, invitationId: inv?.id ?? null };
+    }
+    const appEmails = new Set([...emailOf.values()]);
+    const { data: access } = await db.from("investor_fund_access").select("user_id").eq("offering_id", data.fundId);
+    const accessIds = ((access ?? []) as any[]).map((a) => a.user_id as string).filter((id) => !ids.includes(id));
+    const { data: accessProfs } = accessIds.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", accessIds) : { data: [] };
+    const pending = ((accessProfs ?? []) as any[]).filter((p) => !appEmails.has(String(p.email ?? "").toLowerCase())).map((p) => {
+      const inv = (invs ?? []).find((i: any) => String(i.email).toLowerCase() === String(p.email ?? "").toLowerCase() && i.status !== "revoked");
+      return { userId: p.user_id as string, name: (p.legal_name as string | null) ?? (p.email as string), email: p.email as string | null, invitationId: (inv?.id as string | undefined) ?? null, invitedAt: (inv?.created_at as string | undefined) ?? null };
+    });
+    return { isStaff: ctx.isAdmin, rows, pending };
+  });
