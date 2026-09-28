@@ -105,7 +105,7 @@ export function InvestorOnboardingJourney({
             <CardDescription>Your investment is complete.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="outline"><Link to="/dashboard">Go to your investments</Link></Button>
+            <Button asChild variant="outline"><Link to="/home">Go to your investments</Link></Button>
           </CardContent>
         </Card>
       ) : null}

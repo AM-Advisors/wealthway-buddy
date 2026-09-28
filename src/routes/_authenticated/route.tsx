@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { safeInternalPath } from "@/lib/app-origins";
 import { clearStoredClientContext } from "@/lib/client-context-storage";
 import { getNavigation } from "@/lib/navigation";
-import { AppSidebar } from "@/components/app-sidebar";
 import { ClientSidebar } from "@/components/client-sidebar";
 import { ClientWorkspaceProvider, useClientWorkspace } from "@/components/client-workspace";
 import { PolicyGate } from "@/components/policy-gate";
@@ -79,6 +78,5 @@ function Menu({ onSignOut }: { onSignOut: () => void }) {
   const { activeId, session } = useClientWorkspace();
   const { shell } = getNavigation(session as never, activeId, pathname);
   if (shell === "ops") return <OpsSidebar onSignOut={onSignOut} />;
-  if (shell === "internal") return <AppSidebar onSignOut={onSignOut} />;
   return <ClientSidebar onSignOut={onSignOut} />;
 }

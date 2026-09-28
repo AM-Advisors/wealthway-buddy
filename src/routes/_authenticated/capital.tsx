@@ -36,7 +36,7 @@ function CapitalSummaryPage() {
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/dashboard">Back to dashboard</Link>
+          <Link to="/home">Back to dashboard</Link>
         </Button>
       </header>
       <InvestorCapitalSummary />

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/onboarding/documents")({
     throw redirect(
       offeringId
         ? { to: "/fund/$offeringId/documents", params: { offeringId } }
-        : { to: "/portal" },
+        : { to: "/home" },
     );
   },
   component: () => null,

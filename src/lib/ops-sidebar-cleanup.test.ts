@@ -101,7 +101,7 @@ describe("shell chrome", () => {
   });
 
   it("each sidebar renders one logo; account controls live in the footer", () => {
-    for (const f of ["ops-sidebar", "client-sidebar", "app-sidebar"]) {
+    for (const f of ["ops-sidebar", "client-sidebar"]) {
       const src = readFileSync(`src/components/${f}.tsx`, "utf8");
       expect(src.match(/data-testid="brand-logo"/g)).toHaveLength(1);
       expect(src).toContain("SidebarAccountFooter");

@@ -118,7 +118,7 @@ function DiligenceIndex() {
       )}
 
       <p className="mt-8 text-xs text-muted-foreground">
-        <Link to="/dashboard" className="underline">
+        <Link to="/home" className="underline">
           Back to your dashboard
         </Link>
       </p>

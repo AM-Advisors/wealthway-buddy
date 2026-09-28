@@ -46,7 +46,7 @@ export function invitationSubject(data: Record<string, any>) {
 function InvestorInvitation({
   investorName = 'Investor',
   offeringName = 'Harmonious',
-  portalUrl = `${DEFAULT_PORTAL_ORIGIN}/dashboard`,
+  portalUrl = `${DEFAULT_PORTAL_ORIGIN}/home`,
   contactEmail = 'operations@harmonious.co',
   currentStep,
   ctaUrl,
@@ -213,7 +213,7 @@ export const template = {
   previewData: {
     investorName: 'Jane Doe',
     offeringName: 'Harmonious Growth Fund II',
-    portalUrl: 'https://app.harmonious.co/dashboard',
+    portalUrl: 'https://app.harmonious.co/home',
     contactEmail: 'operations@harmonious.co',
   },
 } satisfies TemplateEntry

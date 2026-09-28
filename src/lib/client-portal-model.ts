@@ -363,5 +363,5 @@ export function workspaceCategories(f: { companyIds: readonly string[]; clientId
 export const CATEGORY_NAV: Record<WorkspaceCategory, { title: string; url: string; icon: string }> = {
   company: { title: "My Company", url: "/client", icon: "building" },
   funds: { title: "My Funds", url: "/my-funds", icon: "briefcase" },
-  investments: { title: "My Investments", url: "/dashboard", icon: "money" },
+  investments: { title: "My Investments", url: "/my-funds", icon: "money" },
 };

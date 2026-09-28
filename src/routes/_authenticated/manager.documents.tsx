@@ -126,7 +126,7 @@ function ManagerDocumentsPage() {
           Fund documents are available once a fund has been assigned to you.
         </p>
         <Button asChild variant="outline" className="mt-6">
-          <Link to="/dashboard">Back to your dashboard</Link>
+          <Link to="/home">Back to your dashboard</Link>
         </Button>
       </main>
     );

@@ -171,7 +171,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
       if (res.allSigned) {
         const fund = offeringId ?? data?.offering?.id;
         if (fund) navigate({ to: "/fund/$offeringId/funding", params: { offeringId: fund } });
-        else navigate({ to: "/portal" });
+        else navigate({ to: "/home" });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not sign the document");
@@ -193,7 +193,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <ScopeNotice offeringId={data?.offering?.id ?? null} section="documents" label="Fund documents" />
       <p className="mt-6 text-xs uppercase tracking-wide text-muted-foreground">
-        <Link to="/portal" className="underline-offset-4 hover:underline">
+        <Link to="/home" className="underline-offset-4 hover:underline">
           Your funds
         </Link>{" "}
         · {data?.offering?.name ?? "Fund"}
@@ -418,7 +418,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
               onClick={() => {
                 const fund = offeringId ?? data?.offering?.id;
                 if (fund) navigate({ to: "/fund/$offeringId/funding", params: { offeringId: fund } });
-                else navigate({ to: "/portal" });
+                else navigate({ to: "/home" });
               }}
             >
               Continue to funding

@@ -25,7 +25,6 @@ describe("client navigation by workspace", () => {
   it("gives an investor exactly the investor menu", () => {
     expect(titles("investor")).toEqual([
       "Home",
-      "My Investments",
       "My Funds",
       "Activity",
       "Reports",
@@ -177,7 +176,7 @@ describe("workspace switcher", () => {
     const facts = { ...emptyFacts(), investmentProfileIds: ["p1"] };
     const options = workspaceOptions(availableWorkspaces(facts));
     expect(options[0]?.external).toBe(false);
-    expect(options[0]?.href).toBe("/dashboard");
+    expect(options[0]?.href).toBe("/home");
   });
 
   it("cannot produce an entry for an invented workspace", () => {

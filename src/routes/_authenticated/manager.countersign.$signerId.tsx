@@ -70,7 +70,7 @@ function CountersignPage() {
               </p>
             </>
           )}
-          <Link to="/portal" className="text-sm underline">Back</Link>
+          <Link to="/home" className="text-sm underline">Back</Link>
         </CardContent>
       </Card>
     </main>

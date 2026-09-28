@@ -17,9 +17,9 @@ export async function destinationAfterSignIn(
     const result: any = await resolveSession({
       data: { intended: intended ? safeInternalPath(intended, "") : null },
     });
-    return safeInternalPath(result?.destination, "/dashboard");
+    return safeInternalPath(result?.destination, "/home");
   } catch {
-    return "/dashboard";
+    return "/home";
   }
 }
 
