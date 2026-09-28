@@ -170,7 +170,7 @@ async function touch(onboardingId: string, patch: Record<string, unknown>) {
 // ------------------------------------------------------------ the offering
 
 /** A fund may only take investors once Phase A has launched it. */
-async function launchedOffering(offeringIdOrSlug: string) {
+export async function launchedOffering(offeringIdOrSlug: string) {
   const byId = await db()
     .from("offerings")
     .select("*")
