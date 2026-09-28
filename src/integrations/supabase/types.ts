@@ -16220,6 +16220,7 @@ export type Database = {
       }
       investment_readiness_tasks: {
         Row: {
+          became_actionable_at: string
           created_at: string
           id: string
           offering_id: string | null
@@ -16232,6 +16233,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          became_actionable_at?: string
           created_at?: string
           id?: string
           offering_id?: string | null
@@ -16244,6 +16246,7 @@ export type Database = {
           title: string
         }
         Update: {
+          became_actionable_at?: string
           created_at?: string
           id?: string
           offering_id?: string | null
