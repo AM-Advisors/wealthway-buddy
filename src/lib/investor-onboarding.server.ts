@@ -1910,10 +1910,11 @@ export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { 
   const plan = readinessTaskPlan(new Set(open.keys()), result);
   if (plan.create.length) {
     // Partial unique index makes a concurrent/duplicate reconciliation a no-op.
-    await db().from("investment_readiness_tasks").upsert(
-      plan.create.map((c) => ({ onboarding_id: row.id, offering_id: row.offering_id, requirement_key: c.key, title: c.title, owner: c.owner, rule_version: READINESS_RULE_VERSION, became_actionable_at: at })),
-      { onConflict: "onboarding_id,requirement_key", ignoreDuplicates: true },
-    ).then(() => null, () => null);
+    // The partial unique index (one open item per requirement) turns a concurrent or
+    // duplicate reconciliation into a no-op; insert one by one so duplicates are ignored.
+    for (const c of plan.create) {
+      await db().from("investment_readiness_tasks").insert({ onboarding_id: row.id, offering_id: row.offering_id, requirement_key: c.key, title: c.title, owner: c.owner, rule_version: READINESS_RULE_VERSION, became_actionable_at: at });
+    }
   }
   for (const k of plan.resolve) {
     await db().from("investment_readiness_tasks").update({ status: "resolved", resolved_at: at }).eq("id", open.get(k));
