@@ -34,7 +34,7 @@ export async function loadBundle() {
     if (data.users.length < 1000) break;
   }
   const q = (t: string, cols: string) => db.from(t).select(cols).limit(10000).then((r: any) => (r.data ?? []) as any[]);
-  const [profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents] = await Promise.all([
+  const [profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents, classifications] = await Promise.all([
     q("profiles", "user_id, legal_name, email"),
     q("user_roles", "user_id, role, created_at"),
     q("staff_capability_grants", "id, user_id, capability, role_key, granted_by, granted_at, reason, revoked_by, revoked_at"),
@@ -54,8 +54,9 @@ export async function loadBundle() {
     q("access_permission_grants", "*"),
     q("access_role_definitions", "*"),
     db.from("access_audit_events").select("*").order("created_at", { ascending: false }).limit(1000).then((r: any) => (r.data ?? []) as any[]),
+    q("access_account_classifications", "id, user_id, classification, reason, recorded_by, created_at"),
   ]);
-  return { users, profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents };
+  return { users, profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents, classifications };
 }
 
 export function factsFor(b: Bundle, userId: string, names: Map<string, string>): Facts {
