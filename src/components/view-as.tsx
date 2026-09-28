@@ -4,8 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Eye, LogOut, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { activeViewAsFn, beginEditAsHarmoniousFn, endViewAsFn, listPerspectivesFn, startViewAsFn } from "@/lib/view-as.functions";
-import { PERSPECTIVE_LABEL, VIEW_AS_COPY } from "@/lib/view-as";
+import { activeEditContextFn, exitEditContextFn, returnToClientViewFn, activeViewAsFn, beginEditAsHarmoniousFn, endViewAsFn, listPerspectivesFn, startViewAsFn } from "@/lib/view-as.functions";
+import { EDIT_CONTEXT_COPY, PERSPECTIVE_LABEL, VIEW_AS_COPY } from "@/lib/view-as";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -69,7 +69,7 @@ export function ViewAsBanner({ ctx }: { ctx: any }) {
     if (to === "edit") {
       const r = await edit();
       qc.removeQueries({ queryKey: ["view-as"] });
-      toast.message(VIEW_AS_COPY.editNotice);
+      qc.invalidateQueries({ queryKey: ["edit-context"] });
       // Existing Operations screens and their canonical save paths; edits are recorded under the staff account.
       if (r.onboardingId) navigate({ to: "/admin/investor-onboarding" });
       else navigate({ to: "/manager/fund/$fundId", params: { fundId: r.offeringId } });
@@ -81,7 +81,7 @@ export function ViewAsBanner({ ctx }: { ctx: any }) {
   };
   const amount = ctx.amountCents ? ` · $${(ctx.amountCents / 100).toLocaleString("en-US")}` : "";
   return (
-    <div role="status" className="sticky top-0 z-40 border-b-2 border-accent bg-primary px-4 py-2 text-primary-foreground shadow-sm">
+    <div role="status" data-mode="client-view" aria-readonly="true" className="sticky top-0 z-40 border-b-2 border-accent bg-primary px-4 py-2 text-primary-foreground shadow-sm">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
           <span className="rounded bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground"><Eye className="mr-1 inline h-3 w-3" />Client View</span>
@@ -106,5 +106,48 @@ export function NoActiveViewAs() {
       <p className="text-sm text-muted-foreground">Start one from an investment, a fund's Readiness tab or the readiness queue. Client views end on sign-out, after 60 minutes, or when you switch to another record.</p>
       <Link to="/ops" className="text-primary underline">Return to Harmonious Operations</Link>
     </div>
+  );
+}
+
+/** Presentational Edit-as-Harmonious banner. Visually distinct from Client View (accent, not navy). */
+export function EditContextBannerView({ ctx, onReturn, onExit }: { ctx: any; onReturn: () => void; onExit: () => void }) {
+  const origin = [ctx.clientName, ctx.fundName, ctx.investmentProfileLabel, ctx.amountCents ? `$${(ctx.amountCents / 100).toLocaleString("en-US")}` : null].filter(Boolean).join(" · ");
+  return (
+    <div role="status" data-mode="edit-as-harmonious" className="sticky top-0 z-40 border-b-2 border-primary bg-accent px-4 py-2 text-accent-foreground shadow-sm">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="rounded bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground"><Pencil className="mr-1 inline h-3 w-3" />{EDIT_CONTEXT_COPY.title}</span>
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-sm font-semibold">{EDIT_CONTEXT_COPY.cameFrom(ctx.subjectName, ctx.roleLabel)}</p>
+            <p className="truncate text-xs opacity-80">{origin}{origin ? " · " : ""}{EDIT_CONTEXT_COPY.recorded}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="default" onClick={onReturn}><Eye className="mr-1 h-3.5 w-3.5" />Return to Client View</Button>
+          <Button size="sm" variant="outline" className="bg-transparent" onClick={onExit}><LogOut className="mr-1 h-3.5 w-3.5" />Exit edit context</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Server-validated edit context. Display only — grants no permission; saves use their normal checks. */
+export function EditContextBanner() {
+  const load = useServerFn(activeEditContextFn);
+  const exit = useServerFn(exitEditContextFn);
+  const back = useServerFn(returnToClientViewFn);
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const q = useQuery({ queryKey: ["edit-context"], queryFn: () => load(), retry: false, staleTime: 30000 });
+  if (!q.data) return null;
+  return (
+    <EditContextBannerView
+      ctx={q.data}
+      onReturn={async () => {
+        try { await back(); qc.removeQueries({ queryKey: ["view-as"] }); qc.setQueryData(["edit-context"], null); navigate({ to: "/view-as" }); }
+        catch { qc.setQueryData(["edit-context"], null); toast.error("That client view is no longer available."); }
+      }}
+      onExit={async () => { await exit(); qc.setQueryData(["edit-context"], null); }}
+    />
   );
 }

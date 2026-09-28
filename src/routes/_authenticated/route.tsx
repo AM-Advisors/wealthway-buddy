@@ -14,6 +14,7 @@ import { PortalGate } from "@/components/portal-gate";
 import { PortalTopbar } from "@/components/portal-topbar";
 import { PortalFooter } from "@/components/portal-footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { EditContextBanner } from "@/components/view-as";
 
 export const Route = createFileRoute("/_authenticated")({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
@@ -50,6 +51,7 @@ function AuthenticatedLayout() {
           <Menu onSignOut={signOut} />
           <div className="flex min-w-0 flex-1 flex-col">
             <PortalTopbar onSignOut={signOut} />
+            <EditContextBanner />
             <main className="min-w-0 flex-1">
               <PolicyGate onSignOut={signOut}>
                 <PortalGate onSignOut={signOut}>
