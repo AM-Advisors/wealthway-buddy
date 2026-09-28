@@ -265,6 +265,7 @@ function Reviews({ d }: { d: Data }) {
   const decide = useServerFn(decideAccessReview);
   const [f, setF] = useState({ title: "Quarterly Harmonious Privileged Access Review", population: "privileged", period_start: quarterStart(), period_end: today(), reviewer_user_id: "" });
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [targets, setTargets] = useState<Record<string, string>>({});
   const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? "—";
   return (
     <div className="space-y-4">
@@ -287,12 +288,17 @@ function Reviews({ d }: { d: Data }) {
           <Card key={r.id}><CardHeader className="pb-2"><CardTitle className="text-base">{r.title} <Badge variant={r.completed ? "default" : "outline"}>{r.completed ? "Completed" : "Open"}</Badge></CardTitle>
             <p className="text-xs text-muted-foreground">Period {r.period_start} → {r.period_end} · population {r.population} ({r.snapshot.items.length}) · reviewer {name(r.reviewer_user_id)} · snapshot {r.snapshot.taken_at.slice(0, 16).replace("T", " ")} · fingerprint {r.fingerprint.slice(0, 16)}</p></CardHeader>
             <CardContent className="overflow-x-auto">
-              <table className="w-full text-xs"><thead><tr className="text-left text-muted-foreground">{["Person", "Role", "Scope", "Sensitive Access", "Grant Source", "Granted By", "Last Used", "Expiry", "Review Decision"].map((h) => <th key={h} className="p-1">{h}</th>)}</tr></thead>
-                <tbody>{r.snapshot.items.map((i: any) => { const dd = decided(i.key); return (
-                  <tr key={i.key} className="border-t align-top"><td className="p-1">{i.person}</td><td className="p-1">{i.role}</td><td className="p-1">{i.scope}</td><td className="p-1">{i.sensitive || "—"}</td><td className="p-1">{i.source}</td><td className="p-1">{i.granted_by}</td><td className="p-1">{i.last_used}</td><td className="p-1">{i.expiry}</td>
-                    <td className="p-1">{dd ? <span>{dd.decision}{dd.note ? ` — ${dd.note}` : ""}</span> : mine ? (
+              <table className="w-full text-xs"><thead><tr className="text-left text-muted-foreground">{["Person", "Account type", "Role(s)", "Scope", "Sensitive Access", "Grant Source", "Granted By", "Last Used", "Expiry", "Review Decision"].map((h) => <th key={h} className="p-1">{h}</th>)}</tr></thead>
+                <tbody>{r.snapshot.items.map((i: any) => { const dd = decided(i.key); const roles: any[] = i.roles ?? [{ role: i.role, source: i.source, scope: i.scope, granted_by: i.granted_by, granted_at: "—", expiry: i.expiry, sensitive: i.sensitive }]; return (
+                  <tr key={i.key} className="border-t align-top"><td className="p-1"><div>{i.person}</div><div className="font-mono text-[10px] text-muted-foreground">{i.user_id}</div></td><td className="p-1">{i.account_type ?? "—"}</td>
+                    <td className="p-1"><details><summary className="cursor-pointer">{i.role}</summary>
+                      <ul className="mt-1 space-y-1">{roles.map((x, n) => <li key={n} className="rounded border p-1">{x.role} · {x.source} · scope {x.scope} · by {x.granted_by} · at {String(x.granted_at).slice(0, 16).replace("T", " ")} · expiry {x.expiry}{x.sensitive ? ` · ${x.sensitive}` : ""}</li>)}
+                        <li className="text-muted-foreground">Direct grants/denies: {(i.direct_grants ?? []).join("; ") || "None"}</li></ul></details></td>
+                    <td className="p-1">{i.scope}</td><td className="p-1">{i.sensitive || "—"}</td><td className="p-1">{i.source}</td><td className="p-1">{i.granted_by}</td><td className="p-1">{i.last_used}</td><td className="p-1">{i.expiry}</td>
+                    <td className="p-1">{dd ? <span>{dd.decision}{dd.target ? ` (${dd.target})` : ""}{dd.note ? ` — ${dd.note}` : ""}</span> : mine ? (
                       <div className="flex flex-wrap gap-1"><Input className="h-7 w-40" placeholder="Note" value={notes[i.key] ?? ""} onChange={(e) => setNotes({ ...notes, [i.key]: e.target.value })} />
-                        {(["approve", "revoke", "reduce", "investigate"] as const).map((x) => <Button key={x} size="sm" variant="outline" className="h-7 px-2" onClick={() => act(() => decide({ data: { review_id: r.id, item_key: i.key, decision: x, note: notes[i.key] ?? "" } }), "Decision recorded")}>{x === "reduce" ? "Reduce" : x === "investigate" ? "Investigate" : x[0]!.toUpperCase() + x.slice(1)}</Button>)}</div>
+                        <select className={sel + " h-7"} value={targets[i.key] ?? ""} onChange={(e) => setTargets({ ...targets, [i.key]: e.target.value })}><option value="">Whole subject</option>{roles.map((x) => <option key={x.role} value={x.role}>{x.role}</option>)}{(i.direct_grants ?? []).map((g: string) => <option key={g} value={g}>{g}</option>)}</select>
+                        {(["approve", "revoke", "reduce", "investigate"] as const).map((x) => <Button key={x} size="sm" variant="outline" className="h-7 px-2" onClick={() => act(() => decide({ data: { review_id: r.id, item_key: i.key, decision: x, note: notes[i.key] ?? "", target: targets[i.key] || null } }), "Decision recorded")}>{x === "reduce" ? "Reduce" : x === "investigate" ? "Investigate" : x[0]!.toUpperCase() + x.slice(1)}</Button>)}</div>
                     ) : "Pending"}</td></tr>); })}</tbody></table>
               {mine && <Button size="sm" className="mt-2" onClick={() => act(() => decide({ data: { review_id: r.id, item_key: "__complete__", decision: "complete", note: "Review completed" } }), "Review completed")}>Complete review</Button>}
             </CardContent></Card>

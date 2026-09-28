@@ -206,7 +206,7 @@ export const createAccessReview = createServerFn({ method: "POST" })
 /** Records a decision only; revoking/reducing access still happens in Access Control. */
 export const decideAccessReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ review_id: z.string().uuid(), item_key: z.string().max(400), decision: z.enum(["approve", "revoke", "reduce", "investigate", "complete"]), note: z.string().trim().max(1000) }).parse(d))
+  .inputValidator((d) => z.object({ review_id: z.string().uuid(), item_key: z.string().max(400), decision: z.enum(["approve", "revoke", "reduce", "investigate", "complete"]), note: z.string().trim().max(1000), target: z.string().max(200).nullable().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     const review = (await c.db.from("compliance_access_reviews").select("*").eq("id", data.review_id).single()).data;
@@ -219,7 +219,13 @@ export const decideAccessReview = createServerFn({ method: "POST" })
       const keys = new Set((review.snapshot?.items ?? []).map((i: any) => i.key));
       const decided = new Set(prior.map((p: any) => p.item_key));
       if ([...keys].some((k) => !decided.has(k))) throw new Error("Decide every item before completing the review.");
-    } else if (!(review.snapshot?.items ?? []).some((i: any) => i.key === data.item_key)) throw new Error("That item isn't in this review's snapshot.");
+    } else {
+      const item = (review.snapshot?.items ?? []).find((i: any) => i.key === data.item_key);
+      if (!item) throw new Error("That item isn't in this review's snapshot.");
+      const roles: string[] = (item.roles ?? [{ role: item.role }]).map((r: any) => r.role);
+      if (data.target && !roles.includes(data.target) && !(item.direct_grants ?? []).includes(data.target)) throw new Error("Pick a role or permission that belongs to this person.");
+      if ((data.decision === "revoke" || data.decision === "reduce") && roles.length > 1 && !data.target) throw new Error("Choose which role or permission should be removed or reduced.");
+    }
     unwrap(await c.db.from("compliance_access_review_decisions").insert({ ...data, reviewer_user_id: c.userId }));
     return { ok: true };
   });
