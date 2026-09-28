@@ -8,7 +8,7 @@
  * None of these imply money execution, posting, tax/identity evidence,
  * compliance exceptions, regulatory approval or legal signing.
  */
-export type AtomicDef = { key: string; label: string; area: "clients" | "funds"; summary: "view" | "edit" | "manage_access" | "export"; destructive?: boolean };
+export type AtomicDef = { key: string; label: string; area: "clients" | "funds" | "administration"; summary: "view" | "edit" | "review" | "approve" | "manage_access" | "export"; destructive?: boolean };
 
 const C = (key: string, label: string, summary: AtomicDef["summary"] = "edit", destructive = false): AtomicDef => ({ key: `clients.${key}`, label, area: "clients", summary, destructive });
 const Fd = (key: string, label: string, summary: AtomicDef["summary"] = "edit", destructive = false): AtomicDef => ({ key: `funds.${key}`, label, area: "funds", summary, destructive });
@@ -62,6 +62,15 @@ export const ATOMIC_PERMISSIONS: AtomicDef[] = [
   Fd("team.edit", "Team — edit"),
   Fd("team.remove", "Team — remove"),
   Fd("team.manage_access", "Team — manage access", "manage_access"),
+  // Stage 2.7 — Compliance & Controls (Harmonious internal only; never implied by client/fund permissions).
+  ...([
+    ["controls.view", "Controls — view", "view"], ["controls.edit", "Controls — edit", "edit"], ["controls.review", "Controls — review", "review"],
+    ["controls.approve", "Controls — approve", "approve"], ["evidence.view", "Evidence — view", "view"], ["evidence.collect", "Evidence — collect", "edit"],
+    ["evidence.review", "Evidence — review", "review"], ["access_reviews.manage", "Access reviews — manage", "edit"],
+    ["privacy.view", "Privacy — view", "view"], ["privacy.manage", "Privacy — manage", "edit"], ["vendors.view", "Vendors — view", "view"],
+    ["vendors.manage", "Vendors — manage", "edit"], ["risks.view", "Risks — view", "view"], ["risks.manage", "Risks — manage", "edit"],
+    ["incidents.view", "Incidents — view", "view"], ["incidents.manage", "Incidents — manage", "edit"],
+  ] as const).map(([k, label, summary]): AtomicDef => ({ key: `administration.${k}`, label, area: "administration", summary })),
 ];
 export const ATOMIC_KEYS = ATOMIC_PERMISSIONS.map((a) => a.key);
 export const isAtomic = (k: string) => ATOMIC_KEYS.includes(k);
@@ -76,6 +85,13 @@ export const AGGREGATES: Record<string, string[]> = {
   "funds.manage_investors": ["funds.investors.view", "funds.investors.add", "funds.investors.edit", "funds.investors.remove", "funds.investors.invite"],
   "funds.manage_team": ["funds.team.view", "funds.team.add", "funds.team.edit", "funds.team.remove"],
   "funds.manage_access": ["funds.team.manage_access"],
+  "administration.controls.edit": ["administration.controls.view"],
+  "administration.evidence.collect": ["administration.evidence.view"],
+  "administration.evidence.review": ["administration.evidence.view"],
+  "administration.privacy.manage": ["administration.privacy.view"],
+  "administration.vendors.manage": ["administration.vendors.view"],
+  "administration.risks.manage": ["administration.risks.view"],
+  "administration.incidents.manage": ["administration.incidents.view"],
 };
 
 /** Broad summary permissions → non-destructive atomics they imply. */
