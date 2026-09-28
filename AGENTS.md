@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Access Control Center (src/lib/access-control-model.ts) is a read-only projection of existing auth facts; enforcement never imports it — why: Stage 1 must not change authority.
