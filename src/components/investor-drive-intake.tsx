@@ -40,7 +40,7 @@ export function InvestorDriveIntakeCard({ investorUserId }: { investorUserId: st
       </CardHeader>
       <CardContent className="space-y-4">
         {!q.data.repositoryReady ? <p className="text-sm text-destructive">{q.data.unavailableMessage}</p> : null}
-        {q.data.rows.map((r) => <Row key={`${r.offeringId}:${r.profileId}`} investorUserId={investorUserId} row={r} ready={q.data!.repositoryReady} />)}
+        {q.data.rows.map((r: any) => <Row key={`${r.offeringId}:${r.profileId}`} investorUserId={investorUserId} row={r} ready={q.data!.repositoryReady} />)}
       </CardContent>
     </Card>
   );

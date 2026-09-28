@@ -245,7 +245,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
               <div className="mt-1 flex flex-wrap gap-1">{r.relationships.map((x: any) => <Badge key={x.label} variant="secondary">{x.label}</Badge>)}</div>
             </div>
             {r.relationships.some((x: any) => x.kind === "investor") ? (
-              <Link to="/ops/investors/$investorId" params={{ investorId: r.userId }} className="text-xs text-primary hover:underline">Open investor</Link>
+              <Link to="/ops/investors/$investorId" params={{ investorId: r.userId }} search={{} as any} className="text-xs text-primary hover:underline">Open investor</Link>
             ) : null}
           </div>
         ))}
