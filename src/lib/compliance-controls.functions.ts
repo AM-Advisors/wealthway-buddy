@@ -69,7 +69,7 @@ export const getCompliance = createServerFn({ method: "GET" })
     const evRows = evidence.map((e) => ({ ...e, reviews: evReviews.filter((r) => r.evidence_id === e.id), superseded: evidence.some((o) => o.supersedes_id === e.id) }));
     const reviewRows = reviews.map((r) => ({ ...r, decisions: decisions.filter((d) => d.review_id === r.id), completed: decisions.some((d) => d.review_id === r.id && d.decision === "complete") }));
     const names = new Map<string, string>(c.b.users.map((u: any) => [u.id, u.email ?? u.id]));
-    const staff = [...new Set(c.b.roles.filter((r: any) => r.role !== "investor").map((r: any) => r.user_id as string))].map((id) => ({ id, label: names.get(id) ?? id })).sort((a, b) => a.label.localeCompare(b.label));
+    const staff: { id: string; label: string }[] = [...new Set<string>(c.b.roles.filter((r: any) => r.role !== "investor").map((r: any) => r.user_id as string))].map((id: string) => ({ id, label: String(names.get(id) ?? id) })).sort((a, b) => a.label.localeCompare(b.label));
     const latestRecords = latestVersions(visibleRecords);
     const report = BASELINE_CONTROLS.map((bc) => {
       const row = controlRows.find((r) => r.control_key === bc.key);
