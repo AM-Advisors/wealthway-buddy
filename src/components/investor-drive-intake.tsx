@@ -1,3 +1,4 @@
+import { DRIVE_LABELS, intakeActionsEnabled } from "@/lib/drive-labels";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,18 +30,34 @@ const TYPES: Record<string, string> = {
 export function InvestorDriveIntakeCard({ investorUserId }: { investorUserId: string }) {
   const load = useServerFn(getInvestorDriveIntake);
   const q = useQuery({ queryKey: ["investor-drive-intake", investorUserId], queryFn: () => load({ data: { investorUserId } }), retry: false });
-  if (q.isError || !q.data || !q.data.rows.length) return null;
+  if (q.isError) return null;
+  const rows = q.data?.rows ?? [];
+  const ready = !!q.data?.repositoryReady;
+  const enabled = intakeActionsEnabled({ repositoryReady: ready, rowCount: rows.length });
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Google Drive</CardTitle>
+        <CardTitle className="text-base">{DRIVE_LABELS.intake.title}</CardTitle>
+        <p className="text-xs font-medium text-muted-foreground">{DRIVE_LABELS.intake.direction}</p>
         <CardDescription>
-          Connect an existing folder in Restricted Investor Records and pull eligible documents into Harmonious. Nothing is imported until you choose to, and Drive never decides identity, compliance, ownership or access.
+          {DRIVE_LABELS.intake.copy} Nothing is imported until you choose to, and Drive never decides identity, compliance, ownership or access.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!q.data.repositoryReady ? <p className="text-sm text-destructive">{q.data.unavailableMessage}</p> : null}
-        {q.data.rows.map((r: any) => <Row key={`${r.offeringId}:${r.profileId}`} investorUserId={investorUserId} row={r} ready={q.data!.repositoryReady} />)}
+        {!q.data ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
+        {q.data && !ready ? <p className="text-sm text-destructive">{q.data.unavailableMessage}</p> : null}
+        {q.data && !rows.length ? (
+          <div className="rounded-lg border border-dashed p-3 space-y-2" aria-disabled="true">
+            <p className="font-medium">{DRIVE_LABELS.intake.emptyTitle}</p>
+            <p className="text-sm text-muted-foreground">{DRIVE_LABELS.intake.emptyCopy}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" disabled>Connect Investor Folder</Button>
+              <Button size="sm" variant="outline" disabled>Check for Updates</Button>
+              <Button size="sm" variant="outline" disabled>Import Documents</Button>
+            </div>
+          </div>
+        ) : null}
+        {rows.map((r: any) => <Row key={`${r.offeringId}:${r.profileId}`} investorUserId={investorUserId} row={r} ready={enabled} />)}
       </CardContent>
     </Card>
   );

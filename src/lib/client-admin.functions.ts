@@ -270,9 +270,11 @@ export const listClientFunds = createServerFn({ method: "GET" })
       db.from("fund_client_reassignments").select("*").or(`from_client_id.eq.${data.clientId},to_client_id.eq.${data.clientId}`).order("requested_at", { ascending: false }),
       loadContractTerms(db, data.clientId),
     ]);
+    const { data: clientRow } = await db.from("clients").select("name").eq("id", data.clientId).maybeSingle();
     const names = new Map(((people ?? []) as any[]).map((p) => [p.id, p.full_name]));
     return {
       caps,
+      clientName: ((clientRow as any)?.name as string | null) ?? null,
       msaStatus: terms.governing ? `Approved — ${terms.governing.title}` : "No approved MSA on file",
       reassignments: reassign ?? [],
       funds: ((funds ?? []) as any[]).map((f) => {

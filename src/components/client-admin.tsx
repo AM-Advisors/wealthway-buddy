@@ -1,3 +1,4 @@
+import { addFundTitle } from "@/lib/drive-labels";
 import { useMemo, useState } from "react";
 import { parseMoneyToCents, PRICE_INPUT_MESSAGE } from "@/lib/contract-coverage";
 import { Link } from "@tanstack/react-router";
@@ -647,13 +648,13 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
           </CardContent>
         </Card>
       ) : null}
-      {mode === "create" ? <CreateFundDialog clientId={clientId} onClose={() => { setMode(null); refresh(); }} /> : null}
+      {mode === "create" ? <CreateFundDialog clientId={clientId} clientName={(d as any).clientName ?? null} onClose={() => { setMode(null); refresh(); }} /> : null}
       {mode === "link" ? <LinkFundDialog clientId={clientId} onClose={() => { setMode(null); refresh(); }} /> : null}
     </div>
   );
 }
 
-function CreateFundDialog({ clientId, onClose }: { clientId: string; onClose: () => void }) {
+function CreateFundDialog({ clientId, clientName, onClose }: { clientId: string; clientName: string | null; onClose: () => void }) {
   const create = useServerFn(createClientFund);
   const [f, setF] = useState({ name: "", fundType: "", entityType: "", legalEntityName: "", jurisdiction: "", regType: "506b" });
   const [busy, setBusy] = useState(false);
@@ -661,7 +662,7 @@ function CreateFundDialog({ clientId, onClose }: { clientId: string; onClose: ()
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Fund</DialogTitle>
+          <DialogTitle>{addFundTitle(clientName)}</DialogTitle>
           <DialogDescription>Creates the fund for this client, closed and in setup. No investors, investments, bank accounts, accounting records, Drive folders, onboarding records, integrations or SOWs are created.</DialogDescription>
         </DialogHeader>
         {([["name", "Fund / SPV name"], ["fundType", "Structure / type (e.g. SPV, Venture Fund)"], ["entityType", "Entity type"], ["legalEntityName", "Legal entity (if formed)"], ["jurisdiction", "Jurisdiction"]] as const).map(([k, l]) => (
