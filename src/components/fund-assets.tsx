@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { getFundInvestorActions } from "@/lib/invitations.functions";
 import { getPortfolioAsOf, getPortfolioAssets, savePortfolioAsset } from "@/lib/valuation.functions";
 import { ASSET_CLASS_LABELS, PORTFOLIO_ASSET_CLASSES, type PortfolioAssetClass } from "@/lib/valuation-model";
 import { money, prettyStatus } from "@/lib/status";
@@ -30,6 +31,9 @@ export function FundAssets({ fundId }: { fundId: string }) {
   const [busy, setBusy] = useState(false);
   const assets = useQuery({ queryKey: ["fund-assets", fundId], queryFn: () => list({ data: { fundId } }) });
   const values = useQuery({ queryKey: ["fund-assets-asof", fundId], queryFn: () => asOf({ data: { fundId, date: today() } }) });
+  const loadActions = useServerFn(getFundInvestorActions);
+  const actions = useQuery({ queryKey: ["fund-investor-actions", fundId], queryFn: () => loadActions({ data: { fundId } }) });
+  const isStaff = !!actions.data?.isStaff;
   const byId = new Map((values.data?.lines ?? []).map((l: any) => [l.assetId, l]));
 
   if (assets.isError) return <p className="text-sm text-muted-foreground">You don't have access to this fund's investments.</p>;
@@ -64,7 +68,7 @@ export function FundAssets({ fundId }: { fundId: string }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h2 className="text-xl">Investments</h2><p className="mt-1 text-sm text-muted-foreground">Assets this fund holds. Values show only approved, effective valuations.</p></div>
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => setOpen(true)}>+ Add Asset</Button>
+          {isStaff ? <Button size="sm" onClick={() => setOpen(true)}>+ Add Asset</Button> : <span className="self-center text-xs text-muted-foreground">Harmonious records assets for this fund.</span>}
           <Button size="sm" variant="outline" asChild><Link to="/manager/valuations">Valuations</Link></Button>
         </div>
       </div>
@@ -90,7 +94,7 @@ export function FundAssets({ fundId }: { fundId: string }) {
           </table>
         </CardContent>
       </Card>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open && isStaff} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Add asset to this fund</DialogTitle></DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">

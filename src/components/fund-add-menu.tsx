@@ -24,7 +24,7 @@ export function FundAddMenu({ fundId }: { fundId: string }) {
         {inv("prep", "Prepare Investor")}
         {inv("bulk", "Add Multiple Investors")}
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/assets" params={{ fundId }} search={{ add: "asset" } as never}>Add Asset / Investment</Link></DropdownMenuItem>
+        {data.isStaff ? <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/assets" params={{ fundId }} search={{ add: "asset" } as never}>Add Asset / Investment</Link></DropdownMenuItem> : null}
         <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/settings" params={{ fundId }}>Add Fund Team Member</Link></DropdownMenuItem>
         <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/documents" params={{ fundId }}>Upload Document</Link></DropdownMenuItem>
       </DropdownMenuContent>
