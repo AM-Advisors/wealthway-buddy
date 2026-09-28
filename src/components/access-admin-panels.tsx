@@ -1,3 +1,4 @@
+import { PROTECTED_PERMISSIONS } from "@/lib/authorize";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -251,6 +252,8 @@ export function PersonMatrix({ canonical }: { canonical: Canonical }) {
           <p className="font-medium">{hit.permission}</p>
           <p>{hit.text}</p>
           {hit.scoped.map((s, i) => <p key={i} className="text-muted-foreground">{s.source === "Direct deny" ? "✕" : "✓"} {s.source} — scope: {s.scope} (not valid outside it)</p>)}
+          <p className="text-xs">Decision: <span className="font-medium">{hit.global ? "Allow — all resources" : hit.scoped.length ? "Allow — listed scopes only" : "Deny (no source grants it)"}</span>{hit.sources.length ? ` · source: ${hit.sources.join(", ")}` : ""}</p>
+          <p className="text-xs text-muted-foreground">Protected conditions still apply regardless of this cell: {PROTECTED_PERMISSIONS.join(", ")} are never granted by roles or grants; maker-checker, dual control and immutability rules are enforced separately.</p>
         </CardContent></Card>
       ) : null}
       {hit && canonical.atomic ? <AtomicDrawer rows={canonical.atomic} area={hit.permission.split(".")[0]!} summary={hit.permission.split(".")[1]!} /> : null}
