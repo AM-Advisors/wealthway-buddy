@@ -83,6 +83,7 @@ export function InvestmentChecklist({ onboardingId, viewAs = false }: { onboardi
       <CardHeader>
         <CardTitle className="text-base">{d.fundName} — Investment Readiness</CardTitle>
         <CardDescription>Investment Checklist{d.profileLabel ? ` · ${d.profileLabel}` : ""}. Updated automatically from verification, signing, tax and banking records.</CardDescription>
+        {!viewAs && d.viewer === "staff" ? <div className="pt-1"><ViewAsPicker onboardingId={onboardingId} label="See Client View" /></div> : null}
       </CardHeader>
       <CardContent><Checklist r={d.readiness} showReasons={d.viewer !== "manager"} /></CardContent>
     </Card>
