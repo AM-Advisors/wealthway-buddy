@@ -68,7 +68,7 @@ export const STATUS_LABELS: Record<FileStatus, string> = {
 export function proposedClassification(name: string): { classification: DriveClassification; documentType: string } {
   const c = classifyDocument(null, name);
   const t = name.toLowerCase();
-  const documentType = /accredit|verification letter/.test(t) ? "accreditation_evidence" : /subscription|joinder|questionnaire/.test(t) ? "subscription_agreement" : "other";
+  const documentType = /accredit|verification letter/.test(t) ? "accreditation_evidence" : /subscription|joinder|questionnaire/.test(t) ? "subscription_agreement" : "other_investor";
   return { classification: c === "fund_general" || c === "harmonious_restricted" ? "investor_restricted" : c, documentType };
 }
 
