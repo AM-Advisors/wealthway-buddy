@@ -24,7 +24,7 @@ import {
   listAccessPeople,
   listAccessRoles,
 } from "@/lib/access-control.functions";
-import { ManageAccessPanel, PersonMatrix, RoleAdmin } from "@/components/access-admin-panels";
+import { ManageAccessPanel, NeedsReview, PersonMatrix, RoleAdmin } from "@/components/access-admin-panels";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -66,11 +66,13 @@ export function AccessControlCenter() {
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="matrix">Permission Matrix</TabsTrigger>
           <TabsTrigger value="audit">Access Audit</TabsTrigger>
+          <TabsTrigger value="review">Needs Review</TabsTrigger>
         </TabsList>
         <TabsContent value="people"><PeopleTab /></TabsContent>
         <TabsContent value="roles"><RolesTab /></TabsContent>
         <TabsContent value="matrix"><MatrixTab /></TabsContent>
         <TabsContent value="audit"><AuditTab /></TabsContent>
+        <TabsContent value="review"><NeedsReview /></TabsContent>
       </Tabs>
     </main>
   );
