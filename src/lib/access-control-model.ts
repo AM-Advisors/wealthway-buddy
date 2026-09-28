@@ -97,15 +97,10 @@ const OPS_ACTION_MAP: Record<string, AccessAction[]> = {
 
 /** Granular staff capability groups → the matrix area they sit under. */
 export const STAFF_GROUP_AREA: Record<string, OpsArea> = {
-  Clients: "clients",
-  People: "clients",
-  Funds: "funds",
-  Companies: "companies",
-  Services: "clients",
-  Pricing: "clients",
+  "Client Operations": "clients",
+  "Fund Operations": "funds",
   Contracts: "documents",
-  SOWs: "documents",
-  Approvals: "documents",
+  "Contract Approval": "documents",
   "Banking/Capital": "capital",
   Administration: "administration",
 };
