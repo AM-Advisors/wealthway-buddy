@@ -307,8 +307,8 @@ export const getLegacyCompatibility = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireAccessViewer(context);
     const b = await loadBundle();
-    const name = (id: string) => { const u = b.users.find((x: any) => x.id === id); const pr = b.profiles.find((x: any) => x.id === id); return pr?.full_name ?? u?.email ?? id.slice(0, 8); };
-    const rows = b.roles.filter((r: any) => r.role === "client_gp" || r.role === "client_readonly").flatMap((r: any) =>
+    const name = (id: string) => { const u = b.users.find((x: any) => x.id === id); const pr = b.profiles.find((x: any) => x.user_id === id); return pr?.legal_name ?? u?.email ?? id.slice(0, 8); };
+    const rows: import("@/lib/legacy-role-compat").DryRunRow[] = b.roles.filter((r: any) => r.role === "client_gp" || r.role === "client_readonly").flatMap((r: any) =>
       dryRun({
         userId: r.user_id, person: name(r.user_id), legacyRole: r.role,
         clients: b.cus.filter((c: any) => c.user_id === r.user_id).map((c: any) => ({ id: c.client_id, role: c.client_role, name: b.clients.find((x: any) => x.id === c.client_id)?.name ?? "Unknown client" })),
@@ -324,7 +324,7 @@ export const getLegacyCompatibility = createServerFn({ method: "GET" })
     for (const e of ev ?? []) shadow[e.category] = (shadow[e.category] ?? 0) + 1;
     return {
       dryRun: rows,
-      needsReview: rows.filter((r) => r.note).map((r) => ({ userId: r.userId, person: r.person, issue: r.note! })),
+      needsReview: rows.filter((r: any) => r.note).map((r: any) => ({ userId: r.userId, person: r.person, issue: r.note! })),
       superAdmins,
       shadow: shadow as { allow_allow: number; deny_deny: number; legacy_allow_rbac_deny: number; legacy_deny_rbac_allow: number },
     };
