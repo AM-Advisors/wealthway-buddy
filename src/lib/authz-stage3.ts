@@ -83,7 +83,7 @@ export function migrationStatus(p: PilotPath & { semanticsClear?: boolean }, c: 
   if (p.semanticsClear === false) return "Shadowing";
   const total = c.allow_allow + c.deny_deny + mismatches(c);
   if (mismatches(c) > 0) return "Blocked";
-  if (total === 0) return "Not Started";
+  if (total === 0) return p.semanticsClear === undefined ? "Not Started" : "Shadowing";
   if (total < minSamples || c.allow_allow === 0 || c.deny_deny === 0) return "Shadowing";
   return "Ready for Cutover";
 }
