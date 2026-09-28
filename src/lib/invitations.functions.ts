@@ -570,12 +570,13 @@ export const searchExistingInvestors = createServerFn({ method: "GET" })
     ]);
     const ids = [...new Set([...(people ?? []).map((p: any) => p.user_id), ...(profs ?? []).map((p: any) => p.owner_user_id)].filter(Boolean))].slice(0, 15) as string[];
     if (!ids.length) return [];
-    const [{ data: base }, { data: allProfs }, { data: access }] = await Promise.all([
+    const [{ data: base }, { data: allProfs }, { data: access }, { data: apps }] = await Promise.all([
       db.from("profiles").select("user_id, legal_name, email").in("user_id", ids),
       db.from("investment_profiles").select("owner_user_id, legal_name, display_label, profile_type").in("owner_user_id", ids),
       db.from("investor_fund_access").select("user_id").eq("offering_id", data.fundId).in("user_id", ids),
+      db.from("investor_applications").select("user_id").eq("offering_id", data.fundId).in("user_id", ids),
     ]);
-    const inFund = new Set((access ?? []).map((a: any) => a.user_id));
+    const inFund = new Set([...(access ?? []), ...(apps ?? [])].map((a: any) => a.user_id));
     return (base ?? []).map((p: any) => ({
       userId: p.user_id as string,
       name: (p.legal_name as string | null) ?? "Unnamed person",
@@ -596,8 +597,11 @@ export const addExistingInvestorToFund = createServerFn({ method: "POST" })
     if (!ctx.isAdmin) throw new Error("Forbidden: only Harmonious staff can attach existing people.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const { data: existing } = await db.from("investor_fund_access").select("id").eq("offering_id", data.fundId).eq("user_id", data.userId).maybeSingle();
-    if (existing) return { status: "already_added" as const };
+    const [{ data: existing }, { data: existingApp }] = await Promise.all([
+      db.from("investor_fund_access").select("id").eq("offering_id", data.fundId).eq("user_id", data.userId).maybeSingle(),
+      db.from("investor_applications").select("id").eq("offering_id", data.fundId).eq("user_id", data.userId).limit(1).maybeSingle(),
+    ]);
+    if (existing || existingApp) return { status: "already_added" as const };
     const { data: person } = await db.from("profiles").select("legal_name, email").eq("user_id", data.userId).maybeSingle();
     const { data: u } = await supabaseAdmin.auth.admin.getUserById(data.userId);
     const email = String(person?.email ?? u?.user?.email ?? "").toLowerCase();
