@@ -567,7 +567,7 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
           </div>
           {caps.includes("link_funds") ? (
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => setMode("create")}>+ Create New Fund/SPV</Button>
+              <Button size="sm" onClick={() => setMode("create")}>+ Add Fund</Button>
               <Button size="sm" variant="outline" onClick={() => setMode("link")}>Link Existing Fund/SPV</Button>
             </div>
           ) : null}
@@ -638,8 +638,8 @@ function CreateFundDialog({ clientId, onClose }: { clientId: string; onClose: ()
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Fund/SPV</DialogTitle>
-          <DialogDescription>Starts in setup. Compliance, banking, accounting and onboarding are not marked complete. If no executed SOW covers it, a Draft SOW is prepared from the current approved template.</DialogDescription>
+          <DialogTitle>Add Fund</DialogTitle>
+          <DialogDescription>Creates the fund for this client, closed and in setup. No investors, investments, bank accounts, accounting records, Drive folders, onboarding records, integrations or SOWs are created.</DialogDescription>
         </DialogHeader>
         {([["name", "Fund / SPV name"], ["fundType", "Structure / type (e.g. SPV, Venture Fund)"], ["entityType", "Entity type"], ["legalEntityName", "Legal entity (if formed)"], ["jurisdiction", "Jurisdiction"]] as const).map(([k, l]) => (
           <div key={k} className="space-y-1"><Label htmlFor={`cf-${k}`}>{l}</Label><Input id={`cf-${k}`} value={(f as any)[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></div>
@@ -653,7 +653,7 @@ function CreateFundDialog({ clientId, onClose }: { clientId: string; onClose: ()
         <p className="text-xs text-muted-foreground">Add services for this fund afterwards on Services & Pricing.</p>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [] } }).then((r) => { toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
+          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [] } }).then((r) => { if (r.duplicate) toast.message("This client already has a fund with that name — nothing new was created."); else toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

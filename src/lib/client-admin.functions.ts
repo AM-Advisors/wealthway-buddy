@@ -332,6 +332,12 @@ export const createClientFund = createServerFn({ method: "POST" })
     const { db, caps, userId } = await clientGate(context, "link_funds");
     const { data: client } = await db.from("clients").select("id").eq("id", data.clientId).maybeSingle();
     if (!client) throw new Error("Client not found.");
+    // Retry-safe: the same client never gets a second fund with the same name.
+    const { data: same } = await db.from("offerings").select("id").eq("client_id", data.clientId).ilike("name", data.name.replace(/[%_\\]/g, (c: string) => `\\${c}`)).limit(1);
+    if (same?.length) {
+      await audit(db, { actor: userId, clientId: data.clientId, offeringId: same[0].id, action: "fund_create_duplicate_prevented", after: { name: data.name } });
+      return { offeringId: same[0].id as string, duplicate: true, coverage: { status: "existing", label: "Existing fund — nothing new was created" } };
+    }
     const base = data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "fund";
     let slug = base;
     for (let i = 2; i < 40; i += 1) {
@@ -366,7 +372,7 @@ export const createClientFund = createServerFn({ method: "POST" })
     // Fund creation and contractual engagement are separate: never create or attach a SOW here.
     const cov = await loadCoverageInputs(db, data.clientId);
     const coverage = resolveFundCoverage({ clientId: data.clientId, offeringId, governingMsa: cov.governingMsa, sows: cov.sows as CoverageSow[], fundHasServices: data.serviceKeys.length > 0 });
-    return { offeringId, coverage: { status: coverage.status, label: coverage.label } };
+    return { offeringId, duplicate: false, coverage: { status: coverage.status, label: coverage.label } };
   });
 
 /** Link an unassigned fund, or open a reviewed reassignment — never a silent move. */
