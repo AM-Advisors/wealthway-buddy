@@ -3,7 +3,10 @@ import { ArrowRight } from "lucide-react";
 
 import { useClientWorkspace } from "@/components/client-workspace";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { can, opsWorkArea, type OpsArea, type OpsCapability } from "@/lib/ops-capabilities";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getAccessControlAccess } from "@/lib/access-control.functions";
+import { can, opsWorkArea, visibleScreens, type OpsArea, type OpsCapability } from "@/lib/ops-capabilities";
 
 export const Route = createFileRoute("/_authenticated/ops/areas/$area")({
   loader: ({ params }) => {
@@ -34,6 +37,10 @@ function WorkAreaPage() {
   const { session, loading } = useClientWorkspace();
   const caps = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const allowed = can(caps, area.id as OpsArea, "see");
+  const accessFn = useServerFn(getAccessControlAccess);
+  // UX only — the Access Control server functions re-check on every call.
+  const { data: acl } = useQuery({ queryKey: ["access-control-access"], queryFn: () => accessFn(), enabled: area.id === "administration" });
+  const screens = visibleScreens(area.screens, { accessControl: acl?.allowed === true });
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-4 sm:p-6">
@@ -45,7 +52,7 @@ function WorkAreaPage() {
         <p className="text-sm text-muted-foreground">You don't have access to this work area.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {area.screens.map((s) => (
+          {screens.map((s) => (
             <Link key={s.url} to={s.url as never} className="group">
               <Card className="h-full transition-colors group-hover:border-primary/50">
                 <CardHeader>
