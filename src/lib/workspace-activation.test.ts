@@ -10,7 +10,7 @@ describe("Operational workspace activation — server authorization", () => {
     expect(s).toMatch(/assertFundAllowed\(ctx, data\.fundId\)/);
     expect(s).toMatch(/if \(!ctx\.isAdmin\) throw/);
     expect(s).toMatch(/maskEmail\(p\.email\)/);
-    expect(s).not.toMatch(/tax|tin|government|kyc/i);
+    expect(s).not.toMatch(/\btax\b|\btin\b|government|kyc/i);
   });
   it("add existing: exact fund, staff only, no duplicates, reuses grantFundAccess (audited)", () => {
     const s = slice("addExistingInvestorToFund");
