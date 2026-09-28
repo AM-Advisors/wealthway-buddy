@@ -106,8 +106,10 @@ export const listClientPeople = createServerFn({ method: "GET" })
     const { data: fm } = fundIds.length
       ? await db.from("fund_managers").select("user_id, offering_id").in("offering_id", fundIds)
       : { data: [] };
+    const relationships = await clientRelationshipPeople(db, data.clientId, (funds ?? []) as any[], (fm ?? []) as any[]);
     return {
       caps,
+      relationships,
       funds: funds ?? [],
       companies: companies ?? [],
       people: ((people ?? []) as any[]).map((p) => ({
@@ -126,6 +128,32 @@ export const listClientPeople = createServerFn({ method: "GET" })
       })),
     };
   });
+
+/**
+ * People connected to this client through real underlying records only: fund
+ * manager assignments, investments in the client's funds, and active
+ * delegations scoped to the client or its funds. Never by email or domain.
+ * Returns names, masked emails and relationship labels — no documents, tax,
+ * KYC/KYB, accreditation or ID information.
+ */
+async function clientRelationshipPeople(db: any, clientId: string, funds: { id: string; name: string }[], fm: { user_id: string; offering_id: string }[]) {
+  const { maskEmail, mergeRelationships } = await import("@/lib/client-people");
+  const fundIds = funds.map((f) => f.id);
+  const [{ data: apps }, { data: dels }] = await Promise.all([
+    fundIds.length ? db.from("investor_applications").select("user_id, offering_id").in("offering_id", fundIds) : { data: [] },
+    db.from("delegations").select("delegate_user_id, scope_type, scope_id, authority_level").eq("status", "active").in("scope_id", [clientId, ...fundIds]),
+  ]);
+  const edges = [
+    ...fm.map((m) => ({ userId: m.user_id, kind: "fund_manager" as const, offeringId: m.offering_id })),
+    ...((apps ?? []) as any[]).map((a) => ({ userId: a.user_id, kind: "investor" as const, offeringId: a.offering_id })),
+    ...((dels ?? []) as any[]).map((d) => ({ userId: d.delegate_user_id, kind: "delegate" as const, offeringId: d.scope_id === clientId ? null : d.scope_id, detail: String(d.authority_level ?? "") })),
+  ].filter((e) => e.userId);
+  const ids = [...new Set(edges.map((e) => e.userId))];
+  const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
+  const names = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, { name: p.legal_name as string | null, email: maskEmail(p.email) }]));
+  const fundName = new Map(funds.map((f) => [f.id, f.name]));
+  return mergeRelationships(edges, names, fundName);
+}
 
 const personInput = z.object({
   clientId: uuid,
