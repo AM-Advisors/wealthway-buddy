@@ -15,7 +15,7 @@ export function FundRosterSummary({ fundId }: { fundId: string }) {
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
         {cells.map(([l, v]) => (
-          <div key={l} className="bg-card p-4"><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className="font-heading text-2xl font-semibold">{v}</p></div>
+          <div key={l} className="bg-card p-4 last:col-span-2 sm:last:col-span-1"><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className="font-heading text-2xl font-semibold">{v}</p></div>
         ))}
       </div>
       <Link to="/manager/fund/$fundId/readiness" params={{ fundId }} className="text-xs text-primary underline">See readiness, next action and owner for each investor</Link>

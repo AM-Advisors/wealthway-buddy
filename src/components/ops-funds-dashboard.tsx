@@ -76,7 +76,7 @@ export function OpsFundsDashboard() {
       </div>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
         {metric.map(([l, v, warn]) => (
-          <div key={l} className="bg-card p-4"><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className={cn("font-heading text-2xl font-semibold", warn && v ? "text-destructive" : "")}>{v}</p></div>
+          <div key={l} className="bg-card p-4 last:col-span-2 sm:last:col-span-1"><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className={cn("font-heading text-2xl font-semibold", warn && v ? "text-destructive" : "")}>{v}</p></div>
         ))}
       </div>
       <div className="space-y-3">
@@ -99,13 +99,13 @@ export function OpsFundsDashboard() {
         <div className="rounded-xl border border-dashed px-6 py-12 text-center"><p className="font-heading font-semibold">No funds yet</p><p className="text-sm text-muted-foreground">Funds appear here once they are set up.</p></div>
       ) : (
         <div className="overflow-hidden rounded-xl border bg-card">
-          <div className="hidden grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_auto] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground lg:grid">
+          <div className="hidden grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_13rem] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground lg:grid">
             <span>Fund</span><span>Client</span><span>Investors</span><span>Onboarding</span><span>Ready</span><span>Needs Attention</span><span>Next Close</span><span>Owner</span><span />
           </div>
           {!shown.length ? <p className="px-4 py-6 text-sm text-muted-foreground">No funds match these filters.</p> : shown.map((f) => {
             const lines = attentionLines(f.metrics);
             return (
-              <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 lg:grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_auto] lg:items-center">
+              <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 lg:grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_13rem] lg:items-center">
                 <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}</Link>
                 <span className="text-right text-muted-foreground lg:text-left">{f.clientName ?? "—"}</span>
                 <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.investors}</span>
