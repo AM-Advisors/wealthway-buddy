@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_account_classifications: {
+        Row: {
+          classification: string
+          correlation_id: string | null
+          created_at: string
+          id: string
+          reason: string
+          recorded_by: string | null
+          user_id: string
+        }
+        Insert: {
+          classification: string
+          correlation_id?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          recorded_by?: string | null
+          user_id: string
+        }
+        Update: {
+          classification?: string
+          correlation_id?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          recorded_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       access_audit_events: {
         Row: {
           action: string
@@ -5993,6 +6023,7 @@ export type Database = {
           note: string
           review_id: string
           reviewer_user_id: string
+          target: string | null
         }
         Insert: {
           created_at?: string
@@ -6002,6 +6033,7 @@ export type Database = {
           note?: string
           review_id: string
           reviewer_user_id: string
+          target?: string | null
         }
         Update: {
           created_at?: string
@@ -6011,6 +6043,7 @@ export type Database = {
           note?: string
           review_id?: string
           reviewer_user_id?: string
+          target?: string | null
         }
         Relationships: [
           {
@@ -28733,6 +28766,10 @@ export type Database = {
       ct_can_view: { Args: { _company_id: string }; Returns: boolean }
       ct_is_holder: { Args: { _stakeholder_id: string }; Returns: boolean }
       ct_is_staff: { Args: never; Returns: boolean }
+      current_account_classification: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       diligence_access_open: {
         Args: { _offering_id: string }
         Returns: boolean
