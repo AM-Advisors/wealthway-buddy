@@ -101,8 +101,12 @@ export const assignAccessRole = createServerFn({ method: "POST" })
     if (!t && data.scope.type !== "global") throw new Error("Custom Harmonious roles are global.");
     const before = snapshot(p.b, data.targetUserId);
     const db = await admin();
-    if (t?.platformRole) {
-      if (data.effectiveAt || data.expiresAt) throw new Error("Harmonious platform roles take effect immediately and have no expiry; use a scoped role or direct grant for timed access.");
+    const timed = !!(data.effectiveAt || data.expiresAt);
+    if (t?.platformRole && timed && (t.key === "super_admin" || t.key === "admin")) {
+      throw new Error("Super Administrator and Operations Administrator are permanent explicit assignments; they can't be timed.");
+    }
+    // Timed Harmonious access → RBAC assignment (effective/expiring); legacy user_roles untouched.
+    if (t?.platformRole && !timed) {
       if (before.platformRoles.includes(t.platformRole)) throw new Error("This person already has that role.");
       await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: "Role assigned", roleKey: data.roleKey, scopeType: "global", previous: before, next: { ...before, platformRoles: [...before.platformRoles, t.platformRole] }, reason: data.reason, correlationId: p.correlationId });
       const { error } = await db.from("user_roles").insert({ user_id: data.targetUserId, role: t.platformRole });
