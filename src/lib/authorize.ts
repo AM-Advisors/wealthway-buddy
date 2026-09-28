@@ -163,6 +163,7 @@ export function isLive(r: { effective_at: string; expires_at: string | null; rev
   return true;
 }
 
+const asScope = (r: { scope_type: ScopeType; scope_id: string | null }) => ({ type: r.scope_type, id: r.scope_id });
 function scopeCovers(scope: { type: ScopeType; id: string | null }, res: Resource): boolean {
   if (scope.type === "global") return true;
   if (scope.type === res.type && scope.id === res.id) return true;
@@ -208,7 +209,7 @@ export function authorize(
   if (!isPermission(permission)) return deny("Unknown permission");
 
   // Explicit deny wins over everything ordinary.
-  const denied = f.grants.find((g) => g.effect === "deny" && g.permission === permission && isLive(g, now) && scopeCovers(g, resource));
+  const denied = f.grants.find((g) => g.effect === "deny" && g.permission === permission && isLive(g, now) && scopeCovers(asScope(g), resource));
   if (denied) return { ...deny(`Explicitly denied (${denied.scope_type === "global" ? "global" : `${denied.scope_type} scope`})`), sources: ["Direct deny"] };
 
   const [area, action] = permission.split(".") as [OpsArea, AccessAction];
@@ -218,13 +219,13 @@ export function authorize(
     if (lp.area === area && lp.action === action && scopeCovers(lp.scope, resource)) hits.push({ source: lp.via, scope: lp.scope.label });
   }
   for (const a of f.assignments) {
-    if (!isLive(a, now) || !scopeCovers(a, resource)) continue;
+    if (!isLive(a, now) || !scopeCovers(asScope(a), resource)) continue;
     if (permsOfAssignment(f, a).includes(permission)) {
       hits.push({ source: `Role: ${templateFor(a.role_key)?.label ?? a.role_key}`, scope: a.scope_type === "global" ? "All resources" : `${a.scope_type} ${a.scope_id}` });
     }
   }
   for (const g of f.grants) {
-    if (g.effect === "allow" && g.permission === permission && isLive(g, now) && scopeCovers(g, resource)) {
+    if (g.effect === "allow" && g.permission === permission && isLive(g, now) && scopeCovers(asScope(g), resource)) {
       hits.push({ source: "Direct grant", scope: g.scope_type === "global" ? "All resources" : `${g.scope_type} ${g.scope_id}` });
     }
   }
