@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
+import { FundAddMenu } from "@/components/fund-add-menu";
 import { regTypeLabel } from "@/lib/reg-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,7 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
                 {[fund.legalEntityName, fund.fundType, fund.stateFormed].filter(Boolean).join(" · ") || "Fund workspace"}
               </p>
             </div>
+            <FundAddMenu fundId={fundId} />
             <div className="min-w-40">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Setup readiness</span>
