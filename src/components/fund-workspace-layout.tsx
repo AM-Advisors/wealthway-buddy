@@ -7,6 +7,7 @@ import {
   Building2,
   FileText,
   Settings,
+  UserCog,
   ShieldCheck,
   Users,
   WalletCards,
@@ -26,6 +27,7 @@ const sections = [
   { slug: "transactions", label: "Capital", icon: WalletCards },
   { slug: "documents", label: "Documents", icon: FileText },
   { slug: "compliance", label: "Compliance", icon: ShieldCheck },
+  { slug: "team", label: "Team", icon: UserCog },
   { slug: "settings", label: "Fund Settings", icon: Settings },
 ] as const;
 
