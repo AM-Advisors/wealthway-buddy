@@ -111,3 +111,17 @@ describe("Stage 2.9 classification & certification", () => {
     expect(accessReviewPopulation("privileged", base()).some((r) => r.user_id === INFO)).toBe(false);
   });
 });
+
+describe("classification audit & self-review", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { evidenceReviewProblem } = await import("@/lib/compliance-model");
+  it("classification writes an audit event before the append-only insert", () => {
+    const src = readFileSync("src/lib/access-admin.functions.ts", "utf8");
+    const fn = src.slice(src.indexOf("export const setAccountClassification"), src.indexOf("// ------------------------------------------------------------ account state"));
+    expect(fn.indexOf('action: "Account classified"')).toBeGreaterThan(0);
+    expect(fn.indexOf('action: "Account classified"')).toBeLessThan(fn.indexOf("access_account_classifications"));
+  });
+  it("collector can't review their own evidence", () => {
+    expect(evidenceReviewProblem({ reviewerId: "a", collectedBy: "a", operatorId: null, sodRequired: true, alreadyReviewedByMe: false })).toBeTruthy();
+  });
+});
