@@ -34,7 +34,7 @@ export async function loadBundle() {
     if (data.users.length < 1000) break;
   }
   const q = (t: string, cols: string) => db.from(t).select(cols).limit(10000).then((r: any) => (r.data ?? []) as any[]);
-  const [profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms] = await Promise.all([
+  const [profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents] = await Promise.all([
     q("profiles", "user_id, legal_name, email"),
     q("user_roles", "user_id, role, created_at"),
     q("staff_capability_grants", "id, user_id, capability, role_key, granted_by, granted_at, reason, revoked_by, revoked_at"),
@@ -50,8 +50,12 @@ export async function loadBundle() {
     q("professional_organizations", "id, name, legal_name"),
     q("delegations", "id, principal_user_id, delegate_user_id, scope_type, scope_id, authority_level, status, acceptance_state, expires_at, revoked_at, revoked_by, revoke_reason, granted_by, created_at, updated_at"),
     q("delegation_permissions", "delegation_id, capability"),
+    q("access_role_assignments", "*"),
+    q("access_permission_grants", "*"),
+    q("access_role_definitions", "*"),
+    db.from("access_audit_events").select("*").order("created_at", { ascending: false }).limit(1000).then((r: any) => (r.data ?? []) as any[]),
   ]);
-  return { users, profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms };
+  return { users, profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents };
 }
 
 export function factsFor(b: Bundle, userId: string, names: Map<string, string>): Facts {
@@ -137,6 +141,59 @@ export function historyFor(b: Bundle, names: Map<string, string>, userId?: strin
     rows.push({ at: d.created_at, actor: who(d.granted_by), target: who(d.delegate_user_id), change: `Delegation (${d.authority_level}) granted by ${who(d.principal_user_id)}`, scope: String(d.scope_type), reason: null });
     if (d.revoked_at) rows.push({ at: d.revoked_at, actor: who(d.revoked_by), target: who(d.delegate_user_id), change: "Delegation revoked", scope: String(d.scope_type), reason: d.revoke_reason });
   }
+  for (const e of b.auditEvents ?? []) {
+    if (userId && e.target_user_id !== userId) continue;
+    rows.push({ at: e.created_at, actor: e.actor_identity ?? who(e.actor_user_id), target: who(e.target_user_id), change: `${e.outcome === "denied" ? "REFUSED — " : ""}${e.action}${e.role_key ? `: ${e.role_key}` : ""}${e.permission ? `: ${e.permission}` : ""}`, scope: e.scope_type ? `${e.scope_type}${e.scope_id ? ` ${e.scope_id}` : ""}` : "—", reason: e.reason, authoritative: true } as any);
+  }
   return rows.filter((r) => r.at).sort((a, b2) => b2.at.localeCompare(a.at)).slice(0, 500);
 }
 
+
+/** Full canonical facts for one user (resolver input). */
+export function authzFactsFor(b: Bundle, userId: string, names = nameMap(b)): AuthzFacts {
+  const u = b.users.find((x: any) => x.id === userId);
+  const base: Facts = factsFor(b, userId, names);
+  return {
+    ...base,
+    authenticated: !!u,
+    suspended: u ? status(u) === "suspended" : true,
+    assignments: b.assignments.filter((a: any) => a.user_id === userId),
+    grants: b.pgrants.filter((g: any) => g.user_id === userId),
+    roleDefinitions: b.roleDefs,
+  };
+}
+
+/** Append-only access audit. Never updated or deleted (database trigger). */
+export async function recordAccessEvent(e: {
+  actorUserId: string | null;
+  actorIdentity: string | null;
+  targetUserId: string | null;
+  action: string;
+  outcome?: "applied" | "denied";
+  roleKey?: string | null;
+  permission?: string | null;
+  scopeType?: string | null;
+  scopeId?: string | null;
+  previous?: unknown;
+  next?: unknown;
+  reason?: string | null;
+  correlationId?: string | null;
+}) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await (supabaseAdmin as any).from("access_audit_events").insert({
+    actor_user_id: e.actorUserId,
+    actor_identity: e.actorIdentity,
+    target_user_id: e.targetUserId,
+    action: e.action,
+    outcome: e.outcome ?? "applied",
+    role_key: e.roleKey ?? null,
+    permission: e.permission ?? null,
+    scope_type: e.scopeType ?? null,
+    scope_id: e.scopeId ?? null,
+    previous_state: e.previous ?? null,
+    new_state: e.next ?? null,
+    reason: e.reason ?? null,
+    correlation_id: e.correlationId ?? null,
+  });
+  if (error) throw new Error("Could not record the access audit event; nothing was changed.");
+}
