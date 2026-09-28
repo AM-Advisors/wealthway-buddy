@@ -3,7 +3,7 @@
 Generated in Stage 2. Nothing here has been migrated; existing checks still enforce production.
 
 Files with direct role/admin checks: 109
-Totals after Stage 2.5 manual validation: safe to migrate mechanically: 2; requires resource-aware migration: 65; protected/specialized — keep dedicated: 42
+Totals after Stage 2.5 manual validation: safe to migrate mechanically: 0; requires resource-aware migration: 66; protected/specialized — keep dedicated: 43 (after Stage 3A re-review)
 
 ## Tax (5)
 
@@ -29,7 +29,7 @@ Totals after Stage 2.5 manual validation: safe to migrate mechanically: 2; requi
 
 - `src/lib/allocations.server.ts` — protected/specialized — keep dedicated (reclassified in 2.5: accounting allocations)
 - `src/lib/nav.server.ts` — protected/specialized — keep dedicated (reclassified in 2.5: session/workspace resolver)
-- `src/lib/navigation.ts` — safe to migrate mechanically (manually confirmed: global staff check, no scoped record)
+- `src/lib/navigation.ts` — protected/specialized — keep dedicated (reclassified in 3A: contains no authorization decision; route access is enforced by the server resolver)
 - `src/lib/reconciliation.server.ts` — protected/specialized — keep dedicated (reclassified in 2.5: accounting reconciliation)
 - `src/lib/valuation.server.ts` — protected/specialized — keep dedicated (reclassified in 2.5: valuation/NAV)
 
@@ -112,7 +112,7 @@ Totals after Stage 2.5 manual validation: safe to migrate mechanically: 2; requi
 - `src/components/operations-board.tsx` — requires resource-aware migration (reclassified in 2.5: touches client/fund/company/investor/profile records)
 - `src/components/portal-message-thread.tsx` — requires resource-aware migration (reclassified in 2.5: touches client/fund/company/investor/profile records)
 - `src/components/staff-calendar.tsx` — requires resource-aware migration (reclassified in 2.5: touches client/fund/company/investor/profile records)
-- `src/components/staff-desk.tsx` — safe to migrate mechanically (manually confirmed: global staff check, no scoped record)
+- `src/components/staff-desk.tsx` — requires resource-aware migration (reclassified in 3A: getMyDesk returns assignment-scoped client records; admins can list all clients)
 - `src/components/team-access-board.tsx` — protected/specialized — keep dedicated (reclassified in 2.5: staff access administration → access-admin)
 - `src/lib/admin-activity.functions.ts` — requires resource-aware migration (reclassified in 2.5: touches client/fund/company/investor/profile records)
 - `src/lib/agreements-admin.functions.ts` — requires resource-aware migration (reclassified in 2.5: touches client/fund/company/investor/profile records)
