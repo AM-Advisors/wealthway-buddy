@@ -64,7 +64,7 @@ export function buildRbacEvidence(q: EvidenceQuery, s: AccessSnapshot, period: {
 }
 
 export type ReviewRole = { role: string; source: string; scope: string; granted_by: string; granted_at: string; expiry: string; sensitive: string };
-export type ReviewSubject = { key: string; user_id: string; person: string; role: string; roles: ReviewRole[]; scope: string; sensitive: string; source: string; granted_by: string; last_used: string; expiry: string; account_type?: string; direct_grants?: string[] };
+export type ReviewSubject = { key: string; user_id: string; person: string; role: string; roles: ReviewRole[]; scope: string; sensitive: string; source: string; granted_by: string; last_used: string; expiry: string; account_type?: string | undefined; direct_grants?: string[] };
 
 /** Grantor/date for a legacy platform role, from the authoritative audit when recorded. */
 function grantFor(s: AccessSnapshot, userId: string, role: string, fallbackAt: string | undefined, who: (id: string | null | undefined) => string) {

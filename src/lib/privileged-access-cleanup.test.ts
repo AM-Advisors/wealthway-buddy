@@ -58,7 +58,7 @@ describe("Stage 2.8 privileged access cleanup", () => {
     const after = snap();
     expect(accessReviewPopulation("privileged", after).some((r) => r.user_id === INFO)).toBe(false);
     const scoped = buildRbacEvidence("scoped_client", after, { start: "2026-01-01", end: "2026-12-31" });
-    expect(scoped.items.some((i) => i.person === "info@harmonious.co")).toBe(true);
+    expect(scoped.items.some((i) => i["person"] === "info@harmonious.co")).toBe(true);
   });
 
   it("Effective Permissions and Person Matrix derive from the same canonical decision", () => {
@@ -79,7 +79,7 @@ describe("Stage 2.8 privileged access cleanup", () => {
     const s = snap({ roles: [...snap().roles, { user_id: INFO, role: "super_admin" }], classifications: [...snap().classifications!, { user_id: INFO, classification: "shared_inbox", created_at: "2026-09-28" }] });
     const ev = buildRbacEvidence("privileged_accounts", s, { start: "2026-01-01", end: "2026-12-31" });
     expect(ev.control).toBe("AC-07");
-    expect(ev.items.find((i) => i.user_id === INFO)?.exception).toMatch(/Control exception/);
+    expect(ev.items.find((i) => i["user_id"] === INFO)?.["exception"]).toMatch(/Control exception/);
     expect(JSON.stringify(ev)).not.toMatch(/password|token|secret|encrypted|otp/i);
   });
 });
