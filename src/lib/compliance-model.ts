@@ -294,7 +294,7 @@ export function recordProblem(kind: string, status: string, data: Record<string,
     if (typeof v === "string" && TIN.test(v)) return "That looks like a tax ID — reference the audit record instead of copying it.";
   }
   for (const f of spec.fields) if (f.required && (data[f.key] === undefined || data[f.key] === "" || data[f.key] === null)) return `${f.label} is required.`;
-  if (kind === "risk" && (status === "accepted" || data.treatment === "accept") && !data.accepted_by) return "Risk acceptance must name the approving person.";
+  if (kind === "risk" && (status === "accepted" || data["treatment"] === "accept") && !data.accepted_by) return "Risk acceptance must name the approving person.";
   if (kind === "incident" && status === "closed" && (!data.notification_decision || data.notification_decision === "Pending human review" || !data.decision_owner))
     return "Record the human notification decision and its owner before closing.";
   if (kind === "exception" && status === "closed" && (!data.closure_evidence_id || (ctx.evidenceIds && !ctx.evidenceIds.includes(String(data.closure_evidence_id)))))

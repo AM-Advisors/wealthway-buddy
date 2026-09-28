@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   addControlMapping, addManualEvidence, collectRbacEvidence, createAccessReview, decideAccessReview, getCompliance,
   recordControlStatus, reviewEvidence, saveControlVersion, saveRecord,
-} from "@/lib/compliance.functions";
+} from "@/lib/compliance-controls.functions";
 import { CONTROL_STATUSES, CONTROL_TYPES, EVIDENCE_QUERIES, FREQUENCIES, PRIVACY_KINDS, REGISTERS, registerPermissions, STATUS_LABEL } from "@/lib/compliance-model";
 
 type Data = { perms: string[]; me: string; staff: { id: string; label: string }[]; dashboard: any; controls: any[]; evidence: any[]; requirements: any[]; reviews: any[]; records: any[]; recordHistory: any[]; providers: any[]; report: any[] };

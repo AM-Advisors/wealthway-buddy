@@ -17,7 +17,7 @@ const G = (permission: string, scope_type: Grant["scope_type"] = "global", scope
 const g = { type: "global" as const, id: null };
 const ok = (f: AuthzFacts, p: string) => authorize(f, p, g).allowed;
 const migration = readFileSync("drizzle/migrations/0052_compliance_controls_layer.sql", "utf8");
-const fns = readFileSync("src/lib/compliance.functions.ts", "utf8");
+const fns = readFileSync("src/lib/compliance-controls.functions.ts", "utf8");
 
 describe("access to Compliance & Controls", () => {
   it("ordinary clients, investors and fund managers can't access it", () => {
