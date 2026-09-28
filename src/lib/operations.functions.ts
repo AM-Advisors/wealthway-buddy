@@ -55,7 +55,11 @@ export const getOperationsAccess = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     // Legacy coarse projection of the canonical staff facts.
     const { gatherStaffFacts, operationsAccessProjection } = await import("@/lib/session-facts.server");
-    return operationsAccessProjection(await gatherStaffFacts(context));
+    const result = operationsAccessProjection(await gatherStaffFacts(context));
+    // Stage 3A.1 shadow: legacy result is returned unchanged.
+    const { shadowOperations } = await import("@/lib/authz-shadow.server");
+    await shadowOperations("getOperationsAccess", context.userId, result.allowed);
+    return result;
   });
 
 async function fundMap(supabase: any, ids: string[]) {
@@ -528,7 +532,15 @@ export const getOpsSs4Url = createServerFn({ method: "POST" })
 export const listOperationsTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const who = await requireOperations(context);
+    const { shadowOperations } = await import("@/lib/authz-shadow.server");
+    let who: Who;
+    try {
+      who = await requireOperations(context);
+    } catch (e) {
+      await shadowOperations("listOperationsTeam", context.userId, false);
+      throw e;
+    }
+    await shadowOperations("listOperationsTeam", context.userId, true);
     const { data: roles } = await context.supabase
       .from("user_roles")
       .select("user_id, created_at")
