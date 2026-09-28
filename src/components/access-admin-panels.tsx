@@ -377,10 +377,10 @@ function Stage3Panel() {
         <TableBody>{(data ?? []).map((r) => (
           <TableRow key={r.endpoint}>
             <TableCell>{r.area}</TableCell>
-            <TableCell className="text-xs"><div className="font-mono">{r.endpoint}</div><div className="text-muted-foreground">{r.file}</div>{r.reclassified ? <div className="mt-1 rounded bg-muted p-1">Reclassified: {r.reclassified}</div> : null}</TableCell>
+            <TableCell className="text-xs"><div className="font-mono">{r.endpoint}</div><div className="text-muted-foreground">{r.file}</div>{r.reclassified ? <div className="mt-1 rounded bg-muted p-1">Reclassified: {r.reclassified}</div> : null}{(r as any).note ? <div className="mt-1 rounded bg-muted p-1">{(r as any).note}</div> : null}</TableCell>
             <TableCell className="text-xs">{r.legacy}</TableCell>
             <TableCell className="text-xs">{r.canonical ?? "—"}</TableCell>
-            <TableCell className="text-xs">{r.total ? `${r.counts.allow_allow} allow/allow · ${r.counts.deny_deny} deny/deny` : "—"}</TableCell>
+            <TableCell className="text-xs">{r.total ? `${r.counts.allow_allow} allow/allow · ${r.counts.deny_deny} deny/deny · ${r.counts.legacy_allow_rbac_deny} legacy-allow/RBAC-deny · ${r.counts.legacy_deny_rbac_allow} legacy-deny/RBAC-allow` : "—"}</TableCell>
             <TableCell>{r.total}</TableCell>
             <TableCell>{r.mismatches}</TableCell>
             <TableCell><Badge variant={r.status === "Blocked" ? "destructive" : "secondary"}>{r.status}</Badge></TableCell>

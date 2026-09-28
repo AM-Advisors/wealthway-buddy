@@ -44,3 +44,18 @@ export function shadowCompare(args: { endpoint: string; legacyAllowed: boolean; 
   };
   return { allowed: args.legacyAllowed, record };
 }
+
+/** Stage 3A.1: record for a canonical decision computed outside authorize(). Payload-free. */
+export function shadowRecordFor(args: { endpoint: string; actorUserId: string; legacyAllowed: boolean; canonical: { allowed: boolean; key: string; reason: string } }): ShadowRecord {
+  return {
+    endpoint: args.endpoint.slice(0, 120),
+    actor_user_id: UUID.test(args.actorUserId) ? args.actorUserId : null,
+    permission: args.canonical.key.slice(0, 80),
+    resource_type: "global",
+    resource_id: null,
+    legacy_allowed: args.legacyAllowed,
+    canonical_allowed: args.canonical.allowed,
+    category: shadowCategory(args.legacyAllowed, args.canonical.allowed),
+    canonical_reason: args.canonical.reason.slice(0, 60),
+  };
+}

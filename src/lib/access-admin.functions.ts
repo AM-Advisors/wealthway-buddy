@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dryRun } from "@/lib/legacy-role-compat";
 import { privilegedAccounts } from "@/lib/compliance-evidence";
-import { STAGE3A_CANDIDATES, emptyCounts, migrationStatus, mismatches } from "@/lib/authz-stage3";
+import { STAGE3A1_PATHS, STAGE3A_CANDIDATES, emptyCounts, migrationStatus, mismatches } from "@/lib/authz-stage3";
 import {
   ACCOUNT_CLASSIFICATIONS,
   classificationChangeProblem,
@@ -384,7 +384,7 @@ export const getStage3Migration = createServerFn({ method: "GET" })
     await requireAccessViewer(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin as any).from("authz_shadow_events").select("endpoint, category").limit(10000);
-    return STAGE3A_CANDIDATES.map((p) => {
+    return [...STAGE3A1_PATHS, ...STAGE3A_CANDIDATES].map((p: any) => {
       const c = emptyCounts();
       for (const e of data ?? []) if (e.endpoint === p.endpoint && e.category in c) (c as any)[e.category]++;
       const total = Object.values(c).reduce((a, b) => a + b, 0);
