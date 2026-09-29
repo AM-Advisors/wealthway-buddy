@@ -92,7 +92,7 @@ export async function searchInvestors(userId: string, input: { offeringId: strin
 /* ---------------------------------------------------------------- create */
 
 export type PersonInput = {
-  firstName?: string; middleName?: string | null; lastName?: string; preferredName?: string | null; email?: string;
+  firstName?: string | undefined; middleName?: string | null; lastName?: string | undefined; preferredName?: string | null; email?: string | undefined;
   phone?: string | null; dateOfBirth?: string | null; citizenship?: string | null;
   addressLine1?: string | null; addressLine2?: string | null; city?: string | null; region?: string | null; postalCode?: string | null; country?: string | null;
   mailingAddress?: Record<string, string> | null;

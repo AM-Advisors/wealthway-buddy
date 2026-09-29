@@ -45,7 +45,7 @@ function InvestorRecordPage() {
   const p = data.person; const inv = data.investment as any;
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) : undefined);
 
-  const save = async (payload: Parameters<typeof update>[0]["data"]) => {
+  const save = async (payload: any) => {
     try {
       const r = await update({ data: payload });
       toast.success(r.suggested ? `${r.changed} saved; ${r.suggested} sent to Harmonious for review because the investor supplied it.` : r.changed ? "Saved" : "No changes");
