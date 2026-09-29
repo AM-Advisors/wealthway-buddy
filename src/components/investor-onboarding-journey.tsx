@@ -177,7 +177,7 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Who is making this investment?</CardTitle>
+        <CardTitle>How are you investing?</CardTitle>
         <CardDescription>Each individual, company, trust or retirement account you invest through is kept separate.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
