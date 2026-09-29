@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -105,10 +106,10 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       );
 
       const inProgress = fundApps.filter(
-        (a) => !["settled", "funded", "closed", "declined"].includes(String(a.funding_status ?? "")),
+        (a) => !isReconciledFunding(a.funding_status) && !["closed", "declined"].includes(String(a.funding_status ?? "")),
       ).length;
       const settled = fundApps.filter((a) =>
-        ["settled", "funded"].includes(String(a.funding_status ?? "")),
+        isReconciledFunding(a.funding_status),
       ).length;
       const declined = fundApps.filter(
         (a) => String(a.status ?? "") === "declined" || String(a.funding_status ?? "") === "declined",
@@ -119,7 +120,7 @@ export const getFundingDashboard = createServerFn({ method: "GET" })
       const closingCostCents = Number((o as any).closing_cost_cents ?? 0);
       // Each investor is charged their own rate when one is set, otherwise the fund's.
       const wireFeesTotalCents = fundApps
-        .filter((a) => ["settled", "funded"].includes(String(a.funding_status ?? "")))
+        .filter((a) => isReconciledFunding(a.funding_status))
         .reduce(
           (s, a) => s + (a.wire_fee_cents != null ? Number(a.wire_fee_cents) : wireFeeCents),
           0,

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 async function assertReviewer(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -95,7 +96,7 @@ export const getFundOverview = createServerFn({ method: "GET" })
 
     for (const app of applications as any[]) {
       committedCents += app.commitment_cents ?? 0;
-      if (app.funding_status === "settled") {
+      if (isReconciledFunding(app.funding_status)) {
         counts.complete += 1;
         settledCents += app.commitment_cents ?? 0;
         continue;
@@ -743,7 +744,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
         .reduce((sum, payment) => sum + Number(payment.amount_cents ?? 0), 0);
       for (const app of own) {
         committedCents += app.commitment_cents ?? 0;
-        if (app.funding_status === "settled") complete += 1;
+        if (isReconciledFunding(app.funding_status)) complete += 1;
         else if (app.kyc_status !== "approved" || app.aml_status !== "approved") identity += 1;
         else if (app.accreditation_status !== "approved") accreditation += 1;
         else if (app.documents_status !== "approved") documents += 1;

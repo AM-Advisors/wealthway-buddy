@@ -1,3 +1,4 @@
+import { isReconciledFunding } from "@/lib/funding-status";
 /**
  * Role dashboards — the single place every dashboard number is defined.
  *
@@ -58,7 +59,7 @@ export type InvestmentFact = {
 
 /** Funded only when the canonical funding status is reconciled "funded". */
 export function isFunded(f: Pick<InvestmentFact, "fundingStatus" | "readiness">): boolean {
-  if (f.fundingStatus === "funded") return true;
+  if (isReconciledFunding(f.fundingStatus)) return true;
   return !!f.readiness?.items?.some((i) => i.key === "funding" && i.status === "complete") && f.fundingStatus !== "investor_reports_sent";
 }
 

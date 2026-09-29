@@ -1,3 +1,4 @@
+import { canonicalExecutionStatus, type CanonicalExecutionStatus } from "@/lib/document-execution-status";
 /**
  * Offering Documents — pure rules (no I/O).
  *
@@ -155,15 +156,15 @@ export const EXECUTION_STATE_LABELS: Record<ExecutionState, string> = {
 
 /** Sent ≠ signed; investor-signed ≠ fully executed when a countersignature remains. */
 export function executionState(signers: { role: string; status: string; required?: boolean }[]): ExecutionState {
-  const req = signers.filter((s) => s.required !== false);
-  if (!req.length) return "not_sent";
-  const signed = (s: { status: string }) => s.status === "signed" || s.status === "completed";
-  if (req.every(signed)) return "fully_executed";
-  const investorSide = req.filter((s) => s.role !== "fund_signatory");
-  const counter = req.filter((s) => s.role === "fund_signatory");
-  if (investorSide.length && investorSide.every(signed) && counter.length && !counter.every(signed)) return "awaiting_countersignature";
-  if (req.some(signed)) return "partially_signed";
-  return "sent";
+  return toOfferingExecutionState(canonicalExecutionStatus({ signers }), signers.filter((s) => s.required !== false).length > 0);
+}
+
+/** Adapter: canonical status -> Offering Documents display state. */
+export function toOfferingExecutionState(c: CanonicalExecutionStatus, hasSigners: boolean): ExecutionState {
+  if (c === "fully_executed") return "fully_executed";
+  if (c === "awaiting_countersignature") return "awaiting_countersignature";
+  if (c === "partially_signed") return "partially_signed";
+  return hasSigners || c === "sent" ? "sent" : "not_sent";
 }
 
 export type InvestmentDocument = {

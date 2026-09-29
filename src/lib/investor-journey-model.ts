@@ -12,6 +12,7 @@ import type {
   RequirementKey,
   RequirementResult,
 } from "@/lib/investor-onboarding-model";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 export const JOURNEY_STEPS = ["about", "verify", "sign", "fund"] as const;
 export type JourneyStep = (typeof JOURNEY_STEPS)[number];
@@ -78,7 +79,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
 
   let fund: StepState = "locked";
   let fundMessage = "Funding opens once Harmonious has reviewed and accepted your subscription.";
-  if (facts.fundingStatus === "funded") {
+  if (isReconciledFunding(facts.fundingStatus)) {
     fund = "complete";
     fundMessage = "Received. Your investment is complete.";
   } else if (facts.approvedToFund) {
@@ -271,7 +272,7 @@ export function managerInvestorStatus(input: {
   if (!stage) return "Invited";
   if (stage === "declined" || stage === "cancelled") return "Declined";
   if (stage === "closed") return "Closed";
-  if (input.fundingStatus === "funded" || stage === "funded") return "Funded";
+  if (isReconciledFunding(input.fundingStatus) || stage === "funded") return "Funded";
   if (input.approvedToFund || ["approved_to_fund", "awaiting_funds", "accepted"].includes(stage)) {
     if (input.investorReportsSent || ["bank_transaction_detected", "reconciliation_pending", "partially_funded"].includes(String(input.fundingStatus))) {
       return "Funding pending";

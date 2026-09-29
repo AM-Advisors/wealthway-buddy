@@ -16,6 +16,7 @@ import {
   missingRelatedRoles,
   type InvestmentProfileType,
 } from "@/lib/identity-model";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 // ------------------------------------------------------------------ stages
 
@@ -471,7 +472,7 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
   const sig = String(subscription.signatureStatus ?? "").toLowerCase();
   add("signature", sig === "completed" || sig === "signed" ? "valid" : "missing");
 
-  add("funding", subscription.fundingStatus === "funded" ? "valid" : "missing");
+  add("funding", isReconciledFunding(subscription.fundingStatus) ? "valid" : "missing");
 
   return out;
 }

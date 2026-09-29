@@ -1,3 +1,4 @@
+import { isReconciledFunding } from "@/lib/funding-status";
 /**
  * Operations Funds dashboard — pure aggregation over canonical readiness
  * results and open work items. No manually maintained attention fields.
@@ -22,7 +23,7 @@ export function fundMetrics(offeringId: string, facts: FundOnboardingFact[], tas
   for (const f of facts) {
     if (f.offeringId !== offeringId) continue;
     m.investors++;
-    if (f.fundingStatus === "funded") m.funded++;
+    if (isReconciledFunding(f.fundingStatus)) m.funded++;
     if (f.terminal === "closed" || f.stage === "closed") continue;
     if (f.closeReady) { m.ready++; continue; }
     m.onboarding++;

@@ -1,3 +1,4 @@
+import { isReconciledFunding } from "@/lib/funding-status";
 /**
  * Where an open investment's Action Center item should point, read from the
  * investment row alone (the page re-derives the full picture server-side).
@@ -15,7 +16,7 @@ export function investmentAttentionStep(
 ): { step: "about" | "verify" | "sign" | "fund"; status: string; waiting: boolean } | null {
   const stage = String(row.stage ?? "");
   if (["closed", "declined", "cancelled"].includes(stage)) return null;
-  if (row.funding_status === "funded") return null;
+  if (isReconciledFunding(row.funding_status)) return null;
   if (row.approved_to_fund_at) {
     const pending =
       Boolean(row.investor_reports_sent_at) ||

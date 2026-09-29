@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 export type TimelineStepKey =
   | "invited"
@@ -341,7 +342,7 @@ export const getFundTimelines = createServerFn({ method: "GET" })
           detail: approvedWire ? money(approvedWire.amount_cents) : pendingWire ? "Waiting on approval" : null,
         },
         funded: {
-          done: app.funding_status === "settled" || Boolean(settledPayment),
+          done: isReconciledFunding(app.funding_status) || Boolean(settledPayment),
           at: (settledPayment?.confirmed_at as string) ?? null,
           detail: money(app.commitment_cents),
         },

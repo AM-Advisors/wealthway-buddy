@@ -8,6 +8,7 @@ import {
   FORBIDDEN_PREP_KEYS, type FundDocument, type PreparedField, type PreparerCapacity, type SelectedDoc,
   reconcileDocuments, signingModeOf,
 } from "@/lib/investor-prep-model";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 /* ---------- 1–3. Confirm Your Information ---------- */
 
@@ -274,7 +275,7 @@ export type NextAction =
 
 export function nextAction(r: ManagerRowInput): NextAction {
   if (r.draftOnly) return "Send onboarding";
-  if (r.fundingStatus === "funded") return "Complete";
+  if (isReconciledFunding(r.fundingStatus)) return "Complete";
   if (r.invitedOnly) return "Waiting for investor";
   if (r.approvedToFund) return ["bank_transaction_detected", "reconciliation_pending", "partially_funded", "awaiting_wire"].includes(String(r.fundingStatus)) ? "Waiting for funding" : "Approved to fund";
   if (r.needsInvestorInfo) return "Investor needs information";
@@ -295,7 +296,7 @@ export function managerSafeRow(r: ManagerRowInput & { name: string; investingAs:
     verification: r.kycStatus === "approved" && r.amlStatus === "approved" ? "Complete" : coarse(r.kycStatus === "approved" ? r.amlStatus : r.kycStatus),
     accreditation: coarse(r.accreditationStatus),
     documents: r.fullyExecuted ? "Fully executed" : r.investorSigned ? (r.managerSignatureRequired ? "Awaiting Fund Manager" : "Investor signed") : coarse(r.documentsStatus),
-    funding: r.fundingStatus === "funded" ? "Funded" : r.approvedToFund ? "Approved to fund" : "Not yet",
+    funding: isReconciledFunding(r.fundingStatus) ? "Funded" : r.approvedToFund ? "Approved to fund" : "Not yet",
     nextAction: nextAction(r),
   };
 }

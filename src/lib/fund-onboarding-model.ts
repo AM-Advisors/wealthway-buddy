@@ -1,3 +1,4 @@
+import { isReconciledFunding } from "@/lib/funding-status";
 /**
  * Fund-specific onboarding: pure rules for dual signature sequencing, funding
  * projection and fresh-authentication wire reveal. No storage here — every
@@ -126,7 +127,7 @@ export function managerFundingLabel(input: {
   investorReportsSent: boolean;
 }): ManagerFundingLabel {
   const s = String(input.fundingStatus ?? "");
-  if (s === "funded") return "Funded";
+  if (isReconciledFunding(s)) return "Funded";
   if (s === "partially_funded" || s === "overfunded" || s === "exception") return "Reconciliation required";
   if (s === "received" || s === "matched" || s === "pending_reconciliation") return "Payment detected";
   if (!input.approvedToFund || !input.instructionsReleased) return "Not ready";
@@ -168,7 +169,7 @@ export function fundStepState(input: {
   fundingStatus: string | null | undefined;
   investorReportsSent: boolean;
 }): FundStepState {
-  if (String(input.fundingStatus ?? "") === "funded") return "funded";
+  if (isReconciledFunding(input.fundingStatus)) return "funded";
   if (!input.onboardingComplete) return "locked";
   if (!input.fundingUnlocked) return "not_ready";
   if (input.investorReportsSent) return "investor_sent";

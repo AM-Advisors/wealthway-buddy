@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 /** Reviewers are admins (all funds) and fund managers (their assigned funds). */
 async function reviewerScope(supabase: any, userId: string) {
@@ -83,7 +84,7 @@ export const getFundPage = createServerFn({ method: "GET" })
 
     const apps = applications ?? [];
     const settledCents = apps
-      .filter((a: any) => a.funding_status === "settled")
+      .filter((a: any) => isReconciledFunding(a.funding_status))
       .reduce((sum: number, a: any) => sum + Number(a.commitment_cents ?? 0), 0);
     const committedCents = apps.reduce((sum: number, a: any) => sum + Number(a.commitment_cents ?? 0), 0);
 
@@ -103,7 +104,7 @@ export const getFundPage = createServerFn({ method: "GET" })
       },
       stats: {
         applications: apps.length,
-        funded: apps.filter((a: any) => a.funding_status === "settled").length,
+        funded: apps.filter((a: any) => isReconciledFunding(a.funding_status)).length,
         investorsWithAccess: (access ?? []).length,
         managers: (managers ?? []).length,
         committedCents,

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { FundOperations } from "@/components/fund-operations";
 import { InvestorReviewBoard } from "@/components/investor-review-board";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 
 
@@ -47,7 +48,7 @@ const STAGES = [
 type Stage = (typeof STAGES)[number]["key"];
 
 function stageOf(app: any): Exclude<Stage, "all"> {
-  if (app.funding_status === "settled") return "complete";
+  if (isReconciledFunding(app.funding_status)) return "complete";
   if (app.kyc_status !== "approved" || app.aml_status !== "approved") return "identity";
   if (app.accreditation_status !== "approved") return "accreditation";
   if (app.documents_status !== "approved") return "documents";
