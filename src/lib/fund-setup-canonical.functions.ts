@@ -288,3 +288,31 @@ export const changeInvestmentClassFn = createServerFn({ method: "POST" })
 export const pendingWireVerificationsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await p3()).pendingWireVerifications(context.supabase, context.userId));
+
+const signatories = () => import("@/lib/fund-signatories.server");
+const opt = z.string().max(200).nullish();
+
+export const listFundSignatoriesFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .handler(async ({ data, context }) => (await signatories()).listFundSignatories(context.userId, data.offeringId));
+
+export const addFundSignatoryFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      offeringId: uuid,
+      candidateKey: z.string().max(80).nullish(),
+      newPerson: z.object({ fullName: z.string().trim().min(2).max(160), email: z.string().trim().email().max(254).nullish().or(z.literal("")), title: opt }).nullish(),
+      title: opt,
+      capacity: opt,
+      makePrimary: z.boolean().optional(),
+      confirmSeparate: z.boolean().optional(),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => (await signatories()).addFundSignatory(context.userId, data));
+
+export const updateFundSignatoryFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, id: uuid, title: opt, capacity: opt, makePrimary: z.boolean().optional(), remove: z.boolean().optional() }).parse)
+  .handler(async ({ data, context }) => (await signatories()).updateFundSignatory(context.userId, data));
