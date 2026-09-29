@@ -5,7 +5,7 @@ import { FundSetupCanonical } from "@/components/fund-setup-canonical";
 import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
 import { OperationsBanking, OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
-import { FundSetupChecklist } from "@/components/fund-setup-checklist";
+import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
   head: () => ({ meta: [
@@ -34,7 +34,9 @@ function FundSetupDetail() {
         {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
           <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Launch: {d.launchState ?? "Not ready"}</p>
           <p className="text-sm text-muted-foreground">{d.tasks.filter((t) => t.status !== "complete").length} setup tasks and {d.conditions.filter((c) => !c.satisfied).length} launch conditions still to complete. {d.approvalCount} launch approvals recorded.</p>
-          <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={d.canUseCanonical} onChanged={() => q.refetch()} />
+          {d.canUseCanonical
+            ? <p className="text-sm text-muted-foreground">Each required item is listed inside its Fund Setup section below.</p>
+            : <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={false} onChanged={() => q.refetch()} />}
         </>}
       </section>
       {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="Banking, EIN and tax">
@@ -45,7 +47,11 @@ function FundSetupDetail() {
         <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
         <OperationsTaxDocuments fundId={fundId} />
       </section>}
-      {d.canUseCanonical && <FundSetupCanonical offeringId={fundId} />}
+      {d.canUseCanonical && (
+        <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, onChanged: () => q.refetch() }}>
+          <FundSetupCanonical offeringId={fundId} />
+        </SetupRequirementsProvider>
+      )}
     </> : <p>Fund details are available to the Operations team.</p>}
   </main>;
 }
