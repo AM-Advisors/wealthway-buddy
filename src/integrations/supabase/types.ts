@@ -15229,6 +15229,62 @@ export type Database = {
           },
         ]
       }
+      fund_regulatory_filings: {
+        Row: {
+          accession_number: string | null
+          created_at: string
+          efd_id: string | null
+          filing_date: string | null
+          filing_kind: string
+          filing_type: string
+          id: string
+          notes: string | null
+          offering_id: string
+          recorded_by: string
+          removed_at: string | null
+          removed_by: string | null
+          state: string | null
+        }
+        Insert: {
+          accession_number?: string | null
+          created_at?: string
+          efd_id?: string | null
+          filing_date?: string | null
+          filing_kind?: string
+          filing_type: string
+          id?: string
+          notes?: string | null
+          offering_id: string
+          recorded_by: string
+          removed_at?: string | null
+          removed_by?: string | null
+          state?: string | null
+        }
+        Update: {
+          accession_number?: string | null
+          created_at?: string
+          efd_id?: string | null
+          filing_date?: string | null
+          filing_kind?: string
+          filing_type?: string
+          id?: string
+          notes?: string | null
+          offering_id?: string
+          recorded_by?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_regulatory_filings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_reporting_policies: {
         Row: {
           administrator_attribution: string
@@ -15694,6 +15750,7 @@ export type Database = {
           regulatory_structure: string | null
           series_designation: string | null
           series_parent_id: string | null
+          service_providers: Json
           stage: string
           structure: string
           structure_other: string | null
@@ -15732,6 +15789,7 @@ export type Database = {
           regulatory_structure?: string | null
           series_designation?: string | null
           series_parent_id?: string | null
+          service_providers?: Json
           stage?: string
           structure?: string
           structure_other?: string | null
@@ -15770,6 +15828,7 @@ export type Database = {
           regulatory_structure?: string | null
           series_designation?: string | null
           series_parent_id?: string | null
+          service_providers?: Json
           stage?: string
           structure?: string
           structure_other?: string | null
