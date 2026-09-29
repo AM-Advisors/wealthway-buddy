@@ -75,7 +75,7 @@ export async function listSendableDocuments(userId: string, offeringId: string) 
   };
 }
 
-export async function sendDocumentsToInvestors(userId: string, input: { offeringId: string; documentIds: string[]; onboardingIds: string[]; note?: string | null }) {
+export async function sendDocumentsToInvestors(userId: string, input: { offeringId: string; documentIds: string[]; onboardingIds: string[]; note?: string | null | undefined }) {
   await assertManager(userId, input.offeringId);
   if (!input.documentIds.length || !input.onboardingIds.length) throw new Error("Choose at least one document and one investor.");
   const docs = (await activeDocs(input.offeringId)).filter((d) => input.documentIds.includes(d.id));
@@ -86,7 +86,7 @@ export async function sendDocumentsToInvestors(userId: string, input: { offering
   const { data: sender } = await db().from("profiles").select("full_name").eq("id", userId).maybeSingle();
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
 
-  const results: { onboardingId: string; name: string; documents: number; emailed: boolean; skipped?: string }[] = [];
+  const results: { onboardingId: string; name: string; documents: number; emailed: boolean; skipped?: string | undefined }[] = [];
   for (const inv of roster) {
     const mine = docs.filter((d) => documentApplies(d.applicability, inv));
     const name = inv.name ?? inv.email ?? "Investor";
