@@ -20,9 +20,10 @@ export function FundAddMenu({ fundId }: { fundId: string }) {
       <DropdownMenuTrigger asChild><Button size="sm"><Plus className="mr-1 h-4 w-4" aria-hidden />Add</Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {data.isStaff ? inv("existing", "Add Existing Investor") : null}
-        {inv("invite", "Invite New Investor")}
+        {inv("create", "Create New Investor")}
+        {inv("invite", "Invite Investor")}
         {inv("prep", "Prepare Investor")}
-        {inv("bulk", "Add Multiple Investors")}
+        {inv("records", "Bulk Add Investors")}
         <DropdownMenuSeparator />
         {data.isStaff ? <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/assets" params={{ fundId }} search={{ add: "asset" } as never}>Add Asset / Investment</Link></DropdownMenuItem> : null}
         <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/settings" params={{ fundId }}>Add Fund Team Member</Link></DropdownMenuItem>
