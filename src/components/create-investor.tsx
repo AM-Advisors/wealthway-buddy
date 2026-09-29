@@ -35,7 +35,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
 
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) || null : null);
   const runSearch = async () => {
-    if (!f['email'] && !f['lastName'] && !f['entityName']) return toast.error("Enter an email, name, or entity name to search.");
+    if (!f['email'] && !f['lastName'] && !f['entityName']) return void toast.error("Enter an email, name, or entity name to search.");
     try {
       const r = await search({ data: { offeringId: fundId, email: f['email'] || null, name: `${f['firstName'] ?? ""} ${f['lastName'] ?? ""}`.trim() || null, entityName: f['entityName'] || null } });
       setMatches(r.matches); setChosen(null); setConfirmedNew(false);
@@ -46,8 +46,8 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
     const amountCents = cents(f['amount']) ?? 0;
     if (!chosen) {
       const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: f['email'], profileType: f['profileType'], amountCents });
-      if (errs.length) return toast.error(errs[0]);
-    } else if (!(amountCents > 0)) return toast.error("Enter the investment amount.");
+      if (errs.length) return void toast.error(errs[0]);
+    } else if (!(amountCents > 0)) return void toast.error("Enter the investment amount.");
     setBusy(true);
     try {
       const details: Record<string, string> = {};

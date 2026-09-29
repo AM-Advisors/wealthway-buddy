@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
-type Preview = Awaited<ReturnType<typeof bulkPreviewFn>>;
+type Preview = { importId: string; summary: Record<BulkClass, number>; rows: { index: number; cls: string; errors: string[]; name: string; email: string; amount: string; conflicts: { field: string; current: unknown; proposed: unknown }[] }[] };
 const tone: Record<BulkClass, "default" | "secondary" | "outline" | "destructive"> = { create_new: "default", match_existing: "secondary", already_in_fund: "outline", needs_review: "outline", invalid: "destructive" };
 
 /** Nothing is written until the preview is confirmed. Conflicts never overwrite silently. */
@@ -24,7 +24,7 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
   const [busy, setBusy] = useState(false);
 
   const onFile = async (file?: File) => { if (file) setCsv(await file.text()); };
-  const run = async () => { setBusy(true); try { setP(await preview({ data: { offeringId: fundId, csv } })); setDecisions({}); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
+  const run = async () => { setBusy(true); try { setP((await preview({ data: { offeringId: fundId, csv } })) as Preview); setDecisions({}); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   const confirm = async () => {
     if (!p) return; setBusy(true);
     try {

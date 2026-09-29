@@ -125,7 +125,7 @@ export function createNewBlocker(matches: SafeMatch[], confirmedNew: boolean): s
 /* ---------------- quick add ---------------- */
 
 export type QuickAdd = { firstName: string; lastName: string; email: string; profileType: string; amountCents: number };
-export function validateQuickAdd(q: Partial<QuickAdd>): string[] {
+export function validateQuickAdd(q: { [K in keyof QuickAdd]?: QuickAdd[K] | undefined }): string[] {
   const e: string[] = [];
   if (!String(q.firstName ?? "").trim() || !String(q.lastName ?? "").trim()) e.push("Enter the investor's first and last name.");
   if (!isEmail(String(q.email ?? ""))) e.push("Enter a valid email address.");
