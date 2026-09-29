@@ -114,18 +114,18 @@ export const getStaffFundSetup = createServerFn({ method: "POST" })
     const canSeeOperations = can(capabilitiesFor(roles), "funds", "see");
     const [{ data: formation }, { data: tasks }, { data: conditions }, { count: approvalCount }] = setup && canSeeOperations ? await Promise.all([
       db.from("fund_entity_formation").select("step,formation_document_id,certificate_document_id,ein_letter_document_id").eq("setup_id", setup.id).maybeSingle(),
-      db.from("fund_setup_tasks").select("id,label,status,blocking").eq("setup_id", setup.id).order("sort_order"),
-      db.from("fund_launch_conditions").select("id,label,required,satisfied").eq("setup_id", setup.id).order("sort_order"),
+      db.from("fund_setup_tasks").select("id,task_key,label,status,blocking").eq("setup_id", setup.id).order("sort_order"),
+      db.from("fund_launch_conditions").select("id,condition_key,label,required,satisfied").eq("setup_id", setup.id).order("sort_order"),
       db.from("fund_launch_approvals").select("id", { count: "exact", head: true }).eq("setup_id", setup.id),
     ]) : [{ data: null }, { data: [] }, { data: [] }, { count: 0 }];
     return {
       name: fund.name, fundType: fund.fund_type, clientName: client?.name ?? null,
       retired: Boolean(fund.consolidated_into), formationStep: formation?.step ?? null,
       launchState: canSeeOperations ? setup?.launch_state ?? null : null, setupStage: canSeeOperations ? setup?.stage ?? null : null,
-      hasSetup: Boolean(setup), approvalCount: approvalCount ?? 0,
+      hasSetup: Boolean(setup), setupId: (setup?.id ?? null) as string | null, approvalCount: approvalCount ?? 0,
       evidence: { formation: Boolean(formation?.formation_document_id), certificate: Boolean(formation?.certificate_document_id), einLetter: Boolean(formation?.ein_letter_document_id) },
-      tasks: (tasks ?? []).filter((t) => t.blocking).map((t) => ({ id: t.id, label: t.label, status: t.status })),
-      conditions: (conditions ?? []).filter((c) => c.required).map((c) => ({ id: c.id, label: c.label, satisfied: c.satisfied })),
+      tasks: (tasks ?? []).filter((t) => t.blocking).map((t) => ({ id: t.id, key: t.task_key as string, label: t.label, status: t.status as string })),
+      conditions: (conditions ?? []).filter((c) => c.required).map((c) => ({ id: c.id, key: c.condition_key as string, label: c.label, satisfied: c.satisfied })),
       canSeeOperations, canUseCanonical: roles.includes("admin"),
       canUseOperations: can(capabilitiesFor(roles), "funds", "prepare"),
     };
