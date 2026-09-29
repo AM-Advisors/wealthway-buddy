@@ -21769,6 +21769,67 @@ export type Database = {
           },
         ]
       }
+      offering_document_sends: {
+        Row: {
+          email_sent: boolean
+          id: string
+          note: string | null
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          recipient_email: string | null
+          sent_at: string
+          sent_by: string
+          version: number
+        }
+        Insert: {
+          email_sent?: boolean
+          id?: string
+          note?: string | null
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          recipient_email?: string | null
+          sent_at?: string
+          sent_by: string
+          version: number
+        }
+        Update: {
+          email_sent?: boolean
+          id?: string
+          note?: string | null
+          offering_document_id?: string
+          offering_id?: string
+          onboarding_id?: string
+          recipient_email?: string | null
+          sent_at?: string
+          sent_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_document_sends_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_sends_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_sends_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_document_signature_blocks: {
         Row: {
           block_type: string
