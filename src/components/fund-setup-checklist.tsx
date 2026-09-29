@@ -1,4 +1,5 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
+import { decideLaunchFn } from "@/lib/fund-setup.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
@@ -129,6 +130,8 @@ export function FundSetupChecklist({
 type Req = {
   tasks: Task[]; conditions: Condition[]; evidence: { formation: boolean; certificate: boolean; einLetter: boolean };
   canEdit: boolean; approvalCount: number; onChanged: () => void;
+  setupId?: string | null; isPreparer?: boolean;
+  approvals?: { id: string; decision: string; reason: string | null; decidedAt: string; decidedBy: string; unmet: number }[];
 };
 const ReqCtx = createContext<Req | null>(null);
 export const SetupRequirementsProvider = ReqCtx.Provider;
@@ -182,19 +185,66 @@ export function RequiredHere({ section }: { section: string }) {
 /** Final launch readiness: overall task count and second-person approval. */
 export function LaunchRequirements() {
   const r = useContext(ReqCtx);
+  const decide = useServerFn(decideLaunchFn);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
   if (!r) return null;
   const open = r.tasks.filter((t) => t.status !== "complete").length;
   const unplaced = r.tasks.filter((t) => !SECTION[t.key]);
   const conds = r.conditions.filter((c) => !SECTION[c.key]);
+  const approval = r.conditions.find((c) => c.key === "harmonious_approval");
+  const othersMet = r.conditions.every((c) => c.key === "harmonious_approval" || c.satisfied) && open === 0;
   const icon = (done: boolean) => done ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> : <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />;
+  const run = async (decision: "approved" | "declined") => {
+    if (!r.setupId) return;
+    setBusy(true);
+    try {
+      await decide({ data: { setupId: r.setupId, decision, reason: reason.trim() || undefined } });
+      toast.success(decision === "approved" ? "Launch approved" : "Launch declined");
+      setReason(""); r.onChanged();
+    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+  };
   return (
-    <div className="rounded-lg border p-4">
+    <div id="setup-launch" className="scroll-mt-6 rounded-lg border p-4">
       <p className="font-medium">Launch</p>
-      <p className="text-xs text-muted-foreground">{open} setup task{open === 1 ? "" : "s"} left across all sections · {r.approvalCount} launch approval{r.approvalCount === 1 ? "" : "s"} recorded</p>
+      <p className="text-xs text-muted-foreground">{open} setup task{open === 1 ? "" : "s"} left across all sections · {r.approvalCount} launch decision{r.approvalCount === 1 ? "" : "s"} recorded</p>
       <ul className="mt-2 space-y-1.5 text-sm">
         {conds.map((c) => <li key={c.id} className="flex items-start gap-2">{icon(c.satisfied)}<div><p>{c.label}</p>{!c.satisfied && c.key === "harmonious_approval" && <p className="text-xs text-muted-foreground">Second-person approval once everything else is complete.</p>}</div></li>)}
         {unplaced.map((t) => <li key={t.id} className="flex items-start gap-2">{icon(t.status === "complete")}{t.label}</li>)}
       </ul>
+      {approval && !approval.satisfied && r.canEdit && r.setupId && (
+        <div className="mt-3 space-y-2 border-t pt-3">
+          {!othersMet ? (
+            <p className="text-sm text-muted-foreground">Approval opens once every other setup task and launch condition is complete.</p>
+          ) : r.isPreparer ? (
+            <p className="text-sm text-muted-foreground">You helped prepare this Fund's setup, so a different Harmonious team member needs to approve the launch.</p>
+          ) : (
+            <>
+              <label className="block text-sm font-medium" htmlFor="launch-reason">Note (required to decline)</label>
+              <textarea id="launch-reason" className="w-full rounded-md border bg-background p-2 text-sm" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
+              <div className="flex gap-2">
+                <Button size="sm" disabled={busy} onClick={() => run("approved")}>Approve launch</Button>
+                <Button size="sm" variant="outline" disabled={busy || !reason.trim()} onClick={() => run("declined")}>Decline</Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      {!!r.approvals?.length && (
+        <div className="mt-3 border-t pt-3">
+          <p className="text-sm font-medium">Approval record</p>
+          <ul className="mt-1 space-y-1 text-sm">
+            {r.approvals.map((a) => (
+              <li key={a.id}>
+                <span className="font-medium">{a.decision === "approved" ? "Approved" : "Declined"}</span> by {a.decidedBy} on {new Date(a.decidedAt).toLocaleString()}
+                {a.reason && <span className="text-muted-foreground"> — {a.reason}</span>}
+                {a.unmet > 0 && <span className="text-xs text-muted-foreground"> ({a.unmet} conditions open at the time)</span>}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1 text-xs text-muted-foreground">Decisions are permanent and cannot be edited.</p>
+        </div>
+      )}
     </div>
   );
 }
