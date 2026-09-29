@@ -249,7 +249,7 @@ export async function updateInvestorRecord(userId: string, input: {
     const apply: Record<string, unknown> = {};
     for (const [f, v] of Object.entries(patch)) {
       if (!PERSON_FIELDS.includes(f) || sameValue(cur?.[f], v)) continue;
-      const investorOwned = Boolean(cur?.user_id) && cur?.entry_source === "investor";
+      const investorOwned = Boolean(cur?.user_id) && (cur?.entry_source === "investor" || Boolean(row.investor_confirmed_at));
       const materialField = isMaterial(f) || ADDRESS_FIELDS.has(f) || f === "email";
       if (!actor.isStaff && investorOwned && materialField) {
         await db().from("investor_record_suggestions").insert({ offering_id: row.offering_id, onboarding_id: row.id, subject_table: "persons", subject_id: row.person_id, field: f, current_value: cur?.[f] ?? null, proposed_value: v, source, proposed_by: actor.userId });
