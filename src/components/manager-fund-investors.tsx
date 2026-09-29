@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -65,6 +66,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   const [panel, setPanel] = useState<Panel>(initial ? PANEL_FROM_SEARCH[initial] ?? null : null);
   const toggle = (p: Panel) => setPanel(panel === p ? null : p);
   const [search, setSearch] = useState("");
+  const drill = useRouterState({ select: (st) => ({ stage: (st.location.search as any)?.stage as string | undefined, bucket: (st.location.search as any)?.bucket as string | undefined }) });
   const isStaff = Boolean(records.data?.isStaff ?? actions.data?.isStaff);
 
   const refresh = () => ["fund-investor-records", "fund-readiness", "fund-investor-progress", "fund-investor-actions", "manager-fund-home"].forEach((k) => qc.invalidateQueries({ queryKey: [k, fundId] }));
@@ -89,7 +91,14 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   const summary = fundInvestorsSummary(items.map((i) => i.onboardingId), readinessRows, pendingOnboard.length + pendingAccess.length);
 
   const term = search.trim().toLowerCase();
-  const shown = items.filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
+  const drillMatch = (onboardingId: string) => {
+    if (!drill.stage && !drill.bucket) return true;
+    const rr = readinessById.get(onboardingId);
+    if (!rr) return false;
+    const fact = { onboardingId, offeringId: fundId, fundingStatus: null, intendedCents: null, readiness: rr.readiness };
+    return (!drill.stage || funnelStageOf(fact) === drill.stage) && (!drill.bucket || managerBucketOf(fact) === drill.bucket);
+  };
+  const shown = items.filter((r) => drillMatch(r.onboardingId)).filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
   const shownLegacy = legacy.filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
 
   if (records.isLoading) return <p className="text-sm text-muted-foreground">Loading investors…</p>;

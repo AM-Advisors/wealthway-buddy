@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ManagerFundHome } from "@/components/manager-fund-home";
+import { ManagerFundDashboard } from "@/components/manager-fund-dashboard";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
   head: () => ({ meta: [
@@ -13,4 +14,7 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
   component: Overview,
 });
 
-function Overview() { return <ManagerFundHome offeringId={Route.useParams().fundId} embedded />; }
+function Overview() {
+  const { fundId } = Route.useParams();
+  return <div className="space-y-6"><ManagerFundDashboard fundId={fundId} /><ManagerFundHome offeringId={fundId} embedded /></div>;
+}
