@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { REG_TYPES, type RegTypeValue } from "@/lib/reg-types";
 
-export const Route = createFileRoute("/_authenticated/ops/fund-setup")({
+export const Route = createFileRoute("/_authenticated/ops/fund-setup/")({
   head: () => ({ meta: [
     { title: "Fund Setup — Harmonious" },
     { name: "description", content: "Harmonious Fund and SPV setup register." },
