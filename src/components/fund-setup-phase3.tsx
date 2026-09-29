@@ -228,7 +228,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
 
 // ------------------------------------------------------------------ EIN
 
-const SS4_QUESTIONS: { key: string; label: string; when?: (a: Record<string, any>) => boolean }[] = [
+const SS4_QUESTIONS: { key: string; label: string; when?: (a: any) => boolean }[] = [
   { key: "responsible_party_name", label: "Responsible party (name)" },
   { key: "mailing_street", label: "Mailing address, if different" },
   { key: "mailing_city_state_zip", label: "Mailing city, state, ZIP" },
@@ -253,7 +253,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
   const e = d.ein;
   const [ein, setEin] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [answers, setAnswers] = useState<Record<string, any>>(e.ss4Answers);
+  const [answers, setAnswers] = useState<any>(e.ss4Answers);
   const [tin, setTin] = useState("");
   const submitEin = (received: boolean) =>
     run(async () => {
