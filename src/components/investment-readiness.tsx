@@ -341,7 +341,7 @@ export function QueueAge({ days }: { days: number }) {
 }
 
 /** Operations → readiness queue: an inbox of open work items, oldest first. */
-export function ReadinessQueue({ initialTab }: { initialTab?: QTab } = {}) {
+export function ReadinessQueue({ initialTab }: { initialTab?: QTab | undefined } = {}) {
   const load = useServerFn(readinessQueueFn);
   const q = useQuery({ queryKey: ["readiness-queue"], queryFn: () => load(), retry: false });
   const [tab, setTab] = useState<QTab>(initialTab ?? "harmonious");

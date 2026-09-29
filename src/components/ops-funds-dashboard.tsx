@@ -42,7 +42,7 @@ function RowActions({ f }: { f: any }) {
 }
 
 /** Operations → Funds: which funds need attention, and what's next. */
-export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilter } = {}) {
+export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilter | undefined } = {}) {
   const load = useServerFn(opsFundsDashboardFn);
   const q = useQuery({ queryKey: ["ops-funds-dashboard"], queryFn: () => load(), retry: false });
   const [filter, setFilter] = useState<FundFilter>(initialFilter ?? "all");
