@@ -416,3 +416,19 @@ export async function classAssignments(userId: string, offeringId: string) {
     investments: ((rows ?? []) as any[]).map((r) => ({ id: r.id, investor: name.get(r.person_id) || "Investor", classKey: r.offering_class_key as string | null, stage: r.stage as string })),
   };
 }
+
+/** Harmonious-only: funds whose current wire instructions await second-person verification. */
+export async function pendingWireVerifications(sb: any, userId: string) {
+  const { data: staff } = await sb.rpc("is_any_staff", { _user_id: userId });
+  if (!staff) forbid("only Harmonious can review wire instructions.");
+  const { data: offerings } = await db().from("offerings").select("id, name").order("name");
+  const out: { offeringId: string; fundName: string; version: number; hasDocument: boolean; ownershipReview: string | null }[] = [];
+  for (const o of (offerings ?? []) as any[]) {
+    const versions = await bankVersions(sb, o.id).catch(() => []);
+    const cur = versions[0];
+    if (cur && cur.status === "pending_verification") {
+      out.push({ offeringId: o.id, fundName: o.name, version: cur.version, hasDocument: cur.hasWireDocument, ownershipReview: cur.ownershipReview ?? null });
+    }
+  }
+  return out;
+}

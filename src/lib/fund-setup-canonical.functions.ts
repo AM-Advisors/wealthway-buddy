@@ -284,3 +284,7 @@ export const changeInvestmentClassFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: uuid, classKey: z.string().max(60).nullable(), acknowledged: z.boolean() }).parse)
   .handler(async ({ data, context }) => (await p3()).changeInvestmentClass(context.userId, data));
+
+export const pendingWireVerificationsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await p3()).pendingWireVerifications(context.supabase, context.userId));

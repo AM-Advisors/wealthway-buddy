@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { OperationsBanking } from "@/components/operations-board";
+import { PendingWireVerifications } from "@/components/pending-wire-verifications";
 
 export const Route = createFileRoute("/_authenticated/ops/banking")({
 
@@ -34,6 +35,7 @@ function BankingPage() {
         >
           Distributions and payments →
         </Link>
+        <div className="mt-4"><PendingWireVerifications /></div>
       </div>
       <OperationsBanking />
     </div>
