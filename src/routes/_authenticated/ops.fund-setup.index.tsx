@@ -57,7 +57,7 @@ function FundSetupRegister() {
     {q.isPending ? <p>Loading funds…</p> : q.isError ? <p role="alert">{(q.error as Error).message}</p> : rows.length === 0 ? <p>No funds or SPVs match.</p> :
       <div className="divide-y border-y">{rows.map((f) => <div key={f.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
         <div className="min-w-0"><p className="font-medium">{f.name} {f.retired && <span className="text-muted-foreground">· Retired</span>}</p>
-          <p className="text-sm text-muted-foreground">{f.clientName ?? "Client not assigned"} · {f.fundType ?? "Fund"} · {f.id.slice(0, 8)}</p></div>
+          <p className="text-sm text-muted-foreground">{f.clientName ?? "Client not assigned"} · {f.fundType ?? "Fund"} · {f.id.slice(0, 8)}{f.setupStage ? ` · Setup: ${f.setupStage.replaceAll("_", " ")} · Launch: ${(f.launchState ?? "not ready").replaceAll("_", " ")}` : ""}</p></div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild><Link to="/ops/fund-setup/$fundId" params={{ fundId: f.id }}>Open Setup</Link></Button>
           {q.data.canPrepare && !f.retired && <Button variant="ghost" size="sm" onClick={() => { setEditing(f.id); setSummary(f.summary ?? ""); }}>Edit summary</Button>}

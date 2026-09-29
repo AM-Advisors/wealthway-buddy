@@ -27,7 +27,6 @@ function FundSetupDetail() {
     <Button variant="ghost" size="sm" asChild><Link to="/ops/fund-setup">← Funds &amp; SPVs</Link></Button>
     <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>
     {d.retired ? <p>This Fund is retired. Its setup cannot be changed.</p> : d.canSeeOperations ? <>
-      {d.canUseCanonical && <FundSetupCanonical offeringId={fundId} />}
       <section className="space-y-3 border-t pt-6" aria-label="Entity formation and launch">
         <h2 className="font-heading text-xl font-semibold">Entity formation &amp; launch</h2>
         {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
@@ -42,6 +41,7 @@ function FundSetupDetail() {
         </>}
         {d.canUseOperations && <Button variant="outline" asChild><Link to="/ops/funds/$fundId" params={{ fundId }}>Fund workspace</Link></Button>}
       </section>
+      {d.canUseCanonical && <FundSetupCanonical offeringId={fundId} />}
     </> : <p>Fund details are available to the Operations team.</p>}
   </main>;
 }

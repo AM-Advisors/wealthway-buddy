@@ -26,16 +26,20 @@ export const listStaffFunds = createServerFn({ method: "GET" })
     const { roles } = await staff(context);
     const canPrepare = can(capabilitiesFor(roles), "funds", "prepare");
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
-    const [{ data: funds, error }, { data: clients, error: clientError }] = await Promise.all([
+    const canSeeOperations = can(capabilitiesFor(roles), "funds", "see");
+    const [{ data: funds, error }, { data: clients, error: clientError }, { data: setups, error: setupError }] = await Promise.all([
       db.from("offerings").select("id,name,summary,fund_type,client_id,consolidated_into,created_at").order("name").limit(5000),
       db.from("clients").select("id,name").limit(5000),
+      canSeeOperations ? db.from("fund_setups").select("offering_id,stage,launch_state").limit(5000) : Promise.resolve({ data: [], error: null }),
     ]);
-    if (error || clientError) throw new Error("Unable to load funds.");
+    if (error || clientError || setupError) throw new Error("Unable to load funds.");
     const names = new Map((clients ?? []).map((c) => [c.id, c.name]));
+    const setupByFund = new Map((setups ?? []).map((s) => [s.offering_id, s]));
     return { canPrepare, rows: (funds ?? []).map((f) => ({
       id: f.id, name: f.name, summary: f.summary, fundType: f.fund_type, clientId: f.client_id,
       clientName: f.client_id ? names.get(f.client_id) ?? null : null,
-      retired: !!f.consolidated_into,
+      retired: !!f.consolidated_into, setupStage: setupByFund.get(f.id)?.stage ?? null,
+      launchState: setupByFund.get(f.id)?.launch_state ?? null,
       createdAt: f.created_at,
     })) };
   });
