@@ -90,6 +90,7 @@ export function FundSetupPhase3({ offeringId, onChanged }: { offeringId: string;
       <EntityEinCard d={d} offeringId={offeringId} onChanged={refresh} />
       <BankingCard d={d} offeringId={offeringId} onChanged={refresh} />
       <AdminCard d={d} offeringId={offeringId} onChanged={refresh} />
+      <RegulatoryFilingsCard offeringId={offeringId} />
       {d.canEdit && <ClassAssignmentCard offeringId={offeringId} />}
       <ReviewCard d={d} />
     </div>
