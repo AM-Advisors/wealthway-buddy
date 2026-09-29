@@ -162,8 +162,11 @@ describe("claim & confirmation", () => {
     await s.createInvestor(MGR_A, jane());
     tables["persons"]!.push({ id: "own", user_id: JANE, email: "jane@example.com" });
     authUsers[JANE] = { email: "jane@example.com", email_confirmed_at: "2026-01-01" };
-    expect(await s.claimPreparedRecords(JANE)).toEqual({ claimed: false, review: true });
+    const res = await s.claimPreparedRecords(JANE);
+    expect(res).toMatchObject({ claimed: false, review: true, reviewOfferingIds: [FUND_A] });
     expect(tables["investor_record_suggestions"]![0]!.field).toBe("account_link");
+    // No duplicate: starting again in the same Fund must wait for Harmonious, not create a new investment.
+    expect(tables["persons"]!.filter((p: any) => p.user_id === JANE)).toHaveLength(1);
   });
   it("investor confirms and corrects only permitted fields; provenance retained", async () => {
     const s = await srv();
@@ -413,7 +416,7 @@ describe("roster presentation", () => {
       { onboardingId: "c", closeReady: false, readiness: { items: [] } },
       { onboardingId: "other-fund", closeReady: true, readiness: { items: [] } },
     ];
-    expect(fundInvestorsSummary(["a", "b", "c"], rd, 2)).toEqual({ total: 3, invited: 2, onboarding: 2, needsAttention: 1, ready: 1, funded: 1 });
+    expect(fundInvestorsSummary(["a", "b", "c"], rd, 2)).toMatchObject({ total: 3, invited: 2, onboarding: 2, needsAttention: 1, ready: 1, funded: 1 });
     expect(rosterReadiness(undefined)).toBe("unknown");
     expect(rosterReadiness(rd[1])).toBe("needs_attention");
   });
