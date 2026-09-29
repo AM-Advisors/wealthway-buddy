@@ -4467,6 +4467,7 @@ export type Database = {
           full_name: string
           id: string
           notes: string | null
+          person_id: string | null
           phone: string | null
           status: string
           title: string | null
@@ -4484,6 +4485,7 @@ export type Database = {
           full_name: string
           id?: string
           notes?: string | null
+          person_id?: string | null
           phone?: string | null
           status?: string
           title?: string | null
@@ -4501,6 +4503,7 @@ export type Database = {
           full_name?: string
           id?: string
           notes?: string | null
+          person_id?: string | null
           phone?: string | null
           status?: string
           title?: string | null
@@ -4513,6 +4516,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contacts_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -15795,6 +15805,73 @@ export type Database = {
             columns: ["series_parent_id"]
             isOneToOne: false
             referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_signatories: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          capacity: string | null
+          client_contact_id: string | null
+          id: string
+          is_primary: boolean
+          offering_id: string
+          person_id: string
+          removed_at: string | null
+          removed_by: string | null
+          status: string
+          title: string | null
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          capacity?: string | null
+          client_contact_id?: string | null
+          id?: string
+          is_primary?: boolean
+          offering_id: string
+          person_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string
+          title?: string | null
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          capacity?: string | null
+          client_contact_id?: string | null
+          id?: string
+          is_primary?: boolean
+          offering_id?: string
+          person_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_signatories_client_contact_id_fkey"
+            columns: ["client_contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_signatories_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_signatories_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]

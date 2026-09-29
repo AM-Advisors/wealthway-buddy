@@ -575,6 +575,13 @@
       "when": 1790718632786,
       "tag": "0081_repair_invoice_reminder_cron_http_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1790721390209,
+      "tag": "0082_fund_signatories",
+      "breakpoints": true
     }
   ]
 }
