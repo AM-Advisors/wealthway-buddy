@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
 import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
-import { OperationsBanking, OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
+import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
