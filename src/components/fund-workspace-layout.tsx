@@ -22,18 +22,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const sections = [
-  { slug: "", label: "Overview", icon: Building2 },
-  { slug: "investors", label: "Investors", icon: Users },
-  { slug: "readiness", label: "Readiness", icon: ListChecks },
-  { slug: "assets", label: "Investments", icon: Activity },
-  { slug: "transactions", label: "Capital", icon: WalletCards },
-  { slug: "documents", label: "Documents", icon: FileText },
-  { slug: "compliance", label: "Compliance", icon: ShieldCheck },
-  { slug: "team", label: "Team", icon: UserCog },
-  { slug: "onboarding-link", label: "Onboarding Link", icon: Link2 },
-  { slug: "settings", label: "Fund Settings", icon: Settings },
+const groups = [
+  { label: "Fund", items: [
+    { slug: "", label: "Overview", icon: Building2 },
+    { slug: "settings", label: "Setup & Settings", icon: Settings },
+    { slug: "team", label: "Team", icon: UserCog },
+  ] },
+  { label: "Investors", items: [
+    { slug: "investors", label: "Investors", icon: Users },
+    { slug: "readiness", label: "Readiness", icon: ListChecks },
+    { slug: "onboarding-link", label: "Onboarding Link", icon: Link2 },
+  ] },
+  { label: "Operations", items: [
+    { slug: "assets", label: "Investments", icon: Activity },
+    { slug: "transactions", label: "Capital", icon: WalletCards },
+    { slug: "documents", label: "Documents", icon: FileText },
+    { slug: "compliance", label: "Compliance", icon: ShieldCheck },
+  ] },
 ] as const;
+const label = (v: string | null) => (v ? v.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()) : "Not started");
 
 export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -59,8 +66,8 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
     );
   }
 
-  const { fund, progress } = query.data;
-  const percent = Math.round((progress.done / progress.total) * 100);
+  const { fund, progress, setupStatus } = query.data;
+  const percent = setupStatus?.percent ?? Math.round((progress.done / progress.total) * 100);
 
   return (
     <main className="min-w-0 bg-background">
@@ -81,43 +88,48 @@ export function FundWorkspaceLayout({ fundId }: { fundId: string }) {
               </p>
             </div>
             <FundAddMenu fundId={fundId} />
-            <div className="min-w-40">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Setup readiness</span>
-                <span className="font-medium">{percent}%</span>
+            <div className="grid min-w-64 grid-cols-2 gap-3 rounded-lg border bg-background p-3">
+              <div className="col-span-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Fund setup</span>
+                  <span className="font-medium">{percent}%</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+                </div>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
-              </div>
+              <div><p className="text-[11px] uppercase tracking-wide text-muted-foreground">Stage</p><p className="text-sm">{label(setupStatus?.stage ?? null)}</p></div>
+              <div><p className="text-[11px] uppercase tracking-wide text-muted-foreground">Launch</p><p className="text-sm">{label(setupStatus?.launchState ?? null)}</p></div>
             </div>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 sm:px-6" aria-label="Fund sections">
-          {sections.map((section) => {
-            const to = section.slug
-              ? `/manager/fund/$fundId/${section.slug}`
-              : "/manager/fund/$fundId";
-            const href = section.slug
-              ? `/manager/fund/${fundId}/${section.slug}`
-              : `/manager/fund/${fundId}`;
-            const active = section.slug ? pathname === href : pathname === href || pathname === `${href}/`;
-            return (
-              <Link
-                key={section.label}
-                to={to as never}
-                params={{ fundId } as never}
-                className={cn(
-                  "flex h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm transition-colors",
-                  active
-                    ? "border-primary font-medium text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <section.icon className="h-4 w-4" aria-hidden />
-                {section.label}
-              </Link>
-            );
-          })}
+        <nav className="mx-auto flex max-w-7xl gap-6 overflow-x-auto px-4 sm:px-6" aria-label="Fund sections">
+          {groups.map((group) => (
+            <div key={group.label} className="flex shrink-0 flex-col">
+              <span className="px-3 pt-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{group.label}</span>
+              <div className="flex gap-1">
+                {group.items.map((section) => {
+                  const to = section.slug ? `/manager/fund/$fundId/${section.slug}` : "/manager/fund/$fundId";
+                  const href = section.slug ? `/manager/fund/${fundId}/${section.slug}` : `/manager/fund/${fundId}`;
+                  const active = section.slug ? pathname === href : pathname === href || pathname === `${href}/`;
+                  return (
+                    <Link
+                      key={section.label}
+                      to={to as never}
+                      params={{ fundId } as never}
+                      className={cn(
+                        "flex h-10 shrink-0 items-center gap-2 border-b-2 px-3 text-sm transition-colors",
+                        active ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <section.icon className="h-4 w-4" aria-hidden />
+                      {section.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
       </header>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
