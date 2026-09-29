@@ -91,6 +91,7 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
         .from("diligence_documents")
         .select("id, category, title, description, file_name, size_bytes, uploaded_at")
         .eq("room_id", room.id)
+        .is("archived_at", null)
         .order("uploaded_at", { ascending: false });
       if (error) throw new Error(error.message);
       documents = (docs ?? []) as DiligenceDocument[];
@@ -179,7 +180,8 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
               .select(
                 "id, room_id, category, title, description, file_name, size_bytes, uploaded_at",
               )
-              .in("room_id", ids),
+              .in("room_id", ids)
+              .is("archived_at", null),
             supabase
               .from("diligence_nda_acceptances")
               .select("room_id, nda_version, accepted_at")
