@@ -224,36 +224,13 @@ export const addProfileRelationship = createServerFn({ method: "POST" })
       throw new Error("That investment profile was not found.");
     }
 
-    const email = data.person_email.trim().toLowerCase();
-    const existing = await db.from("persons").select("id").ilike("email", email).maybeSingle();
-
-    let personId = existing.data?.id as string | undefined;
-    if (!personId) {
-      const name = data.full_name.trim();
-      const created = await db
-        .from("persons")
-        .insert({
-          email,
-          legal_first_name: name.split(/\s+/)[0],
-          legal_last_name: name.includes(" ") ? name.slice(name.indexOf(" ") + 1) : null,
-          onboarding_state: "profile_required",
-        })
-        .select("id")
-        .single();
-      if (created.error) throw new Error(created.error.message);
-      personId = created.data.id as string;
-    }
-
-    const { error } = await db.from("investment_profile_relationships").insert({
-      profile_id: data.profile_id,
-      person_id: personId,
-      role: data.role,
-      ownership_percent: data.ownership_percent ?? null,
-      added_by: userId,
-      status: "active",
-      verification_status: "not_started",
+    // Never silently reuse a Person found by email: possible matches go to Harmonious review.
+    const name = data.full_name.trim();
+    const { addRelatedPerson } = await import("@/lib/related-person.server");
+    await addRelatedPerson({
+      profileId: data.profile_id, firstName: name.split(/\s+/)[0]!, lastName: name.includes(" ") ? name.slice(name.indexOf(" ") + 1) : "",
+      email: data.person_email, role: data.role, ownershipPercent: data.ownership_percent ?? null, actorUserId: userId, verificationStatus: "not_started",
     });
-    if (error && !String(error.message).includes("duplicate")) throw new Error(error.message);
 
     return { ok: true };
   });
