@@ -464,7 +464,7 @@ export async function bulkPreview(userId: string, input: { offeringId: string; c
   const people = await loadCandidates(((ps ?? []) as any[]).map((p) => p.id), input.offeringId);
   const preview = classifyBulk(rows, people);
   // Staff see matches as masked emails only; managers additionally never see existing names.
-  const { data: staged, error } = await db().from("investor_bulk_imports").insert({ offering_id: input.offeringId, created_by: actor.userId, rows: preview, summary: bulkSummary(preview) }).select("id").single();
+  const { data: staged, error } = await db().from("investor_bulk_imports").insert({ offering_id: input.offeringId, created_by: actor.userId, status: "previewed", rows: preview, summary: bulkSummary(preview) }).select("id").single();
   if (error) fail(error.message);
   return {
     importId: staged.id as string, summary: bulkSummary(preview),

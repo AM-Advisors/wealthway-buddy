@@ -274,7 +274,7 @@ describe("model", () => {
   });
   it("quick add needs only name, email, profile type and amount", () => {
     expect(validateQuickAdd({ firstName: "A", lastName: "B", email: "a@b.co", profileType: "trust", amountCents: 1 })).toEqual([]);
-    expect(validateQuickAdd({ firstName: "A" })).toHaveLength(3);
+    expect(validateQuickAdd({ firstName: "A" })).toHaveLength(4);
   });
   it("maps entry groups to canonical profile types", () => {
     expect(dbProfileType("entity", "llc")).toBe("llc");
