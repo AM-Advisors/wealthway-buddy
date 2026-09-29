@@ -419,7 +419,7 @@ export async function classAssignments(userId: string, offeringId: string) {
 
 /** Harmonious-only: funds whose current wire instructions await second-person verification. */
 export async function pendingWireVerifications(sb: any, userId: string) {
-  const { data: staff } = await sb.rpc("is_any_staff", { _user_id: userId });
+  const { data: staff } = await sb.rpc("is_any_staff");
   if (!staff) forbid("only Harmonious can review wire instructions.");
   const { data: offerings } = await db().from("offerings").select("id, name").order("name");
   const out: { offeringId: string; fundName: string; version: number; hasDocument: boolean; ownershipReview: string | null }[] = [];
