@@ -357,7 +357,7 @@ function SetupPage() {
               )}
               {!fundId && !chosenSow?.signed && (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Choose a signed agreement to continue.
+                  No agreement link needed. Services & Pricing are recorded automatically when the fund is created.
                 </p>
               )}
             </div>

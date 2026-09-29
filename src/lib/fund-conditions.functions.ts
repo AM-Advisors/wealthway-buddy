@@ -203,11 +203,8 @@ export async function assertFundConditions(
     );
   }
 
-  if (stage === "application" && result.feeNotice && !result.feeNotice.acknowledged) {
-    throw new Error(
-      `This fund has ${result.feeNotice.investors} investors, above the ${result.feeNotice.threshold} in the statement of work. Onboarding pauses until Harmonious acknowledges the additional per-investor fee.`,
-    );
-  }
+  // Phase 3.10: the per-investor fee threshold is commercial (a billing
+  // follow-up for Harmonious), never an onboarding stop.
 
   return result;
 }

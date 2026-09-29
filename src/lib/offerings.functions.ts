@@ -422,6 +422,8 @@ export const saveOffering = createServerFn({ method: "POST" })
         throw new Error(error.message);
       }
       offeringId = (inserted as any).id as string;
+      { const { safeCreateSnapshot } = await import("@/lib/commercial-pricing.server");
+        await safeCreateSnapshot({ offeringId, clientId: clientIdForFund, actorId: context.userId, source: "fund_setup" }); }
 
       if (row) {
         const { error: linkError } = await context.supabase

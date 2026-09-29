@@ -144,6 +144,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Entities and engagements", url: "/admin/entities", description: "Client entities and engagements" },
       { title: "Services administration", url: "/admin/services", description: "Service catalogue and delivery" },
       { title: "Agreements & SOW", url: "/admin/agreements", description: "Master agreements and statements of work" },
+      { title: "Sales", url: "/sales", description: "Fund pricing, approvals, Client Pricing and commercial follow-up" },
       { title: "Pricing and agreements", url: "/admin/pricing", description: "Pricing schedules" },
       { title: "Rate proposals", url: "/admin/rate-proposals", description: "Proposed fee changes" },
       { title: "Contract permissions", url: "/ops/contracts/permissions", description: "Who may upload, review, approve and price contracts" },
