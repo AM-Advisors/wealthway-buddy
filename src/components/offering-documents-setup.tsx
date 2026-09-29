@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -111,6 +111,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
   const impact = useServerFn(previewVersionImpactFn);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const needsSigning = doc.usage === "signature";
   const [effective, setEffective] = useState("");
   const [impactView, setImpactView] = useState<{ version: number; r: Awaited<ReturnType<typeof previewVersionImpactFn>> } | null>(null);
   const latest = doc.versions[0];
@@ -135,7 +136,12 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
       const { error } = await supabase.storage.from("offering-files").upload(path, file);
       if (error) throw new Error(error.message);
       await upload({ data: { documentId: doc.id, filePath: path, fileName: file.name, fileSizeBytes: file.size, effectiveDate: effective || null } });
-    }, "New version uploaded — review required");
+      // Signature documents default to Signature Required so the blocks can be added right away.
+      if (!doc.usage && (doc.category === "subscription_agreement" || doc.category === "operating_agreement")) {
+        await setUsage({ data: { documentId: doc.id, usage: "signature", applicability: { profileTypes: [], classKeys: [] } } });
+      }
+      setOpen(true);
+    }, "Document uploaded — now add the signature blocks, then approve");
   };
 
   const startActivate = async (version: number) => {
@@ -162,29 +168,40 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         </div>
         <div className="flex items-center gap-2">
           {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
-          <Button size="sm" variant="ghost" onClick={() => setOpen(!open)}>{open ? "Hide" : "Details"}</Button>
+          <Button size="sm" variant={latest ? "ghost" : "default"} onClick={() => setOpen(!open)}>{open ? "Hide" : latest ? "Manage" : "Set up"}</Button>
         </div>
       </div>
 
       {open && (
         <div className="mt-3 space-y-4">
-          {data.canEdit && (
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1">
-                <Label htmlFor={`eff-${doc.id}`}>Effective date (optional)</Label>
-                <Input id={`eff-${doc.id}`} type="date" value={effective} onChange={(e) => setEffective(e.target.value)} />
+          <Step n={1} title="Upload the document" done={doc.versions.length > 0}>
+            {data.canEdit && (
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor={`eff-${doc.id}`}>Effective date (optional)</Label>
+                  <Input id={`eff-${doc.id}`} type="date" value={effective} onChange={(e) => setEffective(e.target.value)} />
+                </div>
+                <Label className="inline-flex cursor-pointer items-center rounded-md border px-3 py-2 text-sm">
+                  {busy ? "Uploading…" : latest ? "Upload new version" : "Upload Document"}
+                  <input type="file" accept="application/pdf" className="sr-only" disabled={busy} onChange={(e) => onFile(e.target.files?.[0])} />
+                </Label>
               </div>
-              <Label className="inline-flex cursor-pointer items-center rounded-md border px-3 py-2 text-sm">
-                {busy ? "Uploading…" : "Upload Document"}
-                <input type="file" accept="application/pdf" className="sr-only" disabled={busy} onChange={(e) => onFile(e.target.files?.[0])} />
-              </Label>
-            </div>
+            )}
+            {latest && <p className="text-xs text-muted-foreground">Latest: Version {latest.version} · {latest.fileName ?? "file"}</p>}
+          </Step>
+
+          <Step n={2} title="How it is used and who it applies to" done={!!doc.usage}>
+            <UsageEditor doc={doc} data={data} busy={busy} onSave={(usage, applicability) => run(() => setUsage({ data: { documentId: doc.id, usage, applicability } }), "Usage saved")} />
+          </Step>
+
+          {needsSigning && (
+            <Step n={3} title="Signature blocks" done={latest?.signingStatus === "confirmed"}>
+              {!latest ? <p className="text-sm text-muted-foreground">Upload the document first, then add its signature blocks here.</p>
+                : <SigningEditor key={`${latest.version}-${latest.signingStatus}`} doc={doc} version={latest} data={data} onChanged={onChanged} />}
+            </Step>
           )}
 
-          <UsageEditor doc={doc} data={data} busy={busy} onSave={(usage, applicability) => run(() => setUsage({ data: { documentId: doc.id, usage, applicability } }), "Usage saved")} />
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Versions</p>
+          <Step n={needsSigning ? 4 : 3} title="Approve and put in use" done={!!active && active.version === latest?.version}>
             {doc.versions.length === 0 && <p className="text-sm text-muted-foreground">No file uploaded yet.</p>}
             {doc.versions.map((v) => (
               <div key={v.version} className="rounded-md bg-muted/40 p-2 text-sm">
@@ -196,21 +213,24 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
                   <Badge variant="outline">{v.isActive ? "In use" : VERSION_STATE_LABELS[v.state]}</Badge>
                 </div>
                 {data.canEdit && v.approval !== "superseded" && (
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     {v.approval === "uploaded_review_required" && (
                       <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: v.version } }), "Approved for use")}>Approve for use</Button>
                     )}
                     {v.approval === "approved" && !v.isActive && (
-                      <Button size="sm" disabled={busy || (doc.usage === "signature" && v.signingStatus !== "confirmed")} onClick={() => startActivate(v.version)}>Use this version</Button>
+                      <Button size="sm" disabled={busy || (needsSigning && v.signingStatus !== "confirmed")} onClick={() => startActivate(v.version)}>Use this version</Button>
+                    )}
+                    {needsSigning && v.signingStatus !== "confirmed" && !v.isActive && (
+                      <span className="text-xs text-muted-foreground">Confirm the signature blocks first.</span>
                     )}
                   </div>
                 )}
-                {doc.usage === "signature" && v.approval !== "superseded" && (
+                {needsSigning && v !== latest && v.approval !== "superseded" && (
                   <SigningEditor doc={doc} version={v} data={data} onChanged={onChanged} />
                 )}
               </div>
             ))}
-          </div>
+          </Step>
 
           {impactView && (
             <div className="rounded-md border border-destructive/40 p-3 text-sm">
@@ -232,6 +252,18 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         </div>
       )}
     </div>
+  );
+}
+
+function Step({ n, title, done, children }: { n: number; title: string; done: boolean; children: ReactNode }) {
+  return (
+    <section className="rounded-md border p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium ${done ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{done ? "✓" : n}</span>
+        <p className="text-sm font-medium">{title}</p>
+      </div>
+      <div className="space-y-2">{children}</div>
+    </section>
   );
 }
 
@@ -290,6 +322,22 @@ function SigningEditor({ doc, version, data, onChanged }: { doc: Doc; version: D
         Signing setup for Version {version.version}
         {version.signingStatus === "needs_review" && <span className="text-destructive"> — Signing Setup Needs Review</span>}
       </p>
+      {data.canEdit && signers.length === 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2">
+          <span className="text-xs text-muted-foreground">Quick start:</span>
+          <Button size="sm" variant="outline" onClick={() => setSigners([
+            { role: "investor", fields: ["signature", "printed_name", "date_signed"], order: 1 },
+            { role: "fund_signatory", fields: ["signature", "printed_name", "title", "entity_name", "date_signed"], order: 2 },
+          ])}>Investor + Fund Signatory</Button>
+          <Button size="sm" variant="outline" onClick={() => setSigners([
+            { role: "investor", fields: ["signature", "printed_name", "date_signed"], order: 1 },
+            { role: "joint_investor", fields: ["signature", "printed_name", "date_signed"], order: 2 },
+            { role: "entity_authorized_signer", fields: ["signature", "printed_name", "title", "entity_name", "date_signed"], order: 3 },
+            { role: "fund_signatory", fields: ["signature", "printed_name", "title", "entity_name", "date_signed"], order: 4 },
+          ])}>All investor types + Fund Signatory</Button>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">Choose who signs, then the fields in each signature block.</p>
       <div className="flex flex-wrap gap-1">
         {SIGNER_ROLES.map((r) => (
           <Button key={r} size="sm" variant={has(r) ? "secondary" : "ghost"} disabled={!data.canEdit} onClick={() => toggleRole(r)}>{SIGNER_ROLE_LABELS[r]}</Button>
@@ -307,7 +355,7 @@ function SigningEditor({ doc, version, data, onChanged }: { doc: Doc; version: D
         </div>
       ))}
       {has("fund_signatory") && !data.hasFundSignatory && (
-        <p className="text-xs text-destructive">Choose the Fund Signatory in Fund Details first.</p>
+        <p className="text-xs text-destructive">Add a Fund Signatory in the Fund Signatories section first.</p>
       )}
       {data.canEdit && (
         <div className="flex gap-2">
