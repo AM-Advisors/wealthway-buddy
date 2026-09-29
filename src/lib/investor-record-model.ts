@@ -16,6 +16,18 @@ export const PROFILE_TYPE_LABELS: Record<ProfileType, string> = {
   individual: "Individual", joint: "Joint", entity: "Entity", trust: "Trust", ira: "IRA / Retirement",
 };
 export function isProfileType(v: unknown): v is ProfileType { return PROFILE_TYPES.includes(v as ProfileType); }
+export const ENTITY_TYPES = ["llc", "corporation", "partnership", "family_office", "foundation", "other_entity"] as const;
+/** Map the entry form's profile group onto the canonical investment_profile_type. */
+export function dbProfileType(type: ProfileType, sub?: string | null): string {
+  if (type === "entity") return (ENTITY_TYPES as readonly string[]).includes(String(sub)) ? String(sub) : "other_entity";
+  if (type === "ira") return sub === "retirement_plan" ? "retirement_plan" : "ira";
+  return type;
+}
+export function formProfileType(db: string): ProfileType {
+  if ((ENTITY_TYPES as readonly string[]).includes(db)) return "entity";
+  if (db === "retirement_plan") return "ira";
+  return isProfileType(db) ? db : "entity";
+}
 
 /** Fields that must never be accepted from manual entry, bulk import, or fund managers. */
 export const FORBIDDEN_ENTRY_KEYS = [
@@ -94,7 +106,7 @@ export function rankMatches(q: { email?: string | null; name?: string | null; en
       personId: p.personId,
       displayName: full ? `${p.firstName ?? ""} ${p.lastName ?? ""}`.trim() : "Existing investor",
       maskedEmail: maskEmail(p.email), strength,
-      profiles: p.profiles.map((pr) => ({ id: pr.id, label: `Existing ${PROFILE_TYPE_LABELS[pr.type as ProfileType] ?? "Investor"} Profile` })),
+      profiles: p.profiles.map((pr) => ({ id: pr.id, label: `Existing ${PROFILE_TYPE_LABELS[formProfileType(pr.type)]} Profile` })),
       alreadyInFund: p.inFund,
     });
   }
