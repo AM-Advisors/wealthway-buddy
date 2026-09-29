@@ -26,10 +26,18 @@ function TaxPage() {
     queryFn: () => docsFn({ data: {} }) as Promise<any>,
   });
 
+  const forms = (data?.groups ?? []).flatMap((group: any) =>
+    group.forms.map((form: any) => ({
+      ...form,
+      taxYear: group.taxYear,
+      profileLabel: group.profileLabel,
+      fundName: group.fundName,
+    })),
+  );
   const groups: { label: string; items: any[] }[] = [
-    { label: "Schedule K-1", items: (data?.groups ?? []).flatMap((group: any) => group.forms.filter((form: any) => form.kind === "K-1").map((form: any) => ({ ...form, taxYear: group.taxYear, profileLabel: group.profileLabel, fundName: group.fundName })) },
-    { label: "Form 1042-S", items: (data?.groups ?? []).flatMap((group: any) => group.forms.filter((form: any) => form.kind === "1042-S").map((form: any) => ({ ...form, taxYear: group.taxYear, profileLabel: group.profileLabel, fundName: group.fundName })) },
-    { label: "Form 1099", items: (data?.groups ?? []).flatMap((group: any) => group.forms.filter((form: any) => String(form.kind).startsWith("1099")).map((form: any) => ({ ...form, taxYear: group.taxYear, profileLabel: group.profileLabel, fundName: group.fundName })) },
+    { label: "Schedule K-1", items: forms.filter((form: any) => form.kind === "K-1") },
+    { label: "Form 1042-S", items: forms.filter((form: any) => form.kind === "1042-S") },
+    { label: "Form 1099", items: forms.filter((form: any) => String(form.kind).startsWith("1099")) },
   ];
 
   return (
