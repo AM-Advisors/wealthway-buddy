@@ -108,7 +108,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
     db().from("fund_setups").select("id, fiscal_year_end").eq("offering_id", offeringId).maybeSingle(),
   ]);
   const hasEin = !!(detail as any)?.ein;
-  const ss4 = ((detail as any)?.ss4 ?? {}) as Record<string, unknown>;
+  const ss4: any = (detail as any)?.ss4 ?? {};
   const prefill = ss4Prefill({
     legalName: o.legal_entity_name,
     entityType: o.entity_type,
@@ -162,7 +162,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
       responsiblePersonId: o.ss4_responsible_person_id as string | null,
       ss4Prefilled: Object.keys(prefill),
       ss4Missing: missing,
-      ss4Answers: actor.isStaff ? Object.fromEntries(Object.entries(ss4).filter(([k]) => k !== "responsible_party_tin")) : {},
+      ss4Answers: (actor.isStaff ? Object.fromEntries(Object.entries(ss4).filter(([k]) => k !== "responsible_party_tin")) : {}) as Record<string, string | boolean>,
       hasResponsiblePartyTin: hasRpTin,
       section: entity,
     },
@@ -306,8 +306,8 @@ export async function recordEin(sb: any, userId: string, input: { offeringId: st
 export async function saveSs4(sb: any, userId: string, input: { offeringId: string; answers: Record<string, unknown>; responsiblePersonId?: string | null | undefined; responsiblePartyTin?: string | null | undefined }) {
   await assertStaff(userId, input.offeringId);
   const { data: cur } = await sb.rpc("get_offering_entity_details", { p_offering_id: input.offeringId }).maybeSingle();
-  const prev = ((cur as any)?.ss4 ?? {}) as Record<string, unknown>;
-  const next: Record<string, unknown> = { ...prev, ...input.answers };
+  const prev: any = (cur as any)?.ss4 ?? {};
+  const next: any = { ...prev, ...input.answers };
   delete next.responsible_party_tin_last4;
   if (input.responsiblePartyTin) {
     const t = input.responsiblePartyTin.replace(/\D/g, "");
@@ -337,7 +337,7 @@ export async function setEinStatus(sb: any, userId: string, input: { offeringId:
   const patch: any = { ein_workflow_status: input.status };
   if (input.status === "ready_for_review" || input.status === "ready_for_submission") {
     const { data: cur } = await sb.rpc("get_offering_entity_details", { p_offering_id: input.offeringId }).maybeSingle();
-    const ss4 = ((cur as any)?.ss4 ?? {}) as Record<string, unknown>;
+    const ss4: any = (cur as any)?.ss4 ?? {};
     if (input.status === "ready_for_review") {
       const missing = ss4Missing(ss4, { hasEmployees: false, usesDesignee: !!String(ss4.designee_name ?? "").trim() });
       if (missing.length) throw new Error("Some SS-4 information is still missing.");

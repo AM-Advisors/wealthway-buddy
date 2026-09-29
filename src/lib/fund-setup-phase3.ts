@@ -171,7 +171,7 @@ export function ss4Prefill(e: CanonicalEntity): Record<string, string | boolean>
 export const SS4_REQUIRED = ["legal_name", "responsible_party_name", "responsible_party_tin", "reason", "date_started", "closing_month", "principal_activity", "principal_line"] as const;
 
 /** Which SS-4 answers are still missing after prefill; employee/wage/designee questions are conditional. */
-export function ss4Missing(answers: Record<string, unknown>, opts: { hasEmployees: boolean; usesDesignee: boolean }): string[] {
+export function ss4Missing(answers: any, opts: { hasEmployees: boolean; usesDesignee: boolean }): string[] {
   const need: string[] = [...SS4_REQUIRED];
   if (answers.is_llc) need.push("llc_members");
   if (opts.hasEmployees) need.push("first_wages_date");
