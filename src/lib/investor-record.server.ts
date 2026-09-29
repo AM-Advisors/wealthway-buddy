@@ -387,7 +387,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   const readiness = {
     ready: Boolean((result as any).closeReady), label: (result as any).closeReady ? "Ready to Close" : "Not Ready to Close",
     nextAction: (result as any).nextAction?.label ?? null,
-    stages: ((result as any).stages ?? []).map((s: any) => ({ key: s.key, label: s.label, status: s.status })),
+    stages: ((result as any).stages ?? []).map((s: any) => ({ key: s.stage, label: s.title, status: s.status })),
   };
   // Sensitive boundary: tax IDs, KYC/AML status fields, ID images and DOB never leave for managers.
   const safePerson = person ? {

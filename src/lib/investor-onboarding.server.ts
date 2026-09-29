@@ -1694,12 +1694,18 @@ export async function claimOnboardInvitation(userId: string, reference: string) 
   if (!inv.email) fail("That invitation was not found.");
   const wrong = invitationRecipientError(inv.email, me.user.email ?? null);
   if (wrong) fail(wrong);
+  try {
+    const { claimPreparedRecords } = await import("@/lib/investor-record.server");
+    await claimPreparedRecords(userId);
+  } catch (e) {
+    console.error("[onboard] prepared-record claim skipped", (e as Error).message);
+  }
   const { data: bound } = await db()
     .from("investor_onboardings")
     .select("id, investor_user_id")
     .eq("invitation_id", inv.id)
     .limit(5);
-  const others = ((bound ?? []) as any[]).filter((b) => b.investor_user_id !== userId);
+  const others = ((bound ?? []) as any[]).filter((b) => b.investor_user_id && b.investor_user_id !== userId);
   if (others.length) fail("This invitation has already been used.");
   const mine = ((bound ?? []) as any[]).find((b) => b.investor_user_id === userId);
   if (mine) return { onboardingId: mine.id as string };
