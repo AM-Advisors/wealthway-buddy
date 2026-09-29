@@ -133,3 +133,7 @@
 - [x] Verified reported findings and repaired incorrect columns (sign-off, banking, exceptions, transfers, invitations), tax groups, batch isolation, Access Control guard, and address visibility/errors. Signing applicability now uses the portal's canonical profile/class rules; missing signing blocks remain a preparation task, not an automatic backfill. Invoice reminder cron now calls net.http_post; the next scheduled delivery still needs observation.
 - [x] Distribution proposal/request controls now call the existing server-authorized workflow; recording external transfer, reconciliation, second-person approval and posting remain separate.
 - [ ] QA browser walk-through with role-specific accounts, actual PDF signature placement, and next-day cron delivery (no real money or production email tests). Fund setup uses the existing canonical board; tax review/documents already have Operations routes, but the broader legacy fund-setup.functions and tax.functions workflows are not automatically exposed by this repair.
+
+## Fund Setup and Chapter 1
+- [x] Add Fund Setup under Funds & SPVs; list all existing Funds/SPVs, provide protected draft creation and summary editing, and show scoped formation/launch readiness for Chapter 1.
+- [ ] Chapter 1 live formation and launch: blocked by missing formation/certificate/EIN evidence, open blocking tasks, unmet launch conditions and no approvals. Resolve the duplicate Chapter 1 records before any authoritative status change; do not manufacture evidence or approvals.
