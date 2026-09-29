@@ -1096,6 +1096,7 @@ export function distributionBucket(line: {
 export function managerSafeLine(line: Record<string, any>) {
   return {
     id: line['id'],
+    batchId: line['batch_id'] ?? line['batchId'] ?? null,
     displayName: line['display_name'] ?? line['displayName'] ?? null,
     investmentProfileId: line['investment_profile_id'] ?? line['investmentProfileId'] ?? null,
     grossCents: Number(line['gross_cents'] ?? line['grossCents'] ?? 0),

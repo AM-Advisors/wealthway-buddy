@@ -70,7 +70,7 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
       supabase
         .from("client_sows")
         .select(
-          "id, client_id, offering_id, title, status, client_status, approval_status, signed_on, signed_by, client_signed_name, created_at",
+          "id, client_id, offering_id, title, status, client_status, approval_status, signed_on, signed_by, client_signature_name, created_at",
         )
         .eq("approval_status", "pending")
         .order("created_at"),
@@ -171,7 +171,7 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
         title: (s.title as string) ?? "Statement of work",
         detail:
           s.client_status === "signed"
-            ? `Signed by ${s.client_signed_name ?? person.get(s.signed_by) ?? "the client"}${s.signed_on ? ` on ${s.signed_on}` : ""}.`
+            ? `Signed by ${s.client_signature_name ?? person.get(s.signed_by) ?? "the client"}${s.signed_on ? ` on ${s.signed_on}` : ""}.`
             : s.client_status === "sent_back"
               ? "The client sent this back for changes."
               : "The client has not signed this yet.",
