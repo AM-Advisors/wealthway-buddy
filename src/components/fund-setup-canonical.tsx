@@ -21,6 +21,7 @@ import {
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FundSetupPhase3 } from "@/components/fund-setup-phase3";
+import { RequiredHere, LaunchRequirements } from "@/components/fund-setup-checklist";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,11 +81,12 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
       </Card>
 
       <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
-      <div id="setup-details" className="scroll-mt-6"><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
-      <div id="setup-signatories" className="scroll-mt-6"><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
-      <div id="setup-economics" className="scroll-mt-6"><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
-      <div id="setup-documents" className="scroll-mt-6"><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
+      <div id="setup-details" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-details" /><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
+      <div id="setup-signatories" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
+      <div id="setup-economics" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
+      <div id="setup-documents" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
       <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
+      <LaunchRequirements />
       <Card>
         <CardHeader><CardTitle className="text-base">Banking and Administration</CardTitle></CardHeader>
         <CardContent className="text-sm text-muted-foreground">
