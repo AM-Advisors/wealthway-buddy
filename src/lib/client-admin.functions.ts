@@ -395,6 +395,8 @@ export const createClientFund = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     const offeringId = ins.id as string;
+    { const { safeCreateSnapshot } = await import("@/lib/commercial-pricing.server");
+      await safeCreateSnapshot({ offeringId, clientId: data.clientId, actorId: userId, source: "client_360" }); }
     await audit(db, { actor: userId, clientId: data.clientId, offeringId, action: "fund_created_from_client_360", after: { name: data.name, fundType: data.fundType, regType: data.regType } });
     if (data.serviceKeys.length && caps.includes("manage_services")) {
       await addSelections(db, userId, data.clientId, offeringId, data.serviceKeys);

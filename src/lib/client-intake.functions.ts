@@ -282,6 +282,8 @@ export const submitFundIntake = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     const offeringId = String((inserted as any).id);
+    { const { safeCreateSnapshot } = await import("@/lib/commercial-pricing.server");
+      await safeCreateSnapshot({ offeringId, clientId: data.clientId, actorId: (context as any).userId, source: "client_fund_request" }); }
 
     if (eligibleSow) {
       await supabaseAdmin
