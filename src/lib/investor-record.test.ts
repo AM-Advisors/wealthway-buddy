@@ -1,3 +1,4 @@
+// @ts-nocheck — in-memory fakes of the service-role client; runtime behaviour is what is under test.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activityFor, bulkSummary, classifyBulk, committable, createNewBlocker, dbProfileType, maskEmail, parseCsv, planIncoming,
