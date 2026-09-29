@@ -27,7 +27,7 @@ export function InvestmentOfferingDocuments({ onboardingId }: { onboardingId: st
       <CardContent className="space-y-2">
         {q.data.map((d) => (
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
-            <span className="text-sm">{d.title}</span>
+            <span className="text-sm">{d.title}{d.versionLabel && <span className="block text-xs text-muted-foreground">{d.versionLabel}</span>}</span>
             {d.action === "Acknowledge" ? (
               <Button size="sm" onClick={() => acknowledge(d.id)}>I have reviewed this document</Button>
             ) : (

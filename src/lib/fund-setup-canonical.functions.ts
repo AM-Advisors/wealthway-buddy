@@ -171,8 +171,28 @@ export const previewVersionImpactFn = createServerFn({ method: "POST" })
 
 export const activateDocumentVersionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ documentId: uuid, version: z.number().int().min(1), impactAcknowledged: z.boolean() }).parse)
+  .inputValidator(z.object({ documentId: uuid, version: z.number().int().min(1), scope: z.enum(["new_only", "all", "single"]).optional(), targetOnboardingId: uuid.nullish(), note: z.string().trim().max(1000).nullish(), impactAcknowledged: z.boolean().optional() }).parse)
   .handler(async ({ data, context }) => (await docs()).activateDocumentVersion(context.userId, data));
+
+export const rolloutPreviewFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid }).parse)
+  .handler(async ({ data, context }) => (await docs()).rolloutPreview(context.userId, data));
+
+export const resolveResignItemFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: uuid, status: z.enum(["sent", "signed", "waived"]) }).parse)
+  .handler(async ({ data, context }) => (await docs()).resolveResignItem(context.userId, data));
+
+export const requestDocumentChangeFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid, filePath: z.string().min(3).max(400), fileName: z.string().min(1).max(260), fileSizeBytes: z.number().int().min(0), scope: z.enum(["new_only", "all", "single"]), targetOnboardingId: uuid.nullish(), note: z.string().trim().max(1000).nullish() }).parse)
+  .handler(async ({ data, context }) => (await docs()).requestDocumentChange(context.userId, data));
+
+export const decideChangeRequestFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: uuid, decision: z.enum(["accept", "decline"]), note: z.string().trim().max(1000).nullish() }).parse)
+  .handler(async ({ data, context }) => (await docs()).decideChangeRequest(context.userId, data));
 
 export const investorDocumentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

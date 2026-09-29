@@ -21578,6 +21578,85 @@ export type Database = {
           },
         ]
       }
+      offering_document_change_requests: {
+        Row: {
+          created_version: number | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number
+          id: string
+          note: string | null
+          offering_document_id: string
+          offering_id: string
+          requested_at: string
+          requested_by: string
+          rollout_scope: string
+          status: string
+          target_onboarding_id: string | null
+        }
+        Insert: {
+          created_version?: number | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes?: number
+          id?: string
+          note?: string | null
+          offering_document_id: string
+          offering_id: string
+          requested_at?: string
+          requested_by: string
+          rollout_scope: string
+          status?: string
+          target_onboarding_id?: string | null
+        }
+        Update: {
+          created_version?: number | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number
+          id?: string
+          note?: string | null
+          offering_document_id?: string
+          offering_id?: string
+          requested_at?: string
+          requested_by?: string
+          rollout_scope?: string
+          status?: string
+          target_onboarding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_document_change_requests_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_change_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_change_requests_target_onboarding_id_fkey"
+            columns: ["target_onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_document_events: {
         Row: {
           actor_user_id: string | null
@@ -21622,6 +21701,70 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offering_document_resign_items: {
+        Row: {
+          created_at: string
+          created_by: string
+          from_version: number | null
+          id: string
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          to_version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          from_version?: number | null
+          id?: string
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          to_version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          from_version?: number | null
+          id?: string
+          offering_document_id?: string
+          offering_id?: string
+          onboarding_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          to_version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_document_resign_items_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_resign_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_resign_items_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
             referencedColumns: ["id"]
           },
         ]
@@ -21700,12 +21843,17 @@ export type Database = {
           note: string | null
           offering_document_id: string
           offering_id: string
+          rolled_out_at: string | null
+          rolled_out_by: string | null
+          rollout_note: string | null
+          rollout_scope: string | null
           signing_config: Json | null
           signing_config_confirmed_at: string | null
           signing_config_confirmed_by: string | null
           signing_config_status: string
           source: string
           superseded_at: string | null
+          target_onboarding_id: string | null
           version: number
         }
         Insert: {
@@ -21722,12 +21870,17 @@ export type Database = {
           note?: string | null
           offering_document_id: string
           offering_id: string
+          rolled_out_at?: string | null
+          rolled_out_by?: string | null
+          rollout_note?: string | null
+          rollout_scope?: string | null
           signing_config?: Json | null
           signing_config_confirmed_at?: string | null
           signing_config_confirmed_by?: string | null
           signing_config_status?: string
           source?: string
           superseded_at?: string | null
+          target_onboarding_id?: string | null
           version: number
         }
         Update: {
@@ -21744,12 +21897,17 @@ export type Database = {
           note?: string | null
           offering_document_id?: string
           offering_id?: string
+          rolled_out_at?: string | null
+          rolled_out_by?: string | null
+          rollout_note?: string | null
+          rollout_scope?: string | null
           signing_config?: Json | null
           signing_config_confirmed_at?: string | null
           signing_config_confirmed_by?: string | null
           signing_config_status?: string
           source?: string
           superseded_at?: string | null
+          target_onboarding_id?: string | null
           version?: number
         }
         Relationships: [
@@ -21765,6 +21923,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_versions_target_onboarding_id_fkey"
+            columns: ["target_onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
             referencedColumns: ["id"]
           },
         ]

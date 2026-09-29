@@ -233,3 +233,39 @@ export function versionChangeImpact(investments: { executedVersion: number | nul
     classKeys: [...new Set(investments.map((i) => i.classKey).filter(Boolean))] as string[],
   };
 }
+
+// ------------------------------------------------------------------ template rollout
+
+export const ROLLOUT_SCOPES = ["new_only", "all", "single"] as const;
+export type RolloutScope = (typeof ROLLOUT_SCOPES)[number];
+export const ROLLOUT_LABELS: Record<RolloutScope, string> = {
+  new_only: "New investors only",
+  all: "All investors",
+  single: "Only one investor",
+};
+
+type RolloutInvestment = { onboardingId: string; execution: ExecutionState };
+
+/** Investors who were already sent or signed the old version and must re-sign under "All investors". */
+export function resignTargets(investments: RolloutInvestment[], activeVersion: number | null): string[] {
+  if (activeVersion == null) return [];
+  return investments.filter((i) => i.execution !== "not_sent").map((i) => i.onboardingId);
+}
+
+/** Counts shown next to each choice in the Replace dialog. */
+export function rolloutCounts(investments: RolloutInvestment[], activeVersion: number | null) {
+  const notSent = investments.filter((i) => i.execution === "not_sent").length;
+  const resign = resignTargets(investments, activeVersion).length;
+  return { new_only: notSent, all: notSent + resign, resign, single: 1 };
+}
+
+/** Which version applies to one investor: an individual version wins over the Fund template. */
+export function appliedVersionFor(
+  onboardingId: string,
+  activeVersion: number | null,
+  individual: { targetOnboardingId: string | null; version: number }[],
+): { version: number | null; reason: "individual" | "template" | "none" } {
+  const own = individual.filter((v) => v.targetOnboardingId === onboardingId).sort((a, b) => b.version - a.version)[0];
+  if (own) return { version: own.version, reason: "individual" };
+  return activeVersion != null ? { version: activeVersion, reason: "template" } : { version: null, reason: "none" };
+}
