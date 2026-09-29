@@ -39,6 +39,8 @@ export async function opsFundsDashboard(userId: string) {
     });
   }
   const openTasks = ((tasks ?? []) as any[]).map((t) => ({ offeringId: t.offering_id, owner: t.owner }));
+  const { agreementStatusForClients } = await import("@/lib/commercial-agreements.server");
+  const agreements = await agreementStatusForClients(clientIds as string[]).catch(() => new Map());
   const rows = offerings.map((o) => {
     const mgrs = ((managers ?? []) as any[]).filter((m) => m.offering_id === o.id).map((m) => ({ id: m.user_id as string, name: (name.get(m.user_id) ?? "Unnamed") as string }));
     const s = setup.get(o.id);
@@ -53,6 +55,8 @@ export async function opsFundsDashboard(userId: string) {
       targetClose: (s?.target_close ?? s?.final_close ?? null) as string | null,
       hasActiveLink: activeLink.has(o.id),
       metrics: fundMetrics(o.id, facts, openTasks),
+      // Harmonious commercial agreement: a follow-up signal only, never a fund blocker.
+      agreement: (o.client_id && agreements.get(o.client_id)?.overall) || "needs_review",
     };
   });
   return { rows, totals: totals(rows) };

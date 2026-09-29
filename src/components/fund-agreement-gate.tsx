@@ -1,23 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getFundAgreement } from "@/lib/fund-sow.functions";
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { getFundAgreementNotice } from "@/lib/commercial-agreements.functions";
+import { CommercialAgreementCard } from "@/components/commercial-agreement-card";
 
 /**
- * Shows the signed statement of work behind a fund, or warns the Harmonious
- * team when a fund is running without one.
+ * Harmonious commercial agreement for a fund. Never blocks the fund: staff see
+ * the agreement status as a follow-up item; clients see a quiet notice only.
  */
 export function FundAgreementGate({ fundId }: { fundId: string }) {
   const load = useServerFn(getFundAgreement);
@@ -26,73 +17,30 @@ export function FundAgreementGate({ fundId }: { fundId: string }) {
     queryFn: () => load({ data: { offeringId: fundId } }),
     retry: false,
   });
-
   const data = query.data as any;
   if (!data) return null;
-
-  if (data.signed) {
+  if (data.canSee) {
     return (
-      <Card className="border-primary/30">
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle className="text-base">Statement of work</CardTitle>
-            <Badge>Signed</Badge>
-          </div>
-          <CardDescription>
-            {data.clientName ? `${data.clientName} · ` : ""}
-            {data.sow.title} · {data.sow.sowType}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Signed by {data.sow.signedBy} on {formatDate(data.sow.signedOn)}. This agreement sets the
-          services, fees and terms Harmonious provides for this fund.
-        </CardContent>
-      </Card>
+      <div className="space-y-2">
+        <CommercialAgreementCard offeringId={fundId} />
+        <Button asChild size="sm" variant="ghost">
+          <Link to="/admin/pricing">Open agreements</Link>
+        </Button>
+      </div>
     );
   }
+  return <ClientAgreementNotice fundId={fundId} />;
+}
 
-  const awaitingApproval =
-    data.sow &&
-    data.sow.signedOn &&
-    data.sow.signedBy &&
-    data.sow.status === "active" &&
-    data.sow.approvalStatus !== "approved";
-
+export function ClientAgreementNotice({ fundId }: { fundId: string }) {
+  const load = useServerFn(getFundAgreementNotice);
+  const q = useQuery({ queryKey: ["fund-agreement-notice", fundId], queryFn: () => load({ data: { offeringId: fundId } }), retry: false });
+  const notice = (q.data as any)?.notice as { title: string; body: string } | null | undefined;
+  if (!notice) return null;
   return (
-    <Card className="border-destructive/40 bg-destructive/5">
-      <CardHeader className="pb-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">
-            {awaitingApproval
-              ? data.sow.approvalStatus === "rejected"
-                ? "Statement of work rejected in review"
-                : "Statement of work waiting for approval"
-              : "Statement of work not signed"}
-          </CardTitle>
-          <Badge variant="destructive">Action needed</Badge>
-        </div>
-        <CardDescription>
-          {awaitingApproval
-            ? `${data.sow.title} is signed but has not been approved by an administrator.`
-            : data.sow
-              ? `${data.sow.title} is recorded as ${data.sow.status} and has no recorded client signature.`
-              : "No statement of work is attached to this fund."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm text-muted-foreground">
-        <p>
-          {awaitingApproval
-            ? "Harmonious reviews every signed agreement before work begins. This fund's onboarding, documents, banking and payments wait for that approval."
-            : "Harmonious only performs services covered by a signed statement of work. Attach and sign the agreement before running this fund's onboarding, documents, banking or payments."}
-        </p>
-        {data.canSee ? (
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/pricing">Open agreements</Link>
-          </Button>
-        ) : (
-          <p>Your Harmonious contact will confirm the agreement before this fund goes ahead.</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+      <p className="font-medium">{notice.title}</p>
+      <p className="mt-1 text-muted-foreground">{notice.body}</p>
+    </div>
   );
 }

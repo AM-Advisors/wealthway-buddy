@@ -190,7 +190,9 @@ export async function assertFundConditions(
 ) {
   const result = await evaluateFundConditions(supabase, offeringId);
 
-  if (!result.configured) throw new Error(NO_SCOPE_MESSAGE);
+  // A missing Harmonious SOW is a commercial follow-up item, not an onboarding
+  // gate. Money movement keeps its existing scope control unchanged.
+  if (!result.configured && stage === "funding") throw new Error(NO_SCOPE_MESSAGE);
 
   if (result.blocking.length) {
     const first = result.blocking[0]!;

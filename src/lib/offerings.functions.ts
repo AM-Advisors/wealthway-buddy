@@ -359,61 +359,51 @@ export const saveOffering = createServerFn({ method: "POST" })
         .eq("id", offeringId);
       if (error) throw new Error(error.message);
     } else {
-      // A fund cannot exist before its statement of work is signed.
-      if (!data.sow_id) {
-        throw new Error(
-          "Choose the signed statement of work that covers this fund before creating it.",
-        );
+      // An unsigned or missing Harmonious MSA/SOW is a follow-up item, never a
+      // gate on creating a fund. Linking a SOW is optional; when one is linked it
+      // must belong to this client and not already cover another fund.
+      let row: any = null;
+      if (data.sow_id) {
+        const { data: sow, error: sowError } = await context.supabase
+          .from("client_sows")
+          .select("id, client_id, title, status, offering_id")
+          .eq("id", data.sow_id)
+          .maybeSingle();
+        if (sowError) throw new Error(sowError.message);
+        if (!sow) throw new Error("That statement of work could not be found.");
+        row = sow as any;
+        if (row.offering_id) throw new Error("That statement of work already covers another fund.");
+        if (data.client_id && row.client_id !== data.client_id) {
+          throw new Error("That statement of work belongs to a different client.");
+        }
       }
-      const { data: sow, error: sowError } = await context.supabase
-        .from("client_sows")
-        .select("id, client_id, title, status, signed_on, signed_by, offering_id, approval_status")
-        .eq("id", data.sow_id)
-        .maybeSingle();
-      if (sowError) throw new Error(sowError.message);
-      if (!sow) throw new Error("That statement of work could not be found.");
-      const row = sow as any;
-      if (row.status !== "active" || !row.signed_on || !row.signed_by) {
-        throw new Error(
-          "That statement of work is not signed yet. A fund can only be created once the client has signed.",
-        );
-      }
-      if (row.approval_status !== "approved") {
-        throw new Error(
-          row.approval_status === "rejected"
-            ? "That statement of work was rejected in review. It cannot be used for a fund."
-            : "That statement of work is still waiting for approval. An administrator has to approve it before a fund can be created.",
-        );
-      }
-      if (row.offering_id) {
-        throw new Error("That statement of work already covers another fund.");
-      }
-      if (data.client_id && row.client_id !== data.client_id) {
-        throw new Error("That statement of work belongs to a different client.");
-      }
+      const clientIdForFund = (row?.client_id ?? data.client_id ?? null) as string | null;
+      if (!clientIdForFund) throw new Error("Choose the client this fund belongs to.");
 
       // A new fund starts on the client's agreed rates, falling back to the
       // published standard card, so its fees are never silently zero.
       const { seedFundFeeColumns } = await import("@/lib/fee-rates.server");
-      const seeded = await seedFundFeeColumns(context.supabase, row.client_id);
+      const seeded = await seedFundFeeColumns(context.supabase, clientIdForFund);
       const seedPatch = Object.fromEntries(
         Object.entries(seeded).filter(([k]) => !(k in payload) || !payload[k]),
       );
 
       const { data: inserted, error } = await context.supabase
         .from("offerings")
-        .insert({ ...payload, ...seedPatch, client_id: row.client_id } as any)
+        .insert({ ...payload, ...seedPatch, client_id: clientIdForFund } as any)
         .select("id")
         .single();
       if (error) throw new Error(error.message);
       offeringId = (inserted as any).id as string;
 
-      const { error: linkError } = await context.supabase
-        .from("client_sows")
-        .update({ offering_id: offeringId } as any)
-        .eq("id", row.id)
-        .is("offering_id", null);
-      if (linkError) throw new Error(linkError.message);
+      if (row) {
+        const { error: linkError } = await context.supabase
+          .from("client_sows")
+          .update({ offering_id: offeringId } as any)
+          .eq("id", row.id)
+          .is("offering_id", null);
+        if (linkError) throw new Error(linkError.message);
+      }
     }
 
     const { error: wireError } = await context.supabase.rpc("save_wire_instructions", {

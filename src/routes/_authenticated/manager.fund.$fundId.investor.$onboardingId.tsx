@@ -1,3 +1,4 @@
+import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -119,7 +120,7 @@ function InvestorRecordPage() {
           {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
           <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]!])) } })}>Save profile</Button>
           <div className="sm:col-span-2"><p className="text-sm font-medium">Owners, control persons & signers</p>
-            {data.related.length ? <ul className="mt-1 space-y-1 text-sm">{data.related.map((r) => <li key={r.id}>{r.name} · {prettyStatus(r.role)}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}</li>)}</ul> : <p className="text-sm text-muted-foreground">None recorded.</p>}</div>
+            {data.related.length ? <ul className="mt-1 space-y-1 text-sm">{data.related.map((r) => <li key={r.id}>{r.name} · {prettyStatus(r.role)}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}{(r as any).underReview ? <span className="block text-xs text-muted-foreground">{RELATED_REVIEW_MESSAGE}</span> : null}</li>)}</ul> : <p className="text-sm text-muted-foreground">None recorded.</p>}</div>
           <p className="text-xs text-muted-foreground sm:col-span-2">Tax IDs, tax forms, ID images and verification evidence are never shown here. The investor provides them securely.</p>
         </CardContent></Card> : null}
       </div> : null}

@@ -1,3 +1,4 @@
+import { RelatedPersonReviews } from "@/components/related-person-reviews";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { OpsFundsDashboard } from "@/components/ops-funds-dashboard";
@@ -14,5 +15,10 @@ export const Route = createFileRoute("/_authenticated/ops/funds/")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: OpsFundsDashboard,
+  component: () => (
+    <>
+      <OpsFundsDashboard />
+      <div className="mx-auto max-w-6xl px-4 pb-10"><RelatedPersonReviews /></div>
+    </>
+  ),
 });

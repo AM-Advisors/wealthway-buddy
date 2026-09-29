@@ -16,7 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "Blocked"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"]];
+const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "Blocked"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"], ["agreement_follow_up", "Agreement Follow-Up"]];
 const fmt = (d: string | null) => (d ? new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—");
 
 function RowActions({ f }: { f: any }) {
@@ -106,7 +106,7 @@ export function OpsFundsDashboard() {
             const lines = attentionLines(f.metrics);
             return (
               <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 lg:grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_13rem] lg:items-center">
-                <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}</Link>
+                <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}{(f as any).agreement && (f as any).agreement !== "complete" ? <span className="block text-xs font-normal text-muted-foreground">Agreement: {(f as any).agreement === "follow_up" ? "Follow-up required" : "Setup needs review"}</span> : null}</Link>
                 <span className="text-right text-muted-foreground lg:text-left">{f.clientName ?? "—"}</span>
                 <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.investors}</span>
                 <span className="text-right lg:text-left"><span className="lg:hidden text-muted-foreground">Onboarding </span>{f.metrics.onboarding}</span>

@@ -60,10 +60,10 @@ export function attentionLines(m: FundMetrics): string[] {
   return out;
 }
 
-export type FundFilter = "all" | "active" | "onboarding" | "needs_harmonious" | "blocked" | "ready" | "closing_soon";
+export type FundFilter = "all" | "active" | "onboarding" | "needs_harmonious" | "blocked" | "ready" | "closing_soon" | "agreement_follow_up";
 
 /** "Closing soon" is an explicit date window chosen by the user, not an SLA. */
-export function matchesFilter(r: { isOpen: boolean; targetClose: string | null; metrics: FundMetrics }, f: FundFilter, closingWithinDays = 30, now = Date.now()) {
+export function matchesFilter(r: { isOpen: boolean; targetClose: string | null; metrics: FundMetrics; agreement?: string }, f: FundFilter, closingWithinDays = 30, now = Date.now()) {
   switch (f) {
     case "all": return true;
     case "active": return r.isOpen;
@@ -71,6 +71,7 @@ export function matchesFilter(r: { isOpen: boolean; targetClose: string | null; 
     case "needs_harmonious": return r.metrics.needsHarmonious > 0;
     case "blocked": return r.metrics.blocked > 0;
     case "ready": return r.metrics.ready > 0;
+    case "agreement_follow_up": return r.agreement === "follow_up" || r.agreement === "needs_review";
     case "closing_soon": {
       if (!r.targetClose) return false;
       const t = new Date(r.targetClose).getTime();

@@ -212,9 +212,9 @@ export async function createInvestor(userId: string, input: {
   // 4. Related parties become their own (unclaimed) People on the profile.
   for (const r of input.related ?? []) {
     if (!RELATED_ROLES.has(r.role) || !r.firstName?.trim() || !r.lastName?.trim()) continue;
-    const { data: rp } = await db().from("persons").insert({ user_id: null, legal_first_name: r.firstName.trim(), legal_last_name: r.lastName.trim(), email: r.email ? normEmail(r.email) : null, entry_source: source, created_by: actor.userId, onboarding_state: "account_created" }).select("id").single();
-    if (!rp) continue;
-    await db().from("investment_profile_relationships").insert({ profile_id: profileId, person_id: rp.id, role: r.role, ownership_percent: r.ownershipPercent ?? null, is_authorized_signer: Boolean(r.isSigner) || r.role === "authorized_signer", status: "active", verification_status: "unverified", added_by: actor.userId });
+    // Safe matching: a possible existing Person opens a Harmonious review; never auto-merge.
+    const { addRelatedPerson } = await import("@/lib/related-person.server");
+    await addRelatedPerson({ profileId: profileId!, offeringId: input.offeringId, firstName: r.firstName, lastName: r.lastName, email: r.email ?? null, role: r.role, ownershipPercent: r.ownershipPercent ?? null, isSigner: r.isSigner, actorUserId: actor.userId, entrySource: source });
     changes.push({ offeringId: input.offeringId, onboardingId, table: "investment_profile_relationships", id: profileId!, field: `related:${r.role}`, from: null, to: `${r.firstName} ${r.lastName}`, source, actor: actor.userId });
   }
 
@@ -392,6 +392,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     nextAction: (result as any).nextAction?.label ?? null,
     stages: ((result as any).stages ?? []).map((s: any) => ({ key: s.stage, label: s.title, status: s.status })),
   };
+  const reviewSet = await (await import("@/lib/related-person.server")).relationshipsUnderReview(((rel ?? []) as any[]).map((r) => r.id));
   // Sensitive boundary: tax IDs, KYC/AML status fields, ID images and DOB never leave for managers.
   const safePerson = person ? {
     firstName: person.legal_first_name, middleName: person.legal_middle_name, lastName: person.legal_last_name, preferredName: person.preferred_name,
@@ -406,7 +407,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     overview: { name: personName(person) ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at) },
     person: safePerson,
     profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {} } : null,
-    related: ((rel ?? []) as any[]).map((r) => ({ id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status })),
+    related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status })),
     investment: {
       amountCents: row.requested_amount_cents, commitmentCents: row.commitment_amount_cents, investmentDate: row.investment_date, unitCount: row.unit_count,
       sourceReferral: row.source_referral, managerNotes: row.manager_notes, fundedCents: row.funded_amount_cents,

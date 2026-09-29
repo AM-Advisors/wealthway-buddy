@@ -421,6 +421,13 @@
       "when": 1790640329164,
       "tag": "0059_investor_manual_entry_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790654709851,
+      "tag": "0060_commercial_agreements_related_person_review",
+      "breakpoints": true
     }
   ]
 }
