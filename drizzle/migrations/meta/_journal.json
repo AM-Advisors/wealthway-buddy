@@ -505,6 +505,13 @@
       "when": 1790696571339,
       "tag": "0071_fund_record_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1790696729498,
+      "tag": "0072_rename_offering_rpc",
+      "breakpoints": true
     }
   ]
 }

@@ -30029,6 +30029,16 @@ export type Database = {
         Returns: number
       }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
+      rename_offering: {
+        Args: {
+          _actor: string
+          _effective: string
+          _name: string
+          _offering: string
+          _reason: string
+        }
+        Returns: undefined
+      }
       respond_to_invoice: {
         Args: {
           _decision: string
