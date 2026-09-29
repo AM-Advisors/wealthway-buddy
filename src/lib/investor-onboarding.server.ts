@@ -449,9 +449,10 @@ export async function startOnboarding(
   }
 
   // Continue records Harmonious or a Fund Manager prepared before sign-in.
+  let claim: { review?: boolean; reviewOfferingIds?: string[] } = {};
   try {
     const { claimPreparedRecords } = await import("@/lib/investor-record.server");
-    await claimPreparedRecords(actor.userId);
+    claim = await claimPreparedRecords(actor.userId);
   } catch (e) {
     console.error("[onboard] prepared-record claim skipped", (e as Error).message);
   }
@@ -465,7 +466,12 @@ export async function startOnboarding(
     .order("created_at", { ascending: false })
     .limit(1);
   const open = ((existing ?? []) as any[])[0];
-  if (open) return { onboardingId: open.id as string, resumed: true };
+  if (open) return { onboardingId: open.id as string, resumed: true, pendingReview: false };
+  // A prepared investment in this Fund may be theirs but can't be linked safely:
+  // wait for Harmonious instead of creating a duplicate.
+  if (claim.review && claim.reviewOfferingIds?.includes(offering.id)) {
+    return { onboardingId: null as string | null, resumed: false, pendingReview: true };
+  }
 
   const { data: person } = await db()
     .from("persons")
@@ -490,7 +496,7 @@ export async function startOnboarding(
     if ((error as any).code === "23505") {
       const { data: again } = await db().from("investor_onboardings").select("id").eq("offering_id", offering.id).eq("investor_user_id", actor.userId).not("stage", "in", "(closed,declined,cancelled)").order("created_at", { ascending: false }).limit(1);
       const row = ((again ?? []) as any[])[0];
-      if (row) return { onboardingId: row.id as string, resumed: true };
+      if (row) return { onboardingId: row.id as string, resumed: true, pendingReview: false };
     }
     fail(error.message);
   }
@@ -510,7 +516,7 @@ export async function startOnboarding(
     actorRole: "investor",
     detail: { invitationId: invitation?.id ?? null },
   });
-  return { onboardingId: created.id as string, resumed: false };
+  return { onboardingId: created.id as string, resumed: false, pendingReview: false };
 }
 
 /** The profiles this person may invest through, plus what they may create. */
@@ -1710,6 +1716,7 @@ export async function claimOnboardInvitation(userId: string, reference: string) 
   const mine = ((bound ?? []) as any[]).find((b) => b.investor_user_id === userId);
   if (mine) return { onboardingId: mine.id as string };
   const started = await startOnboarding(userId, { slugOrId: inv.offering_id, invitationToken: reference });
+  if (!started.onboardingId) fail("We need to verify your existing investment record before you continue. Harmonious has been notified. You don't need to create another investment.");
   return { onboardingId: started.onboardingId };
 }
 

@@ -12,7 +12,7 @@ import { FundOnboardingSettings } from "@/components/fund-onboarding-settings";
 import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { ManagerAddInvestor } from "@/components/manager-add-investor";
 import { PrepareInvestor } from "@/components/prepare-investor";
-import { copyText } from "@/components/fund-onboarding-link";
+import { copyText, FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { getFundInvestorActions, removeFundAccess, resendInvitation } from "@/lib/invitations.functions";
 import { fundReadinessFn, managerOnboardingBoardFn, resendOnboardInvitationFn } from "@/lib/investor-onboarding.functions";
 import { fundInvestorRecordsFn, removeFromFundFn } from "@/lib/investor-record.functions";
@@ -20,7 +20,7 @@ import { getFundLinkFn } from "@/lib/fund-onboarding-link.functions";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
 import { managerRowFromApplication } from "@/lib/prepared-investor-workflow";
 import {
-  CLAIM_STATE_LABELS, ROSTER_READINESS_LABELS, fundInvestorsSummary, rosterReadiness,
+  CLAIM_STATE_LABELS, ROSTER_READINESS_LABELS, fundInvestorsSummary, rosterReadiness, rosterOwner,
   type ClaimState, type RecordStatus, type RosterReadiness,
 } from "@/lib/investor-record-model";
 import { money, prettyStatus } from "@/lib/status";
@@ -124,7 +124,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   };
   const readinessCell = (id: string) => {
     const rr = readinessById.get(id); const st = rosterReadiness(rr);
-    return { st, label: ROSTER_READINESS_LABELS[st], next: rr?.nextAction?.label ?? (st === "unknown" ? "—" : "No action needed") };
+    return { st, label: ROSTER_READINESS_LABELS[st], next: rr?.nextAction?.label ?? (st === "unknown" ? "—" : "No action needed"), owner: rosterOwner(rr) };
   };
 
   return (
@@ -147,8 +147,10 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-6">
-        {([["Total", summary.total + legacy.length], ["Invited", summary.invited], ["Onboarding", summary.onboarding], ["Needs Attention", summary.needsAttention], ["Ready", summary.ready], ["Funded", summary.funded]] as const).map(([l, v]) => (
+      <FundOnboardingLinkCard fundId={fundId} />
+
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4 lg:grid-cols-7">
+        {([["Total", summary.total + legacy.length], ["Invited", summary.invited], ["Onboarding", summary.onboarding], ["Needs Investor", summary.needsInvestor], ["Needs Harmonious", summary.needsHarmonious], ["Ready", summary.ready], ["Funded", summary.funded]] as const).map(([l, v]) => (
           <div key={l} className="bg-card p-3"><p className="text-[11px] uppercase tracking-wide text-muted-foreground">{l}</p><p className="font-heading text-xl font-semibold">{v}</p></div>
         ))}
       </div>
@@ -191,7 +193,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
                 </li>); })}
             </ul>
             <table className="hidden w-full text-left text-sm md:table">
-              <thead className="border-y bg-muted/50 text-xs text-muted-foreground"><tr>{["Investor", "Profile", "Investment", "Record Status", "Readiness", "Next Action", ""].map((h) => <th key={h} className="px-2 py-2.5 font-medium">{h}</th>)}</tr></thead>
+              <thead className="border-y bg-muted/50 text-xs text-muted-foreground"><tr>{["Investor", "Profile", "Amount", "Record Status", "Status", "Next Action", "Owner", ""].map((h) => <th key={h} className="px-2 py-2.5 font-medium">{h}</th>)}</tr></thead>
               <tbody className="divide-y">
                 {shown.map((r) => { const rc = readinessCell(r.onboardingId); return (
                   <tr key={r.onboardingId} className="align-top hover:bg-muted/30">
@@ -202,6 +204,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
                     <td className="px-2 py-3"><Badge variant={recordTone[r.recordStatus]}>{r.recordStatusLabel}</Badge></td>
                     <td className="px-2 py-3"><Badge variant={readinessTone[rc.st]}>{rc.label}</Badge></td>
                     <td className="px-2 py-3 text-muted-foreground">{rc.next}</td>
+                    <td className="px-2 py-3 text-muted-foreground">{rc.owner}</td>
                     <td className="px-2 py-3">{rowMenu(r)}</td>
                   </tr>); })}
                 {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); return (
@@ -211,6 +214,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
                     <td className="px-2 py-3">{money(s.commitmentCents)}<p className="text-xs text-muted-foreground">{prettyStatus(row.stage)}</p></td>
                     <td className="px-2 py-3 text-muted-foreground" colSpan={2}>Verification {s.verification} · Documents {s.documents} · Funding {s.funding}</td>
                     <td className="px-2 py-3 text-muted-foreground">{s.nextAction}</td>
+                    <td className="px-2 py-3 text-muted-foreground">—</td>
                     <td className="px-2 py-3">{legacyMenu(row.applicationId, s.investor)}</td>
                   </tr>); })}
               </tbody>

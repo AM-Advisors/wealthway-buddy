@@ -320,15 +320,52 @@ export function rosterReadiness(r: ReadinessRow | undefined): RosterReadiness {
   return items.some((i) => ["blocked", "needs_harmonious", "needs_fund_manager"].includes(i.status)) ? "needs_attention" : "in_progress";
 }
 /** Summary for the single Fund Investors roster: counts only canonical investments shown in the roster; invitations counted separately. */
-export function fundInvestorsSummary(recordIds: string[], readiness: ReadinessRow[], pendingInvitations: number) {
+export function fundInvestorsSummary(recordIds: string[], readiness: (ReadinessRow & { nextAction?: { owner?: string | null } | null })[], pendingInvitations: number) {
   const byId = new Map(readiness.map((r) => [r.onboardingId, r]));
-  const s = { total: recordIds.length, invited: pendingInvitations, onboarding: 0, needsAttention: 0, ready: 0, funded: 0 };
+  const s = { total: recordIds.length, invited: pendingInvitations, onboarding: 0, needsAttention: 0, needsInvestor: 0, needsHarmonious: 0, ready: 0, funded: 0 };
   for (const id of recordIds) {
     const r = byId.get(id);
     if (r?.readiness?.items?.some((i) => i.key === "funding" && i.status === "complete")) s.funded++;
     const st = rosterReadiness(r);
     if (st === "ready") s.ready++;
-    else if (st !== "closed") { s.onboarding++; if (st === "needs_attention") s.needsAttention++; }
+    else if (st !== "closed") {
+      s.onboarding++;
+      if (st === "needs_attention") s.needsAttention++;
+      const who = rosterOwner(r);
+      if (who === "Investor") s.needsInvestor++;
+      else if (who === "Harmonious") s.needsHarmonious++;
+    }
   }
   return s;
 }
+
+/** Who the next step is waiting on, in client wording. Never exposes the internal work item. */
+export type RosterOwner = "Investor" | "Harmonious" | "Fund Manager" | "—";
+export function rosterOwner(r: (ReadinessRow & { nextAction?: { owner?: string | null } | null }) | undefined): RosterOwner {
+  const o = r?.nextAction?.owner;
+  if (!r || r.closeReady || r.readiness?.terminal) return "—";
+  if (o === "investor") return "Investor";
+  if (o === "harmonious") return "Harmonious";
+  if (o === "fund_manager" || o === "manager") return "Fund Manager";
+  return "—";
+}
+
+/* ---------------- prepared-record claim (pure) ---------------- */
+
+/**
+ * Decide how a verified sign-in relates to records prepared before sign-in.
+ * Never merges automatically: exactly one unclaimed candidate and no existing
+ * Person of the user's own is the only case that links without a person.
+ */
+export type ClaimPlan = { kind: "none" } | { kind: "link"; personId: string } | { kind: "review"; candidateIds: string[] };
+export function planClaim(input: { emailVerified: boolean; unclaimedCandidateIds: string[]; ownPersonId: string | null }): ClaimPlan {
+  if (!input.emailVerified || input.unclaimedCandidateIds.length === 0) return { kind: "none" };
+  if (input.ownPersonId || input.unclaimedCandidateIds.length > 1) return { kind: "review", candidateIds: [...input.unclaimedCandidateIds] };
+  return { kind: "link", personId: input.unclaimedCandidateIds[0]! };
+}
+
+/** Investor-facing wording while Harmonious resolves an ambiguous match. No candidate details. */
+export const PENDING_MATCH_MESSAGE = {
+  title: "We need to verify your existing investment record before you continue.",
+  body: "Harmonious has been notified. You don't need to create another investment.",
+} as const;

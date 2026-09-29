@@ -156,6 +156,31 @@ export function openableStep(steps: JourneyStepView[], requested: unknown): Jour
   return nextJourneyStep(steps);
 }
 
+/**
+ * The investor's "home" summary for one investment, read from the same steps.
+ * If nothing is on the investor, say they're caught up and what it waits on.
+ */
+export type InvestorHomeSummary = {
+  progressPercent: number;
+  caughtUp: boolean;
+  complete: boolean;
+  nextAction: string | null;
+  nextStep: JourneyStep | null;
+  waitingOn: string | null;
+};
+export function investorHomeSummary(steps: JourneyStepView[], facts: { waitingOnManager?: boolean } = {}): InvestorHomeSummary {
+  const total = steps.length || 1;
+  const done = steps.filter((s) => s.state === "complete").length;
+  const complete = steps.length > 0 && done === steps.length;
+  const action = steps.find((s) => s.state === "action_required");
+  if (complete) return { progressPercent: 100, caughtUp: true, complete, nextAction: null, nextStep: null, waitingOn: null };
+  if (action) return { progressPercent: Math.round((done / total) * 100), caughtUp: false, complete, nextAction: action.message, nextStep: action.key, waitingOn: null };
+  return {
+    progressPercent: Math.round((done / total) * 100), caughtUp: true, complete, nextAction: null, nextStep: null,
+    waitingOn: facts.waitingOnManager ? "Waiting for the Fund Manager." : "Harmonious is reviewing your information.",
+  };
+}
+
 // ------------------------------------------------------- offering exemption
 
 /**

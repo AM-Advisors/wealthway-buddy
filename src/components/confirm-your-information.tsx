@@ -17,6 +17,7 @@ export function ConfirmYourInformation({ onboardingId }: { onboardingId: string 
   const { data } = useQuery({ queryKey: ["investor-prefill", onboardingId], queryFn: () => load({ data: { onboardingId } }), retry: false });
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
   if (!data?.needed) return null;
   const submit = async () => {
     setBusy(true);
@@ -28,20 +29,23 @@ export function ConfirmYourInformation({ onboardingId }: { onboardingId: string 
   };
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Please confirm your information</CardTitle>
-        <p className="text-sm text-muted-foreground">Some details were entered for you. Check them, correct what you can, and confirm. Anything you can't change here can be corrected by Harmonious.</p></CardHeader>
+      <CardHeader><CardTitle className="text-base">We already have some information for this investment.</CardTitle>
+        <p className="text-sm text-muted-foreground">Please review and confirm it before continuing. Anything you can't change here can be corrected by Harmonious.</p></CardHeader>
       <CardContent className="space-y-3">
         {data.fields.filter((f: any) => f.value != null || f.editable).map((f: any) => (
           <div key={f.key} className="grid gap-1 sm:grid-cols-[10rem_1fr] sm:items-center">
             <div><p className="text-sm font-medium">{f.label}</p>{f.suppliedBy ? <p className="text-xs text-muted-foreground">Entered by {SOURCE_LABELS[f.suppliedBy as EntrySource] ?? "Harmonious"}</p> : null}</div>
-            {f.editable ? (
+            {f.editable && editing ? (
               <Input aria-label={f.label} defaultValue={f.value ?? ""} onChange={(e) => setEdits((s) => ({ ...s, [f.key]: e.target.value }))} />
             ) : (
-              <p className="text-sm">{f.key.endsWith("_cents") ? money(f.value) : String(f.value ?? "—")}</p>
+              <p className="text-sm">{f.value == null || f.value === "" ? "—" : f.key.endsWith("_cents") ? money(f.value) : String(f.value)}</p>
             )}
           </div>
         ))}
-        <Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Confirm my information"}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Confirm"}</Button>
+          {!editing ? <Button variant="outline" onClick={() => setEditing(true)} disabled={busy}>Edit</Button> : null}
+        </div>
       </CardContent>
     </Card>
   );

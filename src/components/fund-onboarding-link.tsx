@@ -30,7 +30,7 @@ export function FundOnboardingLinkCard({ fundId }: { fundId: string }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 font-heading text-xl font-semibold"><Link2 className="h-5 w-5" />Investor Onboarding Link</h2>
-          <p className="text-sm text-muted-foreground">Use this link to invite investors to begin onboarding for this fund.</p>
+          <p className="text-sm text-muted-foreground">Share this link with investors to begin or continue onboarding for this Fund.</p>
         </div>
         <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-semibold", d.status === "active" ? "bg-accent/30" : "bg-muted text-muted-foreground")}>{LINK_STATUS_LABEL[d.status]}</span>
       </div>
@@ -39,12 +39,12 @@ export function FundOnboardingLinkCard({ fundId }: { fundId: string }) {
           <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/40 px-3 py-2 text-xs">{d.url}</code>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => copyText(d.url!, "Link copied")}><Copy className="mr-1 h-3.5 w-3.5" />Copy Link</Button>
-            <Button size="sm" variant="outline" asChild><a href={d.url} target="_blank" rel="noreferrer"><ExternalLink className="mr-1 h-3.5 w-3.5" />Preview</a></Button>
+            <Button size="sm" variant="outline" asChild><a href={d.url} target="_blank" rel="noreferrer"><ExternalLink className="mr-1 h-3.5 w-3.5" />Preview Investor Experience</a></Button>
             <Button size="sm" variant="outline" onClick={() => copyText(invitationMessage(d.fundName, d.url!), "Invitation message copied")}><MessageSquare className="mr-1 h-3.5 w-3.5" />Copy Invitation Message</Button>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">{d.status === "disabled" ? "This link is turned off. Investors who open it see that it isn't active." : "No onboarding link has been set up for this fund yet."}</p>
+        <p className="text-sm text-muted-foreground">{d.status === "disabled" ? "This link is turned off. Investors who open it see that it isn't active." : "No onboarding link has been set up for this fund yet. Harmonious will set it up for you."}</p>
       )}
       <dl className="grid grid-cols-2 gap-4 border-t pt-4 text-sm sm:grid-cols-4">
         <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Created</dt><dd>{fmt(d.createdAt)}</dd></div>
