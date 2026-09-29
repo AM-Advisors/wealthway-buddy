@@ -112,6 +112,16 @@ const saveSchema = z.object({
   ss4: ss4Schema,
 });
 
+function stripRpTinPlain(ss4: Record<string, unknown>) {
+  const { responsible_party_tin: _a, responsible_party_tin_last4: _b, ...rest } = ss4 as any;
+  return rest as Record<string, unknown>;
+}
+
+async function rpMeta(offeringId: string) {
+  const { rpIdentifierMeta } = await import("@/lib/responsible-party-identifier.server");
+  return rpIdentifierMeta(offeringId);
+}
+
 function normalizeEin(value: string) {
   const digits = value.replace(/\D/g, "");
   if (digits.length !== 9) return value.trim();
@@ -157,7 +167,8 @@ export const getFundEntity = createServerFn({ method: "POST" })
       details: {
         has_ein: Boolean(detail.has_ein),
         ein: einVisible ? ((detail.ein ?? "") as string) : "",
-        ss4: (detail.ss4 ?? {}) as Record<string, string | boolean>,
+        ss4: stripRpTinPlain(detail.ss4 ?? {}) as Record<string, string | boolean>,
+        rp_tin_on_file: (await rpMeta(data.offering_id)).onFile,
         ss4_generated_at: (detail.ss4_generated_at ?? null) as string | null,
         has_ss4_file: ss4Visible && Boolean(detail.ss4_storage_path),
         ein_review_status: einStatus,
@@ -193,11 +204,17 @@ export const saveFundEntity = createServerFn({ method: "POST" })
       .eq("id", data.offering_id);
     if (offeringError) throw new Error(offeringError.message);
 
+    // Responsible Party SSN/ITIN goes only to the encrypted vault, never into SS-4 JSON.
+    const rpTin = String(data.ss4.responsible_party_tin ?? "").trim();
+    if (rpTin) {
+      const { storeRpIdentifier } = await import("@/lib/responsible-party-identifier.server");
+      await storeRpIdentifier(data.offering_id, rpTin, context.userId);
+    }
     const { error: detailError } = await context.supabase.rpc("save_offering_entity_details", {
       p_offering_id: data.offering_id,
       p_has_ein: data.has_ein,
       p_ein: data.has_ein ? normalizeEin(data.ein) : "",
-      p_ss4: data.ss4 as any,
+      p_ss4: stripRpTinPlain(data.ss4) as any,
     });
     if (detailError) throw new Error(detailError.message);
 
@@ -219,7 +236,10 @@ export const generateSs4 = createServerFn({ method: "POST" })
     }
 
     const { fillSs4Pdf } = await import("@/lib/ss4-pdf.server");
-    const bytes = await fillSs4Pdf(ss4 as any);
+    // Identifier is decrypted server-side for this authorized generation only; never returned or persisted in plaintext.
+    const { readRpIdentifierForAuthorizedOperation } = await import("@/lib/responsible-party-identifier.server");
+    const rpTin = (await readRpIdentifierForAuthorizedOperation(data.offering_id)) ?? "";
+    const bytes = await fillSs4Pdf({ ...stripRpTinPlain(ss4), responsible_party_tin: rpTin } as any);
 
     const path = `${data.offering_id}/form-ss4-${Date.now()}.pdf`;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

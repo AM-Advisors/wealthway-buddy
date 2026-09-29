@@ -7,6 +7,7 @@
 import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
+import { rpIdentifierMeta, storeRpIdentifier, stripRpTin } from "@/lib/responsible-party-identifier.server";
 import {
   ADMIN_SERVICES,
   adminSection,
@@ -119,7 +120,8 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
     gpName: o.gp_entity_name,
   });
   const merged = { ...ss4, ...prefill };
-  const hasRpTin = !!String(ss4.responsible_party_tin ?? ss4.responsible_party_tin_last4 ?? "").trim();
+  const rpMeta = await rpIdentifierMeta(offeringId);
+  const hasRpTin = rpMeta.onFile;
   const missing = ss4Missing({ ...merged, responsible_party_tin: hasRpTin ? "x" : "" }, {
     hasEmployees: Number(ss4.employees_other ?? 0) + Number(ss4.employees_household ?? 0) + Number(ss4.employees_agricultural ?? 0) > 0,
     usesDesignee: !!String(ss4.designee_name ?? "").trim(),
@@ -162,8 +164,9 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
       responsiblePersonId: o.ss4_responsible_person_id as string | null,
       ss4Prefilled: Object.keys(prefill),
       ss4Missing: missing,
-      ss4Answers: (actor.isStaff ? Object.fromEntries(Object.entries(ss4).filter(([k]) => k !== "responsible_party_tin")) : {}) as Record<string, string | boolean>,
+      ss4Answers: (actor.isStaff ? stripRpTin(ss4) : {}) as Record<string, string | boolean>,
       hasResponsiblePartyTin: hasRpTin,
+      responsiblePartyTinLast4: actor.isStaff ? rpMeta.last4 : null,
       section: entity,
     },
     admin: { services, formD: o.form_d_responsibility as FilingResponsibility | null, blueSky: o.blue_sky_responsibility as FilingResponsibility | null, regType: o.reg_type as string | null, section: admin },
@@ -307,15 +310,9 @@ export async function saveSs4(sb: any, userId: string, input: { offeringId: stri
   await assertStaff(userId, input.offeringId);
   const { data: cur } = await sb.rpc("get_offering_entity_details", { p_offering_id: input.offeringId }).maybeSingle();
   const prev: any = (cur as any)?.ss4 ?? {};
-  const next: any = { ...prev, ...input.answers };
-  delete next.responsible_party_tin_last4;
-  if (input.responsiblePartyTin) {
-    const t = input.responsiblePartyTin.replace(/\D/g, "");
-    if (t.length !== 9) throw new Error("The responsible party's SSN, ITIN or EIN must be 9 digits.");
-    next.responsible_party_tin = t;
-  } else {
-    next.responsible_party_tin = prev.responsible_party_tin ?? "";
-  }
+  // Identifier goes to the encrypted vault first; it never enters SS-4 JSON.
+  if (input.responsiblePartyTin) await storeRpIdentifier(input.offeringId, input.responsiblePartyTin, userId);
+  const next: any = stripRpTin({ ...prev, ...input.answers });
   await writeEntity(sb, input.offeringId, { ss4: next });
   if (input.responsiblePersonId !== undefined) {
     if (input.responsiblePersonId) {
@@ -418,4 +415,20 @@ export async function classAssignments(userId: string, offeringId: string) {
     defaults: approved?.terms ?? null,
     investments: ((rows ?? []) as any[]).map((r) => ({ id: r.id, investor: name.get(r.person_id) || "Investor", classKey: r.offering_class_key as string | null, stage: r.stage as string })),
   };
+}
+
+/** Harmonious-only: funds whose current wire instructions await second-person verification. */
+export async function pendingWireVerifications(sb: any, userId: string) {
+  const { data: staff } = await sb.rpc("is_any_staff");
+  if (!staff) forbid("only Harmonious can review wire instructions.");
+  const { data: offerings } = await db().from("offerings").select("id, name").order("name");
+  const out: { offeringId: string; fundName: string; version: number; hasDocument: boolean; ownershipReview: string | null }[] = [];
+  for (const o of (offerings ?? []) as any[]) {
+    const versions = await bankVersions(sb, o.id).catch(() => []);
+    const cur = versions[0];
+    if (cur && cur.status === "pending_verification") {
+      out.push({ offeringId: o.id, fundName: o.name, version: cur.version, hasDocument: cur.hasWireDocument, ownershipReview: cur.ownershipReview ?? null });
+    }
+  }
+  return out;
 }
