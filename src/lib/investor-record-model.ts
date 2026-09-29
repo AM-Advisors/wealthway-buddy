@@ -244,7 +244,7 @@ export function classifyBulk(rows: BulkRowInput[], people: (PersonCandidate & { 
     const m = matches[0];
     if (!m) {
       // Canonical Person Resolution: a same-name Person under another email is a possible match, never "new".
-      const r = resolvePerson({ firstName: input.first_name, lastName: input.last_name }, people.map((p) => ({ id: p.personId, email: p.email, firstName: p.firstName, lastName: p.lastName })));
+      const r = resolvePerson({ firstName: input.first_name ?? null, lastName: input.last_name ?? null }, people.map((p) => ({ id: p.personId, email: p.email, firstName: p.firstName, lastName: p.lastName })));
       if (r.outcome !== "no_match") return { index, input, cls: "needs_review", errors: ["An existing person with the same legal name may be this investor. Harmonious will review before anything is created."], personId: null, conflicts: [] };
       return { index, input, cls: "create_new", errors: [], personId: null, conflicts: [] };
     }
