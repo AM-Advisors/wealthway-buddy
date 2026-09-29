@@ -119,8 +119,9 @@ export const saveClientDraft = createServerFn({ method: "POST" })
       legal_name: data.legal_name || null,
       dba_name: data.dba_name || null,
       client_type: data.client_type ?? null,
-      primary_contact_name: data.primary_contact_name || null,
-      primary_contact_email: data.primary_contact_email || null,
+      // Primary Contact now lives under Contacts; only legacy callers still send these.
+      ...(data.primary_contact_name ? { primary_contact_name: data.primary_contact_name } : {}),
+      ...(data.primary_contact_email ? { primary_contact_email: data.primary_contact_email } : {}),
       phone: data.phone || null,
       website: data.website || null,
       entity_type: data.entity_type || null,
@@ -179,36 +180,48 @@ const contactInput = z.object({
       }),
     )
     .max(40),
+  /** Row indexes the preparer confirmed are a separate person despite a possible match. */
+  confirmedSeparate: z.array(z.number().int().min(0).max(40)).max(40).optional(),
 });
 
-/** Contacts are records only — a designation never creates platform access or authority. */
+/**
+ * Contacts are records only — a designation never creates platform access or authority.
+ * Primary Contact is a designation on a Contact, never a second Person. New
+ * contacts are matched against this Client's existing contacts through the
+ * canonical Person Resolution rules; removed contacts are deactivated, never deleted.
+ */
 export const saveClientContacts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => contactInput.parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "prepare");
     const db = await admin();
-    const { data: existing } = await db.from("client_contacts").select("id").eq("client_id", data.clientId);
-    const keep = new Set(data.contacts.map((c) => c.id).filter(Boolean));
-    const remove = ((existing ?? []) as any[]).map((r) => r.id).filter((id) => !keep.has(id));
-    if (remove.length) await db.from("client_contacts").delete().in("id", remove).eq("client_id", data.clientId);
-    for (const c of data.contacts) {
-      const row = { client_id: data.clientId, full_name: c.full_name, email: c.email || null, phone: c.phone || null, title: c.title || null, designations: c.designations, updated_at: new Date().toISOString() };
+    const { planContactSave } = await import("@/lib/client-contacts-model");
+    const { data: existing } = await db.from("client_contacts").select("id, full_name, email, designations, status").eq("client_id", data.clientId);
+    const plan = planContactSave(((existing ?? []) as any[]).filter((r) => r.status !== "inactive"), data.contacts as any, data.confirmedSeparate ?? []);
+    if (plan.error) throw new Error(plan.error);
+    const now = new Date().toISOString();
+    if (plan.deactivate.length) {
+      await db.from("client_contacts").update({ status: "inactive", deactivated_at: now, deactivated_by: context.userId, updated_at: now }).in("id", plan.deactivate).eq("client_id", data.clientId);
+    }
+    for (const c of plan.rows) {
+      const row = { client_id: data.clientId, full_name: c.full_name, email: c.email || null, phone: c.phone || null, title: c.title || null, designations: c.designations, status: "active", updated_at: now };
       if (c.id) await db.from("client_contacts").update(row).eq("id", c.id).eq("client_id", data.clientId);
       else await db.from("client_contacts").insert({ ...row, created_by: context.userId });
     }
-    const primary = data.contacts.find((c) => c.designations.includes("Primary"));
-    const billing = data.contacts.find((c) => c.designations.includes("Billing"));
+    const primary = plan.rows.find((c) => c.designations.includes("Primary"));
+    const billing = plan.rows.find((c) => c.designations.includes("Billing"));
+    // Legacy primary_contact_* columns stay as a mirror of the canonical Primary Contact; old values are kept in the audit trail.
+    const { data: before } = await db.from("clients").select("primary_contact_name, primary_contact_email").eq("id", data.clientId).maybeSingle();
     await db
       .from("clients")
       .update({
-        intake_step: 3,
         ...(primary ? { primary_contact_name: primary.full_name, primary_contact_email: primary.email || null } : {}),
         ...(billing ? { billing_contact_name: billing.full_name, billing_contact_email: billing.email || null } : {}),
       })
       .eq("id", data.clientId);
-    await audit(context, roles, { clientId: data.clientId, area: "client", action: "contacts saved", next: { count: data.contacts.length } });
-    return { ok: true };
+    await audit(context, roles, { clientId: data.clientId, area: "client", action: "contacts saved", previous: before, next: { count: plan.rows.length, deactivated: plan.deactivate.length, linked: plan.linked, primary: primary?.full_name ?? null } });
+    return { ok: true, linked: plan.linked };
   });
 
 export const saveExpectedServices = createServerFn({ method: "POST" })

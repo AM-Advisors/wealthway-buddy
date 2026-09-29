@@ -5270,6 +5270,65 @@ export type Database = {
           },
         ]
       }
+      client_service_configurations: {
+        Row: {
+          changed_by: string | null
+          client_id: string
+          config: Json
+          created_at: string
+          effective_date: string
+          entitlements: Json
+          id: string
+          legacy_services: string[]
+          mapping_review: string[]
+          pricing: Json
+          pricing_version_id: string | null
+          reason: string | null
+          superseded_at: string | null
+          version: number
+        }
+        Insert: {
+          changed_by?: string | null
+          client_id: string
+          config?: Json
+          created_at?: string
+          effective_date?: string
+          entitlements?: Json
+          id?: string
+          legacy_services?: string[]
+          mapping_review?: string[]
+          pricing?: Json
+          pricing_version_id?: string | null
+          reason?: string | null
+          superseded_at?: string | null
+          version: number
+        }
+        Update: {
+          changed_by?: string | null
+          client_id?: string
+          config?: Json
+          created_at?: string
+          effective_date?: string
+          entitlements?: Json
+          id?: string
+          legacy_services?: string[]
+          mapping_review?: string[]
+          pricing?: Json
+          pricing_version_id?: string | null
+          reason?: string | null
+          superseded_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_service_configurations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_service_selections: {
         Row: {
           client_id: string
@@ -14895,6 +14954,7 @@ export type Database = {
           id: string
           offering_id: string
           pricing_version_id: string | null
+          service_config: Json | null
           source: string
           status: string
           superseded_at: string | null
@@ -14910,6 +14970,7 @@ export type Database = {
           id?: string
           offering_id: string
           pricing_version_id?: string | null
+          service_config?: Json | null
           source: string
           status: string
           superseded_at?: string | null
@@ -14925,6 +14986,7 @@ export type Database = {
           id?: string
           offering_id?: string
           pricing_version_id?: string | null
+          service_config?: Json | null
           source?: string
           status?: string
           superseded_at?: string | null
@@ -16421,6 +16483,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      harmonious_series_masters: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          jurisdiction: string | null
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          jurisdiction?: string | null
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          jurisdiction?: string | null
+          name?: string
+        }
+        Relationships: []
       }
       help_content: {
         Row: {

@@ -11,13 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UploadContractForm } from "@/components/client-contracts";
+import { ExpectedServicesEditor } from "@/components/expected-services-editor";
+import { HarmoniousTeamCard } from "@/components/harmonious-team-card";
 import {
   finishIntake,
   getClientDraft,
   getIntakeOptions,
   saveClientContacts,
   saveClientDraft,
-  saveExpectedServices,
 } from "@/lib/contract-intake.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/clients/new")({
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/ops/clients/new")({
   component: NewClient,
 });
 
-const STEPS = ["Client", "Contacts", "Services", "Contract", "Review"];
+const STEPS = ["Client Information", "Contacts", "Harmonious Team", "Expected Services", "Commercial"];
 type Contact = { id?: string; full_name: string; email: string; phone: string; title: string; designations: string[] };
 
 function NewClient() {
@@ -48,7 +49,6 @@ function NewClient() {
   const draftFn = useServerFn(getClientDraft);
   const saveFn = useServerFn(saveClientDraft);
   const contactsFn = useServerFn(saveClientContacts);
-  const servicesFn = useServerFn(saveExpectedServices);
   const finishFn = useServerFn(finishIntake);
   const options = useQuery({ queryKey: ["intake-options"], queryFn: () => optionsFn() });
   const draft = useQuery({
@@ -60,7 +60,7 @@ function NewClient() {
   const [f, setF] = useState<any>({ name: "" });
   const v = f as any;
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [services, setServices] = useState<string[]>([]);
+  const [confirmedSeparate, setConfirmedSeparate] = useState<number[]>([]);
   const [contractChoice, setContractChoice] = useState<"upload" | "standard" | "later">("later");
   const [dupes, setDupes] = useState<{ id: string; name: string }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -75,11 +75,11 @@ function NewClient() {
       address: c.address?.text ?? "", relationship_owner_id: c.relationship_owner_id ?? "", referral_source: c.referral_source ?? "",
       notes: c.notes ?? "", ein_hint: c.ein_last4 ? `••••${c.ein_last4}` : "",
     });
-    setServices(c.expected_services ?? []);
     if (c.contract_choice) setContractChoice(c.contract_choice);
     setContacts(((draft.data?.contacts ?? []) as any[]).map((x) => ({ id: x.id, full_name: x.full_name, email: x.email ?? "", phone: x.phone ?? "", title: x.title ?? "", designations: x.designations ?? [] })));
   }, [draft.data]);
 
+  const legacyPrimary = !!(f.primary_contact_name || f.primary_contact_email) && !contacts.some((x) => x.designations.includes("Primary"));
   const set = (k: string) => (e: { target: { value: string } }) => setF((p: any) => ({ ...p, [k]: e.target.value }));
   const go = (n: number) => {
     setStep(n);
@@ -92,8 +92,7 @@ function NewClient() {
       const res = await saveFn({
         data: {
           id: clientId, confirmDuplicate, step: 2, name: v.name ?? "", legal_name: v.legal_name, dba_name: v.dba_name,
-          client_type: (v.client_type || undefined) as any, primary_contact_name: v.primary_contact_name,
-          primary_contact_email: v.primary_contact_email, phone: v.phone, website: v.website, entity_type: v.entity_type,
+          client_type: (v.client_type || undefined) as any, phone: v.phone, website: v.website, entity_type: v.entity_type,
           jurisdiction: v.jurisdiction, ein: v.ein, address: v.address, relationship_owner_id: v.relationship_owner_id || null,
           referral_source: v.referral_source, notes: v.notes,
         },
@@ -101,8 +100,6 @@ function NewClient() {
       if (res.duplicates.length) return setDupes(res.duplicates);
       setDupes([]);
       setClientId(res.id!);
-      if (!contacts.length && v.primary_contact_name)
-        setContacts([{ full_name: v.primary_contact_name, email: v.primary_contact_email ?? "", phone: v.phone ?? "", title: "", designations: ["Primary"] }]);
       toast.success("Draft saved");
       setStep(2);
       navigate({ to: "/ops/clients/new", search: { id: res.id!, step: 2 }, replace: true });
@@ -150,8 +147,6 @@ function NewClient() {
               </select>
             </Field>
             <Field label="Legal entity name"><Input value={f.legal_name ?? ""} onChange={set("legal_name")} /></Field>
-            <Field label="Primary contact"><Input value={f.primary_contact_name ?? ""} onChange={set("primary_contact_name")} /></Field>
-            <Field label="Primary email"><Input type="email" value={f.primary_contact_email ?? ""} onChange={set("primary_contact_email")} /></Field>
             <Field label="Phone"><Input value={f.phone ?? ""} onChange={set("phone")} /></Field>
             <Field label="Website"><Input value={f.website ?? ""} onChange={set("website")} /></Field>
             <Field label="Entity type"><Input value={f.entity_type ?? ""} onChange={set("entity_type")} placeholder="LLC, LP, Corporation…" /></Field>
@@ -182,8 +177,15 @@ function NewClient() {
 
       {step === 2 && clientId && (
         <Card><CardHeader><CardTitle className="text-base">Contacts</CardTitle>
-          <CardDescription>Designations are reference only — they don't grant access or signing authority.</CardDescription></CardHeader>
+          <CardDescription>Everyone at the client lives here. Mark one person as Primary Contact. Designations are reference only — they don't grant access or signing authority.</CardDescription></CardHeader>
           <CardContent className="space-y-4">
+            {legacyPrimary && (
+              <div className="rounded-md border border-dashed p-3 text-sm">
+                <p className="font-medium">Contact Review Required</p>
+                <p className="text-xs text-muted-foreground">This client has a saved primary contact ({f.primary_contact_name || f.primary_contact_email}) that isn't linked to a contact yet. Nothing has been changed.</p>
+                <Button size="sm" variant="outline" className="mt-2" onClick={() => setContacts((p) => [...p.map((x) => ({ ...x, designations: x.designations.filter((d) => d !== "Primary") })), { full_name: f.primary_contact_name || "", email: f.primary_contact_email || "", phone: "", title: "", designations: ["Primary"] }])}>Add as Primary Contact</Button>
+              </div>
+            )}
             {contacts.map((c, i) => (
               <div key={i} className="grid gap-2 rounded-md border p-3 sm:grid-cols-2">
                 <Input placeholder="Full name" value={c.full_name} onChange={(e) => setContacts((p) => p.map((x, j) => j === i ? { ...x, full_name: e.target.value } : x))} />
@@ -194,41 +196,44 @@ function NewClient() {
                   {opts?.designations.map((d) => (
                     <label key={d} className="flex items-center gap-1">
                       <input type="checkbox" checked={c.designations.includes(d)}
-                        onChange={(e) => setContacts((p) => p.map((x, j) => j === i ? { ...x, designations: e.target.checked ? [...x.designations, d] : x.designations.filter((y) => y !== d) } : x))} />
-                      {d}
+                        onChange={(e) => setContacts((p) => p.map((x, j) => j === i ? { ...x, designations: e.target.checked ? [...x.designations, d] : x.designations.filter((y) => y !== d) } : d === "Primary" && e.target.checked ? { ...x, designations: x.designations.filter((y) => y !== "Primary") } : x))} />
+                      {d === "Primary" ? "Primary Contact" : d}
                     </label>
                   ))}
+                  {!c.id && <label className="flex items-center gap-1 text-xs text-muted-foreground"><input type="checkbox" checked={confirmedSeparate.includes(i)} onChange={(e) => setConfirmedSeparate((p) => e.target.checked ? [...p, i] : p.filter((x) => x !== i))} />Separate person (confirmed)</label>}
                   <button type="button" className="ml-auto text-muted-foreground underline" onClick={() => setContacts((p) => p.filter((_, j) => j !== i))}>Remove</button>
                 </div>
               </div>
             ))}
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setContacts((p) => [...p, { full_name: "", email: "", phone: "", title: "", designations: [] }])}>+ Add contact</Button>
-              <Button disabled={busy} onClick={() => run(() => contactsFn({ data: { clientId, contacts: contacts.filter((c) => c.full_name.trim()) as any } }), 3)}>Save & continue</Button>
+              <Button disabled={busy} onClick={() => run(() => contactsFn({ data: { clientId, contacts: contacts.filter((c) => c.full_name.trim()) as any, confirmedSeparate } }), 3)}>Save & continue</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
       {step === 3 && clientId && (
+        <div className="space-y-3">
+          <HarmoniousTeamCard clientId={clientId} />
+          <p className="text-xs text-muted-foreground">Optional — you can assign the team later. Funds pick up this team automatically.</p>
+          <Button onClick={() => go(4)}>Continue</Button>
+        </div>
+      )}
+
+      {step === 4 && clientId && (
         <Card><CardHeader><CardTitle className="text-base">Expected services</CardTitle>
-          <CardDescription>From the Harmonious service catalog. These are expectations only — the signed contract controls actual scope.</CardDescription></CardHeader>
+          <CardDescription>What Harmonious expects to provide. Optional, and never a blocker — each fund records its own Services & Pricing when it's created.</CardDescription></CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid gap-2 sm:grid-cols-2">
-              {opts?.services.map((s) => (
-                <label key={s.key} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={services.includes(s.key)} onChange={(e) => setServices((p) => e.target.checked ? [...p, s.key] : p.filter((x) => x !== s.key))} />
-                  {s.name}
-                </label>
-              ))}
-            </div>
-            <Button disabled={busy} onClick={() => run(() => servicesFn({ data: { clientId, services } }), 4)}>Save & continue</Button>
+            <ExpectedServicesEditor clientId={clientId} onSaved={() => go(5)} />
+            <Button variant="ghost" onClick={() => go(5)}>Skip for now</Button>
           </CardContent>
         </Card>
       )}
 
-      {step === 4 && clientId && (
-        <Card><CardHeader><CardTitle className="text-base">Contract</CardTitle></CardHeader>
+      {step === 5 && clientId && (
+        <Card><CardHeader><CardTitle className="text-base">Commercial</CardTitle>
+          <CardDescription>The client MSA. A missing MSA is a follow-up for Harmonious, never a blocker.</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-col gap-2 text-sm">
               {([["upload", "Upload Existing Executed Contract"], ["standard", "Use Harmonious Standard Agreement"], ["later", "Add Contract Later"]] as const).map(([v, l]) => (
@@ -236,18 +241,11 @@ function NewClient() {
               ))}
             </div>
             {contractChoice === "upload" && <UploadContractForm clientId={clientId} onDone={() => toast.success("Contract saved — review its terms from the client's Contracts tab.")} />}
-            {contractChoice === "standard" && <p className="text-sm text-muted-foreground">The standard master agreement and statements of work are prepared from the existing Client Agreements area after intake.</p>}
-            <Button disabled={busy} onClick={() => go(5)}>Continue</Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 5 && clientId && (
-        <Card><CardHeader><CardTitle className="text-base">Review</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p><b>{f.name}</b>{f.client_type ? ` · ${f.client_type}` : ""}</p>
-            <p>{contacts.length} contact(s) · {services.length} expected service(s)</p>
-            <p>Contract: {contractChoice === "upload" ? "Uploaded existing contract (terms need approval)" : contractChoice === "standard" ? "Harmonious standard agreement" : "Added later"}</p>
+            {contractChoice === "standard" && <p className="text-sm text-muted-foreground">The standard master agreement is prepared from the existing Client Agreements area after setup.</p>}
+            <div className="border-t pt-3 text-sm">
+              <p><b>{f.name}</b>{f.client_type ? ` · ${f.client_type}` : ""}</p>
+              <p>{contacts.length} contact(s){contacts.find((x) => x.designations.includes("Primary")) ? ` · Primary: ${contacts.find((x) => x.designations.includes("Primary"))!.full_name}` : ""}</p>
+            </div>
             <Button disabled={busy} onClick={async () => {
               setBusy(true);
               try {

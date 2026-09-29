@@ -36,6 +36,8 @@ export async function loadBaseline(clientId: string | null) {
 export async function createFundPricingSnapshot(args: {
   offeringId: string; clientId: string | null; actorId: string; source: string;
   requested?: Record<string, number>; reason?: string | null;
+  /** Package-level services chosen for this Fund (Phase 3.10B); frozen with the snapshot. */
+  serviceConfig?: unknown;
 }) {
   const db = await admin();
   const base = await loadBaseline(args.clientId);
@@ -47,7 +49,7 @@ export async function createFundPricingSnapshot(args: {
   }
   const { data: snap, error } = await db.from("fund_pricing_snapshots").insert({
     offering_id: args.offeringId, client_id: args.clientId, status: d.status, pricing_version_id: base.versionId,
-    source: args.source, baseline_total_cents: d.baselineTotal, final_total_cents: d.finalTotal, created_by: args.actorId,
+    source: args.source, service_config: args.serviceConfig ?? null, baseline_total_cents: d.baselineTotal, final_total_cents: d.finalTotal, created_by: args.actorId,
   }).select("id").single();
   if (error) throw new Error(error.message);
   if (d.lines.length) {
