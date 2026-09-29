@@ -17320,6 +17320,7 @@ export type Database = {
           invitation_id: string | null
           last_activity_at: string
           manager_notes: string | null
+          offering_class_key: string | null
           offering_id: string
           person_id: string | null
           position_id: string | null
@@ -17366,6 +17367,7 @@ export type Database = {
           invitation_id?: string | null
           last_activity_at?: string
           manager_notes?: string | null
+          offering_class_key?: string | null
           offering_id: string
           person_id?: string | null
           position_id?: string | null
@@ -17412,6 +17414,7 @@ export type Database = {
           invitation_id?: string | null
           last_activity_at?: string
           manager_notes?: string | null
+          offering_class_key?: string | null
           offering_id?: string
           person_id?: string | null
           position_id?: string | null
@@ -20916,6 +20919,47 @@ export type Database = {
           },
         ]
       }
+      offering_legal_name_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          effective_date: string
+          id: string
+          new_value: string | null
+          offering_id: string
+          previous_value: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          effective_date?: string
+          id?: string
+          new_value?: string | null
+          offering_id: string
+          previous_value?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          effective_date?: string
+          id?: string
+          new_value?: string | null
+          offering_id?: string
+          previous_value?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_legal_name_history_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_memos: {
         Row: {
           created_at: string
@@ -21290,22 +21334,39 @@ export type Database = {
           date_formed: string | null
           drive_sync_enabled: boolean
           entity_type: string | null
+          fund_signatory_person_id: string | null
           fund_type: string | null
           fund_type_other: string | null
+          gp_entity_name: string | null
+          has_multiple_classes: boolean
           id: string
           is_open: boolean
           legal_entity_name: string | null
+          legal_name_change_reason: string | null
+          legal_name_changed_by: string | null
+          legal_name_effective_date: string | null
+          max_investment_cents: number | null
+          max_offering_cents: number | null
           min_investment_cents: number
           name: string
+          offering_close_date: string | null
+          offering_open_date: string | null
+          principal_address: string | null
           public_headline: string | null
           public_page_enabled: boolean
           public_summary: string | null
           reg_type: Database["public"]["Enums"]["reg_type"]
+          registered_agent: string | null
+          rolling_closes: boolean | null
           share_price_cents: number
+          signatory_capacity: string | null
+          signatory_entity_name: string | null
+          signatory_title: string | null
           slug: string
           state_formed: string | null
           summary: string | null
           target_raise_cents: number | null
+          tax_classification: string | null
           updated_at: string
           wire_fee_cents: number
           wire_fee_rate_id: string | null
@@ -21322,22 +21383,39 @@ export type Database = {
           date_formed?: string | null
           drive_sync_enabled?: boolean
           entity_type?: string | null
+          fund_signatory_person_id?: string | null
           fund_type?: string | null
           fund_type_other?: string | null
+          gp_entity_name?: string | null
+          has_multiple_classes?: boolean
           id?: string
           is_open?: boolean
           legal_entity_name?: string | null
+          legal_name_change_reason?: string | null
+          legal_name_changed_by?: string | null
+          legal_name_effective_date?: string | null
+          max_investment_cents?: number | null
+          max_offering_cents?: number | null
           min_investment_cents?: number
           name: string
+          offering_close_date?: string | null
+          offering_open_date?: string | null
+          principal_address?: string | null
           public_headline?: string | null
           public_page_enabled?: boolean
           public_summary?: string | null
           reg_type: Database["public"]["Enums"]["reg_type"]
+          registered_agent?: string | null
+          rolling_closes?: boolean | null
           share_price_cents?: number
+          signatory_capacity?: string | null
+          signatory_entity_name?: string | null
+          signatory_title?: string | null
           slug: string
           state_formed?: string | null
           summary?: string | null
           target_raise_cents?: number | null
+          tax_classification?: string | null
           updated_at?: string
           wire_fee_cents?: number
           wire_fee_rate_id?: string | null
@@ -21354,22 +21432,39 @@ export type Database = {
           date_formed?: string | null
           drive_sync_enabled?: boolean
           entity_type?: string | null
+          fund_signatory_person_id?: string | null
           fund_type?: string | null
           fund_type_other?: string | null
+          gp_entity_name?: string | null
+          has_multiple_classes?: boolean
           id?: string
           is_open?: boolean
           legal_entity_name?: string | null
+          legal_name_change_reason?: string | null
+          legal_name_changed_by?: string | null
+          legal_name_effective_date?: string | null
+          max_investment_cents?: number | null
+          max_offering_cents?: number | null
           min_investment_cents?: number
           name?: string
+          offering_close_date?: string | null
+          offering_open_date?: string | null
+          principal_address?: string | null
           public_headline?: string | null
           public_page_enabled?: boolean
           public_summary?: string | null
           reg_type?: Database["public"]["Enums"]["reg_type"]
+          registered_agent?: string | null
+          rolling_closes?: boolean | null
           share_price_cents?: number
+          signatory_capacity?: string | null
+          signatory_entity_name?: string | null
+          signatory_title?: string | null
           slug?: string
           state_formed?: string | null
           summary?: string | null
           target_raise_cents?: number | null
+          tax_classification?: string | null
           updated_at?: string
           wire_fee_cents?: number
           wire_fee_rate_id?: string | null
@@ -21389,6 +21484,13 @@ export type Database = {
             columns: ["closing_cost_rate_id"]
             isOneToOne: false
             referencedRelation: "client_pricing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offerings_fund_signatory_person_id_fkey"
+            columns: ["fund_signatory_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
           {

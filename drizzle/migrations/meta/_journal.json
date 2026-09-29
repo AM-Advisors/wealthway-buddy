@@ -428,6 +428,20 @@
       "when": 1790654709851,
       "tag": "0060_commercial_agreements_related_person_review",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1790670224843,
+      "tag": "0061_fund_setup_canonical_phase1",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1790670469585,
+      "tag": "0062_legal_name_change_actor",
+      "breakpoints": true
     }
   ]
 }
