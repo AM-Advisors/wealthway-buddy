@@ -126,8 +126,8 @@ export const getStaffFundSetup = createServerFn({ method: "POST" })
         import("@/lib/fund-setup.server"),
       ]);
       const ids = [...new Set((rows ?? []).map((r) => r.decided_by))];
-      const { data: people } = ids.length ? await db.from("profiles").select("id,email").in("id", ids) : { data: [] as any[] };
-      const nameOf = (id: string) => { const p = (people ?? []).find((x: any) => x.id === id); return p?.email || "Harmonious staff"; };
+      const { data: people } = ids.length ? await db.from("profiles").select("user_id,legal_name,email").in("user_id", ids) : { data: [] as any[] };
+      const nameOf = (id: string) => { const p = (people ?? []).find((x: any) => x.user_id === id); return p?.legal_name || p?.email || "Harmonious staff"; };
       approvals = (rows ?? []).map((r) => ({ id: r.id, decision: r.decision, reason: r.reason, decidedAt: r.decided_at, decidedBy: nameOf(r.decided_by), unmet: Array.isArray(r.unmet_conditions) ? r.unmet_conditions.length : 0 }));
       isPreparer = (await launchPreparers(setup.id)).has(context.userId);
     }
