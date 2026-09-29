@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DISTRIBUTION_TYPE_LABELS, OPERATIONS_STAGE_LABELS } from "@/lib/distributions-model";
+import { DISTRIBUTION_TYPE_LABELS, OPERATIONS_STAGE_LABELS, type DistributionType } from "@/lib/distributions-model";
 import {
   approveDistributionReconciliationFn,
   approveDistributionReversalFn,
@@ -63,6 +63,7 @@ export function DistributionsWorkspace() {
 
   const [bucket, setBucket] = useState("all");
   const [fundId, setFundId] = useState("");
+  const [distributionType, setDistributionType] = useState<DistributionType | "">("");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [search, setSearch] = useState("");
@@ -122,9 +123,10 @@ export function DistributionsWorkspace() {
         </CardHeader>
         <CardContent className="flex flex-wrap items-end gap-3">
           <div><Label htmlFor="distribution-fund">Fund ID</Label><Input id="distribution-fund" value={fundId} onChange={(e) => setFundId(e.target.value)} placeholder="Fund UUID" /></div>
+          <div><Label>Distribution type</Label><Select value={distributionType} onValueChange={(value) => setDistributionType(value as DistributionType)}><SelectTrigger className="w-52"><SelectValue placeholder="Choose type" /></SelectTrigger><SelectContent>{Object.entries(DISTRIBUTION_TYPE_LABELS).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>
           <div><Label htmlFor="distribution-title">Title</Label><Input id="distribution-title" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
           <div><Label htmlFor="distribution-amount">Declared amount (USD)</Label><Input id="distribution-amount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-          <Button disabled={!/^[0-9a-f-]{36}$/i.test(fundId) || !title.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || proposeM.pending} onClick={() => proposeM.run({ offeringId: fundId, title: title.trim(), distributionType: "return_of_capital", declaredAmountCents: Math.round(Number(amount) * 100) })}>Prepare proposal</Button>
+          <Button disabled={!/^[0-9a-f-]{36}$/i.test(fundId) || !distributionType || !title.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || proposeM.pending} onClick={() => proposeM.run({ offeringId: fundId, title: title.trim(), distributionType, declaredAmountCents: Math.round(Number(amount) * 100) })}>Prepare proposal</Button>
         </CardContent>
       </Card>
       <Card>

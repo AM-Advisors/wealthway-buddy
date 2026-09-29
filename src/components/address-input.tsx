@@ -88,7 +88,7 @@ export function AddressInput({
   const [items, setItems] = useState<Array<{ id: string; description: string }>>([]);
   const [searching, setSearching] = useState(false);
   const [lookupAvailable, setLookupAvailable] = useState(true);
-  const [manual, setManual] = useState(Boolean(value.line1 || value.city || value.region || value.postalCode));
+  const [manual, setManual] = useState(true);
   const session = useRef(newSessionToken());
   const requestSeq = useRef(0);
 
