@@ -449,6 +449,13 @@
       "when": 1790671502552,
       "tag": "0063_offering_documents_phase2",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1790673964513,
+      "tag": "0064_fund_setup_phase3",
+      "breakpoints": true
     }
   ]
 }
