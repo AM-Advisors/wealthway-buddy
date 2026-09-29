@@ -95,6 +95,13 @@ describe("nobody approves their own work", () => {
 });
 
 describe("the Operations menu", () => {
+  it("keeps Fund Setup in the Fund area without granting edit to viewers", () => {
+    expect(opsNavigation(capabilitiesFor(["operations"])).find((s) => s.id === "funds")?.url).toBe("/ops/funds");
+    expect(existsSync("src/routes/_authenticated/ops.fund-setup.index.tsx")).toBe(true);
+    expect(existsSync("src/routes/_authenticated/ops.fund-setup.$fundId.tsx")).toBe(true);
+    expect(opsNavigation(capabilitiesFor(["tax"])).some((s) => s.id === "funds")).toBe(false);
+    expect(can(capabilitiesFor(["executive"]), "funds", "prepare")).toBe(false);
+  });
   it("shows only the sections the person may see", () => {
     expect(opsNavigation(capabilitiesFor(["tax"])).map((s) => s.id)).toEqual(["tax", "reports"]);
     expect(opsNavigation(capabilitiesFor([]))).toEqual([]);

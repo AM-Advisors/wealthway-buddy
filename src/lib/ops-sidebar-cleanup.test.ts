@@ -51,7 +51,7 @@ describe("Operations sidebar consolidation", () => {
 
   it("child routes activate exactly one parent section", () => {
     const cases: [string, string][] = [
-      ["/ops", "home"], ["/ops/funds/abc", "funds"], ["/ops/fund/abc", "funds"], ["/ops/investors/x", "investors"],
+      ["/ops", "home"], ["/ops/funds/abc", "funds"], ["/ops/fund/abc", "funds"], ["/ops/fund-setup", "funds"], ["/ops/fund-setup/abc", "funds"], ["/ops/investors/x", "investors"],
       ["/ops/accounting", "accounting"], ["/ops/valuations", "accounting"], ["/ops/nav", "accounting"],
       ["/ops/reporting", "reports"], ["/ops/financials", "reports"], ["/ops/banking", "capital"],
       ["/ops/ss4", "regulatory"], ["/admin", "onboarding"], ["/admin/investor-onboarding", "onboarding"],
