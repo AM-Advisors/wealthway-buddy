@@ -13,6 +13,7 @@ import { OfferingDocumentFile } from "@/components/offering-document-file";
 import { SignedDocumentsCard } from "@/components/signed-documents-card";
 import { PacketEmailCard } from "@/components/packet-email-card";
 import { FundEntityCard } from "@/components/fund-entity-card";
+import { FundSetupCanonical } from "@/components/fund-setup-canonical";
 import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
@@ -245,6 +246,7 @@ function FundPage() {
       <Tabs defaultValue="overview" className="mt-8">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="setup">Fund Setup</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="banking">Banking</TabsTrigger>
           <TabsTrigger value="investors">Investors &amp; funding</TabsTrigger>
@@ -255,6 +257,10 @@ function FundPage() {
         <TabsContent value="overview" className="mt-6 space-y-6">
           <ScopeServicesPanel scope={scope} offeringId={fundId} />
           <FundProvidersPanel scope={scope} />
+        </TabsContent>
+
+        <TabsContent value="setup" className="mt-6">
+          <FundSetupCanonical offeringId={fundId} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6 space-y-6">

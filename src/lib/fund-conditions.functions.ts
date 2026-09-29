@@ -190,9 +190,11 @@ export async function assertFundConditions(
 ) {
   const result = await evaluateFundConditions(supabase, offeringId);
 
-  // A missing Harmonious SOW is a commercial follow-up item, not an onboarding
-  // gate. Money movement keeps its existing scope control unchanged.
-  if (!result.configured && stage === "funding") throw new Error(NO_SCOPE_MESSAGE);
+  // Decision (Fund Setup pass): the Harmonious statement of work is a
+  // commercial record, not a funding control. Funding no longer checks for a
+  // recorded SOW or SOW-derived limits; payment, banking, reconciliation and
+  // investor requirements keep their own independent gates.
+  if (stage === "funding") return result;
 
   if (result.blocking.length) {
     const first = result.blocking[0]!;
