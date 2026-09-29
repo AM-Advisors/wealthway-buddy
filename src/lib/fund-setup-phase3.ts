@@ -155,7 +155,7 @@ function closingMonth(fye: string | null): string {
 
 /** SS-4 answers drawn from canonical fund data; the client is never asked to retype these. */
 export function ss4Prefill(e: CanonicalEntity): Record<string, string | boolean> {
-  const out: Record<string, string | boolean> = {};
+  const out: any = {};
   if (e.legalName) out.legal_name = e.legalName;
   if (e.jurisdiction) out.state_incorporated = e.jurisdiction;
   if (e.formationDate) out.date_started = e.formationDate;
