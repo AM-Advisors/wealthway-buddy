@@ -17,7 +17,7 @@ import {
   setInvestmentAmountFn,
   startInvestmentVerificationFn,
 } from "@/lib/investor-onboarding.functions";
-import { openableStep, type JourneyStep, type JourneyStepView } from "@/lib/investor-journey-model";
+import { investorHomeSummary, openableStep, type JourneyStep, type JourneyStepView } from "@/lib/investor-journey-model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,11 +92,31 @@ export function InvestorOnboardingJourney({
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm text-muted-foreground">Complete Your Investment</p>
-        <h1 className="text-3xl">{d.offering?.name ?? "Your investment"}</h1>
-        <p className="mt-1 text-2xl font-semibold">{money(amount)}</p>
-        {d.profileLabel ? <p className="mt-1 text-sm text-muted-foreground">Investing as: {d.profileLabel}</p> : null}
+        <h1 className="text-3xl">Complete your investment in {d.offering?.name ?? "this Fund"}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {d.profileLabel ? `Investing as ${d.profileLabel}` : "Investing profile not chosen yet"}{amount ? ` · ${money(amount)}` : ""}
+        </p>
       </header>
+
+      {(() => {
+        const h = investorHomeSummary(steps);
+        return (
+          <Card>
+            <CardContent className="space-y-3 pt-6">
+              <div className="flex items-center justify-between text-sm"><span className="font-medium">Progress</span><span className="text-muted-foreground">{h.progressPercent}%</span></div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${h.progressPercent}%` }} /></div>
+              {h.complete ? null : h.caughtUp ? (
+                <div><p className="font-medium">You're caught up</p><p className="text-sm text-muted-foreground">{h.waitingOn}</p></div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Next action</p><p className="font-medium">{h.nextAction}</p></div>
+                  {h.nextStep && h.nextStep !== current ? <Button size="sm" onClick={() => setActive(h.nextStep!)}>Continue</Button> : null}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {complete ? (
         <Card>
