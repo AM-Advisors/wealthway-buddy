@@ -54,7 +54,7 @@ export async function opsDashboard(userId: string, filters: { clientId?: string;
   const clientIds = [...new Set(offerings.map((o) => o.client_id).filter(Boolean))] as string[];
   const [{ data: onbs }, { data: invites }, { data: reviews }, { data: clients }] = await Promise.all([
     ids.length ? db().from("investor_onboardings").select("*").in("offering_id", ids).not("stage", "in", "(declined,cancelled)").limit(5000) : { data: [] },
-    ids.length ? db().from("fund_invitations").select("offering_id").in("offering_id", ids).eq("status", "pending").is("accepted_at", null).limit(5000) : { data: [] },
+    ids.length ? db().from("fund_invitations").select("offering_id").in("offering_id", ids).eq("onboarding_status", "invited").limit(5000) : { data: [] },
     db().from("related_person_reviews").select("id").in("status", ["open", "review_later"]).limit(5000),
     clientIds.length ? db().from("clients").select("id, name").in("id", clientIds) : { data: [] },
   ]);
@@ -108,7 +108,7 @@ export async function managerFundDashboard(userId: string, offeringId: string, r
   if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not manage that fund.");
   const [{ data: onbs }, { data: invites }, { data: setup }, { data: events }] = await Promise.all([
     db().from("investor_onboardings").select("*").eq("offering_id", offeringId).not("stage", "in", "(declined,cancelled)").limit(5000),
-    db().from("fund_invitations").select("id").eq("offering_id", offeringId).eq("status", "pending").is("accepted_at", null).limit(5000),
+    db().from("fund_invitations").select("id").eq("offering_id", offeringId).eq("onboarding_status", "invited").limit(5000),
     db().from("fund_setups").select("target_size_cents").eq("offering_id", offeringId).maybeSingle(),
     db().from("investment_readiness_events").select("onboarding_id, requirement_key, stage, new_status, created_at").eq("offering_id", offeringId)
       .eq("new_status", "complete").in("stage", Object.keys(SAFE_ACTIVITY)).order("created_at", { ascending: false }).limit(15),
