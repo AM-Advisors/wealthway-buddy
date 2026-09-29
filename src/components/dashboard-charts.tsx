@@ -3,7 +3,6 @@
  * drill-down, and explicit empty / unavailable states. Color is never the only cue.
  */
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
 import { Info } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
@@ -123,8 +122,4 @@ export function TrendChart({ data }: { data: { bucket: string; started: number; 
       <p className="sr-only">{data.map((d) => `${d.bucket}: ${d.started} started, ${d.completed} funded`).join("; ")}</p>
     </>
   );
-}
-
-export function DrillLink({ to, children }: { to: string; children: ReactNode }) {
-  return <Link to={to as any} className="text-sm underline-offset-4 hover:underline">{children}</Link>;
 }
