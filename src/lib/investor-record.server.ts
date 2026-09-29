@@ -385,7 +385,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   ]);
   const { result } = await computeReadinessFor(row);
   const readiness = {
-    ready: Boolean((result as any).readyToClose), label: (result as any).readyToClose ? "Ready to Close" : "Not Ready to Close",
+    ready: Boolean((result as any).closeReady), label: (result as any).closeReady ? "Ready to Close" : "Not Ready to Close",
     nextAction: (result as any).nextAction?.label ?? null,
     stages: ((result as any).stages ?? []).map((s: any) => ({ key: s.key, label: s.label, status: s.status })),
   };

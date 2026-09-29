@@ -448,6 +448,14 @@ export async function startOnboarding(
     // intended amount forward once the caller is authenticated.
   }
 
+  // Continue records Harmonious or a Fund Manager prepared before sign-in.
+  try {
+    const { claimPreparedRecords } = await import("@/lib/investor-record.server");
+    await claimPreparedRecords(actor.userId);
+  } catch (e) {
+    console.error("[onboard] prepared-record claim skipped", (e as Error).message);
+  }
+
   const { data: existing } = await db()
     .from("investor_onboardings")
     .select("*")
@@ -1477,7 +1485,12 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
   const { data } = await query;
   const rows = (data ?? []) as any[];
 
-  const investorIds = [...new Set(rows.map((r) => r.investor_user_id))];
+  const investorIds = [...new Set(rows.map((r) => r.investor_user_id).filter(Boolean))];
+  const personIds = [...new Set(rows.filter((r) => !r.investor_user_id && r.person_id).map((r) => r.person_id))];
+  const { data: prepared } = personIds.length
+    ? await db().from("persons").select("id, legal_first_name, legal_last_name").in("id", personIds)
+    : { data: [] as any[] };
+  const byPerson = new Map(((prepared ?? []) as any[]).map((p) => [p.id, `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim()]));
   const { data: people } = investorIds.length
     ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", investorIds)
     : { data: [] as any[] };
@@ -1490,7 +1503,7 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
       managerSafeView({
         id: row.id,
         offeringId: row.offering_id,
-        investorName: byUser.get(row.investor_user_id)?.legal_name ?? "Investor",
+        investorName: byUser.get(row.investor_user_id)?.legal_name ?? byPerson.get(row.person_id) ?? "Investor",
         profileLabel: facts.profile?.display_label ?? null,
         profileType: facts.profile?.profile_type ?? null,
         requestedAmountCents: row.requested_amount_cents,
