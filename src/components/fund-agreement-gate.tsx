@@ -6,6 +6,7 @@ import { getFundAgreement } from "@/lib/fund-sow.functions";
 import { getFundAgreementNotice } from "@/lib/commercial-agreements.functions";
 import { CommercialAgreementCard } from "@/components/commercial-agreement-card";
 import { ServicesPricingCard } from "@/components/services-pricing-card";
+import { YourHarmoniousTeam } from "@/components/harmonious-team-card";
 
 /**
  * Harmonious commercial agreement for a fund. Never blocks the fund: staff see
@@ -33,6 +34,7 @@ export function FundAgreementGate({ fundId }: { fundId: string }) {
   }
   return (
     <div className="space-y-2">
+      <YourHarmoniousTeam fundId={fundId} />
       <ServicesPricingCard fundId={fundId} />
       <ClientAgreementNotice fundId={fundId} />
     </div>
