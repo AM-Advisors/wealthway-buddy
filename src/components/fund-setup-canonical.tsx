@@ -152,7 +152,7 @@ function LegalNameCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
 function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onSaved: () => void }) {
   const save = useServerFn(saveFundSetupFieldsFn);
   const o = d.offering;
-  const [f, setF] = useState<Record<string, string>>({});
+  const [f, setF] = useState<any>({});
   useEffect(() => {
     setF({
       displayName: o.displayName ?? "", fundType: o.fundType ?? "", gpName: o.gpName ?? "",
