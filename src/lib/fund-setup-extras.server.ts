@@ -35,7 +35,7 @@ async function setupFor(offeringId: string) {
   return data as { id: string; service_providers: Providers };
 }
 async function event(setupIdV: string, offeringId: string, userId: string | null, ev: string, summary: string) {
-  await db().from("fund_setup_events").insert({ setup_id: setupIdV, subject_table: "offerings", subject_id: offeringId, event: ev, actor_id: userId, detail: { summary } }).then(() => null, () => null);
+  await db().from("fund_setup_events").insert({ setup_id: setupIdV, subject_table: "offerings", subject_id: offeringId, event: ev, actor_user_id: userId, detail: { summary } }).then(() => null, () => null);
 }
 
 export function providersComplete(p: Providers) {
@@ -142,7 +142,7 @@ export async function autoCompleteTasks(offeringId: string) {
   try {
     const { data: s } = await db().from("fund_setups").select("id, service_providers, display_name").eq("offering_id", offeringId).maybeSingle();
     if (!s) return;
-    const { data: o } = await db().from("offerings").select("name, legal_entity_name, fund_type, registered_agent, reg_type, target_raise_cents, min_investment_cents, has_ein").eq("id", offeringId).maybeSingle();
+    const { data: o } = await db().from("offerings").select("name, legal_entity_name, fund_type, registered_agent, reg_type, target_raise_cents, min_investment_cents").eq("id", offeringId).maybeSingle();
     const { data: ef } = await db().from("fund_entity_formation").select("formation_document_id, certificate_document_id, ein_letter_document_id, registered_agent").eq("setup_id", s.id).maybeSingle();
     const done: Record<string, boolean> = {
       client_service_providers: providersComplete(s.service_providers ?? {}),

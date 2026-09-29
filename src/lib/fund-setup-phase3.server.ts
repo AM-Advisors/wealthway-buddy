@@ -300,9 +300,13 @@ export async function recordEin(sb: any, userId: string, input: { offeringId: st
   }
   const digits = input.ein.replace(/\D/g, "");
   await writeEntity(sb, input.offeringId, { ein: `${digits.slice(0, 2)}-${digits.slice(2)}` });
-  await addControlledDoc(userId, input.offeringId, "ein_letter", "IRS EIN Letter", input.letterPath);
+  const letterId = await addControlledDoc(userId, input.offeringId, "ein_letter", "IRS EIN Letter", input.letterPath);
+  const extras = await import("@/lib/fund-setup-extras.server");
+  const sid = await setupId(input.offeringId);
+  if (sid) await extras.linkEvidence(userId, sid, "ein_letter", null, letterId);
   if (input.received) await db().from("offerings").update({ ein_workflow_status: "ein_received" }).eq("id", input.offeringId);
   await activity(input.offeringId, userId, input.received ? "ein_received" : "ein_recorded", input.received ? "EIN received from the IRS and recorded" : "Existing EIN recorded with IRS letter", o.ein_workflow_status, input.received ? "ein_received" : o.ein_workflow_status);
+  await extras.autoCompleteTasks(input.offeringId);
   return { ok: true };
 }
 
