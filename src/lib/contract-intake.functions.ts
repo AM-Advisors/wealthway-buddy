@@ -146,6 +146,7 @@ export const saveClientDraft = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    { const { safeSeedClientTeam } = await import("@/lib/harmonious-team.server"); await safeSeedClientTeam(created.id, context.userId); }
     await audit(context, roles, { clientId: created.id, area: "client", action: "created (intake draft)", next: { name: data.name, client_type: data.client_type ?? null } });
     return { id: created.id as string, duplicates: [] };
   });
