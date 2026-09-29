@@ -456,6 +456,13 @@
       "when": 1790673964513,
       "tag": "0064_fund_setup_phase3",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1790674014257,
+      "tag": "0065_entity_details_preserve_rp_tin",
+      "breakpoints": true
     }
   ]
 }
