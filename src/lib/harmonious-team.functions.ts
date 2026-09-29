@@ -39,7 +39,7 @@ export const getHarmoniousTeam = createServerFn({ method: "GET" })
     const team = data.clientId
       ? (await import("@/lib/harmonious-team")).resolveTeam({ hasClient: true, client: await srv.loadClientTeam(data.clientId) })
       : (await srv.loadFundTeam(data.offeringId!)).team;
-    const events = await history(data.clientId ? { client_id: data.clientId } : { offering_id: data.offeringId });
+    const events = await history(data.clientId ? { client_id: data.clientId } : { offering_id: data.offeringId! });
     const n = await names([...team.map((m) => m.userId), ...events.flatMap((e) => [e.prior_user_id, e.new_user_id, e.changed_by])]);
     return {
       scope: data.clientId ? "client" : "fund",
