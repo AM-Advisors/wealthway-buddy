@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { InvestorOnboardingJourney } from "@/components/investor-onboarding-journey";
 import { InvestmentChecklist } from "@/components/investment-readiness";
+import { InvestmentOfferingDocuments } from "@/components/investment-offering-documents";
 import { ConfirmYourInformation } from "@/components/confirm-your-information";
 
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
@@ -31,6 +32,7 @@ function InvestmentPage() {
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
       <ConfirmYourInformation onboardingId={onboardingId} />
+      <InvestmentOfferingDocuments onboardingId={onboardingId} />
       <InvestmentChecklist onboardingId={onboardingId} />
       <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={step} />
     </main>

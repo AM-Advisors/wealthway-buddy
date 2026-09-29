@@ -86,7 +86,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
   return { canEdit: actor.isStaff, documents: list, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
 }
 
-export async function createSetupDocument(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null }) {
+export async function createSetupDocument(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
   await assertStaff(userId, input.offeringId);
   const title = input.category === "other" ? (input.title ?? "").trim() : DOCUMENT_CATEGORY_LABELS[input.category];
   if (!title) throw new Error("Give the document a clear name.");

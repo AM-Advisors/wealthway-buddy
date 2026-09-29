@@ -19,6 +19,7 @@ import {
   type FundClass,
   type EconomicTerms,
 } from "@/lib/fund-setup-canonical";
+import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,11 +80,11 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
       <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
       <DetailsCard d={d} offeringId={offeringId} onSaved={refresh} />
       <EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} />
+      <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} />
       <Card>
-        <CardHeader><CardTitle className="text-base">Offering Documents, Banking and Administration</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Banking and Administration</CardTitle></CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          These sections use the fund's existing Documents and Banking tabs for now. The new document signing setup, bank
-          verification and administration settings come in the next phases.
+          These sections use the fund's existing Banking tab for now. Bank verification and administration settings come in the next phase.
         </CardContent>
       </Card>
     </div>

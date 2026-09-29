@@ -118,3 +118,68 @@ export const assignInvestmentClassFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: uuid, classKey: z.string().max(60).nullable() }).parse)
   .handler(async ({ data, context }) => (await engine()).assignInvestmentClass(context.userId, data));
+
+// ---------------------------------------------------------------- Offering Documents (Phase 2)
+const docs = () => import("@/lib/offering-document-setup.server");
+const applicability = z.object({ profileTypes: z.array(z.string().max(60)).max(20).optional(), classKeys: z.array(z.string().max(60)).max(20).optional() });
+const signingConfig = z.object({
+  signers: z
+    .array(
+      z.object({
+        role: z.enum(["investor", "joint_investor", "entity_authorized_signer", "trustee", "fund_signatory", "other_authorized_signer"]),
+        fields: z.array(z.enum(["signature", "printed_name", "title", "entity_name", "date_signed", "initials"])).max(6),
+        order: z.number().int().min(1).max(10),
+      }),
+    )
+    .max(6),
+});
+
+export const listSetupDocumentsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .handler(async ({ data, context }) => (await docs()).listSetupDocuments(context.userId, data.offeringId));
+
+export const createSetupDocumentFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, category: z.enum(["operating_agreement", "subscription_agreement", "ppm", "other"]), title: z.string().trim().max(160).nullish() }).parse)
+  .handler(async ({ data, context }) => (await docs()).createSetupDocument(context.userId, data));
+
+export const uploadDocumentVersionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid, filePath: z.string().min(3).max(400), fileName: z.string().trim().min(1).max(200), fileSizeBytes: z.number().int().min(0).max(60 * 1024 * 1024), effectiveDate: z.string().max(20).nullish() }).parse)
+  .handler(async ({ data, context }) => (await docs()).uploadDocumentVersion(context.userId, data));
+
+export const approveDocumentVersionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid, version: z.number().int().min(1) }).parse)
+  .handler(async ({ data, context }) => (await docs()).approveDocumentVersion(context.userId, data));
+
+export const setDocumentUsageFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid, usage: z.enum(["reference", "acknowledgment", "signature"]), applicability }).parse)
+  .handler(async ({ data, context }) => (await docs()).setDocumentUsage(context.userId, data));
+
+export const saveSigningConfigFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid, version: z.number().int().min(1), config: signingConfig, confirm: z.boolean() }).parse)
+  .handler(async ({ data, context }) => (await docs()).saveSigningConfig(context.userId, data));
+
+export const previewVersionImpactFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid }).parse)
+  .handler(async ({ data, context }) => (await docs()).previewVersionImpact(context.userId, data));
+
+export const activateDocumentVersionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: uuid, version: z.number().int().min(1), impactAcknowledged: z.boolean() }).parse)
+  .handler(async ({ data, context }) => (await docs()).activateDocumentVersion(context.userId, data));
+
+export const investorDocumentsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ onboardingId: uuid }).parse)
+  .handler(async ({ data, context }) => (await docs()).investorDocuments(context.userId, data.onboardingId));
+
+export const acknowledgeDocumentFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ onboardingId: uuid, documentId: uuid }).parse)
+  .handler(async ({ data, context }) => (await docs()).acknowledgeDocument(context.userId, data));

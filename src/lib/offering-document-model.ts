@@ -117,7 +117,7 @@ export function requiresCountersignature(config: SigningConfig | null | undefine
   return !!config?.signers.some((s) => s.role === "fund_signatory");
 }
 
-export type Applicability = { profileTypes?: string[]; classKeys?: string[] };
+export type Applicability = { profileTypes?: string[] | undefined; classKeys?: string[] | undefined };
 
 /** Whether a document applies to one Investment (by profile type and class). Empty lists mean "all". */
 export function documentApplies(a: Applicability | null | undefined, inv: { profileType: string | null; classKey: string | null }): boolean {
