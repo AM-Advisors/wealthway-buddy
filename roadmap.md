@@ -117,3 +117,9 @@
 - [ ] SLA/aging targets (spec §15) — ages shown; no contractual SLAs invented
 - [ ] Close Request workflow (Fund → Closes, 8-step wizard) — next pass; consumes closeReadinessFor
 - [ ] Built-in NASAA Blue Sky fee table (July 1 2026 matrix), fixed fees only; variable → Needs Review
+
+## Fund Setup (canonical) — phased
+- [x] Phase 1: 8-section status, Legal Name once + history, Fund Details/signatory, Entity, Offering, structured economics, classes, investment class rule; funding no longer checks SOW
+- [ ] Phase 2: Offering Documents (upload only; versions, approval states, signature/acknowledgment config, Box Sign signer roles, countersignature, version-bound signing setup). Template generation waits on approved templates with marked fill-in fields from the user
+- [ ] Phase 3: Banking (client-provided wire upload + verification, Harmonious-opened path), Administration & Regulatory, Review, investor impact warnings, class picker on investments
+- [ ] QA walkthrough of Fund Setup scenarios in the separate QA copy (e-sign stops without QA provider config)
