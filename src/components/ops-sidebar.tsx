@@ -152,6 +152,9 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                               <span className="truncate">{section.title}</span>
                             </Link>
                           </SidebarMenuButton>
+                          {section.id === "funds" && !collapsed && <div className="ml-6 border-l border-sidebar-border pl-3">
+                            <Link to="/ops/fund-setup" aria-current={pathname.startsWith("/ops/fund-setup") ? "page" : undefined} onClick={close} className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground">Fund Setup</Link>
+                          </div>}
                         </SidebarMenuItem>
                       );
                     })}

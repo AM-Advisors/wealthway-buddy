@@ -186,6 +186,7 @@ import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
 import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authenticated/ops.documents'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
+import { Route as AuthenticatedOpsFundSetupRouteImport } from './routes/_authenticated/ops.fund-setup'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
@@ -266,6 +267,7 @@ import { Route as AuthenticatedOpsContractsCompareRouteImport } from './routes/_
 import { Route as AuthenticatedOpsContractsPermissionsRouteImport } from './routes/_authenticated/ops.contracts.permissions'
 import { Route as AuthenticatedOpsContractsSowTemplatesRouteImport } from './routes/_authenticated/ops.contracts.sow-templates'
 import { Route as AuthenticatedOpsContractsStandardRouteImport } from './routes/_authenticated/ops.contracts.standard'
+import { Route as AuthenticatedOpsFundSetupFundIdRouteImport } from './routes/_authenticated/ops.fund-setup.$fundId'
 import { Route as AuthenticatedOpsFundFundIdRouteImport } from './routes/_authenticated/ops.fund.$fundId'
 import { Route as AuthenticatedOpsFundsIndexRouteImport } from './routes/_authenticated/ops.funds.index'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
@@ -1287,6 +1289,12 @@ const AuthenticatedOpsFinancialsRoute =
     path: '/ops/financials',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsFundSetupRoute =
+  AuthenticatedOpsFundSetupRouteImport.update({
+    id: '/ops/fund-setup',
+    path: '/ops/fund-setup',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
   id: '/ops/nav',
   path: '/ops/nav',
@@ -1759,6 +1767,12 @@ const AuthenticatedOpsContractsStandardRoute =
     path: '/ops/contracts/standard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsFundSetupFundIdRoute =
+  AuthenticatedOpsFundSetupFundIdRouteImport.update({
+    id: '/$fundId',
+    path: '/$fundId',
+    getParentRoute: () => AuthenticatedOpsFundSetupRoute,
+  } as any)
 const AuthenticatedOpsFundFundIdRoute =
   AuthenticatedOpsFundFundIdRouteImport.update({
     id: '/ops/fund/$fundId',
@@ -2088,6 +2102,7 @@ export interface FileRoutesByFullPath {
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
+  '/ops/fund-setup': typeof AuthenticatedOpsFundSetupRouteWithChildren
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2167,6 +2182,7 @@ export interface FileRoutesByFullPath {
   '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2368,6 +2384,7 @@ export interface FileRoutesByTo {
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
+  '/ops/fund-setup': typeof AuthenticatedOpsFundSetupRouteWithChildren
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2446,6 +2463,7 @@ export interface FileRoutesByTo {
   '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2654,6 +2672,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/_authenticated/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
+  '/_authenticated/ops/fund-setup': typeof AuthenticatedOpsFundSetupRouteWithChildren
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2733,6 +2752,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/_authenticated/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/_authenticated/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/_authenticated/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
@@ -2941,6 +2961,7 @@ export interface FileRouteTypes {
     | '/ops/distributions'
     | '/ops/documents'
     | '/ops/financials'
+    | '/ops/fund-setup'
     | '/ops/nav'
     | '/ops/performance'
     | '/ops/readiness'
@@ -3020,6 +3041,7 @@ export interface FileRouteTypes {
     | '/ops/contracts/permissions'
     | '/ops/contracts/sow-templates'
     | '/ops/contracts/standard'
+    | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
@@ -3221,6 +3243,7 @@ export interface FileRouteTypes {
     | '/ops/distributions'
     | '/ops/documents'
     | '/ops/financials'
+    | '/ops/fund-setup'
     | '/ops/nav'
     | '/ops/performance'
     | '/ops/readiness'
@@ -3299,6 +3322,7 @@ export interface FileRouteTypes {
     | '/ops/contracts/permissions'
     | '/ops/contracts/sow-templates'
     | '/ops/contracts/standard'
+    | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
@@ -3506,6 +3530,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/distributions'
     | '/_authenticated/ops/documents'
     | '/_authenticated/ops/financials'
+    | '/_authenticated/ops/fund-setup'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/performance'
     | '/_authenticated/ops/readiness'
@@ -3585,6 +3610,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/contracts/permissions'
     | '/_authenticated/ops/contracts/sow-templates'
     | '/_authenticated/ops/contracts/standard'
+    | '/_authenticated/ops/fund-setup/$fundId'
     | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
     | '/_authenticated/ops/investors/$investorId'
@@ -4907,6 +4933,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFinancialsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/fund-setup': {
+      id: '/_authenticated/ops/fund-setup'
+      path: '/ops/fund-setup'
+      fullPath: '/ops/fund-setup'
+      preLoaderRoute: typeof AuthenticatedOpsFundSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/nav': {
       id: '/_authenticated/ops/nav'
       path: '/ops/nav'
@@ -5467,6 +5500,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsContractsStandardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/fund-setup/$fundId': {
+      id: '/_authenticated/ops/fund-setup/$fundId'
+      path: '/$fundId'
+      fullPath: '/ops/fund-setup/$fundId'
+      preLoaderRoute: typeof AuthenticatedOpsFundSetupFundIdRouteImport
+      parentRoute: typeof AuthenticatedOpsFundSetupRoute
+    }
     '/_authenticated/ops/fund/$fundId': {
       id: '/_authenticated/ops/fund/$fundId'
       path: '/ops/fund/$fundId'
@@ -5838,6 +5878,20 @@ const AuthenticatedProfessionalRouteWithChildren =
     AuthenticatedProfessionalRouteChildren,
   )
 
+interface AuthenticatedOpsFundSetupRouteChildren {
+  AuthenticatedOpsFundSetupFundIdRoute: typeof AuthenticatedOpsFundSetupFundIdRoute
+}
+
+const AuthenticatedOpsFundSetupRouteChildren: AuthenticatedOpsFundSetupRouteChildren =
+  {
+    AuthenticatedOpsFundSetupFundIdRoute: AuthenticatedOpsFundSetupFundIdRoute,
+  }
+
+const AuthenticatedOpsFundSetupRouteWithChildren =
+  AuthenticatedOpsFundSetupRoute._addFileChildren(
+    AuthenticatedOpsFundSetupRouteChildren,
+  )
+
 interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdAssetsRoute: typeof AuthenticatedManagerFundFundIdAssetsRoute
   AuthenticatedManagerFundFundIdComplianceRoute: typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -6015,6 +6069,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
   AuthenticatedOpsDocumentsRoute: typeof AuthenticatedOpsDocumentsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
+  AuthenticatedOpsFundSetupRoute: typeof AuthenticatedOpsFundSetupRouteWithChildren
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
@@ -6216,6 +6271,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsDistributionsRoute: AuthenticatedOpsDistributionsRoute,
   AuthenticatedOpsDocumentsRoute: AuthenticatedOpsDocumentsRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
+  AuthenticatedOpsFundSetupRoute: AuthenticatedOpsFundSetupRouteWithChildren,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,

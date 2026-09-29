@@ -135,7 +135,23 @@ export async function createFundSetup(
     displayName?: string | null | undefined;
   },
 ) {
-  const actor = await assertStaff(userId);
+  await assertStaff(userId);
+  return bootstrapFundSetup(userId, input);
+}
+
+/** Called only after a separate staff-authorized creation; not a public function. */
+export async function bootstrapFundSetup(
+  userId: string,
+  input: {
+    offeringId: string;
+    clientId?: string | null | undefined;
+    fundRequestId?: string | null | undefined;
+    structure: string;
+    structureOther?: string | null | undefined;
+    legalFundName?: string | null | undefined;
+    displayName?: string | null | undefined;
+  },
+) {
   if (!isFundStructure(input.structure)) fail("That fund structure is not supported.");
   const structure = input.structure as FundStructure;
 
@@ -158,7 +174,7 @@ export async function createFundSetup(
       display_name: input.displayName ?? null,
       stage: "new_request",
       launch_state: "not_ready",
-      created_by: actor.userId,
+      created_by: userId,
     })
     .select("*")
     .single();
@@ -178,7 +194,7 @@ export async function createFundSetup(
         client_editable: t.clientEditable ?? false,
         dependencies: t.dependencies ?? [],
         sort_order: index,
-        created_by: actor.userId,
+        created_by: userId,
       })),
     );
   await db()
@@ -201,11 +217,11 @@ export async function createFundSetup(
         step: r.step,
         required: r.required,
         sort_order: index,
-        updated_by: actor.userId,
+        updated_by: userId,
       })),
     );
-  await db().from("fund_entity_formation").insert({ setup_id: setup.id, updated_by: actor.userId });
-  await db().from("fund_banking_setups").insert({ setup_id: setup.id, updated_by: actor.userId });
+  await db().from("fund_entity_formation").insert({ setup_id: setup.id, updated_by: userId });
+  await db().from("fund_banking_setups").insert({ setup_id: setup.id, updated_by: userId });
 
   await recordEvent({
     setupId: setup.id,
@@ -214,7 +230,7 @@ export async function createFundSetup(
     event: "fund_setup_created",
     toStatus: "new_request",
     detail: { structure },
-    actorUserId: actor.userId,
+    actorUserId: userId,
     actorRole: "harmonious",
   });
   return setup;
