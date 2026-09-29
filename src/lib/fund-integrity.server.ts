@@ -44,14 +44,14 @@ async function allFunds(): Promise<FundRef[]> {
   return ((data ?? []) as any[]).map((f) => ({ id: f.id, name: f.name, legalName: f.legal_entity_name }));
 }
 
-export async function searchFunds(context: any, input: { name?: string | null; legalName?: string | null; excludeId?: string | null }) {
+export async function searchFunds(context: any, input: { name?: string | null | undefined; legalName?: string | null | undefined; excludeId?: string | null | undefined }) {
   await requireStaff(context);
   const matches = findFundMatches(input, await allFunds(), input.excludeId ?? null);
   return { matches: matches.slice(0, 10) };
 }
 
 /** Pre-insert check used by fund creation. Throws with the existing Fund's id so the UI can open it. */
-export async function assertFundIdentityFree(input: { name: string; legalName?: string | null; excludeId?: string | null; distinctConfirmed?: boolean }, actorId: string | null) {
+export async function assertFundIdentityFree(input: { name: string; legalName?: string | null | undefined; excludeId?: string | null | undefined; distinctConfirmed?: boolean | undefined }, actorId: string | null) {
   const matches = findFundMatches(input, await allFunds(), input.excludeId ?? null);
   const same = matches.find((m) => m.kind === "same_name" || m.kind === "same_legal_name");
   if (same) {
@@ -394,7 +394,7 @@ export async function resolveSyncItem(context: any, input: ResolveInput) {
 }
 
 /** Rename a Fund: history is written by the database; never a second Fund. */
-export async function renameFund(context: any, input: { offeringId: string; name: string; reason: string; effectiveDate?: string | null }) {
+export async function renameFund(context: any, input: { offeringId: string; name: string; reason: string; effectiveDate?: string | null | undefined }) {
   const actorId = await requireStaff(context);
   const name = input.name.trim();
   if (!name) throw new Error("Enter the new Fund name.");
