@@ -5657,6 +5657,38 @@ export type Database = {
           },
         ]
       }
+      client_team_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          client_id: string
+          team_role: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id: string
+          team_role: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id?: string
+          team_role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_team_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_users: {
         Row: {
           can_approve: boolean
@@ -15841,6 +15873,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fund_tax_documents_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_team_overrides: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          offering_id: string
+          team_role: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          offering_id: string
+          team_role: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          offering_id?: string
+          team_role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_team_overrides_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
@@ -29463,6 +29527,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      team_assignment_events: {
+        Row: {
+          changed_by: string | null
+          client_id: string | null
+          created_at: string
+          id: string
+          new_source: string | null
+          new_user_id: string | null
+          offering_id: string | null
+          prior_source: string | null
+          prior_user_id: string | null
+          scope: string
+          team_role: string
+        }
+        Insert: {
+          changed_by?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          new_source?: string | null
+          new_user_id?: string | null
+          offering_id?: string | null
+          prior_source?: string | null
+          prior_user_id?: string | null
+          scope: string
+          team_role: string
+        }
+        Update: {
+          changed_by?: string | null
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          new_source?: string | null
+          new_user_id?: string | null
+          offering_id?: string | null
+          prior_source?: string | null
+          prior_user_id?: string | null
+          scope?: string
+          team_role?: string
+        }
+        Relationships: []
       }
       third_party_providers: {
         Row: {
