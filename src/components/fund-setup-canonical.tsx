@@ -254,6 +254,69 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
 
 const emptyFee = { ratePercent: null, basis: null, frequency: null };
 
+const FEE_PRESETS = [0.5, 1, 1.5, 2, 2.5];
+const CARRY_PRESETS = [10, 15, 20, 25, 30];
+const HURDLE_PRESETS = [6, 7, 8, 10];
+const MIN_PRESETS = [1000, 5000, 10000, 25000, 50000, 100000, 250000];
+const ORG_EXPENSE_PRESETS = ["Borne by the Fund", "Borne by the Manager", "Borne by the Fund up to a cap", "Reimbursed to the Manager at closing"];
+const DISTRIBUTION_PRESETS = ["As realized", "Quarterly", "Semi-annually", "Annually", "At the Manager's discretion"];
+
+function toggle(c: FundClass, k: EconomicTermKey, on: boolean): EconomicTermKey[] {
+  const s = new Set(c.notApplicable ?? []);
+  if (on) s.add(k); else s.delete(k);
+  return [...s];
+}
+
+const selCls = "h-9 w-full rounded-md border bg-background px-2 text-sm";
+
+/** Numeric dropdown: common values, Other (custom), Not applicable, and optionally "Same as fund default". */
+function PresetSelect({ options, value, na, onChange, disabled, suffix = "", prefix = "", allowDefault }: {
+  options: number[]; value: number | null; na: boolean; onChange: (v: number | null, na: boolean) => void; disabled?: boolean; suffix?: string; prefix?: string; allowDefault?: boolean;
+}) {
+  const [custom, setCustom] = useState(false);
+  const isPreset = value != null && options.includes(value);
+  const mode = na ? "na" : value == null ? (custom ? "other" : "") : isPreset && !custom ? String(value) : "other";
+  return (
+    <div className="space-y-1">
+      <select className={selCls} disabled={disabled} value={mode} onChange={(e) => {
+        const v = e.target.value;
+        if (v === "na") { setCustom(false); onChange(null, true); }
+        else if (v === "other") { setCustom(true); onChange(value, false); }
+        else if (v === "") { setCustom(false); onChange(null, false); }
+        else { setCustom(false); onChange(Number(v), false); }
+      }}>
+        <option value="">{allowDefault ? "Same as fund default" : "—"}</option>
+        {options.map((o) => <option key={o} value={String(o)}>{prefix}{o.toLocaleString()}{suffix}</option>)}
+        <option value="other">Other…</option>
+        <option value="na">Not applicable</option>
+      </select>
+      {mode === "other" && <Input inputMode="decimal" disabled={disabled} placeholder={`Enter ${suffix ? "%" : "amount"}`} value={value ?? ""} onChange={(e) => onChange(num(e.target.value), false)} />}
+    </div>
+  );
+}
+
+function TextPresetSelect({ options, value, na, onChange, disabled }: { options: string[]; value: string | null; na: boolean; onChange: (v: string | null, na: boolean) => void; disabled?: boolean }) {
+  const [custom, setCustom] = useState(false);
+  const mode = na ? "na" : !value ? (custom ? "other" : "") : options.includes(value) && !custom ? value : "other";
+  return (
+    <div className="space-y-1">
+      <select className={selCls} disabled={disabled} value={mode} onChange={(e) => {
+        const v = e.target.value;
+        if (v === "na") { setCustom(false); onChange(null, true); }
+        else if (v === "other") { setCustom(true); onChange(value && !options.includes(value) ? value : null, false); }
+        else if (v === "") { setCustom(false); onChange(null, false); }
+        else { setCustom(false); onChange(v, false); }
+      }}>
+        <option value="">—</option>
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        <option value="other">Other…</option>
+        <option value="na">Not applicable</option>
+      </select>
+      {mode === "other" && <Input disabled={disabled} placeholder="Describe" value={value ?? ""} onChange={(e) => onChange(e.target.value || null, false)} />}
+    </div>
+  );
+}
+
 function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onSaved: () => void }) {
   const save = useServerFn(saveFundEconomicsFn);
   const saveFields = useServerFn(saveFundSetupFieldsFn);
@@ -261,12 +324,19 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
   const [terms, setTerms] = useState<EconomicTerms>({ managementFee: emptyFee as any, carry: { ratePercent: null } });
   const [classes, setClasses] = useState<FundClass[]>([]);
   useEffect(() => {
-    setTerms({ managementFee: (d.economics.terms?.managementFee ?? emptyFee) as any, carry: d.economics.terms?.carry ?? { ratePercent: null }, preferredReturnPercent: d.economics.terms?.preferredReturnPercent ?? null, orgExpenseTreatment: d.economics.terms?.orgExpenseTreatment ?? null, distributionFrequency: d.economics.terms?.distributionFrequency ?? null });
+    setTerms({ managementFee: (d.economics.terms?.managementFee ?? emptyFee) as any, carry: d.economics.terms?.carry ?? { ratePercent: null }, preferredReturnPercent: d.economics.terms?.preferredReturnPercent ?? null, orgExpenseTreatment: d.economics.terms?.orgExpenseTreatment ?? null, distributionFrequency: d.economics.terms?.distributionFrequency ?? null, notApplicable: d.economics.terms?.notApplicable ?? [] });
     setClasses(d.economics.classes ?? []);
   }, [d]);
   const fee = terms.managementFee ?? (emptyFee as any);
   const setFee = (p: any) => setTerms({ ...terms, managementFee: { ...fee, ...p } });
   const multi = d.offering.hasMultipleClasses;
+  const isNa = (k: EconomicTermKey) => !!terms.notApplicable?.includes(k);
+  const setNa = (k: EconomicTermKey, on: boolean, patch: Partial<EconomicTerms> = {}) =>
+    setTerms((t) => {
+      const cur = new Set(t.notApplicable ?? []);
+      if (on) cur.add(k); else cur.delete(k);
+      return { ...t, ...patch, notApplicable: [...cur] };
+    });
 
   const run = async (fn: () => Promise<unknown>, ok: string) => {
     try { await fn(); toast.success(ok); onSaved(); } catch (e: any) { toast.error(e.message); }
@@ -282,22 +352,40 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
       </CardHeader>
       <CardContent className="space-y-5">
         <section className="grid gap-3 sm:grid-cols-4">
-          <Field label="Management fee (%)"><Input inputMode="decimal" disabled={!d.canEdit} value={fee.ratePercent ?? ""} onChange={(e) => setFee({ ratePercent: num(e.target.value) })} /></Field>
+          <Field label="Management fee (%)">
+            <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
+              onChange={(v, na) => { setNa("managementFee", na); setFee(na ? { ratePercent: null, basis: null, frequency: null } : { ratePercent: v, basis: fee.basis ?? (v != null ? "committed_capital" : null), frequency: fee.frequency ?? (v != null ? "annual" : null) }); }} suffix="%" />
+          </Field>
           <Field label="Basis">
-            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit} value={fee.basis ?? ""} onChange={(e) => setFee({ basis: e.target.value || null })}>
-              <option value="">—</option><option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
+            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.basis ?? ""} onChange={(e) => setFee({ basis: e.target.value || null })}>
+              {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">—</option>}
+              <option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
             </select>
           </Field>
           <Field label="Frequency">
-            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit} value={fee.frequency ?? ""} onChange={(e) => setFee({ frequency: e.target.value || null })}>
-              <option value="">—</option><option value="one_time">One time</option><option value="annual">Annual</option><option value="quarterly">Quarterly</option><option value="monthly">Monthly</option>
+            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.frequency ?? ""} onChange={(e) => setFee({ frequency: e.target.value || null })}>
+              {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">—</option>}
+              <option value="one_time">One time</option><option value="annual">Annual</option><option value="quarterly">Quarterly</option><option value="monthly">Monthly</option>
             </select>
           </Field>
-          <Field label="Carry (%)"><Input inputMode="decimal" disabled={!d.canEdit} value={terms.carry?.ratePercent ?? ""} onChange={(e) => setTerms({ ...terms, carry: { ...(terms.carry ?? {}), ratePercent: num(e.target.value) } })} /></Field>
-          <Field label="Preferred return / hurdle (%)"><Input inputMode="decimal" disabled={!d.canEdit} value={terms.preferredReturnPercent ?? ""} onChange={(e) => setTerms({ ...terms, preferredReturnPercent: num(e.target.value) })} /></Field>
-          <Field label="Formation expense treatment"><Input disabled={!d.canEdit} value={terms.orgExpenseTreatment ?? ""} onChange={(e) => setTerms({ ...terms, orgExpenseTreatment: e.target.value || null })} /></Field>
-          <Field label="Distribution frequency"><Input disabled={!d.canEdit} value={terms.distributionFrequency ?? ""} onChange={(e) => setTerms({ ...terms, distributionFrequency: e.target.value || null })} /></Field>
+          <Field label="Carry (%)">
+            <PresetSelect disabled={!d.canEdit} options={CARRY_PRESETS} na={isNa("carry")} value={terms.carry?.ratePercent ?? null}
+              onChange={(v, na) => { setNa("carry", na, { carry: { ...(terms.carry ?? {}), ratePercent: na ? null : v } }); }} suffix="%" />
+          </Field>
+          <Field label="Preferred return / hurdle (%)">
+            <PresetSelect disabled={!d.canEdit} options={HURDLE_PRESETS} na={isNa("preferredReturn")} value={terms.preferredReturnPercent ?? null}
+              onChange={(v, na) => setNa("preferredReturn", na, { preferredReturnPercent: na ? null : v })} suffix="%" />
+          </Field>
+          <Field label="Formation expense treatment">
+            <TextPresetSelect disabled={!d.canEdit} options={ORG_EXPENSE_PRESETS} na={isNa("orgExpense")} value={terms.orgExpenseTreatment ?? null}
+              onChange={(v, na) => setNa("orgExpense", na, { orgExpenseTreatment: na ? null : v })} />
+          </Field>
+          <Field label="Distribution frequency">
+            <TextPresetSelect disabled={!d.canEdit} options={DISTRIBUTION_PRESETS} na={isNa("distributionFrequency")} value={terms.distributionFrequency ?? null}
+              onChange={(v, na) => setNa("distributionFrequency", na, { distributionFrequency: na ? null : v })} />
+          </Field>
         </section>
+        <p className="text-xs text-muted-foreground">Pick a common value, "Other…" to type your own, or "Not applicable". Not applicable counts as answered.</p>
 
         <div className="flex items-center gap-3">
           <Switch checked={multi} disabled={!d.canEdit} onCheckedChange={(v) => run(() => saveFields({ data: { offeringId, fields: { hasMultipleClasses: v } } }), "Saved")} id="multi" />
@@ -307,12 +395,22 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
           <section className="space-y-3">
             {classes.map((c, i) => {
               const upd = (p: Partial<FundClass>) => setClasses(classes.map((x, j) => (j === i ? { ...x, ...p } : x)));
+              const cNa = (k: EconomicTermKey) => !!c.notApplicable?.includes(k);
               return (
                 <div key={i} className="grid gap-3 rounded-md border p-3 sm:grid-cols-5">
                   <Field label="Class name"><Input disabled={!d.canEdit} value={c.name} onChange={(e) => upd({ name: e.target.value })} /></Field>
-                  <Field label="Mgmt fee (%) — blank uses default"><Input inputMode="decimal" disabled={!d.canEdit} value={c.managementFee?.ratePercent ?? ""} onChange={(e) => upd({ managementFee: e.target.value === "" ? null : { ...(c.managementFee ?? fee), ratePercent: num(e.target.value) } })} /></Field>
-                  <Field label="Carry (%)"><Input inputMode="decimal" disabled={!d.canEdit} value={c.carry?.ratePercent ?? ""} onChange={(e) => upd({ carry: e.target.value === "" ? null : { ratePercent: num(e.target.value) } })} /></Field>
-                  <Field label="Minimum ($)"><Input inputMode="decimal" disabled={!d.canEdit} value={fromCents(c.minInvestmentCents)} onChange={(e) => upd({ minInvestmentCents: toCents(e.target.value) })} /></Field>
+                  <Field label="Mgmt fee (%)">
+                    <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} allowDefault na={cNa("managementFee")} value={c.managementFee?.ratePercent ?? null}
+                      onChange={(v, na) => upd({ notApplicable: toggle(c, "managementFee", na), managementFee: na || v == null ? null : { ...(c.managementFee ?? fee), ratePercent: v } })} suffix="%" />
+                  </Field>
+                  <Field label="Carry (%)">
+                    <PresetSelect disabled={!d.canEdit} options={CARRY_PRESETS} allowDefault na={cNa("carry")} value={c.carry?.ratePercent ?? null}
+                      onChange={(v, na) => upd({ notApplicable: toggle(c, "carry", na), carry: na || v == null ? null : { ratePercent: v } })} suffix="%" />
+                  </Field>
+                  <Field label="Minimum ($)">
+                    <PresetSelect disabled={!d.canEdit} options={MIN_PRESETS} allowDefault na={cNa("minInvestment")} value={c.minInvestmentCents != null ? c.minInvestmentCents / 100 : null}
+                      onChange={(v, na) => upd({ notApplicable: toggle(c, "minInvestment", na), minInvestmentCents: na || v == null ? null : Math.round(v * 100) })} prefix="$" />
+                  </Field>
                   {d.canEdit && <Button variant="ghost" className="self-end" onClick={() => setClasses(classes.filter((_, j) => j !== i))}>Remove</Button>}
                 </div>
               );
