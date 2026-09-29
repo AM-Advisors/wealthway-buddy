@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stat } from "@/components/dashboard-primitives";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { AttentionCenter } from "@/components/attention-center";
+import { InvestorDashboard } from "@/components/investor-dashboard";
 import { SetupCard } from "@/components/setup-card";
 
 import { money, prettyStatus, statusTone } from "@/lib/status";
@@ -303,6 +304,8 @@ function RoleHome() {
           ))}
         </div>
       </header>
+
+      {activeKind === "investor" ? <InvestorDashboard /> : null}
 
       <SetupCard />
 

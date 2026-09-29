@@ -99,7 +99,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
     return (!drill.stage || funnelStageOf(fact) === drill.stage) && (!drill.bucket || managerBucketOf(fact) === drill.bucket);
   };
   const shown = items.filter((r) => drillMatch(r.onboardingId)).filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
-  const shownLegacy = legacy.filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
+  const shownLegacy = legacy.filter(() => !drill.stage && !drill.bucket).filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
 
   if (records.isLoading) return <p className="text-sm text-muted-foreground">Loading investors…</p>;
   if (records.error) return <p className="text-sm text-destructive">{(records.error as Error).message}</p>;
@@ -175,6 +175,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
         <CardHeader className="gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div><CardTitle className="text-base">Investor roster</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground"><b>Record</b> = is the investor's information complete and confirmed. <b>Readiness</b> = is the investment ready to close. <b>Prepared</b> = entered by the Fund team or Harmonious; the investor hasn't signed in or confirmed it.</p></div>
+          {drill.stage || drill.bucket ? <p className="text-sm">Showing: <b>{drill.stage ? (FUNNEL_LABELS as any)[drill.stage] ?? drill.stage : (MANAGER_BUCKET_LABELS as any)[drill.bucket!] ?? drill.bucket}</b> · <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="underline">Show all</Link></p> : null}
           <Input className="sm:w-56" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search investors" aria-label="Search investors" />
         </CardHeader>
         <CardContent>
