@@ -42,9 +42,9 @@ describe("fund setup canonical rules", () => {
   it("calculates setup completion only from applicable canonical sections", () => {
     const statuses = sectionStatuses(base);
     expect(setupCompletion(statuses)).toBe(0);
-    expect(setupCompletion({ ...statuses, fund_details: { status: "complete", next: null } })).toBe(14);
-    expect(setupCompletion({ ...statuses, review: { status: "complete", next: null }, classes: { status: "not_applicable", next: null } })).toBe(14);
-    expect(setupCompletion({ ...statuses, classes: { status: "complete", next: null } })).toBe(13);
+    expect(setupCompletion({ ...statuses, fund_details: { status: "complete" } })).toBe(14);
+    expect(setupCompletion({ ...statuses, review: { status: "complete" }, classes: { status: "not_applicable" } })).toBe(14);
+    expect(setupCompletion({ ...statuses, classes: { status: "complete" } })).toBe(13);
   });
   it("economics stay incomplete until approved by a second reviewer", () => {
     const s = sectionStatuses({ ...base, minInvestmentCents: 100, targetRaiseCents: 1, managementFeeSet: true, carrySet: true, economicsStatus: "draft" });
