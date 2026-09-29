@@ -512,6 +512,13 @@
       "when": 1790696729498,
       "tag": "0072_rename_offering_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1790697480377,
+      "tag": "0073_sync_items_staff_read",
+      "breakpoints": true
     }
   ]
 }
