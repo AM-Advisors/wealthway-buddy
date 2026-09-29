@@ -124,7 +124,7 @@
 - [ ] Phase 3: Banking (client-provided wire upload + verification, Harmonious-opened path), Administration & Regulatory, Review, investor impact warnings, class picker on investments
 - [ ] QA walkthrough of Fund Setup scenarios in the separate QA copy (e-sign stops without QA provider config)
 ## Training videos
-- [ ] Produce investor onboarding walkthrough in landscape and vertical formats
-- [ ] Produce new Fund and investor setup walkthrough in landscape and vertical formats
-- [ ] Deliver voiceover scripts and companion checklists
+- [x] Produce investor onboarding walkthrough in landscape and vertical formats
+- [x] Produce new Fund and investor setup walkthrough in landscape and vertical formats
+- [x] Deliver voiceover scripts and companion checklists
 
