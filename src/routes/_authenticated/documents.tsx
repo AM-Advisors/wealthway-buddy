@@ -10,6 +10,7 @@ import {
 } from "@/lib/portal.functions";
 import { getSignedDocumentUrl } from "@/lib/documents.functions";
 import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { InvestorDocumentInbox } from "@/components/investor-document-inbox";
 import { savePdf } from "@/lib/download-pdf";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -130,6 +131,7 @@ function DocumentsPage() {
   if (!data?.application) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
+        <InvestorDocumentInbox />
         <h1 className="text-2xl">Your fund documents</h1>
         <Card className="mt-6">
           <CardContent className="pt-6">
@@ -155,6 +157,7 @@ function DocumentsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
+      <InvestorDocumentInbox />
       <header>
         <p className="text-sm text-muted-foreground">{data.offering?.name ?? "Your fund"}</p>
         <h1 className="text-2xl md:text-3xl">Your fund documents</h1>
