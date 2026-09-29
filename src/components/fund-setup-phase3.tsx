@@ -90,7 +90,6 @@ export function FundSetupPhase3({ offeringId, onChanged }: { offeringId: string;
       <EntityEinCard d={d} offeringId={offeringId} onChanged={refresh} />
       <BankingCard d={d} offeringId={offeringId} onChanged={refresh} />
       <AdminCard d={d} offeringId={offeringId} onChanged={refresh} />
-      <RegulatoryFilingsCard offeringId={offeringId} />
       {d.canEdit && <ClassAssignmentCard offeringId={offeringId} />}
       <ReviewCard d={d} />
     </div>
@@ -390,10 +389,12 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
             </div>
           </div>
         ))}
-        {pick("Form D", formD, setFormD)}
-        {pick("Blue Sky", blueSky, setBlueSky)}
-        {d.canEdit && <Button size="sm" disabled={busy} onClick={() => run(() => save({ data: { offeringId, services, formD, blueSky } }), "Saved")}>Save</Button>}
-        <p className="text-xs text-muted-foreground">No filings are made and no filing fees are calculated here.</p>
+        {d.canEdit && <Button size="sm" disabled={busy} onClick={() => run(() => save({ data: { offeringId, services, formD, blueSky } }), "Saved")}>Save services</Button>}
+        <RegulatoryFilingsCard offeringId={offeringId}>
+          {pick("Who files Form D", formD, setFormD)}
+          {pick("Who files Blue Sky", blueSky, setBlueSky)}
+          {d.canEdit && <div className="sm:col-span-2"><Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => save({ data: { offeringId, services, formD, blueSky } }), "Saved")}>Save filing responsibility</Button></div>}
+        </RegulatoryFilingsCard>
       </CardContent>
     </Card>
   );

@@ -147,7 +147,7 @@ export function FormationEvidenceSection({ offeringId }: { offeringId: string })
 
 // ---------------------------------------------------------------- Form D & Blue Sky
 
-export function RegulatoryFilingsCard({ offeringId }: { offeringId: string }) {
+export function RegulatoryFilingsCard({ offeringId, children }: { offeringId: string; children?: import("react").ReactNode }) {
   const { data } = useExtras(offeringId);
   const add = useServerFn(addRegulatoryFilingFn);
   const remove = useServerFn(removeRegulatoryFilingFn);
@@ -170,16 +170,16 @@ export function RegulatoryFilingsCard({ offeringId }: { offeringId: string }) {
   const formD = data.filings.filter((x) => x.type === "form_d");
   const blue = data.filings.filter((x) => x.type === "blue_sky");
   return (
-    <Card id="setup-filings" className="scroll-mt-6">
-      <CardHeader>
-        <CardTitle className="text-base">Form D & Blue Sky filings</CardTitle>
-        <p className="text-sm text-muted-foreground">
+    <section id="setup-filings" className="scroll-mt-6 space-y-4 rounded-md border p-3">
+      <div>
+        <p className="text-sm font-medium">Form D & Blue Sky filings</p>
+        <p className="text-xs text-muted-foreground">
           File Form D and state notices on{" "}
           <a className="inline-flex items-center gap-1 text-primary underline" href="https://www.nasaaefd.org/" target="_blank" rel="noreferrer">NASAA EFD <ExternalLink className="h-3 w-3" /></a>
-          , then record the details here. Recording a filing never submits anything.
+          , then record the details here. Recording a filing never submits anything, and no filing fees are calculated.
         </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </div>
+      {children && <div className="grid gap-3 sm:grid-cols-2">{children}</div>}
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <p className="mb-1 text-sm font-medium">Form D</p>
@@ -231,7 +231,6 @@ export function RegulatoryFilingsCard({ offeringId }: { offeringId: string }) {
             <div className="flex items-end"><Button size="sm" disabled={busy} onClick={submit}>Record filing</Button></div>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </section>
   );
 }
