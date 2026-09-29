@@ -526,6 +526,13 @@
       "when": 1790698365911,
       "tag": "0074_fund_duplicate_resolution",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1790701401105,
+      "tag": "0075_phase36_retired_fund_and_historical_names",
+      "breakpoints": true
     }
   ]
 }
