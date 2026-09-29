@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { decidePricingRequest, getSalesOverview, priceFund, saveClientPricing } from "@/lib/commercial-pricing.functions";
 import { COMMERCIAL_STATUS_LABEL } from "@/lib/commercial-pricing";
+import { SalesOverviewTab } from "@/components/sales-overview-tab";
 
 export const Route = createFileRoute("/_authenticated/sales")({
   head: () => ({
@@ -40,8 +41,9 @@ function SalesPage() {
       <h1 className="text-3xl">Sales</h1>
       <p className="mb-6 mt-2 text-sm text-muted-foreground">Commercial information only. Nothing here pauses a fund, its setup or its investors.</p>
       {!d ? <p className="text-sm text-muted-foreground">Loading…</p> : (
-        <Tabs defaultValue="funds">
+        <Tabs defaultValue="overview">
           <TabsList className="flex-wrap">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
             <TabsTrigger value="requests">Fund Requests</TabsTrigger>
             <TabsTrigger value="funds">Pricing</TabsTrigger>
@@ -49,6 +51,7 @@ function SalesPage() {
             <TabsTrigger value="client-pricing">Commercial Agreements</TabsTrigger>
             <TabsTrigger value="history">Pricing History</TabsTrigger>
           </TabsList>
+          <TabsContent value="overview"><SalesOverviewTab /></TabsContent>
           <TabsContent value="clients"><Rows items={d.clients} render={(c: any) => (<><span>{c.name} <span className="text-xs text-muted-foreground">· {c.funds} funds</span></span>{c.msaFollowUp ? <Badge variant="outline">MSA Follow-Up Required</Badge> : <Badge variant="secondary">MSA on file</Badge>}</>)} /></TabsContent>
           <TabsContent value="requests"><Rows items={d.fundRequests} empty="No fund requests." render={(r: any) => (<><span>{r.name} <span className="text-xs text-muted-foreground">· {r.clientName ?? "No client"}</span></span><Badge variant="outline">{r.status}</Badge></>)} /></TabsContent>
           <TabsContent value="funds"><FundPricing d={d} /></TabsContent>
