@@ -148,7 +148,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
       </div>
 
       <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-6">
-        {([["Total", summary.total], ["Invited", summary.invited], ["Onboarding", summary.onboarding], ["Needs Attention", summary.needsAttention], ["Ready", summary.ready], ["Funded", summary.funded]] as const).map(([l, v]) => (
+        {([["Total", summary.total + legacy.length], ["Invited", summary.invited], ["Onboarding", summary.onboarding], ["Needs Attention", summary.needsAttention], ["Ready", summary.ready], ["Funded", summary.funded]] as const).map(([l, v]) => (
           <div key={l} className="bg-card p-3"><p className="text-[11px] uppercase tracking-wide text-muted-foreground">{l}</p><p className="font-heading text-xl font-semibold">{v}</p></div>
         ))}
       </div>
