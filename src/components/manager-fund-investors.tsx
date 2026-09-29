@@ -10,6 +10,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useServerFn } from "@tanstack/react-start";
 
 import { BulkAddInvestors } from "@/components/bulk-add-investors";
+import { BulkInvestorRecords } from "@/components/bulk-investor-records";
+import { CreateInvestor } from "@/components/create-investor";
+import { FundInvestorRecords } from "@/components/fund-investor-records";
 import { FundOnboardingSettings } from "@/components/fund-onboarding-settings";
 import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { FundInvestorProgress, ManagerAddInvestor } from "@/components/manager-add-investor";
@@ -34,8 +37,8 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("all");
   const initial = useRouterState({ select: (st) => (st.location.search as any)?.add as string | undefined });
-  const [panel, setPanel] = useState<"existing" | "one" | "prep" | "many" | null>(
-    initial === "existing" ? "existing" : initial === "invite" ? "one" : initial === "prep" ? "prep" : initial === "bulk" ? "many" : null,
+  const [panel, setPanel] = useState<"existing" | "one" | "prep" | "many" | "create" | "records" | null>(
+    initial === "create" ? "create" : initial === "records" ? "records" : initial === "existing" ? "existing" : initial === "invite" ? "one" : initial === "prep" ? "prep" : initial === "bulk" ? "many" : null,
   );
   const loadActions = useServerFn(getFundInvestorActions);
   const actions = useQuery({ queryKey: ["fund-investor-actions", fundId], queryFn: () => loadActions({ data: { fundId } }) });
@@ -70,16 +73,21 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
         <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Identity, eligibility, signing, and funding for this fund.</p></div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           {actions.data?.isStaff ? <Button size="sm" variant="secondary" onClick={() => setPanel(panel === "existing" ? null : "existing")}>Add Existing Investor</Button> : null}
-          <Button size="sm" onClick={() => setPanel(panel === "one" ? null : "one")}>Invite New Investor</Button>
+          <Button size="sm" onClick={() => setPanel(panel === "create" ? null : "create")}>Create New Investor</Button>
+          <Button size="sm" variant="secondary" onClick={() => setPanel(panel === "one" ? null : "one")}>Invite Investor</Button>
+          <Button size="sm" variant="outline" onClick={() => setPanel(panel === "records" ? null : "records")}>Bulk Add Investors</Button>
           <Button size="sm" variant="secondary" onClick={() => setPanel(panel === "prep" ? null : "prep")}>Prepare Investor</Button>
           <Button size="sm" variant="outline" onClick={() => setPanel(panel === "many" ? null : "many")}>Bulk Invite</Button>
         </div>
       </div>
       <div className="mt-5"><FundRosterSummary fundId={fundId} /></div>
+      {panel === "create" && <div className="mt-5"><CreateInvestor fundId={fundId} isStaff={Boolean(actions.data?.isStaff)} onDone={() => setPanel(null)} /></div>}
+      {panel === "records" && <div className="mt-5"><BulkInvestorRecords fundId={fundId} isStaff={Boolean(actions.data?.isStaff)} /></div>}
       {panel === "existing" && <div className="mt-5"><AddExistingInvestor fundId={fundId} /></div>}
       {panel === "one" && <div className="mt-5"><ManagerAddInvestor fundId={fundId} /></div>}
       {panel === "prep" && <div className="mt-5"><PrepareInvestor fundId={fundId} /></div>}
       {panel === "many" && <div className="mt-5"><BulkAddInvestors fundId={fundId} existingEmails={(data?.applications ?? []).map((a: any) => String(a.email ?? "")).filter(Boolean)} /></div>}
+      <div className="mt-5"><FundInvestorRecords fundId={fundId} /></div>
       <div className="mt-5"><FundOnboardingSettings fundId={fundId} /></div>
       <div className="mt-5"><FundEligibilitySetup fundId={fundId} /></div>
       <div className="mt-5"><FundInvestorProgress fundId={fundId} /></div>

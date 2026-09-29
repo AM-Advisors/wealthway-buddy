@@ -16220,11 +16220,14 @@ export type Database = {
       investment_profiles: {
         Row: {
           created_at: string
+          created_by: string | null
+          details: Json
           display_label: string
+          entry_source: string
           id: string
           legacy_persona_id: string | null
           legal_name: string | null
-          owner_user_id: string
+          owner_user_id: string | null
           person_id: string | null
           profile_type: Database["public"]["Enums"]["investment_profile_type"]
           status: string
@@ -16232,11 +16235,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
+          details?: Json
           display_label: string
+          entry_source?: string
           id?: string
           legacy_persona_id?: string | null
           legal_name?: string | null
-          owner_user_id: string
+          owner_user_id?: string | null
           person_id?: string | null
           profile_type: Database["public"]["Enums"]["investment_profile_type"]
           status?: string
@@ -16244,11 +16250,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
+          details?: Json
           display_label?: string
+          entry_source?: string
           id?: string
           legacy_persona_id?: string | null
           legal_name?: string | null
-          owner_user_id?: string
+          owner_user_id?: string | null
           person_id?: string | null
           profile_type?: Database["public"]["Enums"]["investment_profile_type"]
           status?: string
@@ -16456,6 +16465,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      investor_bulk_imports: {
+        Row: {
+          committed_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          offering_id: string
+          rows: Json
+          status: string
+          summary: Json
+        }
+        Insert: {
+          committed_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          offering_id: string
+          rows?: Json
+          status?: string
+          summary?: Json
+        }
+        Update: {
+          committed_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          offering_id?: string
+          rows?: Json
+          status?: string
+          summary?: Json
+        }
+        Relationships: []
       }
       investor_cap_positions: {
         Row: {
@@ -17218,26 +17260,38 @@ export type Database = {
           closed_amount_cents: number | null
           closed_at: string | null
           closed_by: string | null
+          commitment_amount_cents: number | null
           created_at: string
+          created_by: string | null
           document_template_version: number | null
+          entry_source: string
           executed_snapshot: Json | null
           funded_amount_cents: number
           funding_released_at: string | null
           funding_status: string
           id: string
+          internal_notes: string | null
+          investment_date: string | null
           investment_profile_id: string | null
+          investor_confirmed_at: string | null
           investor_reports_sent_at: string | null
-          investor_user_id: string
+          investor_user_id: string | null
           invitation_id: string | null
           last_activity_at: string
+          manager_notes: string | null
           offering_id: string
           person_id: string | null
           position_id: string | null
           questionnaire_responses: Json
           questionnaire_version: number | null
+          removal_reason: string | null
+          removed_at: string | null
+          removed_by: string | null
           requested_amount_cents: number | null
           signature_id: string | null
+          source_referral: string | null
           stage: string
+          unit_count: number | null
           updated_at: string
         }
         Insert: {
@@ -17252,26 +17306,38 @@ export type Database = {
           closed_amount_cents?: number | null
           closed_at?: string | null
           closed_by?: string | null
+          commitment_amount_cents?: number | null
           created_at?: string
+          created_by?: string | null
           document_template_version?: number | null
+          entry_source?: string
           executed_snapshot?: Json | null
           funded_amount_cents?: number
           funding_released_at?: string | null
           funding_status?: string
           id?: string
+          internal_notes?: string | null
+          investment_date?: string | null
           investment_profile_id?: string | null
+          investor_confirmed_at?: string | null
           investor_reports_sent_at?: string | null
-          investor_user_id: string
+          investor_user_id?: string | null
           invitation_id?: string | null
           last_activity_at?: string
+          manager_notes?: string | null
           offering_id: string
           person_id?: string | null
           position_id?: string | null
           questionnaire_responses?: Json
           questionnaire_version?: number | null
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
           requested_amount_cents?: number | null
           signature_id?: string | null
+          source_referral?: string | null
           stage?: string
+          unit_count?: number | null
           updated_at?: string
         }
         Update: {
@@ -17286,26 +17352,38 @@ export type Database = {
           closed_amount_cents?: number | null
           closed_at?: string | null
           closed_by?: string | null
+          commitment_amount_cents?: number | null
           created_at?: string
+          created_by?: string | null
           document_template_version?: number | null
+          entry_source?: string
           executed_snapshot?: Json | null
           funded_amount_cents?: number
           funding_released_at?: string | null
           funding_status?: string
           id?: string
+          internal_notes?: string | null
+          investment_date?: string | null
           investment_profile_id?: string | null
+          investor_confirmed_at?: string | null
           investor_reports_sent_at?: string | null
-          investor_user_id?: string
+          investor_user_id?: string | null
           invitation_id?: string | null
           last_activity_at?: string
+          manager_notes?: string | null
           offering_id?: string
           person_id?: string | null
           position_id?: string | null
           questionnaire_responses?: Json
           questionnaire_version?: number | null
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
           requested_amount_cents?: number | null
           signature_id?: string | null
+          source_referral?: string | null
           stage?: string
+          unit_count?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -18031,6 +18109,105 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      investor_record_changes: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          field: string
+          id: string
+          manager_visible: boolean
+          new_value: Json | null
+          offering_id: string | null
+          old_value: Json | null
+          onboarding_id: string | null
+          source: string
+          subject_id: string
+          subject_table: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          manager_visible?: boolean
+          new_value?: Json | null
+          offering_id?: string | null
+          old_value?: Json | null
+          onboarding_id?: string | null
+          source: string
+          subject_id: string
+          subject_table: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          manager_visible?: boolean
+          new_value?: Json | null
+          offering_id?: string | null
+          old_value?: Json | null
+          onboarding_id?: string | null
+          source?: string
+          subject_id?: string
+          subject_table?: string
+        }
+        Relationships: []
+      }
+      investor_record_suggestions: {
+        Row: {
+          created_at: string
+          current_value: Json | null
+          field: string
+          id: string
+          offering_id: string | null
+          onboarding_id: string | null
+          proposed_by: string | null
+          proposed_value: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source: string
+          source_ref: string | null
+          status: string
+          subject_id: string | null
+          subject_table: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: Json | null
+          field: string
+          id?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          proposed_by?: string | null
+          proposed_value?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source: string
+          source_ref?: string | null
+          status?: string
+          subject_id?: string | null
+          subject_table: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: Json | null
+          field?: string
+          id?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          proposed_by?: string | null
+          proposed_value?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source?: string
+          source_ref?: string | null
+          status?: string
+          subject_id?: string | null
+          subject_table?: string
+        }
+        Relationships: []
       }
       investor_signoffs: {
         Row: {
@@ -22970,8 +23147,10 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          created_by: string | null
           date_of_birth: string | null
           email: string | null
+          entry_source: string
           id: string
           identity_verified_at: string | null
           kyc_status: Database["public"]["Enums"]["check_status"]
@@ -22979,6 +23158,7 @@ export type Database = {
           legal_first_name: string | null
           legal_last_name: string | null
           legal_middle_name: string | null
+          mailing_address: Json | null
           onboarding_reason: string | null
           onboarding_state: Database["public"]["Enums"]["onboarding_state"]
           phone: string | null
@@ -23002,8 +23182,10 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          created_by?: string | null
           date_of_birth?: string | null
           email?: string | null
+          entry_source?: string
           id?: string
           identity_verified_at?: string | null
           kyc_status?: Database["public"]["Enums"]["check_status"]
@@ -23011,6 +23193,7 @@ export type Database = {
           legal_first_name?: string | null
           legal_last_name?: string | null
           legal_middle_name?: string | null
+          mailing_address?: Json | null
           onboarding_reason?: string | null
           onboarding_state?: Database["public"]["Enums"]["onboarding_state"]
           phone?: string | null
@@ -23034,8 +23217,10 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          created_by?: string | null
           date_of_birth?: string | null
           email?: string | null
+          entry_source?: string
           id?: string
           identity_verified_at?: string | null
           kyc_status?: Database["public"]["Enums"]["check_status"]
@@ -23043,6 +23228,7 @@ export type Database = {
           legal_first_name?: string | null
           legal_last_name?: string | null
           legal_middle_name?: string | null
+          mailing_address?: Json | null
           onboarding_reason?: string | null
           onboarding_state?: Database["public"]["Enums"]["onboarding_state"]
           phone?: string | null

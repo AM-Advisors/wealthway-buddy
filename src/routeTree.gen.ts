@@ -290,6 +290,7 @@ import { Route as AuthenticatedManagerFundFundIdReadinessRouteImport } from './r
 import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './routes/_authenticated/manager.fund.$fundId.settings'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
 import { Route as AuthenticatedManagerFundFundIdTransactionsRouteImport } from './routes/_authenticated/manager.fund.$fundId.transactions'
+import { Route as AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport } from './routes/_authenticated/manager.fund.$fundId.investor.$onboardingId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -1896,6 +1897,12 @@ const AuthenticatedManagerFundFundIdTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute =
+  AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport.update({
+    id: '/investor/$onboardingId',
+    path: '/investor/$onboardingId',
+    getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -2178,6 +2185,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
+  '/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -2454,6 +2462,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdIndexRoute
+  '/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -2738,6 +2747,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/_authenticated/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/_authenticated/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
+  '/_authenticated/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -3022,6 +3032,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
     | '/manager/fund/$fundId/'
+    | '/manager/fund/$fundId/investor/$onboardingId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -3298,6 +3309,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
     | '/manager/fund/$fundId'
+    | '/manager/fund/$fundId/investor/$onboardingId'
   id:
     | '__root__'
     | '/'
@@ -3581,6 +3593,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/team'
     | '/_authenticated/manager/fund/$fundId/transactions'
     | '/_authenticated/manager/fund/$fundId/'
+    | '/_authenticated/manager/fund/$fundId/investor/$onboardingId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -5597,6 +5610,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdTransactionsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/manager/fund/$fundId/investor/$onboardingId': {
+      id: '/_authenticated/manager/fund/$fundId/investor/$onboardingId'
+      path: '/investor/$onboardingId'
+      fullPath: '/manager/fund/$fundId/investor/$onboardingId'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport
+      parentRoute: typeof AuthenticatedManagerFundFundIdRoute
+    }
   }
 }
 
@@ -5790,6 +5810,7 @@ interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdTeamRoute: typeof AuthenticatedManagerFundFundIdTeamRoute
   AuthenticatedManagerFundFundIdTransactionsRoute: typeof AuthenticatedManagerFundFundIdTransactionsRoute
   AuthenticatedManagerFundFundIdIndexRoute: typeof AuthenticatedManagerFundFundIdIndexRoute
+  AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute: typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
 }
 
 const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundIdRouteChildren =
@@ -5814,6 +5835,8 @@ const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundI
       AuthenticatedManagerFundFundIdTransactionsRoute,
     AuthenticatedManagerFundFundIdIndexRoute:
       AuthenticatedManagerFundFundIdIndexRoute,
+    AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute:
+      AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute,
   }
 
 const AuthenticatedManagerFundFundIdRouteWithChildren =

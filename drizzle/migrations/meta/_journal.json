@@ -414,6 +414,13 @@
       "when": 1790638470042,
       "tag": "0058_fund_onboarding_links",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1790640329164,
+      "tag": "0059_investor_manual_entry_sync",
+      "breakpoints": true
     }
   ]
 }
