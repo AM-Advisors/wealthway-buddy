@@ -825,6 +825,7 @@ export async function releaseBankingInstructions(userId: string, setupId: string
   if (!record) fail("That fund has no banking record.");
   const error = canReleaseBankingInstructions(record);
   if (error) fail(error);
+  await (await import("@/lib/legal-name-gate.server")).assertLegalName({ setupId }, "funding_instruction_release");
   const { data } = await db()
     .from("fund_banking_setups")
     .update({

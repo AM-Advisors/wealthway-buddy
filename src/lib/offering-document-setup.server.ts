@@ -143,6 +143,7 @@ export async function approveDocumentVersion(userId: string, input: { documentId
   await assertStaff(userId, d.offering_id);
   const v = await versionRow(d.id, input.version);
   if (v.approval_status !== "uploaded_review_required") throw new Error("Only a version awaiting review can be approved.");
+  await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
   await db().from("offering_document_versions").update({ approval_status: "approved", approved_by: userId, approved_at: now() }).eq("id", v.id);
   await event(d.offering_id, d.id, v.version, "version_approved", userId);
   return { ok: true };

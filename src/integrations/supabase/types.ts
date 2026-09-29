@@ -13551,6 +13551,52 @@ export type Database = {
           },
         ]
       }
+      fund_aliases: {
+        Row: {
+          canonical_offering_id: string
+          created_at: string
+          created_by: string | null
+          old_offering_id: string
+          review_id: string | null
+        }
+        Insert: {
+          canonical_offering_id: string
+          created_at?: string
+          created_by?: string | null
+          old_offering_id: string
+          review_id?: string | null
+        }
+        Update: {
+          canonical_offering_id?: string
+          created_at?: string
+          created_by?: string | null
+          old_offering_id?: string
+          review_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_aliases_canonical_offering_id_fkey"
+            columns: ["canonical_offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_aliases_old_offering_id_fkey"
+            columns: ["old_offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_aliases_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "fund_duplicate_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_banking_setups: {
         Row: {
           account_active_at: string | null
@@ -13783,6 +13829,50 @@ export type Database = {
           },
         ]
       }
+      fund_consolidation_moves: {
+        Row: {
+          column_name: string
+          created_at: string
+          from_offering_id: string
+          id: string
+          moved_count: number
+          review_id: string
+          row_ids: string[]
+          table_name: string
+          to_offering_id: string
+        }
+        Insert: {
+          column_name: string
+          created_at?: string
+          from_offering_id: string
+          id?: string
+          moved_count?: number
+          review_id: string
+          row_ids?: string[]
+          table_name: string
+          to_offering_id: string
+        }
+        Update: {
+          column_name?: string
+          created_at?: string
+          from_offering_id?: string
+          id?: string
+          moved_count?: number
+          review_id?: string
+          row_ids?: string[]
+          table_name?: string
+          to_offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_consolidation_moves_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "fund_duplicate_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_distributions: {
         Row: {
           amount_cents: number
@@ -13834,6 +13924,116 @@ export type Database = {
           {
             foreignKeyName: "fund_distributions_offering_id_fkey"
             columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_duplicate_review_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          review_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          review_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_duplicate_review_events_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "fund_duplicate_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_duplicate_reviews: {
+        Row: {
+          acknowledged_conflicts: Json
+          canonical_id: string | null
+          consolidated_at: string | null
+          consolidated_by: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision: string | null
+          duplicate_id: string | null
+          failure_message: string | null
+          fund_ids: string[]
+          id: string
+          note: string | null
+          pair_key: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          acknowledged_conflicts?: Json
+          canonical_id?: string | null
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          duplicate_id?: string | null
+          failure_message?: string | null
+          fund_ids: string[]
+          id?: string
+          note?: string | null
+          pair_key: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          acknowledged_conflicts?: Json
+          canonical_id?: string | null
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          duplicate_id?: string | null
+          failure_message?: string | null
+          fund_ids?: string[]
+          id?: string
+          note?: string | null
+          pair_key?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_duplicate_reviews_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_duplicate_reviews_duplicate_id_fkey"
+            columns: ["duplicate_id"]
             isOneToOne: false
             referencedRelation: "offerings"
             referencedColumns: ["id"]
@@ -21659,6 +21859,10 @@ export type Database = {
           closing_cost_rate_id: string | null
           closing_cost_reason: string | null
           closing_cost_source: string
+          consolidated_at: string | null
+          consolidated_by: string | null
+          consolidated_into: string | null
+          consolidation_reason: string | null
           created_at: string
           date_formed: string | null
           drive_sync_enabled: boolean
@@ -21720,6 +21924,10 @@ export type Database = {
           closing_cost_rate_id?: string | null
           closing_cost_reason?: string | null
           closing_cost_source?: string
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          consolidated_into?: string | null
+          consolidation_reason?: string | null
           created_at?: string
           date_formed?: string | null
           drive_sync_enabled?: boolean
@@ -21781,6 +21989,10 @@ export type Database = {
           closing_cost_rate_id?: string | null
           closing_cost_reason?: string | null
           closing_cost_source?: string
+          consolidated_at?: string | null
+          consolidated_by?: string | null
+          consolidated_into?: string | null
+          consolidation_reason?: string | null
           created_at?: string
           date_formed?: string | null
           drive_sync_enabled?: boolean
@@ -21845,6 +22057,13 @@ export type Database = {
             columns: ["closing_cost_rate_id"]
             isOneToOne: false
             referencedRelation: "client_pricing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offerings_consolidated_into_fkey"
+            columns: ["consolidated_into"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
           {
@@ -29822,6 +30041,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      consolidate_duplicate_fund: {
+        Args: {
+          _actor: string
+          _canonical: string
+          _duplicate: string
+          _expected_version: number
+          _reason: string
+          _review: string
+        }
+        Returns: Json
+      }
       consume_signing_stepup: {
         Args: {
           p_action: string
@@ -29878,6 +30108,16 @@ export type Database = {
         Returns: boolean
       }
       fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
+      fund_dependency_counts: {
+        Args: { _offering: string }
+        Returns: {
+          column_name: string
+          preserved: boolean
+          row_count: number
+          table_name: string
+        }[]
+      }
+      fund_dependency_preserved: { Args: { _tbl: string }; Returns: boolean }
       fund_setup_manager: { Args: { _setup_id: string }; Returns: boolean }
       get_bank_access_token: {
         Args: { p_offering_id: string }
