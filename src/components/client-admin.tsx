@@ -23,6 +23,7 @@ import {
   type ClientCapability,
 } from "@/lib/client-admin-model";
 import { CLIENT_TYPES } from "@/lib/contract-ingestion";
+import { getProposedFundServices } from "@/lib/client-service-config.functions";
 import {
   createClientFund,
   decideFundReassignment,
@@ -658,6 +659,10 @@ function CreateFundDialog({ clientId, clientName, onClose }: { clientId: string;
   const create = useServerFn(createClientFund);
   const [f, setF] = useState({ name: "", fundType: "", entityType: "", legalEntityName: "", jurisdiction: "", regType: "506b" });
   const [busy, setBusy] = useState(false);
+  const proposedFn = useServerFn(getProposedFundServices);
+  const proposed = useQuery({ queryKey: ["proposed-fund-services", clientId], queryFn: () => proposedFn({ data: { clientId } }) });
+  const [pk, setPk] = useState<string[] | null>(null);
+  const chosen = pk ?? (proposed.data?.packages ?? []).filter((p) => p.defaultOn).map((p) => p.key);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
@@ -674,10 +679,18 @@ function CreateFundDialog({ clientId, clientName, onClose }: { clientId: string;
             {["506b", "506c", "regcf", "rega", "regaplus"].map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-        <p className="text-xs text-muted-foreground">Add services for this fund afterwards on Services & Pricing.</p>
+        {(proposed.data?.packages ?? []).length > 0 ? (
+          <div className="space-y-1 rounded-md border p-2 text-sm">
+            <p className="text-xs font-medium">Services for this fund (from the client's expected services)</p>
+            {proposed.data!.packages.map((p) => (
+              <label key={p.key} className="flex items-center gap-2"><input type="checkbox" checked={chosen.includes(p.key)} onChange={(e) => setPk(e.target.checked ? [...chosen, p.key] : chosen.filter((k) => k !== p.key))} />{p.label}</label>
+            ))}
+            <p className="text-xs text-muted-foreground">Frozen into this fund's Services & Pricing when it's created. Later client changes don't alter it.</p>
+          </div>
+        ) : <p className="text-xs text-muted-foreground">Add services for this fund afterwards on Services & Pricing.</p>}
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [] } }).then((r) => { if (r.duplicate) toast.message("This client already has a fund with that name — nothing new was created."); else toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
+          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [], packageKeys: (proposed.data?.packages ?? []).length ? chosen : undefined } }).then((r) => { if (r.duplicate) toast.message("This client already has a fund with that name — nothing new was created."); else toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

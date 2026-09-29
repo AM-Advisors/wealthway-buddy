@@ -119,8 +119,9 @@ export const saveClientDraft = createServerFn({ method: "POST" })
       legal_name: data.legal_name || null,
       dba_name: data.dba_name || null,
       client_type: data.client_type ?? null,
-      primary_contact_name: data.primary_contact_name || null,
-      primary_contact_email: data.primary_contact_email || null,
+      // Primary Contact now lives under Contacts; only legacy callers still send these.
+      ...(data.primary_contact_name ? { primary_contact_name: data.primary_contact_name } : {}),
+      ...(data.primary_contact_email ? { primary_contact_email: data.primary_contact_email } : {}),
       phone: data.phone || null,
       website: data.website || null,
       entity_type: data.entity_type || null,
