@@ -118,7 +118,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
   );
 
   return (
-    <Card>
+    <Card id="setup-banking" className="scroll-mt-6">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Banking</CardTitle>
@@ -264,7 +264,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
     }, received ? "EIN received and recorded" : "EIN recorded");
 
   return (
-    <Card>
+    <Card id="setup-entity" className="scroll-mt-6">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Entity & EIN</CardTitle>
@@ -362,7 +362,7 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
     </div>
   );
   return (
-    <Card>
+    <Card id="setup-admin" className="scroll-mt-6">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Administration & Regulatory</CardTitle>

@@ -80,10 +80,10 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
       </Card>
 
       <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
-      <DetailsCard d={d} offeringId={offeringId} onSaved={refresh} />
-      <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} />
-      <EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} />
-      <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} />
+      <div id="setup-details" className="scroll-mt-6"><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
+      <div id="setup-signatories" className="scroll-mt-6"><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
+      <div id="setup-economics" className="scroll-mt-6"><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
+      <div id="setup-documents" className="scroll-mt-6"><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
       <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
       <Card>
         <CardHeader><CardTitle className="text-base">Banking and Administration</CardTitle></CardHeader>
