@@ -9,8 +9,8 @@ import { setupActor, forbid } from "@/lib/fund-setup.server";
 const db = () => supabaseAdmin as any;
 
 export type Providers = {
-  bankName?: string; custodianName?: string; counsel?: string; auditor?: string;
-  taxPreparer?: string; taxPreparerIsHarmonious?: boolean;
+  bankName?: string | undefined; custodianName?: string | undefined; counsel?: string | undefined; auditor?: string | undefined;
+  taxPreparer?: string | undefined; taxPreparerIsHarmonious?: boolean | undefined;
 };
 export type EvidenceKind = "formation" | "certificate" | "ein_letter";
 const EVIDENCE: Record<EvidenceKind, { docType: string; title: string; col: string }> = {
@@ -113,7 +113,7 @@ export async function linkEvidence(userId: string, setupIdV: string, kind: Evide
   else await db().from("fund_entity_formation").insert({ setup_id: setupIdV, step: "name_selected", [spec.col]: docId, updated_by: userId });
 }
 
-export async function addFiling(userId: string, input: { offeringId: string; type: "form_d" | "blue_sky"; kind: "initial" | "amendment" | "renewal"; state?: string | null; accessionNumber?: string | null; efdId?: string | null; filingDate?: string | null; notes?: string | null }) {
+export async function addFiling(userId: string, input: { offeringId: string; type: "form_d" | "blue_sky"; kind: "initial" | "amendment" | "renewal"; state?: string | null | undefined; accessionNumber?: string | null | undefined; efdId?: string | null | undefined; filingDate?: string | null | undefined; notes?: string | null | undefined }) {
   await assertStaff(userId, input.offeringId);
   if (input.type === "blue_sky" && !input.state) throw new Error("Choose the state for a Blue Sky filing.");
   if (input.type === "form_d" && !input.accessionNumber) throw new Error("Enter the SEC accession number for the Form D.");
