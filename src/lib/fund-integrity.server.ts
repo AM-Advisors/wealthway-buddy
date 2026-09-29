@@ -40,7 +40,7 @@ async function audit(offeringId: string | null, itemId: string | null, event: st
 
 async function allFunds(): Promise<FundRef[]> {
   const db = await admin();
-  const { data } = await db.from("offerings").select("id,name,legal_entity_name").limit(5000);
+  const { data } = await db.from("offerings").select("id,name,legal_entity_name").is("consolidated_into", null).limit(5000);
   return ((data ?? []) as any[]).map((f) => ({ id: f.id, name: f.name, legalName: f.legal_entity_name }));
 }
 
@@ -57,6 +57,13 @@ export async function assertFundIdentityFree(input: { name: string; legalName?: 
   if (same) {
     await audit(same.id, null, "fund_duplicate_prevented", actorId, { kind: same.kind });
     throw new Error(`EXISTING_FUND:${same.id}:${same.kind === "same_name" ? `A Fund named "${same.name}" already exists.` : `That Legal Name already belongs to "${same.name}".`} Open the existing Fund instead.`);
+  }
+  const { data: history } = await (await admin()).from("offering_name_history").select("offering_id,previous_name").limit(5000);
+  const { historicalNameCollision, HISTORICAL_NAME_MESSAGE } = await import("@/lib/fund-duplicate-resolution");
+  const prior = historicalNameCollision(input.name, ((history ?? []) as any[]).map((h) => ({ offeringId: h.offering_id, previousName: h.previous_name })), input.excludeId ?? null);
+  if (prior) {
+    await audit(prior.offeringId, null, "fund_historical_name_collision", actorId, {});
+    throw new Error(`EXISTING_FUND:${prior.offeringId}:${HISTORICAL_NAME_MESSAGE} Harmonious review is required before using it.`);
   }
   if (!input.distinctConfirmed && matches.some((m) => m.kind === "similar")) {
     throw new Error("SIMILAR_FUND:A similar Fund already exists. Open it, add an offering to it, or confirm this is a genuinely distinct Fund.");

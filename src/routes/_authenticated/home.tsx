@@ -271,6 +271,7 @@ function RoleHome() {
             { to: "/admin/invoices", icon: Landmark, label: "Unpaid invoices" },
             { to: "/admin/signoff", icon: ShieldCheck, label: "Sign-off" },
             { to: "/admin/funds", icon: Building2, label: "Funds" },
+            { to: "/admin/fund-duplicates", icon: Building2, label: "Fund Duplicate Review" },
             { to: "/admin/funding", icon: Landmark, label: "Funding dashboard" },
             { to: "/admin/requests", icon: MessageSquare, label: "Access requests" },
             { to: "/admin/activity", icon: ClipboardList, label: "Activity log" },
