@@ -19,6 +19,7 @@ import {
   FUND_TYPES,
   type FundClass,
   type EconomicTerms,
+  type EconomicTermKey,
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FundSetupPhase3 } from "@/components/fund-setup-phase3";
