@@ -25,6 +25,7 @@ import {
   listManagedWireInstructions,
   saveManagedWireInstructions,
 } from "@/lib/wire-instructions.functions";
+import { ManagerBankingSummary } from "@/components/manager-banking-summary";
 import { BANK_CHOICES, getFundEntity, requestBankSetup } from "@/lib/fund-entity.functions";
 
 const FIELDS: { key: string; label: string; hint?: string }[] = [
@@ -56,6 +57,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
   const wireQuery = useQuery({
     queryKey: ["managed-wire-instructions"],
     queryFn: () => loadWire(),
+    enabled: backTo === "admin",
     retry: false,
   });
   const entityQuery = useQuery({
@@ -150,61 +152,65 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
       <div className="mt-6 space-y-6">
         <ScopeSection scope={scope} section="banking" offeringId={fundId} label="Bank account">
           <div className="grid gap-6 lg:grid-cols-2">
+            {backTo === "manager" ? (
+              <ManagerBankingSummary fundId={fundId} />
+            ) : (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Enter the account details</CardTitle>
-                <CardDescription>
-                  These are the instructions investors see when they fund.
-                  {hasInstructions ? "" : " Nothing is saved for this fund yet."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {FIELDS.map((field) => (
-                  <div key={field.key} className="grid gap-1.5">
-                    <Label htmlFor={`bank-${field.key}`}>{field.label}</Label>
-                    <Input
-                      id={`bank-${field.key}`}
-                      value={form[field.key] ?? ""}
-                      disabled={!canEdit}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, [field.key]: e.target.value }))
-                      }
-                    />
-                    {field.hint && (
-                      <p className="text-xs text-muted-foreground">{field.hint}</p>
-                    )}
-                  </div>
-                ))}
-
-                {accountChanged && (
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="bank-confirm">Re-type the account number to confirm</Label>
-                    <Input
-                      id="bank-confirm"
-                      value={confirmAccount}
-                      onChange={(e) => setConfirmAccount(e.target.value)}
-                    />
-                  </div>
-                )}
-
-                <Button
-                  onClick={() => saveMutation.mutate()}
-                  disabled={
-                    !canEdit ||
-                    saveMutation.isPending ||
-                    (accountChanged && confirmAccount.trim() !== (form["account_number"] ?? "").trim())
-                  }
-                >
-                  {saveMutation.isPending ? "Saving…" : "Save banking details"}
-                </Button>
-
-                <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground">
-                  Harmonious never changes these details by email. Investors are told to confirm
-                  instructions by phone with a known contact before sending funds. Every change is
-                  written to the fund&apos;s history with who made it and what it replaced.
-                </p>
-              </CardContent>
-            </Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Enter the account details</CardTitle>
+                  <CardDescription>
+                    These are the instructions investors see when they fund.
+                    {hasInstructions ? "" : " Nothing is saved for this fund yet."}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {FIELDS.map((field) => (
+                    <div key={field.key} className="grid gap-1.5">
+                      <Label htmlFor={`bank-${field.key}`}>{field.label}</Label>
+                      <Input
+                        id={`bank-${field.key}`}
+                        value={form[field.key] ?? ""}
+                        disabled={!canEdit}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, [field.key]: e.target.value }))
+                        }
+                      />
+                      {field.hint && (
+                        <p className="text-xs text-muted-foreground">{field.hint}</p>
+                      )}
+                    </div>
+                  ))}
+  
+                  {accountChanged && (
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="bank-confirm">Re-type the account number to confirm</Label>
+                      <Input
+                        id="bank-confirm"
+                        value={confirmAccount}
+                        onChange={(e) => setConfirmAccount(e.target.value)}
+                      />
+                    </div>
+                  )}
+  
+                  <Button
+                    onClick={() => saveMutation.mutate()}
+                    disabled={
+                      !canEdit ||
+                      saveMutation.isPending ||
+                      (accountChanged && confirmAccount.trim() !== (form["account_number"] ?? "").trim())
+                    }
+                  >
+                    {saveMutation.isPending ? "Saving…" : "Save banking details"}
+                  </Button>
+  
+                  <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-muted-foreground">
+                    Harmonious never changes these details by email. Investors are told to confirm
+                    instructions by phone with a known contact before sending funds. Every change is
+                    written to the fund&apos;s history with who made it and what it replaced.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
