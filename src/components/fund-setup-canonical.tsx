@@ -21,6 +21,7 @@ import {
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FundSetupPhase3 } from "@/components/fund-setup-phase3";
+import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +81,7 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
 
       <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
       <DetailsCard d={d} offeringId={offeringId} onSaved={refresh} />
+      <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} />
       <EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} />
       <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} />
       <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
@@ -185,8 +187,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           offeringId,
           fields: {
             displayName: f.displayName, fundType: f.fundType || null, gpName: f.gpName || null,
-            signatoryPersonId: f.signatoryPersonId || null, signatoryTitle: f.signatoryTitle || null,
-            signatoryCapacity: f.signatoryCapacity || null, signatoryEntityName: f.signatoryEntityName || null,
+            signatoryEntityName: f.signatoryEntityName || null,
             entityType: f.entityType || null, jurisdiction: f.jurisdiction || null, formationDate: f.formationDate || null,
             registeredAgent: f.registeredAgent || null, principalAddress: f.principalAddress || null,
             taxClassification: f.taxClassification || null, regType: f.regType as any,
@@ -216,17 +217,11 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Display name"><Input {...bind("displayName")} /></Field>
           <Field label="Fund Type">{sel("fundType", FUND_TYPES.map((t) => [t, t]))}</Field>
           <Field label="Fund Manager / GP"><Input {...bind("gpName")} /></Field>
-          <Field label="Fund Signatory">{sel("signatoryPersonId", d.signatoryOptions.map((p) => [p.id, p.name]))}</Field>
-          <Field label="Signatory title"><Input {...bind("signatoryTitle")} /></Field>
-          <Field label="Capacity"><Input placeholder="e.g. Managing Member of the GP" {...bind("signatoryCapacity")} /></Field>
           <Field label="Signing entity"><Input {...bind("signatoryEntityName")} /></Field>
           <Field label="Fiscal year end (MM-DD)"><Input placeholder="12-31" {...bind("fiscalYearEnd")} /></Field>
           {d.termApplies && <Field label="Fund term (months)"><Input inputMode="numeric" {...bind("fundTermMonths")} /></Field>}
           {d.termApplies && <Field label="Investment period (months)"><Input inputMode="numeric" {...bind("investmentPeriodMonths")} /></Field>}
         </section>
-        {d.signatoryOptions.length === 0 && (
-          <p className="text-xs text-muted-foreground">No signatory can be chosen yet: none of this fund's managers has a person record.</p>
-        )}
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Entity type">{sel("entityType", ["LLC", "LP", "Series LLC", "Master LLC", "Corporation", "Trust", "Other"].map((t) => [t, t]))}</Field>
           <Field label="Jurisdiction of formation"><Input {...bind("jurisdiction")} /></Field>
