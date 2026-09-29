@@ -8,7 +8,10 @@ import {
   approveDocumentVersionFn,
   createSetupDocumentFn,
   listSetupDocumentsFn,
-  previewVersionImpactFn,
+  decideChangeRequestFn,
+  requestDocumentChangeFn,
+  resolveResignItemFn,
+  rolloutPreviewFn,
   saveSigningConfigFn,
   setDocumentUsageFn,
   uploadDocumentVersionFn,
@@ -22,6 +25,8 @@ import {
   SIGNER_ROLES,
   SIGNER_ROLE_LABELS,
   VERSION_STATE_LABELS,
+  ROLLOUT_LABELS,
+  type RolloutScope,
   type BlockField,
   type DocumentCategory,
   type DocumentUsage,
@@ -108,12 +113,15 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
   const approve = useServerFn(approveDocumentVersionFn);
   const setUsage = useServerFn(setDocumentUsageFn);
   const activate = useServerFn(activateDocumentVersionFn);
-  const impact = useServerFn(previewVersionImpactFn);
+  const preview = useServerFn(rolloutPreviewFn);
+  const resolveResign = useServerFn(resolveResignItemFn);
+  const decide = useServerFn(decideChangeRequestFn);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const needsSigning = doc.usage === "signature";
   const [effective, setEffective] = useState("");
-  const [impactView, setImpactView] = useState<{ version: number; r: Awaited<ReturnType<typeof previewVersionImpactFn>> } | null>(null);
+  const [rollout, setRollout] = useState<{ version: number; r: Awaited<ReturnType<typeof rolloutPreviewFn>> } | null>(null);
+  const [showRequest, setShowRequest] = useState(false);
   const latest = doc.versions[0];
   const active = doc.versions.find((v) => v.isActive);
   const run = async (fn: () => Promise<unknown>, ok: string) => {
@@ -145,16 +153,18 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
   };
 
   const startActivate = async (version: number) => {
-    if (active && active.version !== version) {
-      try {
-        setImpactView({ version, r: await impact({ data: { documentId: doc.id } }) });
-      } catch (e: any) {
-        toast.error(e.message);
-      }
-      return;
+    try {
+      setRollout({ version, r: await preview({ data: { documentId: doc.id } }) });
+    } catch (e: any) {
+      toast.error(e.message);
     }
-    await run(() => activate({ data: { documentId: doc.id, version, impactAcknowledged: false } }), "Version is now in use");
   };
+  const u = doc.usageCounts;
+  const signedSummary = Object.entries(u.signedByVersion).sort((a, b) => Number(b[0]) - Number(a[0])).map(([v, n]) => `${n} signed on v${v}`);
+  const appliesTo = (doc.applicability.profileTypes?.length || doc.applicability.classKeys?.length)
+    ? [...(doc.applicability.profileTypes ?? []), ...(doc.applicability.classKeys ?? []).map((c) => `class ${c}`)].join(", ")
+    : "All investors";
+  const pendingRequests = doc.changeRequests.filter((r) => r.status === "pending");
 
   return (
     <div className="rounded-md border p-3">
@@ -162,15 +172,61 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         <div>
           <p className="text-sm font-medium">{doc.title}</p>
           <p className="text-xs text-muted-foreground">
-            {doc.usage ? DOCUMENT_USAGE_LABELS[doc.usage] : "Usage not chosen"}
-            {active ? ` · Version ${active.version} in use` : " · No version in use"}
+            {active ? `Fund template v${active.version} (in use)` : latest ? "Draft — not in use yet" : "Needs setup"}
+            {" · "}{doc.usage ? DOCUMENT_USAGE_LABELS[doc.usage] : "Usage not chosen"}
+            {" · "}{appliesTo}
           </p>
+          {(signedSummary.length > 0 || u.waiting > 0 || u.notSent > 0) && (
+            <p className="text-xs text-muted-foreground">
+              {[...signedSummary, u.waiting ? `${u.waiting} waiting to sign` : null, u.notSent ? `${u.notSent} not sent` : null, u.individual ? `${u.individual} individual version(s)` : null].filter(Boolean).join(" · ")}
+            </p>
+          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {doc.resignOpen.length > 0 && <Badge variant="destructive">{doc.resignOpen.length} re-sign needed</Badge>}
+          {pendingRequests.length > 0 && <Badge variant="secondary">{pendingRequests.length} change request(s)</Badge>}
           {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
+          {!data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setShowRequest(!showRequest)}>Request a change</Button>}
+          {data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Replace</Button>}
           <Button size="sm" variant={latest ? "ghost" : "default"} onClick={() => setOpen(!open)}>{open ? "Hide" : latest ? "Manage" : "Set up"}</Button>
         </div>
       </div>
+
+      {showRequest && !data.canEdit && <ChangeRequestForm doc={doc} offeringId={offeringId} onDone={() => { setShowRequest(false); onChanged(); }} />}
+
+      {doc.changeRequests.length > 0 && (
+        <div className="mt-3 space-y-1 rounded-md bg-muted/40 p-2 text-xs">
+          <p className="font-medium">Change requests</p>
+          {doc.changeRequests.map((r) => (
+            <div key={r.id} className="flex flex-wrap items-center justify-between gap-2">
+              <span>{new Date(r.requestedAt).toLocaleDateString()} · {r.fileName} · {ROLLOUT_LABELS[r.scope]}{r.note ? ` · "${r.note}"` : ""} · <span className="capitalize">{r.status}</span>{r.decisionNote ? ` (${r.decisionNote})` : ""}</span>
+              {data.canEdit && r.status === "pending" && (r.mine ? <span className="text-muted-foreground">Another team member must decide</span> : (
+                <span className="flex gap-1">
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => decide({ data: { id: r.id, decision: "accept" } }), "Added as a new version — review, set signature blocks and approve").then(() => setOpen(true))}>Accept as new version</Button>
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => { const note = window.prompt("Reason for declining"); if (note) void run(() => decide({ data: { id: r.id, decision: "decline", note } }), "Request declined"); }}>Decline</Button>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {data.canEdit && doc.resignOpen.length > 0 && (
+        <div className="mt-3 space-y-1 rounded-md border border-destructive/40 p-2 text-xs">
+          <p className="font-medium">Re-sign needed ({doc.resignOpen.length})</p>
+          <p className="text-muted-foreground">Send each investor the new version with the usual send button, then mark it here. Nothing is sent automatically.</p>
+          {doc.resignOpen.map((r) => (
+            <div key={r.id} className="flex flex-wrap items-center justify-between gap-2">
+              <span>Investment {r.onboardingId.slice(0, 8)} · v{r.from ?? "?"} → v{r.to}</span>
+              <span className="flex gap-1">
+                {(["sent", "signed", "waived"] as const).map((st) => (
+                  <Button key={st} size="sm" variant="ghost" disabled={busy} className="capitalize" onClick={() => run(() => resolveResign({ data: { id: r.id, status: st } }), "Updated")}>{st === "waived" ? "Not needed" : `Mark ${st}`}</Button>
+                ))}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {open && (
         <div className="mt-3 space-y-4">
@@ -210,14 +266,14 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
                     Version {v.version} · {v.fileName ?? "file"} · {new Date(v.uploadedAt).toLocaleDateString()}
                     {v.effectiveDate ? ` · effective ${v.effectiveDate}` : ""}
                   </span>
-                  <Badge variant="outline">{v.isActive ? "In use" : VERSION_STATE_LABELS[v.state]}</Badge>
+                  <Badge variant="outline">{v.isActive ? "In use (template)" : v.rolloutScope === "single" && v.approval === "approved" ? "Individual version" : VERSION_STATE_LABELS[v.state]}</Badge>
                 </div>
                 {data.canEdit && v.approval !== "superseded" && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     {v.approval === "uploaded_review_required" && (
                       <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: v.version } }), "Approved for use")}>Approve for use</Button>
                     )}
-                    {v.approval === "approved" && !v.isActive && (
+                    {v.approval === "approved" && !v.isActive && v.rolloutScope !== "single" && (
                       <Button size="sm" disabled={busy || (needsSigning && v.signingStatus !== "confirmed")} onClick={() => startActivate(v.version)}>Use this version</Button>
                     )}
                     {needsSigning && v.signingStatus !== "confirmed" && !v.isActive && (
@@ -232,22 +288,16 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
             ))}
           </Step>
 
-          {impactView && (
-            <div className="rounded-md border border-destructive/40 p-3 text-sm">
-              <p className="font-medium">Investor Impact</p>
-              <ul className="mt-1 list-disc pl-5 text-muted-foreground">
-                <li>{impactView.r.executedOldVersion} investment(s) already executed the current version — they keep it.</li>
-                <li>{impactView.r.awaitingSignature} investment(s) are awaiting signature on the current version.</li>
-                <li>{impactView.r.notYetSent} investment(s) have not been sent documents yet.</li>
-                {impactView.r.profileTypes.length > 0 && <li>Profile types affected: {impactView.r.profileTypes.join(", ")}</li>}
-                {impactView.r.classKeys.length > 0 && <li>Classes affected: {impactView.r.classKeys.join(", ")}</li>}
-              </ul>
-              <p className="mt-2 text-muted-foreground">Nothing is re-sent automatically. Signed investments are never moved to the new version.</p>
-              <div className="mt-2 flex gap-2">
-                <Button size="sm" disabled={busy} onClick={() => run(() => activate({ data: { documentId: doc.id, version: impactView.version, impactAcknowledged: true } }), "Version is now in use").then(() => setImpactView(null))}>Use Version {impactView.version}</Button>
-                <Button size="sm" variant="ghost" onClick={() => setImpactView(null)}>Cancel</Button>
-              </div>
-            </div>
+          {rollout && (
+            <RolloutDialog
+              version={rollout.version}
+              preview={rollout.r}
+              busy={busy}
+              onCancel={() => setRollout(null)}
+              onConfirm={(scope, targetOnboardingId, note) =>
+                run(() => activate({ data: { documentId: doc.id, version: rollout.version, scope, targetOnboardingId, note } }), scope === "single" ? "Individual version assigned" : "Version is now the Fund template").then(() => setRollout(null))
+              }
+            />
           )}
         </div>
       )}
@@ -364,6 +414,94 @@ function SigningEditor({ doc, version, data, onChanged }: { doc: Doc; version: D
         </div>
       )}
       <p className="text-xs text-muted-foreground">Field placement on the page is done in the signing provider's editor for this version.</p>
+    </div>
+  );
+}
+
+function ScopePicker({ scope, setScope, counts, hasActive, investors, target, setTarget }: {
+  scope: RolloutScope; setScope: (s: RolloutScope) => void; counts?: { new_only: number; all: number; resign: number } | undefined; hasActive: boolean;
+  investors: { onboardingId: string; name: string }[]; target: string; setTarget: (s: string) => void;
+}) {
+  const help: Record<RolloutScope, string> = {
+    new_only: "New investors and anyone not yet sent get this version. Anyone already sent or signed keeps theirs.",
+    all: "Becomes the template, and everyone already sent or signed is listed as needing to re-sign.",
+    single: "Used only for one investor (e.g. a side letter or corrected copy). The Fund template doesn't change.",
+  };
+  const opts: RolloutScope[] = hasActive ? ["new_only", "all", "single"] : ["new_only", "single"];
+  return (
+    <div className="space-y-2">
+      {opts.map((o) => (
+        <label key={o} className={`flex cursor-pointer gap-2 rounded-md border p-2 ${scope === o ? "border-primary" : ""}`}>
+          <input type="radio" checked={scope === o} onChange={() => setScope(o)} />
+          <span>
+            <span className="font-medium">{o === "new_only" && !hasActive ? "All investors (first template)" : ROLLOUT_LABELS[o]}</span>
+            {counts && o !== "single" && <span className="text-muted-foreground"> · {o === "all" ? `${counts.all} investor(s), ${counts.resign} to re-sign` : `${counts.new_only} investor(s) not yet sent`}</span>}
+            <span className="block text-xs text-muted-foreground">{help[o]}</span>
+          </span>
+        </label>
+      ))}
+      {scope === "single" && (
+        <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={target} onChange={(e) => setTarget(e.target.value)}>
+          <option value="">Choose the investor…</option>
+          {investors.map((i) => <option key={i.onboardingId} value={i.onboardingId}>{i.name} · {i.onboardingId.slice(0, 8)}</option>)}
+        </select>
+      )}
+    </div>
+  );
+}
+
+function RolloutDialog({ version, preview, busy, onCancel, onConfirm }: {
+  version: number; preview: Awaited<ReturnType<typeof rolloutPreviewFn>>; busy: boolean; onCancel: () => void;
+  onConfirm: (scope: RolloutScope, target: string | null, note: string | null) => void;
+}) {
+  const [scope, setScope] = useState<RolloutScope>("new_only");
+  const [target, setTarget] = useState("");
+  const [note, setNote] = useState("");
+  return (
+    <div className="space-y-3 rounded-md border border-primary/40 p-3 text-sm">
+      <p className="font-medium">Who should get Version {version}?</p>
+      <ScopePicker scope={scope} setScope={setScope} counts={preview.counts} hasActive={preview.hasActive} investors={preview.investors} target={target} setTarget={setTarget} />
+      <Input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+      <p className="text-xs text-muted-foreground">Signed documents never change and nothing is emailed or sent automatically.</p>
+      <div className="flex gap-2">
+        <Button size="sm" disabled={busy || (scope === "single" && !target)} onClick={() => onConfirm(scope, scope === "single" ? target : null, note || null)}>Confirm</Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
+      </div>
+    </div>
+  );
+}
+
+function ChangeRequestForm({ doc, offeringId, onDone }: { doc: Doc; offeringId: string; onDone: () => void }) {
+  const request = useServerFn(requestDocumentChangeFn);
+  const [file, setFile] = useState<File | null>(null);
+  const [scope, setScope] = useState<RolloutScope>("new_only");
+  const [target, setTarget] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const path = `${offeringId}/requests/${doc.id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
+      const { error } = await supabase.storage.from("offering-files").upload(path, file);
+      if (error) throw new Error(error.message);
+      await request({ data: { documentId: doc.id, filePath: path, fileName: file.name, fileSizeBytes: file.size, scope, targetOnboardingId: scope === "single" ? target || null : null, note: note || null } });
+      toast.success("Change request sent to Harmonious");
+      onDone();
+    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="mt-3 space-y-2 rounded-md border p-3 text-sm">
+      <p className="font-medium">Request a change to {doc.title}</p>
+      <Label className="inline-flex cursor-pointer items-center rounded-md border px-3 py-2 text-sm">
+        {file ? file.name : "Choose the new file (PDF)"}
+        <input type="file" accept="application/pdf" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+      </Label>
+      <ScopePicker scope={scope} setScope={setScope} hasActive investors={[]} target={target} setTarget={setTarget} />
+      {scope === "single" && <Input placeholder="Which investor? (name)" value={note} onChange={(e) => setNote(e.target.value)} />}
+      {scope !== "single" && <Input placeholder="Note for Harmonious (optional)" value={note} onChange={(e) => setNote(e.target.value)} />}
+      <p className="text-xs text-muted-foreground">Harmonious reviews the file, sets its signature blocks and puts it in use.</p>
+      <Button size="sm" disabled={busy || !file} onClick={submit}>Send request</Button>
     </div>
   );
 }
