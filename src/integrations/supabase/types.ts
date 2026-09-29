@@ -9719,6 +9719,8 @@ export type Database = {
       }
       diligence_documents: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
           box_file_id: string
           category: string
           description: string | null
@@ -9734,6 +9736,8 @@ export type Database = {
           visibility: string
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
           box_file_id: string
           category: string
           description?: string | null
@@ -9749,6 +9753,8 @@ export type Database = {
           visibility?: string
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
           box_file_id?: string
           category?: string
           description?: string | null
