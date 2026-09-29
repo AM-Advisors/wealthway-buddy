@@ -133,3 +133,24 @@ describe("setup status and access", () => {
     expect(server).toMatch(/d\.offering_id !== row\.offering_id/);
   });
 });
+
+import { appliedVersionFor, resignTargets, rolloutCounts } from "./offering-document-model";
+describe("template rollout", () => {
+  const inv = [
+    { onboardingId: "a", execution: "fully_executed" as const },
+    { onboardingId: "b", execution: "sent" as const },
+    { onboardingId: "c", execution: "not_sent" as const },
+  ];
+  it("re-sign only targets investors already sent or signed", () => {
+    expect(resignTargets(inv, 2)).toEqual(["a", "b"]);
+    expect(resignTargets(inv, null)).toEqual([]);
+  });
+  it("counts each choice", () => {
+    expect(rolloutCounts(inv, 2)).toMatchObject({ new_only: 1, all: 3, resign: 2 });
+  });
+  it("individual version wins over the template", () => {
+    expect(appliedVersionFor("a", 3, [{ targetOnboardingId: "a", version: 4 }])).toEqual({ version: 4, reason: "individual" });
+    expect(appliedVersionFor("b", 3, [{ targetOnboardingId: "a", version: 4 }])).toEqual({ version: 3, reason: "template" });
+    expect(appliedVersionFor("b", null, [])).toEqual({ version: null, reason: "none" });
+  });
+});

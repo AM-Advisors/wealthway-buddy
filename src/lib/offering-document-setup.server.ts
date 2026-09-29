@@ -358,7 +358,7 @@ export async function requestDocumentChange(
   const d = await docRow(input.documentId);
   await assertRead(userId, d.offering_id);
   if (!input.filePath.startsWith(`${d.offering_id}/`)) throw new Error("That file does not belong to this fund.");
-  if (input.scope === "single" && !input.targetOnboardingId) throw new Error("Choose the investor this version is for.");
+  if (input.scope === "single" && !input.targetOnboardingId && !input.note?.trim()) throw new Error("Name the investor this version is for.");
   const { error } = await db().from("offering_document_change_requests").insert({
     offering_id: d.offering_id, offering_document_id: d.id, file_path: input.filePath, file_name: input.fileName, file_size_bytes: input.fileSizeBytes,
     rollout_scope: input.scope, target_onboarding_id: input.targetOnboardingId || null, note: input.note || null, requested_by: userId,
