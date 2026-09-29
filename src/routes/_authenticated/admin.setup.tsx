@@ -153,7 +153,7 @@ function SetupPage() {
       createFund({
         data: {
           ...(fundId ? { id: fundId } : {}),
-          ...(fundId ? {} : { client_id: clientId, sow_id: sowId }),
+          ...(fundId ? {} : { client_id: clientId, sow_id: sowId || null }),
           name: fund.name.trim(),
           slug: fund.slug.trim() || slugify(fund.name),
           summary: fund.summary.trim(),
@@ -236,7 +236,7 @@ function SetupPage() {
   const canSaveFund =
     fund.name.trim().length >= 2 &&
     (fund.slug.trim() || slugify(fund.name)).length >= 2 &&
-    (Boolean(fundId) || Boolean(chosenSow?.signed));
+    (Boolean(fundId) || Boolean(clientId));
   const canAddDoc = docForm.title.trim().length >= 2 && docForm.body.trim().length >= 10;
   const canAssign = Boolean(existingUserId) || /\S+@\S+\.\S+/.test(inviteEmail.trim());
 
@@ -282,10 +282,10 @@ function SetupPage() {
           </CardHeader>
           <CardContent className="grid gap-4 [&>*]:min-w-0">
             <div className="rounded-md border p-4">
-              <p className="text-sm font-medium">Client and signed statement of work</p>
+              <p className="text-sm font-medium">Client and statement of work</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                A fund can only be created once its client has signed the statement of work that
-                covers it. That agreement sets the services, fees and terms for this fund.
+                Choose the client. Linking the statement of work is optional: an unsigned or missing
+                Harmonious agreement is a follow-up item for Harmonious and does not stop fund setup.
               </p>
               <div className="mt-3 grid gap-3 [&>*]:min-w-0 sm:grid-cols-2">
                 <div className="grid gap-2">
@@ -318,11 +318,11 @@ function SetupPage() {
                     disabled={Boolean(fundId) || !clientId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose a signed agreement" />
+                      <SelectValue placeholder="Optional — choose an agreement" />
                     </SelectTrigger>
                     <SelectContent>
                       {clientSows.map((s) => (
-                        <SelectItem key={s.id} value={s.id} disabled={!s.signed}>
+                        <SelectItem key={s.id} value={s.id} disabled={s.reason === "Already used for another fund"}>
                           {s.title}
                           {s.signed ? "" : ` — ${s.reason}`}
                         </SelectItem>
@@ -332,9 +332,9 @@ function SetupPage() {
                 </div>
               </div>
               {clientId && clientSows.length === 0 && (
-                <p className="mt-3 text-xs text-destructive">
-                  This client has no statement of work yet. Create and sign one under Pricing and
-                  agreements first.
+                <p className="mt-3 text-xs text-muted-foreground">
+                  This client has no statement of work yet. You can still create the fund; Harmonious
+                  will follow up on the agreement.
                 </p>
               )}
               {chosenSow?.signed && (
