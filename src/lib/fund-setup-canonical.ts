@@ -95,7 +95,11 @@ export type EconomicTerms = {
   preferredReturnPercent?: number | null;
   orgExpenseTreatment?: string | null;
   distributionFrequency?: string | null;
+  /** Terms explicitly marked Not applicable (counts as answered, never as a value). */
+  notApplicable?: EconomicTermKey[] | undefined;
 };
+export const ECONOMIC_TERM_KEYS = ["managementFee", "carry", "preferredReturn", "orgExpense", "distributionFrequency", "minInvestment"] as const;
+export type EconomicTermKey = (typeof ECONOMIC_TERM_KEYS)[number];
 export type FundClass = {
   key: string;
   name: string;
@@ -104,6 +108,7 @@ export type FundClass = {
   carry?: Carry | null;
   preferredReturnPercent?: number | null;
   minInvestmentCents?: number | null;
+  notApplicable?: EconomicTermKey[] | undefined;
 };
 
 const pct = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100;
