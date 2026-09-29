@@ -937,7 +937,7 @@ async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: str
     rows(
       await s
         .from("distribution_exceptions")
-        .select("id, offering_id, batch_id, distribution_line_id, investor_user_id, kind, status, detail, created_at")
+        .select("id, offering_id, batch_id, distribution_line_id, kind, status, detail, created_at")
         .neq("status", "resolved")
         .limit(SOURCE_LIMIT),
     ),
@@ -957,7 +957,7 @@ async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: str
         workflowState: String(e.status ?? "open"),
         requiredAction: "review",
         fundId: e.offering_id,
-        investorUserId: e.investor_user_id ?? null,
+        investorUserId: null,
         blocked: true,
         blockReason: String(e.kind ?? "exception").replace(/_/g, " "),
         at: e.created_at ?? null,

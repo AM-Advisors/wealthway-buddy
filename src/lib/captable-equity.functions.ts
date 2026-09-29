@@ -133,7 +133,7 @@ export const getMyEquity = createServerFn({ method: "GET" })
     const { data: transfers } = await supabase
       .from("ct_secondary_transfers")
       .select(
-        "id, company_id, seller_stakeholder_id, buyer_stakeholder_id, buyer_name, quantity, price_per_share, total_amount, status, restriction_status, rofr_status, consent_status, proposed_date, closed_date, created_at",
+        "id, company_id, seller_stakeholder_id, buyer_stakeholder_id, buyer_name, quantity, price_per_share, amount, status, restriction_status, rofr_status, consent_status, requested_on, closed_at, created_at",
       )
       .order("created_at", { ascending: false });
 
@@ -240,13 +240,13 @@ export const getMyEquity = createServerFn({ method: "GET" })
                     : "The selling shareholder",
                 quantity: n(t.quantity),
                 pricePerShare: t.price_per_share === null ? null : n(t.price_per_share),
-                totalAmount: t.total_amount === null ? null : n(t.total_amount),
+                totalAmount: t.amount === null ? null : n(t.amount),
                 status: t.status as string,
                 restrictionStatus: t.restriction_status as string,
                 rofrStatus: t.rofr_status as string,
                 consentStatus: t.consent_status as string,
-                proposedDate: t.proposed_date as string | null,
-                closedDate: t.closed_date as string | null,
+                proposedDate: t.requested_on as string | null,
+                closedDate: t.closed_at as string | null,
               }))
           : [],
         exerciseRequests: ((requests ?? []) as any[])
