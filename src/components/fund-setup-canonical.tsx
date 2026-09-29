@@ -1,3 +1,4 @@
+import { ServiceProvidersSection } from "@/components/fund-setup-extras";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -232,6 +233,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Principal business address"><Input {...bind("principalAddress")} /></Field>
           <Field label="Tax classification"><Input placeholder="e.g. Partnership" {...bind("taxClassification")} /></Field>
         </section>
+        <ServiceProvidersSection offeringId={offeringId} />
         <p className="text-xs text-muted-foreground">The EIN and EIN letter stay in the locked Entity & EIN card; they are never shown to investors.</p>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Offering exemption">{sel("regType", [["506b", "Rule 506(b)"], ["506c", "Rule 506(c)"], ["regcf", "Reg CF"], ["rega", "Reg A"], ["regaplus", "Reg A+"]])}</Field>

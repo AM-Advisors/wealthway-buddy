@@ -37,6 +37,7 @@ import {
 } from "@/lib/fund-setup-phase3";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FormationEvidenceSection, RegulatoryFilingsCard } from "@/components/fund-setup-extras";
 import { RequiredHere } from "@/components/fund-setup-checklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -279,6 +280,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
       </CardHeader>
       <CardContent className="space-y-4">
         <RequiredHere section="setup-entity" />
+        <FormationEvidenceSection offeringId={offeringId} />
         <div className="space-y-2">
           <p className="text-sm font-medium">How will the EIN be handled?</p>
           <div className="flex flex-wrap gap-2">
