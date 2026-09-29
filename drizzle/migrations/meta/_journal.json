@@ -477,6 +477,13 @@
       "when": 1790675144327,
       "tag": "0067_responsible_party_identifier_vault",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1790676878452,
+      "tag": "0068_block_plaintext_rp_tin",
+      "breakpoints": true
     }
   ]
 }
