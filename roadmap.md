@@ -128,3 +128,7 @@
 - [x] Produce new Fund and investor setup walkthrough in landscape and vertical formats
 - [x] Deliver voiceover scripts and companion checklists
 
+
+## Project monitoring review (2026-09-29)
+- [ ] Verify 16 reported findings against current code; fix bounded defects and classify stale reports
+- [ ] Separate plans for confirmed high-risk workflow gaps
