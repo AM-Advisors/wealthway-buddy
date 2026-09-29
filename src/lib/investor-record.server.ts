@@ -145,7 +145,7 @@ export async function createInvestor(userId: string, input: {
   } else {
     const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
     if (errs.length) fail(errs[0]!);
-    const matches = rankMatches({ email: input.person.email }, await candidates(input.offeringId, { email: input.person.email }));
+    const matches = rankMatches({ email: input.person.email ?? null }, await candidates(input.offeringId, { email: input.person.email ?? null }));
     const blocker = createNewBlocker(matches, Boolean(input.confirmedNew));
     if (blocker) fail(blocker);
     const row = personRow(input.person, actor);

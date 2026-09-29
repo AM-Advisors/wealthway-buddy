@@ -57,7 +57,7 @@ export const bulkPreviewFn = createServerFn({ method: "POST" }).middleware([requ
 
 export const bulkCommitFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ importId: uuid, decisions: z.record(z.string(), z.enum(["keep", "use_imported", "later"])).optional() }).parse)
-  .handler(async ({ data, context }) => (await srv()).bulkCommit(context.userId, data));
+  .handler(async ({ data, context }) => (await srv()).bulkCommit(context.userId, data as any));
 
 export const bulkCancelFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ importId: uuid }).parse)
@@ -69,4 +69,4 @@ export const prefillForInvestorFn = createServerFn({ method: "POST" }).middlewar
 
 export const confirmInvestorInformationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: uuid, corrections: z.record(z.string(), z.string().max(300)).optional() }).parse)
-  .handler(async ({ data, context }) => (await srv()).confirmInvestorInformation(context.userId, data));
+  .handler(async ({ data, context }) => (await srv()).confirmInvestorInformation(context.userId, data as any));
