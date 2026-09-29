@@ -1,0 +1,1 @@
+SELECT cron.alter_job(job_id := jobid, command := replace(command, 'extensions.http_post(', 'net.http_post(')) FROM cron.job WHERE jobname = 'invoice-due-date-reminders' AND command LIKE '%extensions.http_post(%';

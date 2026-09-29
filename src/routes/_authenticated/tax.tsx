@@ -26,10 +26,18 @@ function TaxPage() {
     queryFn: () => docsFn({ data: {} }) as Promise<any>,
   });
 
+  const forms = (data?.groups ?? []).flatMap((group: any) =>
+    group.forms.map((form: any) => ({
+      ...form,
+      taxYear: group.taxYear,
+      profileLabel: group.profileLabel,
+      fundName: group.fundName,
+    })),
+  );
   const groups: { label: string; items: any[] }[] = [
-    { label: "Schedule K-1", items: data?.k1Forms ?? data?.k1 ?? [] },
-    { label: "Form 1042-S", items: data?.form1042s ?? data?.f1042s ?? [] },
-    { label: "Form 1099", items: data?.form1099 ?? data?.f1099 ?? [] },
+    { label: "Schedule K-1", items: forms.filter((form: any) => form.kind === "K-1") },
+    { label: "Form 1042-S", items: forms.filter((form: any) => form.kind === "1042-S") },
+    { label: "Form 1099", items: forms.filter((form: any) => String(form.kind).startsWith("1099")) },
   ];
 
   return (
@@ -58,10 +66,10 @@ function TaxPage() {
                 group.items.map((item: any, index: number) => (
                   <div key={item.id ?? index} className="rounded-md border p-3 text-sm">
                     <p className="font-medium">
-                      {item.tax_year ?? item.year ?? ""} {group.label}
+                      {item.taxYear} {item.kind} · {item.fundName ?? "Fund"}
                     </p>
                     <p className="text-muted-foreground">
-                      {item.profile_name ?? item.investment_profile_name ?? "Investment profile"}
+                      {item.profileLabel ?? "Investment profile"} · {item.status}
                     </p>
                   </div>
                 ))

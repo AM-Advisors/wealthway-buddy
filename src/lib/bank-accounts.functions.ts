@@ -44,7 +44,7 @@ export const listFundBankAccounts = createServerFn({ method: "GET" })
 
     const { data: offerings, error } = await supabase
       .from("offerings")
-      .select("id, name, status, client_id")
+      .select("id, name, is_open, client_id")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -97,7 +97,7 @@ export const listFundBankAccounts = createServerFn({ method: "GET" })
         return {
           fundId: f.id as string,
           fundName: (f.name as string) ?? "Untitled fund",
-          fundStatus: (f.status as string) ?? "draft",
+          fundStatus: f.is_open ? "open" : "closed",
           clientId: (f.client_id as string | null) ?? null,
           clientName: (clientById.get(f.client_id)?.legal_name as string) ?? null,
           account: account

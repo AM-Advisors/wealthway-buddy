@@ -128,3 +128,8 @@
 - [x] Produce new Fund and investor setup walkthrough in landscape and vertical formats
 - [x] Deliver voiceover scripts and companion checklists
 
+
+## Project monitoring review (2026-09-29)
+- [x] Verified reported findings and repaired incorrect columns (sign-off, banking, exceptions, transfers, invitations), tax groups, batch isolation, Access Control guard, and address visibility/errors. Signing applicability now uses the portal's canonical profile/class rules; missing signing blocks remain a preparation task, not an automatic backfill. Invoice reminder cron now calls net.http_post; the next scheduled delivery still needs observation.
+- [x] Distribution proposal/request controls now call the existing server-authorized workflow; recording external transfer, reconciliation, second-person approval and posting remain separate.
+- [ ] QA browser walk-through with role-specific accounts, actual PDF signature placement, and next-day cron delivery (no real money or production email tests). Fund setup uses the existing canonical board; tax review/documents already have Operations routes, but the broader legacy fund-setup.functions and tax.functions workflows are not automatically exposed by this repair.

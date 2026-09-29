@@ -1,5 +1,5 @@
 import type { PreparedField } from "@/lib/investor-prep-model";
-import { type FieldProvenance, confirmedFacts, docApplies, initialProvenance, mergeDocument, requiredMergeFields, reviewField, signatureConfig } from "@/lib/prepared-investor-workflow";
+import { type FieldProvenance, confirmedFacts, docApplies, effectiveResolverFacts, initialProvenance, mergeDocument, requiredMergeFields, reviewField, signatureConfig } from "@/lib/prepared-investor-workflow";
 
 /** Field provenance for one investment, rebuilt from the prepared draft + append-only review history. */
 export async function loadProvenance(db: any, onboarding: { id: string; offering_id: string; invitation_id: string | null }) {
@@ -35,18 +35,29 @@ export async function docContext(userId: string, onboardingId: string) {
   const c = await ownContext(userId, onboardingId);
   const { db, ob, draft, prov } = c;
   const { data: fund } = await db.from("offerings").select("id, name, legal_entity_name").eq("id", ob.offering_id).maybeSingle();
-  const selectedIds: string[] = ((draft?.documents ?? []) as any[]).map((s) => s.documentId);
-  const { data: docs } = await db.from("offering_documents")
-    .select("id, offering_id, title, investor_required, requires_signature, signing_mode, template_key, file_path, applies_to")
+  const { data: investment, error: investmentError } = await db.from("investor_onboardings").select("investment_profile_id, offering_class_key").eq("id", ob.id).single();
+  if (investmentError || !investment) throw new Error("Investment document context isn't available.");
+  const { data: storedProfile, error: profileError } = investment.investment_profile_id
+    ? await db.from("investment_profiles").select("profile_type").eq("id", investment.investment_profile_id).maybeSingle()
+    : { data: null, error: null };
+  if (profileError) throw new Error("Investment profile isn't available.");
+  const { data: docs, error: docsError } = await db.from("offering_documents")
+    .select("id, offering_id, title, investor_required, requires_signature, signing_mode, template_key, file_path, applies_to, applicability")
     .eq("offering_id", ob.offering_id);
-  const pt = String(prov["profile_type"]?.currentValue ?? draft?.profile_type ?? "unknown");
-  const chosen = ((docs ?? []) as any[]).filter((d) => docApplies(d.applies_to, pt) && (d.investor_required || (d.applies_to ?? []).length > 0 || selectedIds.includes(d.id)));
+  if (docsError) throw new Error("Investment documents aren't available.");
+  const { documentApplies } = await import("@/lib/offering-document-model");
+  const confirmed = confirmedFacts(prov);
+  const pt = String(effectiveResolverFacts({ profileType: storedProfile?.profile_type ?? null, requestedAmountCents: null, country: null }, confirmed).profileType ?? "unknown");
+  const chosen = ((docs ?? []) as any[]).filter((d) =>
+    docApplies(d.applies_to, pt) && documentApplies(d.applicability, { profileType: pt, classKey: investment?.offering_class_key ?? null }),
+  );
   const profile: Record<string, unknown> = {};
   const { data: me } = await db.from("profiles").select("legal_name, email").eq("user_id", ob.investor_user_id).maybeSingle();
   if ((me as any)?.legal_name) profile["legal_name"] = (me as any).legal_name;
   if ((me as any)?.email) profile["email"] = (me as any).email;
   for (const [k, p] of Object.entries(prov)) profile[k] = p.currentValue;
-  const profileType = String(profile["profile_type"] ?? draft?.profile_type ?? "unknown");
+  profile["profile_type"] = pt;
+  const profileType = pt;
   const commitment = (profile["commitment_cents"] as number | undefined) ?? ob.requested_amount_cents ?? null;
   return { ...c, fund: fund as any, chosen, profile, profileType, commitment };
 }

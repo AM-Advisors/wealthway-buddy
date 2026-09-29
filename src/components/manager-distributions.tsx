@@ -79,7 +79,7 @@ export function ManagerDistributions({ offeringId }: { offeringId?: string } = {
               {b.managerApproved ? "Approved" : "Approve this distribution"}
             </Button>
             <ul className="text-sm text-muted-foreground">
-              {lines.map((l) => (
+              {lines.filter((l) => l.batchId === b.id).map((l) => (
                 <li key={l.id}>
                   {l.displayName ?? "Investor"} — {money(l.grossCents)} gross,{" "}
                   {money(l.withholdingCents)} withheld, {money(l.netCents)} net ·{" "}

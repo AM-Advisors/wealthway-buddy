@@ -116,10 +116,10 @@ export const getInvestorOnboarding = createServerFn({ method: "GET" })
       supabase.from("ct_holder_permissions").select("*").eq("company_id", data.companyId),
       supabase
         .from("ct_events")
-        .select("entity_id, created_at, action")
+        .select("entity_id, occurred_at, action")
         .eq("company_id", data.companyId)
         .eq("action", "investor.invited")
-        .order("created_at", { ascending: false }),
+        .order("occurred_at", { ascending: false }),
       supabase
         .from("ct_companies")
         .select("id, name, is_demo")
@@ -137,7 +137,7 @@ export const getInvestorOnboarding = createServerFn({ method: "GET" })
     const invitedAt = new Map<string, string>();
     for (const row of (invites ?? []) as any[]) {
       const key = String(row.entity_id ?? "");
-      if (key && !invitedAt.has(key)) invitedAt.set(key, row.created_at as string);
+      if (key && !invitedAt.has(key)) invitedAt.set(key, row.occurred_at as string);
     }
 
     const investors = ((stakeholders ?? []) as any[]).map((holder) => {

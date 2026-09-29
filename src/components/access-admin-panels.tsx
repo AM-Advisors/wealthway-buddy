@@ -123,7 +123,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
     onSuccess: () => { toast.success("Access updated and recorded in the audit log."); setReason(""); refresh(); },
     onError: (e: Error) => { toast.error(e.message); refresh(); },
   });
-  if (!ctx?.canManage && !ctx) return null;
+  if (!ctx?.canManage) return null;
 
   const roles = [...(ctx?.templates ?? []), ...(ctx?.custom ?? []).filter((c) => c.status === "active").map((c) => ({ key: c.key, label: `${c.label} (custom v${c.version})`, scopeTypes: ["global"], superAdminOnly: false, category: "custom" }))];
   const chosen = roles.find((r) => r.key === roleKey);
