@@ -24,13 +24,13 @@ export const listStaffFunds = createServerFn({ method: "GET" })
     const canPrepare = can(capabilitiesFor(roles), "funds", "prepare");
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
     const [{ data: funds, error }, { data: clients, error: clientError }] = await Promise.all([
-      db.from("offerings").select("id,name,fund_type,client_id,consolidated_into,created_at").order("name").limit(5000),
+      db.from("offerings").select("id,name,summary,fund_type,client_id,consolidated_into,created_at").order("name").limit(5000),
       db.from("clients").select("id,name").limit(5000),
     ]);
     if (error || clientError) throw new Error("Unable to load funds.");
     const names = new Map((clients ?? []).map((c) => [c.id, c.name]));
     return { canPrepare, rows: (funds ?? []).map((f) => ({
-      id: f.id, name: f.name, fundType: f.fund_type, clientId: f.client_id,
+      id: f.id, name: f.name, summary: f.summary, fundType: f.fund_type, clientId: f.client_id,
       clientName: f.client_id ? names.get(f.client_id) ?? null : null,
       retired: !!f.consolidated_into,
       createdAt: f.created_at,
@@ -105,16 +105,20 @@ export const getStaffFundSetup = createServerFn({ method: "POST" })
       db.from("fund_setups").select("id,stage,launch_state").eq("offering_id", fund.id).maybeSingle(),
     ]);
     const canSeeOperations = can(capabilitiesFor(roles), "funds", "see");
-    const [{ data: formation }, { count: pendingTasks }, { count: unmetConditions }] = setup && canSeeOperations ? await Promise.all([
-      db.from("fund_entity_formation").select("step").eq("setup_id", setup.id).maybeSingle(),
-      db.from("fund_setup_tasks").select("id", { count: "exact", head: true }).eq("setup_id", setup.id).eq("blocking", true).neq("status", "complete"),
-      db.from("fund_launch_conditions").select("id", { count: "exact", head: true }).eq("setup_id", setup.id).eq("required", true).eq("satisfied", false),
-    ]) : [{ data: null }, { count: 0 }, { count: 0 }];
+    const [{ data: formation }, { data: tasks }, { data: conditions }, { count: approvalCount }] = setup && canSeeOperations ? await Promise.all([
+      db.from("fund_entity_formation").select("step,formation_document_id,certificate_document_id,ein_letter_document_id").eq("setup_id", setup.id).maybeSingle(),
+      db.from("fund_setup_tasks").select("id,label,status,blocking").eq("setup_id", setup.id).order("sort_order"),
+      db.from("fund_launch_conditions").select("id,label,required,satisfied").eq("setup_id", setup.id).order("sort_order"),
+      db.from("fund_launch_approvals").select("id", { count: "exact", head: true }).eq("setup_id", setup.id),
+    ]) : [{ data: null }, { data: [] }, { data: [] }, { count: 0 }];
     return {
       name: fund.name, fundType: fund.fund_type, clientName: client?.name ?? null,
       retired: Boolean(fund.consolidated_into), formationStep: formation?.step ?? null,
       launchState: canSeeOperations ? setup?.launch_state ?? null : null, setupStage: canSeeOperations ? setup?.stage ?? null : null,
-      pendingTasks: pendingTasks ?? 0, unmetConditions: unmetConditions ?? 0,
+      hasSetup: Boolean(setup), approvalCount: approvalCount ?? 0,
+      evidence: { formation: Boolean(formation?.formation_document_id), certificate: Boolean(formation?.certificate_document_id), einLetter: Boolean(formation?.ein_letter_document_id) },
+      tasks: (tasks ?? []).filter((t) => t.blocking).map((t) => ({ id: t.id, label: t.label, status: t.status })),
+      conditions: (conditions ?? []).filter((c) => c.required).map((c) => ({ id: c.id, label: c.label, satisfied: c.satisfied })),
       canSeeOperations, canUseCanonical: roles.includes("admin"),
       canUseOperations: can(capabilitiesFor(roles), "funds", "prepare"),
     };

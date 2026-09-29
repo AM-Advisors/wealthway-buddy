@@ -25,13 +25,21 @@ function FundSetupDetail() {
   const d = q.data;
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
     <Button variant="ghost" size="sm" asChild><Link to="/ops/fund-setup">← Funds &amp; SPVs</Link></Button>
-    <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p></header>
+    <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>
     {d.retired ? <p>This Fund is retired. Its setup cannot be changed.</p> : d.canSeeOperations ? <>
       {d.canUseCanonical && <FundSetupCanonical offeringId={fundId} />}
       <section className="space-y-3 border-t pt-6" aria-label="Entity formation and launch">
         <h2 className="font-heading text-xl font-semibold">Entity formation &amp; launch</h2>
-        <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Launch: {d.launchState ?? "Not ready"}</p>
-        <p className="text-sm text-muted-foreground">{d.pendingTasks} setup tasks and {d.unmetConditions} launch conditions remain. Evidence, approvals and launch decisions remain in their authorized workflows.</p>
+        {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
+          <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Launch: {d.launchState ?? "Not ready"}</p>
+          <p className="text-sm text-muted-foreground">{d.tasks.filter((t) => t.status !== "complete").length} blocking tasks and {d.conditions.filter((c) => !c.satisfied).length} required conditions remain. {d.approvalCount} launch approvals recorded.</p>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div><h3 className="font-medium">Formation evidence</h3><ul className="mt-2 space-y-1 text-sm"><li>Formation document: {d.evidence.formation ? "Recorded" : "Missing"}</li><li>Certificate: {d.evidence.certificate ? "Recorded" : "Missing"}</li><li>EIN letter: {d.evidence.einLetter ? "Recorded" : "Missing"}</li></ul></div>
+            <div><h3 className="font-medium">Launch conditions</h3><ul className="mt-2 space-y-1 text-sm">{d.conditions.map((c) => <li key={c.id}>{c.satisfied ? "Complete" : "Pending"} · {c.label}</li>)}</ul></div>
+          </div>
+          <div><h3 className="font-medium">Blocking setup tasks</h3><ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">{d.tasks.map((t) => <li key={t.id}>{t.status === "complete" ? "Complete" : "Pending"} · {t.label}</li>)}</ul></div>
+          <p className="text-sm text-muted-foreground">Evidence, approvals and launch decisions remain in their authorized workflows.</p>
+        </>}
         {d.canUseOperations && <Button variant="outline" asChild><Link to="/ops/funds/$fundId" params={{ fundId }}>Fund workspace</Link></Button>}
       </section>
     </> : <p>Fund details are available to the Operations team.</p>}
