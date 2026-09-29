@@ -18,6 +18,7 @@ import { template as invoiceReminder } from './invoice-reminder'
 import { template as wireRequestApproved } from './wire-request-approved'
 import { template as shareholderInvitation } from './shareholder-invitation'
 import { template as investmentOnboarding } from './investment-onboarding'
+import { template as documentsSent } from './documents-sent'
 
 
 
@@ -58,5 +59,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'wire-request-approved': wireRequestApproved,
   'shareholder-invitation': shareholderInvitation,
   'investment-onboarding': investmentOnboarding,
+  'documents-sent': documentsSent,
 
 }
