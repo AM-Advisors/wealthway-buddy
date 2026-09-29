@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
 import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
+import { FundSetupChecklist } from "@/components/fund-setup-checklist";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
   head: () => ({ meta: [
@@ -31,13 +32,8 @@ function FundSetupDetail() {
         <h2 className="font-heading text-xl font-semibold">Entity formation &amp; launch</h2>
         {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
           <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Launch: {d.launchState ?? "Not ready"}</p>
-          <p className="text-sm text-muted-foreground">{d.tasks.filter((t) => t.status !== "complete").length} blocking tasks and {d.conditions.filter((c) => !c.satisfied).length} required conditions remain. {d.approvalCount} launch approvals recorded.</p>
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div><h3 className="font-medium">Formation evidence</h3><ul className="mt-2 space-y-1 text-sm"><li>Formation document: {d.evidence.formation ? "Recorded" : "Missing"}</li><li>Certificate: {d.evidence.certificate ? "Recorded" : "Missing"}</li><li>EIN letter: {d.evidence.einLetter ? "Recorded" : "Missing"}</li></ul></div>
-            <div><h3 className="font-medium">Launch conditions</h3><ul className="mt-2 space-y-1 text-sm">{d.conditions.map((c) => <li key={c.id}>{c.satisfied ? "Complete" : "Pending"} · {c.label}</li>)}</ul></div>
-          </div>
-          <div><h3 className="font-medium">Blocking setup tasks</h3><ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">{d.tasks.map((t) => <li key={t.id}>{t.status === "complete" ? "Complete" : "Pending"} · {t.label}</li>)}</ul></div>
-          <p className="text-sm text-muted-foreground">Evidence, approvals and launch decisions remain in their authorized workflows.</p>
+          <p className="text-sm text-muted-foreground">{d.tasks.filter((t) => t.status !== "complete").length} setup tasks and {d.conditions.filter((c) => !c.satisfied).length} launch conditions still to complete. {d.approvalCount} launch approvals recorded.</p>
+          <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={d.canUseCanonical} onChanged={() => q.refetch()} />
         </>}
         {d.canUseOperations && <Button variant="outline" asChild><Link to="/ops/funds/$fundId" params={{ fundId }}>Fund workspace</Link></Button>}
       </section>
