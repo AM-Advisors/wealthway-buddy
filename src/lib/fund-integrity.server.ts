@@ -1,3 +1,4 @@
+import { canUseDriveIntake } from "@/lib/drive-intake";
 /**
  * Fund & Investor Record Integrity (server-only).
  *
@@ -27,7 +28,7 @@ export async function requireStaff(context: any): Promise<string> {
 
 async function isSuperAdmin(context: any): Promise<boolean> {
   const { data } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
-  return (data ?? []).some((r: any) => r.role === "super_admin");
+  return canUseDriveIntake((data ?? []).map((r: any) => String(r.role)));
 }
 
 async function audit(offeringId: string | null, itemId: string | null, event: string, actorId: string | null, detail: Record<string, unknown> = {}) {

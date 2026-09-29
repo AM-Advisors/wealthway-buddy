@@ -91,6 +91,7 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
         .from("diligence_documents")
         .select("id, category, title, description, file_name, size_bytes, uploaded_at")
         .eq("room_id", room.id)
+        .is("archived_at", null)
         .order("uploaded_at", { ascending: false });
       if (error) throw new Error(error.message);
       documents = (docs ?? []) as DiligenceDocument[];
@@ -179,7 +180,8 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
               .select(
                 "id, room_id, category, title, description, file_name, size_bytes, uploaded_at",
               )
-              .in("room_id", ids),
+              .in("room_id", ids)
+              .is("archived_at", null),
             supabase
               .from("diligence_nda_acceptances")
               .select("room_id, nda_version, accepted_at")
@@ -434,12 +436,13 @@ export const removeDiligenceDocument = createServerFn({ method: "POST" })
       throw new Error("You do not have permission to remove this document.");
     }
 
-    const { deleteBoxFile } = await import("@/lib/box.server");
-    await deleteBoxFile(doc.box_file_id);
-
-    const { error } = await supabase.from("diligence_documents").delete().eq("id", doc.id);
+    // Archive, never destroy: metadata, version, Box file and provenance are preserved.
+    const { error } = await supabase
+      .from("diligence_documents")
+      .update({ archived_at: new Date().toISOString(), archived_by: context.userId } as any)
+      .eq("id", doc.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, archived: true };
   });
 
 export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
