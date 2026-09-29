@@ -29,6 +29,8 @@ import {
   executeDistributionPaymentFn,
   finalApproveDistributionFn,
   postDistributionPaymentFn,
+  proposeDistributionFn,
+  requestDistributionFn,
   publishDistributionNoticeFn,
   resolveDistributionExceptionFn,
   reviewDistributionFn,
@@ -56,8 +58,13 @@ export function DistributionsWorkspace() {
   const approveRec = useServerFn(approveDistributionReconciliationFn);
   const requestReversal = useServerFn(reverseDistributionPaymentFn);
   const approveReversal = useServerFn(approveDistributionReversalFn);
+  const propose = useServerFn(proposeDistributionFn);
+  const request = useServerFn(requestDistributionFn);
 
   const [bucket, setBucket] = useState("all");
+  const [fundId, setFundId] = useState("");
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
   const [search, setSearch] = useState("");
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
 
@@ -73,6 +80,8 @@ export function DistributionsWorkspace() {
     useMutationLike(fn, success, refresh);
 
   const reviewM = act(review, "Sent for approval.");
+  const proposeM = act(propose, "Proposal prepared for review; no transfer was initiated.");
+  const requestM = act(request, "Manager approval requested.");
   const approveM = act(finalApprove, "Approved. Payments can now be released.");
   const cancelM = act(cancel, "Distribution cancelled.");
   const executeM = act(execute, "Bank transfer recorded. It completes only after reconciliation and posting.");
@@ -106,6 +115,18 @@ export function DistributionsWorkspace() {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Prepare a distribution proposal</CardTitle>
+          <CardDescription>Proposal only. The server checks fund access and allocation rules; this never sends money.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-end gap-3">
+          <div><Label htmlFor="distribution-fund">Fund ID</Label><Input id="distribution-fund" value={fundId} onChange={(e) => setFundId(e.target.value)} placeholder="Fund UUID" /></div>
+          <div><Label htmlFor="distribution-title">Title</Label><Input id="distribution-title" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+          <div><Label htmlFor="distribution-amount">Declared amount (USD)</Label><Input id="distribution-amount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+          <Button disabled={!/^[0-9a-f-]{36}$/i.test(fundId) || !title.trim() || !Number.isFinite(Number(amount)) || Number(amount) <= 0 || proposeM.pending} onClick={() => proposeM.run({ offeringId: fundId, title: title.trim(), distributionType: "return_of_capital", declaredAmountCents: Math.round(Number(amount) * 100) })}>Prepare proposal</Button>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Distributions and payments</CardTitle>
@@ -166,6 +187,7 @@ export function DistributionsWorkspace() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
+            {b.status === "draft" ? <Button size="sm" variant="outline" onClick={() => requestM.run({ batchId: b.id })}>Request manager approval</Button> : null}
             <Button size="sm" variant="outline" onClick={() => reviewM.run({ batchId: b.id })}>
               Send for approval
             </Button>
