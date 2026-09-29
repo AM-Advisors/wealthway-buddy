@@ -29,7 +29,7 @@ export function planContactSave(existing: readonly ExistingContact[], incoming: 
     if (c.id) { rows.push(c); continue; }
     const free = existing.filter((e) => !claimed.has(e.id));
     const n = split(c.full_name);
-    const r = resolvePerson({ email: c.email, firstName: n.first, lastName: n.last }, free.map(asCandidate));
+    const r = resolvePerson({ email: c.email ?? null, firstName: n.first, lastName: n.last }, free.map(asCandidate));
     if (r.outcome === "exact_match" && r.personId) {
       const match = existing.find((e) => e.id === r.personId)!;
       claimed.add(match.id);
