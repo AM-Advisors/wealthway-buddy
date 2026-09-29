@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { PENDING_MATCH_MESSAGE } from "@/lib/investor-record-model";
 import { getOfferingLanding, startOnboardingFn } from "@/lib/investor-onboarding.functions";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -55,7 +56,9 @@ function InvestLanding() {
   const begin = useMutation({
     mutationFn: () => start({ data: { slugOrId: slug, invitationToken: invite ?? null } }),
     onSuccess: (result: any) =>
-      navigate({ to: "/investment/$onboardingId", params: { onboardingId: result.onboardingId } }),
+      result.onboardingId
+        ? navigate({ to: "/investment/$onboardingId", params: { onboardingId: result.onboardingId } })
+        : toast.message(PENDING_MATCH_MESSAGE.title, { description: PENDING_MATCH_MESSAGE.body }),
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
 

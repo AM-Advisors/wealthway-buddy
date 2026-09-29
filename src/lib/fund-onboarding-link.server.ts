@@ -103,7 +103,8 @@ export async function startFromLink(userId: string, token: string, callerHash: s
   await note(callerHash, !!hit);
   if (!hit) unavailable();
   const r = await startOnboarding(userId, { slugOrId: hit!.offering.id });
-  await db().from("fund_onboarding_link_starts").upsert({ link_id: hit!.row.id, offering_id: hit!.offering.id, onboarding_id: r.onboardingId }, { onConflict: "onboarding_id", ignoreDuplicates: true });
   await db().from("fund_onboarding_links").update({ last_used_at: new Date().toISOString() }).eq("id", hit!.row.id);
-  return { onboardingId: r.onboardingId, resumed: r.resumed };
+  if (!r.onboardingId) return { onboardingId: null, resumed: false, pendingReview: true };
+  await db().from("fund_onboarding_link_starts").upsert({ link_id: hit!.row.id, offering_id: hit!.offering.id, onboarding_id: r.onboardingId }, { onConflict: "onboarding_id", ignoreDuplicates: true });
+  return { onboardingId: r.onboardingId, resumed: r.resumed, pendingReview: false };
 }
