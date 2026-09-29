@@ -461,7 +461,10 @@ export async function bulkPreview(userId: string, input: { offeringId: string; c
   if (!rows.length) fail("The file has no investor rows.");
   const emails = [...new Set(rows.map((r) => normEmail(r.email)).filter(Boolean))];
   const { data: ps } = emails.length ? await db().from("persons").select("id").in("email", emails) : { data: [] };
-  const people = await loadCandidates(((ps ?? []) as any[]).map((p) => p.id), input.offeringId);
+  // Email is a signal, not identity: also surface same-legal-name People for review.
+  const lastNames = [...new Set(rows.map((r) => String(r.last_name ?? "").trim()).filter(Boolean))].slice(0, 500);
+  const { data: byName } = lastNames.length ? await db().from("persons").select("id").in("legal_last_name", lastNames).limit(2000) : { data: [] };
+  const people = await loadCandidates([...new Set([...(ps ?? []), ...(byName ?? [])].map((p: any) => p.id))], input.offeringId);
   const preview = classifyBulk(rows, people);
   // Staff see matches as masked emails only; managers additionally never see existing names.
   const { data: staged, error } = await db().from("investor_bulk_imports").insert({ offering_id: input.offeringId, created_by: actor.userId, status: "previewed", rows: preview, summary: bulkSummary(preview) }).select("id").single();

@@ -1,3 +1,4 @@
+import { resolvePerson } from "@/lib/person-resolution";
 /**
  * Canonical investor record entry & sync — pure rules only.
  * Person → Investment Profile → Investment → Fund. Nothing here writes data,
@@ -241,7 +242,12 @@ export function classifyBulk(rows: BulkRowInput[], people: (PersonCandidate & { 
     const matches = people.filter((p) => normEmail(p.email) === email);
     if (matches.length > 1) return { index, input, cls: "needs_review", errors: ["More than one existing person uses this email."], personId: null, conflicts: [] };
     const m = matches[0];
-    if (!m) return { index, input, cls: "create_new", errors: [], personId: null, conflicts: [] };
+    if (!m) {
+      // Canonical Person Resolution: a same-name Person under another email is a possible match, never "new".
+      const r = resolvePerson({ firstName: input.first_name, lastName: input.last_name }, people.map((p) => ({ id: p.personId, email: p.email, firstName: p.firstName, lastName: p.lastName })));
+      if (r.outcome !== "no_match") return { index, input, cls: "needs_review", errors: ["An existing person with the same legal name may be this investor. Harmonious will review before anything is created."], personId: null, conflicts: [] };
+      return { index, input, cls: "create_new", errors: [], personId: null, conflicts: [] };
+    }
     if (m.inFund) return { index, input, cls: "already_in_fund", errors: [], personId: m.personId, conflicts: [] };
     const { conflicts } = planIncoming(
       { legal_first_name: m.firstName, legal_last_name: m.lastName, address: m.address ?? null },
