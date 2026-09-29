@@ -16,6 +16,10 @@ import {
   signingStatusForNewVersion,
   versionChangeImpact,
   versionState,
+  appliedVersionFor,
+  resignTargets,
+  rolloutCounts,
+  type RolloutScope,
   type Applicability,
   type DocumentCategory,
   type DocumentUsage,
@@ -64,6 +68,8 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       signingConfig: (v.signing_config ?? null) as SigningConfig | null,
       state: versionState({ approval: v.approval_status, usage: d.usage, signingStatus: v.signing_config_status }),
       isActive: d.active_version === v.version,
+      rolloutScope: (v.rollout_scope ?? null) as RolloutScope | null,
+      targetOnboardingId: (v.target_onboarding_id ?? null) as string | null,
     }));
     return {
       id: d.id,
@@ -84,7 +90,32 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
     })),
   );
   const { data: o } = await db().from("offerings").select("fund_signatory_person_id, has_multiple_classes").eq("id", offeringId).maybeSingle();
-  return { canEdit: actor.isStaff, documents: list, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
+  const [{ data: resign }, { data: requests }] = await Promise.all([
+    db().from("offering_document_resign_items").select("id, offering_document_id, onboarding_id, from_version, to_version, status").eq("offering_id", offeringId).eq("status", "open"),
+    db().from("offering_document_change_requests").select("id, offering_document_id, file_name, rollout_scope, note, status, requested_by, requested_at, decision_note").eq("offering_id", offeringId).order("requested_at", { ascending: false }).limit(50),
+  ]);
+  const withUsage = await Promise.all(
+    list.map(async (d) => {
+      const inv = d.activeVersion != null || d.versions.length ? await investmentsForDocument(offeringId, d.id) : [];
+      const signedByVersion: Record<number, number> = {};
+      for (const i of inv) if (i.execution === "fully_executed" && i.executedVersion != null) signedByVersion[i.executedVersion] = (signedByVersion[i.executedVersion] ?? 0) + 1;
+      return {
+        ...d,
+        usageCounts: {
+          signedByVersion,
+          waiting: inv.filter((i) => ["sent", "partially_signed", "awaiting_countersignature"].includes(i.execution)).length,
+          notSent: inv.filter((i) => i.execution === "not_sent").length,
+          individual: d.versions.filter((v) => v.rolloutScope === "single").length,
+        },
+        resignOpen: ((resign ?? []) as any[]).filter((r) => r.offering_document_id === d.id).map((r) => ({ id: r.id as string, onboardingId: r.onboarding_id as string, from: r.from_version as number | null, to: r.to_version as number })),
+        changeRequests: ((requests ?? []) as any[]).filter((r) => r.offering_document_id === d.id).map((r) => ({
+          id: r.id as string, fileName: r.file_name as string, scope: r.rollout_scope as RolloutScope, note: r.note as string | null, status: r.status as string,
+          requestedAt: r.requested_at as string, decisionNote: r.decision_note as string | null, mine: r.requested_by === userId,
+        })),
+      };
+    }),
+  );
+  return { canEdit: actor.isStaff, documents: withUsage, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
 }
 
 export async function createSetupDocument(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
@@ -212,18 +243,44 @@ export async function previewVersionImpact(userId: string, input: { documentId: 
   return versionChangeImpact(inv, d.active_version);
 }
 
-/** Makes an approved, correctly configured version the one used for new Investments. */
-export async function activateDocumentVersion(userId: string, input: { documentId: string; version: number; impactAcknowledged: boolean }) {
+/**
+ * Puts an approved, correctly configured version into use.
+ * - new_only: becomes the Fund template; anyone already sent or signed keeps their version.
+ * - all: becomes the template and everyone already sent/signed gets an open re-sign item.
+ * - single: used for one investor only; the Fund template is unchanged.
+ * Nothing is sent automatically, and signed documents never change.
+ */
+export async function activateDocumentVersion(
+  userId: string,
+  input: { documentId: string; version: number; scope?: RolloutScope | undefined; targetOnboardingId?: string | null | undefined; note?: string | null | undefined; impactAcknowledged?: boolean | undefined },
+) {
   const d = await docRow(input.documentId);
   await assertStaff(userId, d.offering_id);
   const v = await versionRow(d.id, input.version);
   if (v.approval_status !== "approved") throw new Error("Approve this version before activating it.");
   if (d.usage === "signature" && v.signing_config_status !== "confirmed") throw new Error("Confirm the signing setup for this version first.");
-  if (d.active_version && d.active_version !== v.version && !input.impactAcknowledged) throw new Error("Review the investor impact before activating a new version.");
-  if (d.active_version && d.active_version !== v.version) {
+  const replacing = !!d.active_version && d.active_version !== v.version;
+  const scope: RolloutScope = input.scope ?? (replacing ? (input.impactAcknowledged ? "new_only" : (null as any)) : "new_only");
+  if (!scope) throw new Error("Choose who should get the new version.");
+  const rollout = { rollout_scope: scope, rollout_note: input.note || null, rolled_out_by: userId, rolled_out_at: now() };
+
+  if (scope === "single") {
+    if (!input.targetOnboardingId) throw new Error("Choose the investor this version is for.");
+    const { data: t } = await db().from("investor_onboardings").select("id, offering_id").eq("id", input.targetOnboardingId).maybeSingle();
+    if (!t || t.offering_id !== d.offering_id) throw new Error("That investor isn't part of this Fund.");
+    await db().from("offering_document_versions").update({ ...rollout, target_onboarding_id: t.id }).eq("id", v.id);
+    await event(d.offering_id, d.id, v.version, "version_assigned_individual", userId, { onboardingId: t.id });
+    await reconcile([t.id], userId);
+    return { ok: true, resign: 0 };
+  }
+
+  const previous = d.active_version as number | null;
+  let resignIds: string[] = [];
+  if (replacing) {
+    if (scope === "all") resignIds = resignTargets(await investmentsForDocument(d.offering_id, d.id), previous);
     // Earlier versions become history; executed Investments keep the version they signed.
-    await db().from("offering_document_versions").update({ approval_status: "superseded", superseded_at: now() }).eq("offering_document_id", d.id).eq("version", d.active_version);
-    await event(d.offering_id, d.id, d.active_version, "version_superseded", userId);
+    await db().from("offering_document_versions").update({ approval_status: "superseded", superseded_at: now() }).eq("offering_document_id", d.id).eq("version", previous);
+    await event(d.offering_id, d.id, previous, "version_superseded", userId);
   }
   const countersign = (v.signing_config?.signers ?? []).some((s: any) => s.role === "fund_signatory");
   let countersigner: string | null = null;
@@ -244,8 +301,90 @@ export async function activateDocumentVersion(userId: string, input: { documentI
       countersigner_user_id: countersign ? countersigner : d.countersigner_user_id,
     })
     .eq("id", d.id);
-  await event(d.offering_id, d.id, v.version, "version_activated", userId);
+  await db().from("offering_document_versions").update({ ...rollout, target_onboarding_id: null }).eq("id", v.id);
+  if (resignIds.length) {
+    await db().from("offering_document_resign_items").upsert(
+      resignIds.map((id) => ({ offering_id: d.offering_id, offering_document_id: d.id, onboarding_id: id, from_version: previous, to_version: v.version, created_by: userId })),
+      { onConflict: "offering_document_id,onboarding_id,to_version", ignoreDuplicates: true },
+    );
+  }
+  await event(d.offering_id, d.id, v.version, "version_activated", userId, { scope, resign: resignIds.length });
+  await reconcile(resignIds, userId);
+  return { ok: true, resign: resignIds.length };
+}
+
+async function reconcile(onboardingIds: string[], userId: string) {
+  if (!onboardingIds.length) return;
+  try {
+    const { reconcileInvestmentReadiness } = await import("@/lib/investor-onboarding.server");
+    for (const id of onboardingIds) await reconcileInvestmentReadiness(id, { actorUserId: userId, trigger: "document_version_rollout" } as any).catch(() => null);
+  } catch {
+    // Readiness refresh never undoes the rollout.
+  }
+}
+
+/** Counts per choice for the Replace dialog, plus the investors to pick from for "Only one investor". */
+export async function rolloutPreview(userId: string, input: { documentId: string }) {
+  const d = await docRow(input.documentId);
+  await assertStaff(userId, d.offering_id);
+  const inv = await investmentsForDocument(d.offering_id, d.id);
+  const { data: rows } = await db().from("investor_onboardings").select("id, investment_profile_id").eq("offering_id", d.offering_id).is("removed_at", null);
+  const pids = ((rows ?? []) as any[]).map((r) => r.investment_profile_id).filter(Boolean);
+  const { data: profiles } = pids.length ? await db().from("investment_profiles").select("id, display_name, legal_name").in("id", pids) : { data: [] };
+  const nameOf = new Map(((profiles ?? []) as any[]).map((p) => [p.id, p.display_name || p.legal_name || "Investor"]));
+  return {
+    counts: rolloutCounts(inv, d.active_version),
+    hasActive: !!d.active_version,
+    investors: ((rows ?? []) as any[]).map((r) => ({ onboardingId: r.id as string, name: (nameOf.get(r.investment_profile_id) as string) ?? "Investor (no profile yet)" })),
+  };
+}
+
+export async function resolveResignItem(userId: string, input: { id: string; status: "sent" | "signed" | "waived" }) {
+  const { data: item } = await db().from("offering_document_resign_items").select("*").eq("id", input.id).maybeSingle();
+  if (!item) throw new Error("That re-sign item was not found.");
+  await assertStaff(userId, item.offering_id);
+  await db().from("offering_document_resign_items").update({ status: input.status, resolved_by: userId, resolved_at: now() }).eq("id", item.id);
+  await event(item.offering_id, item.offering_document_id, item.to_version, `resign_${input.status}`, userId, { onboardingId: item.onboarding_id });
+  await reconcile([item.onboarding_id], userId);
   return { ok: true };
+}
+
+// ------------------------------------------------------------------ manager change requests
+
+export async function requestDocumentChange(
+  userId: string,
+  input: { documentId: string; filePath: string; fileName: string; fileSizeBytes: number; scope: RolloutScope; targetOnboardingId?: string | null | undefined; note?: string | null | undefined },
+) {
+  const d = await docRow(input.documentId);
+  await assertRead(userId, d.offering_id);
+  if (!input.filePath.startsWith(`${d.offering_id}/`)) throw new Error("That file does not belong to this fund.");
+  if (input.scope === "single" && !input.targetOnboardingId) throw new Error("Choose the investor this version is for.");
+  const { error } = await db().from("offering_document_change_requests").insert({
+    offering_id: d.offering_id, offering_document_id: d.id, file_path: input.filePath, file_name: input.fileName, file_size_bytes: input.fileSizeBytes,
+    rollout_scope: input.scope, target_onboarding_id: input.targetOnboardingId || null, note: input.note || null, requested_by: userId,
+  });
+  if (error) throw new Error(error.message);
+  await event(d.offering_id, d.id, null, "change_requested", userId, { scope: input.scope });
+  return { ok: true };
+}
+
+/** Accepting turns the proposed file into a new version awaiting review; it is never activated here. */
+export async function decideChangeRequest(userId: string, input: { id: string; decision: "accept" | "decline"; note?: string | null | undefined }) {
+  const { data: r } = await db().from("offering_document_change_requests").select("*").eq("id", input.id).maybeSingle();
+  if (!r) throw new Error("That request was not found.");
+  await assertStaff(userId, r.offering_id);
+  if (r.status !== "pending") throw new Error("That request was already decided.");
+  if (r.requested_by === userId) throw new Error("A different Harmonious team member must decide this request.");
+  if (input.decision === "decline" && !input.note?.trim()) throw new Error("Give a reason for declining.");
+  let createdVersion: number | null = null;
+  if (input.decision === "accept") {
+    // Copy into the fund's setup path so the version passes the same file checks.
+    createdVersion = (await uploadDocumentVersion(userId, { documentId: r.offering_document_id, filePath: r.file_path, fileName: r.file_name, fileSizeBytes: Number(r.file_size_bytes) })).version;
+    await db().from("offering_document_versions").update({ rollout_scope: r.rollout_scope, target_onboarding_id: r.target_onboarding_id, rollout_note: r.note }).eq("offering_document_id", r.offering_document_id).eq("version", createdVersion);
+  }
+  await db().from("offering_document_change_requests").update({ status: input.decision === "accept" ? "accepted" : "declined", decided_by: userId, decided_at: now(), decision_note: input.note || null, created_version: createdVersion }).eq("id", r.id);
+  await event(r.offering_id, r.offering_document_id, createdVersion, `change_request_${input.decision}ed`, userId);
+  return { ok: true, version: createdVersion };
 }
 
 /** Documents that apply to the caller's own Investment, with a plain action label. */
@@ -257,12 +396,21 @@ export async function investorDocuments(userId: string, onboardingId: string) {
   const applicable = ((docs ?? []) as any[]).filter((d) => documentApplies(d.applicability, { profileType: profile?.profile_type ?? null, classKey: row.offering_class_key ?? null }));
   const { data: acks } = await db().from("investment_document_acknowledgments").select("offering_document_id, version").eq("onboarding_id", row.id);
   const inv = await Promise.all(applicable.map(async (d) => (await investmentsForDocument(row.offering_id, d.id)).find((i) => i.onboardingId === row.id)));
+  const ids = applicable.map((d) => d.id);
+  const [{ data: singles }, { data: resign }] = await Promise.all([
+    ids.length ? db().from("offering_document_versions").select("offering_document_id, version, target_onboarding_id").in("offering_document_id", ids).eq("rollout_scope", "single").eq("target_onboarding_id", row.id) : { data: [] },
+    ids.length ? db().from("offering_document_resign_items").select("offering_document_id, from_version, to_version").eq("onboarding_id", row.id).eq("status", "open") : { data: [] },
+  ]);
   return applicable.map((d, i) => {
+    const applied = appliedVersionFor(row.id, d.active_version, ((singles ?? []) as any[]).filter((x) => x.offering_document_id === d.id).map((x) => ({ targetOnboardingId: x.target_onboarding_id, version: x.version })));
+    const rs = ((resign ?? []) as any[]).find((x) => x.offering_document_id === d.id);
+    const versionLabel = rs ? `Re-sign needed: v${rs.from_version ?? "?"} → v${rs.to_version}` : applied.reason === "individual" ? `Individual version v${applied.version}` : applied.version != null ? `Fund template v${applied.version}` : null;
     const acknowledged = ((acks ?? []) as any[]).some((a) => a.offering_document_id === d.id && a.version === d.active_version);
     return {
       id: d.id,
       title: d.title,
       action: investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
+      versionLabel,
     };
   });
 }
