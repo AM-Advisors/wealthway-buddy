@@ -1,5 +1,5 @@
 import type { PreparedField } from "@/lib/investor-prep-model";
-import { type FieldProvenance, confirmedFacts, docApplies, initialProvenance, mergeDocument, requiredMergeFields, reviewField, signatureConfig } from "@/lib/prepared-investor-workflow";
+import { type FieldProvenance, confirmedFacts, docApplies, effectiveResolverFacts, initialProvenance, mergeDocument, requiredMergeFields, reviewField, signatureConfig } from "@/lib/prepared-investor-workflow";
 
 /** Field provenance for one investment, rebuilt from the prepared draft + append-only review history. */
 export async function loadProvenance(db: any, onboarding: { id: string; offering_id: string; invitation_id: string | null }) {
