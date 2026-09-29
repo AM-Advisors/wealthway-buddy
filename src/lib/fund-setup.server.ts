@@ -1184,6 +1184,16 @@ export async function getReadiness(userId: string, setupId: string) {
   return { ...result, conditions: conditionRows };
 }
 
+/** People who prepared the setup: its creator and whoever completed a task. */
+export async function launchPreparers(setupId: string, setup?: any) {
+  const row = setup ?? (await setupRow(setupId));
+  const { data } = await db().from("fund_setup_tasks").select("completed_by").eq("setup_id", setupId);
+  const ids = new Set<string>();
+  if (row?.created_by) ids.add(row.created_by);
+  for (const t of (data ?? []) as any[]) if (t.completed_by) ids.add(t.completed_by);
+  return ids;
+}
+
 /**
  * Harmonious approves — or declines — the fund for investor onboarding.
  * The decision is recorded immutably, with the unmet conditions at the time.
@@ -1202,7 +1212,12 @@ export async function decideLaunch(
       unmetBeforeApproval: result.unmet,
     });
     if (error) fail(error);
+    const preparers = await launchPreparers(input.setupId, setup);
+    if (preparers.has(userId)) {
+      fail("Launch approval must come from a second person who did not prepare this Fund's setup.");
+    }
   }
+  if (input.decision === "declined" && !input.reason?.trim()) fail("Give a reason for declining.");
 
   await db().from("fund_launch_approvals").insert({
     setup_id: input.setupId,

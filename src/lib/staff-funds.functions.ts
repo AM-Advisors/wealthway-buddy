@@ -118,11 +118,24 @@ export const getStaffFundSetup = createServerFn({ method: "POST" })
       db.from("fund_launch_conditions").select("id,condition_key,label,required,satisfied").eq("setup_id", setup.id).order("sort_order"),
       db.from("fund_launch_approvals").select("id", { count: "exact", head: true }).eq("setup_id", setup.id),
     ]) : [{ data: null }, { data: [] }, { data: [] }, { count: 0 }];
+    let approvals: { id: string; decision: string; reason: string | null; decidedAt: string; decidedBy: string; unmet: number }[] = [];
+    let isPreparer = false;
+    if (setup && canSeeOperations) {
+      const [{ data: rows }, { launchPreparers }] = await Promise.all([
+        db.from("fund_launch_approvals").select("id,decision,reason,decided_by,decided_at,unmet_conditions").eq("setup_id", setup.id).order("decided_at", { ascending: false }),
+        import("@/lib/fund-setup.server"),
+      ]);
+      const ids = [...new Set((rows ?? []).map((r) => r.decided_by))];
+      const { data: people } = ids.length ? await db.from("profiles").select("user_id,legal_name,email").in("user_id", ids) : { data: [] as any[] };
+      const nameOf = (id: string) => { const p = (people ?? []).find((x: any) => x.user_id === id); return p?.legal_name || p?.email || "Harmonious staff"; };
+      approvals = (rows ?? []).map((r) => ({ id: r.id, decision: r.decision, reason: r.reason, decidedAt: r.decided_at, decidedBy: nameOf(r.decided_by), unmet: Array.isArray(r.unmet_conditions) ? r.unmet_conditions.length : 0 }));
+      isPreparer = (await launchPreparers(setup.id)).has(context.userId);
+    }
     return {
       name: fund.name, fundType: fund.fund_type, clientName: client?.name ?? null,
       retired: Boolean(fund.consolidated_into), formationStep: formation?.step ?? null,
       launchState: canSeeOperations ? setup?.launch_state ?? null : null, setupStage: canSeeOperations ? setup?.stage ?? null : null,
-      hasSetup: Boolean(setup), setupId: (setup?.id ?? null) as string | null, approvalCount: approvalCount ?? 0,
+      hasSetup: Boolean(setup), setupId: (setup?.id ?? null) as string | null, approvalCount: approvalCount ?? 0, approvals, isPreparer,
       evidence: { formation: Boolean(formation?.formation_document_id), certificate: Boolean(formation?.certificate_document_id), einLetter: Boolean(formation?.ein_letter_document_id) },
       tasks: (tasks ?? []).filter((t) => t.blocking).map((t) => ({ id: t.id, key: t.task_key as string, label: t.label, status: t.status as string })),
       conditions: (conditions ?? []).filter((c) => c.required).map((c) => ({ id: c.id, key: c.condition_key as string, label: c.label, satisfied: c.satisfied })),

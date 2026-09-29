@@ -40,7 +40,7 @@ function FundSetupDetail() {
         </>}
       </section>
       {d.canUseCanonical && (
-        <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, onChanged: () => q.refetch() }}>
+        <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, setupId: d.setupId, isPreparer: d.isPreparer, approvals: d.approvals, onChanged: () => q.refetch() }}>
           <FundSetupCanonical offeringId={fundId} />
         </SetupRequirementsProvider>
       )}
