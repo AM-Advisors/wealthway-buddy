@@ -330,8 +330,8 @@ export async function rolloutPreview(userId: string, input: { documentId: string
   const inv = await investmentsForDocument(d.offering_id, d.id);
   const { data: rows } = await db().from("investor_onboardings").select("id, investment_profile_id").eq("offering_id", d.offering_id).is("removed_at", null);
   const pids = ((rows ?? []) as any[]).map((r) => r.investment_profile_id).filter(Boolean);
-  const { data: profiles } = pids.length ? await db().from("investment_profiles").select("id, display_name, legal_name").in("id", pids) : { data: [] };
-  const nameOf = new Map(((profiles ?? []) as any[]).map((p) => [p.id, p.display_name || p.legal_name || "Investor"]));
+  const { data: profiles } = pids.length ? await db().from("investment_profiles").select("id, legal_name").in("id", pids) : { data: [] };
+  const nameOf = new Map(((profiles ?? []) as any[]).map((p) => [p.id, p.legal_name || "Investor"]));
   return {
     counts: rolloutCounts(inv, d.active_version),
     hasActive: !!d.active_version,
