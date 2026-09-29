@@ -484,6 +484,13 @@
       "when": 1790676878452,
       "tag": "0068_block_plaintext_rp_tin",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1790677487862,
+      "tag": "0069_wire_release_after_signing",
+      "breakpoints": true
     }
   ]
 }
