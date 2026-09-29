@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
 import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
+import { OperationsBanking, OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
 import { FundSetupChecklist } from "@/components/fund-setup-checklist";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
@@ -35,8 +36,15 @@ function FundSetupDetail() {
           <p className="text-sm text-muted-foreground">{d.tasks.filter((t) => t.status !== "complete").length} setup tasks and {d.conditions.filter((c) => !c.satisfied).length} launch conditions still to complete. {d.approvalCount} launch approvals recorded.</p>
           <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={d.canUseCanonical} onChanged={() => q.refetch()} />
         </>}
-        {d.canUseOperations && <Button variant="outline" asChild><Link to="/ops/funds/$fundId" params={{ fundId }}>Fund workspace</Link></Button>}
       </section>
+      {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="Banking, EIN and tax">
+        <h2 className="font-heading text-xl font-semibold">Banking</h2>
+        <OperationsBanking fundId={fundId} />
+        <h2 className="font-heading text-xl font-semibold">EIN and Form SS-4</h2>
+        <OperationsSs4 fundId={fundId} />
+        <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
+        <OperationsTaxDocuments fundId={fundId} />
+      </section>}
       {d.canUseCanonical && <FundSetupCanonical offeringId={fundId} />}
     </> : <p>Fund details are available to the Operations team.</p>}
   </main>;

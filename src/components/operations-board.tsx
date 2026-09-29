@@ -154,13 +154,13 @@ export function OperationsHome() {
               key: `b-${r.id}`,
               at: r.requestedAt,
               text: `${r.fundName} — bank account with ${BANK_LABELS[r.bank] ?? r.bank}`,
-              to: "/ops/banking",
+              to: r.offeringId,
             })),
             ...entitiesPending.map((e) => ({
               key: `e-${e.offeringId}`,
               at: e.updatedAt ?? "",
               text: `${e.fundName} — EIN and Form SS-4`,
-              to: "/ops/ss4",
+              to: e.offeringId,
             })),
             ...taxPending.map((t) => ({
               key: `t-${t.id}`,
@@ -168,7 +168,7 @@ export function OperationsHome() {
               text: `${t.fundName} — ${DOC_LABELS[t.docType] ?? t.docType}${
                 t.investorName ? ` for ${t.investorName}` : ""
               }`,
-              to: "/ops/tax-documents",
+              to: t.offeringId,
             })),
           ]
             .sort((a, b) => (a.at < b.at ? -1 : 1))
@@ -180,7 +180,7 @@ export function OperationsHome() {
                   <p className="text-xs text-muted-foreground">Waiting since {when(row.at)}</p>
                 </div>
                 <Button asChild size="sm" variant="outline">
-                  <Link to={row.to as never}>Review</Link>
+                  <Link to="/ops/fund-setup/$fundId" params={{ fundId: row.to }} hash="fund-operations">Open in Fund</Link>
                 </Button>
               </div>
             ))}
@@ -203,6 +203,11 @@ function Stat({ label, value, to }: { label: string; value: string; to: string }
 }
 
 /* ----------------------------------------------------------------- Banking */
+
+function FundLink({ id, name, show }: { id: string; name: string; show: boolean }) {
+  if (!show) return <>{name}</>;
+  return <Link to="/ops/fund-setup/$fundId" params={{ fundId: id }} hash="fund-operations" className="hover:underline">{name}</Link>;
+}
 
 export function OperationsBanking({ fundId }: { fundId?: string }) {
   const q = useOpsQueue();
@@ -239,7 +244,7 @@ export function OperationsBanking({ fundId }: { fundId?: string }) {
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-base">
-                  {r.fundName} — {BANK_LABELS[r.bank] ?? r.bank}
+                  <FundLink id={r.offeringId} name={r.fundName} show={!fundId} /> — {BANK_LABELS[r.bank] ?? r.bank}
                 </CardTitle>
                 <ReviewBadge status={r.reviewStatus} />
               </div>
@@ -376,7 +381,7 @@ export function OperationsSs4({ fundId }: { fundId?: string }) {
           <Card key={e.offeringId}>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-base">{e.fundName}</CardTitle>
+                <CardTitle className="text-base"><FundLink id={e.offeringId} name={e.fundName} show={!fundId} /></CardTitle>
                 <div className="flex gap-2">
                   <ReviewBadge status={e.einStatus} />
                 </div>
@@ -649,7 +654,7 @@ export function OperationsTaxDocuments({ fundId }: { fundId?: string }) {
                 <ReviewBadge status={t.reviewStatus} />
               </div>
               <CardDescription>
-                {t.fundName}
+                <FundLink id={t.offeringId} name={t.fundName} show={!fundId} />
                 {t.investorName ? ` · ${t.investorName}` : ""} · {t.fileName} · added {when(t.uploadedAt)}
                 {t.uploadedBy ? ` by ${t.uploadedBy}` : ""}
               </CardDescription>
