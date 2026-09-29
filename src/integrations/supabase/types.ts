@@ -5151,6 +5151,7 @@ export type Database = {
       }
       client_pricing: {
         Row: {
+          approval_reason: string | null
           approved_at: string | null
           approved_by: string | null
           client_id: string
@@ -5158,11 +5159,13 @@ export type Database = {
           created_at: string
           discount_note: string | null
           effective_date: string | null
+          expires_on: string | null
           id: string
           label: string
           offering_id: string | null
           pricing_model: string
           pricing_source: string
+          scope: string
           service_key: string | null
           source_document_id: string | null
           source_term_id: string | null
@@ -5173,6 +5176,7 @@ export type Database = {
           version_id: string | null
         }
         Insert: {
+          approval_reason?: string | null
           approved_at?: string | null
           approved_by?: string | null
           client_id: string
@@ -5180,11 +5184,13 @@ export type Database = {
           created_at?: string
           discount_note?: string | null
           effective_date?: string | null
+          expires_on?: string | null
           id?: string
           label: string
           offering_id?: string | null
           pricing_model?: string
           pricing_source?: string
+          scope?: string
           service_key?: string | null
           source_document_id?: string | null
           source_term_id?: string | null
@@ -5195,6 +5201,7 @@ export type Database = {
           version_id?: string | null
         }
         Update: {
+          approval_reason?: string | null
           approved_at?: string | null
           approved_by?: string | null
           client_id?: string
@@ -5202,11 +5209,13 @@ export type Database = {
           created_at?: string
           discount_note?: string | null
           effective_date?: string | null
+          expires_on?: string | null
           id?: string
           label?: string
           offering_id?: string | null
           pricing_model?: string
           pricing_source?: string
+          scope?: string
           service_key?: string | null
           source_document_id?: string | null
           source_term_id?: string | null
@@ -14785,6 +14794,115 @@ export type Database = {
             columns: ["setup_id"]
             isOneToOne: false
             referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_pricing_snapshot_lines: {
+        Row: {
+          baseline_cents: number
+          baseline_source: string
+          catalog_cents: number | null
+          client_cents: number | null
+          created_at: string
+          final_cents: number
+          id: string
+          label: string
+          pass_through: boolean
+          pricing_model: string | null
+          service_key: string
+          snapshot_id: string
+        }
+        Insert: {
+          baseline_cents?: number
+          baseline_source: string
+          catalog_cents?: number | null
+          client_cents?: number | null
+          created_at?: string
+          final_cents?: number
+          id?: string
+          label: string
+          pass_through?: boolean
+          pricing_model?: string | null
+          service_key: string
+          snapshot_id: string
+        }
+        Update: {
+          baseline_cents?: number
+          baseline_source?: string
+          catalog_cents?: number | null
+          client_cents?: number | null
+          created_at?: string
+          final_cents?: number
+          id?: string
+          label?: string
+          pass_through?: boolean
+          pricing_model?: string | null
+          service_key?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_pricing_snapshot_lines_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "fund_pricing_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_pricing_snapshots: {
+        Row: {
+          approval_request_id: string | null
+          approved_exception: Json | null
+          baseline_total_cents: number
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          final_total_cents: number
+          id: string
+          offering_id: string
+          pricing_version_id: string | null
+          source: string
+          status: string
+          superseded_at: string | null
+        }
+        Insert: {
+          approval_request_id?: string | null
+          approved_exception?: Json | null
+          baseline_total_cents?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          final_total_cents?: number
+          id?: string
+          offering_id: string
+          pricing_version_id?: string | null
+          source: string
+          status: string
+          superseded_at?: string | null
+        }
+        Update: {
+          approval_request_id?: string | null
+          approved_exception?: Json | null
+          baseline_total_cents?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          final_total_cents?: number
+          id?: string
+          offering_id?: string
+          pricing_version_id?: string | null
+          source?: string
+          status?: string
+          superseded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_pricing_snapshots_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -24933,6 +25051,69 @@ export type Database = {
           },
         ]
       }
+      pricing_approval_requests: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          decision_scope: string | null
+          id: string
+          lines: Json
+          offering_id: string | null
+          reason: string | null
+          requested_by: string
+          snapshot_id: string | null
+          status: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          decision_scope?: string | null
+          id?: string
+          lines?: Json
+          offering_id?: string | null
+          reason?: string | null
+          requested_by: string
+          snapshot_id?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          decision_scope?: string | null
+          id?: string
+          lines?: Json
+          offering_id?: string | null
+          reason?: string | null
+          requested_by?: string
+          snapshot_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_approval_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_approval_requests_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "fund_pricing_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_items: {
         Row: {
           amount_cents: number | null
@@ -30515,6 +30696,8 @@ export type Database = {
         | "client_readonly"
         | "entity_representative"
         | "beneficial_owner"
+        | "sales"
+        | "sales_management"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -30993,6 +31176,8 @@ export const Constants = {
         "client_readonly",
         "entity_representative",
         "beneficial_owner",
+        "sales",
+        "sales_management",
       ],
       assisted_draft_status: [
         "awaiting_client_review",
