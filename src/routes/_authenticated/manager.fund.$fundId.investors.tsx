@@ -7,8 +7,8 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/inves
     { property: "og:title", content: "Fund investors — Harmonious" }, { property: "og:description", content: "Review every investor status and commitment for one fund." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
-  validateSearch: (s: Record<string, unknown>): { stage?: string; bucket?: string; add?: string } => ({
-    stage: typeof s.stage === "string" ? s.stage : undefined, bucket: typeof s.bucket === "string" ? s.bucket : undefined, add: typeof s.add === "string" ? s.add : undefined,
+  validateSearch: (s: Record<string, unknown>): { stage?: string | undefined; bucket?: string | undefined; add?: string | undefined } => ({
+    stage: typeof s["stage"] === "string" ? s["stage"] : undefined, bucket: typeof s["bucket"] === "string" ? s["bucket"] : undefined, add: typeof s["add"] === "string" ? s["add"] : undefined,
   }),
   component: Page,
 });

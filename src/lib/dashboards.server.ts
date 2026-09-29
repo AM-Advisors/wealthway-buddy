@@ -39,7 +39,7 @@ async function trendFor(offeringIds: string[] | null, range: TrendRange) {
   return trend(((sd ?? []) as any[]).map((r) => r.created_at), ((cd ?? []) as any[]).map((r) => r.created_at), range);
 }
 
-export async function opsDashboard(userId: string, filters: { clientId?: string; fundId?: string; managerId?: string; range: TrendRange }) {
+export async function opsDashboard(userId: string, filters: { clientId?: string | undefined; fundId?: string | undefined; managerId?: string | undefined; range: TrendRange }) {
   await assertStaff(userId);
   let offQ = db().from("offerings").select("id, name, client_id, is_open").order("name").limit(1000);
   if (filters.clientId) offQ = offQ.eq("client_id", filters.clientId);

@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/ops/funds/")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { filter?: FundFilter } => ({ filter: FILTERS.includes(s.filter as FundFilter) ? (s.filter as FundFilter) : undefined }),
+  validateSearch: (s: Record<string, unknown>): { filter?: FundFilter | undefined } => ({ filter: FILTERS.includes(s["filter"] as FundFilter) ? (s["filter"] as FundFilter) : undefined }),
   component: Page,
 });
 

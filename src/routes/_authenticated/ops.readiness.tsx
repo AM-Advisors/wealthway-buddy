@@ -13,8 +13,8 @@ export const Route = createFileRoute("/_authenticated/ops/readiness")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { owner?: "harmonious" | "investor" | "fund_manager" | "all" } => ({
-    owner: ["harmonious", "investor", "fund_manager", "all"].includes(String(s.owner)) ? (s.owner as any) : undefined,
+  validateSearch: (s: Record<string, unknown>): { owner?: "harmonious" | "investor" | "fund_manager" | "all" | undefined } => ({
+    owner: ["harmonious", "investor", "fund_manager", "all"].includes(String(s["owner"])) ? (s["owner"] as any) : undefined,
   }),
   component: Page,
 });

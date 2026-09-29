@@ -82,7 +82,7 @@ export function BarList({ rows, onSelect, empty, ariaLabel }: { rows: Row[]; onS
   );
 }
 
-export function CapitalBars({ intended, awaiting, funded, target, definitions }: { intended: number; awaiting?: number; funded: number; target?: number | null; definitions: Record<string, string> }) {
+export function CapitalBars({ intended, awaiting, funded, target, definitions }: { intended: number; awaiting?: number; funded: number; target?: number | null; definitions: { intended: string; awaitingFunding: string; funded: string } }) {
   const rows = [
     { label: "Intended", value: intended, def: definitions.intended },
     ...(awaiting !== undefined ? [{ label: "Awaiting funding", value: awaiting, def: definitions.awaitingFunding }] : []),
