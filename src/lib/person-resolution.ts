@@ -125,6 +125,18 @@ export function requiresReview(r: PersonResolution): boolean {
   return r.outcome === "possible_match" || r.outcome === "ambiguous" || r.outcome === "conflict";
 }
 
+/**
+ * Manual creation: any existing candidate (email, legal name or entity) needs
+ * the preparer to use the existing record or explicitly confirm a separate person.
+ */
+export function personCreationBlocker(r: PersonResolution, confirmedNew: boolean): string | null {
+  if (confirmedNew || r.outcome === "no_match") return null;
+  if (r.outcome === "exact_match" || r.hits.some((h) => h.signals.includes("email"))) {
+    return "An investor with this email already exists. Use the existing record or confirm you are creating a separate person.";
+  }
+  return "An existing investor may be this person. Use the existing record or confirm you are creating a separate person.";
+}
+
 /** Deterministic lock key so concurrent creators of the same identity serialize. */
 export function personCreationLockKey(s: PersonSignals): string | null {
   const email = normEmail(s.email);

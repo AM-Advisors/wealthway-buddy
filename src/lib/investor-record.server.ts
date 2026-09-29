@@ -17,6 +17,8 @@ import {
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
   planIncoming, PROFILE_TYPE_LABELS, planClaim,
 } from "@/lib/investor-record-model";
+import { personCreationBlocker } from "@/lib/person-resolution";
+import { findPersonCandidates, resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
 
 const db = () => supabaseAdmin as any;
 const nowIso = () => new Date().toISOString();
@@ -145,13 +147,18 @@ export async function createInvestor(userId: string, input: {
   } else {
     const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
     if (errs.length) fail(errs[0]!);
-    const matches = rankMatches({ email: input.person.email ?? null }, await candidates(input.offeringId, { email: input.person.email ?? null }));
-    const blocker = createNewBlocker(matches, Boolean(input.confirmedNew));
-    if (blocker) fail(blocker);
+    // Canonical Person Resolution: email is a signal, not identity. Re-checked
+    // inside the creation lock so concurrent saves can't both create.
+    const signals = { email: input.person.email ?? null, firstName: input.person.firstName ?? null, lastName: input.person.lastName ?? null };
     const row = personRow(input.person, actor);
-    const { data, error } = await db().from("persons").insert({ ...row, user_id: null, entry_source: source, created_by: actor.userId, onboarding_state: "account_created" }).select("*").single();
-    if (error) fail(error.message);
-    person = data;
+    person = await withPersonCreationLock(signals, async () => {
+      const resolution = await resolvePersonServer(signals);
+      const blocker = personCreationBlocker(resolution, Boolean(input.confirmedNew));
+      if (blocker) fail(blocker);
+      const { data, error } = await db().from("persons").insert({ ...row, user_id: null, entry_source: source, created_by: actor.userId, onboarding_state: "account_created" }).select("*").single();
+      if (error) fail(error.message);
+      return data;
+    });
     changes.push(...Object.entries(row).map(([f, v]) => ({ offeringId: input.offeringId, onboardingId: null, table: "persons", id: person.id, field: f, from: null, to: v, source, actor: actor.userId })));
   }
 
