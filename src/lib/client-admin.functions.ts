@@ -348,6 +348,8 @@ const createFundInput = z.object({
   jurisdiction: z.string().trim().max(80).optional().or(z.literal("")),
   regType: z.enum(["506b", "506c", "regcf", "rega", "regaplus"]).default("506b"),
   serviceKeys: z.array(z.string().max(80)).max(80).default([]),
+  /** Client Expected Services packages chosen for this Fund; frozen into its snapshot. */
+  packageKeys: z.array(z.string().max(40)).max(20).optional(),
 });
 
 /**
@@ -396,7 +398,17 @@ export const createClientFund = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const offeringId = ins.id as string;
     { const { safeCreateSnapshot } = await import("@/lib/commercial-pricing.server");
-      await safeCreateSnapshot({ offeringId, clientId: data.clientId, actorId: userId, source: "client_360" }); }
+      let serviceConfig: unknown = null;
+      if (data.packageKeys) {
+        const { currentClientConfig } = await import("@/lib/client-service-config.functions");
+        const cur = await currentClientConfig(db, data.clientId);
+        if (cur) {
+          const { fundSubset, priceConfig } = await import("@/lib/service-packages");
+          const sub = fundSubset(cur.config, data.packageKeys);
+          serviceConfig = { fromClientConfigVersion: cur.version, packages: data.packageKeys, config: sub, pricing: priceConfig(sub, (cur.pricing ?? []).length ? [] : []) , clientPricing: (cur.pricing ?? []).filter((l: any) => data.packageKeys!.some((k) => String(l.key).startsWith(k === "cap_table" ? "cap_table_" : k) || (k.startsWith("spv") && l.key === "investor_onboarding"))) };
+        }
+      }
+      await safeCreateSnapshot({ offeringId, clientId: data.clientId, actorId: userId, source: "client_360", serviceConfig }); }
     await audit(db, { actor: userId, clientId: data.clientId, offeringId, action: "fund_created_from_client_360", after: { name: data.name, fundType: data.fundType, regType: data.regType } });
     if (data.serviceKeys.length && caps.includes("manage_services")) {
       await addSelections(db, userId, data.clientId, offeringId, data.serviceKeys);
