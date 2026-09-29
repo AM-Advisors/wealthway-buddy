@@ -12,7 +12,7 @@ import {
 } from "@/lib/investor-onboarding.server";
 import {
   type EntrySource, type ProfileType, type BulkPreviewRow, type PersonCandidate,
-  canManageFundRecords, sanitizePatch, sourceFor, rankMatches, createNewBlocker, validateQuickAdd, isProfileType,
+  canManageFundRecords, sanitizePatch, sourceFor, rankMatches, validateQuickAdd, isProfileType,
   dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, claimState, CLAIM_STATE_LABELS, sameValue, isMaterial,
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
   planIncoming, PROFILE_TYPE_LABELS, planClaim,
