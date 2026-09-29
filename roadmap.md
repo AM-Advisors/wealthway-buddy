@@ -123,3 +123,8 @@
 - [ ] Phase 2: Offering Documents (upload only; versions, approval states, signature/acknowledgment config, Box Sign signer roles, countersignature, version-bound signing setup). Template generation waits on approved templates with marked fill-in fields from the user
 - [ ] Phase 3: Banking (client-provided wire upload + verification, Harmonious-opened path), Administration & Regulatory, Review, investor impact warnings, class picker on investments
 - [ ] QA walkthrough of Fund Setup scenarios in the separate QA copy (e-sign stops without QA provider config)
+## Training videos
+- [x] Produce investor onboarding walkthrough in landscape and vertical formats
+- [x] Produce new Fund and investor setup walkthrough in landscape and vertical formats
+- [x] Deliver voiceover scripts and companion checklists
+
