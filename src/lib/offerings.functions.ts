@@ -319,6 +319,25 @@ export const saveOffering = createServerFn({ method: "POST" })
     let offeringId = data.id;
     const identity = await actorIdentity(context.supabase, context.userId, context.claims);
 
+    // Fund identity is unique by normalized name and Legal Name. The database
+    // trigger is the final authority (and serializes concurrent creates).
+    {
+      const { assertFundIdentityFree } = await import("@/lib/fund-integrity.server");
+      const { normalizeFundName } = await import("@/lib/fund-integrity");
+      if (!data.id) {
+        await assertFundIdentityFree(
+          { name: data.name, legalName: data.legal_entity_name ?? null, distinctConfirmed: data.distinct_confirmed },
+          context.userId,
+        );
+      } else {
+        const { data: cur } = await context.supabase.from("offerings").select("name").eq("id", data.id).maybeSingle();
+        // Unchanged names (including pre-existing duplicates under review) are left alone.
+        if (normalizeFundName((cur as any)?.name) !== normalizeFundName(data.name)) {
+          await assertFundIdentityFree({ name: data.name, excludeId: data.id, distinctConfirmed: true }, context.userId);
+        }
+      }
+    }
+
     let previousOffering: Record<string, unknown> | null = null;
     let previousWire: Record<string, unknown> | null = null;
 
@@ -395,7 +414,13 @@ export const saveOffering = createServerFn({ method: "POST" })
         .insert({ ...payload, ...seedPatch, client_id: clientIdForFund } as any)
         .select("id")
         .single();
-      if (error) throw new Error(error.message);
+      if (error) {
+        // Another request created the same Fund first: open it, never duplicate.
+        const { duplicateFundIdFromError } = await import("@/lib/fund-integrity");
+        const existingId = duplicateFundIdFromError(error.message);
+        if (existingId) throw new Error(`EXISTING_FUND:${existingId}:That Fund was just created. Open the existing Fund instead.`);
+        throw new Error(error.message);
+      }
       offeringId = (inserted as any).id as string;
 
       if (row) {
