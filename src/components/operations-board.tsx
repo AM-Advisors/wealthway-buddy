@@ -1,3 +1,4 @@
+import { FundSignoffQueue } from "@/components/signoff-board";
 import { useMemo, useRef, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
@@ -825,6 +826,8 @@ export function OperationsFund({ fundId }: { fundId: string }) {
       <OperationsSs4 fundId={fundId} />
       <h2 className="text-lg">Tax documents</h2>
       <OperationsTaxDocuments fundId={fundId} />
+      <h2 className="text-lg">Sign-off queue</h2>
+      <FundSignoffQueue fundId={fundId} />
     </Shell>
   );
 }

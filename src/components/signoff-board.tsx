@@ -1,5 +1,6 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ function daysWaiting(at: string | null) {
   return Math.floor((Date.now() - new Date(at).getTime()) / 86_400_000);
 }
 
-export function SignoffBoard({ initial }: { initial: Queue }) {
+export function SignoffBoard({ initial, fundId }: { initial: Queue; fundId?: string }) {
   const [queue, setQueue] = useState<Queue>(initial);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -36,7 +37,7 @@ export function SignoffBoard({ initial }: { initial: Queue }) {
   const decideSow = useServerFn(decideSowApproval);
   const decideInvoice = useServerFn(resolveInvoiceQuery);
 
-  const refresh = async () => setQueue(await reload());
+  const refresh = async () => setQueue(await reload({ data: fundId ? { offeringId: fundId } : undefined }));
 
   async function run(key: string, work: () => Promise<unknown>, done: string) {
     setBusy(key);
@@ -213,4 +214,14 @@ export function SignoffBoard({ initial }: { initial: Queue }) {
       ))}
     </Tabs>
   );
+}
+
+/** The sign-off queue limited to one Fund, for the Fund's operations view. */
+export function FundSignoffQueue({ fundId }: { fundId: string }) {
+  const load = useServerFn(listSignoffQueue);
+  const q = useQuery({ queryKey: ["signoff", fundId], queryFn: () => load({ data: { offeringId: fundId } }) });
+  if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading sign-off items…</p>;
+  if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
+  if (!q.data) return null;
+  return <SignoffBoard key={fundId} initial={q.data} fundId={fundId} />;
 }

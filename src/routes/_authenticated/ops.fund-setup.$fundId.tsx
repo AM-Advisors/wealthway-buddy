@@ -1,3 +1,4 @@
+import { FundSignoffQueue } from "@/components/signoff-board";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -51,6 +52,8 @@ function FundSetupDetail() {
         <OperationsSs4 fundId={fundId} />
         <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
         <OperationsTaxDocuments fundId={fundId} />
+        <h2 className="font-heading text-xl font-semibold">Sign-off queue</h2>
+        <FundSignoffQueue fundId={fundId} />
       </section>}
     </> : <p>Fund details are available to the Operations team.</p>}
   </main>;
