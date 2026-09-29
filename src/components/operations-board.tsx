@@ -154,13 +154,13 @@ export function OperationsHome() {
               key: `b-${r.id}`,
               at: r.requestedAt,
               text: `${r.fundName} — bank account with ${BANK_LABELS[r.bank] ?? r.bank}`,
-              to: `/ops/fund-setup/${r.offeringId}#fund-operations`,
+              to: r.offeringId,
             })),
             ...entitiesPending.map((e) => ({
               key: `e-${e.offeringId}`,
               at: e.updatedAt ?? "",
               text: `${e.fundName} — EIN and Form SS-4`,
-              to: `/ops/fund-setup/${e.offeringId}#fund-operations`,
+              to: e.offeringId,
             })),
             ...taxPending.map((t) => ({
               key: `t-${t.id}`,
@@ -168,7 +168,7 @@ export function OperationsHome() {
               text: `${t.fundName} — ${DOC_LABELS[t.docType] ?? t.docType}${
                 t.investorName ? ` for ${t.investorName}` : ""
               }`,
-              to: `/ops/fund-setup/${t.offeringId}#fund-operations`,
+              to: t.offeringId,
             })),
           ]
             .sort((a, b) => (a.at < b.at ? -1 : 1))
@@ -180,7 +180,7 @@ export function OperationsHome() {
                   <p className="text-xs text-muted-foreground">Waiting since {when(row.at)}</p>
                 </div>
                 <Button asChild size="sm" variant="outline">
-                  <a href={row.to}>Open in Fund</a>
+                  <Link to="/ops/fund-setup/$fundId" params={{ fundId: row.to }} hash="fund-operations">Open in Fund</Link>
                 </Button>
               </div>
             ))}
