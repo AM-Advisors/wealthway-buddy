@@ -35,13 +35,16 @@ export async function docContext(userId: string, onboardingId: string) {
   const c = await ownContext(userId, onboardingId);
   const { db, ob, draft, prov } = c;
   const { data: fund } = await db.from("offerings").select("id, name, legal_entity_name").eq("id", ob.offering_id).maybeSingle();
-  const { data: investment } = await db.from("investor_onboardings").select("investment_profile_id, offering_class_key").eq("id", ob.id).single();
-  const { data: storedProfile } = investment?.investment_profile_id
+  const { data: investment, error: investmentError } = await db.from("investor_onboardings").select("investment_profile_id, offering_class_key").eq("id", ob.id).single();
+  if (investmentError || !investment) throw new Error("Investment document context isn't available.");
+  const { data: storedProfile, error: profileError } = investment.investment_profile_id
     ? await db.from("investment_profiles").select("profile_type").eq("id", investment.investment_profile_id).maybeSingle()
-    : { data: null };
-  const { data: docs } = await db.from("offering_documents")
+    : { data: null, error: null };
+  if (profileError) throw new Error("Investment profile isn't available.");
+  const { data: docs, error: docsError } = await db.from("offering_documents")
     .select("id, offering_id, title, investor_required, requires_signature, signing_mode, template_key, file_path, applies_to, applicability")
     .eq("offering_id", ob.offering_id);
+  if (docsError) throw new Error("Investment documents aren't available.");
   const { documentApplies } = await import("@/lib/offering-document-model");
   const confirmed = confirmedFacts(prov);
   const pt = String(effectiveResolverFacts({ profileType: storedProfile?.profile_type ?? null, requestedAmountCents: null, country: null }, confirmed).profileType ?? "unknown");
