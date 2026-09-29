@@ -29,7 +29,7 @@ export type FundRef = { id: string; name: string | null; legalName: string | nul
 export type FundMatchKind = "same_name" | "same_legal_name" | "similar";
 export type FundMatch = FundRef & { kind: FundMatchKind };
 
-export function findFundMatches(proposed: { name?: string | null; legalName?: string | null }, funds: FundRef[], excludeId?: string | null): FundMatch[] {
+export function findFundMatches(proposed: { name?: string | null | undefined; legalName?: string | null | undefined }, funds: FundRef[], excludeId?: string | null): FundMatch[] {
   const n = normalizeFundName(proposed.name);
   const l = normalizeFundName(proposed.legalName);
   const loose = looseFundKey(proposed.name);
