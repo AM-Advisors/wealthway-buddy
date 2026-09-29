@@ -88,7 +88,7 @@ async function touchedBy(table: string, id: string, userId: string) {
     .eq("subject_table", table)
     .eq("subject_id", id)
     .eq("actor_user_id", userId)
-    .in("event", ["professional_mark_prepared", "professional_submit"])
+    .in("event", ["professional_mark_prepared", "professional_submit", "staff_mark_prepared", "staff_submit"])
     .limit(1);
   return ((data ?? []) as any[]).length > 0;
 }
@@ -254,7 +254,7 @@ export async function professionalTaxAction(
     subjectId: input.id,
     taxYear: row.tax_year,
     offeringId: row.offering_id,
-    event: `professional_${input.action}`,
+    event: `${staff ? "staff" : "professional"}_${input.action}`,
     fromStatus: row.status,
     toStatus: move.to,
     detail: input.note ? { note: input.note } : {},
@@ -279,7 +279,7 @@ export async function professionalTaxHistory(userId: string, input: { kind: ProT
     .order("created_at", { ascending: false });
   return ((data ?? []) as any[]).map((e) => ({
     id: e.id as string,
-    event: String(e.event).replace(/^professional_/, "").replace(/_/g, " "),
+    event: String(e.event).replace(/^(professional|staff)_/, "").replace(/_/g, " "),
     from: e.from_status as string | null,
     to: e.to_status as string | null,
     note: (e.detail?.note as string) ?? null,
