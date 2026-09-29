@@ -596,6 +596,13 @@
       "when": 1790724142334,
       "tag": "0084_offering_document_rollout",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1790725434097,
+      "tag": "0085_offering_document_sends",
+      "breakpoints": true
     }
   ]
 }
