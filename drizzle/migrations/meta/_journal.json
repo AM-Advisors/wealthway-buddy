@@ -582,6 +582,13 @@
       "when": 1790721390209,
       "tag": "0082_fund_signatories",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1790723679266,
+      "tag": "0083_fund_providers_and_regulatory_filings",
+      "breakpoints": true
     }
   ]
 }

@@ -230,6 +230,7 @@ export async function saveFundSetupFields(
     if ("investmentPeriodMonths" in input.setupFields) patch.investment_period_months = input.setupFields.investmentPeriodMonths ?? null;
     await db().from("fund_setups").update(patch).eq("id", setup.id);
   }
+  await (await import("@/lib/fund-setup-extras.server")).autoCompleteTasks(input.offeringId);
   return { ok: true };
 }
 
