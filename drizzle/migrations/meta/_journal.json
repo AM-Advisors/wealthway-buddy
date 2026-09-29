@@ -449,6 +449,27 @@
       "when": 1790671502552,
       "tag": "0063_offering_documents_phase2",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1790673964513,
+      "tag": "0064_fund_setup_phase3",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1790674014257,
+      "tag": "0065_entity_details_preserve_rp_tin",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1790674709739,
+      "tag": "0066_fund_setup_restricted_storage",
+      "breakpoints": true
     }
   ]
 }

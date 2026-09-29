@@ -183,3 +183,104 @@ export const acknowledgeDocumentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: uuid, documentId: uuid }).parse)
   .handler(async ({ data, context }) => (await docs()).acknowledgeDocument(context.userId, data));
+
+// ---------------------------------------------------------------- Fund Setup Phase 3
+const p3 = () => import("@/lib/fund-setup-phase3.server");
+const bankDetails = z.object({
+  bank_name: z.string().trim().max(160).default(""),
+  bank_address: z.string().trim().max(240).default(""),
+  account_name: z.string().trim().max(160).default(""),
+  account_number: z.string().trim().regex(/^[0-9A-Za-z-]{0,34}$/, "Account number has unexpected characters").default(""),
+  routing_number: z.string().trim().regex(/^(\d{9})?$/, "Routing number must be 9 digits").default(""),
+  swift: z.string().trim().regex(/^([A-Za-z0-9]{8}|[A-Za-z0-9]{11})?$/, "SWIFT/BIC must be 8 or 11 characters").default(""),
+  memo: z.string().trim().max(240).default(""),
+});
+const filing = z.enum(["not_applicable", "required", "harmonious", "client_counsel"]).nullable();
+const einStatus = z.enum(["information_needed", "ready_for_review", "awaiting_signature", "ready_for_submission", "submitted", "ein_received", "needs_attention"]);
+
+export const phase3OverviewFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .handler(async ({ data, context }) => (await p3()).phase3Overview(context.supabase, context.userId, data.offeringId));
+
+export const setBankingPathFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, path: z.enum(["harmonious", "client", "not_required"]), reason: z.string().trim().max(500).nullish() }).parse)
+  .handler(async ({ data, context }) => (await p3()).setBankingPath(context.userId, data));
+
+export const setHarmoniousBankStatusFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, status: z.enum(["not_started", "information_needed", "in_progress", "account_opened", "wire_pending_verification", "funding_instructions_ready"]) }).parse)
+  .handler(async ({ data, context }) => (await p3()).setHarmoniousBankStatus(context.supabase, context.userId, data));
+
+export const saveBankDetailsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, details: bankDetails }).parse)
+  .handler(async ({ data, context }) => (await p3()).saveBankDetails(context.supabase, context.userId, data));
+
+export const attachWireDocumentFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, version: z.number().int().min(1), filePath: z.string().min(3).max(400) }).parse)
+  .handler(async ({ data, context }) => (await p3()).attachWireDocument(context.supabase, context.userId, data));
+
+export const reviewBankVersionFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, version: z.number().int().min(1), decision: z.enum(["verify", "reject", "accept_ownership"]), method: z.string().trim().max(200).nullish(), note: z.string().trim().max(1000).nullish() }).parse)
+  .handler(async ({ data, context }) => (await p3()).reviewBankVersion(context.supabase, context.userId, data));
+
+export const setEinPathFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, path: z.enum(["existing", "harmonious"]) }).parse)
+  .handler(async ({ data, context }) => (await p3()).setEinPath(context.userId, data));
+
+export const recordEinFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, ein: z.string().trim().max(12), letterPath: z.string().min(3).max(400), received: z.boolean() }).parse)
+  .handler(async ({ data, context }) => (await p3()).recordEin(context.supabase, context.userId, data));
+
+export const saveSs4Fn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      offeringId: uuid,
+      answers: z.record(z.string().max(60), z.union([z.string().max(300), z.boolean()])),
+      responsiblePersonId: uuid.nullish(),
+      responsiblePartyTin: z.string().trim().max(12).nullish(),
+    }).parse,
+  )
+  .handler(async ({ data, context }) => {
+    const { responsible_party_tin: _drop, ...answers } = data.answers as Record<string, unknown>;
+    return (await p3()).saveSs4(context.supabase, context.userId, { ...data, answers });
+  });
+
+export const setEinStatusFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, status: einStatus }).parse)
+  .handler(async ({ data, context }) => (await p3()).setEinStatus(context.supabase, context.userId, data));
+
+export const saveAdministrationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      offeringId: uuid,
+      services: z.record(z.string().max(40), z.enum(["included", "not_included"])),
+      formD: filing,
+      blueSky: filing,
+    }).parse,
+  )
+  .handler(async ({ data, context }) => (await p3()).saveAdministration(context.userId, data as any));
+
+export const classAssignmentsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .handler(async ({ data, context }) => (await p3()).classAssignments(context.userId, data.offeringId));
+
+export const previewClassChangeFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ onboardingId: uuid }).parse)
+  .handler(async ({ data, context }) => (await p3()).previewClassChange(context.userId, data));
+
+export const changeInvestmentClassFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ onboardingId: uuid, classKey: z.string().max(60).nullable(), acknowledged: z.boolean() }).parse)
+  .handler(async ({ data, context }) => (await p3()).changeInvestmentClass(context.userId, data));

@@ -21454,6 +21454,10 @@ export type Database = {
       }
       offerings: {
         Row: {
+          admin_services: Json
+          banking_not_required_reason: string | null
+          banking_path: string | null
+          blue_sky_responsibility: string | null
           client_id: string | null
           closing_cost_cents: number
           closing_cost_rate_id: string | null
@@ -21462,11 +21466,15 @@ export type Database = {
           created_at: string
           date_formed: string | null
           drive_sync_enabled: boolean
+          ein_path: string | null
+          ein_workflow_status: string | null
           entity_type: string | null
+          form_d_responsibility: string | null
           fund_signatory_person_id: string | null
           fund_type: string | null
           fund_type_other: string | null
           gp_entity_name: string | null
+          harmonious_bank_status: string | null
           has_multiple_classes: boolean
           id: string
           is_open: boolean
@@ -21492,6 +21500,9 @@ export type Database = {
           signatory_entity_name: string | null
           signatory_title: string | null
           slug: string
+          ss4_generated_form_version: string | null
+          ss4_responsible_person_id: string | null
+          ss4_snapshot_hash: string | null
           state_formed: string | null
           summary: string | null
           target_raise_cents: number | null
@@ -21503,6 +21514,10 @@ export type Database = {
           wire_fee_source: string
         }
         Insert: {
+          admin_services?: Json
+          banking_not_required_reason?: string | null
+          banking_path?: string | null
+          blue_sky_responsibility?: string | null
           client_id?: string | null
           closing_cost_cents?: number
           closing_cost_rate_id?: string | null
@@ -21511,11 +21526,15 @@ export type Database = {
           created_at?: string
           date_formed?: string | null
           drive_sync_enabled?: boolean
+          ein_path?: string | null
+          ein_workflow_status?: string | null
           entity_type?: string | null
+          form_d_responsibility?: string | null
           fund_signatory_person_id?: string | null
           fund_type?: string | null
           fund_type_other?: string | null
           gp_entity_name?: string | null
+          harmonious_bank_status?: string | null
           has_multiple_classes?: boolean
           id?: string
           is_open?: boolean
@@ -21541,6 +21560,9 @@ export type Database = {
           signatory_entity_name?: string | null
           signatory_title?: string | null
           slug: string
+          ss4_generated_form_version?: string | null
+          ss4_responsible_person_id?: string | null
+          ss4_snapshot_hash?: string | null
           state_formed?: string | null
           summary?: string | null
           target_raise_cents?: number | null
@@ -21552,6 +21574,10 @@ export type Database = {
           wire_fee_source?: string
         }
         Update: {
+          admin_services?: Json
+          banking_not_required_reason?: string | null
+          banking_path?: string | null
+          blue_sky_responsibility?: string | null
           client_id?: string | null
           closing_cost_cents?: number
           closing_cost_rate_id?: string | null
@@ -21560,11 +21586,15 @@ export type Database = {
           created_at?: string
           date_formed?: string | null
           drive_sync_enabled?: boolean
+          ein_path?: string | null
+          ein_workflow_status?: string | null
           entity_type?: string | null
+          form_d_responsibility?: string | null
           fund_signatory_person_id?: string | null
           fund_type?: string | null
           fund_type_other?: string | null
           gp_entity_name?: string | null
+          harmonious_bank_status?: string | null
           has_multiple_classes?: boolean
           id?: string
           is_open?: boolean
@@ -21590,6 +21620,9 @@ export type Database = {
           signatory_entity_name?: string | null
           signatory_title?: string | null
           slug?: string
+          ss4_generated_form_version?: string | null
+          ss4_responsible_person_id?: string | null
+          ss4_snapshot_hash?: string | null
           state_formed?: string | null
           summary?: string | null
           target_raise_cents?: number | null
@@ -21618,6 +21651,13 @@ export type Database = {
           {
             foreignKeyName: "offerings_fund_signatory_person_id_fkey"
             columns: ["fund_signatory_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offerings_ss4_responsible_person_id_fkey"
+            columns: ["ss4_responsible_person_id"]
             isOneToOne: false
             referencedRelation: "persons"
             referencedColumns: ["id"]
@@ -29693,6 +29733,28 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_bank_instruction_versions: {
+        Args: { p_offering_id: string }
+        Returns: {
+          account_last4: string
+          account_name: string
+          bank_name: string
+          created_at: string
+          created_by: string
+          has_ffc: boolean
+          has_swift: boolean
+          ownership_explanation: string
+          ownership_review: string
+          rejection_reason: string
+          routing_last4: string
+          status: string
+          verification_method: string
+          verified_at: string
+          verified_by: string
+          version: number
+          wire_document_id: string
+        }[]
+      }
       list_entity_reviews: {
         Args: never
         Returns: {
@@ -29746,6 +29808,17 @@ export type Database = {
           _invoice_id: string
           _reason?: string
           _signer_name?: string
+        }
+        Returns: undefined
+      }
+      review_bank_instruction_version: {
+        Args: {
+          p_decision: string
+          p_method: string
+          p_note: string
+          p_offering_id: string
+          p_version: number
+          p_wire_document_id: string
         }
         Returns: undefined
       }

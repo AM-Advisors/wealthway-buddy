@@ -20,6 +20,7 @@ import {
   type EconomicTerms,
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
+import { FundSetupPhase3 } from "@/components/fund-setup-phase3";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,6 +82,7 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
       <DetailsCard d={d} offeringId={offeringId} onSaved={refresh} />
       <EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} />
       <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} />
+      <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
       <Card>
         <CardHeader><CardTitle className="text-base">Banking and Administration</CardTitle></CardHeader>
         <CardContent className="text-sm text-muted-foreground">
