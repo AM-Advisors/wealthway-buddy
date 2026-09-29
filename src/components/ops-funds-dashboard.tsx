@@ -106,7 +106,10 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
             const lines = attentionLines(f.metrics);
             return (
               <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 lg:grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_13rem] lg:items-center">
-                <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}{(f as any).agreement && (f as any).agreement !== "complete" ? <span className="block text-xs font-normal text-muted-foreground">Agreement: {(f as any).agreement === "follow_up" ? "Follow-up required" : "Setup needs review"}</span> : null}</Link>
+                <div className="min-w-0">
+                  <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}{(f as any).agreement && (f as any).agreement !== "complete" ? <span className="block text-xs font-normal text-muted-foreground">Agreement: {(f as any).agreement === "follow_up" ? "Follow-up required" : "Setup needs review"}</span> : null}</Link>
+                  <p className="mt-1 text-xs text-muted-foreground">Fund Setup: {f.setupCompletion == null ? "Unavailable" : `${f.setupCompletion}% complete`}</p>
+                </div>
                 <span className="text-right text-muted-foreground lg:text-left">{f.clientName ?? "—"}</span>
                 <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.investors}</span>
                 <span className="text-right lg:text-left"><span className="lg:hidden text-muted-foreground">Onboarding </span>{f.metrics.onboarding}</span>
