@@ -13,7 +13,13 @@ export const Route = createFileRoute("/_authenticated/ops/readiness")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => (
-    <div className="p-6"><ReadinessQueue /></div>
-  ),
+  validateSearch: (s: Record<string, unknown>): { owner?: "harmonious" | "investor" | "fund_manager" | "all" } => ({
+    owner: ["harmonious", "investor", "fund_manager", "all"].includes(String(s.owner)) ? (s.owner as any) : undefined,
+  }),
+  component: Page,
 });
+
+function Page() {
+  const { owner } = Route.useSearch();
+  return <div className="p-6"><ReadinessQueue key={owner ?? "harmonious"} initialTab={owner} /></div>;
+}

@@ -24,8 +24,8 @@ export function OpsDashboard() {
   const filters = { clientId: clientId === ANY ? undefined : clientId, fundId: fundId === ANY ? undefined : fundId, range };
   const q = useQuery({ queryKey: ["ops-dashboard", filters], queryFn: () => load({ data: filters }), retry: false });
 
-  const toFunds = (filter: string) => navigate({ to: "/ops/funds", search: { filter } as any });
-  const toQueue = (owner: string) => navigate({ to: "/ops/readiness", search: { owner } as any });
+  const toFunds = (filter: string) => navigate({ to: "/ops/funds", search: { filter: filter as any } });
+  const toQueue = (owner: string) => navigate({ to: "/ops/readiness", search: { owner: owner as any } });
 
   const d = q.data;
   const attention = d ? [

@@ -341,10 +341,10 @@ export function QueueAge({ days }: { days: number }) {
 }
 
 /** Operations → readiness queue: an inbox of open work items, oldest first. */
-export function ReadinessQueue() {
+export function ReadinessQueue({ initialTab }: { initialTab?: QTab } = {}) {
   const load = useServerFn(readinessQueueFn);
   const q = useQuery({ queryKey: ["readiness-queue"], queryFn: () => load(), retry: false });
-  const [tab, setTab] = useState<QTab>("harmonious");
+  const [tab, setTab] = useState<QTab>(initialTab ?? "harmonious");
   const [sel, setSel] = useState<any | null>(null);
   if (q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
   if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
