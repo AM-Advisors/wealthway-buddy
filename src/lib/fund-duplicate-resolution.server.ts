@@ -164,7 +164,7 @@ async function reviewFor(fundIds: string[]) {
 
 /* ----------------------------------------------------------- decisions */
 
-export async function decidePair(context: any, input: { fundIds: string[]; decision: Decision; canonicalId?: string | null; note?: string | null; acknowledged?: ConflictKind[] }) {
+export async function decidePair(context: any, input: { fundIds: string[]; decision: Decision; canonicalId?: string | null | undefined; note?: string | null | undefined; acknowledged?: ConflictKind[] | undefined }) {
   const actor = await requireAdmin(context);
   const db = await admin();
   if (input.fundIds.length !== 2) throw new Error("Choose exactly two Funds.");
