@@ -85,7 +85,7 @@ export function TaxFormReview({ kind, id, mode = "professional" }: { kind: ProTa
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
   const list = kind === "1065" ? q.data!.returns1065 : kind === "1042" ? q.data!.returns1042 : q.data!.forms1099;
   const r = list.find((x) => x.id === id);
-  if (!r) return <p className="text-sm text-muted-foreground">This form isn't in your delegated scope.</p>;
+  if (!r) return <p className="text-sm text-muted-foreground">{mode === "staff" ? "That form wasn't found." : "This form isn't in your delegated scope."}</p>;
   const recipients = kind === "1042" ? q.data!.forms1042s.filter((s) => s.fundName === r.fundName && s.taxYear === r.taxYear) : [];
 
   const run = async (action: string) => {
