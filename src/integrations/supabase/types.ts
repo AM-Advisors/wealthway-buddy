@@ -14587,6 +14587,51 @@ export type Database = {
           },
         ]
       }
+      fund_name_reuse_approvals: {
+        Row: {
+          approved_by: string
+          consumed_by_offering_id: string | null
+          created_at: string
+          historical_offering_id: string
+          id: string
+          normalized_name: string
+          reason: string
+        }
+        Insert: {
+          approved_by: string
+          consumed_by_offering_id?: string | null
+          created_at?: string
+          historical_offering_id: string
+          id?: string
+          normalized_name: string
+          reason: string
+        }
+        Update: {
+          approved_by?: string
+          consumed_by_offering_id?: string | null
+          created_at?: string
+          historical_offering_id?: string
+          id?: string
+          normalized_name?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_name_reuse_approvals_consumed_by_offering_id_fkey"
+            columns: ["consumed_by_offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_name_reuse_approvals_historical_offering_id_fkey"
+            columns: ["historical_offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_onboarding_link_attempts: {
         Row: {
           caller_hash: string
