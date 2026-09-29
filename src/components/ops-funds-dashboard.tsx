@@ -16,7 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "Blocked"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"]];
+const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "Blocked"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"], ["agreement_follow_up", "Agreement Follow-Up"]];
 const fmt = (d: string | null) => (d ? new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—");
 
 function RowActions({ f }: { f: any }) {
