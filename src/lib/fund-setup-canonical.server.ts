@@ -81,7 +81,10 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
   const bankRows = (banking.data ?? []) as any[];
   const bankingState = bankRows.some((r) => r.status === "opened") ? "active" : bankRows.some((r) => r.status === "in_progress") ? "in_progress" : bankRows.some((r) => r.status === "requested") ? "requested" : "none";
 
+  const { listSetupDocuments } = await import("@/lib/offering-document-setup.server");
+  const docSetup = await listSetupDocuments(userId, offeringId);
   const statuses = sectionStatuses({
+    documentsStatus: docSetup.status,
     fundType: o.fund_type,
     legalName: o.legal_entity_name,
     displayName: o.name,
