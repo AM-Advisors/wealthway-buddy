@@ -6,13 +6,16 @@ import { can, capabilitiesFor } from "@/lib/ops-capabilities";
 import { structureForFundType } from "@/lib/fund-setup-canonical";
 
 async function staff(context: any) {
-  const [{ data: roles, error: roleError }, { data: classification, error: classificationError }] = await Promise.all([
-    context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
-    context.supabase.rpc("current_account_classification", { _user_id: context.userId }),
-  ]);
-  if (roleError || classificationError) throw new Error("Unable to verify staff access.");
+  const { data: roles, error: roleError } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+  if (roleError) throw new Error("Unable to verify staff access.");
   const profile = staffProfile((roles ?? []).map((r: any) => String(r.role)));
-  if (!profile.isHarmoniousStaff || classification !== "individual") throw new Error("Individual Harmonious staff access required.");
+  if (!profile.isHarmoniousStaff) throw new Error("Individual Harmonious staff access required.");
+  // Classification history is deliberately not readable by ordinary users.
+  // After verifying the signed-in staff role, read only this actor's latest row.
+  const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+  const { data: classification, error: classificationError } = await db.from("access_account_classifications")
+    .select("classification").eq("user_id", context.userId).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1).maybeSingle();
+  if (classificationError || classification?.classification !== "individual") throw new Error("Individual Harmonious staff access required.");
   return { profile, roles: (roles ?? []).map((r: any) => String(r.role)) };
 }
 
