@@ -50,24 +50,9 @@ async function onbEvent(onboardingId: string | null, offeringId: string, event: 
 /* ---------------------------------------------------------------- search */
 
 async function candidates(offeringId: string, q: { email?: string | null; name?: string | null; entityName?: string | null }): Promise<(PersonCandidate & { address?: string | null })[]> {
-  const ids = new Set<string>();
-  const email = normEmail(q.email);
-  if (email) {
-    const { data } = await db().from("persons").select("id").ilike("email", email).limit(10);
-    (data ?? []).forEach((p: any) => ids.add(p.id));
-  }
-  const name = String(q.name ?? "").trim();
-  if (name.includes(" ")) {
-    const first = name.split(/\s+/)[0]!, last = name.slice(name.indexOf(" ") + 1);
-    const { data } = await db().from("persons").select("id").ilike("legal_first_name", first).ilike("legal_last_name", last).limit(10);
-    (data ?? []).forEach((p: any) => ids.add(p.id));
-  }
-  const entity = String(q.entityName ?? "").trim();
-  if (entity) {
-    const { data } = await db().from("investment_profiles").select("person_id").ilike("legal_name", entity).not("person_id", "is", null).limit(10);
-    (data ?? []).forEach((p: any) => ids.add(p.person_id));
-  }
-  return loadCandidates([...ids], offeringId);
+  // Candidate discovery is the canonical Person Resolution finder.
+  const found = await findPersonCandidates({ email: q.email ?? null, fullName: q.name ?? null, entityName: q.entityName ?? null });
+  return loadCandidates(found.map((c) => c.id), offeringId);
 }
 
 async function loadCandidates(personIds: string[], offeringId: string) {
