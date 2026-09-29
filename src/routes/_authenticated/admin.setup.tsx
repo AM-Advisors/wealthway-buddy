@@ -22,6 +22,7 @@ import { listAccessDirectory, assignFundAccess } from "@/lib/access.functions";
 import { FundEntityCard } from "@/components/fund-entity-card";
 import { inviteToFund } from "@/lib/invitations.functions";
 import { listFundSetupAgreements } from "@/lib/fund-sow.functions";
+import { FundExistingCheck, parseFundError } from "@/components/fund-existing-check";
 import { REG_TYPES, regTypeDescription, type RegTypeValue } from "@/lib/reg-types";
 
 export const Route = createFileRoute("/_authenticated/admin/setup")({
@@ -148,6 +149,9 @@ function SetupPage() {
 
   const users = useMemo(() => (directoryQuery.data?.users ?? []) as any[], [directoryQuery.data]);
 
+  const [distinctFund, setDistinctFund] = useState(false);
+  const [fundBlocked, setFundBlocked] = useState(false);
+
   const fundMutation = useMutation({
     mutationFn: () =>
       createFund({
@@ -162,6 +166,7 @@ function SetupPage() {
           target_raise_cents: fund.target_raise.trim() ? dollarsToCents(fund.target_raise) : null,
           is_open: fund.is_open,
           wire_instructions: wire,
+          distinct_confirmed: distinctFund,
         } as any,
       }),
     onSuccess: (result: any) => {
@@ -169,7 +174,10 @@ function SetupPage() {
       toast.success("Fund saved.");
       setStep(1);
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save the fund."),
+    onError: (e: unknown) => {
+      const { fundId: existing, text } = parseFundError(e instanceof Error ? e.message : "Could not save the fund.");
+      toast.error(text, existing ? { action: { label: "Open Fund", onClick: () => window.location.assign(`/admin/fund/${existing}`) } } : undefined);
+    },
   });
 
   const documentMutation = useMutation({
@@ -234,6 +242,7 @@ function SetupPage() {
   });
 
   const canSaveFund =
+    !fundBlocked &&
     fund.name.trim().length >= 2 &&
     (fund.slug.trim() || slugify(fund.name)).length >= 2 &&
     (Boolean(fundId) || Boolean(clientId));
@@ -365,6 +374,13 @@ function SetupPage() {
                   }))
                 }
                 placeholder="Harmonious Growth Fund I"
+              />
+              <FundExistingCheck
+                name={fund.name}
+                excludeId={fundId}
+                distinct={distinctFund}
+                onDistinctChange={setDistinctFund}
+                onBlockedChange={setFundBlocked}
               />
             </div>
             <div className="grid gap-2">

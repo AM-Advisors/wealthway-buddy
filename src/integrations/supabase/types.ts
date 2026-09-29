@@ -14538,6 +14538,161 @@ export type Database = {
           },
         ]
       }
+      fund_record_sync_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          item_id: string | null
+          offering_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          item_id?: string | null
+          offering_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          item_id?: string | null
+          offering_id?: string | null
+        }
+        Relationships: []
+      }
+      fund_record_sync_items: {
+        Row: {
+          category: string
+          confidence: string | null
+          detail: Json
+          first_seen_at: string
+          id: string
+          investment_profile_id: string | null
+          item_key: string
+          last_run_id: string | null
+          last_seen_at: string
+          offering_id: string | null
+          onboarding_id: string | null
+          person_id: string | null
+          queue_kind: string
+          resolution: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source: string
+          source_ref: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          category: string
+          confidence?: string | null
+          detail?: Json
+          first_seen_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          item_key: string
+          last_run_id?: string | null
+          last_seen_at?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          person_id?: string | null
+          queue_kind: string
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source?: string
+          source_ref?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          confidence?: string | null
+          detail?: Json
+          first_seen_at?: string
+          id?: string
+          investment_profile_id?: string | null
+          item_key?: string
+          last_run_id?: string | null
+          last_seen_at?: string
+          offering_id?: string | null
+          onboarding_id?: string | null
+          person_id?: string | null
+          queue_kind?: string
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source?: string
+          source_ref?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_record_sync_items_last_run_id_fkey"
+            columns: ["last_run_id"]
+            isOneToOne: false
+            referencedRelation: "fund_record_sync_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_record_sync_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_record_sync_runs: {
+        Row: {
+          actor_id: string | null
+          counts: Json
+          created_at: string
+          drive_checked: boolean
+          drive_note: string | null
+          id: string
+          offering_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          counts?: Json
+          created_at?: string
+          drive_checked?: boolean
+          drive_note?: string | null
+          id?: string
+          offering_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          counts?: Json
+          created_at?: string
+          drive_checked?: boolean
+          drive_note?: string | null
+          id?: string
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_record_sync_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_regulatory_configs: {
         Row: {
           amendment_reason: string | null
@@ -21151,6 +21306,47 @@ export type Database = {
           },
         ]
       }
+      offering_name_history: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          effective_date: string
+          id: string
+          new_name: string
+          offering_id: string
+          previous_name: string
+          reason: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          effective_date?: string
+          id?: string
+          new_name: string
+          offering_id: string
+          previous_name: string
+          reason?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          effective_date?: string
+          id?: string
+          new_name?: string
+          offering_id?: string
+          previous_name?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_name_history_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_packet_links: {
         Row: {
           created_at: string
@@ -21486,6 +21682,7 @@ export type Database = {
           max_offering_cents: number | null
           min_investment_cents: number
           name: string
+          name_normalized: string | null
           offering_close_date: string | null
           offering_open_date: string | null
           principal_address: string | null
@@ -21546,6 +21743,7 @@ export type Database = {
           max_offering_cents?: number | null
           min_investment_cents?: number
           name: string
+          name_normalized?: string | null
           offering_close_date?: string | null
           offering_open_date?: string | null
           principal_address?: string | null
@@ -21606,6 +21804,7 @@ export type Database = {
           max_offering_cents?: number | null
           min_investment_cents?: number
           name?: string
+          name_normalized?: string | null
           offering_close_date?: string | null
           offering_open_date?: string | null
           principal_address?: string | null
@@ -29800,6 +29999,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      normalize_fund_name: { Args: { p: string }; Returns: string }
       offering_rp_identifier_meta: {
         Args: { _offering: string }
         Returns: {
@@ -29829,6 +30029,16 @@ export type Database = {
         Returns: number
       }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
+      rename_offering: {
+        Args: {
+          _actor: string
+          _effective: string
+          _name: string
+          _offering: string
+          _reason: string
+        }
+        Returns: undefined
+      }
       respond_to_invoice: {
         Args: {
           _decision: string

@@ -1106,6 +1106,37 @@ async function fundRequestItems(s: any, lookup: Lookup, now: Date) {
 /* -------------------------------------------------------------- the queue */
 
 
+/** Investor Records Sync review items (Phase 3.5). Titles carry no sensitive values. */
+async function investorSyncItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
+  let q = s
+    .from("fund_record_sync_items")
+    .select("id, offering_id, category, queue_kind, status, last_seen_at")
+    .in("status", ["open", "in_progress"])
+    .neq("category", "matched")
+    .limit(SOURCE_LIMIT);
+  if (fundId) q = q.eq("offering_id", fundId);
+  const { QUEUE_KINDS } = await import("@/lib/fund-integrity");
+  const rowsOut = await safely(async () => rows(await q));
+  return (rowsOut as any[])
+    .filter((r) => r.offering_id)
+    .map((r) =>
+      build(lookup, now, {
+        id: `investor-sync:${r.id}`,
+        source: "documents.investor_sync",
+        area: "documents",
+        recordType: "fund",
+        recordId: r.offering_id,
+        recordTab: "documents",
+        title: (QUEUE_KINDS as Record<string, string>)[r.queue_kind] ?? "Investor Record Review",
+        reason: "Investor Records Sync found something for Harmonious to decide",
+        workflowState: String(r.category),
+        requiredAction: "review",
+        fundId: r.offering_id,
+        at: r.last_seen_at ?? null,
+      }),
+    );
+}
+
 const COLLECTORS: {
   area: OpsArea;
   load: (s: any, lookup: Lookup, now: Date, fundId?: string) => Promise<WorkItem[]>;
@@ -1119,6 +1150,7 @@ const COLLECTORS: {
   { area: "reports", load: reportingItems },
   { area: "documents", load: documentItems },
   { area: "documents", load: driveExceptionItems },
+  { area: "documents", load: investorSyncItems },
   { area: "clients", load: contractItems },
   { area: "clients", load: engagementItems },
   { area: "capital", load: distributionItems },

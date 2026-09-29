@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { InvestorRecordsSync } from "@/components/investor-records-sync";
 import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -169,6 +170,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
       {panel === "existing" && <AddExistingInvestor fundId={fundId} />}
       {panel === "invite" && <ManagerAddInvestor fundId={fundId} />}
       {panel === "prep" && <PrepareInvestor fundId={fundId} />}
+      {isStaff ? <InvestorRecordsSync fundId={fundId} /> : null}
       {panel === "bulkInvite" && <BulkAddInvestors fundId={fundId} existingEmails={legacy.map((a) => String(a.email ?? "")).filter(Boolean)} />}
 
       <Card>
