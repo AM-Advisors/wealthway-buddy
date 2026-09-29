@@ -38,6 +38,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FormationEvidenceSection, RegulatoryFilingsCard } from "@/components/fund-setup-extras";
+import { OperationsBanking } from "@/components/operations-board";
 import { RequiredHere } from "@/components/fund-setup-checklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -223,6 +224,14 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
               </div>
             )}
           </>
+        )}
+
+        {d.canEdit && (
+          <div className="space-y-2 border-t pt-4">
+            <p className="text-sm font-medium">Bank account review</p>
+            <p className="text-xs text-muted-foreground">Bank change requests for this Fund waiting on Harmonious review.</p>
+            <OperationsBanking fundId={offeringId} />
+          </div>
         )}
       </CardContent>
     </Card>

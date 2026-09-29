@@ -45,9 +45,7 @@ function FundSetupDetail() {
           <FundSetupCanonical offeringId={fundId} />
         </SetupRequirementsProvider>
       )}
-      {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="Banking, EIN and tax">
-        <h2 className="font-heading text-xl font-semibold">Banking</h2>
-        <OperationsBanking fundId={fundId} />
+      {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="EIN, tax and sign-off">
         <h2 className="font-heading text-xl font-semibold">EIN and Form SS-4</h2>
         <OperationsSs4 fundId={fundId} />
         <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
