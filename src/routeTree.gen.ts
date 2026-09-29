@@ -294,6 +294,7 @@ import { Route as AuthenticatedManagerFundFundIdReadinessRouteImport } from './r
 import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './routes/_authenticated/manager.fund.$fundId.settings'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
 import { Route as AuthenticatedManagerFundFundIdTransactionsRouteImport } from './routes/_authenticated/manager.fund.$fundId.transactions'
+import { Route as AuthenticatedProfessionalTaxKindIdRouteImport } from './routes/_authenticated/professional.tax_.$kind.$id'
 import { Route as AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport } from './routes/_authenticated/manager.fund.$fundId.investor.$onboardingId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -1924,6 +1925,12 @@ const AuthenticatedManagerFundFundIdTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedProfessionalTaxKindIdRoute =
+  AuthenticatedProfessionalTaxKindIdRouteImport.update({
+    id: '/tax_/$kind/$id',
+    path: '/tax/$kind/$id',
+    getParentRoute: () => AuthenticatedProfessionalRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute =
   AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport.update({
     id: '/investor/$onboardingId',
@@ -2215,6 +2222,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
   '/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
 }
@@ -2496,6 +2504,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdIndexRoute
   '/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
 }
@@ -2785,6 +2794,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/_authenticated/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/_authenticated/professional/tax_/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/_authenticated/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
   '/_authenticated/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
 }
@@ -3074,6 +3084,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
+    | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId/'
     | '/manager/fund/$fundId/investor/$onboardingId'
   fileRoutesByTo: FileRoutesByTo
@@ -3355,6 +3366,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
+    | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId'
     | '/manager/fund/$fundId/investor/$onboardingId'
   id:
@@ -3643,6 +3655,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/settings'
     | '/_authenticated/manager/fund/$fundId/team'
     | '/_authenticated/manager/fund/$fundId/transactions'
+    | '/_authenticated/professional/tax_/$kind/$id'
     | '/_authenticated/manager/fund/$fundId/'
     | '/_authenticated/manager/fund/$fundId/investor/$onboardingId'
   fileRoutesById: FileRoutesById
@@ -5689,6 +5702,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdTransactionsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/professional/tax_/$kind/$id': {
+      id: '/_authenticated/professional/tax_/$kind/$id'
+      path: '/tax/$kind/$id'
+      fullPath: '/professional/tax/$kind/$id'
+      preLoaderRoute: typeof AuthenticatedProfessionalTaxKindIdRouteImport
+      parentRoute: typeof AuthenticatedProfessionalRoute
+    }
     '/_authenticated/manager/fund/$fundId/investor/$onboardingId': {
       id: '/_authenticated/manager/fund/$fundId/investor/$onboardingId'
       path: '/investor/$onboardingId'
@@ -5839,6 +5859,7 @@ interface AuthenticatedProfessionalRouteChildren {
   AuthenticatedProfessionalVerificationRoute: typeof AuthenticatedProfessionalVerificationRoute
   AuthenticatedProfessionalIndexRoute: typeof AuthenticatedProfessionalIndexRoute
   AuthenticatedProfessionalActingDelegationIdRoute: typeof AuthenticatedProfessionalActingDelegationIdRoute
+  AuthenticatedProfessionalTaxKindIdRoute: typeof AuthenticatedProfessionalTaxKindIdRoute
 }
 
 const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChildren =
@@ -5871,6 +5892,8 @@ const AuthenticatedProfessionalRouteChildren: AuthenticatedProfessionalRouteChil
     AuthenticatedProfessionalIndexRoute: AuthenticatedProfessionalIndexRoute,
     AuthenticatedProfessionalActingDelegationIdRoute:
       AuthenticatedProfessionalActingDelegationIdRoute,
+    AuthenticatedProfessionalTaxKindIdRoute:
+      AuthenticatedProfessionalTaxKindIdRoute,
   }
 
 const AuthenticatedProfessionalRouteWithChildren =
