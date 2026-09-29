@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { OperationsWorkHome } from "@/components/ops-home";
+import { OpsDashboard } from "@/components/ops-dashboard";
 
 export const Route = createFileRoute("/_authenticated/ops/")({
   head: () => ({
@@ -20,5 +21,10 @@ export const Route = createFileRoute("/_authenticated/ops/")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: OperationsWorkHome,
+  component: () => (
+    <>
+      <OpsDashboard />
+      <OperationsWorkHome />
+    </>
+  ),
 });

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -65,6 +66,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   const [panel, setPanel] = useState<Panel>(initial ? PANEL_FROM_SEARCH[initial] ?? null : null);
   const toggle = (p: Panel) => setPanel(panel === p ? null : p);
   const [search, setSearch] = useState("");
+  const drill = useRouterState({ select: (st) => ({ stage: (st.location.search as any)?.stage as string | undefined, bucket: (st.location.search as any)?.bucket as string | undefined }) });
   const isStaff = Boolean(records.data?.isStaff ?? actions.data?.isStaff);
 
   const refresh = () => ["fund-investor-records", "fund-readiness", "fund-investor-progress", "fund-investor-actions", "manager-fund-home"].forEach((k) => qc.invalidateQueries({ queryKey: [k, fundId] }));
@@ -89,8 +91,15 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   const summary = fundInvestorsSummary(items.map((i) => i.onboardingId), readinessRows, pendingOnboard.length + pendingAccess.length);
 
   const term = search.trim().toLowerCase();
-  const shown = items.filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
-  const shownLegacy = legacy.filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
+  const drillMatch = (onboardingId: string) => {
+    if (!drill.stage && !drill.bucket) return true;
+    const rr = readinessById.get(onboardingId);
+    if (!rr) return false;
+    const fact = { onboardingId, offeringId: fundId, fundingStatus: null, intendedCents: null, readiness: rr.readiness };
+    return (!drill.stage || funnelStageOf(fact) === drill.stage) && (!drill.bucket || managerBucketOf(fact) === drill.bucket);
+  };
+  const shown = items.filter((r) => drillMatch(r.onboardingId)).filter((r) => !term || r.name.toLowerCase().includes(term) || (r.profileLabel ?? "").toLowerCase().includes(term));
+  const shownLegacy = legacy.filter(() => !drill.stage && !drill.bucket).filter((a) => !term || String(a.name ?? "").toLowerCase().includes(term));
 
   if (records.isLoading) return <p className="text-sm text-muted-foreground">Loading investors…</p>;
   if (records.error) return <p className="text-sm text-destructive">{(records.error as Error).message}</p>;
@@ -166,6 +175,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
         <CardHeader className="gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div><CardTitle className="text-base">Investor roster</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground"><b>Record</b> = is the investor's information complete and confirmed. <b>Readiness</b> = is the investment ready to close. <b>Prepared</b> = entered by the Fund team or Harmonious; the investor hasn't signed in or confirmed it.</p></div>
+          {drill.stage || drill.bucket ? <p className="text-sm">Showing: <b>{drill.stage ? (FUNNEL_LABELS as any)[drill.stage] ?? drill.stage : (MANAGER_BUCKET_LABELS as any)[drill.bucket!] ?? drill.bucket}</b> · <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="underline">Show all</Link></p> : null}
           <Input className="sm:w-56" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search investors" aria-label="Search investors" />
         </CardHeader>
         <CardContent>
