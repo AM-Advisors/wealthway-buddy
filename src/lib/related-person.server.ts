@@ -10,7 +10,7 @@ const db = () => supabaseAdmin as any;
 
 export type RelatedPersonInput = {
   profileId: string; offeringId?: string | null; firstName: string; lastName: string; email?: string | null;
-  role: string; ownershipPercent?: number | null; isSigner?: boolean; actorUserId: string; entrySource?: string | null;
+  role: string; ownershipPercent?: number | null; isSigner?: boolean | undefined; actorUserId: string; entrySource?: string | null;
   verificationStatus?: string;
 };
 
@@ -92,7 +92,7 @@ export async function listRelatedPersonReviews() {
  * row to the chosen Person, so role, ownership and signer status are untouched.
  * The provisional Person is kept (never deleted); supplied details stay as provenance.
  */
-export async function resolveRelatedPersonReview(input: { reviewId: string; resolution: RelatedResolution; personId?: string | null; note?: string | null; actorUserId: string }) {
+export async function resolveRelatedPersonReview(input: { reviewId: string; resolution: RelatedResolution; personId?: string | null | undefined; note?: string | null | undefined; actorUserId: string }) {
   const { data: r } = await db().from("related_person_reviews").select("*").eq("id", input.reviewId).maybeSingle();
   if (!r) throw new Error("That review item was not found.");
   if (!["open", "review_later"].includes(r.status)) throw new Error("That review item is already resolved.");
