@@ -39,6 +39,11 @@ function FundSetupDetail() {
             : <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={false} onChanged={() => q.refetch()} />}
         </>}
       </section>
+      {d.canUseCanonical && (
+        <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, onChanged: () => q.refetch() }}>
+          <FundSetupCanonical offeringId={fundId} />
+        </SetupRequirementsProvider>
+      )}
       {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="Banking, EIN and tax">
         <h2 className="font-heading text-xl font-semibold">Banking</h2>
         <OperationsBanking fundId={fundId} />
@@ -47,11 +52,6 @@ function FundSetupDetail() {
         <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
         <OperationsTaxDocuments fundId={fundId} />
       </section>}
-      {d.canUseCanonical && (
-        <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, onChanged: () => q.refetch() }}>
-          <FundSetupCanonical offeringId={fundId} />
-        </SetupRequirementsProvider>
-      )}
     </> : <p>Fund details are available to the Operations team.</p>}
   </main>;
 }
