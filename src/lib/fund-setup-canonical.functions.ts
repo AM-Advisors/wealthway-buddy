@@ -31,6 +31,7 @@ const fundClass = z.object({
   carry: carry.optional(),
   preferredReturnPercent: z.number().min(0).max(100).nullish(),
   minInvestmentCents: z.number().int().min(0).nullish(),
+  notApplicable: z.array(z.enum(["managementFee", "carry", "preferredReturn", "orgExpense", "distributionFrequency", "minInvestment"])).max(6).optional(),
 });
 
 export const getFundSetupOverview = createServerFn({ method: "POST" })
