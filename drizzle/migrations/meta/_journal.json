@@ -442,6 +442,13 @@
       "when": 1790670469585,
       "tag": "0062_legal_name_change_actor",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790671502552,
+      "tag": "0063_offering_documents_phase2",
+      "breakpoints": true
     }
   ]
 }

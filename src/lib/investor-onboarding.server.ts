@@ -281,7 +281,7 @@ async function gatherFacts(row: any) {
   ]);
   const { data: offeringDocs } = await db()
     .from("offering_documents")
-    .select("id, title, doc_type, requires_signature, applies_to")
+    .select("id, title, doc_type, requires_signature, applies_to, usage, applicability, active_version")
     .eq("offering_id", row.offering_id);
 
   // Investor-confirmed facts outrank prepared values; unreviewed prepared values never drive requirements.
@@ -292,7 +292,23 @@ async function gatherFacts(row: any) {
     { profileType: profile?.profile_type ?? null, requestedAmountCents: row.requested_amount_cents ?? null, country: person?.residence_country ?? null },
     confirmed,
   );
-  const applicableDocs = ((offeringDocs ?? []) as any[]).filter((d) => docApplies(d.applies_to, eff.profileType));
+  const { documentApplies, documentObligations, acknowledgmentsComplete } = await import("@/lib/offering-document-model");
+  // Legacy profile rule plus Fund Setup applicability (profile type and class).
+  const applicableDocs = ((offeringDocs ?? []) as any[]).filter(
+    (d) =>
+      docApplies(d.applies_to, eff.profileType) &&
+      documentApplies(d.applicability, { profileType: eff.profileType ?? null, classKey: row.offering_class_key ?? null }),
+  );
+  const obligations = documentObligations(
+    applicableDocs.map((d) => ({ id: String(d.id), usage: d.usage ?? null, legacyRequiresSignature: Boolean(d.requires_signature), activeVersion: d.active_version ?? null })),
+  );
+  const { data: ackRows } = obligations.needsAck.length
+    ? await db().from("investment_document_acknowledgments").select("offering_document_id, version").eq("onboarding_id", row.id)
+    : { data: [] as any[] };
+  const acksDone = acknowledgmentsComplete(
+    obligations.needsAck,
+    ((ackRows ?? []) as any[]).map((a) => ({ documentId: String(a.offering_document_id), version: Number(a.version) })),
+  );
 
   const accreditation = ((accreditations ?? []) as any[])[0] ?? null;
   const tax = ((taxProfiles ?? []) as any[])[0] ?? null;
@@ -308,7 +324,9 @@ async function gatherFacts(row: any) {
   const completedSignatures = ((signatures ?? []) as any[]).filter(
     (sig) => isAuthoritativeSignature(sig, docScope) && !(sig.snapshot_id && deadSnaps.has(sig.snapshot_id)),
   );
-  const requiredToSign = applicableDocs.filter((d) => d.requires_signature);
+  // Reference-only and acknowledgment documents never require a signature.
+  const signIds = new Set(obligations.needsSignature.map((d) => d.id));
+  const requiredToSign = applicableDocs.filter((d) => signIds.has(String(d.id)));
   const signedIds = new Set(completedSignatures.map((sig) => sig.offering_document_id).filter(Boolean));
   const allSigned =
     completedSignatures.length > 0 &&
@@ -380,7 +398,7 @@ async function gatherFacts(row: any) {
       requestedAmountCents: eff.requestedAmountCents,
       questionnaireVersion: row.questionnaire_version,
       questionnaireComplete: Boolean(row.questionnaire_version),
-      documentsPrepared: Boolean(row.document_template_version),
+      documentsPrepared: Boolean(row.document_template_version) && acksDone,
       signatureStatus: signedCount > 0 ? "completed" : null,
       fundingStatus: row.funding_status,
     },

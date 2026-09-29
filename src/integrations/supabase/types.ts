@@ -16133,6 +16133,48 @@ export type Database = {
           },
         ]
       }
+      investment_document_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          acknowledged_by: string
+          id: string
+          offering_document_id: string
+          onboarding_id: string
+          version: number
+        }
+        Insert: {
+          acknowledged_at?: string
+          acknowledged_by: string
+          id?: string
+          offering_document_id: string
+          onboarding_id: string
+          version: number
+        }
+        Update: {
+          acknowledged_at?: string
+          acknowledged_by?: string
+          id?: string
+          offering_document_id?: string
+          onboarding_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_document_acknowledgments_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_document_acknowledgments_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investment_profile_relationships: {
         Row: {
           added_by: string | null
@@ -20726,6 +20768,54 @@ export type Database = {
           },
         ]
       }
+      offering_document_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          offering_document_id: string | null
+          offering_id: string
+          version: number | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          offering_document_id?: string | null
+          offering_id: string
+          version?: number | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          offering_document_id?: string | null
+          offering_id?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_document_events_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offering_document_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_document_signature_blocks: {
         Row: {
           block_type: string
@@ -20787,8 +20877,12 @@ export type Database = {
       }
       offering_document_versions: {
         Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           created_by: string | null
+          effective_date: string | null
           file_name: string | null
           file_path: string | null
           file_size_bytes: number | null
@@ -20796,12 +20890,21 @@ export type Database = {
           note: string | null
           offering_document_id: string
           offering_id: string
+          signing_config: Json | null
+          signing_config_confirmed_at: string | null
+          signing_config_confirmed_by: string | null
+          signing_config_status: string
           source: string
+          superseded_at: string | null
           version: number
         }
         Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           created_by?: string | null
+          effective_date?: string | null
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
@@ -20809,12 +20912,21 @@ export type Database = {
           note?: string | null
           offering_document_id: string
           offering_id: string
+          signing_config?: Json | null
+          signing_config_confirmed_at?: string | null
+          signing_config_confirmed_by?: string | null
+          signing_config_status?: string
           source?: string
+          superseded_at?: string | null
           version: number
         }
         Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           created_by?: string | null
+          effective_date?: string | null
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
@@ -20822,7 +20934,12 @@ export type Database = {
           note?: string | null
           offering_document_id?: string
           offering_id?: string
+          signing_config?: Json | null
+          signing_config_confirmed_at?: string | null
+          signing_config_confirmed_by?: string | null
+          signing_config_status?: string
           source?: string
+          superseded_at?: string | null
           version?: number
         }
         Relationships: [
@@ -20844,12 +20961,15 @@ export type Database = {
       }
       offering_documents: {
         Row: {
+          active_version: number | null
+          applicability: Json
           applies_to: string[]
           body: string
           countersigner_user_id: string | null
           created_at: string
           current_version: number
           doc_type: string
+          document_category: string | null
           file_name: string | null
           file_path: string | null
           file_size_bytes: number | null
@@ -20864,14 +20984,18 @@ export type Database = {
           template_key: string | null
           template_pack: string | null
           title: string
+          usage: string | null
         }
         Insert: {
+          active_version?: number | null
+          applicability?: Json
           applies_to?: string[]
           body: string
           countersigner_user_id?: string | null
           created_at?: string
           current_version?: number
           doc_type: string
+          document_category?: string | null
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
@@ -20886,14 +21010,18 @@ export type Database = {
           template_key?: string | null
           template_pack?: string | null
           title: string
+          usage?: string | null
         }
         Update: {
+          active_version?: number | null
+          applicability?: Json
           applies_to?: string[]
           body?: string
           countersigner_user_id?: string | null
           created_at?: string
           current_version?: number
           doc_type?: string
+          document_category?: string | null
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
@@ -20908,6 +21036,7 @@ export type Database = {
           template_key?: string | null
           template_pack?: string | null
           title?: string
+          usage?: string | null
         }
         Relationships: [
           {
