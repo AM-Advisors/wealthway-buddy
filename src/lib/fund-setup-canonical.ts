@@ -32,6 +32,14 @@ export const CANONICAL_SECTION_LABELS: Record<CanonicalSection, string> = {
 
 export type SectionStatus = "not_started" | "in_progress" | "complete" | "needs_attention" | "not_applicable";
 
+/** A read-only summary of applicable Fund Setup sections, not investor readiness. */
+export function setupCompletion(statuses: Record<CanonicalSection, { status: SectionStatus }>): number {
+  const applicable = CANONICAL_SECTIONS.filter((section) => statuses[section].status !== "not_applicable");
+  if (!applicable.length) return 0;
+  const complete = applicable.filter((section) => statuses[section].status === "complete").length;
+  return Math.round((complete / applicable.length) * 100);
+}
+
 export const SECTION_STATUS_LABELS: Record<SectionStatus, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
