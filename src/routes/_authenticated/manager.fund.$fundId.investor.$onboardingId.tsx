@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
-import { SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
+import { CLAIM_STATE_LABELS, SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
 import { money, prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,7 @@ function InvestorRecordPage() {
           <p className="text-sm text-muted-foreground">{data.profile?.label ?? "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "Investor"}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
           {data.overview.removed ? <Badge variant="destructive">Removed from Fund</Badge> : null}
-          {!p?.hasAccount ? <Badge variant="outline">Incomplete — awaiting investor sign-in</Badge> : null}
+          <Badge variant={data.claimState === "prepared" ? "outline" : "secondary"}>{CLAIM_STATE_LABELS[data.claimState]}</Badge>
           {data.pendingReviewCount ? <Badge variant="secondary">{data.pendingReviewCount} awaiting Harmonious review</Badge> : null}
         </div>
       </div>
@@ -100,7 +100,10 @@ function InvestorRecordPage() {
       </CardContent></Card> : null}
 
       {tab === "profile" ? <div className="space-y-4">
-        <Card><CardHeader><CardTitle className="text-base">Contact</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
+        <Card><CardHeader><CardTitle className="text-base">Contact</CardTitle>
+          {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">This investor has claimed their record and supplies their own contact details. Your changes are sent to Harmonious as suggested updates; they don't overwrite what the investor entered.</p>
+            : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "the Fund team"}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
+        </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
           {field("firstName", "Legal first name", p?.firstName)}{field("middleName", "Middle name", p?.middleName)}{field("lastName", "Last name", p?.lastName)}{field("preferredName", "Preferred name", p?.preferredName)}
           {field("email", "Email", p?.email)}{field("phone", "Phone", p?.phone)}{field("citizenship", "Citizenship", p?.citizenship)}
           {staff ? field("dob", "Date of birth", (p as any)?.dateOfBirth, { type: "date" }) : null}
@@ -108,7 +111,7 @@ function InvestorRecordPage() {
           <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, person: {
             firstName: edit['firstName'], middleName: edit['middleName'], lastName: edit['lastName'], preferredName: edit['preferredName'], email: edit['email'], phone: edit['phone'],
             citizenship: edit['citizenship'], dateOfBirth: staff ? edit['dob'] : undefined, addressLine1: edit['address1'], addressLine2: edit['address2'], city: edit['city'], region: edit['region'], postalCode: edit['postal'], country: edit['country'],
-          } })}>Save contact</Button>
+          } })}>{data.contactEditMode === "suggest" ? "Suggest change" : "Save contact"}</Button>
         </CardContent></Card>
         {data.profile ? <Card><CardHeader><CardTitle className="text-base">Investment Profile · {data.profile.typeLabel}</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
           {field("legalName", "Legal investor name", data.profile.legalName)}

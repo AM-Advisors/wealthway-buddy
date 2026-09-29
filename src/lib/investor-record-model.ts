@@ -294,3 +294,41 @@ export function removalBlocker(stage: string, fundedCents: number): string | nul
   if (fundedCents > 0) return "Money has been received for this investment; Harmonious must handle it.";
   return null;
 }
+
+/* ---------------- roster presentation (pure) ---------------- */
+
+/** Prepared = created by Harmonious/Fund Manager, nobody signed in yet. Grants no access and implies no investor confirmation. */
+export type ClaimState = "prepared" | "claimed" | "investor_started";
+export const CLAIM_STATE_LABELS: Record<ClaimState, string> = {
+  prepared: "Prepared · not yet claimed", claimed: "Claimed by investor", investor_started: "Started by investor",
+};
+export function claimState(r: { hasAccount: boolean; entrySource: string | null | undefined }): ClaimState {
+  if (!r.hasAccount) return "prepared";
+  return r.entrySource && r.entrySource !== "investor" ? "claimed" : "investor_started";
+}
+
+export type RosterReadiness = "ready" | "needs_attention" | "in_progress" | "closed" | "unknown";
+export const ROSTER_READINESS_LABELS: Record<RosterReadiness, string> = {
+  ready: "Ready to Close", needs_attention: "Needs attention", in_progress: "In progress", closed: "Closed", unknown: "—",
+};
+type ReadinessRow = { onboardingId: string; closeReady: boolean; readiness?: { terminal?: string | null; items?: { key: string; status: string }[] } | null };
+export function rosterReadiness(r: ReadinessRow | undefined): RosterReadiness {
+  if (!r) return "unknown";
+  if (r.readiness?.terminal === "closed") return "closed";
+  if (r.closeReady) return "ready";
+  const items = r.readiness?.items ?? [];
+  return items.some((i) => ["blocked", "needs_harmonious", "needs_fund_manager"].includes(i.status)) ? "needs_attention" : "in_progress";
+}
+/** Summary for the single Fund Investors roster: counts only canonical investments shown in the roster; invitations counted separately. */
+export function fundInvestorsSummary(recordIds: string[], readiness: ReadinessRow[], pendingInvitations: number) {
+  const byId = new Map(readiness.map((r) => [r.onboardingId, r]));
+  const s = { total: recordIds.length, invited: pendingInvitations, onboarding: 0, needsAttention: 0, ready: 0, funded: 0 };
+  for (const id of recordIds) {
+    const r = byId.get(id);
+    if (r?.readiness?.items?.some((i) => i.key === "funding" && i.status === "complete")) s.funded++;
+    const st = rosterReadiness(r);
+    if (st === "ready") s.ready++;
+    else if (st !== "closed") { s.onboarding++; if (st === "needs_attention") s.needsAttention++; }
+  }
+  return s;
+}

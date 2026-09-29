@@ -13,7 +13,7 @@ import {
 import {
   type EntrySource, type ProfileType, type BulkPreviewRow, type PersonCandidate,
   canManageFundRecords, sanitizePatch, sourceFor, rankMatches, createNewBlocker, validateQuickAdd, isProfileType,
-  dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, sameValue, isMaterial,
+  dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, claimState, CLAIM_STATE_LABELS, sameValue, isMaterial,
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
   planIncoming, PROFILE_TYPE_LABELS,
 } from "@/lib/investor-record-model";
@@ -365,6 +365,9 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
         ...(actor.isStaff ? { acceptedCents: r.accepted_amount_cents } : {}),
         stage: r.stage, hasAccount: Boolean(r.investor_user_id), invited: Boolean(r.invitation_id),
         recordStatus: status, recordStatusLabel: RECORD_STATUS_LABELS[status],
+        claimState: claimState({ hasAccount: Boolean(r.investor_user_id), entrySource: r.entry_source }),
+        claimStateLabel: CLAIM_STATE_LABELS[claimState({ hasAccount: Boolean(r.investor_user_id), entrySource: r.entry_source })],
+        investorConfirmed: Boolean(r.investor_confirmed_at),
         enteredBy: r.entry_source,
       };
     }),
@@ -413,6 +416,9 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     activity: activityFor((changes ?? []) as any[], staff ? "staff" : "manager"),
     suggestions: staff ? ((sugg ?? []) as any[]).map((s) => ({ id: s.id, field: s.field, current: s.current_value, proposed: s.proposed_value, source: s.source, status: s.status, at: s.created_at })) : [],
     pendingReviewCount: (sugg ?? []).length,
+    // Mirrors updateInvestorRecord: a manager's contact edits to investor-controlled data become suggestions.
+    contactEditMode: role === "manager" && Boolean(person?.user_id) && (person?.entry_source === "investor" || Boolean(row.investor_confirmed_at)) ? "suggest" as const : "direct" as const,
+    claimState: claimState({ hasAccount: Boolean(row.investor_user_id), entrySource: row.entry_source }),
     actor: { isStaff: actor.isStaff },
   };
 }

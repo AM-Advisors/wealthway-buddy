@@ -315,3 +315,106 @@ describe("model", () => {
     expect(removalBlocker("started", 0)).toBeNull();
   });
 });
+
+describe("cross-fund authorization: manager of Fund A vs Fund B (server-side)", () => {
+  const setupB = async () => {
+    const s = await srv();
+    const b = await s.createInvestor(STAFF, jane({ offeringId: FUND_B, investment: { amountCents: 77_700_000 } }));
+    return { s, b };
+  };
+  it("cannot open Fund B records list or an investor record by direct id", async () => {
+    const { s, b } = await setupB();
+    await expect(s.fundInvestorRecords(MGR_A, FUND_B)).rejects.toThrow(/Forbidden/);
+    await expect(s.investorRecordDetail(MGR_A, b.onboardingId)).rejects.toThrow(/Forbidden/);
+    await expect(s.prefillForInvestor(MGR_A, b.onboardingId)).rejects.toThrow(/Forbidden|not yours/);
+  });
+  it("cannot edit Fund B person, profile or investment fields", async () => {
+    const { s, b } = await setupB();
+    await expect(s.updateInvestorRecord(MGR_A, { onboardingId: b.onboardingId, person: { lastName: "X" } })).rejects.toThrow(/Forbidden/);
+    await expect(s.updateInvestorRecord(MGR_A, { onboardingId: b.onboardingId, profile: { legalName: "X" } })).rejects.toThrow(/Forbidden/);
+    await expect(s.updateInvestorRecord(MGR_A, { onboardingId: b.onboardingId, investment: { amountCents: 1 } })).rejects.toThrow(/Forbidden/);
+    expect(tables["persons"]![0]!.legal_last_name).toBe("Smith");
+    expect(tables["investor_onboardings"]![0]!.requested_amount_cents).toBe(77_700_000);
+  });
+  it("cannot create, search, or bulk import into Fund B", async () => {
+    const s = await srv();
+    await expect(s.createInvestor(MGR_A, jane({ offeringId: FUND_B }))).rejects.toThrow(/Forbidden/);
+    await expect(s.searchInvestors(MGR_A, { offeringId: FUND_B, email: "jane@example.com" })).rejects.toThrow(/Forbidden/);
+    await expect(s.bulkPreview(MGR_A, { offeringId: FUND_B, csv: "first_name,last_name,email,amount\nJo,Doe,jo@example.com,1000" })).rejects.toThrow(/Forbidden/);
+    expect(tables["investor_bulk_imports"] ?? []).toHaveLength(0);
+    expect(tables["persons"] ?? []).toHaveLength(0);
+  });
+  it("cannot commit or cancel a Fund B bulk import prepared by staff", async () => {
+    const s = await srv();
+    tables["investor_bulk_imports"] = [{ id: "imp-b", offering_id: FUND_B, created_by: STAFF, status: "previewed", rows: [], summary: {} }];
+    await expect(s.bulkCommit(MGR_A, { importId: "imp-b" })).rejects.toThrow(/Forbidden/);
+    await expect(s.bulkCancel(MGR_A, "imp-b")).rejects.toThrow(/Forbidden/);
+    expect(tables["investor_bulk_imports"]![0]!.status).toBe("previewed");
+  });
+  it("cannot remove a Fund B investor", async () => {
+    const { s, b } = await setupB();
+    await expect(s.removeFromFund(MGR_A, { onboardingId: b.onboardingId })).rejects.toThrow(/Forbidden/);
+    expect(tables["investor_onboardings"]![0]!.removed_at).toBeFalsy();
+  });
+  it("cannot accept, reject or defer Fund B suggestions, or propose them", async () => {
+    const { s, b } = await setupB();
+    await s.proposeUpdate(STAFF, { onboardingId: b.onboardingId, subjectTable: "investor_onboardings", field: "requested_amount_cents", proposed: 1, source: "document" });
+    const id = tables["investor_record_suggestions"]![0]!.id;
+    for (const action of ["accept", "reject", "review_later"] as const) await expect(s.resolveSuggestion(MGR_A, { id, action })).rejects.toThrow(/Forbidden/);
+    await expect(s.proposeUpdate(MGR_A, { onboardingId: b.onboardingId, subjectTable: "persons", field: "phone", proposed: "1", source: "document" })).rejects.toThrow(/Forbidden/);
+    expect(tables["investor_record_suggestions"]![0]!.status).toBeUndefined();
+  });
+  it("a person in both funds: manager of A sees only the Fund A relationship and cannot traverse to B", async () => {
+    const s = await srv();
+    const a = await s.createInvestor(STAFF, jane({ investment: { amountCents: 10_000_000 } }));
+    const b = await s.createInvestor(STAFF, jane({ offeringId: FUND_B, personId: a.personId, investment: { amountCents: 77_700_000 } }));
+    expect(b.personId).toBe(a.personId);
+    const list = await s.fundInvestorRecords(MGR_A, FUND_A);
+    expect(list.items.map((i: any) => i.onboardingId)).toEqual([a.onboardingId]);
+    const detail = await s.investorRecordDetail(MGR_A, a.onboardingId);
+    const blob = JSON.stringify([list, detail]);
+    expect(blob).not.toContain(b.onboardingId);
+    expect(blob).not.toContain(FUND_B);
+    expect(blob).not.toContain("77700000");
+    // Shared Person identity does not unlock the other Fund's investment.
+    await expect(s.investorRecordDetail(MGR_A, b.onboardingId)).rejects.toThrow(/Forbidden/);
+    await expect(s.updateInvestorRecord(MGR_A, { onboardingId: b.onboardingId, investment: { amountCents: 1 } })).rejects.toThrow(/Forbidden/);
+  });
+});
+
+describe("roster presentation", () => {
+  it("Prepared vs Claimed is derived from sign-in, not from who typed the data", async () => {
+    const { claimState } = await import("@/lib/investor-record-model");
+    expect(claimState({ hasAccount: false, entrySource: "fund_manager" })).toBe("prepared");
+    expect(claimState({ hasAccount: true, entrySource: "fund_manager" })).toBe("claimed");
+    expect(claimState({ hasAccount: true, entrySource: "investor" })).toBe("investor_started");
+  });
+  it("list rows carry claim state; prepared records grant no account", async () => {
+    const s = await srv();
+    await s.createInvestor(MGR_A, jane());
+    const [row] = (await s.fundInvestorRecords(MGR_A, FUND_A)).items as any[];
+    expect(row.claimState).toBe("prepared");
+    expect(row.hasAccount).toBe(false);
+    expect(row.investorConfirmed).toBe(false);
+  });
+  it("manager edit mode is 'suggest' once the investor controls their data", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    expect((await s.investorRecordDetail(MGR_A, r.onboardingId)).contactEditMode).toBe("direct");
+    Object.assign(tables["persons"]![0]!, { user_id: JANE, entry_source: "investor" });
+    expect((await s.investorRecordDetail(MGR_A, r.onboardingId)).contactEditMode).toBe("suggest");
+    expect((await s.investorRecordDetail(STAFF, r.onboardingId)).contactEditMode).toBe("direct");
+  });
+  it("summary counts only this fund's investments; invitations separate; readiness distinct from record status", async () => {
+    const { fundInvestorsSummary, rosterReadiness } = await import("@/lib/investor-record-model");
+    const rd = [
+      { onboardingId: "a", closeReady: true, readiness: { items: [{ key: "funding", status: "complete" }] } },
+      { onboardingId: "b", closeReady: false, readiness: { items: [{ key: "sign", status: "needs_fund_manager" }] } },
+      { onboardingId: "c", closeReady: false, readiness: { items: [] } },
+      { onboardingId: "other-fund", closeReady: true, readiness: { items: [] } },
+    ];
+    expect(fundInvestorsSummary(["a", "b", "c"], rd, 2)).toEqual({ total: 3, invited: 2, onboarding: 2, needsAttention: 1, ready: 1, funded: 1 });
+    expect(rosterReadiness(undefined)).toBe("unknown");
+    expect(rosterReadiness(rd[1])).toBe("needs_attention");
+  });
+});
