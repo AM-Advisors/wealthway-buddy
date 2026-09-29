@@ -278,9 +278,9 @@ function KycPage() {
                   setForm((f) => ({ ...f, ...addressToSnake(next) }))
                 }
               />
-              {errors["address_line1"] ? (
-                <p className="mt-2 text-sm text-destructive">{errors["address_line1"]}</p>
-              ) : null}
+              {(["address_line1", "city", "region", "postal_code", "country"] as const).map((field) =>
+                errors[field] ? <p key={field} className="mt-2 text-sm text-destructive">{field.replace("address_line1", "Street address").replace("postal_code", "Postal code").replace(/_/g, " ")}: {errors[field]}</p> : null,
+              )}
             </CardContent>
           </Card>
 
