@@ -390,7 +390,18 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
                   {field("street_address", "Street address, if different (line 5a)")}
                   {field("street_city_state_zip", "City, state, ZIP (line 5b)")}
                   {field("responsible_party_name", "Responsible party (line 7a)")}
-                  {field("responsible_party_tin", "Their SSN, ITIN or EIN (line 7b)")}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rp-tin">
+                      Their SSN, ITIN or EIN (line 7b){data?.details?.rp_tin_on_file ? " — on file; enter only to replace" : ""}
+                    </Label>
+                    <Input
+                      id="rp-tin"
+                      type="password"
+                      autoComplete="off"
+                      value={String(ss4["responsible_party_tin"] ?? "")}
+                      onChange={(e) => setSs4((prev) => ({ ...prev, responsible_party_tin: e.target.value }))}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">

@@ -29585,6 +29585,10 @@ export type Database = {
         Args: { _stakeholder_id: string }
         Returns: boolean
       }
+      clear_legacy_rp_plaintext: {
+        Args: { _offering: string }
+        Returns: boolean
+      }
       client_create_wire_request: {
         Args: {
           _amount_cents: number
@@ -29770,6 +29774,13 @@ export type Database = {
           updated_at: string
         }[]
       }
+      list_legacy_rp_plaintext: {
+        Args: never
+        Returns: {
+          offering_id: string
+          tin: string
+        }[]
+      }
       list_staff_accounts: {
         Args: never
         Returns: {
@@ -29787,6 +29798,22 @@ export type Database = {
           details: Json
           offering_id: string
           updated_at: string
+        }[]
+      }
+      offering_rp_identifier_meta: {
+        Args: { _offering: string }
+        Returns: {
+          identifier_type: string
+          last4: string
+          on_file: boolean
+        }[]
+      }
+      read_offering_rp_identifier: {
+        Args: { _offering: string }
+        Returns: {
+          ciphertext: string
+          iv: string
+          key_version: number
         }[]
       }
       read_tax_identifier: {
@@ -29862,6 +29889,18 @@ export type Database = {
           _grant: boolean
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: undefined
+      }
+      store_offering_rp_identifier: {
+        Args: {
+          _actor: string
+          _ciphertext: string
+          _iv: string
+          _key_version: number
+          _last4: string
+          _offering: string
+          _type: string
         }
         Returns: undefined
       }
