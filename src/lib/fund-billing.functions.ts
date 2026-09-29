@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { CONTRACT_ROLES, STAFF_ROLES } from "@/lib/contracts.functions";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 /** Fund-level money: each fund's wire fee and closing cost, the events that
  *  earn them, the invoice each one landed on, and the trail behind it. */
@@ -56,7 +57,6 @@ async function audit(
   });
 }
 
-const SETTLED = ["settled", "funded", "closed"];
 
 async function buildEvents(context: any, offeringId: string) {
   const { data: offering } = await context.supabase
@@ -89,7 +89,7 @@ async function buildEvents(context: any, offeringId: string) {
   const events: any[] = [];
 
   for (const a of ((apps ?? []) as any[])) {
-    if (!SETTLED.includes(String(a.funding_status ?? ""))) continue;
+    if (!isReconciledFunding(a.funding_status) && String(a.funding_status ?? "") !== "closed") continue;
     const cents = Number(a.wire_fee_cents ?? fundWire ?? 0);
     const rateMissing = cents <= 0;
     events.push({

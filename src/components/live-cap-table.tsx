@@ -7,6 +7,7 @@ import { getFundCapTable } from "@/lib/cap-table.functions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 function money(cents?: number | null) {
   if (!cents) return "$0";
@@ -108,7 +109,7 @@ export function LiveCapTable({ offeringId }: { offeringId: string }) {
                   <tr key={h.application_id} className="border-b last:border-0">
                     <td className="py-2 pr-3">
                       <span className={h.is_you ? "font-medium" : ""}>{h.name}</span>{" "}
-                      {h.funding_status === "settled" ? (
+                      {isReconciledFunding(h.funding_status) ? (
                         <Badge variant="secondary" className="ml-1">
                           Funded
                         </Badge>

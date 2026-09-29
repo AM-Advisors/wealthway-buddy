@@ -12,6 +12,7 @@ import {
 } from "@/lib/fund-duplicate-resolution";
 import { normalizeFundName } from "@/lib/fund-integrity";
 import { requireStaff } from "@/lib/fund-integrity.server";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
@@ -107,13 +108,13 @@ async function snapshot(id: string): Promise<{ snap: FundSnapshot; secret: { ein
     investors: {
       persons: new Set(investments.map((i) => i.person_id).filter(Boolean)).size,
       investments: investments.length, active: live.length, removed: investments.length - live.length,
-      funded: investments.filter((i) => i.funding_status === "funded").length,
+      funded: investments.filter((i) => isReconciledFunding(i.funding_status)).length,
       closed: investments.filter((i) => i.stage === "closed").length,
     },
     capital: {
       subscribedCents: live.reduce((n, i) => n + Number(i.accepted_amount_cents ?? i.commitment_amount_cents ?? i.requested_amount_cents ?? 0), 0),
       // Reconciled only — an investor-reported or "sent" wire never counts.
-      reconciledFundedCents: investments.filter((i) => i.funding_status === "funded").reduce((n, i) => n + Number(i.funded_amount_cents ?? 0), 0),
+      reconciledFundedCents: investments.filter((i) => isReconciledFunding(i.funding_status)).reduce((n, i) => n + Number(i.funded_amount_cents ?? 0), 0),
     },
     documents: { offeringDocuments, versions, executed: investments.filter((i) => i.signature_id || i.executed_snapshot).length, historical },
     banking: { exists: !!current || (!!banking.data && banking.data.status && banking.data.status !== "not_started"), currentVersion: current?.version ?? null, verification: current?.release_status ?? banking.data?.status ?? null },

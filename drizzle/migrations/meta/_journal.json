@@ -540,6 +540,13 @@
       "when": 1790702839499,
       "tag": "0076_diligence_documents_archive",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1790706096820,
+      "tag": "0077_person_creation_locks",
+      "breakpoints": true
     }
   ]
 }

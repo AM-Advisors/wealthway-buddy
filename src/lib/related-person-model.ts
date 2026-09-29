@@ -5,15 +5,14 @@
 export type RelatedMatchKind = "none" | "possible" | "ambiguous";
 export type RelatedResolution = "use_existing" | "keep_new" | "review_later";
 
-const norm = (v: unknown) => String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+import { candidateSignals } from "@/lib/person-resolution";
 
 export type RelatedCandidate = { id: string; email: string | null; firstName: string | null; lastName: string | null };
 
-/** A candidate counts when the normalized email matches, or the full legal name matches exactly. */
+/** Delegates to the canonical Person Resolution signals (email or full legal name). */
 export function relatedCandidateMatches(input: { email?: string | null; firstName: string; lastName: string }, c: RelatedCandidate) {
-  const email = norm(input.email);
-  if (email && norm(c.email) === email) return true;
-  return norm(c.firstName) === norm(input.firstName) && norm(c.lastName) === norm(input.lastName) && norm(input.firstName) !== "";
+  const sig = candidateSignals(input, c);
+  return sig.includes("email") || sig.includes("name");
 }
 
 export function classifyRelatedMatch(candidateIds: string[]): RelatedMatchKind {

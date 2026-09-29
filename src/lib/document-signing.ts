@@ -1,3 +1,4 @@
+import { canonicalExecutionStatus, type CanonicalExecutionStatus } from "@/lib/document-execution-status";
 /**
  * Pure rules for the Box-connected signing experience. No database, no Box
  * calls — everything here is decidable from values, so it can be tested
@@ -77,18 +78,20 @@ export interface SignerLike {
  * A missing or empty signer list is never treated as executed.
  */
 export function executionState(signers: readonly SignerLike[]): ExecutionState {
-  const required = signers.filter((s) => s.required !== false);
-  if (required.length === 0) return "not_sent";
+  const c = canonicalExecutionStatus({ signers: signers.map((x) => ({ role: (x as any).role_key ?? (x as any).role ?? null, status: String(x.status), required: x.required ?? true })) });
+  return toSigningExecutionState(c);
+}
 
-  const statuses = required.map((s) => String(s.status));
-  if (statuses.some((s) => s === "error")) return "error";
-  if (statuses.some((s) => s === "declined")) return "declined";
-  if (statuses.some((s) => s === "cancelled")) return "cancelled";
-  if (statuses.some((s) => s === "expired")) return "expired";
-  if (statuses.every((s) => s === "signed")) return "executed";
-  if (statuses.some((s) => s === "signed")) return "partially_signed";
-  if (statuses.every((s) => s === "pending")) return "not_sent";
-  return "out_for_signature";
+/** Adapter: canonical status -> this module's display state. */
+export function toSigningExecutionState(c: CanonicalExecutionStatus): ExecutionState {
+  switch (c) {
+    case "fully_executed": return "executed";
+    case "partially_signed": case "awaiting_countersignature": return "partially_signed";
+    case "sent": return "out_for_signature";
+    case "needs_review": return "error";
+    case "declined": case "expired": case "cancelled": return c;
+    default: return "not_sent";
+  }
 }
 
 export const EXECUTION_LABELS: Record<ExecutionState, string> = {

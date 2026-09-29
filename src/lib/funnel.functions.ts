@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 async function assertReviewer(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -138,7 +139,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
       const accredited = app.accreditation_status === "approved";
       const startedSigning = signedByApp.has(app.id);
       const signed = app.documents_status === "approved";
-      const funded = app.funding_status === "settled";
+      const funded = isReconciledFunding(app.funding_status);
       const stage = funded
         ? "Funded"
         : signed
@@ -357,7 +358,7 @@ export const getBoxSigningFunnel = createServerFn({ method: "GET" })
         const wireApproved = appWires.some((w) => w.status === "approved");
         const settled =
           payments.some((p) => p.application_id === app.id && p.status === "settled") ||
-          app.funding_status === "settled";
+          isReconciledFunding(app.funding_status);
         const signedAll = requested > 0 && completed === requested;
         const lastSentAt =
           sigs

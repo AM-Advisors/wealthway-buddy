@@ -29,6 +29,7 @@ import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-porta
 import { cn } from "@/lib/utils";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
 import { CertificationsPanel, EligibilityPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? null : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -139,9 +140,9 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
         })}
         <li className="flex-1">
           <div className={cn("flex w-full flex-col items-center gap-1 rounded-md border p-2 text-center text-xs sm:text-sm", d.complete ? "border-primary bg-primary/5" : "opacity-50")}>
-            {d.fundingStatus === "funded" ? <Check className="h-4 w-4 text-primary" /> : d.complete ? <span className="text-muted-foreground">4</span> : <Lock className="h-4 w-4" />}
+            {isReconciledFunding(d.fundingStatus) ? <Check className="h-4 w-4 text-primary" /> : d.complete ? <span className="text-muted-foreground">4</span> : <Lock className="h-4 w-4" />}
             <span className="font-medium">Fund</span>
-            <span className="text-muted-foreground">{d.fundingStatus === "funded" ? "Received" : d.complete ? "To do" : "Later"}</span>
+            <span className="text-muted-foreground">{isReconciledFunding(d.fundingStatus) ? "Received" : d.complete ? "To do" : "Later"}</span>
           </div>
         </li>
       </ol>
@@ -378,8 +379,8 @@ function Completed({ d }: { d: any }) {
           <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> {acc === "not_applicable" ? "Accreditation not required" : "Accreditation complete"}</li>
           <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Documents fully executed</li>
           <li className="flex items-center gap-2">
-            {d.fundingStatus === "funded" ? <Check className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
-            {d.fundingStatus === "funded" ? "Funding received" : "Funding not yet received"}
+            {isReconciledFunding(d.fundingStatus) ? <Check className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+            {isReconciledFunding(d.fundingStatus) ? "Funding received" : "Funding not yet received"}
           </li>
         </ul>
         <p className="text-muted-foreground">

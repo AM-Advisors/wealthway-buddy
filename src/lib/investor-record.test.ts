@@ -48,7 +48,17 @@ function q(name: string) {
 }
 const authUsers: Record<string, { email: string; email_confirmed_at: string | null }> = {};
 vi.mock("@/integrations/supabase/client.server", () => ({
-  supabaseAdmin: { from: (n: string) => q(n), auth: { admin: { getUserById: async (id: string) => ({ data: { user: authUsers[id] ?? null } }) } } },
+  supabaseAdmin: {
+    from: (n: string) => q(n),
+    // In-memory Person creation lock (mirrors acquire/release_person_creation_lock).
+    rpc: async (fn: string, a: { _key: string; _token: string }) => {
+      const locks = ((globalThis as any).__personLocks ??= new Map<string, string>());
+      if (fn === "acquire_person_creation_lock") { if (locks.has(a._key)) return { data: false, error: null }; locks.set(a._key, a._token); return { data: true, error: null }; }
+      if (fn === "release_person_creation_lock") { if (locks.get(a._key) === a._token) locks.delete(a._key); return { data: null, error: null }; }
+      return { data: null, error: null };
+    },
+    auth: { admin: { getUserById: async (id: string) => ({ data: { user: authUsers[id] ?? null } }) } },
+  },
 }));
 
 const FUND_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";

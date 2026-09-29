@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 
 function money(cents?: number | null) {
@@ -221,7 +222,7 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
                         <td className="py-2 pr-3">
                           <p className="font-medium">{row.name}</p>
                           <p className="text-xs text-muted-foreground">{row.email}</p>
-                          {row.funding_status === "settled" ? (
+                          {isReconciledFunding(row.funding_status) ? (
                             <Badge variant="secondary" className="mt-1">
                               Funded
                             </Badge>

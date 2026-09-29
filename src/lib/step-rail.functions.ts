@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { regTypeLabel } from "@/lib/reg-types";
 import { activeApplicationId } from "@/lib/active-application";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 export type RailStatus = "not_started" | "in_progress" | "in_review" | "complete" | "attention";
 
@@ -253,7 +254,7 @@ export const getStepRail = createServerFn({ method: "GET" })
     }
     steps[4]!.facts = fundFacts;
     steps[4]!.status =
-      application.funding_status === "settled"
+      isReconciledFunding(application.funding_status)
         ? "complete"
         : application.funding_status === "failed" || application.funding_status === "returned"
           ? "attention"

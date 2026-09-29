@@ -5,6 +5,7 @@
  * Fund, Investor and Operations views are role-filtered projections of the same result.
  */
 import type { RequirementKey, RequirementResult, RequirementState, FundingStatus } from "@/lib/investor-onboarding-model";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 export const READINESS_RULE_VERSION = "readiness-v1";
 
@@ -233,7 +234,7 @@ function fundingItem(input: ReadinessInput, preFundingDone: boolean, blockingExc
   };
   let funding: Pick<ReadinessItem, "status" | "owner" | "action"> & { reason?: string };
   // Only reconciled cash completes funding. An investor saying "sent" never does.
-  if (f === "funded") funding = { status: "complete", owner: null, action: null };
+  if (isReconciledFunding(f)) funding = { status: "complete", owner: null, action: null };
   else if (!approved) funding = { status: "not_started", owner: null, action: null };
   else if (f === "funding_exception" || f === "returned" || f === "overfunded") funding = { status: "blocked", owner: "harmonious", action: "Resolve funding exception" };
   else if (f === "investor_reports_sent" || f === "bank_transaction_detected" || f === "reconciliation_pending" || f === "partially_funded")
@@ -279,7 +280,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
       ? { status: "blocked" as const, owner: exOwner(blockingEx[0]!.owner), action: exOwner(blockingEx[0]!.owner) === "fund_manager" ? "Resolve issue raised for the fund" : exOwner(blockingEx[0]!.owner) === "investor" ? "Resolve issue raised for the investor" : "Resolve open review issue" }
       : { status: "complete" as const, owner: null, action: null }),
   });
-  const funded = String(input.fundingStatus) === "funded";
+  const funded = isReconciledFunding(input.fundingStatus);
   items.push({
     ...cr,
     key: "acceptance",

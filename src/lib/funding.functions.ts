@@ -7,6 +7,7 @@ import { applicationIdForOffering } from "@/lib/active-application";
 const fundScope = (data: unknown) =>
   z.object({ offering_id: z.string().uuid().optional() }).parse(data ?? {});
 import { assertFundConditions } from "@/lib/fund-conditions.functions";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 export const wireSentSchema = z.object({
   expected_date: z.string().trim().min(1, "Choose the date the wire was sent"),
@@ -291,7 +292,7 @@ async function fundProgress(offeringId: string, targetCents: number | null) {
 
     return {
       investors: rows.length,
-      fundedInvestors: rows.filter((r) => r.funding_status === "settled").length,
+      fundedInvestors: rows.filter((r) => isReconciledFunding(r.funding_status)).length,
       committedCents,
       receivedCents,
       inFlightCents,

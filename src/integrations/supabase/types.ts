@@ -23874,6 +23874,24 @@ export type Database = {
           },
         ]
       }
+      person_creation_locks: {
+        Row: {
+          expires_at: string
+          holder: string
+          lock_key: string
+        }
+        Insert: {
+          expires_at: string
+          holder: string
+          lock_key: string
+        }
+        Update: {
+          expires_at?: string
+          holder?: string
+          lock_key?: string
+        }
+        Relationships: []
+      }
       person_onboarding_events: {
         Row: {
           actor_kind: string
@@ -30042,6 +30060,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      acquire_person_creation_lock: {
+        Args: { _key: string; _token: string }
+        Returns: boolean
+      }
       can_manage_diligence: { Args: { _offering_id: string }; Returns: boolean }
       can_prepare_investor: { Args: { _offering_id: string }; Returns: boolean }
       can_read_wire_instructions: {
@@ -30318,6 +30340,10 @@ export type Database = {
       register_stepup_attempt: {
         Args: { p_id: string; p_max: number; p_user_id: string }
         Returns: number
+      }
+      release_person_creation_lock: {
+        Args: { _key: string; _token: string }
+        Returns: undefined
       }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
       rename_offering: {

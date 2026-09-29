@@ -1,3 +1,4 @@
+import { canonicalExecutionStatus } from "@/lib/document-execution-status";
 /**
  * Offering Documents in Fund Setup. Staff configure; managers of the exact fund
  * read; investors see only documents that apply to their own Investment.
@@ -8,7 +9,7 @@ import { setupActor, forbid } from "@/lib/fund-setup.server";
 import {
   DOCUMENT_CATEGORY_LABELS,
   documentApplies,
-  executionState,
+  toOfferingExecutionState,
   investorDocumentAction,
   offeringDocumentsSetupStatus,
   signingConfigErrors,
@@ -199,7 +200,7 @@ async function investmentsForDocument(offeringId: string, documentId: string) {
   return list.map((r) => {
     const sig = ((sigs ?? []) as any[]).find((s) => (r.application_id && s.application_id === r.application_id) || (r.investment_profile_id && s.investment_profile_id === r.investment_profile_id));
     const rows = sig ? ((signers ?? []) as any[]).filter((x) => x.signature_id === sig.id).map((x) => ({ role: x.role_key ?? "investor", status: x.status, required: x.required })) : [];
-    const exec = sig?.provider_completed_at ? "fully_executed" : rows.length ? executionState(rows) : sig?.provider_sent_at ? "sent" : "not_sent";
+    const exec = toOfferingExecutionState(canonicalExecutionStatus({ signers: rows, providerCompleted: Boolean(sig?.provider_completed_at), providerSent: Boolean(sig?.provider_sent_at) }), rows.length > 0 || Boolean(sig?.provider_completed_at));
     return { onboardingId: r.id, executedVersion: sig?.signature_template_version ?? null, execution: exec as any, profileType: typeOf.get(r.investment_profile_id) ?? null, classKey: r.offering_class_key ?? null };
   });
 }

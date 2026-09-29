@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logReviewerActivity } from "@/lib/reviewer-activity.server";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 const CHECK_STATUSES = [
   "not_started",
@@ -61,7 +62,7 @@ export interface InvestorRow {
 
 function stepFor(app: any): string {
   if (!app) return "no_application";
-  if (app.funding_status === "settled") return "funded";
+  if (isReconciledFunding(app.funding_status)) return "funded";
   if (app.kyc_status !== "approved") return "identity";
   if (app.aml_status !== "approved") return "screening";
   if (app.accreditation_status === "review" || app.accreditation_status === "pending")

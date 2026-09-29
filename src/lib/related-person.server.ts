@@ -4,7 +4,8 @@
  * candidate details to fund managers or investors.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { classifyRelatedMatch, relatedCandidateMatches, resolutionError, type RelatedResolution } from "@/lib/related-person-model";
+import { classifyRelatedMatch, resolutionError, type RelatedResolution } from "@/lib/related-person-model";
+import { resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
 
 const db = () => supabaseAdmin as any;
 
@@ -14,23 +15,14 @@ export type RelatedPersonInput = {
   verificationStatus?: string;
 };
 
+/**
+ * Candidate discovery goes through the canonical Person Resolution Service.
+ * For related persons every non-"no match" outcome — even an exact one — opens
+ * review: matching a Person never grants authority or reuses them silently.
+ */
 async function findCandidates(input: { email?: string | null; firstName: string; lastName: string }) {
-  const ids = new Set<string>();
-  const rows: any[] = [];
-  const email = String(input.email ?? "").trim().toLowerCase();
-  if (email) {
-    const { data } = await db().from("persons").select("id, email, legal_first_name, legal_last_name").ilike("email", email).limit(10);
-    rows.push(...(data ?? []));
-  }
-  if (input.firstName.trim() && input.lastName.trim()) {
-    const { data } = await db().from("persons").select("id, email, legal_first_name, legal_last_name")
-      .ilike("legal_first_name", input.firstName.trim()).ilike("legal_last_name", input.lastName.trim()).limit(10);
-    rows.push(...(data ?? []));
-  }
-  for (const r of rows) {
-    if (relatedCandidateMatches(input, { id: r.id, email: r.email, firstName: r.legal_first_name, lastName: r.legal_last_name })) ids.add(r.id);
-  }
-  return [...ids];
+  const r = await resolvePersonServer({ email: input.email ?? null, firstName: input.firstName, lastName: input.lastName });
+  return r.candidateIds;
 }
 
 /**
@@ -39,6 +31,10 @@ async function findCandidates(input: { email?: string | null; firstName: string;
  * reusing or merging. Returns only a neutral flag to the caller.
  */
 export async function addRelatedPerson(input: RelatedPersonInput): Promise<{ relationshipId: string; underReview: boolean }> {
+  return withPersonCreationLock({ email: input.email ?? null, firstName: input.firstName, lastName: input.lastName }, () => addRelatedPersonLocked(input));
+}
+
+async function addRelatedPersonLocked(input: RelatedPersonInput): Promise<{ relationshipId: string; underReview: boolean }> {
   const candidates = await findCandidates(input);
   const kind = classifyRelatedMatch(candidates);
   const email = input.email ? String(input.email).trim().toLowerCase() : null;

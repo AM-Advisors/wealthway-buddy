@@ -1,8 +1,10 @@
+import { canonicalExecutionStatus } from "@/lib/document-execution-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { regTypeLabel } from "@/lib/reg-types";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 /**
  * One fund, seen by the manager who runs it: how far setup has got,
@@ -442,7 +444,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
         const inv = list.find((r) => r.role_key === "investor"); const fm = list.find((r) => r.role_key === "fund_manager");
         if (!fm) continue;
         const d = docMap.get(fm.offering_document_id);
-        const st = countersignState({ mode: "dual", providerStatus: inv?.status === "signed" && fm.status === "signed" ? "completed" : "in_progress",
+        const st = countersignState({ mode: "dual", providerStatus: canonicalExecutionStatus({ signers: list.map((r: any) => ({ role: r.role_key, status: String(r.status) })) }) === "fully_executed" ? "completed" : "in_progress",
           investorSigned: inv?.status === "signed", managerSigned: fm.status === "signed", countersignerUserId: d?.countersigner_user_id ?? null,
           viewerUserId: userId, viewerManagesFund: !!iManage });
         const prev = countersignByApp.get(fm.application_id);
@@ -451,7 +453,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
     }
 
     function stageOf(app: any) {
-      if (app.funding_status === "settled") return "complete";
+      if (isReconciledFunding(app.funding_status)) return "complete";
       if (app.kyc_status !== "approved" || app.aml_status !== "approved") return "identity";
       if (app.accreditation_status !== "approved") return "accreditation";
       if (app.documents_status !== "approved") return "documents";

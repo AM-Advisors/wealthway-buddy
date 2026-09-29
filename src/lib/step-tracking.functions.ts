@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { activeApplicationId } from "@/lib/active-application";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 export const STEP_KEYS = ["kyc", "aml", "accreditation", "documents", "funding"] as const;
 export type StepKey = (typeof STEP_KEYS)[number];
@@ -87,7 +88,7 @@ function isDone(step: StepKey, app: any) {
     case "documents":
       return app.documents_status === "approved";
     case "funding":
-      return app.funding_status === "settled";
+      return isReconciledFunding(app.funding_status);
   }
 }
 

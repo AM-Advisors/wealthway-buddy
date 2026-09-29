@@ -12,11 +12,13 @@ import {
 } from "@/lib/investor-onboarding.server";
 import {
   type EntrySource, type ProfileType, type BulkPreviewRow, type PersonCandidate,
-  canManageFundRecords, sanitizePatch, sourceFor, rankMatches, createNewBlocker, validateQuickAdd, isProfileType,
+  canManageFundRecords, sanitizePatch, sourceFor, rankMatches, validateQuickAdd, isProfileType,
   dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, claimState, CLAIM_STATE_LABELS, sameValue, isMaterial,
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
   planIncoming, PROFILE_TYPE_LABELS, planClaim,
 } from "@/lib/investor-record-model";
+import { personCreationBlocker } from "@/lib/person-resolution";
+import { findPersonCandidates, resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
 
 const db = () => supabaseAdmin as any;
 const nowIso = () => new Date().toISOString();
@@ -48,24 +50,9 @@ async function onbEvent(onboardingId: string | null, offeringId: string, event: 
 /* ---------------------------------------------------------------- search */
 
 async function candidates(offeringId: string, q: { email?: string | null; name?: string | null; entityName?: string | null }): Promise<(PersonCandidate & { address?: string | null })[]> {
-  const ids = new Set<string>();
-  const email = normEmail(q.email);
-  if (email) {
-    const { data } = await db().from("persons").select("id").ilike("email", email).limit(10);
-    (data ?? []).forEach((p: any) => ids.add(p.id));
-  }
-  const name = String(q.name ?? "").trim();
-  if (name.includes(" ")) {
-    const first = name.split(/\s+/)[0]!, last = name.slice(name.indexOf(" ") + 1);
-    const { data } = await db().from("persons").select("id").ilike("legal_first_name", first).ilike("legal_last_name", last).limit(10);
-    (data ?? []).forEach((p: any) => ids.add(p.id));
-  }
-  const entity = String(q.entityName ?? "").trim();
-  if (entity) {
-    const { data } = await db().from("investment_profiles").select("person_id").ilike("legal_name", entity).not("person_id", "is", null).limit(10);
-    (data ?? []).forEach((p: any) => ids.add(p.person_id));
-  }
-  return loadCandidates([...ids], offeringId);
+  // Candidate discovery is the canonical Person Resolution finder.
+  const found = await findPersonCandidates({ email: q.email ?? null, fullName: q.name ?? null, entityName: q.entityName ?? null });
+  return loadCandidates(found.map((c) => c.id), offeringId);
 }
 
 async function loadCandidates(personIds: string[], offeringId: string) {
@@ -145,13 +132,18 @@ export async function createInvestor(userId: string, input: {
   } else {
     const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
     if (errs.length) fail(errs[0]!);
-    const matches = rankMatches({ email: input.person.email ?? null }, await candidates(input.offeringId, { email: input.person.email ?? null }));
-    const blocker = createNewBlocker(matches, Boolean(input.confirmedNew));
-    if (blocker) fail(blocker);
+    // Canonical Person Resolution: email is a signal, not identity. Re-checked
+    // inside the creation lock so concurrent saves can't both create.
+    const signals = { email: input.person.email ?? null, firstName: input.person.firstName ?? null, lastName: input.person.lastName ?? null };
     const row = personRow(input.person, actor);
-    const { data, error } = await db().from("persons").insert({ ...row, user_id: null, entry_source: source, created_by: actor.userId, onboarding_state: "account_created" }).select("*").single();
-    if (error) fail(error.message);
-    person = data;
+    person = await withPersonCreationLock(signals, async () => {
+      const resolution = await resolvePersonServer(signals);
+      const blocker = personCreationBlocker(resolution, Boolean(input.confirmedNew));
+      if (blocker) fail(blocker);
+      const { data, error } = await db().from("persons").insert({ ...row, user_id: null, entry_source: source, created_by: actor.userId, onboarding_state: "account_created" }).select("*").single();
+      if (error) fail(error.message);
+      return data;
+    });
     changes.push(...Object.entries(row).map(([f, v]) => ({ offeringId: input.offeringId, onboardingId: null, table: "persons", id: person.id, field: f, from: null, to: v, source, actor: actor.userId })));
   }
 
@@ -469,7 +461,10 @@ export async function bulkPreview(userId: string, input: { offeringId: string; c
   if (!rows.length) fail("The file has no investor rows.");
   const emails = [...new Set(rows.map((r) => normEmail(r.email)).filter(Boolean))];
   const { data: ps } = emails.length ? await db().from("persons").select("id").in("email", emails) : { data: [] };
-  const people = await loadCandidates(((ps ?? []) as any[]).map((p) => p.id), input.offeringId);
+  // Email is a signal, not identity: also surface same-legal-name People for review.
+  const lastNames = [...new Set(rows.map((r) => String(r.last_name ?? "").trim()).filter(Boolean))].slice(0, 500);
+  const { data: byName } = lastNames.length ? await db().from("persons").select("id").in("legal_last_name", lastNames).limit(2000) : { data: [] };
+  const people = await loadCandidates([...new Set([...(ps ?? []), ...(byName ?? [])].map((p: any) => p.id))], input.offeringId);
   const preview = classifyBulk(rows, people);
   // Staff see matches as masked emails only; managers additionally never see existing names.
   const { data: staged, error } = await db().from("investor_bulk_imports").insert({ offering_id: input.offeringId, created_by: actor.userId, status: "previewed", rows: preview, summary: bulkSummary(preview) }).select("id").single();

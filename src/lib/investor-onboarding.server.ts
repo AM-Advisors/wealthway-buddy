@@ -61,6 +61,7 @@ import {
   isInvestmentProfileType,
   type InvestmentProfileType,
 } from "@/lib/identity-model";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 const db = () => supabaseAdmin as any;
 const nowIso = () => new Date().toISOString();
@@ -1071,7 +1072,7 @@ export async function reviewDetail(userId: string, onboardingId: string) {
     approvedToFundAt: row.approved_to_fund_at,
     openBlockingExceptions: blocking,
     fundingStatus: row.funding_status,
-    fundingReconciled: row.funding_status === "funded",
+    fundingReconciled: isReconciledFunding(row.funding_status),
     acceptedAt: row.accepted_at,
     acceptedAmountCents: row.accepted_amount_cents,
   });
@@ -1398,7 +1399,7 @@ export async function closeInvestment(userId: string, input: { onboardingId: str
     approvedToFundAt: row.approved_to_fund_at,
     openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length,
     fundingStatus: row.funding_status,
-    fundingReconciled: row.funding_status === "funded",
+    fundingReconciled: isReconciledFunding(row.funding_status),
     acceptedAt: row.accepted_at,
     acceptedAmountCents: row.accepted_amount_cents,
   });

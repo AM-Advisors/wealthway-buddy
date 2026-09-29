@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { isReconciledFunding } from "@/lib/funding-status";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -87,7 +88,7 @@ export function InvestorOnboardingJourney({
   if (!d) return <p className="text-sm text-muted-foreground">This investment is not available.</p>;
   const current = active ?? openableStep(steps, requestedStep);
   const amount = d.acceptedAmountCents ?? d.requestedAmountCents;
-  const complete = d.fundingStatus === "funded";
+  const complete = isReconciledFunding(d.fundingStatus);
 
   return (
     <div className="space-y-6">
