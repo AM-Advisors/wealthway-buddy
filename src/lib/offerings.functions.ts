@@ -106,6 +106,8 @@ const offeringSchema = z.object({
   wire_instructions: wireSchema,
   client_id: z.string().uuid().nullable().optional(),
   sow_id: z.string().uuid().nullable().optional(),
+  /** Staff confirmed a similar-named Fund is a genuinely distinct legal entity. */
+  distinct_confirmed: z.boolean().optional(),
 });
 
 
