@@ -62,7 +62,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
   const current = versions.find((v) => v.status === "draft") ?? versions.find((v) => v.status === "approved") ?? null;
   const approved = versions.find((v) => v.status === "approved") ?? null;
   const terms = ((current?.terms ?? {}) as EconomicTerms) || ({} as EconomicTerms);
-  const classes = ((current?.classes ?? []) as FundClass[]) ?? [];
+  const classes = (current?.classes ?? []) as FundClass[];
 
   // Signatory candidates: canonical Persons of this fund's assigned managers only.
   const managerIds = ((managers.data ?? []) as any[]).map((m) => m.user_id);
@@ -199,10 +199,10 @@ async function ensureSetup(userId: string, offeringId: string, fundType: string 
 
 export async function saveFundSetupFields(
   userId: string,
-  input: { offeringId: string; fields: Record<string, unknown>; setupFields?: { fiscalYearEnd?: string | null; fundTermMonths?: number | null; investmentPeriodMonths?: number | null } },
+  input: { offeringId: string; fields: Record<string, unknown>; setupFields?: { fiscalYearEnd?: string | null | undefined; fundTermMonths?: number | null | undefined; investmentPeriodMonths?: number | null | undefined } | undefined },
 ) {
   await assertStaffFor(userId, input.offeringId);
-  const update: Record<string, unknown> = {};
+  const update: any = {};
   for (const [k, v] of Object.entries(input.fields)) {
     const col = OFFERING_FIELDS[k];
     if (!col) throw new Error(`"${k}" cannot be changed here.`);
@@ -221,7 +221,7 @@ export async function saveFundSetupFields(
   if (input.setupFields && Object.keys(input.setupFields).length) {
     const { data: o } = await db().from("offerings").select("fund_type").eq("id", input.offeringId).maybeSingle();
     const setup = await ensureSetup(userId, input.offeringId, o?.fund_type ?? null);
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const patch: any = { updated_at: new Date().toISOString() };
     if ("fiscalYearEnd" in input.setupFields) patch.fiscal_year_end = input.setupFields.fiscalYearEnd || null;
     if ("fundTermMonths" in input.setupFields) patch.fund_term_months = input.setupFields.fundTermMonths ?? null;
     if ("investmentPeriodMonths" in input.setupFields) patch.investment_period_months = input.setupFields.investmentPeriodMonths ?? null;
@@ -239,7 +239,7 @@ export async function previewLegalNameChange(userId: string, offeringId: string,
 /** The only path that changes the canonical Legal Name; history is written by the database. */
 export async function changeLegalName(
   userId: string,
-  input: { offeringId: string; legalName: string; effectiveDate?: string | null; reason?: string | null },
+  input: { offeringId: string; legalName: string; effectiveDate?: string | null | undefined; reason?: string | null | undefined },
 ) {
   await assertStaffFor(userId, input.offeringId);
   const name = input.legalName.trim();
