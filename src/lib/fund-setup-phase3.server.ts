@@ -250,6 +250,7 @@ async function addControlledDoc(userId: string, offeringId: string, docType: str
   if (!sid) throw new Error("Save the Fund Details first so a setup record exists.");
   const existing = await controlledDocs(offeringId, docType);
   const current = existing.find((d) => d.is_current);
+  if (current) await db().from("fund_setup_documents").update({ is_current: false }).eq("id", current.id);
   const { data, error } = await db().from("fund_setup_documents").insert({
     setup_id: sid,
     doc_type: docType,
@@ -264,7 +265,6 @@ async function addControlledDoc(userId: string, offeringId: string, docType: str
     supersedes_id: current?.id ?? null,
   }).select("id").single();
   if (error) throw new Error(error.message);
-  if (current) await db().from("fund_setup_documents").update({ is_current: false }).eq("id", current.id);
   return data.id;
 }
 
@@ -369,7 +369,7 @@ async function classFacts(onboardingId: string) {
   const { data: docs } = await db().from("offering_documents").select("id").eq("offering_id", row.offering_id).not("active_version", "is", null);
   const ors = [row.application_id && `application_id.eq.${row.application_id}`, row.investment_profile_id && `investment_profile_id.eq.${row.investment_profile_id}`].filter(Boolean).join(",");
   const { count: signed } = ors
-    ? await db().from("document_signatures").select("id", { count: "exact", head: true }).eq("offering_id", row.offering_id).or(ors).not("provider_completed_at", "is", null)
+    ? await db().from("document_signatures").select("id", { count: "exact", head: true }).or(ors).not("provider_completed_at", "is", null)
     : { count: 0 };
   return {
     row,
