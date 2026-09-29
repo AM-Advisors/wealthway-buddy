@@ -434,12 +434,13 @@ export const removeDiligenceDocument = createServerFn({ method: "POST" })
       throw new Error("You do not have permission to remove this document.");
     }
 
-    const { deleteBoxFile } = await import("@/lib/box.server");
-    await deleteBoxFile(doc.box_file_id);
-
-    const { error } = await supabase.from("diligence_documents").delete().eq("id", doc.id);
+    // Archive, never destroy: metadata, version, Box file and provenance are preserved.
+    const { error } = await supabase
+      .from("diligence_documents")
+      .update({ archived_at: new Date().toISOString(), archived_by: context.userId } as any)
+      .eq("id", doc.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, archived: true };
   });
 
 export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
