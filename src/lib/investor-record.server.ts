@@ -446,6 +446,7 @@ export async function resolveSuggestion(userId: string, input: { id: string; act
   const { actor, role } = await assertOnboardingAccess(userId, s.onboarding_id);
   if (role !== "staff") forbid("only Harmonious reviewers can resolve information conflicts.");
   if (s.status === "accepted" || s.status === "rejected") return { status: s.status };
+  if (s.field === "account_link" && input.action === "accept") return linkPreparedAccount(userId, s.id);
   if (input.action === "accept") {
     const table = APPLY_TABLES[s.subject_table]; if (!table) fail("Unsupported field.");
     const { data: cur } = await db().from(table).select(s.field).eq("id", s.subject_id).maybeSingle();
@@ -531,29 +532,67 @@ export async function bulkCancel(userId: string, importId: string) {
  * Links only when exactly one unclaimed Person has this verified email and the
  * user has no Person yet; anything ambiguous goes to Harmonious review.
  */
-export async function claimPreparedRecords(userId: string): Promise<{ claimed: boolean; review?: boolean }> {
+export async function claimPreparedRecords(userId: string): Promise<{ claimed: boolean; review?: boolean; reviewOfferingIds?: string[] }> {
   const { data: me } = await db().auth.admin.getUserById(userId);
   const email = normEmail(me?.user?.email);
-  if (!email || !me?.user?.email_confirmed_at) return { claimed: false };
-  const { data: unclaimed } = await db().from("persons").select("id").is("user_id", null).ilike("email", email).limit(3);
+  const { data: unclaimed } = email ? await db().from("persons").select("id").is("user_id", null).ilike("email", email).limit(5) : { data: [] };
   const list = (unclaimed ?? []) as any[];
-  if (!list.length) return { claimed: false };
-  const { data: own } = await db().from("persons").select("id").eq("user_id", userId).maybeSingle();
-  if (own || list.length > 1) {
-    const { data: onb } = await db().from("investor_onboardings").select("id, offering_id").in("person_id", list.map((p) => p.id)).is("investor_user_id", null).limit(10);
-    for (const o of (onb ?? []) as any[]) {
+  const { data: own } = list.length ? await db().from("persons").select("id").eq("user_id", userId).maybeSingle() : { data: null };
+  const plan = planClaim({ emailVerified: Boolean(email && me?.user?.email_confirmed_at), unclaimedCandidateIds: list.map((p) => p.id), ownPersonId: (own as any)?.id ?? null });
+  if (plan.kind === "none") return { claimed: false };
+  if (plan.kind === "review") {
+    // Never merge and never duplicate: open one Harmonious resolution item per prepared investment.
+    const { data: onb } = await db().from("investor_onboardings").select("id, offering_id").in("person_id", plan.candidateIds).is("investor_user_id", null).is("removed_at", null).limit(10);
+    const rows = (onb ?? []) as any[];
+    for (const o of rows) {
       const { data: exists } = await db().from("investor_record_suggestions").select("id").eq("onboarding_id", o.id).eq("field", "account_link").in("status", ["open", "review_later"]).limit(1);
-      if (!(exists ?? []).length) await db().from("investor_record_suggestions").insert({ offering_id: o.offering_id, onboarding_id: o.id, subject_table: "persons", subject_id: own?.id ?? null, field: "account_link", current_value: null, proposed_value: { userId }, source: "provider", proposed_by: null });
+      if (!(exists ?? []).length) await db().from("investor_record_suggestions").insert({ offering_id: o.offering_id, onboarding_id: o.id, subject_table: "persons", subject_id: (own as any)?.id ?? null, field: "account_link", current_value: null, proposed_value: { userId, email, reason: (own as any)?.id ? "account_already_has_person" : "multiple_prepared_people", candidates: plan.candidateIds.length }, source: "provider", proposed_by: null });
     }
-    return { claimed: false, review: true };
+    return { claimed: false, review: true, reviewOfferingIds: [...new Set(rows.map((o) => o.offering_id as string))] };
   }
-  const personId = list[0].id as string;
+  const personId = plan.personId;
   const { error } = await db().from("persons").update({ user_id: userId, updated_at: nowIso() }).eq("id", personId).is("user_id", null);
   if (error) return { claimed: false };
   await db().from("investment_profiles").update({ owner_user_id: userId }).eq("person_id", personId).is("owner_user_id", null);
   const { data: onbs } = await db().from("investor_onboardings").update({ investor_user_id: userId }).eq("person_id", personId).is("investor_user_id", null).select("id, offering_id");
   await logChanges(((onbs ?? []) as any[]).map((o) => ({ offeringId: o.offering_id, onboardingId: o.id, table: "persons", id: personId, field: "claimed", from: null, to: "account_linked", source: "investor" as EntrySource, actor: userId })));
   return { claimed: true };
+}
+
+/**
+ * Harmonious resolves an ambiguous match for one prepared investment by
+ * explicitly linking it to the signed-in account. Staff-only, one investment
+ * at a time, logged; never deletes or merges Person records.
+ */
+export async function linkPreparedAccount(staffUserId: string, suggestionId: string) {
+  const { data: s } = await db().from("investor_record_suggestions").select("*").eq("id", suggestionId).maybeSingle();
+  if (!s || s.field !== "account_link") fail("That resolution item was not found.");
+  const { actor, role, row } = await assertOnboardingAccess(staffUserId, s.onboarding_id);
+  if (role !== "staff") forbid("only Harmonious can link an investor account to a prepared investment.");
+  if (s.status === "accepted" || s.status === "rejected") return { status: s.status as string };
+  const userId = String((s.proposed_value as any)?.userId ?? "");
+  if (!userId) fail("This item has no account to link.");
+  if (row.investor_user_id && row.investor_user_id !== userId) fail("This investment already belongs to a different account.");
+  const { data: dup } = await db().from("investor_onboardings").select("id").eq("offering_id", row.offering_id).eq("investor_user_id", userId).neq("id", row.id).not("stage", "in", "(closed,declined,cancelled)").limit(1);
+  if ((dup ?? []).length) fail("This account already has an open investment in this Fund. Resolve that one first.");
+  const { data: own } = await db().from("persons").select("id").eq("user_id", userId).maybeSingle();
+  const changes: Change[] = [];
+  if (own && row.person_id && own.id !== row.person_id) {
+    // Account already has its own Person: move only this investment (and its prepared profile) onto it.
+    await db().from("investor_onboardings").update({ person_id: own.id, investor_user_id: userId }).eq("id", row.id);
+    if (row.investment_profile_id) await db().from("investment_profiles").update({ person_id: own.id, owner_user_id: userId }).eq("id", row.investment_profile_id).is("owner_user_id", null);
+    changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investor_onboardings", id: row.id, field: "person_id", from: row.person_id, to: own.id, source: "harmonious", actor: actor.userId });
+  } else if (row.person_id) {
+    const { error } = await db().from("persons").update({ user_id: userId, updated_at: nowIso() }).eq("id", row.person_id).is("user_id", null);
+    if (error) fail(error.message);
+    await db().from("investor_onboardings").update({ investor_user_id: userId }).eq("id", row.id);
+    if (row.investment_profile_id) await db().from("investment_profiles").update({ owner_user_id: userId }).eq("id", row.investment_profile_id).is("owner_user_id", null);
+  } else fail("This investment has no prepared person to link.");
+  changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "persons", id: own?.id ?? row.person_id, field: "claimed", from: null, to: "account_linked_by_harmonious", source: "harmonious", actor: actor.userId });
+  await logChanges(changes);
+  await db().from("investor_record_suggestions").update({ status: "accepted", resolved_by: actor.userId, resolved_at: nowIso() }).eq("id", s.id);
+  await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "account_link_resolved" });
+  return { status: "accepted" };
 }
 
 const INVESTOR_EDITABLE = ["preferred_name", "phone", "address_line1", "address_line2", "city", "region", "postal_code", "country", "mailing_address"];
