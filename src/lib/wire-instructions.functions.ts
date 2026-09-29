@@ -70,9 +70,11 @@ export const saveManagedWireInstructions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => wireSchema.parse(data))
   .handler(async ({ context, data }) => {
-    const { isAdmin, offeringIds } = await managedOfferingIds(context.supabase, context.userId);
-    if (!isAdmin && !(offeringIds ?? []).includes(data.offering_id)) {
-      throw new Error("Forbidden: you are not assigned to this fund.");
+    const { isAdmin } = await managedOfferingIds(context.supabase, context.userId);
+    // Banking is entered by Harmonious in Fund Setup (versioned, maker-checker).
+    // Fund Managers see a masked summary only and cannot write bank details.
+    if (!isAdmin) {
+      throw new Error("Bank details are entered and verified by Harmonious. Contact your Harmonious team to change them.");
     }
 
     const next = Object.fromEntries(
