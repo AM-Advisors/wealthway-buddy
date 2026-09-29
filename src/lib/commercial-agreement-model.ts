@@ -103,7 +103,8 @@ export function commercialAgreementStatus(structure: ContractStructure, msa: Doc
 
 /** What a client/fund manager sees — non-disruptive and free of internal notes. */
 export function clientAgreementNotice(s: Pick<CommercialAgreementStatus, "overall">): { title: string; body: string } | null {
-  if (s.overall === "complete") return null;
+  // "Setup needs review" is an internal Harmonious item; clients see nothing for it.
+  if (s.overall !== "follow_up") return null;
   return {
     title: "Agreement requires attention",
     body: "Your Harmonious agreement has not yet been completed. You may continue using the workspace while this is resolved.",
