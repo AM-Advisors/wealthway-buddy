@@ -22,7 +22,7 @@ const related = z.array(z.object({ firstName: z.string().max(120), lastName: z.s
 
 export const searchInvestorsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, email: str, name: str, entityName: str }).parse)
-  .handler(async ({ data, context }) => (await srv()).searchInvestors(context.userId, data));
+  .handler(async ({ data, context }) => (await srv()).searchInvestors(context.userId, data as any));
 
 export const createInvestorFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({
@@ -37,7 +37,7 @@ export const updateInvestorRecordFn = createServerFn({ method: "POST" }).middlew
 
 export const removeFromFundFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: uuid, reason: str }).parse)
-  .handler(async ({ data, context }) => (await srv()).removeFromFund(context.userId, data));
+  .handler(async ({ data, context }) => (await srv()).removeFromFund(context.userId, data as any));
 
 export const fundInvestorRecordsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid }).parse)
@@ -53,7 +53,7 @@ export const resolveSuggestionFn = createServerFn({ method: "POST" }).middleware
 
 export const bulkPreviewFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, csv: z.string().max(500_000) }).parse)
-  .handler(async ({ data, context }) => (await srv()).bulkPreview(context.userId, data));
+  .handler(async ({ data, context }) => JSON.parse(JSON.stringify(await (await srv()).bulkPreview(context.userId, data))) as { importId: string; summary: Record<string, number>; rows: { index: number; cls: string; errors: string[]; name: string; email: string; amount: string; conflicts: { field: string; current: string | number | null; proposed: string | number | null }[] }[] });
 
 export const bulkCommitFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ importId: uuid, decisions: z.record(z.string(), z.enum(["keep", "use_imported", "later"])).optional() }).parse)
