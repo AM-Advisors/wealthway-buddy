@@ -27,6 +27,7 @@ export type SignoffItem = {
   clientId: string | null;
   clientName: string | null;
   fundName: string | null;
+  offeringId: string | null;
   amountCents: number | null;
   raisedByName: string | null;
   raisedAt: string | null;
@@ -41,7 +42,8 @@ const OPEN_SERVICE = ["requested", "in_review", "quoted", "signed"];
 /** The four queues: extra services, wire requests, agreements and invoice queries. */
 export const listSignoffQueue = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid().optional() }).optional().parse(d))
+  .handler(async ({ context, data: input }) => {
     const who = await whoIs(context);
     if (!who.isStaff) throw new Error("Forbidden: this area is for the Harmonious team.");
     const { supabase } = context;
@@ -96,7 +98,6 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
         [
           ...((services ?? []) as any[]).map((r) => r.requested_by),
           ...((wires ?? []) as any[]).map((w) => w.requested_by),
-          ...((sows ?? []) as any[]).map((s) => s.signed_by),
           ...((invoices ?? []) as any[]).map((i) => i.client_approved_by),
         ].filter(Boolean),
       ),
@@ -138,6 +139,7 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
         clientId: (r.client_id as string) ?? null,
         clientName: clientName.get(r.client_id) ?? null,
         fundName: r.offering_id ? ((fund.get(r.offering_id) as any)?.name ?? null) : null,
+        offeringId: (r.offering_id as string) ?? null,
         amountCents: (r.proposed_fee_cents as number) ?? null,
         raisedByName: person.get(r.requested_by) ?? null,
         raisedAt: (r.created_at as string) ?? null,
@@ -157,6 +159,7 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
         clientId: f?.client_id ?? null,
         clientName: f?.client_id ? (clientName.get(f.client_id) ?? null) : null,
         fundName: f?.name ?? null,
+        offeringId: (w.offering_id as string) ?? null,
         amountCents: (w.amount_cents as number) ?? null,
         raisedByName: person.get(w.requested_by) ?? null,
         raisedAt: (w.created_at as string) ?? null,
@@ -171,13 +174,14 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
         title: (s.title as string) ?? "Statement of work",
         detail:
           s.client_status === "signed"
-            ? `Signed by ${s.client_signature_name ?? person.get(s.signed_by) ?? "the client"}${s.signed_on ? ` on ${s.signed_on}` : ""}.`
+            ? `Signed by ${s.signed_by || s.client_signature_name || "the client"}${s.signed_on ? ` on ${s.signed_on}` : ""}.`
             : s.client_status === "sent_back"
               ? "The client sent this back for changes."
               : "The client has not signed this yet.",
         clientId: (s.client_id as string) ?? null,
         clientName: clientName.get(s.client_id) ?? null,
         fundName: s.offering_id ? ((fund.get(s.offering_id) as any)?.name ?? null) : null,
+        offeringId: (s.offering_id as string) ?? null,
         amountCents: null,
         raisedByName: person.get(s.signed_by) ?? null,
         raisedAt: (s.signed_on as string) ?? (s.created_at as string) ?? null,
@@ -192,17 +196,20 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
       clientId: (i.client_id as string) ?? null,
       clientName: clientName.get(i.client_id) ?? null,
       fundName: i.offering_id ? ((fund.get(i.offering_id) as any)?.name ?? null) : null,
+      offeringId: (i.offering_id as string) ?? null,
       amountCents: (i.total_cents as number) ?? null,
       raisedByName: person.get(i.client_approved_by) ?? null,
       raisedAt: (i.updated_at as string) ?? null,
     }));
 
+    const only = (items: SignoffItem[]) =>
+      input?.offeringId ? items.filter((i) => i.offeringId === input.offeringId) : items;
     return {
       canManage: who.canManage,
-      services: serviceItems,
-      wires: wireItems,
-      sows: sowItems,
-      invoices: invoiceItems,
+      services: only(serviceItems),
+      wires: only(wireItems),
+      sows: only(sowItems),
+      invoices: only(invoiceItems),
     };
   });
 

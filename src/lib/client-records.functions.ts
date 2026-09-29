@@ -33,7 +33,7 @@ export const getClientRecords = createServerFn({ method: "GET" })
       context.supabase
         .from("client_sows")
         .select(
-          "id, title, status, approval_status, client_signed_at, client_signed_name, signed_on, effective_date, document_path",
+          "id, title, status, approval_status, client_signed_at, client_signature_name, signed_by, signed_on, effective_date, document_path",
         )
         .eq("client_id", clientId)
         .order("created_at", { ascending: false }),
@@ -54,7 +54,7 @@ export const getClientRecords = createServerFn({ method: "GET" })
           kind: "agreement" as const,
           title: (s.title as string) ?? "Statement of work",
           signedAt: (s.client_signed_at as string) ?? (s.signed_on as string) ?? null,
-          signedBy: (s.client_signed_name as string) ?? null,
+          signedBy: ((s.signed_by || s.client_signature_name) as string) ?? null,
           state:
             s.approval_status === "approved"
               ? "Approved by Harmonious"
