@@ -224,6 +224,6 @@ export const FUNDING_STATE_LABELS: Record<FundingState, string> = {
 export function fundingStateOf(f: InvestmentFact): FundingState {
   if (isFunded(f)) return "funded";
   if (!f.approved) return "not_ready";
-  if (f.fundingStatus && f.fundingStatus !== "not_started" && f.fundingStatus !== "awaiting_funds") return "funding_pending";
+  if (f.fundingStatus && f.fundingStatus !== "not_funded") return "funding_pending";
   return "ready_to_fund";
 }
