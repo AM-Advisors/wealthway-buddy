@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getFundAgreement } from "@/lib/fund-sow.functions";
 import { getFundAgreementNotice } from "@/lib/commercial-agreements.functions";
 import { CommercialAgreementCard } from "@/components/commercial-agreement-card";
+import { ServicesPricingCard } from "@/components/services-pricing-card";
 
 /**
  * Harmonious commercial agreement for a fund. Never blocks the fund: staff see
@@ -22,6 +23,7 @@ export function FundAgreementGate({ fundId }: { fundId: string }) {
   if (data.canSee) {
     return (
       <div className="space-y-2">
+        <ServicesPricingCard fundId={fundId} />
         <CommercialAgreementCard offeringId={fundId} />
         <Button asChild size="sm" variant="ghost">
           <Link to="/admin/pricing">Open agreements</Link>
@@ -29,7 +31,12 @@ export function FundAgreementGate({ fundId }: { fundId: string }) {
       </div>
     );
   }
-  return <ClientAgreementNotice fundId={fundId} />;
+  return (
+    <div className="space-y-2">
+      <ServicesPricingCard fundId={fundId} />
+      <ClientAgreementNotice fundId={fundId} />
+    </div>
+  );
 }
 
 export function ClientAgreementNotice({ fundId }: { fundId: string }) {

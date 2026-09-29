@@ -33,8 +33,8 @@ export function CommercialAgreementCard({ clientId, offeringId }: { clientId?: s
     <Card>
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">Agreement Status</CardTitle>
-          <Badge variant={tone as any}>{s.overallLabel}</Badge>
+          <CardTitle className="text-base">Client MSA</CardTitle>
+          <Badge variant={tone as any}>{s.overall === "complete" ? s.overallLabel : "MSA Follow-Up Required"}</Badge>
         </div>
         {s.supporting ? <CardDescription>{s.supporting}</CardDescription> : null}
       </CardHeader>
