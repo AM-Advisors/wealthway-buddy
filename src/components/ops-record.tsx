@@ -1,3 +1,4 @@
+import { CommercialAgreementCard } from "@/components/commercial-agreement-card";
 import { ClientContractsPanel } from "@/components/client-contracts";
 import { InvestorDriveIntakeCard } from "@/components/investor-drive-intake";
 import { ClientFundsPanel, ClientOverviewActions, ClientPeoplePanel, ClientServicesPricingPanel } from "@/components/client-admin";
@@ -348,6 +349,8 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         {type === "client" ? (
           <ClientOverviewActions clientId={id} goTo={(tab) => navigate({ to: ".", search: { tab } as any })} />
         ) : null}
+        {type === "client" ? <CommercialAgreementCard clientId={id} /> : null}
+        {type === "fund" ? <CommercialAgreementCard offeringId={id} /> : null}
         {type === "fund" ? <DriveStatusCard offeringId={id} /> : null}
         {type === "investor" ? <DriveInvestorCard investorUserId={id} /> : null}
         {type === "fund" ? <DriveImportsCard offeringId={id} /> : null}
