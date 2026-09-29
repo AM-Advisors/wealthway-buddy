@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
 import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
-import { OperationsBanking, OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
+import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
@@ -45,9 +45,7 @@ function FundSetupDetail() {
           <FundSetupCanonical offeringId={fundId} />
         </SetupRequirementsProvider>
       )}
-      {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="Banking, EIN and tax">
-        <h2 className="font-heading text-xl font-semibold">Banking</h2>
-        <OperationsBanking fundId={fundId} />
+      {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="EIN, tax and sign-off">
         <h2 className="font-heading text-xl font-semibold">EIN and Form SS-4</h2>
         <OperationsSs4 fundId={fundId} />
         <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
