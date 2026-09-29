@@ -226,7 +226,7 @@ export async function saveBankDetails(sb: any, userId: string, input: { offering
 
 export async function attachWireDocument(sb: any, userId: string, input: { offeringId: string; version: number; filePath: string }) {
   await assertStaff(userId, input.offeringId);
-  if (!input.filePath.startsWith(`${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
+  if (!input.filePath.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
   const docId = await addControlledDoc(userId, input.offeringId, "wire_instructions", "Wire Instructions", input.filePath);
   const { error } = await sb.rpc("review_bank_instruction_version", { p_offering_id: input.offeringId, p_version: input.version, p_decision: "attach_document", p_method: null, p_note: null, p_wire_document_id: docId });
   if (error) throw new Error(error.message);
@@ -290,7 +290,7 @@ async function writeEntity(sb: any, offeringId: string, patch: { ein?: string; s
 export async function recordEin(sb: any, userId: string, input: { offeringId: string; ein: string; letterPath: string; received: boolean }) {
   await assertStaff(userId, input.offeringId);
   if (!validEin(input.ein)) throw new Error("Enter the 9-digit EIN exactly as it appears on the IRS letter.");
-  if (!input.letterPath.startsWith(`${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
+  if (!input.letterPath.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
   const o = await offering(input.offeringId);
   if (input.received && o.ein_workflow_status !== "submitted" && o.ein_workflow_status !== "needs_attention") {
     throw new Error("Mark the SS-4 as submitted before recording the EIN the IRS issued.");
