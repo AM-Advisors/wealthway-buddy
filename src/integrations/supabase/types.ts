@@ -5690,6 +5690,7 @@ export type Database = {
           billing_contact_name: string | null
           client_type: string | null
           contract_choice: string | null
+          contract_structure: string
           created_at: string
           created_by: string | null
           dba_name: string | null
@@ -5725,6 +5726,7 @@ export type Database = {
           billing_contact_name?: string | null
           client_type?: string | null
           contract_choice?: string | null
+          contract_structure?: string
           created_at?: string
           created_by?: string | null
           dba_name?: string | null
@@ -5760,6 +5762,7 @@ export type Database = {
           billing_contact_name?: string | null
           client_type?: string | null
           contract_choice?: string | null
+          contract_structure?: string
           created_at?: string
           created_by?: string | null
           dba_name?: string | null
@@ -7034,6 +7037,44 @@ export type Database = {
             columns: ["relationship_id"]
             isOneToOne: false
             referencedRelation: "contract_document_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_structure_events: {
+        Row: {
+          actor_user_id: string
+          client_id: string
+          created_at: string
+          from_structure: string | null
+          id: string
+          reason: string | null
+          to_structure: string
+        }
+        Insert: {
+          actor_user_id: string
+          client_id: string
+          created_at?: string
+          from_structure?: string | null
+          id?: string
+          reason?: string | null
+          to_structure: string
+        }
+        Update: {
+          actor_user_id?: string
+          client_id?: string
+          created_at?: string
+          from_structure?: string | null
+          id?: string
+          reason?: string | null
+          to_structure?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_structure_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -25178,6 +25219,89 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      related_person_reviews: {
+        Row: {
+          candidate_person_ids: string[]
+          created_at: string
+          created_by: string | null
+          id: string
+          match_kind: string
+          offering_id: string | null
+          profile_id: string
+          provisional_person_id: string
+          relationship_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_person_id: string | null
+          status: string
+          supplied: Json
+        }
+        Insert: {
+          candidate_person_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_kind: string
+          offering_id?: string | null
+          profile_id: string
+          provisional_person_id: string
+          relationship_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_person_id?: string | null
+          status?: string
+          supplied?: Json
+        }
+        Update: {
+          candidate_person_ids?: string[]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match_kind?: string
+          offering_id?: string | null
+          profile_id?: string
+          provisional_person_id?: string
+          relationship_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_person_id?: string | null
+          status?: string
+          supplied?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "related_person_reviews_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "related_person_reviews_provisional_person_id_fkey"
+            columns: ["provisional_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "related_person_reviews_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profile_relationships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "related_person_reviews_resolved_person_id_fkey"
+            columns: ["resolved_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
