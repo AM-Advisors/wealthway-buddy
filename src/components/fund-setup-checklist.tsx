@@ -1,3 +1,4 @@
+import { createContext, useContext } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
@@ -119,6 +120,81 @@ export function FundSetupChecklist({
           ))}
         </ul>
       </div>
+    </div>
+  );
+}
+
+/* ---------- Requirements placed inside each Fund Setup section ---------- */
+
+type Req = {
+  tasks: Task[]; conditions: Condition[]; evidence: { formation: boolean; certificate: boolean; einLetter: boolean };
+  canEdit: boolean; approvalCount: number; onChanged: () => void;
+};
+const ReqCtx = createContext<Req | null>(null);
+export const SetupRequirementsProvider = ReqCtx.Provider;
+
+function useSetStatus(onChanged: () => void) {
+  const update = useServerFn(updateSetupTaskFn);
+  return async (taskId: string, status: string) => {
+    try { await update({ data: { taskId, status: status as any } }); toast.success("Task updated"); onChanged(); }
+    catch (e: any) { toast.error(e.message); }
+  };
+}
+
+/** Required tasks, launch conditions and evidence completed in this section. */
+export function RequiredHere({ section }: { section: string }) {
+  const r = useContext(ReqCtx);
+  const setStatus = useSetStatus(r?.onChanged ?? (() => {}));
+  if (!r) return null;
+  const tasks = r.tasks.filter((t) => SECTION[t.key]?.[0] === section);
+  const conds = r.conditions.filter((c) => SECTION[c.key]?.[0] === section);
+  const ev = section === "setup-entity"
+    ? ([["Formation document", r.evidence.formation], ["Certificate of formation", r.evidence.certificate], ["IRS EIN letter", r.evidence.einLetter]] as const)
+    : [];
+  if (!tasks.length && !conds.length && !ev.length) return null;
+  const left = tasks.filter((t) => t.status !== "complete").length + conds.filter((c) => !c.satisfied).length + ev.filter(([, ok]) => !ok).length;
+  const icon = (done: boolean) => done ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> : <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />;
+  return (
+    <div className="rounded-md border bg-muted/30 p-3">
+      <div className="flex items-baseline justify-between">
+        <p className="text-sm font-medium">Required in this section</p>
+        <span className="text-xs text-muted-foreground">{left === 0 ? "All complete" : `${left} to complete`}</span>
+      </div>
+      <ul className="mt-2 space-y-1.5 text-sm">
+        {ev.map(([l, ok]) => <li key={l} className="flex items-start gap-2">{icon(ok)}<span>{l}{ok ? " — recorded" : " — upload below"}</span></li>)}
+        {conds.map((c) => <li key={c.id} className="flex items-start gap-2">{icon(c.satisfied)}<span>{c.label} <span className="text-xs text-muted-foreground">(launch condition)</span></span></li>)}
+        {tasks.map((t) => (
+          <li key={t.id} className="flex flex-wrap items-center justify-between gap-2">
+            <span className="flex items-start gap-2">{icon(t.status === "complete")}{t.label}</span>
+            {r.canEdit ? (
+              <select aria-label={`Status for ${t.label}`} className="h-7 rounded-md border bg-background px-2 text-xs" value={t.status} onChange={(e) => setStatus(t.id, e.target.value)}>
+                {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                {t.status === "exception" && <option value="exception">Exception</option>}
+              </select>
+            ) : <span className="text-xs text-muted-foreground">{STATUSES.find(([v]) => v === t.status)?.[1] ?? t.status}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Final launch readiness: overall task count and second-person approval. */
+export function LaunchRequirements() {
+  const r = useContext(ReqCtx);
+  if (!r) return null;
+  const open = r.tasks.filter((t) => t.status !== "complete").length;
+  const unplaced = r.tasks.filter((t) => !SECTION[t.key]);
+  const conds = r.conditions.filter((c) => !SECTION[c.key]);
+  const icon = (done: boolean) => done ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> : <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />;
+  return (
+    <div className="rounded-lg border p-4">
+      <p className="font-medium">Launch</p>
+      <p className="text-xs text-muted-foreground">{open} setup task{open === 1 ? "" : "s"} left across all sections · {r.approvalCount} launch approval{r.approvalCount === 1 ? "" : "s"} recorded</p>
+      <ul className="mt-2 space-y-1.5 text-sm">
+        {conds.map((c) => <li key={c.id} className="flex items-start gap-2">{icon(c.satisfied)}<div><p>{c.label}</p>{!c.satisfied && c.key === "harmonious_approval" && <p className="text-xs text-muted-foreground">Second-person approval once everything else is complete.</p>}</div></li>)}
+        {unplaced.map((t) => <li key={t.id} className="flex items-start gap-2">{icon(t.status === "complete")}{t.label}</li>)}
+      </ul>
     </div>
   );
 }

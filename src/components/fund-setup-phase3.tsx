@@ -37,6 +37,7 @@ import {
 } from "@/lib/fund-setup-phase3";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RequiredHere } from "@/components/fund-setup-checklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,6 +128,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
         {b.section.next && <p className="text-sm text-muted-foreground">Next: {b.section.next}</p>}
       </CardHeader>
       <CardContent className="space-y-4">
+        <RequiredHere section="setup-banking" />
         <div className="space-y-2">
           <p className="text-sm font-medium">How will this Fund's bank account be handled?</p>
           <div className="flex flex-wrap gap-2">
@@ -276,6 +278,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        <RequiredHere section="setup-entity" />
         <div className="space-y-2">
           <p className="text-sm font-medium">How will the EIN be handled?</p>
           <div className="flex flex-wrap gap-2">
@@ -373,6 +376,7 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
+        <RequiredHere section="setup-admin" />
         {ADMIN_SERVICES.map((s) => (
           <div key={s} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 text-sm">
             <span>{ADMIN_SERVICE_LABELS[s]}</span>
