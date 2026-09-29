@@ -15,7 +15,7 @@ import {
   canManageFundRecords, sanitizePatch, sourceFor, rankMatches, createNewBlocker, validateQuickAdd, isProfileType,
   dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, claimState, CLAIM_STATE_LABELS, sameValue, isMaterial,
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
-  planIncoming, PROFILE_TYPE_LABELS,
+  planIncoming, PROFILE_TYPE_LABELS, planClaim,
 } from "@/lib/investor-record-model";
 
 const db = () => supabaseAdmin as any;

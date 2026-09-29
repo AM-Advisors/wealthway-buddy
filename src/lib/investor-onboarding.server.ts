@@ -449,9 +449,10 @@ export async function startOnboarding(
   }
 
   // Continue records Harmonious or a Fund Manager prepared before sign-in.
+  let claim: { review?: boolean; reviewOfferingIds?: string[] } = {};
   try {
     const { claimPreparedRecords } = await import("@/lib/investor-record.server");
-    await claimPreparedRecords(actor.userId);
+    claim = await claimPreparedRecords(actor.userId);
   } catch (e) {
     console.error("[onboard] prepared-record claim skipped", (e as Error).message);
   }
@@ -465,7 +466,12 @@ export async function startOnboarding(
     .order("created_at", { ascending: false })
     .limit(1);
   const open = ((existing ?? []) as any[])[0];
-  if (open) return { onboardingId: open.id as string, resumed: true };
+  if (open) return { onboardingId: open.id as string, resumed: true, pendingReview: false };
+  // A prepared investment in this Fund may be theirs but can't be linked safely:
+  // wait for Harmonious instead of creating a duplicate.
+  if (claim.review && claim.reviewOfferingIds?.includes(offering.id)) {
+    return { onboardingId: null as string | null, resumed: false, pendingReview: true };
+  }
 
   const { data: person } = await db()
     .from("persons")
