@@ -11,7 +11,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { canAct } from "@/lib/delegated-access.server";
-import { recordTaxAccess, recordTaxEvent } from "@/lib/tax-authz.server";
+import { recordTaxAccess, recordTaxEvent, assertTaxStaff } from "@/lib/tax-authz.server";
 
 const db = () => supabaseAdmin as any;
 const now = () => new Date().toISOString();
@@ -88,13 +88,24 @@ async function touchedBy(table: string, id: string, userId: string) {
     .eq("subject_table", table)
     .eq("subject_id", id)
     .eq("actor_user_id", userId)
-    .in("event", ["professional_mark_prepared", "professional_submit"])
+    .in("event", ["professional_mark_prepared", "professional_submit", "staff_mark_prepared", "staff_submit"])
     .limit(1);
   return ((data ?? []) as any[]).length > 0;
 }
 
 export async function professionalTaxWorkspace(userId: string) {
-  const funds = await delegatedFunds(userId);
+  return buildWorkspace(userId, await delegatedFunds(userId), null);
+}
+
+/** Harmonious staff: every Fund, prepare + review (still maker-checker). */
+export async function staffTaxWorkspace(userId: string) {
+  await assertTaxStaff(userId);
+  const { data } = await db().from("offerings").select("id");
+  const funds = ((data ?? []) as any[]).map((o) => ({ offeringId: o.id as string, view: true, prepare: true, review: true }));
+  return buildWorkspace(userId, funds, "all");
+}
+
+async function buildWorkspace(userId: string, funds: FundCaps[], individualScope: "all" | null) {
   const ids = funds.map((f) => f.offeringId);
   const capsFor = new Map(funds.map((f) => [f.offeringId, f]));
   const none = { data: [] as any[] };
@@ -136,12 +147,15 @@ export async function professionalTaxWorkspace(userId: string) {
     .eq("delegate_user_id", userId)
     .eq("scope_type", "person");
   const principals: string[] = [];
-  for (const p of [...new Set(((personDelegations ?? []) as any[]).map((d) => d.principal_user_id))] as string[]) {
+  if (individualScope !== "all") for (const p of [...new Set(((personDelegations ?? []) as any[]).map((d) => d.principal_user_id))] as string[]) {
     if ((await canAct(userId, "view_tax_returns", { type: "person", id: p })).allowed) principals.push(p);
   }
-  const { data: individual } = principals.length
+  const { data: individual } = individualScope === "all"
+    ? await db().from("individual_tax_returns").select("id, tax_year, primary_user_id, status, filing_status_code, updated_at").neq("status", "superseded").limit(500)
+    : principals.length
     ? await db().from("individual_tax_returns").select("id, tax_year, primary_user_id, status, filing_status_code, updated_at").in("primary_user_id", principals).neq("status", "superseded")
     : none;
+  if (individualScope === "all") principals.push(...new Set(((individual ?? []) as any[]).map((r) => r.primary_user_id as string)));
   const { data: people } = principals.length
     ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", principals)
     : none;
@@ -150,7 +164,7 @@ export async function professionalTaxWorkspace(userId: string) {
   await recordTaxAccess({
     actorUserId: userId,
     capability: "view_tax_returns",
-    resourceTable: "professional_tax_workspace",
+    resourceTable: individualScope === "all" ? "staff_tax_workspace" : "professional_tax_workspace",
     action: "read",
     allowed: true,
   });
@@ -179,15 +193,28 @@ export async function professionalTaxWorkspace(userId: string) {
   };
 }
 
+export async function staffTaxAction(userId: string, input: { kind: ProTaxKind; id: string; action: ProTaxAction; note?: string | undefined }) {
+  await assertTaxStaff(userId);
+  return professionalTaxAction(userId, input, true);
+}
+
+export async function staffTaxHistory(userId: string, input: { kind: ProTaxKind; id: string }) {
+  await assertTaxStaff(userId);
+  return professionalTaxHistory(userId, input, true);
+}
+
 export async function professionalTaxAction(
   userId: string,
   input: { kind: ProTaxKind; id: string; action: ProTaxAction; note?: string | undefined },
+  staff = false,
 ) {
   const table = TABLE[input.kind];
   const move = MOVES[input.kind][input.action];
   const { data: row } = await db().from(table).select("*").eq("id", input.id).maybeSingle();
   if (!row) fail("That tax record was not found.");
-  const decision = await canAct(userId, move.cap, { type: "fund", id: row.offering_id }, { mutation: true });
+  const decision: { allowed: boolean; reason?: string | null; delegationId?: string | null } = staff
+    ? { allowed: true, delegationId: null }
+    : await canAct(userId, move.cap, { type: "fund", id: row.offering_id }, { mutation: true });
   if (!decision.allowed) {
     await recordTaxAccess({ actorUserId: userId, capability: move.cap, resourceTable: table, resourceId: input.id, action: input.action, allowed: false, reason: decision.reason ?? null });
     fail(`Forbidden: ${decision.reason ?? "your delegation does not allow this."}`);
@@ -227,7 +254,7 @@ export async function professionalTaxAction(
     subjectId: input.id,
     taxYear: row.tax_year,
     offeringId: row.offering_id,
-    event: `professional_${input.action}`,
+    event: `${staff ? "staff" : "professional"}_${input.action}`,
     fromStatus: row.status,
     toStatus: move.to,
     detail: input.note ? { note: input.note } : {},
@@ -237,11 +264,11 @@ export async function professionalTaxAction(
   return updated;
 }
 
-export async function professionalTaxHistory(userId: string, input: { kind: ProTaxKind; id: string }) {
+export async function professionalTaxHistory(userId: string, input: { kind: ProTaxKind; id: string }, staff = false) {
   const table = TABLE[input.kind];
   const { data: row } = await db().from(table).select("offering_id").eq("id", input.id).maybeSingle();
   if (!row) fail("That tax record was not found.");
-  if (!(await canAct(userId, "view_tax_returns", { type: "fund", id: row.offering_id })).allowed) {
+  if (!staff && !(await canAct(userId, "view_tax_returns", { type: "fund", id: row.offering_id })).allowed) {
     fail("Forbidden: your delegation does not cover this Fund's tax returns.");
   }
   const { data } = await db()
@@ -252,7 +279,7 @@ export async function professionalTaxHistory(userId: string, input: { kind: ProT
     .order("created_at", { ascending: false });
   return ((data ?? []) as any[]).map((e) => ({
     id: e.id as string,
-    event: String(e.event).replace(/^professional_/, "").replace(/_/g, " "),
+    event: String(e.event).replace(/^(professional|staff)_/, "").replace(/_/g, " "),
     from: e.from_status as string | null,
     to: e.to_status as string | null,
     note: (e.detail?.note as string) ?? null,

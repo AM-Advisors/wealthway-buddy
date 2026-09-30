@@ -7,7 +7,9 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { getProfessionalTax, getProfessionalTaxHistory, professionalTaxActionFn } from "@/lib/professional-tax.functions";
+import { getProfessionalTax, getProfessionalTaxHistory, professionalTaxActionFn, getStaffTax, getStaffTaxHistory, staffTaxActionFn } from "@/lib/professional-tax.functions";
+
+export type TaxMode = "professional" | "staff";
 
 export type ProTaxKind = "1065" | "1042" | "1099";
 
@@ -17,14 +19,15 @@ export function money(c: number | null | undefined) {
 }
 export const statusLabel = (s: string) => s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
-export function useProfessionalTax() {
-  const load = useServerFn(getProfessionalTax);
-  return useQuery({ queryKey: ["professional-tax"], queryFn: () => load() });
+export function useProfessionalTax(mode: TaxMode = "professional") {
+  const loadPro = useServerFn(getProfessionalTax);
+  const loadStaff = useServerFn(getStaffTax);
+  return useQuery({ queryKey: [mode === "staff" ? "staff-tax" : "professional-tax"], queryFn: () => (mode === "staff" ? loadStaff() : loadPro()) });
 }
 
 type Row = Awaited<ReturnType<typeof getProfessionalTax>>["returns1065"][number];
 
-export function TaxFormTable({ title, rows, empty }: { title: string; rows: Row[]; empty: string }) {
+export function TaxFormTable({ title, rows, empty, mode = "professional" }: { title: string; rows: Row[]; empty: string; mode?: TaxMode }) {
   return (
     <section className="space-y-2">
       <h2 className="font-heading text-lg font-semibold">{title} <span className="text-sm font-normal text-muted-foreground">({rows.length})</span></h2>
@@ -39,9 +42,15 @@ export function TaxFormTable({ title, rows, empty }: { title: string; rows: Row[
               <div className="flex items-center gap-2">
                 <Badge variant={r.status === "review" ? "default" : "secondary"}>{statusLabel(r.status)}</Badge>
                 <Button size="sm" variant={r.actions.length ? "default" : "outline"} asChild>
-                  <Link to="/professional/tax/$kind/$id" params={{ kind: r.kind, id: r.id }}>
-                    {r.actions.includes("approve") ? "Review" : r.actions.length ? "Prepare" : "Open"}
-                  </Link>
+                  {mode === "staff" ? (
+                    <Link to="/ops/tax/$kind/$id" params={{ kind: r.kind, id: r.id }}>
+                      {r.actions.includes("approve") ? "Review" : r.actions.length ? "Prepare" : "Open"}
+                    </Link>
+                  ) : (
+                    <Link to="/professional/tax/$kind/$id" params={{ kind: r.kind, id: r.id }}>
+                      {r.actions.includes("approve") ? "Review" : r.actions.length ? "Prepare" : "Open"}
+                    </Link>
+                  )}
                 </Button>
               </div>
             </li>
@@ -59,12 +68,16 @@ const ACTION_LABEL: Record<string, string> = {
   return: "Return for changes",
 };
 
-export function TaxFormReview({ kind, id }: { kind: ProTaxKind; id: string }) {
-  const q = useProfessionalTax();
+export function TaxFormReview({ kind, id, mode = "professional" }: { kind: ProTaxKind; id: string; mode?: TaxMode }) {
+  const q = useProfessionalTax(mode);
   const qc = useQueryClient();
-  const act = useServerFn(professionalTaxActionFn);
-  const loadHistory = useServerFn(getProfessionalTaxHistory);
-  const history = useQuery({ queryKey: ["professional-tax-history", kind, id], queryFn: () => loadHistory({ data: { kind, id } }) });
+  const actPro = useServerFn(professionalTaxActionFn);
+  const actStaff = useServerFn(staffTaxActionFn);
+  const act = mode === "staff" ? actStaff : actPro;
+  const histPro = useServerFn(getProfessionalTaxHistory);
+  const histStaff = useServerFn(getStaffTaxHistory);
+  const loadHistory = mode === "staff" ? histStaff : histPro;
+  const history = useQuery({ queryKey: [`${mode}-tax-history`, kind, id], queryFn: () => loadHistory({ data: { kind, id } }) });
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -72,7 +85,7 @@ export function TaxFormReview({ kind, id }: { kind: ProTaxKind; id: string }) {
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
   const list = kind === "1065" ? q.data!.returns1065 : kind === "1042" ? q.data!.returns1042 : q.data!.forms1099;
   const r = list.find((x) => x.id === id);
-  if (!r) return <p className="text-sm text-muted-foreground">This form isn't in your delegated scope.</p>;
+  if (!r) return <p className="text-sm text-muted-foreground">{mode === "staff" ? "That form wasn't found." : "This form isn't in your delegated scope."}</p>;
   const recipients = kind === "1042" ? q.data!.forms1042s.filter((s) => s.fundName === r.fundName && s.taxYear === r.taxYear) : [];
 
   const run = async (action: string) => {
@@ -81,7 +94,7 @@ export function TaxFormReview({ kind, id }: { kind: ProTaxKind; id: string }) {
       await act({ data: { kind, id, action: action as any, note: note.trim() || undefined } });
       toast.success(`${ACTION_LABEL[action]} — recorded`);
       setNote("");
-      await Promise.all([qc.invalidateQueries({ queryKey: ["professional-tax"] }), history.refetch()]);
+      await Promise.all([qc.invalidateQueries({ queryKey: [mode === "staff" ? "staff-tax" : "professional-tax"] }), history.refetch()]);
     } catch (e: any) {
       toast.error(e.message);
     } finally {

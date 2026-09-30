@@ -191,6 +191,7 @@ import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
+import { Route as AuthenticatedOpsTaxRouteImport } from './routes/_authenticated/ops.tax'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authenticated/ops.tax-review'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
@@ -294,6 +295,7 @@ import { Route as AuthenticatedManagerFundFundIdReadinessRouteImport } from './r
 import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './routes/_authenticated/manager.fund.$fundId.settings'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
 import { Route as AuthenticatedManagerFundFundIdTransactionsRouteImport } from './routes/_authenticated/manager.fund.$fundId.transactions'
+import { Route as AuthenticatedOpsTaxKindIdRouteImport } from './routes/_authenticated/ops.tax_.$kind.$id'
 import { Route as AuthenticatedProfessionalTaxKindIdRouteImport } from './routes/_authenticated/professional.tax_.$kind.$id'
 import { Route as AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport } from './routes/_authenticated/manager.fund.$fundId.investor.$onboardingId'
 
@@ -1318,6 +1320,11 @@ const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
   path: '/ops/ss4',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsTaxRoute = AuthenticatedOpsTaxRouteImport.update({
+  id: '/ops/tax',
+  path: '/ops/tax',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpsTaxDocumentsRoute =
   AuthenticatedOpsTaxDocumentsRouteImport.update({
     id: '/ops/tax-documents',
@@ -1925,6 +1932,12 @@ const AuthenticatedManagerFundFundIdTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedOpsTaxKindIdRoute =
+  AuthenticatedOpsTaxKindIdRouteImport.update({
+    id: '/ops/tax_/$kind/$id',
+    path: '/ops/tax/$kind/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfessionalTaxKindIdRoute =
   AuthenticatedProfessionalTaxKindIdRouteImport.update({
     id: '/tax_/$kind/$id',
@@ -2114,6 +2127,7 @@ export interface FileRoutesByFullPath {
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -2222,6 +2236,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
   '/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
@@ -2397,6 +2412,7 @@ export interface FileRoutesByTo {
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -2504,6 +2520,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdIndexRoute
   '/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
@@ -2686,6 +2703,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/_authenticated/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
@@ -2794,6 +2812,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/_authenticated/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/_authenticated/ops/tax_/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/_authenticated/professional/tax_/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/_authenticated/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
   '/_authenticated/manager/fund/$fundId/investor/$onboardingId': typeof AuthenticatedManagerFundFundIdInvestorOnboardingIdRoute
@@ -2976,6 +2995,7 @@ export interface FileRouteTypes {
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/ss4'
+    | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
     | '/ops/team'
@@ -3084,6 +3104,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
+    | '/ops/tax/$kind/$id'
     | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId/'
     | '/manager/fund/$fundId/investor/$onboardingId'
@@ -3259,6 +3280,7 @@ export interface FileRouteTypes {
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/ss4'
+    | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
     | '/ops/team'
@@ -3366,6 +3388,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
+    | '/ops/tax/$kind/$id'
     | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId'
     | '/manager/fund/$fundId/investor/$onboardingId'
@@ -3547,6 +3570,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/readiness'
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/ss4'
+    | '/_authenticated/ops/tax'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/tax-review'
     | '/_authenticated/ops/team'
@@ -3655,6 +3679,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/settings'
     | '/_authenticated/manager/fund/$fundId/team'
     | '/_authenticated/manager/fund/$fundId/transactions'
+    | '/_authenticated/ops/tax_/$kind/$id'
     | '/_authenticated/professional/tax_/$kind/$id'
     | '/_authenticated/manager/fund/$fundId/'
     | '/_authenticated/manager/fund/$fundId/investor/$onboardingId'
@@ -4981,6 +5006,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsSs4RouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/tax': {
+      id: '/_authenticated/ops/tax'
+      path: '/ops/tax'
+      fullPath: '/ops/tax'
+      preLoaderRoute: typeof AuthenticatedOpsTaxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/tax-documents': {
       id: '/_authenticated/ops/tax-documents'
       path: '/ops/tax-documents'
@@ -5702,6 +5734,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdTransactionsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/ops/tax_/$kind/$id': {
+      id: '/_authenticated/ops/tax_/$kind/$id'
+      path: '/ops/tax/$kind/$id'
+      fullPath: '/ops/tax/$kind/$id'
+      preLoaderRoute: typeof AuthenticatedOpsTaxKindIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/professional/tax_/$kind/$id': {
       id: '/_authenticated/professional/tax_/$kind/$id'
       path: '/tax/$kind/$id'
@@ -6083,6 +6122,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
+  AuthenticatedOpsTaxRoute: typeof AuthenticatedOpsTaxRoute
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTaxReviewRoute: typeof AuthenticatedOpsTaxReviewRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
@@ -6128,6 +6168,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundsIndexRoute: typeof AuthenticatedOpsFundsIndexRoute
   AuthenticatedOpsInvestorsIndexRoute: typeof AuthenticatedOpsInvestorsIndexRoute
   AuthenticatedAdminClientsClientIdEntitiesRoute: typeof AuthenticatedAdminClientsClientIdEntitiesRoute
+  AuthenticatedOpsTaxKindIdRoute: typeof AuthenticatedOpsTaxKindIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -6286,6 +6327,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
+  AuthenticatedOpsTaxRoute: AuthenticatedOpsTaxRoute,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTaxReviewRoute: AuthenticatedOpsTaxReviewRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
@@ -6351,6 +6393,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsInvestorsIndexRoute: AuthenticatedOpsInvestorsIndexRoute,
   AuthenticatedAdminClientsClientIdEntitiesRoute:
     AuthenticatedAdminClientsClientIdEntitiesRoute,
+  AuthenticatedOpsTaxKindIdRoute: AuthenticatedOpsTaxKindIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
