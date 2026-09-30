@@ -92,6 +92,31 @@ export const TEMPLATE_PACKS: TemplatePack[] = [
       },
     ],
   },
+  {
+    id: "harmonious",
+    name: "Harmonious fielded templates",
+    summary:
+      "Ready-to-tailor Subscription Agreement and Operating Agreement with every changeable value already marked as a {{field}} placeholder (fund legal name, investor details, commitment, class, fees, carry, signatories and dates). Fill in the fields and have counsel review before use.",
+    source: "Harmonious template library",
+    items: [
+      {
+        title: "Subscription Agreement (fielded template)",
+        doc_type: "subscription_agreement",
+        body: "A complete subscription agreement with pre-marked fields for the fund legal name, investor details, commitment amount, class, fees, carry, preferred return and signature blocks. Replace each {{field}} with the fund's values and have counsel review before signing.",
+        requires_signature: true,
+        source_path: "templates/harmonious/Harmonious-Subscription-Agreement-Template.docx",
+        file_name: "Harmonious-Subscription-Agreement-Template.docx",
+      },
+      {
+        title: "Operating Agreement (fielded template)",
+        doc_type: "operating_agreement",
+        body: "A complete operating agreement with pre-marked fields for the fund legal name, formation details, manager, service providers, classes, target raise, fees, carry, distributions and the adoption signature block. Replace each {{field}} with the fund's values and have counsel review before adoption.",
+        requires_signature: false,
+        source_path: "templates/harmonious/Harmonious-Operating-Agreement-Template.docx",
+        file_name: "Harmonious-Operating-Agreement-Template.docx",
+      },
+    ],
+  },
 ];
 
 async function isAdminUser(supabase: any, userId: string) {
