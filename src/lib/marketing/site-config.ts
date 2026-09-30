@@ -101,6 +101,7 @@ export const MARKETING_NAV: NavGroup[] = [
   {
     label: "Solutions",
     items: [
+      { label: "All solutions", href: "/solutions", status: "live" },
       { label: "Fund Managers", href: "/solutions/fund-managers", status: "planned" },
       { label: "Founders & Companies", href: "/solutions/founders", status: "planned" },
       { label: "Investors", href: "/solutions/investors", status: "planned" },
