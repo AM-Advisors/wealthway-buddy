@@ -68,13 +68,14 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { session } = useClientWorkspace();
   const sections = getNavigation(session as never, "operations", pathname).operations;
+  const salesOnly = !session?.operations;
   const capabilities = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const [query, setQuery] = useState("");
   const index = useMemo(() => opsSearchIndex(capabilities), [capabilities]);
   const results = query.trim() ? searchOpsIndex(index, query) : null;
 
   const groups = [
-    sections.filter((s) => s.id === "home" || GROUP_OF.get(s.id) === "records"),
+    sections.filter((s) => s.id === "home" || s.id === "sales" || GROUP_OF.get(s.id) === "records"),
     sections.filter((s) => GROUP_OF.get(s.id) === "work"),
     sections.filter((s) => GROUP_OF.get(s.id) === "admin"),
   ].filter((g) => g.length > 0);
@@ -87,14 +88,14 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   return (
     <Sidebar collapsible="icon" data-testid="ops-sidebar">
       <SidebarHeader>
-        <Link to="/ops" aria-label="Harmonious Operations" data-testid="brand-logo" className="flex items-center px-2 py-1">
+        <Link to={salesOnly ? "/sales" : "/ops"} aria-label="Harmonious Operations" data-testid="brand-logo" className="flex items-center px-2 py-1">
           {collapsed ? (
             <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (
             <Logo variant="white" className="h-7 w-auto" />
           )}
         </Link>
-        {!collapsed && (
+        {!collapsed && !salesOnly && (
           <div className="relative px-1 pb-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sidebar-foreground/60" aria-hidden />
             <Input
@@ -138,7 +139,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                   <SidebarMenu>
                     {group.map((section) => {
                       const Icon = ICONS[section.icon] ?? Home;
-                      const active = operationsNavItemIsActive(section.url, pathname);
+                      const active = section.id === "sales" ? pathname === "/sales" : operationsNavItemIsActive(section.url, pathname);
                       return (
                         <SidebarMenuItem key={section.id}>
                           <SidebarMenuButton
@@ -166,7 +167,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
         )}
       </SidebarContent>
 
-      <SidebarAccountFooter workspaceLabel="Harmonious Operations" onSignOut={onSignOut} />
+        <SidebarAccountFooter workspaceLabel={salesOnly ? "Harmonious Sales" : "Harmonious Operations"} onSignOut={onSignOut} />
     </Sidebar>
   );
 }

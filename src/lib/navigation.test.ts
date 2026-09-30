@@ -140,6 +140,7 @@ describe("visual route cues", () => {
     expect(surfaceLabelForPath("/professional/tasks")).toBe("Professional workspace");
     expect(surfaceLabelForPath("/dashboard")).toBe("Client & investor portal");
     expect(surfaceLabelForPath("/ops/clients")).toBe("Harmonious Operations");
+    expect(surfaceLabelForPath("/sales")).toBe("Harmonious Operations");
   });
 
   it("keeps Funds & SPVs highlighted on a singular Fund 360 route", () => {
