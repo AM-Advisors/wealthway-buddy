@@ -79,6 +79,7 @@ import { Route as ResourcesEinForLlcRouteImport } from './routes/resources.ein-f
 import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/resources.pe-software-buyers-guide'
 import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
+import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
 import { Route as AuthenticatedAccountAgreementsRouteImport } from './routes/_authenticated/account.agreements'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
@@ -664,6 +665,11 @@ const ResourcesRegD506bVs506cRoute = ResourcesRegD506bVs506cRouteImport.update({
 const SharesTokenRoute = SharesTokenRouteImport.update({
   id: '/shares/$token',
   path: '/shares/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsIndexRoute = SolutionsIndexRouteImport.update({
+  id: '/solutions/',
+  path: '/solutions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountAgreementsRoute =
@@ -2074,6 +2080,7 @@ export interface FileRoutesByFullPath {
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/resources/': typeof ResourcesIndexRoute
+  '/solutions/': typeof SolutionsIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2369,6 +2376,7 @@ export interface FileRoutesByTo {
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
   '/resources': typeof ResourcesIndexRoute
+  '/solutions': typeof SolutionsIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2666,6 +2674,7 @@ export interface FileRoutesById {
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/resources/': typeof ResourcesIndexRoute
+  '/solutions/': typeof SolutionsIndexRoute
   '/_authenticated/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2966,6 +2975,7 @@ export interface FileRouteTypes {
     | '/shares/$token'
     | '/auth/'
     | '/resources/'
+    | '/solutions/'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -3261,6 +3271,7 @@ export interface FileRouteTypes {
     | '/shares/$token'
     | '/auth'
     | '/resources'
+    | '/solutions'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -3557,6 +3568,7 @@ export interface FileRouteTypes {
     | '/shares/$token'
     | '/auth/'
     | '/resources/'
+    | '/solutions/'
     | '/_authenticated/account/agreements'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
@@ -3819,6 +3831,7 @@ export interface RootRouteChildren {
   ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
   SharesTokenRoute: typeof SharesTokenRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
+  SolutionsIndexRoute: typeof SolutionsIndexRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
@@ -4325,6 +4338,13 @@ declare module '@tanstack/react-router' {
       path: '/shares/$token'
       fullPath: '/shares/$token'
       preLoaderRoute: typeof SharesTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/': {
+      id: '/solutions/'
+      path: '/solutions'
+      fullPath: '/solutions/'
+      preLoaderRoute: typeof SolutionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account/agreements': {
@@ -6617,6 +6637,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,
   SharesTokenRoute: SharesTokenRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
+  SolutionsIndexRoute: SolutionsIndexRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
