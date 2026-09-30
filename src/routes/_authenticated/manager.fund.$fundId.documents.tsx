@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FundWorkspaceSection } from "@/components/fund-workspace-section";
 import { SendFundDocuments } from "@/components/send-fund-documents";
+import { InvestorDocumentReview } from "@/components/investor-document-review";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/documents")({
   head: () => ({ meta: [
@@ -14,6 +15,7 @@ function Page() {
   return (
     <div className="space-y-8">
       <SendFundDocuments offeringId={fundId} />
+      <InvestorDocumentReview offeringId={fundId} />
       <FundWorkspaceSection title="Documents" description="The complete document record for this fund." items={[
         { title: "Fund documents", description: "Upload and manage the documents investors review and sign.", to: "/manager/documents" },
         { title: "Document inbox", description: "Review investor uploads and signed copies filed back.", to: "/manager/inbox" },

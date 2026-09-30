@@ -17757,6 +17757,42 @@ export type Database = {
           },
         ]
       }
+      investor_document_approvals: {
+        Row: {
+          decided_at: string
+          decided_by: string
+          decision: string
+          id: string
+          note: string | null
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          version: number | null
+        }
+        Insert: {
+          decided_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          note?: string | null
+          offering_document_id: string
+          offering_id: string
+          onboarding_id: string
+          version?: number | null
+        }
+        Update: {
+          decided_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          note?: string | null
+          offering_document_id?: string
+          offering_id?: string
+          onboarding_id?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
       investor_document_snapshots: {
         Row: {
           created_at: string

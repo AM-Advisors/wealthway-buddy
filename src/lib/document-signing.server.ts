@@ -262,6 +262,15 @@ export async function openSigningSession(
   });
   if (refusal) throw new SigningRefusal(refusal);
 
+  // The fund manager approves each investor's documents before signing opens.
+  // A live request already out for signature keeps working.
+  if (resolved.signature?.provider_status !== "out_for_signature") {
+    const { approvedForSigning } = await import("@/lib/investor-document-review.server");
+    if (!(await approvedForSigning(admin, resolved.application.id, resolved.document.id))) {
+      throw new Error("Your fund manager is reviewing this document. You'll be able to sign once they approve it.");
+    }
+  }
+
   if (!resolved.profile.email) throw new SigningRefusal("not_a_required_signer");
 
   const { getSignRequestDetail, createMultiSignerRequest } = await import("@/lib/box.server");
