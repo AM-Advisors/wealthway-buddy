@@ -52,8 +52,8 @@ export function seoScripts(path: string, opts?: { name?: string; description?: s
     publisher: { "@id": `${SITE_URL}/#organization` },
     primaryImageOfPage: { "@type": "ImageObject", url: OG_IMAGE },
   };
-  if (opts?.name) page.name = opts.name;
-  if (opts?.description) page.description = opts.description;
+  if (opts?.name) page["name"] = opts.name;
+  if (opts?.description) page["description"] = opts.description;
 
   return [
     {
