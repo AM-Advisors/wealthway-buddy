@@ -11705,6 +11705,170 @@ export type Database = {
           },
         ]
       }
+      document_template_uses: {
+        Row: {
+          fund_version: number
+          id: string
+          offering_document_id: string
+          offering_id: string
+          template_id: string
+          template_version: number
+          used_at: string
+          used_by: string
+        }
+        Insert: {
+          fund_version: number
+          id?: string
+          offering_document_id: string
+          offering_id: string
+          template_id: string
+          template_version: number
+          used_at?: string
+          used_by: string
+        }
+        Update: {
+          fund_version?: number
+          id?: string
+          offering_document_id?: string
+          offering_id?: string
+          template_id?: string
+          template_version?: number
+          used_at?: string
+          used_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_template_uses_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_template_uses_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_template_uses_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_template_versions: {
+        Row: {
+          change_note: string | null
+          created_at: string
+          created_by: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          source_document_id: string | null
+          source_offering_id: string | null
+          source_version: number | null
+          status: string
+          template_id: string
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          created_at?: string
+          created_by: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          source_document_id?: string | null
+          source_offering_id?: string | null
+          source_version?: number | null
+          status?: string
+          template_id: string
+          version: number
+        }
+        Update: {
+          change_note?: string | null
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          source_document_id?: string | null
+          source_offering_id?: string | null
+          source_version?: number | null
+          status?: string
+          template_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_template_versions_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_template_versions_source_offering_id_fkey"
+            columns: ["source_offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "document_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_templates: {
+        Row: {
+          archived_at: string | null
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          archived_at?: string | null
+          category: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          archived_at?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       drive_exceptions: {
         Row: {
           attempts: number

@@ -603,6 +603,13 @@
       "when": 1790725434097,
       "tag": "0085_offering_document_sends",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1790726586847,
+      "tag": "0086_document_templates",
+      "breakpoints": true
     }
   ]
 }

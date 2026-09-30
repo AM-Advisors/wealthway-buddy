@@ -184,6 +184,7 @@ import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authenticated/ops.compliance'
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
+import { Route as AuthenticatedOpsDocumentTemplatesRouteImport } from './routes/_authenticated/ops.document-templates'
 import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authenticated/ops.documents'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
@@ -1280,6 +1281,12 @@ const AuthenticatedOpsDistributionsRoute =
     path: '/ops/distributions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsDocumentTemplatesRoute =
+  AuthenticatedOpsDocumentTemplatesRouteImport.update({
+    id: '/ops/document-templates',
+    path: '/ops/document-templates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsDocumentsRoute =
   AuthenticatedOpsDocumentsRouteImport.update({
     id: '/ops/documents',
@@ -2120,6 +2127,7 @@ export interface FileRoutesByFullPath {
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
+  '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
@@ -2405,6 +2413,7 @@ export interface FileRoutesByTo {
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
+  '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
@@ -2696,6 +2705,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
+  '/_authenticated/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/_authenticated/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
@@ -2988,6 +2998,7 @@ export interface FileRouteTypes {
     | '/ops/banking'
     | '/ops/compliance'
     | '/ops/distributions'
+    | '/ops/document-templates'
     | '/ops/documents'
     | '/ops/financials'
     | '/ops/nav'
@@ -3273,6 +3284,7 @@ export interface FileRouteTypes {
     | '/ops/banking'
     | '/ops/compliance'
     | '/ops/distributions'
+    | '/ops/document-templates'
     | '/ops/documents'
     | '/ops/financials'
     | '/ops/nav'
@@ -3563,6 +3575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/compliance'
     | '/_authenticated/ops/distributions'
+    | '/_authenticated/ops/document-templates'
     | '/_authenticated/ops/documents'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/nav'
@@ -4957,6 +4970,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsDistributionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/document-templates': {
+      id: '/_authenticated/ops/document-templates'
+      path: '/ops/document-templates'
+      fullPath: '/ops/document-templates'
+      preLoaderRoute: typeof AuthenticatedOpsDocumentTemplatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/documents': {
       id: '/_authenticated/ops/documents'
       path: '/ops/documents'
@@ -6115,6 +6135,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsComplianceRoute: typeof AuthenticatedOpsComplianceRoute
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
+  AuthenticatedOpsDocumentTemplatesRoute: typeof AuthenticatedOpsDocumentTemplatesRoute
   AuthenticatedOpsDocumentsRoute: typeof AuthenticatedOpsDocumentsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
@@ -6320,6 +6341,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsComplianceRoute: AuthenticatedOpsComplianceRoute,
   AuthenticatedOpsDistributionsRoute: AuthenticatedOpsDistributionsRoute,
+  AuthenticatedOpsDocumentTemplatesRoute:
+    AuthenticatedOpsDocumentTemplatesRoute,
   AuthenticatedOpsDocumentsRoute: AuthenticatedOpsDocumentsRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
