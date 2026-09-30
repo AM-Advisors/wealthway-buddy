@@ -12,6 +12,11 @@ export interface SitemapEntry {
 export const PUBLIC_PAGES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/platform", changefreq: "monthly", priority: "0.9" },
+  { path: "/solutions", changefreq: "monthly", priority: "0.7" },
+  { path: "/resources", changefreq: "monthly", priority: "0.7" },
+  { path: "/resources/ein-for-llc", changefreq: "yearly", priority: "0.6" },
+  { path: "/resources/reg-d-506b-vs-506c", changefreq: "yearly", priority: "0.6" },
+  { path: "/resources/pe-software-buyers-guide", changefreq: "yearly", priority: "0.6" },
   { path: "/fund-administration", changefreq: "monthly", priority: "0.9" },
   { path: "/spvs", changefreq: "monthly", priority: "0.9" },
   { path: "/cap-table-management", changefreq: "monthly", priority: "0.9" },

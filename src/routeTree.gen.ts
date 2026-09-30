@@ -74,7 +74,12 @@ import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
+import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
+import { Route as ResourcesEinForLlcRouteImport } from './routes/resources.ein-for-llc'
+import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/resources.pe-software-buyers-guide'
+import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
+import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
 import { Route as AuthenticatedAccountAgreementsRouteImport } from './routes/_authenticated/account.agreements'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
@@ -187,6 +192,7 @@ import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
 import { Route as AuthenticatedOpsDocumentTemplatesRouteImport } from './routes/_authenticated/ops.document-templates'
 import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authenticated/ops.documents'
+import { Route as AuthenticatedOpsEmailHealthRouteImport } from './routes/_authenticated/ops.email-health'
 import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
@@ -195,11 +201,13 @@ import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStatementsRouteImport } from './routes/_authenticated/ops.statements'
+import { Route as AuthenticatedOpsSystemStatusRouteImport } from './routes/_authenticated/ops.system-status'
 import { Route as AuthenticatedOpsTaxRouteImport } from './routes/_authenticated/ops.tax'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authenticated/ops.tax-review'
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as AuthenticatedOpsValuationsRouteImport } from './routes/_authenticated/ops.valuations'
+import { Route as AuthenticatedOpsWebhookLogRouteImport } from './routes/_authenticated/ops.webhook-log'
 import { Route as AuthenticatedProfessionalIndexRouteImport } from './routes/_authenticated/professional.index'
 import { Route as AuthenticatedProfessionalAcceptanceRouteImport } from './routes/_authenticated/professional.acceptance'
 import { Route as AuthenticatedProfessionalActivityRouteImport } from './routes/_authenticated/professional.activity'
@@ -636,9 +644,35 @@ const PostSlugRoute = PostSlugRouteImport.update({
   path: '/post/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
+  id: '/resources/',
+  path: '/resources/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesEinForLlcRoute = ResourcesEinForLlcRouteImport.update({
+  id: '/resources/ein-for-llc',
+  path: '/resources/ein-for-llc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesPeSoftwareBuyersGuideRoute =
+  ResourcesPeSoftwareBuyersGuideRouteImport.update({
+    id: '/resources/pe-software-buyers-guide',
+    path: '/resources/pe-software-buyers-guide',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ResourcesRegD506bVs506cRoute = ResourcesRegD506bVs506cRouteImport.update({
+  id: '/resources/reg-d-506b-vs-506c',
+  path: '/resources/reg-d-506b-vs-506c',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SharesTokenRoute = SharesTokenRouteImport.update({
   id: '/shares/$token',
   path: '/shares/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsIndexRoute = SolutionsIndexRouteImport.update({
+  id: '/solutions/',
+  path: '/solutions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountAgreementsRoute =
@@ -1302,6 +1336,12 @@ const AuthenticatedOpsDocumentsRoute =
     path: '/ops/documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsEmailHealthRoute =
+  AuthenticatedOpsEmailHealthRouteImport.update({
+    id: '/ops/email-health',
+    path: '/ops/email-health',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFinancialReviewsRoute =
   AuthenticatedOpsFinancialReviewsRouteImport.update({
     id: '/ops/financial-reviews',
@@ -1348,6 +1388,12 @@ const AuthenticatedOpsStatementsRoute =
     path: '/ops/statements',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsSystemStatusRoute =
+  AuthenticatedOpsSystemStatusRouteImport.update({
+    id: '/ops/system-status',
+    path: '/ops/system-status',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsTaxRoute = AuthenticatedOpsTaxRouteImport.update({
   id: '/ops/tax',
   path: '/ops/tax',
@@ -1374,6 +1420,12 @@ const AuthenticatedOpsValuationsRoute =
   AuthenticatedOpsValuationsRouteImport.update({
     id: '/ops/valuations',
     path: '/ops/valuations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsWebhookLogRoute =
+  AuthenticatedOpsWebhookLogRouteImport.update({
+    id: '/ops/webhook-log',
+    path: '/ops/webhook-log',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProfessionalIndexRoute =
@@ -2043,8 +2095,13 @@ export interface FileRoutesByFullPath {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
+  '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
+  '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
+  '/solutions/': typeof SolutionsIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2151,6 +2208,7 @@ export interface FileRoutesByFullPath {
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
+  '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
@@ -2159,11 +2217,13 @@ export interface FileRoutesByFullPath {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
+  '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
   '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
+  '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -2334,8 +2394,13 @@ export interface FileRoutesByTo {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
+  '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
+  '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
+  '/resources': typeof ResourcesIndexRoute
+  '/solutions': typeof SolutionsIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2440,6 +2505,7 @@ export interface FileRoutesByTo {
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
+  '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
@@ -2448,11 +2514,13 @@ export interface FileRoutesByTo {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
+  '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
   '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
+  '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -2627,8 +2695,13 @@ export interface FileRoutesById {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
+  '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
+  '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
+  '/solutions/': typeof SolutionsIndexRoute
   '/_authenticated/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2735,6 +2808,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/_authenticated/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/_authenticated/ops/documents': typeof AuthenticatedOpsDocumentsRoute
+  '/_authenticated/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
@@ -2743,11 +2817,13 @@ export interface FileRoutesById {
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/statements': typeof AuthenticatedOpsStatementsRoute
+  '/_authenticated/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
   '/_authenticated/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/_authenticated/ops/valuations': typeof AuthenticatedOpsValuationsRoute
+  '/_authenticated/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
   '/_authenticated/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/_authenticated/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/_authenticated/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -2923,8 +2999,13 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/resources/ein-for-llc'
+    | '/resources/pe-software-buyers-guide'
+    | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth/'
+    | '/resources/'
+    | '/solutions/'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -3031,6 +3112,7 @@ export interface FileRouteTypes {
     | '/ops/distributions'
     | '/ops/document-templates'
     | '/ops/documents'
+    | '/ops/email-health'
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/nav'
@@ -3039,11 +3121,13 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/ss4'
     | '/ops/statements'
+    | '/ops/system-status'
     | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
     | '/ops/team'
     | '/ops/valuations'
+    | '/ops/webhook-log'
     | '/professional/acceptance'
     | '/professional/activity'
     | '/professional/authority'
@@ -3214,8 +3298,13 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/resources/ein-for-llc'
+    | '/resources/pe-software-buyers-guide'
+    | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth'
+    | '/resources'
+    | '/solutions'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -3320,6 +3409,7 @@ export interface FileRouteTypes {
     | '/ops/distributions'
     | '/ops/document-templates'
     | '/ops/documents'
+    | '/ops/email-health'
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/nav'
@@ -3328,11 +3418,13 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/ss4'
     | '/ops/statements'
+    | '/ops/system-status'
     | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
     | '/ops/team'
     | '/ops/valuations'
+    | '/ops/webhook-log'
     | '/professional/acceptance'
     | '/professional/activity'
     | '/professional/authority'
@@ -3506,8 +3598,13 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/resources/ein-for-llc'
+    | '/resources/pe-software-buyers-guide'
+    | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth/'
+    | '/resources/'
+    | '/solutions/'
     | '/_authenticated/account/agreements'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
@@ -3614,6 +3711,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/distributions'
     | '/_authenticated/ops/document-templates'
     | '/_authenticated/ops/documents'
+    | '/_authenticated/ops/email-health'
     | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/nav'
@@ -3622,11 +3720,13 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/statements'
+    | '/_authenticated/ops/system-status'
     | '/_authenticated/ops/tax'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/tax-review'
     | '/_authenticated/ops/team'
     | '/_authenticated/ops/valuations'
+    | '/_authenticated/ops/webhook-log'
     | '/_authenticated/professional/acceptance'
     | '/_authenticated/professional/activity'
     | '/_authenticated/professional/authority'
@@ -3765,7 +3865,12 @@ export interface RootRouteChildren {
   JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
+  ResourcesEinForLlcRoute: typeof ResourcesEinForLlcRoute
+  ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
+  ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  ResourcesIndexRoute: typeof ResourcesIndexRoute
+  SolutionsIndexRoute: typeof SolutionsIndexRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
@@ -4239,11 +4344,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/resources/': {
+      id: '/resources/'
+      path: '/resources'
+      fullPath: '/resources/'
+      preLoaderRoute: typeof ResourcesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/ein-for-llc': {
+      id: '/resources/ein-for-llc'
+      path: '/resources/ein-for-llc'
+      fullPath: '/resources/ein-for-llc'
+      preLoaderRoute: typeof ResourcesEinForLlcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/pe-software-buyers-guide': {
+      id: '/resources/pe-software-buyers-guide'
+      path: '/resources/pe-software-buyers-guide'
+      fullPath: '/resources/pe-software-buyers-guide'
+      preLoaderRoute: typeof ResourcesPeSoftwareBuyersGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/reg-d-506b-vs-506c': {
+      id: '/resources/reg-d-506b-vs-506c'
+      path: '/resources/reg-d-506b-vs-506c'
+      fullPath: '/resources/reg-d-506b-vs-506c'
+      preLoaderRoute: typeof ResourcesRegD506bVs506cRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shares/$token': {
       id: '/shares/$token'
       path: '/shares/$token'
       fullPath: '/shares/$token'
       preLoaderRoute: typeof SharesTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/': {
+      id: '/solutions/'
+      path: '/solutions'
+      fullPath: '/solutions/'
+      preLoaderRoute: typeof SolutionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account/agreements': {
@@ -5030,6 +5170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/email-health': {
+      id: '/_authenticated/ops/email-health'
+      path: '/ops/email-health'
+      fullPath: '/ops/email-health'
+      preLoaderRoute: typeof AuthenticatedOpsEmailHealthRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/financial-reviews': {
       id: '/_authenticated/ops/financial-reviews'
       path: '/ops/financial-reviews'
@@ -5086,6 +5233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsStatementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/system-status': {
+      id: '/_authenticated/ops/system-status'
+      path: '/ops/system-status'
+      fullPath: '/ops/system-status'
+      preLoaderRoute: typeof AuthenticatedOpsSystemStatusRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/tax': {
       id: '/_authenticated/ops/tax'
       path: '/ops/tax'
@@ -5119,6 +5273,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/valuations'
       fullPath: '/ops/valuations'
       preLoaderRoute: typeof AuthenticatedOpsValuationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/webhook-log': {
+      id: '/_authenticated/ops/webhook-log'
+      path: '/ops/webhook-log'
+      fullPath: '/ops/webhook-log'
+      preLoaderRoute: typeof AuthenticatedOpsWebhookLogRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/professional/': {
@@ -6198,6 +6359,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
   AuthenticatedOpsDocumentTemplatesRoute: typeof AuthenticatedOpsDocumentTemplatesRoute
   AuthenticatedOpsDocumentsRoute: typeof AuthenticatedOpsDocumentsRoute
+  AuthenticatedOpsEmailHealthRoute: typeof AuthenticatedOpsEmailHealthRoute
   AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
@@ -6206,11 +6368,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStatementsRoute: typeof AuthenticatedOpsStatementsRoute
+  AuthenticatedOpsSystemStatusRoute: typeof AuthenticatedOpsSystemStatusRoute
   AuthenticatedOpsTaxRoute: typeof AuthenticatedOpsTaxRoute
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTaxReviewRoute: typeof AuthenticatedOpsTaxReviewRoute
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
+  AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
@@ -6409,6 +6573,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsDocumentTemplatesRoute:
     AuthenticatedOpsDocumentTemplatesRoute,
   AuthenticatedOpsDocumentsRoute: AuthenticatedOpsDocumentsRoute,
+  AuthenticatedOpsEmailHealthRoute: AuthenticatedOpsEmailHealthRoute,
   AuthenticatedOpsFinancialReviewsRoute: AuthenticatedOpsFinancialReviewsRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
@@ -6417,11 +6582,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStatementsRoute: AuthenticatedOpsStatementsRoute,
+  AuthenticatedOpsSystemStatusRoute: AuthenticatedOpsSystemStatusRoute,
   AuthenticatedOpsTaxRoute: AuthenticatedOpsTaxRoute,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTaxReviewRoute: AuthenticatedOpsTaxReviewRoute,
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
+  AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
@@ -6531,7 +6698,12 @@ const rootRouteChildren: RootRouteChildren = {
   JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
+  ResourcesEinForLlcRoute: ResourcesEinForLlcRoute,
+  ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
+  ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,
   SharesTokenRoute: SharesTokenRoute,
+  ResourcesIndexRoute: ResourcesIndexRoute,
+  SolutionsIndexRoute: SolutionsIndexRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,

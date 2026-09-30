@@ -260,6 +260,9 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Audit log", url: "/admin/audit", description: "Immutable audit history" },
       { title: "Security", url: "/admin/security", description: "Security settings" },
       { title: "Email preview", url: "/admin/email-preview", description: "Preview outgoing emails" },
+      { title: "Email delivery", url: "/ops/email-health", description: "Bounced and failed platform emails" },
+      { title: "Webhook log", url: "/ops/webhook-log", description: "Identity check, Box Sign and Plaid updates" },
+      { title: "System status", url: "/ops/system-status", description: "App and backend health" },
     ],
   },
 ];

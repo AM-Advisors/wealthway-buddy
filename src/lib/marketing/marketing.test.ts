@@ -20,7 +20,7 @@ const read = (p: string) => readFileSync(resolve(root, p), "utf8");
 function routeFileExists(path: string): boolean {
   if (path === "/") return existsSync(resolve(root, "src/routes/index.tsx"));
   const name = path.slice(1).replace(/\//g, ".");
-  return ["tsx", "ts"].some((ext) => existsSync(resolve(root, `src/routes/${name}.${ext}`)));
+  return ["tsx", "ts", "index.tsx"].some((ext) => existsSync(resolve(root, `src/routes/${name}.${ext}`)));
 }
 
 const sampleArticle: Article = {
@@ -86,7 +86,8 @@ describe("navigation", () => {
     expect(MARKETING_NAV.map((g) => g.label)).toEqual([
       "Platform", "Fund Administration", "SPVs", "Cap Tables", "Solutions", "Resources", "Pricing", "Company",
     ]);
-    expect(visibleNav().some((g) => g.label === "Solutions")).toBe(false);
+    // Solutions now has a live overview page; its per-audience pages stay planned.
+    expect(visibleNav().find((g) => g.label === "Solutions")?.items.map((i) => i.href)).toEqual(["/solutions"]);
   });
 });
 
