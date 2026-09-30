@@ -14143,6 +14143,50 @@ export type Database = {
           },
         ]
       }
+      fund_boi_parties: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          id: string
+          id_document_provided: boolean
+          offering_id: string
+          person_id: string
+          removed_at: string | null
+          removed_by: string | null
+          role: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
+          id_document_provided?: boolean
+          offering_id: string
+          person_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
+          id_document_provided?: boolean
+          offering_id?: string
+          person_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_boi_parties_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_client_reassignments: {
         Row: {
           from_client_id: string | null
@@ -15827,6 +15871,97 @@ export type Database = {
             columns: ["sow_id"]
             isOneToOne: false
             referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_service_order_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          from_status: string | null
+          id: string
+          order_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          from_status?: string | null
+          id?: string
+          order_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          from_status?: string | null
+          id?: string
+          order_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_service_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "fund_service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_service_orders: {
+        Row: {
+          created_at: string
+          fields: Json
+          id: string
+          kind: string
+          offering_id: string
+          prepared_at: string | null
+          prepared_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fields?: Json
+          id?: string
+          kind: string
+          offering_id: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fields?: Json
+          id?: string
+          kind?: string
+          offering_id?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_service_orders_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
