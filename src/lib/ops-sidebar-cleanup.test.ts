@@ -91,6 +91,22 @@ describe("Operations sidebar consolidation", () => {
     expect(getNavigation(session(["operations"]), "operations", "/admin/wire").shell).toBe("ops");
     expect(getNavigation(session(["investor"]), "investor", "/admin/wire").shell).not.toBe("ops");
   });
+
+  it("uses the Operations menu on Sales for Operations staff without changing client pages", () => {
+    const s = session(["investor", "operations"]);
+    expect(getNavigation(s, "investor", "/sales").shell).toBe("ops");
+    expect(getNavigation(s, "investor", "/sales").operations.some((item) => item.title === "Clients")).toBe(true);
+    expect(getNavigation(s, "investor", "/home").shell).toBe("client");
+  });
+
+  it("gives commercial-only Sales staff a Sales menu, never privileged Operations links", () => {
+    const s = { ...session(["investor"]), staffRoles: ["sales"] };
+    const sales = getNavigation(s, "investor", "/sales");
+    expect(sales.shell).toBe("ops");
+    expect(sales.operations.map((item) => item.url)).toEqual(["/sales"]);
+    expect(getNavigation(s, "investor", "/home").shell).toBe("client");
+    expect(getNavigation(session(["investor"]), "investor", "/sales").shell).toBe("client");
+  });
 });
 
 describe("shell chrome", () => {

@@ -23,6 +23,7 @@ export type NavBadgeKey = "signOff" | "applications" | "unpaidInvoices" | "servi
 /** The session fields navigation may read — all produced by resolveSession. */
 export type NavigationSession = {
   operations: boolean;
+  staffRoles?: readonly string[];
   operationsCapabilities?: readonly OpsCapability[];
   workspaces: { kind: WorkspaceKind; id: string; label: string; path: string; surface: "client" | "ops" }[];
   navigation?: {
@@ -75,7 +76,7 @@ export function operationsNavItemIsActive(url: string, pathname: string): boolea
 }
 
 export function surfaceLabelForPath(pathname: string): string {
-  if (isUnder(pathname, "/ops") || isUnder(pathname, "/admin") || isUnder(pathname, "/staff")) return "Harmonious Operations";
+  if (isUnder(pathname, "/ops") || isUnder(pathname, "/admin") || isUnder(pathname, "/staff") || isUnder(pathname, "/sales")) return "Harmonious Operations";
   if (isUnder(pathname, "/manager")) return "Fund management";
   if (isUnder(pathname, "/client")) return "Company workspace";
   if (isUnder(pathname, "/professional")) return "Professional workspace";
@@ -101,7 +102,10 @@ export function getNavigation(
     null;
   const activeKind = active?.kind ?? null;
   const staff = Boolean(session?.operations);
-  const operations = staff ? [OPS_HOME, ...opsNavigation(session?.operationsCapabilities ?? [])] : [];
+  const commercialStaff = Boolean(session?.staffRoles?.some((role) => role === "sales" || role === "sales_management"));
+  const salesPage = isUnder(pathname, "/sales");
+  const operations = staff ? [OPS_HOME, ...opsNavigation(session?.operationsCapabilities ?? [])] : commercialStaff && salesPage
+    ? [{ id: "sales", title: "Sales", url: "/sales", icon: "briefcase" }] : [];
 
   const hasClientWorkspace = workspaces.some((w) => w.surface === "client");
   const onInternalPage = INTERNAL_PATH_PREFIXES.some((p) => isUnder(pathname, p));
@@ -109,7 +113,7 @@ export function getNavigation(
   // canonical Operations menu. Everyone else gets the client menu for their
   // resolved workspace. The retired legacy sidebar has no branch here.
   const shell: Shell =
-    staff && (onInternalPage || activeKind === "operations" || !hasClientWorkspace) ? "ops" : "client";
+    (staff && (onInternalPage || salesPage || activeKind === "operations" || !hasClientWorkspace)) || (commercialStaff && salesPage) ? "ops" : "client";
 
   return {
     shell,
