@@ -93,6 +93,7 @@ export const assignFundAccess = createServerFn({ method: "POST" })
         { onConflict: "user_id,offering_id" },
       );
     if (error) throw new Error(error.message);
+    if (data.kind === "manager") await (await import("@/lib/manager-alerts.server")).sendPendingFundAlerts();
 
     if (data.kind === "manager") {
       const { data: existing } = await supabase

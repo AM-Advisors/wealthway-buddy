@@ -439,6 +439,7 @@ export async function updateTask(
     actorUserId: userId,
     actorRole: actor.isStaff ? "harmonious" : "client",
   });
+  await (await import("@/lib/manager-alerts.server")).sendPendingFundAlerts();
   return data;
 }
 

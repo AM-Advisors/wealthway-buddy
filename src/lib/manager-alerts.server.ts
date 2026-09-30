@@ -392,3 +392,12 @@ export function fundProgressMessage(
   }
   return null;
 }
+
+/** Send any waiting fund-manager updates right after a save; never fails the save. */
+export async function sendPendingFundAlerts() {
+  try {
+    await drainManagerAlerts(10);
+  } catch (e) {
+    console.error("[manager-alerts] immediate send failed", e);
+  }
+}
