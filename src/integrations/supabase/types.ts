@@ -14354,6 +14354,36 @@ export type Database = {
           },
         ]
       }
+      fund_deletion_log: {
+        Row: {
+          actor_user_id: string
+          deleted_at: string
+          fund_name: string
+          id: string
+          impact: Json
+          offering_id: string
+          reason: string
+        }
+        Insert: {
+          actor_user_id: string
+          deleted_at?: string
+          fund_name: string
+          id?: string
+          impact?: Json
+          offering_id: string
+          reason: string
+        }
+        Update: {
+          actor_user_id?: string
+          deleted_at?: string
+          fund_name?: string
+          id?: string
+          impact?: Json
+          offering_id?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       fund_distributions: {
         Row: {
           amount_cents: number
@@ -31317,6 +31347,7 @@ export type Database = {
         Returns: boolean
       }
       fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
+      fund_deletion_impact: { Args: { p_offering_id: string }; Returns: Json }
       fund_dependency_counts: {
         Args: { _offering: string }
         Returns: {
@@ -31576,6 +31607,16 @@ export type Database = {
           _profile: string
         }
         Returns: undefined
+      }
+      super_admin_delete_fund: {
+        Args: {
+          p_actor: string
+          p_allow_funded: boolean
+          p_confirm_name: string
+          p_offering_id: string
+          p_reason: string
+        }
+        Returns: Json
       }
       withdraw_service_request: {
         Args: { _request_id: string }

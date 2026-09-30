@@ -35,7 +35,7 @@ export const listStaffFunds = createServerFn({ method: "GET" })
     if (error || clientError || setupError) throw new Error("Unable to load funds.");
     const names = new Map((clients ?? []).map((c) => [c.id, c.name]));
     const setupByFund = new Map((setups ?? []).map((s) => [s.offering_id, s]));
-    return { canPrepare, rows: (funds ?? []).map((f) => ({
+    return { canPrepare, canDelete: roles.includes("super_admin"), rows: (funds ?? []).map((f) => ({
       id: f.id, name: f.name, summary: f.summary, fundType: f.fund_type, clientId: f.client_id,
       clientName: f.client_id ? names.get(f.client_id) ?? null : null,
       retired: !!f.consolidated_into, setupStage: setupByFund.get(f.id)?.stage ?? null,
@@ -163,5 +163,38 @@ export const saveStaffFundSummary = createServerFn({ method: "POST" })
       changes: [{ field: "summary", from: fund.summary ?? null, to: data.summary }], summary: "Updated fund summary",
     });
     if (auditError) throw new Error(auditError.message);
+    return { ok: true };
+  });
+/** Super Administrators only: counts shown before a permanent Fund deletion. */
+export const getFundDeletionImpact = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { roles } = await staff(context);
+    if (!roles.includes("super_admin")) throw new Error("Only Super Administrators can delete funds.");
+    const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+    const { data: impact, error } = await db.rpc("fund_deletion_impact", { p_offering_id: data.offeringId });
+    if (error) throw new Error("Unable to check what this deletion affects.");
+    return impact as { applications: number; funded: number; documents: number; retired_into: number };
+  });
+
+/** Super Administrators only: permanent, logged Fund deletion (typed name + reason). */
+export const deleteFundPermanently = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    offeringId: z.string().uuid(),
+    confirmName: z.string().max(200),
+    reason: z.string().trim().min(5).max(1000),
+    allowFunded: z.boolean(),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { roles } = await staff(context);
+    if (!roles.includes("super_admin")) throw new Error("Only Super Administrators can delete funds.");
+    const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+    const { error } = await db.rpc("super_admin_delete_fund", {
+      p_offering_id: data.offeringId, p_actor: context.userId, p_reason: data.reason,
+      p_confirm_name: data.confirmName, p_allow_funded: data.allowFunded,
+    });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
