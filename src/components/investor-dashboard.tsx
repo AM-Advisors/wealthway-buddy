@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check } from "lucide-react";
 
-import { Kpi } from "@/components/dashboard-charts";
+import { CapitalByFundChart, Kpi } from "@/components/dashboard-charts";
 import { InvitedFunds } from "@/components/investor-document-review";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,11 @@ export function InvestorDashboard() {
               <Kpi label="Investments" value={d.summary.investments} /><Kpi label="In Progress" value={d.summary.inProgress} />
               <Kpi label="Funded" value={d.summary.funded} /><Kpi label="Needs Your Attention" value={d.summary.needsAttention} />
             </div>
+            <CapitalByFundChart data={Object.values(d.investments.reduce((acc: Record<string, { name: string; committedCents: number; fundedCents: number }>, i: any) => {
+              const a = (acc[i.fundName] ??= { name: i.fundName, committedCents: 0, fundedCents: 0 });
+              a.committedCents += Number(i.amountCents ?? 0); if (i.funded) a.fundedCents += Number(i.amountCents ?? 0);
+              return acc;
+            }, {}))} empty="Amounts will appear once you set them." />
             <ul className="space-y-2">{d.investments.map((i: any) => (
               <li key={i.id}><Link to="/investment/$onboardingId" params={{ onboardingId: i.id }} className="flex flex-col gap-1 rounded-md border p-3 hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between">
                 <span><strong>{i.fundName}</strong><span className="block text-xs text-muted-foreground">{i.profileLabel ?? "Profile not chosen"} · {i.amountCents ? money(i.amountCents) : "Amount not set"}</span></span>

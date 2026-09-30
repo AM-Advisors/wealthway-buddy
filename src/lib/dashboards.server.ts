@@ -72,6 +72,7 @@ export async function opsDashboard(userId: string, filters: { clientId?: string 
     const next = built.filter((b) => b.fact.offeringId === o.id && isActive(b.fact) && b.result.nextAction).map((b) => b.result.nextAction)[0] ?? null;
     return {
       id: o.id as string, name: o.name as string, clientId: o.client_id ?? null, clientName: clientName.get(o.client_id) ?? null, isOpen: !!o.is_open,
+      committedCents: capital(f).intendedCents, fundedCents: capital(f).fundedCents,
       investors: fk.investors, onboarding: fk.onboarding, ready: fk.ready, needsAttention: fk.needsHarmonious, funded: fk.funded,
       agreement: (o.client_id && agreements.get(o.client_id)?.overall) || "needs_review",
       nextAction: next ? { label: String(next.label), owner: next.owner ?? null } : null,

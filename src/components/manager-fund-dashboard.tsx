@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { BarList, CapitalBars, ChartCard, EmptyState, Kpi, KpiSkeleton } from "@/components/dashboard-charts";
+import { BarList, CapitalBars, ChartCard, DonutChart, EmptyState, Kpi, KpiSkeleton, TrendChart } from "@/components/dashboard-charts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { managerFundDashboardFn } from "@/lib/dashboards.functions";
@@ -48,12 +48,16 @@ export function ManagerFundDashboard({ fundId }: { fundId: string }) {
           {q.isPending ? <Skeleton className="h-40" /> : d ? <BarList ariaLabel="Onboarding funnel" rows={d.funnel} empty="No investors yet. Share the onboarding link to begin." onSelect={(k) => k !== "invited" && roster({ stage: k })} /> : null}
         </ChartCard>
         <ChartCard title="Investor readiness" description="Who each active investment is waiting on.">
-          {q.isPending ? <Skeleton className="h-40" /> : d ? <BarList ariaLabel="Investor readiness" rows={d.readiness} empty="No active investments yet." onSelect={(k) => roster({ bucket: k })} /> : null}
+          {q.isPending ? <Skeleton className="h-40" /> : d ? <DonutChart ariaLabel="Investor readiness" rows={d.readiness} empty="No active investments yet." onSelect={(k) => roster({ bucket: k })} /> : null}
         </ChartCard>
         <ChartCard title="Capital progress" description="Intended amounts versus reconciled funded capital.">
           {q.isPending ? <Skeleton className="h-32" /> : d ? <CapitalBars intended={d.capital.intendedCents} funded={d.capital.fundedCents} target={d.capital.targetCents} definitions={METRIC_DEFINITIONS} /> : null}
         </ChartCard>
       </div>
+
+      <ChartCard title="Onboarding over time" description="Investors who started, and investments funded, in the last 90 days.">
+        {q.isPending ? <Skeleton className="h-52" /> : d ? <TrendChart data={d.trend} /> : null}
+      </ChartCard>
 
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-base">Recent Investor Activity</CardTitle><CardDescription>Milestones only.</CardDescription></CardHeader>

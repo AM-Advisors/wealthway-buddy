@@ -192,6 +192,7 @@ import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
+import { Route as AuthenticatedOpsStatementsRouteImport } from './routes/_authenticated/ops.statements'
 import { Route as AuthenticatedOpsTaxRouteImport } from './routes/_authenticated/ops.tax'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authenticated/ops.tax-review'
@@ -1327,6 +1328,12 @@ const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
   path: '/ops/ss4',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsStatementsRoute =
+  AuthenticatedOpsStatementsRouteImport.update({
+    id: '/ops/statements',
+    path: '/ops/statements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsTaxRoute = AuthenticatedOpsTaxRouteImport.update({
   id: '/ops/tax',
   path: '/ops/tax',
@@ -2135,6 +2142,7 @@ export interface FileRoutesByFullPath {
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
@@ -2421,6 +2429,7 @@ export interface FileRoutesByTo {
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
@@ -2713,6 +2722,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
+  '/_authenticated/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/_authenticated/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
@@ -3006,6 +3016,7 @@ export interface FileRouteTypes {
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/ss4'
+    | '/ops/statements'
     | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
@@ -3292,6 +3303,7 @@ export interface FileRouteTypes {
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/ss4'
+    | '/ops/statements'
     | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
@@ -3583,6 +3595,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/readiness'
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/ss4'
+    | '/_authenticated/ops/statements'
     | '/_authenticated/ops/tax'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/tax-review'
@@ -5026,6 +5039,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsSs4RouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/statements': {
+      id: '/_authenticated/ops/statements'
+      path: '/ops/statements'
+      fullPath: '/ops/statements'
+      preLoaderRoute: typeof AuthenticatedOpsStatementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/tax': {
       id: '/_authenticated/ops/tax'
       path: '/ops/tax'
@@ -6143,6 +6163,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
+  AuthenticatedOpsStatementsRoute: typeof AuthenticatedOpsStatementsRoute
   AuthenticatedOpsTaxRoute: typeof AuthenticatedOpsTaxRoute
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTaxReviewRoute: typeof AuthenticatedOpsTaxReviewRoute
@@ -6350,6 +6371,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
+  AuthenticatedOpsStatementsRoute: AuthenticatedOpsStatementsRoute,
   AuthenticatedOpsTaxRoute: AuthenticatedOpsTaxRoute,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTaxReviewRoute: AuthenticatedOpsTaxReviewRoute,

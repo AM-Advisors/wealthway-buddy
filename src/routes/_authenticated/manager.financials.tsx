@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { FinancialReportingBoard } from "@/components/financial-reporting-board";
+import { ManagerReviewMemos } from "@/components/statement-review-board";
 
 export const Route = createFileRoute("/_authenticated/manager/financials")({
   head: () => ({
@@ -21,5 +22,10 @@ export const Route = createFileRoute("/_authenticated/manager/financials")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <FinancialReportingBoard role="manager" />,
+  component: () => (
+    <>
+      <ManagerReviewMemos />
+      <FinancialReportingBoard role="manager" />
+    </>
+  ),
 });

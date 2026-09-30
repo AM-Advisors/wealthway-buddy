@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Badge } from "@/components/ui/badge";
+import { CapitalByFundChart, ChartCard, DonutChart } from "@/components/dashboard-charts";
 import { getSalesPerformance } from "@/lib/sales-performance.functions";
 import { COMMERCIAL_STATUS_LABEL } from "@/lib/commercial-pricing";
 
@@ -21,6 +22,16 @@ export function SalesOverviewTab() {
         <Stat label="Funded (reconciled)" value={money(d.totals.fundedCents)} />
         <Stat label="Harmonious fees" value={money(d.totals.feeCents)} />
         <Stat label="Discounts awaiting approval" value={String(d.totals.pendingApprovals)} />
+      </section>
+
+      <section className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <ChartCard title="Capital raised by fund" description="Committed versus reconciled funded.">
+          <CapitalByFundChart data={d.performance} />
+        </ChartCard>
+        <ChartCard title="Investor pipeline" description="Investors by stage.">
+          <DonutChart ariaLabel="Pipeline by stage" empty="No investors in the pipeline yet."
+            rows={(Object.keys(STAGE_LABEL) as (keyof typeof STAGE_LABEL)[]).map((k) => ({ key: k, label: STAGE_LABEL[k], count: d.stages[k], percent: null }))} />
+        </ChartCard>
       </section>
 
       <section>

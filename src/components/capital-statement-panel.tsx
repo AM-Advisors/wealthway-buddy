@@ -99,6 +99,11 @@ export function CapitalStatementPanel({
                 ) : (
                   <Badge variant="secondary">Current</Badge>
                 )}
+                {s.review_status === "draft" ? (
+                  <Badge variant="outline">Awaiting Harmonious review</Badge>
+                ) : s.review_status === "returned" ? (
+                  <Badge variant="destructive" title={s.review_note ?? undefined}>Returned</Badge>
+                ) : null}
                 <Button size="sm" variant="outline" onClick={() => void openStatement(s)}>
                   View
                 </Button>

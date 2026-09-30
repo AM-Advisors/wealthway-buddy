@@ -132,7 +132,7 @@ export const listStatementsForApplication = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("capital_account_statements")
-      .select("id, statement_date, version, superseded, generated_at, snapshot")
+      .select("id, statement_date, version, superseded, generated_at, snapshot, review_status, review_note")
       .eq("application_id", data.application_id)
       .order("version", { ascending: false });
     if (error) throw new Error(error.message);
@@ -151,11 +151,17 @@ export const getMyStatements = createServerFn({ method: "GET" })
     const ids = ((apps ?? []) as any[]).map((a) => a.id as string);
     if (ids.length === 0) return { rows: [] as any[] };
 
+    // Latest approved statement per investment. A newer draft awaiting
+    // Harmonious review never hides the one the investor already has.
     const { data: rows } = await supabase
       .from("capital_account_statements")
       .select("id, application_id, statement_date, version, superseded, generated_at, snapshot")
       .in("application_id", ids)
-      .eq("superseded", false)
-      .order("statement_date", { ascending: false });
-    return { rows: (rows ?? []) as any[] };
+      .eq("review_status", "approved")
+      .order("version", { ascending: false });
+    const seen = new Set<string>();
+    const latest = ((rows ?? []) as any[]).filter((r) =>
+      seen.has(r.application_id) ? false : (seen.add(r.application_id), true),
+    );
+    return { rows: latest.map((r) => ({ ...r, superseded: false })) };
   });

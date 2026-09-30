@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
-import { BarList, CapitalBars, ChartCard, EmptyState, Kpi, KpiSkeleton, TrendChart } from "@/components/dashboard-charts";
+import { BarList, CapitalBars, CapitalByFundChart, ChartCard, DonutChart, EmptyState, Kpi, KpiSkeleton, TrendChart } from "@/components/dashboard-charts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -85,7 +85,7 @@ export function OpsDashboard() {
           {q.isPending ? <Skeleton className="h-40" /> : d ? <BarList ariaLabel="Onboarding funnel" rows={d.funnel} empty="No investors are onboarding yet." onSelect={(k) => toFunds(k === "complete" ? "ready" : k === "invited" ? "all" : "onboarding")} /> : null}
         </ChartCard>
         <ChartCard title="Readiness" description="Active investments by what they are waiting on.">
-          {q.isPending ? <Skeleton className="h-40" /> : d ? <BarList ariaLabel="Readiness distribution" rows={d.readiness} empty="No active investments yet." onSelect={(k) => k === "ready" ? toFunds("ready") : k === "blocked" ? toFunds("blocked") : toQueue(k === "needs_investor" ? "investor" : k === "needs_fund_manager" ? "fund_manager" : "harmonious")} /> : null}
+          {q.isPending ? <Skeleton className="h-40" /> : d ? <DonutChart ariaLabel="Readiness distribution" rows={d.readiness} empty="No active investments yet." onSelect={(k) => k === "ready" ? toFunds("ready") : k === "blocked" ? toFunds("blocked") : toQueue(k === "needs_investor" ? "investor" : k === "needs_fund_manager" ? "fund_manager" : "harmonious")} /> : null}
         </ChartCard>
         <ChartCard title="Capital status" description="Intended amounts versus money reconciled to investments.">
           {q.isPending ? <Skeleton className="h-32" /> : d ? <CapitalBars intended={d.capital.intendedCents} awaiting={d.capital.awaitingFundingCents} funded={d.capital.fundedCents} definitions={METRIC_DEFINITIONS} /> : null}
@@ -95,6 +95,10 @@ export function OpsDashboard() {
             rows={[{ key: "complete", label: "Complete", count: d.agreements.complete, percent: null }, { key: "follow_up", label: "Follow-Up Required", count: d.agreements.follow_up, percent: null }, { key: "needs_review", label: "Setup Needs Review", count: d.agreements.needs_review, percent: null }]} /> : null}
         </ChartCard>
       </div>
+
+      <ChartCard title="Capital by fund" description="Intended amounts versus money reconciled to investments, per fund.">
+        {q.isPending ? <Skeleton className="h-52" /> : d ? <CapitalByFundChart data={d.funds} /> : null}
+      </ChartCard>
 
       <ChartCard title="Investor onboarding" description="Onboardings started and investments funded, from recorded events only.">
         <div className="mb-2 flex gap-1" role="group" aria-label="Time range">
