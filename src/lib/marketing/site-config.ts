@@ -114,6 +114,10 @@ export const MARKETING_NAV: NavGroup[] = [
     href: "/harmoniousclassroom",
     items: [
       { label: "Guides / Classroom", href: "/harmoniousclassroom", status: "live" },
+      { label: "Resource library", href: "/resources", status: "live" },
+      { label: "EIN for an LLC", href: "/resources/ein-for-llc", status: "live" },
+      { label: "Reg D 506(b) vs 506(c)", href: "/resources/reg-d-506b-vs-506c", status: "live" },
+      { label: "PE software buyer's guide", href: "/resources/pe-software-buyers-guide", status: "live" },
     ],
   },
   {
