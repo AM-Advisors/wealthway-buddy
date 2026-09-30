@@ -74,6 +74,10 @@ import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
+import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
+import { Route as ResourcesEinForLlcRouteImport } from './routes/resources.ein-for-llc'
+import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/resources.pe-software-buyers-guide'
+import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as AuthenticatedAccountAgreementsRouteImport } from './routes/_authenticated/account.agreements'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -634,6 +638,27 @@ const OnboardRefRoute = OnboardRefRouteImport.update({
 const PostSlugRoute = PostSlugRouteImport.update({
   id: '/post/$slug',
   path: '/post/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
+  id: '/resources/',
+  path: '/resources/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesEinForLlcRoute = ResourcesEinForLlcRouteImport.update({
+  id: '/resources/ein-for-llc',
+  path: '/resources/ein-for-llc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesPeSoftwareBuyersGuideRoute =
+  ResourcesPeSoftwareBuyersGuideRouteImport.update({
+    id: '/resources/pe-software-buyers-guide',
+    path: '/resources/pe-software-buyers-guide',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ResourcesRegD506bVs506cRoute = ResourcesRegD506bVs506cRouteImport.update({
+  id: '/resources/reg-d-506b-vs-506c',
+  path: '/resources/reg-d-506b-vs-506c',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SharesTokenRoute = SharesTokenRouteImport.update({
@@ -2043,8 +2068,12 @@ export interface FileRoutesByFullPath {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
+  '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
+  '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2334,8 +2363,12 @@ export interface FileRoutesByTo {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
+  '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
+  '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
+  '/resources': typeof ResourcesIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2627,8 +2660,12 @@ export interface FileRoutesById {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
+  '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
+  '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
   '/_authenticated/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2923,8 +2960,12 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/resources/ein-for-llc'
+    | '/resources/pe-software-buyers-guide'
+    | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth/'
+    | '/resources/'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -3214,8 +3255,12 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/resources/ein-for-llc'
+    | '/resources/pe-software-buyers-guide'
+    | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth'
+    | '/resources'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -3506,8 +3551,12 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/resources/ein-for-llc'
+    | '/resources/pe-software-buyers-guide'
+    | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth/'
+    | '/resources/'
     | '/_authenticated/account/agreements'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
@@ -3765,7 +3814,11 @@ export interface RootRouteChildren {
   JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
+  ResourcesEinForLlcRoute: typeof ResourcesEinForLlcRoute
+  ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
+  ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  ResourcesIndexRoute: typeof ResourcesIndexRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
@@ -4237,6 +4290,34 @@ declare module '@tanstack/react-router' {
       path: '/post/$slug'
       fullPath: '/post/$slug'
       preLoaderRoute: typeof PostSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/': {
+      id: '/resources/'
+      path: '/resources'
+      fullPath: '/resources/'
+      preLoaderRoute: typeof ResourcesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/ein-for-llc': {
+      id: '/resources/ein-for-llc'
+      path: '/resources/ein-for-llc'
+      fullPath: '/resources/ein-for-llc'
+      preLoaderRoute: typeof ResourcesEinForLlcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/pe-software-buyers-guide': {
+      id: '/resources/pe-software-buyers-guide'
+      path: '/resources/pe-software-buyers-guide'
+      fullPath: '/resources/pe-software-buyers-guide'
+      preLoaderRoute: typeof ResourcesPeSoftwareBuyersGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/reg-d-506b-vs-506c': {
+      id: '/resources/reg-d-506b-vs-506c'
+      path: '/resources/reg-d-506b-vs-506c'
+      fullPath: '/resources/reg-d-506b-vs-506c'
+      preLoaderRoute: typeof ResourcesRegD506bVs506cRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shares/$token': {
@@ -6531,7 +6612,11 @@ const rootRouteChildren: RootRouteChildren = {
   JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
+  ResourcesEinForLlcRoute: ResourcesEinForLlcRoute,
+  ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
+  ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,
   SharesTokenRoute: SharesTokenRoute,
+  ResourcesIndexRoute: ResourcesIndexRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
