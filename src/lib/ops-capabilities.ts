@@ -156,6 +156,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     id: "funds", title: "Funds & SPVs", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund"],
     screens: [
       { title: "Fund Setup", url: "/ops/fund-setup", description: "Funds and SPVs, formation and launch status" },
+      { title: "Document templates", url: "/ops/document-templates", description: "Reusable fund documents with versioning and approval" },
       { title: "Fund pages", url: "/admin/funds", description: "Public fund pages" },
       { title: "Fund access", url: "/admin/access", description: "Who can open each fund" },
     ],
