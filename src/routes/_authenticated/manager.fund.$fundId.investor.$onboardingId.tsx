@@ -1,4 +1,5 @@
 import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
+import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -130,8 +131,8 @@ function InvestorRecordPage() {
       {tab === "readiness" ? <Card><CardHeader><CardTitle className="text-base">{data.readiness.label}</CardTitle></CardHeader><CardContent><ul className="divide-y text-sm">{data.readiness.stages.map((s: any) => <li key={s.key} className="flex justify-between py-2"><span>{s.label}</span><span className="text-muted-foreground">{prettyStatus(s.status)}</span></li>)}</ul>
         <Link to="/manager/fund/$fundId/readiness" params={{ fundId }} className="mt-3 inline-block text-sm text-primary hover:underline">Open Fund readiness</Link></CardContent></Card> : null}
 
-      {tab === "documents" ? <Card><CardContent className="pt-6 text-sm text-muted-foreground">Subscription and supporting documents appear in the Fund's Documents area. Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
-        <div className="mt-2"><Link to="/manager/fund/$fundId/documents" params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card> : null}
+      {tab === "documents" ? <div className="space-y-4"><InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
+        <div className="mt-2"><Link to="/manager/fund/$fundId/documents" params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div> : null}
 
       {tab === "activity" ? <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
     </section>
