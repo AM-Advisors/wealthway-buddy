@@ -44,7 +44,7 @@ export function FundServicesCard({ offeringId, onChanged }: { offeringId: string
   if (q.error || !q.data) return <p className="text-sm text-destructive">Operations services couldn't be loaded.</p>;
   const d = q.data;
   return (
-    <Card id="setup-services" className="scroll-mt-6">
+    <Card id="setup-services" className="scroll-mt-32">
       <CardHeader>
         <CardTitle className="text-base">Operations services</CardTitle>
         <p className="text-sm text-muted-foreground">

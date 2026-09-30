@@ -205,7 +205,7 @@ export function LaunchRequirements() {
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
   return (
-    <div id="setup-launch" className="scroll-mt-6 rounded-lg border p-4">
+    <div id="setup-launch" className="scroll-mt-32 rounded-lg border p-4">
       <p className="font-medium">Launch</p>
       <p className="text-xs text-muted-foreground">{open} setup task{open === 1 ? "" : "s"} left across all sections · {r.approvalCount} launch decision{r.approvalCount === 1 ? "" : "s"} recorded</p>
       <ul className="mt-2 space-y-1.5 text-sm">
