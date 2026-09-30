@@ -173,5 +173,5 @@ export async function autoCompleteTasks(offeringId: string) {
     // Auto-completion is a convenience; it must never fail the save that triggered it.
   }
   // Fund managers hear about completed steps (and service moves) straight away.
-  await (await import("@/lib/manager-alerts.server")).sendPendingFundAlerts();
+  await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
 }

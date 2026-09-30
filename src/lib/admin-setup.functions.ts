@@ -93,7 +93,7 @@ export const inviteFundAccess = createServerFn({ method: "POST" })
         { onConflict: "user_id,offering_id" },
       );
     if (assignError) throw new Error(assignError.message);
-    if (data.kind === "manager") await (await import("@/lib/manager-alerts.server")).sendPendingFundAlerts();
+    if (data.kind === "manager") await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
 
     if (data.kind === "manager") {
       const { data: role } = await supabase
