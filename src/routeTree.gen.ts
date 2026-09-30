@@ -146,6 +146,7 @@ import { Route as AuthenticatedManagerClosingRouteImport } from './routes/_authe
 import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_authenticated/manager.diligence'
 import { Route as AuthenticatedManagerDistributionsRouteImport } from './routes/_authenticated/manager.distributions'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
+import { Route as AuthenticatedManagerFinancialReviewsRouteImport } from './routes/_authenticated/manager.financial-reviews'
 import { Route as AuthenticatedManagerFinancialsRouteImport } from './routes/_authenticated/manager.financials'
 import { Route as AuthenticatedManagerFundsRouteImport } from './routes/_authenticated/manager.funds'
 import { Route as AuthenticatedManagerInboxRouteImport } from './routes/_authenticated/manager.inbox'
@@ -186,6 +187,7 @@ import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
 import { Route as AuthenticatedOpsDocumentTemplatesRouteImport } from './routes/_authenticated/ops.document-templates'
 import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authenticated/ops.documents'
+import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
@@ -1058,6 +1060,12 @@ const AuthenticatedManagerDocumentsRoute =
     path: '/manager/documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerFinancialReviewsRoute =
+  AuthenticatedManagerFinancialReviewsRouteImport.update({
+    id: '/manager/financial-reviews',
+    path: '/manager/financial-reviews',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerFinancialsRoute =
   AuthenticatedManagerFinancialsRouteImport.update({
     id: '/manager/financials',
@@ -1292,6 +1300,12 @@ const AuthenticatedOpsDocumentsRoute =
   AuthenticatedOpsDocumentsRouteImport.update({
     id: '/ops/documents',
     path: '/ops/documents',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsFinancialReviewsRoute =
+  AuthenticatedOpsFinancialReviewsRouteImport.update({
+    id: '/ops/financial-reviews',
+    path: '/ops/financial-reviews',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsFinancialsRoute =
@@ -2098,6 +2112,7 @@ export interface FileRoutesByFullPath {
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/manager/financial-reviews': typeof AuthenticatedManagerFinancialReviewsRoute
   '/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/manager/funds': typeof AuthenticatedManagerFundsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -2136,6 +2151,7 @@ export interface FileRoutesByFullPath {
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
+  '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -2385,6 +2401,7 @@ export interface FileRoutesByTo {
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/manager/financial-reviews': typeof AuthenticatedManagerFinancialReviewsRoute
   '/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/manager/funds': typeof AuthenticatedManagerFundsRoute
   '/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -2423,6 +2440,7 @@ export interface FileRoutesByTo {
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
+  '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -2678,6 +2696,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/_authenticated/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
+  '/_authenticated/manager/financial-reviews': typeof AuthenticatedManagerFinancialReviewsRoute
   '/_authenticated/manager/financials': typeof AuthenticatedManagerFinancialsRoute
   '/_authenticated/manager/funds': typeof AuthenticatedManagerFundsRoute
   '/_authenticated/manager/inbox': typeof AuthenticatedManagerInboxRoute
@@ -2716,6 +2735,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/_authenticated/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/_authenticated/ops/documents': typeof AuthenticatedOpsDocumentsRoute
+  '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -2972,6 +2992,7 @@ export interface FileRouteTypes {
     | '/manager/diligence'
     | '/manager/distributions'
     | '/manager/documents'
+    | '/manager/financial-reviews'
     | '/manager/financials'
     | '/manager/funds'
     | '/manager/inbox'
@@ -3010,6 +3031,7 @@ export interface FileRouteTypes {
     | '/ops/distributions'
     | '/ops/document-templates'
     | '/ops/documents'
+    | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/nav'
     | '/ops/performance'
@@ -3259,6 +3281,7 @@ export interface FileRouteTypes {
     | '/manager/diligence'
     | '/manager/distributions'
     | '/manager/documents'
+    | '/manager/financial-reviews'
     | '/manager/financials'
     | '/manager/funds'
     | '/manager/inbox'
@@ -3297,6 +3320,7 @@ export interface FileRouteTypes {
     | '/ops/distributions'
     | '/ops/document-templates'
     | '/ops/documents'
+    | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/nav'
     | '/ops/performance'
@@ -3551,6 +3575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/diligence'
     | '/_authenticated/manager/distributions'
     | '/_authenticated/manager/documents'
+    | '/_authenticated/manager/financial-reviews'
     | '/_authenticated/manager/financials'
     | '/_authenticated/manager/funds'
     | '/_authenticated/manager/inbox'
@@ -3589,6 +3614,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/distributions'
     | '/_authenticated/ops/document-templates'
     | '/_authenticated/ops/documents'
+    | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/performance'
@@ -4717,6 +4743,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/financial-reviews': {
+      id: '/_authenticated/manager/financial-reviews'
+      path: '/manager/financial-reviews'
+      fullPath: '/manager/financial-reviews'
+      preLoaderRoute: typeof AuthenticatedManagerFinancialReviewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/financials': {
       id: '/_authenticated/manager/financials'
       path: '/manager/financials'
@@ -4995,6 +5028,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/documents'
       fullPath: '/ops/documents'
       preLoaderRoute: typeof AuthenticatedOpsDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/financial-reviews': {
+      id: '/_authenticated/ops/financial-reviews'
+      path: '/ops/financial-reviews'
+      fullPath: '/ops/financial-reviews'
+      preLoaderRoute: typeof AuthenticatedOpsFinancialReviewsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/financials': {
@@ -6119,6 +6159,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerDiligenceRoute: typeof AuthenticatedManagerDiligenceRoute
   AuthenticatedManagerDistributionsRoute: typeof AuthenticatedManagerDistributionsRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
+  AuthenticatedManagerFinancialReviewsRoute: typeof AuthenticatedManagerFinancialReviewsRoute
   AuthenticatedManagerFinancialsRoute: typeof AuthenticatedManagerFinancialsRoute
   AuthenticatedManagerFundsRoute: typeof AuthenticatedManagerFundsRoute
   AuthenticatedManagerInboxRoute: typeof AuthenticatedManagerInboxRoute
@@ -6157,6 +6198,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
   AuthenticatedOpsDocumentTemplatesRoute: typeof AuthenticatedOpsDocumentTemplatesRoute
   AuthenticatedOpsDocumentsRoute: typeof AuthenticatedOpsDocumentsRoute
+  AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
@@ -6320,6 +6362,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerDistributionsRoute:
     AuthenticatedManagerDistributionsRoute,
   AuthenticatedManagerDocumentsRoute: AuthenticatedManagerDocumentsRoute,
+  AuthenticatedManagerFinancialReviewsRoute:
+    AuthenticatedManagerFinancialReviewsRoute,
   AuthenticatedManagerFinancialsRoute: AuthenticatedManagerFinancialsRoute,
   AuthenticatedManagerFundsRoute: AuthenticatedManagerFundsRoute,
   AuthenticatedManagerInboxRoute: AuthenticatedManagerInboxRoute,
@@ -6365,6 +6409,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsDocumentTemplatesRoute:
     AuthenticatedOpsDocumentTemplatesRoute,
   AuthenticatedOpsDocumentsRoute: AuthenticatedOpsDocumentsRoute,
+  AuthenticatedOpsFinancialReviewsRoute: AuthenticatedOpsFinancialReviewsRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,

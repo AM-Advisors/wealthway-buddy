@@ -245,6 +245,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     screens: [
       { title: "Financial reporting", url: "/ops/financials", description: "Fund financial statements" },
       { title: "Statements & reviews", url: "/ops/statements", description: "Approve capital account statements and client financial reviews" },
+      { title: "Financial reviews", url: "/ops/financial-reviews", description: "Prepare and review quarterly and annual statement packages" },
       { title: "Performance reporting", url: "/ops/performance", description: "Performance metrics" },
       { title: "Investor reporting", url: "/ops/reporting", description: "Investor report packages" },
     ],

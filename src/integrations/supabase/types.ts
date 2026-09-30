@@ -13529,6 +13529,118 @@ export type Database = {
           },
         ]
       }
+      financial_statement_package_events: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_role: string
+          created_at: string
+          id: string
+          note: string | null
+          package_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_role: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          package_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_role?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          package_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_statement_package_events_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "financial_statement_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_statement_packages: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          figures: Json
+          id: string
+          manager_notified_at: string | null
+          notes: string
+          offering_id: string
+          period_end: string
+          period_start: string
+          period_type: string
+          prepared_at: string
+          prepared_by: string
+          report_ids: string[]
+          returned_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          figures?: Json
+          id?: string
+          manager_notified_at?: string | null
+          notes?: string
+          offering_id: string
+          period_end: string
+          period_start: string
+          period_type: string
+          prepared_at?: string
+          prepared_by: string
+          report_ids?: string[]
+          returned_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          figures?: Json
+          id?: string
+          manager_notified_at?: string | null
+          notes?: string
+          offering_id?: string
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          prepared_at?: string
+          prepared_by?: string
+          report_ids?: string[]
+          returned_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_statement_packages_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_1042_returns: {
         Row: {
           approved_by: string | null
