@@ -1,3 +1,4 @@
+import { FundUpdatesFeed } from "@/components/fund-updates-feed";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -36,7 +37,7 @@ function ManagerPortfolio() {
   const load = useServerFn(getManagerPanelSummary);
   const loadProgress = useServerFn(getManagerFundProgress);
   const summary = useQuery({ queryKey: ["manager-panel-summary"], queryFn: () => load(), refetchInterval: 60_000 });
-  const progress = useQuery({ queryKey: ["manager-fund-progress"], queryFn: () => loadProgress() });
+  const progress = useQuery({ queryKey: ["manager-fund-progress"], queryFn: () => loadProgress(), refetchInterval: 60_000 });
   const loadRequests = useServerFn(getMyFundRequests);
   const myRequests = useQuery({ queryKey: ["my-fund-requests"], queryFn: () => loadRequests() });
   const [search, setSearch] = useState("");
@@ -68,6 +69,7 @@ function ManagerPortfolio() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <div className="mb-6"><FundUpdatesFeed limit={5} /></div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div><h1 className="text-3xl">Your Funds</h1><p className="mt-2 text-sm text-muted-foreground">{all.length} {all.length === 1 ? "fund" : "funds"} · {money(totals.committed)} committed · {money(totals.received)} received</p></div>
         <div className="flex flex-col gap-2 sm:flex-row">

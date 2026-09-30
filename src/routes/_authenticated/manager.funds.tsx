@@ -24,6 +24,8 @@ function ManagerFundsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["manager-funds-list"],
     queryFn: () => fundsFn() as Promise<any>,
+    // Funds Harmonious assigns appear without a reload.
+    refetchInterval: 60_000,
   });
 
   const funds: any[] = Array.isArray(data) ? data : (data?.funds ?? []);
