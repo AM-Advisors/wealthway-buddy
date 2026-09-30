@@ -236,9 +236,10 @@ function RegDComparisonPage() {
             Run the whole raise in one place
           </h2>
           <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
-            Harmonious tracks the entity and EIN, runs investor identity checks and accreditation
-            (self-certified for 506(b), evidence-reviewed for 506(c)) and e-signed subscriptions, and
-            records your Form D and Blue Sky filings — with the audit trail kept for you.
+            Harmonious offers EIN, Form D and Blue Sky filing services for clients. Our team
+            coordinates the applicable submissions, tracks filing dates and receipts, and keeps
+            the record alongside investor onboarding and signed subscriptions. Filing work is
+            handled by the team, not submitted automatically by the platform.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button asChild size="sm">
