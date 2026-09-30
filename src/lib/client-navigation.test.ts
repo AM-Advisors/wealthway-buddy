@@ -41,6 +41,7 @@ describe("client navigation by workspace", () => {
       "Investors",
       "Capital",
       "Reports",
+      "Financial reviews",
       "Documents",
       "Agreements",
       "Profile",
