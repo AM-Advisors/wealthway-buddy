@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/admin/signoff")({
   loader: () => listSignoffQueue(),
   errorComponent: ({ error }) => (
     <main className="mx-auto w-full max-w-3xl p-6 text-sm text-muted-foreground">
-      {error.message}
+      {error instanceof Error ? error.message : "Something went wrong."}
     </main>
   ),
   notFoundComponent: () => (
