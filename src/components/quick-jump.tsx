@@ -15,6 +15,7 @@ import {
 import { getNavigation } from "@/lib/navigation";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { opsSearchIndex } from "@/lib/ops-search";
+import { recordVisit } from "@/lib/recent-screens";
 
 /**
  * "Jump to" palette (Ctrl/Cmd+K) on every signed-in page. Lists only the
@@ -26,6 +27,8 @@ export function QuickJump() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { session, activeId } = useClientWorkspace();
+
+  useEffect(() => recordVisit(pathname), [pathname]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

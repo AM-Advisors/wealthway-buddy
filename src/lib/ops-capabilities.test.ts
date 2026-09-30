@@ -103,7 +103,9 @@ describe("the Operations menu", () => {
     expect(can(capabilitiesFor(["executive"]), "funds", "prepare")).toBe(false);
   });
   it("shows only the sections the person may see", () => {
-    expect(opsNavigation(capabilitiesFor(["tax"])).map((s) => s.id)).toEqual(["tax", "reports"]);
+    expect(opsNavigation(capabilitiesFor(["tax"])).map((s) => s.id)).toEqual(["accounting", "tax"]);
+    // Tax sees only the report screens inside Accounting & Reports, via its work page.
+    expect(opsNavigation(capabilitiesFor(["tax"]))[0]!.url).toBe("/ops/areas/accounting");
     expect(opsNavigation(capabilitiesFor([]))).toEqual([]);
   });
 

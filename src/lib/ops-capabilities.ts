@@ -122,163 +122,169 @@ export function canApprove(input: {
 
 export type OpsSection = { id: OpsArea; title: string; url: string; icon: string };
 export type OpsSectionGroup = "records" | "work" | "admin";
-export type OpsScreen = { title: string; url: string; description: string };
+/** A step in the area's process. Screens without `cap` use the area's own capability. */
+export type OpsStep = "Start" | "Prepare" | "Review" | "Approve" | "Track" | "Reference";
+export type OpsScreen = { title: string; url: string; description: string; cap?: OpsArea; step?: OpsStep };
 export type OpsWorkArea = OpsSection & {
   group: OpsSectionGroup;
-  /** Specialist screens reached from the area landing page and search. */
+  /** Screens in process order, reached from the area page and search. */
   screens: OpsScreen[];
   /** Extra path prefixes that belong to this area (e.g. singular /ops/fund). */
   match?: string[];
+  /** Work-queue areas whose waiting items show on this area's page. */
+  queues?: OpsArea[];
 };
 
 /**
- * The Operations work areas, in the order the work happens. Specialist
- * screens live underneath their area instead of in the sidebar; every old
- * address keeps working because nothing here removes a route.
+ * The Operations work areas, one per team process. A merged area keeps each
+ * screen's original capability (`cap`), so nobody gains or loses access;
+ * every old address keeps working because nothing here removes a route.
  */
 export const OPS_WORK_AREAS: OpsWorkArea[] = [
   {
-    id: "clients", title: "Clients", url: "/ops/clients", icon: "briefcase", group: "records",
+    id: "clients", title: "Clients", url: "/ops/clients", icon: "briefcase", group: "records", queues: ["clients", "tasks"],
     screens: [
-      { title: "Clients and scope", url: "/admin/contracts", description: "Contracts and engagement scope" },
-      { title: "Entities and engagements", url: "/admin/entities", description: "Client entities and engagements" },
-      { title: "Services administration", url: "/admin/services", description: "Service catalogue and delivery" },
-      { title: "Agreements & SOW", url: "/admin/agreements", description: "Master agreements and statements of work" },
-      { title: "Sales", url: "/sales", description: "Fund pricing, approvals, Client Pricing and commercial follow-up" },
-      { title: "Pricing and agreements", url: "/admin/pricing", description: "Pricing schedules" },
-      { title: "Rate proposals", url: "/admin/rate-proposals", description: "Proposed fee changes" },
-      { title: "Contract permissions", url: "/ops/contracts/permissions", description: "Who may upload, review, approve and price contracts" },
-      { title: "Unpaid invoices", url: "/admin/invoices", description: "Client invoices awaiting payment" },
-      { title: "Client portal activity", url: "/admin/client-activity", description: "What clients did in the portal" },
+      { title: "My clients", url: "/staff", description: "Clients assigned to you", cap: "tasks", step: "Start" },
+      { title: "Client onboarding", url: "/admin/onboarding", description: "Set up a new client", cap: "onboarding", step: "Start" },
+      { title: "Entities and engagements", url: "/admin/entities", description: "Client entities and engagements", step: "Prepare" },
+      { title: "Agreements & SOW", url: "/admin/agreements", description: "Master agreements and statements of work", step: "Prepare" },
+      { title: "Service requests & sign-off", url: "/admin/signoff", description: "Requests and documents waiting for sign-off", cap: "tasks", step: "Approve" },
+      { title: "Sales & pricing approvals", url: "/sales", description: "Fund pricing, below-baseline approvals and commercial follow-up", step: "Approve" },
+      { title: "Rate card", url: "/admin/pricing", description: "Standard pricing schedules", step: "Reference" },
+      { title: "Rate proposals", url: "/admin/rate-proposals", description: "Proposed changes to the rate card", step: "Review" },
+      { title: "Unpaid invoices", url: "/admin/invoices", description: "Client invoices awaiting payment", step: "Track" },
+      { title: "Incoming requests", url: "/admin/requests", description: "Requests from clients", cap: "tasks", step: "Track" },
+      { title: "Clients and scope", url: "/admin/contracts", description: "Contract terms and engagement scope", step: "Reference" },
+      { title: "Services catalogue", url: "/admin/services", description: "Service catalogue and delivery", step: "Reference" },
+      { title: "Contract permissions", url: "/ops/contracts/permissions", description: "Who may upload, review, approve and price contracts", step: "Reference" },
+      { title: "Client portal activity", url: "/admin/client-activity", description: "What clients did in the portal", step: "Reference" },
     ],
   },
   {
-    id: "funds", title: "Funds & SPVs", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund"],
+    id: "funds", title: "Funds & SPVs", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund"], queues: ["funds", "regulatory", "documents"],
     screens: [
-      { title: "Fund Setup", url: "/ops/fund-setup", description: "Funds and SPVs, formation and launch status" },
-      { title: "Document templates", url: "/ops/document-templates", description: "Reusable fund documents with versioning and approval" },
-      { title: "Fund pages", url: "/admin/funds", description: "Public fund pages" },
-      { title: "Fund access", url: "/admin/access", description: "Who can open each fund" },
+      { title: "Fund Setup", url: "/ops/fund-setup", description: "Details, entity & EIN, Form D, banking, documents and launch", step: "Start" },
+      { title: "EIN and SS-4 queue", url: "/ops/ss4", description: "EIN applications across all Funds", cap: "regulatory", step: "Prepare" },
+      { title: "Offering statement", url: "/admin/offering-statement", description: "Offering statement drafting", cap: "regulatory", step: "Prepare" },
+      { title: "Document templates", url: "/ops/document-templates", description: "Reusable fund documents with versioning and approval", step: "Review" },
+      { title: "Documents & signatures", url: "/ops/documents", description: "Document repository and signature status", cap: "documents", step: "Track" },
+      { title: "Document activity", url: "/admin/document-log", description: "Who opened or signed what", cap: "documents", step: "Reference" },
+      { title: "Fund access", url: "/admin/access", description: "Who can open each fund", step: "Reference" },
+      { title: "Public fund pages", url: "/admin/funds", description: "Public fund pages", step: "Reference" },
     ],
   },
   {
-    id: "companies", title: "Companies", url: "/ops/companies", icon: "table", group: "records",
+    id: "investors", title: "Investors", url: "/ops/investors", icon: "people", group: "records", queues: ["investors", "onboarding"],
     screens: [
-      { title: "Client cap tables", url: "/admin/client-cap-tables", description: "Company ownership records" },
-      { title: "Cap table requests", url: "/admin/cap-table-requests", description: "Requests from companies" },
-      { title: "Cap table plans", url: "/admin/cap-table-plans", description: "Plans and subscriptions" },
-      { title: "Migration concierge", url: "/admin/cap-table-migrations", description: "Imports from other systems" },
+      { title: "Investment readiness queue", url: "/ops/readiness", description: "What each investment is waiting on, who owns it, and how long", cap: "onboarding", step: "Start" },
+      { title: "Investor onboarding", url: "/admin/investor-onboarding", description: "Investments in progress, KYC/KYB and accreditation", cap: "onboarding", step: "Review" },
+      { title: "Applications", url: "/admin", description: "Fund applications waiting for review", cap: "onboarding", step: "Review" },
+      { title: "New application", url: "/admin/new-application", description: "Start an application for an investor", cap: "onboarding", step: "Prepare" },
+      { title: "Investor directory", url: "/admin/investors", description: "All investors across funds", step: "Reference" },
+      { title: "Onboarding progress", url: "/admin/onboarding-progress", description: "Progress across open onboardings", cap: "onboarding", step: "Track" },
+      { title: "Onboarding funnel", url: "/admin/funnel", description: "Conversion through onboarding", cap: "onboarding", step: "Track" },
     ],
   },
   {
-    id: "investors", title: "Investors", url: "/ops/investors", icon: "people", group: "records",
-    screens: [{ title: "Investor directory", url: "/admin/investors", description: "All investors across funds" }],
-  },
-  {
-    id: "onboarding", title: "Onboarding & Checks", url: "/ops/areas/onboarding", icon: "check", group: "work",
+    id: "capital", title: "Money", url: "/ops/areas/capital", icon: "money", group: "work", queues: ["capital"],
     screens: [
-      { title: "Investor onboarding", url: "/admin/investor-onboarding", description: "Investments in progress, KYC/KYB and accreditation" },
-      { title: "Investment readiness queue", url: "/ops/readiness", description: "What each investment is waiting on, who owns it, and how long" },
-      { title: "Client onboarding", url: "/admin/onboarding", description: "New client setup" },
-      { title: "Onboarding progress", url: "/admin/onboarding-progress", description: "Progress across open onboardings" },
-      { title: "Applications", url: "/admin", description: "Fund applications queue" },
-      { title: "New application", url: "/admin/new-application", description: "Start an application" },
-      { title: "Onboarding funnel", url: "/admin/funnel", description: "Conversion through onboarding" },
+      { title: "Expected funding", url: "/admin/funding", description: "Capital calls, expected funding and exceptions", step: "Track" },
+      { title: "Banking requests", url: "/ops/banking", description: "New and changed fund bank accounts", step: "Review" },
+      { title: "Distribution review", url: "/ops/distributions", description: "Review distributions and payment controls", step: "Review" },
+      { title: "Distribution batches & payments", url: "/admin/distributions", description: "Approved batches and their payments", step: "Approve" },
+      { title: "Wire activity", url: "/admin/money", description: "Incoming and outgoing wire records", step: "Track" },
+      { title: "Wire instructions", url: "/admin/wire", description: "Protected wire instructions", step: "Reference" },
+      { title: "Fund bank accounts", url: "/admin/bank-accounts", description: "Fund bank accounts", step: "Reference" },
+      { title: "Client bank accounts", url: "/admin/client-bank-accounts", description: "Client bank accounts", step: "Reference" },
     ],
   },
   {
-    id: "capital", title: "Capital & Banking", url: "/ops/areas/capital", icon: "money", group: "work",
+    id: "accounting", title: "Accounting & Reports", url: "/ops/areas/accounting", icon: "ledger", group: "work", queues: ["accounting", "reports"],
     screens: [
-      { title: "Banking requests", url: "/ops/banking", description: "Bank account requests" },
-      { title: "Distributions", url: "/ops/distributions", description: "Distribution review and payment controls" },
-      { title: "Expected funding", url: "/admin/funding", description: "Capital calls, expected funding and exceptions" },
-      { title: "Distributions & payments", url: "/admin/distributions", description: "Distribution batches and payments" },
-      { title: "Wires and distributions", url: "/admin/money", description: "Wire activity" },
-      { title: "Wire instructions", url: "/admin/wire", description: "Protected wire instructions" },
-      { title: "Bank accounts", url: "/admin/bank-accounts", description: "Fund bank accounts" },
-      { title: "Client bank accounts", url: "/admin/client-bank-accounts", description: "Client bank accounts" },
+      { title: "Accounting close", url: "/ops/accounting", description: "Reconciliation, journals and period close", step: "Prepare" },
+      { title: "Valuation review", url: "/ops/valuations", description: "Review proposed valuations", step: "Review" },
+      { title: "NAV review", url: "/ops/nav", description: "Review NAV calculations", step: "Review" },
+      { title: "Investor allocations", url: "/ops/allocations", description: "Allocation runs to capital accounts", step: "Approve" },
+      { title: "Financial statements", url: "/ops/financial-reviews", description: "Prepare, review and approve quarterly and annual packages", cap: "reports", step: "Prepare" },
+      { title: "Capital statements & review memos", url: "/ops/statements", description: "Approve capital account statements and client review memos", cap: "reports", step: "Approve" },
+      { title: "Investor reporting", url: "/ops/reporting", description: "Investor report packages", cap: "reports", step: "Track" },
+      { title: "Fund financial records", url: "/ops/financials", description: "Posted fund financial statements", cap: "reports", step: "Reference" },
+      { title: "Performance reporting", url: "/ops/performance", description: "Performance metrics", cap: "reports", step: "Reference" },
     ],
   },
   {
-    id: "accounting", title: "Accounting", url: "/ops/areas/accounting", icon: "ledger", group: "work",
+    id: "tax", title: "Tax", url: "/ops/tax", icon: "tax", group: "work", queues: ["tax"],
     screens: [
-      { title: "Accounting operations", url: "/ops/accounting", description: "Reconciliation, journals and period close" },
-      { title: "Valuation review", url: "/ops/valuations", description: "Review proposed valuations" },
-      { title: "NAV review", url: "/ops/nav", description: "Review NAV calculations" },
-      { title: "Investor allocations", url: "/ops/allocations", description: "Allocation runs to capital accounts" },
+      { title: "Tax workspace", url: "/ops/tax", description: "Prepared returns, 1065s, 1042-Ss and 1099s — prepare and review", step: "Prepare" },
+      { title: "K-1s and investor tax documents", url: "/ops/tax-documents", description: "K-1s and tax documents for investors", step: "Review" },
+      { title: "Investor tax forms (W-9 / W-8)", url: "/ops/tax-review", description: "IRS form status, compliance policy and legal wording", step: "Review" },
     ],
   },
   {
-    id: "tax", title: "Tax", url: "/ops/tax-documents", icon: "tax", group: "work",
+    id: "companies", title: "Companies", url: "/ops/companies", icon: "table", group: "records", queues: ["companies"],
     screens: [
-      { title: "Tax workspace", url: "/ops/tax", description: "Prepared returns, 1065s, 1042-Ss and 1099s — prepare and review" },
-      { title: "Tax documents", url: "/ops/tax-documents", description: "K-1s and investor tax documents" },
-      { title: "Investor tax review", url: "/ops/tax-review", description: "IRS form status, compliance policy and legal wording" },
+      { title: "Cap table requests", url: "/admin/cap-table-requests", description: "Requests from companies", step: "Start" },
+      { title: "Migration concierge", url: "/admin/cap-table-migrations", description: "Imports from other systems", step: "Prepare" },
+      { title: "Client cap tables", url: "/admin/client-cap-tables", description: "Company ownership records", step: "Reference" },
+      { title: "Cap table plans", url: "/admin/cap-table-plans", description: "Plans and subscriptions", step: "Reference" },
     ],
   },
   {
-    id: "regulatory", title: "Regulatory & Filings", url: "/ops/ss4", icon: "shield", group: "work",
+    id: "administration", title: "Administration", url: "/ops/areas/administration", icon: "settings", group: "admin", queues: ["administration"],
     screens: [
-      { title: "EIN and SS-4", url: "/ops/ss4", description: "EIN applications and SS-4 preparation" },
-      { title: "Offering statement", url: "/admin/offering-statement", description: "Offering statement drafting" },
-    ],
-  },
-  {
-    id: "documents", title: "Documents", url: "/ops/areas/documents", icon: "document", group: "work",
-    screens: [
-      { title: "Documents", url: "/ops/documents", description: "Document repository and signatures" },
-      { title: "Document activity", url: "/admin/document-log", description: "Who opened or signed what" },
-    ],
-  },
-  {
-    id: "tasks", title: "Tasks & Activity", url: "/ops/areas/tasks", icon: "tasks", group: "work",
-    screens: [
-      { title: "My clients", url: "/staff", description: "Clients assigned to you" },
-      { title: "Service requests & sign-off", url: "/admin/signoff", description: "Requests waiting for sign-off" },
-      { title: "Requests", url: "/admin/requests", description: "Incoming requests" },
-      { title: "Timeline", url: "/admin/timeline", description: "Operational timeline" },
-      { title: "Activity log", url: "/admin/activity", description: "Everything that happened" },
-    ],
-  },
-  {
-    id: "reports", title: "Reports", url: "/ops/areas/reports", icon: "report", group: "work",
-    screens: [
-      { title: "Financial reporting", url: "/ops/financials", description: "Fund financial statements" },
-      { title: "Statements & reviews", url: "/ops/statements", description: "Approve capital account statements and client financial reviews" },
-      { title: "Financial reviews", url: "/ops/financial-reviews", description: "Prepare and review quarterly and annual statement packages" },
-      { title: "Performance reporting", url: "/ops/performance", description: "Performance metrics" },
-      { title: "Investor reporting", url: "/ops/reporting", description: "Investor report packages" },
-    ],
-  },
-  {
-    id: "administration", title: "Administration", url: "/ops/areas/administration", icon: "settings", group: "admin",
-    screens: [
-      { title: "Access Control", url: "/ops/access-control", description: "People, roles, permission matrix and access audit" },
-      { title: "Compliance & Controls", url: "/ops/compliance", description: "Controls, evidence, access reviews, privacy, vendors, risks, incidents" },
-      { title: "Operations team", url: "/ops/team", description: "Staff and their roles" },
-      { title: "Permissions", url: "/admin/permissions", description: "Permission configuration" },
-      { title: "Audit log", url: "/admin/audit", description: "Immutable audit history" },
-      { title: "Security", url: "/admin/security", description: "Security settings" },
-      { title: "Email preview", url: "/admin/email-preview", description: "Preview outgoing emails" },
-      { title: "Email delivery", url: "/ops/email-health", description: "Bounced and failed platform emails" },
-      { title: "Webhook log", url: "/ops/webhook-log", description: "Identity check, Box Sign and Plaid updates" },
-      { title: "System status", url: "/ops/system-status", description: "App and backend health" },
+      { title: "Access Control", url: "/ops/access-control", description: "People, roles, permissions and access audit", step: "Start" },
+      { title: "Compliance & Controls", url: "/ops/compliance", description: "Controls, evidence, access reviews, privacy, vendors, risks, incidents", step: "Review" },
+      { title: "Operations team", url: "/ops/team", description: "Staff and their roles", step: "Reference" },
+      { title: "Legacy permission settings", url: "/admin/permissions", description: "Older permission configuration (use Access Control for new changes)", step: "Reference" },
+      { title: "Audit log", url: "/admin/audit", description: "Immutable audit history", step: "Reference" },
+      { title: "Activity log", url: "/admin/activity", description: "Everything that happened", cap: "tasks", step: "Reference" },
+      { title: "Timeline", url: "/admin/timeline", description: "Operational timeline", cap: "tasks", step: "Reference" },
+      { title: "Security", url: "/admin/security", description: "Security settings", step: "Reference" },
+      { title: "Email preview", url: "/admin/email-preview", description: "Preview outgoing emails", step: "Reference" },
+      { title: "Email delivery", url: "/ops/email-health", description: "Bounced and failed platform emails", step: "Track" },
+      { title: "Webhook log", url: "/ops/webhook-log", description: "Identity check, Box Sign and Plaid updates", step: "Track" },
+      { title: "System status", url: "/ops/system-status", description: "App and backend health", step: "Track" },
     ],
   },
 ];
 
-const SECTIONS: OpsSection[] = OPS_WORK_AREAS.map(({ id, title, url, icon }) => ({ id, title, url, icon }));
+/** Retired area pages and where their work now lives. */
+export const RETIRED_AREA_REDIRECTS: Record<string, string> = {
+  onboarding: "investors",
+  regulatory: "funds",
+  documents: "funds",
+  tasks: "clients",
+  reports: "accounting",
+};
+
+const screenCap = (area: OpsWorkArea, s: OpsScreen): OpsArea => s.cap ?? area.id;
+
+/** Screens in this area the person may open (capability per screen). */
+export function allowedScreens(area: OpsWorkArea, capabilities: readonly OpsCapability[]): OpsScreen[] {
+  return area.screens.filter((s) => can(capabilities, screenCap(area, s), "see"));
+}
+
+/** An area shows when its own capability, or any of its screens' capabilities, is held. */
+export function areaVisible(area: OpsWorkArea, capabilities: readonly OpsCapability[]): boolean {
+  return can(capabilities, area.id, "see") || allowedScreens(area, capabilities).length > 0;
+}
+
+/** Menu link: the area's main page when allowed, otherwise its work page. */
+function sectionFor(area: OpsWorkArea, capabilities: readonly OpsCapability[]): OpsSection {
+  const url = can(capabilities, area.id, "see") ? area.url : `/ops/areas/${area.id}`;
+  return { id: area.id, title: area.title, url, icon: area.icon };
+}
 
 /** Home is always first for anyone who may enter at all. */
 export const OPS_HOME = { id: "home", title: "Home", url: "/ops", icon: "home" } as const;
 
 export function opsNavigation(capabilities: readonly OpsCapability[]): OpsSection[] {
-  return SECTIONS.filter((section) => can(capabilities, section.id, "see"));
+  return OPS_WORK_AREAS.filter((a) => areaVisible(a, capabilities)).map((a) => sectionFor(a, capabilities));
 }
 
 /** Work areas (with their screens) this person may see. */
 export function opsWorkAreas(capabilities: readonly OpsCapability[]): OpsWorkArea[] {
-  return OPS_WORK_AREAS.filter((area) => can(capabilities, area.id, "see"));
+  return OPS_WORK_AREAS.filter((area) => areaVisible(area, capabilities)).map((area) => ({ ...area, screens: allowedScreens(area, capabilities) }));
 }
 
 export function opsWorkArea(id: string): OpsWorkArea | undefined {
@@ -294,9 +300,11 @@ const under = (pathname: string, base: string) => pathname === base || pathname.
  */
 export function activeOpsSection(pathname: string): string | null {
   if (pathname === "/ops") return "home";
+  const retired = pathname.match(/^\/ops\/areas\/([a-z]+)$/)?.[1];
+  if (retired && RETIRED_AREA_REDIRECTS[retired]) return RETIRED_AREA_REDIRECTS[retired]!;
   let best: { id: string; len: number } | null = null;
   for (const area of OPS_WORK_AREAS) {
-    const paths = [area.url, ...area.screens.map((s) => s.url), ...(area.match ?? [])];
+    const paths = [area.url, `/ops/areas/${area.id}`, ...area.screens.map((s) => s.url), ...(area.match ?? [])];
     for (const p of paths) {
       const hit = p === "/admin" ? pathname === "/admin" : under(pathname, p);
       if (hit && (!best || p.length > best.len)) best = { id: area.id, len: p.length };
