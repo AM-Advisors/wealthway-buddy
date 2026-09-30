@@ -87,10 +87,10 @@ export async function getServices(userId: string, offeringId: string) {
     services: SERVICE_KINDS.map((kind) => {
       const r = byKind.get(kind);
       const status = (r?.status ?? "not_started") as ServiceStatus;
-      const fields = (r?.fields ?? {}) as Record<string, unknown>;
+      const fields = (r?.fields ?? {}) as Record<string, string>;
       return {
         kind, status,
-        fields: a.isStaff ? fields : managerView(fields),
+        fields: (a.isStaff ? fields : managerView(fields)) as Record<string, string>,
         next: a.isStaff ? allowedNext(kind, status) : [],
         preparedBy: r?.prepared_by ?? null,
         preparedByName: r?.prepared_by ? who.get(r.prepared_by) ?? "Harmonious team member" : null,
