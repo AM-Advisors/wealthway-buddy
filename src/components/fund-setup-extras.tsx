@@ -170,7 +170,7 @@ export function RegulatoryFilingsCard({ offeringId, children }: { offeringId: st
   const formD = data.filings.filter((x) => x.type === "form_d");
   const blue = data.filings.filter((x) => x.type === "blue_sky");
   return (
-    <section id="setup-filings" className="scroll-mt-6 space-y-4 rounded-md border p-3">
+    <section id="setup-filings" className="scroll-mt-32 space-y-4 rounded-md border p-3">
       <div>
         <p className="text-sm font-medium">Form D & Blue Sky filings</p>
         <p className="text-xs text-muted-foreground">

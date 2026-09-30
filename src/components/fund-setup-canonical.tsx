@@ -96,7 +96,7 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
       <div id="setup-economics" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
       <div id="setup-documents" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
       <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
-      <div id="setup-services" className="scroll-mt-32"><FundServicesCard offeringId={offeringId} onChanged={refresh} /></div>
+      <FundServicesCard offeringId={offeringId} onChanged={refresh} />
       <LaunchRequirements />
     </div>
   );
