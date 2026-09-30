@@ -26,7 +26,7 @@ export function TemplatePackPicker({
   const [pending, setPending] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: (pack: "ilpa" | "spv") => apply({ data: { offering_id: offeringId, pack } }),
+    mutationFn: (pack: "ilpa" | "spv" | "harmonious") => apply({ data: { offering_id: offeringId, pack } }),
     onMutate: (pack) => setPending(pack),
     onSettled: () => setPending(null),
     onSuccess: (res: any) => {

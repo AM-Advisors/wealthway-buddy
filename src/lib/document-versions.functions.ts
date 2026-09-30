@@ -160,7 +160,7 @@ export const restoreDocumentVersion = createServerFn({ method: "POST" })
 export const refreshTemplateDocuments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({ offering_id: z.string().uuid(), pack: z.enum(["ilpa", "spv"]) }).parse(data),
+    z.object({ offering_id: z.string().uuid(), pack: z.enum(["ilpa", "spv", "harmonious"]) }).parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertCanEdit(context.supabase, context.userId, data.offering_id);

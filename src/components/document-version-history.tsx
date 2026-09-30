@@ -61,7 +61,7 @@ export function DocumentVersionHistory({ offeringId }: { offeringId: string }) {
   });
 
   const refreshMutation = useMutation({
-    mutationFn: (pack: "ilpa" | "spv") => refresh({ data: { offering_id: offeringId, pack } }),
+    mutationFn: (pack: "ilpa" | "spv" | "harmonious") => refresh({ data: { offering_id: offeringId, pack } }),
     onMutate: (pack) => setBusy(pack),
     onSettled: () => setBusy(null),
     onSuccess: (res: any) => {
