@@ -13,7 +13,7 @@ export type TemplateItem = {
 };
 
 export type TemplatePack = {
-  id: "ilpa" | "spv";
+  id: "ilpa" | "spv" | "harmonious";
   name: string;
   summary: string;
   source: string;
