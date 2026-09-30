@@ -19,6 +19,7 @@ import { template as wireRequestApproved } from './wire-request-approved'
 import { template as shareholderInvitation } from './shareholder-invitation'
 import { template as investmentOnboarding } from './investment-onboarding'
 import { template as documentsSent } from './documents-sent'
+import { template as statementReady } from './statement-ready'
 
 
 
@@ -60,5 +61,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'shareholder-invitation': shareholderInvitation,
   'investment-onboarding': investmentOnboarding,
   'documents-sent': documentsSent,
+  'statement-ready': statementReady,
 
 }

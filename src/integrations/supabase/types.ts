@@ -3485,8 +3485,14 @@ export type Database = {
           generated_at: string
           generated_by: string | null
           id: string
+          notified_at: string | null
+          notified_by: string | null
           offering_id: string
           period_end: string | null
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           snapshot: Json
           statement_date: string
           superseded: boolean
@@ -3500,8 +3506,14 @@ export type Database = {
           generated_at?: string
           generated_by?: string | null
           id?: string
+          notified_at?: string | null
+          notified_by?: string | null
           offering_id: string
           period_end?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           snapshot?: Json
           statement_date?: string
           superseded?: boolean
@@ -3515,8 +3527,14 @@ export type Database = {
           generated_at?: string
           generated_by?: string | null
           id?: string
+          notified_at?: string | null
+          notified_by?: string | null
           offering_id?: string
           period_end?: string | null
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           snapshot?: Json
           statement_date?: string
           superseded?: boolean
@@ -13436,6 +13454,77 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "financial_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_review_memos: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          findings: Json
+          id: string
+          notified_at: string | null
+          notified_by: string | null
+          offering_id: string
+          period_end: string
+          period_start: string
+          prepared_at: string
+          prepared_by: string
+          report_ids: string[]
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          findings?: Json
+          id?: string
+          notified_at?: string | null
+          notified_by?: string | null
+          offering_id: string
+          period_end: string
+          period_start: string
+          prepared_at?: string
+          prepared_by: string
+          report_ids?: string[]
+          status?: string
+          summary: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          findings?: Json
+          id?: string
+          notified_at?: string | null
+          notified_by?: string | null
+          offering_id?: string
+          period_end?: string
+          period_start?: string
+          prepared_at?: string
+          prepared_by?: string
+          report_ids?: string[]
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_review_memos_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]

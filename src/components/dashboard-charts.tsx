@@ -4,7 +4,7 @@
  */
 import type { ReactNode } from "react";
 import { Info } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -120,6 +120,64 @@ export function TrendChart({ data }: { data: { bucket: string; started: number; 
         </BarChart>
       </ChartContainer>
       <p className="sr-only">{data.map((d) => `${d.bucket}: ${d.started} started, ${d.completed} funded`).join("; ")}</p>
+    </>
+  );
+}
+
+const PALETTE: string[] = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--primary)"];
+
+/** Donut with a visible legend (label, count, percent) — colour is never the only cue. */
+export function DonutChart({ rows, ariaLabel, empty, onSelect }: { rows: Row[]; ariaLabel: string; empty: string; onSelect?: (key: string) => void }) {
+  const data = rows.filter((r) => r.count > 0);
+  if (!data.length) return <EmptyState>{empty}</EmptyState>;
+  const config = Object.fromEntries(data.map((r, i) => [r.key, { label: r.label, color: PALETTE[i % PALETTE.length] as string }]));
+  const total = data.reduce((n, r) => n + r.count, 0);
+  return (
+    <div className="flex flex-col items-center gap-3 sm:flex-row" aria-label={ariaLabel}>
+      <ChartContainer config={config} className="aspect-square h-40 shrink-0">
+        <PieChart>
+          <ChartTooltip content={<ChartTooltipContent nameKey="key" hideLabel />} />
+          <Pie data={data} dataKey="count" nameKey="key" innerRadius={42} outerRadius={70} strokeWidth={2}>
+            {data.map((r, i) => <Cell key={r.key} fill={PALETTE[i % PALETTE.length]} />)}
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+      <ul className="w-full space-y-1 text-sm">
+        {data.map((r, i) => (
+          <li key={r.key}>
+            <button type="button" disabled={!onSelect} onClick={() => onSelect?.(r.key)} className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left enabled:hover:bg-accent/40">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: PALETTE[i % PALETTE.length] }} aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{r.label}</span>
+              <span className="tabular-nums"><strong>{r.count}</strong><span className="text-muted-foreground"> · {Math.round((r.count / total) * 100)}%</span></span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Committed / intended versus reconciled funded, one bar pair per fund. */
+export function CapitalByFundChart({ data, empty = "No investment amounts recorded yet." }: { data: { name: string; committedCents: number; fundedCents: number }[]; empty?: string }) {
+  const rows = data.filter((d) => d.committedCents || d.fundedCents).slice(0, 12)
+    .map((d) => ({ name: d.name.length > 18 ? `${d.name.slice(0, 17)}…` : d.name, committed: d.committedCents / 100, funded: d.fundedCents / 100 }));
+  if (!rows.length) return <EmptyState>{empty}</EmptyState>;
+  const config = { committed: { label: "Committed", color: "var(--chart-2)" }, funded: { label: "Reconciled funded", color: "var(--primary)" } };
+  const fmt = (v: number) => (v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `$${Math.round(v / 1e3)}k` : `$${v}`);
+  return (
+    <>
+      <ChartContainer config={config} className="aspect-auto w-full" style={{ height: Math.max(160, rows.length * 44) }}>
+        <BarChart data={rows} layout="vertical" accessibilityLayer margin={{ left: 8 }}>
+          <CartesianGrid horizontal={false} />
+          <XAxis type="number" tickFormatter={fmt} fontSize={11} />
+          <YAxis type="category" dataKey="name" width={110} fontSize={11} tickLine={false} axisLine={false} />
+          <ChartTooltip content={<ChartTooltipContent formatter={(v, n) => `${config[n as keyof typeof config]?.label ?? n}: ${money(Number(v) * 100)}`} />} />
+          <ChartLegend content={<ChartLegendContent />} />
+          <Bar dataKey="committed" fill="var(--color-committed)" radius={3} />
+          <Bar dataKey="funded" fill="var(--color-funded)" radius={3} />
+        </BarChart>
+      </ChartContainer>
+      <p className="sr-only">{rows.map((r) => `${r.name}: ${fmt(r.committed)} committed, ${fmt(r.funded)} funded`).join("; ")}</p>
     </>
   );
 }
