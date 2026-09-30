@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check } from "lucide-react";
 
 import { Kpi } from "@/components/dashboard-charts";
+import { InvitedFunds } from "@/components/investor-document-review";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,11 +37,12 @@ export function InvestorDashboard() {
   const q = useQuery({ queryKey: ["investor-dashboard"], queryFn: () => load(), retry: false });
   if (q.isPending) return <Skeleton className="h-40 rounded-xl" />;
   const d = q.data;
-  if (q.isError || !d || !d.investments.length) return null;
+  if (q.isError || !d || !d.investments.length) return <InvitedFunds />;
   const p = d.primary!;
 
   return (
     <section className="space-y-4" aria-label="Your investments">
+      <InvitedFunds />
       <Card className="border-primary/50">
         <CardHeader className="pb-2"><CardDescription>Next action · {p.fundName}</CardDescription>
           <CardTitle className="text-xl">{p.nextAction ?? (p.complete ? "You're all set" : "You're caught up")}</CardTitle>
