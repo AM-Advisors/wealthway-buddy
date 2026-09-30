@@ -25,8 +25,7 @@ function session(kinds: string[], roles: string[] = ["admin"]): NavigationSessio
   };
 }
 
-const FIRST_LEVEL = ["Home", "Clients", "Funds & SPVs", "Companies", "Investors", "Onboarding & Checks",
-  "Capital & Banking", "Accounting", "Tax", "Regulatory & Filings", "Documents", "Tasks & Activity", "Reports", "Administration"];
+const FIRST_LEVEL = ["Home", "Clients", "Funds & SPVs", "Investors", "Money", "Accounting & Reports", "Tax", "Companies", "Administration"];
 const SPECIALIST = ["Valuation review", "NAV review", "Investor allocations", "Financial reporting",
   "Performance reporting", "Investor reporting", "Banking requests", "EIN and SS-4"];
 
@@ -53,9 +52,9 @@ describe("Operations sidebar consolidation", () => {
     const cases: [string, string][] = [
       ["/ops", "home"], ["/ops/funds/abc", "funds"], ["/ops/fund/abc", "funds"], ["/ops/fund-setup", "funds"], ["/ops/fund-setup/abc", "funds"], ["/ops/investors/x", "investors"],
       ["/ops/accounting", "accounting"], ["/ops/valuations", "accounting"], ["/ops/nav", "accounting"],
-      ["/ops/reporting", "reports"], ["/ops/financials", "reports"], ["/ops/banking", "capital"],
-      ["/ops/ss4", "regulatory"], ["/admin", "onboarding"], ["/admin/investor-onboarding", "onboarding"],
-      ["/ops/areas/reports", "reports"], ["/ops/team", "administration"],
+      ["/ops/reporting", "accounting"], ["/ops/financials", "accounting"], ["/ops/banking", "capital"],
+      ["/ops/ss4", "funds"], ["/admin", "investors"], ["/admin/investor-onboarding", "investors"],
+      ["/ops/areas/reports", "accounting"], ["/ops/areas/onboarding", "investors"], ["/staff", "clients"], ["/ops/team", "administration"],
     ];
     const sections = opsNavigation(capabilitiesFor(["super_admin"]));
     for (const [path, owner] of cases) {
@@ -67,7 +66,7 @@ describe("Operations sidebar consolidation", () => {
 
   it("unauthorized work areas stay absent (tax role)", () => {
     const titles = opsNavigation(capabilitiesFor(["tax"])).map((s) => s.title);
-    expect(titles).toEqual(["Tax", "Reports"]);
+    expect(titles).toEqual(["Accounting & Reports", "Tax"]);
   });
 
   it("search respects capabilities and finds hidden specialist screens", () => {
@@ -133,5 +132,20 @@ describe("shell chrome", () => {
     expect(src).toContain('collapsible="icon"');
     expect(src).toContain("tooltip={section.title}");
     expect(src).not.toMatch(/collapsed[^\n]*operationsCapabilities/);
+  });
+});
+
+describe("process-based work areas keep per-screen access", () => {
+  it("legal still reaches EIN/SS-4 and documents, but not Fund Setup", async () => {
+    const { opsWorkAreas } = await import("@/lib/ops-capabilities");
+    const urls = opsWorkAreas(capabilitiesFor(["legal"])).flatMap((a) => a.screens.map((s) => s.url));
+    expect(urls).toContain("/ops/ss4");
+    expect(urls).toContain("/ops/documents");
+    expect(urls).not.toContain("/ops/fund-setup");
+  });
+  it("client success sees onboarding screens but not the investor directory's area page by default", async () => {
+    const { opsWorkAreas } = await import("@/lib/ops-capabilities");
+    const inv = opsWorkAreas(capabilitiesFor(["client_success"])).find((a) => a.id === "investors")!;
+    expect(inv.screens.map((s) => s.url)).toContain("/ops/readiness");
   });
 });
