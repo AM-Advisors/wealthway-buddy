@@ -439,6 +439,7 @@ export async function updateTask(
     actorUserId: userId,
     actorRole: actor.isStaff ? "harmonious" : "client",
   });
+  await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
   return data;
 }
 
@@ -1268,6 +1269,7 @@ export async function decideLaunch(
     actorUserId: userId,
     actorRole: "harmonious",
   });
+  await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
   return { setup: updated, decision: input.decision, readiness: { ...result, ready: true } };
 }
 
@@ -1334,6 +1336,7 @@ export async function launchFund(userId: string, setupId: string) {
   const { onFundLaunched } = await import("@/lib/drive.server");
   await onFundLaunched(offering.id, userId);
 
+  await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
   return {
     setup: updated,
     investorOnboardingUrl: url,

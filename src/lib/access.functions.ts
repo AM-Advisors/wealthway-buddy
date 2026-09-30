@@ -93,6 +93,7 @@ export const assignFundAccess = createServerFn({ method: "POST" })
         { onConflict: "user_id,offering_id" },
       );
     if (error) throw new Error(error.message);
+    if (data.kind === "manager") await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
 
     if (data.kind === "manager") {
       const { data: existing } = await supabase

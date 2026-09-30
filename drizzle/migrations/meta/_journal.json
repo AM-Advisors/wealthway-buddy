@@ -645,6 +645,20 @@
       "when": 1790802117883,
       "tag": "0091_fund_service_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1790808486128,
+      "tag": "0092_fund_manager_progress_updates",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1790808701358,
+      "tag": "0093_fund_setup_task_progress_statuses",
+      "breakpoints": true
     }
   ]
 }

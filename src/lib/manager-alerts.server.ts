@@ -58,10 +58,16 @@ function money(cents: number | null | undefined) {
   }).format(cents / 100);
 }
 
-async function recipientsForOffering(supabaseAdmin: any, offeringId: string) {
+async function recipientsForOffering(supabaseAdmin: any, offeringId: string, meta: Record<string, any> = {}) {
+  // Fund Setup progress goes to the Fund's managers only (not every admin);
+  // a new assignment goes only to the person just assigned.
+  const managersOnly = meta["audience"] === "managers";
+  const only = typeof meta["recipient_user_id"] === "string" ? (meta["recipient_user_id"] as string) : null;
   const [{ data: assignments }, { data: adminRoles }] = await Promise.all([
-    supabaseAdmin.from("fund_managers").select("user_id").eq("offering_id", offeringId),
-    supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
+    only
+      ? Promise.resolve({ data: [{ user_id: only }] })
+      : supabaseAdmin.from("fund_managers").select("user_id").eq("offering_id", offeringId),
+    managersOnly ? Promise.resolve({ data: [] }) : supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin"),
   ]);
 
   const ids = Array.from(
@@ -72,6 +78,7 @@ async function recipientsForOffering(supabaseAdmin: any, offeringId: string) {
   );
 
   if (ids.length === 0) {
+    if (managersOnly) return [];
     return [{ user_id: null as string | null, legal_name: "Harmonious operations", email: "operations@harmonious.co" }];
   }
 
@@ -100,6 +107,9 @@ function buildEmail(
     { label: "Investor", value: investorName },
     { label: "Fund", value: offeringName },
   ];
+
+  const progress = fundProgressMessage(row, offeringName);
+  if (progress) return { ...progress, details: [{ label: "Fund", value: offeringName }, ...progress.details] };
 
   if (row.event_kind === "application_created") {
     return {
@@ -296,7 +306,7 @@ export async function drainManagerAlerts(limit = 25): Promise<{ processed: numbe
           ? `${SITE}/manager/${row.application_id}`
           : `${SITE}/manager`;
 
-      const recipients = await recipientsForOffering(supabaseAdmin, row.offering_id);
+      const recipients = await recipientsForOffering(supabaseAdmin, row.offering_id, row.metadata ?? {});
 
       for (const recipient of recipients) {
         await sendTemplateEmail("manager-alert", recipient.email, {
@@ -335,5 +345,59 @@ export function kickManagerAlerts() {
     void drainManagerAlerts().catch((e) => console.error("[manager-alerts] drain failed", e));
   } catch (e) {
     console.error("[manager-alerts] drain kick failed", e);
+  }
+}
+
+
+const SERVICE_LABELS: Record<string, string> = { formation: "Entity formation", ein: "EIN application", boi: "Beneficial ownership report" };
+const PROGRESS_VALUES: Record<string, string> = {
+  complete: "Completed", completed: "Completed", done: "Completed", in_progress: "In progress", blocked: "Waiting on something",
+  submitted: "Submitted by Harmonious", exempt: "Not required", launched: "Launched", ready: "Ready to launch",
+};
+const pv = (v: string | null) => (v ? PROGRESS_VALUES[v] ?? v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, " ") : "—");
+
+/** Wording for Fund Setup progress events; shared by email and the in-portal feed. */
+export function fundProgressMessage(
+  row: Pick<Row, "event_kind" | "field" | "old_value" | "new_value">,
+  offeringName: string,
+): { headline: string; intro: string; details: { label: string; value: string }[] } | null {
+  if (row.event_kind === "fund_assigned") {
+    return {
+      headline: `You've been added to ${offeringName}`,
+      intro: `Harmonious added you as a fund manager for ${offeringName}. It now appears in your Funds list, and you'll get updates here as setup moves forward.`,
+      details: [],
+    };
+  }
+  if (row.event_kind === "setup_task_progress") {
+    return {
+      headline: `${row.field ?? "Setup task"}: ${pv(row.new_value)}`,
+      intro: `A Fund Setup step for ${offeringName} moved to "${pv(row.new_value)}".`,
+      details: [{ label: "Step", value: row.field ?? "Setup task" }, { label: "Status", value: pv(row.new_value) }],
+    };
+  }
+  if (row.event_kind === "service_progress") {
+    const name = SERVICE_LABELS[row.field ?? ""] ?? "Operations service";
+    return {
+      headline: `${name}: ${pv(row.new_value)}`,
+      intro: `Harmonious updated the ${name.toLowerCase()} for ${offeringName}.`,
+      details: [{ label: "Service", value: name }, { label: "Status", value: pv(row.new_value) }],
+    };
+  }
+  if (row.event_kind === "launch_progress") {
+    return {
+      headline: `Launch status: ${pv(row.new_value)}`,
+      intro: `The launch status for ${offeringName} changed to "${pv(row.new_value)}".`,
+      details: [{ label: "Launch status", value: pv(row.new_value) }],
+    };
+  }
+  return null;
+}
+
+/** Send any waiting fund-manager updates right after a save; never fails the save. */
+export async function sendPendingFundAlerts() {
+  try {
+    await drainManagerAlerts(10);
+  } catch (e) {
+    console.error("[manager-alerts] immediate send failed", e);
   }
 }
