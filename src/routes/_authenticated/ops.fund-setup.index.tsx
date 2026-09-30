@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { REG_TYPES, type RegTypeValue } from "@/lib/reg-types";
+import { DeleteFundDialog } from "@/components/delete-fund-dialog";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/")({
   head: () => ({ meta: [
@@ -61,6 +62,7 @@ function FundSetupRegister() {
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild><Link to="/ops/fund-setup/$fundId" params={{ fundId: f.id }}>Open Setup</Link></Button>
           {q.data.canPrepare && !f.retired && <Button variant="ghost" size="sm" onClick={() => { setEditing(f.id); setSummary(f.summary ?? ""); }}>Edit summary</Button>}
+          {q.data.canDelete && <DeleteFundDialog fundId={f.id} fundName={f.name} onDeleted={() => qc.invalidateQueries({ queryKey: ["staff-funds"] })} />}
         </div>
         {editing === f.id && <form className="w-full space-y-2" onSubmit={async (e) => { e.preventDefault(); setBusy(true); try { await save({ data: { offeringId: f.id, summary } }); toast.success("Fund summary saved"); setEditing(null); await qc.invalidateQueries({ queryKey: ["staff-funds"] }); } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); } }}>
           <Label htmlFor={`summary-${f.id}`}>Summary</Label><Input id={`summary-${f.id}`} value={summary} maxLength={1000} onChange={(e) => setSummary(e.target.value)} />
