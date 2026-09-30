@@ -70,36 +70,60 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
         <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {CANONICAL_SECTIONS.map((s) => {
             const r = (d.statuses as any)[s];
+            const target = SECTION_ANCHOR[s];
             return (
-              <div key={s} className="rounded-md border p-3">
+              <a key={s} href={`#${target}`} className="rounded-md border p-3 transition-colors hover:border-primary/50 hover:bg-muted/40">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">{CANONICAL_SECTION_LABELS[s]}</span>
                   <Badge variant={tone(r.status)}>{(SECTION_STATUS_LABELS as any)[r.status]}</Badge>
                 </div>
-                {r.next && <p className="mt-1 text-xs text-muted-foreground">{r.next}</p>}
-              </div>
+                {r.next && <p className="mt-1 text-xs text-muted-foreground">{r.next} <span className="text-primary">Go →</span></p>}
+              </a>
             );
           })}
         </CardContent>
       </Card>
 
+      <nav aria-label="Fund Setup sections" className="sticky top-16 z-20 -mx-1 flex gap-1 overflow-x-auto rounded-md border bg-background/95 p-1 backdrop-blur">
+        {JUMP_LINKS.map(([id, label]) => (
+          <a key={id} href={`#${id}`} className="shrink-0 rounded px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">{label}</a>
+        ))}
+      </nav>
+
       <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
-      <div id="setup-details" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-details" /><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
-      <div id="setup-signatories" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
-      <div id="setup-economics" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
-      <div id="setup-documents" className="scroll-mt-6 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
+      <div id="setup-details" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-details" /><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
+      <div id="setup-signatories" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
+      <div id="setup-economics" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
+      <div id="setup-documents" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
       <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
-      <FundServicesCard offeringId={offeringId} onChanged={refresh} />
+      <div id="setup-services" className="scroll-mt-32"><FundServicesCard offeringId={offeringId} onChanged={refresh} /></div>
       <LaunchRequirements />
-      <Card>
-        <CardHeader><CardTitle className="text-base">Banking and Administration</CardTitle></CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          These sections use the fund's existing Banking tab for now. Bank verification and administration settings come in the next phase.
-        </CardContent>
-      </Card>
     </div>
   );
 }
+
+const SECTION_ANCHOR: Record<string, string> = {
+  fund_details: "setup-details",
+  entity_ein: "setup-entity",
+  offering_economics: "setup-economics",
+  classes: "setup-economics",
+  offering_documents: "setup-documents",
+  banking: "setup-banking",
+  administration: "setup-admin",
+  review: "setup-launch",
+};
+
+const JUMP_LINKS: [string, string][] = [
+  ["setup-details", "Details"],
+  ["setup-signatories", "Signatories"],
+  ["setup-economics", "Economics"],
+  ["setup-documents", "Documents"],
+  ["setup-entity", "Entity & EIN"],
+  ["setup-banking", "Banking"],
+  ["setup-admin", "Regulatory"],
+  ["setup-services", "Services"],
+  ["setup-launch", "Launch"],
+];
 
 type D = Awaited<ReturnType<typeof getFundSetupOverview>>;
 
