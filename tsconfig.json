@@ -13,6 +13,8 @@
     "noEmit": true,
 
     "skipLibCheck": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/app.tsbuildinfo",
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,

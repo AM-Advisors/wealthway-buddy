@@ -190,9 +190,9 @@ function EinGuidePage() {
             Keep formation and EIN records in one place
           </h2>
           <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
-            Harmonious Fund Setup keeps the formation documents, certificate of formation and IRS EIN
-            letter together, prepares the SS-4 for your signature, and tracks each step with a clear
-            record. You or your counsel submit the filing.
+            Harmonious offers EIN application support for clients: our team prepares the SS-4,
+            coordinates the submission with the responsible party, and keeps the IRS EIN letter
+            alongside the formation documents. Your fund setup records each step and its outcome.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button asChild size="sm">

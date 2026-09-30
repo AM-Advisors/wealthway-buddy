@@ -377,8 +377,9 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
             ) : (
               <div className="grid gap-4">
                 <p className="text-sm text-muted-foreground">
-                  Answer the questions below and we will fill in the official IRS Form SS-4 for you to
-                  print, sign and file. Harmonious does not file the form with the IRS on your behalf.
+                  Answer the questions below so Harmonious can prepare the official IRS Form SS-4.
+                  Our team can coordinate the EIN application with the responsible party as part of
+                  your services. Generating this form does not submit it to the IRS.
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {field("legal_name", "Legal name of entity (line 1)")}
