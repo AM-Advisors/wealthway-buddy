@@ -39,6 +39,8 @@ export function breadcrumbsFor(pathname: string): Crumb[] {
   const out: Crumb[] = [];
   segs.forEach((seg, i) => {
     const url = "/" + segs.slice(0, i + 1).join("/");
+    // "/ops/areas" has no page of its own; skip it in the trail.
+    if (seg === "areas" && segs[i - 1] === "ops") return;
     const label = ID_RE.test(seg) ? "Details" : labelForSegment(seg);
     // "fund" + id reads better as one crumb.
     if (ID_RE.test(seg) && out.length && (segs[i - 1] === "fund" || segs[i - 1] === "funds")) {
