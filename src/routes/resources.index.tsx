@@ -6,7 +6,7 @@ import { seoLinks, seoMeta, seoScripts } from "@/lib/seo";
 
 const TITLE = "Resources — Guides for founders and fund managers";
 const DESCRIPTION =
-  "Practical guides on entity formation, EINs, Reg D exemptions, and private capital software — written from the filings Harmonious runs every day.";
+  "Practical guides on entity formation, EINs, Reg D exemptions, and private capital software — from the Harmonious team.";
 
 export const Route = createFileRoute("/resources/")({
   head: () => ({

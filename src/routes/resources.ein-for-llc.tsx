@@ -187,12 +187,12 @@ function EinGuidePage() {
 
         <section className="mt-14 rounded-2xl border border-border bg-muted/30 p-7">
           <h2 className="text-[20px] font-semibold tracking-tight">
-            Let Harmonious file it with the entity
+            Keep formation and EIN records in one place
           </h2>
           <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
-            Our startup launch track forms the entity in any of 51 jurisdictions, provides the
-            registered agent, prepares and files the SS-4, and hands back the CP 575 alongside a
-            clean cap table — with every step logged.
+            Harmonious Fund Setup keeps the formation documents, certificate of formation and IRS EIN
+            letter together, prepares the SS-4 for your signature, and tracks each step with a clear
+            record. You or your counsel submit the filing.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button asChild size="sm">

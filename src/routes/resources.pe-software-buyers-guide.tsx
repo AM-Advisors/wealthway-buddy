@@ -264,8 +264,8 @@ function BuyersGuidePage() {
           </table>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-          Harmonious is built for the right-hand column: fund formation and administration, cap
-          table, investor and client reporting, compliance controls, and Harbor AI insights operate
+          Harmonious is built for the right-hand column: fund setup and administration, cap
+          table, investor onboarding, investor and client reporting, and compliance controls operate
           on one record of each investment, so LP-facing output and the accounting ledger never
           drift apart.
         </p>

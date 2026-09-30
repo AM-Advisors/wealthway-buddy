@@ -236,9 +236,9 @@ function RegDComparisonPage() {
             Run the whole raise in one place
           </h2>
           <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
-            Harmonious handles the entity and EIN, investor KYC and accreditation (self-certified
-            for 506(b), evidence-reviewed for 506(c)), e-signed subscriptions, Form D on EDGAR, and
-            Blue Sky notice filings across all 51 jurisdictions — with the audit trail kept for you.
+            Harmonious tracks the entity and EIN, runs investor identity checks and accreditation
+            (self-certified for 506(b), evidence-reviewed for 506(c)) and e-signed subscriptions, and
+            records your Form D and Blue Sky filings — with the audit trail kept for you.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button asChild size="sm">
