@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   addTemplateVersionFn, createTemplateFromFundFn, decideTemplateVersionFn, listTemplateSourcesFn,
   listTemplatesFn, templateDownloadUrlFn, useTemplateInFundFn,
-} from "@/lib/document-templates.functions";
+} from "@/lib/fund-doc-templates.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/document-templates")({
   head: () => ({
@@ -111,9 +111,9 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
     setBusy(true);
     try { await fn(); toast.success(ok); setNote(""); refresh(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
-  async function upload() {
-    if (!file) return;
-    if (file.size > 20 * 1024 * 1024) return toast.error("Files must be 20 MB or smaller.");
+  async function upload(): Promise<void> {
+    if (!file) return undefined;
+    if (file.size > 20 * 1024 * 1024) { toast.error("Files must be 20 MB or smaller."); return; }
     const buf = new Uint8Array(await file.arrayBuffer());
     let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
     await run(() => addVersion({ data: { templateId: t.id, fileName: file.name, base64: btoa(bin), note: note || null } }), "New version added — waiting for approval.");
