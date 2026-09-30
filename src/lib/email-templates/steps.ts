@@ -18,7 +18,7 @@ export const ONBOARDING_STEPS: OnboardingStepDef[] = [
     label: 'Identity verification',
     title: 'Identity verification',
     detail: 'A short, guided ID check — a photo of your ID and a selfie.',
-    path: '/onboarding/identity',
+    path: '/onboarding/kyc',
     ctaLabel: 'Verify your identity',
     lead: 'Your next step is a short identity check. It takes a couple of minutes on your phone.',
   },
