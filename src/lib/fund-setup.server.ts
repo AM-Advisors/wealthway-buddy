@@ -139,7 +139,7 @@ export async function createFundSetup(
   return bootstrapFundSetup(userId, input);
 }
 
-/** Called only after a separate staff-authorized creation; not a public function. */
+/** Called only after a separately authorized server-side creation (staff, or a verified client main contact request); not a public function. */
 export async function bootstrapFundSetup(
   userId: string,
   input: {

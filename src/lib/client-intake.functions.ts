@@ -91,12 +91,6 @@ const dollarsToCents = (value: string | undefined) => {
   return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
 };
 
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60) || "fund";
 
 async function membership(context: any) {
   const [{ data: roleRows }, { data: memberships }] = await Promise.all([
@@ -234,38 +228,12 @@ export const submitFundIntake = createServerFn({ method: "POST" })
       return { ok: true, already: true } as const;
     }
 
-    // A unique address for the fund's page.
-    const base = slugify(d.fund_name);
-    let slug = base;
-    for (let i = 2; i < 40; i += 1) {
-      const { data: clash } = await supabaseAdmin.from("offerings").select("id").eq("slug", slug).maybeSingle();
-      if (!clash) break;
-      slug = `${base}-${i}`;
-    }
-
-    // A signed and approved statement of work with no fund attached can cover this one.
-    const { data: sows } = await supabaseAdmin
-      .from("client_sows")
-      .select("id, status, signed_on, signed_by, approval_status, offering_id")
-      .eq("client_id", data.clientId)
-      .eq("status", "active")
-      .is("offering_id", null);
-    const eligibleSow = ((sows ?? []) as any[]).find(
-      (s) => s.signed_on && s.signed_by && s.approval_status === "approved",
-    );
-
-    // Start the fund on the client's agreed rates (then the standard card) so
-    // its wire fee and closing cost are ready to invoice.
-    const { seedFundFeeColumns } = await import("@/lib/fee-rates.server");
-    const seededFees = await seedFundFeeColumns(supabaseAdmin, data.clientId);
-
-    const { data: inserted, error } = await supabaseAdmin
-      .from("offerings")
-      .insert({
-        ...seededFees,
-        client_id: data.clientId,
+    const { createClientRequestedOffering } = await import("@/lib/client-fund-creation.server");
+    const created = await createClientRequestedOffering({
+      clientId: data.clientId,
+      actorId: context.userId,
+      fields: {
         name: d.fund_name.trim(),
-        slug,
         legal_entity_name: d.legal_entity_name.trim(),
         entity_type: d.entity_type,
         fund_type: d.fund_type || null,
@@ -275,23 +243,10 @@ export const submitFundIntake = createServerFn({ method: "POST" })
         reg_type: d.reg_type,
         target_raise_cents: dollarsToCents(d.target_raise) || null,
         min_investment_cents: dollarsToCents(d.min_investment),
-        // Closed to investors until Harmonious has set the fund up.
-        is_open: false,
-      } as any)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    const offeringId = String((inserted as any).id);
-    { const { safeCreateSnapshot } = await import("@/lib/commercial-pricing.server");
-      await safeCreateSnapshot({ offeringId, clientId: data.clientId, actorId: (context as any).userId, source: "client_fund_request" }); }
-
-    if (eligibleSow) {
-      await supabaseAdmin
-        .from("client_sows")
-        .update({ offering_id: offeringId } as any)
-        .eq("id", eligibleSow.id)
-        .is("offering_id", null);
-    }
+      },
+    });
+    const offeringId = created.offeringId;
+    const eligibleSow = created.sowId ? { id: created.sowId } : null;
 
     const { data: draft } = await supabaseAdmin
       .from("client_fund_intakes")
