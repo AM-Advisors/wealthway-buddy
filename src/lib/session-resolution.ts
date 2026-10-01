@@ -91,7 +91,7 @@ export function availableWorkspaces(facts: RelationshipFacts): Workspace[] {
       kind: "company",
       id: "company",
       label: "My company",
-      path: "/client",
+      path: "/client/home",
       surface: "client",
     });
   }

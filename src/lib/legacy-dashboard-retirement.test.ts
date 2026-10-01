@@ -53,7 +53,7 @@ describe("retired legacy dashboard", () => {
       expect(isRetiredHomeAlias(alias)).toBe(true);
       expect(resolveDestination(investor, alias).path).toBe("/home");
       expect(resolveDestination(manager, alias).path).toBe("/manager");
-      expect(resolveDestination(company, alias).path).toBe("/client");
+      expect(resolveDestination(company, alias).path).toBe("/client/home");
       expect(resolveDestination(professional, alias).path).toBe("/professional");
       expect(resolveDestination(staff, alias).path).toBe("/ops");
     }

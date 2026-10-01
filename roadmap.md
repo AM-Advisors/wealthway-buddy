@@ -141,3 +141,4 @@
 - [x] Client portal: move current view into client-level Settings; separate Funds and Cap Table screens
 - [x] Client fund page in portal + request form tests
 - [ ] Live click-through of client portal Funds / request form (needs a client-linked test sign-in)
+- [x] Client Home dashboard + guided new fund/SPV request (creates closed Fund + pre-filled Fund Setup, alerts Operations)
