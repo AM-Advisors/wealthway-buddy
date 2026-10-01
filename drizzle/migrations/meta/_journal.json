@@ -708,6 +708,13 @@
       "when": 1790881311431,
       "tag": "0100_tighten_requirements_and_intake_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1790881494975,
+      "tag": "0101_side_letter_registry",
+      "breakpoints": true
     }
   ]
 }

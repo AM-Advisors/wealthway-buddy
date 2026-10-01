@@ -37,6 +37,7 @@ const groups = [
     { slug: "assets", label: "Investments", icon: Activity },
     { slug: "transactions", label: "Capital", icon: WalletCards },
     { slug: "documents", label: "Documents", icon: FileText },
+    { slug: "side-letters", label: "Side Letters", icon: FileText },
     { slug: "compliance", label: "Compliance", icon: ShieldCheck },
   ] },
 ] as const;
