@@ -26,6 +26,7 @@ export const getFundCapTable = createServerFn({ method: "GET" })
         .eq("offering_id", data.fundId).maybeSingle();
       allowed = !!g;
     }
+    if (!allowed) allowed = await isClientMemberOfFund(db, uid, data.fundId);
     if (!allowed) throw new Error("You don't have access to this Fund's cap table.");
 
     const { data: setup } = await db.from("fund_setups").select("id").eq("offering_id", data.fundId).maybeSingle();
@@ -78,3 +79,54 @@ export const getFundCapTable = createServerFn({ method: "GET" })
 function stripNull(t: ClassTerms): Partial<ClassTerms> {
   return Object.fromEntries(Object.entries(t).filter(([, v]) => v != null)) as Partial<ClassTerms>;
 }
+
+/** True when the user belongs to the Client that owns this Fund (client portal access). */
+export async function isClientMemberOfFund(db: any, uid: string, fundId: string): Promise<boolean> {
+  const { data: off } = await db.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
+  if (!off?.client_id) return false;
+  const { data: cu } = await db.from("client_users").select("id").eq("user_id", uid).eq("client_id", off.client_id).maybeSingle();
+  return !!cu;
+}
+
+/** Client-portal Fund page: details, setup progress, Harmonious steps and side letter summary. */
+export const getClientFund = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const uid = context.userId;
+    const { data: roles } = await db.from("user_roles").select("role").eq("user_id", uid);
+    const staff = ((roles ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role));
+    if (!staff && !(await isClientMemberOfFund(db, uid, data.fundId))) throw new Error("You don't have access to this Fund.");
+
+    const { data: f } = await db
+      .from("offerings")
+      .select("id, name, legal_entity_name, reg_type, is_open, fund_type, fund_type_other, entity_type, state_formed, date_formed, target_raise_cents")
+      .eq("id", data.fundId)
+      .maybeSingle();
+    if (!f) throw new Error("Fund not found.");
+    const { data: setup } = await db.from("fund_setups").select("id, stage, launch_state").eq("offering_id", data.fundId).maybeSingle();
+    const [{ data: tasks }, { data: letters }] = await Promise.all([
+      setup
+        ? db.from("fund_setup_tasks").select("label, section, status, responsible_party, sort_order").eq("setup_id", setup.id).order("sort_order")
+        : Promise.resolve({ data: [] }),
+      db.from("side_letters").select("status").eq("offering_id", data.fundId),
+    ]);
+    const all = (tasks ?? []) as any[];
+    const done = (t: any) => ["complete", "completed", "done", "not_applicable", "waived"].includes(String(t.status));
+    const percent = all.length ? Math.round((all.filter(done).length / all.length) * 100) : null;
+    const steps = all.map((t) => ({
+      label: String(t.label),
+      section: t.section ? String(t.section) : null,
+      done: done(t),
+      owner: String(t.responsible_party ?? "").toLowerCase().includes("client") ? "You" : "Harmonious",
+    }));
+    const ls = (letters ?? []) as any[];
+    return {
+      fund: f as Record<string, any>,
+      setup: { percent, stage: setup?.stage ?? null, launchState: setup?.launch_state ?? null },
+      steps,
+      sideLetters: { active: ls.filter((l) => l.status === "active").length, proposed: ls.filter((l) => l.status === "proposed").length },
+    };
+  });
