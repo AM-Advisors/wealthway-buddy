@@ -139,3 +139,5 @@
 - [ ] Chapter 1 live formation and launch: blocked by missing formation/certificate/EIN evidence, open blocking tasks, unmet launch conditions and no approvals. Resolve the duplicate Chapter 1 records before any authoritative status change; do not manufacture evidence or approvals.
 
 - [x] Client portal: move current view into client-level Settings; separate Funds and Cap Table screens
+- [x] Client fund page in portal + request form tests
+- [ ] Live click-through of client portal Funds / request form (needs a client-linked test sign-in)
