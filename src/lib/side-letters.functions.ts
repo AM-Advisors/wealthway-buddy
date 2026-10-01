@@ -412,3 +412,29 @@ export const recordMfnDecision = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/** Read-only: side letters attached to one investor onboarding on a Fund. */
+export const listInvestorSideLetters = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), onboardingId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await admin();
+    const kind = await actorKind(db, context.userId, data.fundId);
+    if (kind === "none") throw new Error("Forbidden: you do not have access to this fund.");
+    const { data: letters } = await db
+      .from("side_letters")
+      .select("*")
+      .eq("offering_id", data.fundId)
+      .eq("onboarding_id", data.onboardingId)
+      .order("created_at");
+    return ((letters ?? []) as any[]).map((l) => {
+      const snap = toSnapshot(l);
+      return {
+        id: l.id as string,
+        status: l.status as string,
+        version: l.current_version as number,
+        snapshot: snap,
+        expiry: expiryStatus(snap),
+      };
+    });
+  });
