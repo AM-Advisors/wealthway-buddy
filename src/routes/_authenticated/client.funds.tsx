@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import { useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
@@ -32,9 +35,36 @@ const money = (cents: number | null | undefined) =>
 
 function ClientFundsPage() {
   const { data } = useClientPortal();
-  const funds = (data?.funds ?? []) as any[];
+  const all = (data?.funds ?? []) as any[];
+  const [q, setQ] = useState("");
+  const [show, setShow] = useState<"all" | "open" | "setup">("all");
+  const funds = all.filter(
+    (f) =>
+      (show === "all" || (show === "open" ? f.is_open : !f.is_open)) &&
+      `${f.name} ${f.legal_entity_name ?? ""}`.toLowerCase().includes(q.toLowerCase()),
+  );
+  const openCount = all.filter((f) => f.is_open).length;
 
   return (
+    <div className="space-y-4">
+    <div className="grid gap-3 sm:grid-cols-3">
+      {[
+        { l: "Funds", v: all.length },
+        { l: "Open to investors", v: openCount },
+        { l: "In setup", v: all.length - openCount },
+      ].map((k) => (
+        <Card key={k.l}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{k.l}</p><p className="text-2xl font-semibold">{k.v}</p></CardContent></Card>
+      ))}
+    </div>
+    <div className="flex flex-wrap items-center gap-2">
+      <Input className="max-w-xs" placeholder="Search funds" value={q} onChange={(e) => setQ(e.target.value)} />
+      {(["all", "open", "setup"] as const).map((k) => (
+        <Button key={k} size="sm" variant={show === k ? "default" : "outline"} onClick={() => setShow(k)}>
+          {k === "all" ? "All" : k === "open" ? "Open" : "In setup"}
+        </Button>
+      ))}
+      <Button asChild size="sm" className="ml-auto"><Link to="/client/services/request">Launch a new fund or SPV</Link></Button>
+    </div>
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Funds we administer for you</CardTitle>
@@ -46,7 +76,7 @@ function ClientFundsPage() {
       <CardContent className="space-y-3">
         {funds.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            No funds are attached to your engagement yet.
+            {all.length === 0 ? "No funds are attached to your engagement yet." : "No funds match this filter."}
           </p>
         )}
         {funds.map((f) => (
@@ -93,6 +123,11 @@ function ClientFundsPage() {
                 </dd>
               </div>
             </dl>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button asChild size="sm"><Link to="/manager/fund/$fundId" params={{ fundId: f.id }}>Open fund</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/manager/fund/$fundId/cap-table" params={{ fundId: f.id }}>Fund cap table</Link></Button>
+              <Button asChild size="sm" variant="outline"><Link to="/manager/fund/$fundId/side-letters" params={{ fundId: f.id }}>Side letters</Link></Button>
+            </div>
             {!f.is_open ? (
               <p className="mt-2 text-xs text-muted-foreground">
                 Harmonious is setting this fund up. It stays closed to investors until your
@@ -103,5 +138,6 @@ function ClientFundsPage() {
         ))}
       </CardContent>
     </Card>
+    </div>
   );
 }

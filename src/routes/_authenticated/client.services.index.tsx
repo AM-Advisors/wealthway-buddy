@@ -169,16 +169,18 @@ function MyServices() {
           </CardHeader>
           <CardContent className="space-y-2">
             {(data?.requests ?? []).map((r) => (
-              <div
+              <Link
                 key={r.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+                to="/client/services/requests/$requestId"
+                params={{ requestId: r.id }}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm hover:bg-muted"
               >
                 <div>
                   <p className="font-medium">{intentLabel(r.intent)}</p>
                   {r.summary && <p className="text-xs text-muted-foreground">{r.summary}</p>}
                 </div>
                 <Badge variant="secondary">{r.status.replace("_", " ")}</Badge>
-              </div>
+              </Link>
             ))}
           </CardContent>
         </Card>
