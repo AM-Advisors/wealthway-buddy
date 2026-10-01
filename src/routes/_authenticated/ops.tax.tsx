@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { TaxFormTable, statusLabel, useProfessionalTax } from "@/components/professional-tax";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form1065DetailPanel, K1HistoryPanel, FormPfPanel, IrsRecordsPanel } from "@/components/tax-phase4";
 
 export const Route = createFileRoute("/_authenticated/ops/tax")({
   head: () => ({
@@ -27,6 +29,19 @@ function StaffTax() {
         <h1 className="font-heading text-2xl font-semibold">Tax workspace</h1>
         <p className="mt-1 text-sm text-muted-foreground">Every Fund's returns and forms. Whoever prepares or submits a form can't approve it. Nothing is filed or delivered from here.</p>
       </header>
+      <Tabs defaultValue="returns">
+        <TabsList className="flex h-auto flex-wrap">
+          <TabsTrigger value="returns">Returns &amp; forms</TabsTrigger>
+          <TabsTrigger value="1065">1065 detail</TabsTrigger>
+          <TabsTrigger value="k1">K-1 history</TabsTrigger>
+          <TabsTrigger value="pf">Form PF</TabsTrigger>
+          <TabsTrigger value="irs">IRS records</TabsTrigger>
+        </TabsList>
+        <TabsContent value="1065" className="pt-4"><Form1065DetailPanel /></TabsContent>
+        <TabsContent value="k1" className="pt-4"><K1HistoryPanel /></TabsContent>
+        <TabsContent value="pf" className="pt-4"><FormPfPanel /></TabsContent>
+        <TabsContent value="irs" className="pt-4"><IrsRecordsPanel /></TabsContent>
+        <TabsContent value="returns" className="space-y-8 pt-4">
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : d ? (
         <>
           <div className="grid gap-3 sm:grid-cols-4">
@@ -49,6 +64,8 @@ function StaffTax() {
           <TaxFormTable mode="staff" title="Form 1099s" rows={d.forms1099} empty="No 1099s yet." />
         </>
       ) : null}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
