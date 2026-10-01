@@ -7615,6 +7615,329 @@ export type Database = {
           },
         ]
       }
+      crm_activity: {
+        Row: {
+          actor_user_id: string | null
+          campaign_id: string | null
+          contact_id: string | null
+          created_at: string
+          deal_id: string | null
+          details: Json
+          id: string
+          kind: string
+          offering_id: string | null
+          scope: string
+          summary: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          details?: Json
+          id?: string
+          kind: string
+          offering_id?: string | null
+          scope: string
+          summary: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          details?: Json
+          id?: string
+          kind?: string
+          offering_id?: string | null
+          scope?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activity_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_campaign_recipients: {
+        Row: {
+          campaign_id: string
+          contact_id: string
+          created_at: string
+          email: string
+          error: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          unsubscribe_token: string
+        }
+        Insert: {
+          campaign_id: string
+          contact_id: string
+          created_at?: string
+          email: string
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          unsubscribe_token: string
+        }
+        Update: {
+          campaign_id?: string
+          contact_id?: string
+          created_at?: string
+          email?: string
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          unsubscribe_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "crm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_campaign_recipients_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_campaigns: {
+        Row: {
+          audience: Json
+          body: string
+          created_at: string
+          created_by: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          name: string
+          offering_id: string | null
+          owner_user_id: string
+          scope: string
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          subject: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience?: Json
+          body: string
+          created_at?: string
+          created_by: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          name: string
+          offering_id?: string | null
+          owner_user_id: string
+          scope: string
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience?: Json
+          body?: string
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          name?: string
+          offering_id?: string | null
+          owner_user_id?: string
+          scope?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_campaigns_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_contacts: {
+        Row: {
+          archived_at: string | null
+          consent: string
+          consent_note: string | null
+          consent_recorded_at: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          full_name: string
+          id: string
+          offering_id: string | null
+          organization: string | null
+          owner_user_id: string
+          phone: string | null
+          scope: string
+          source: string | null
+          tags: string[]
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          consent?: string
+          consent_note?: string | null
+          consent_recorded_at?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          full_name: string
+          id?: string
+          offering_id?: string | null
+          organization?: string | null
+          owner_user_id: string
+          phone?: string | null
+          scope: string
+          source?: string | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          consent?: string
+          consent_note?: string | null
+          consent_recorded_at?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          offering_id?: string | null
+          organization?: string | null
+          owner_user_id?: string
+          phone?: string | null
+          scope?: string
+          source?: string | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_deals: {
+        Row: {
+          amount_cents: number | null
+          archived_at: string | null
+          contact_id: string
+          created_at: string
+          created_by: string
+          expected_close: string | null
+          id: string
+          lost_reason: string | null
+          offering_id: string | null
+          owner_user_id: string
+          scope: string
+          stage: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          archived_at?: string | null
+          contact_id: string
+          created_at?: string
+          created_by: string
+          expected_close?: string | null
+          id?: string
+          lost_reason?: string | null
+          offering_id?: string | null
+          owner_user_id: string
+          scope: string
+          stage?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number | null
+          archived_at?: string | null
+          contact_id?: string
+          created_at?: string
+          created_by?: string
+          expected_close?: string | null
+          id?: string
+          lost_reason?: string | null
+          offering_id?: string | null
+          owner_user_id?: string
+          scope?: string
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deals_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ct_activity_cases: {
         Row: {
           case_type: string
@@ -22097,6 +22420,24 @@ export type Database = {
           },
         ]
       }
+      message_reads: {
+        Row: {
+          last_read_at: string
+          thread_key: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          thread_key: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          thread_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       msa_sections: {
         Row: {
           body: string
@@ -30506,6 +30847,82 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: true
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          last_message_at: string
+          offering_id: string | null
+          requester_user_id: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          last_message_at?: string
+          offering_id?: string | null
+          requester_user_id: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          last_message_at?: string
+          offering_id?: string | null
+          requester_user_id?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_user_id: string
+          side: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_user_id: string
+          side: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_user_id?: string
+          side?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
             referencedColumns: ["id"]
           },
         ]

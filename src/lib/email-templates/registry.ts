@@ -20,6 +20,7 @@ import { template as shareholderInvitation } from './shareholder-invitation'
 import { template as investmentOnboarding } from './investment-onboarding'
 import { template as documentsSent } from './documents-sent'
 import { template as statementReady } from './statement-ready'
+import { template as crmCampaign } from './crm-campaign'
 
 
 
@@ -62,5 +63,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'investment-onboarding': investmentOnboarding,
   'documents-sent': documentsSent,
   'statement-ready': statementReady,
+  'crm-campaign': crmCampaign,
 
 }

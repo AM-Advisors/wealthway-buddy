@@ -45,6 +45,7 @@ import { Route as AuthenticatedInvestorDistributionsRouteImport } from './routes
 import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
 import { Route as AuthenticatedInvestorPerformanceRouteImport } from './routes/_authenticated/investor-performance'
 import { Route as AuthenticatedInvestorReportingRouteImport } from './routes/_authenticated/investor-reporting'
+import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticated/my-claims'
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
 import { Route as AuthenticatedMyPortfolioRouteImport } from './routes/_authenticated/my-portfolio'
@@ -148,6 +149,7 @@ import { Route as AuthenticatedManagerCapTableBoardRouteImport } from './routes/
 import { Route as AuthenticatedManagerCapitalRouteImport } from './routes/_authenticated/manager.capital'
 import { Route as AuthenticatedManagerCashApprovalsRouteImport } from './routes/_authenticated/manager.cash-approvals'
 import { Route as AuthenticatedManagerClosingRouteImport } from './routes/_authenticated/manager.closing'
+import { Route as AuthenticatedManagerCrmRouteImport } from './routes/_authenticated/manager.crm'
 import { Route as AuthenticatedManagerDiligenceRouteImport } from './routes/_authenticated/manager.diligence'
 import { Route as AuthenticatedManagerDistributionsRouteImport } from './routes/_authenticated/manager.distributions'
 import { Route as AuthenticatedManagerDocumentsRouteImport } from './routes/_authenticated/manager.documents'
@@ -173,6 +175,7 @@ import { Route as AuthenticatedManagerRequestFundRouteImport } from './routes/_a
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authenticated/manager.tax'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
+import { Route as AuthenticatedManagerUpdatesRouteImport } from './routes/_authenticated/manager.updates'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
@@ -196,6 +199,7 @@ import { Route as AuthenticatedOpsEmailHealthRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes/_authenticated/ops.formation-reference'
+import { Route as AuthenticatedOpsMessagesRouteImport } from './routes/_authenticated/ops.messages'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
@@ -224,8 +228,10 @@ import { Route as AuthenticatedProfessionalSignaturesRouteImport } from './route
 import { Route as AuthenticatedProfessionalTasksRouteImport } from './routes/_authenticated/professional.tasks'
 import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_authenticated/professional.tax'
 import { Route as AuthenticatedProfessionalVerificationRouteImport } from './routes/_authenticated/professional.verification'
+import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
+import { Route as ApiPublicCrmUnsubscribeRouteImport } from './routes/api/public/crm-unsubscribe'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as ApiPublicPlaidWebhookRouteImport } from './routes/api/public/plaid-webhook'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
@@ -497,6 +503,11 @@ const AuthenticatedInvestorReportingRoute =
     path: '/investor-reporting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMyClaimsRoute = AuthenticatedMyClaimsRouteImport.update({
   id: '/my-claims',
   path: '/my-claims',
@@ -1078,6 +1089,11 @@ const AuthenticatedManagerClosingRoute =
     path: '/manager/closing',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerCrmRoute = AuthenticatedManagerCrmRouteImport.update({
+  id: '/manager/crm',
+  path: '/manager/crm',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedManagerDiligenceRoute =
   AuthenticatedManagerDiligenceRouteImport.update({
     id: '/manager/diligence',
@@ -1226,6 +1242,12 @@ const AuthenticatedManagerTimelineRoute =
     path: '/manager/timeline',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerUpdatesRoute =
+  AuthenticatedManagerUpdatesRouteImport.update({
+    id: '/manager/updates',
+    path: '/manager/updates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerValuationsRoute =
   AuthenticatedManagerValuationsRouteImport.update({
     id: '/manager/valuations',
@@ -1360,6 +1382,12 @@ const AuthenticatedOpsFormationReferenceRoute =
   AuthenticatedOpsFormationReferenceRouteImport.update({
     id: '/ops/formation-reference',
     path: '/ops/formation-reference',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsMessagesRoute =
+  AuthenticatedOpsMessagesRouteImport.update({
+    id: '/ops/messages',
+    path: '/ops/messages',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
@@ -1526,6 +1554,11 @@ const AuthenticatedProfessionalVerificationRoute =
     path: '/verification',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedSalesCrmRoute = AuthenticatedSalesCrmRouteImport.update({
+  id: '/sales_/crm',
+  path: '/sales/crm',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   id: '/api/public/cap-claim',
   path: '/api/public/cap-claim',
@@ -1537,6 +1570,11 @@ const ApiPublicCapTableRequestRoute =
     path: '/api/public/cap-table-request',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCrmUnsubscribeRoute = ApiPublicCrmUnsubscribeRouteImport.update({
+  id: '/api/public/crm-unsubscribe',
+  path: '/api/public/crm-unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLoginAttemptRoute = ApiPublicLoginAttemptRouteImport.update({
   id: '/api/public/login-attempt',
   path: '/api/public/login-attempt',
@@ -2081,6 +2119,7 @@ export interface FileRoutesByFullPath {
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/messages': typeof AuthenticatedMessagesRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -2180,6 +2219,7 @@ export interface FileRoutesByFullPath {
   '/manager/capital': typeof AuthenticatedManagerCapitalRoute
   '/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
+  '/manager/crm': typeof AuthenticatedManagerCrmRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -2205,6 +2245,7 @@ export interface FileRoutesByFullPath {
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -2226,6 +2267,7 @@ export interface FileRoutesByFullPath {
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2253,8 +2295,10 @@ export interface FileRoutesByFullPath {
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
+  '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
+  '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
@@ -2383,6 +2427,7 @@ export interface FileRoutesByTo {
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/messages': typeof AuthenticatedMessagesRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
   '/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -2479,6 +2524,7 @@ export interface FileRoutesByTo {
   '/manager/capital': typeof AuthenticatedManagerCapitalRoute
   '/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/manager/closing': typeof AuthenticatedManagerClosingRoute
+  '/manager/crm': typeof AuthenticatedManagerCrmRoute
   '/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -2504,6 +2550,7 @@ export interface FileRoutesByTo {
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -2525,6 +2572,7 @@ export interface FileRoutesByTo {
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2552,8 +2600,10 @@ export interface FileRoutesByTo {
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
+  '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
+  '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
@@ -2685,6 +2735,7 @@ export interface FileRoutesById {
   '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/_authenticated/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/_authenticated/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/my-claims': typeof AuthenticatedMyClaimsRoute
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
   '/_authenticated/my-portfolio': typeof AuthenticatedMyPortfolioRoute
@@ -2784,6 +2835,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/capital': typeof AuthenticatedManagerCapitalRoute
   '/_authenticated/manager/cash-approvals': typeof AuthenticatedManagerCashApprovalsRoute
   '/_authenticated/manager/closing': typeof AuthenticatedManagerClosingRoute
+  '/_authenticated/manager/crm': typeof AuthenticatedManagerCrmRoute
   '/_authenticated/manager/diligence': typeof AuthenticatedManagerDiligenceRoute
   '/_authenticated/manager/distributions': typeof AuthenticatedManagerDistributionsRoute
   '/_authenticated/manager/documents': typeof AuthenticatedManagerDocumentsRoute
@@ -2809,6 +2861,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/tax': typeof AuthenticatedManagerTaxRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
+  '/_authenticated/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -2830,6 +2883,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2857,8 +2911,10 @@ export interface FileRoutesById {
   '/_authenticated/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/_authenticated/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/_authenticated/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
+  '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
+  '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
@@ -2991,6 +3047,7 @@ export interface FileRouteTypes {
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
+    | '/messages'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -3090,6 +3147,7 @@ export interface FileRouteTypes {
     | '/manager/capital'
     | '/manager/cash-approvals'
     | '/manager/closing'
+    | '/manager/crm'
     | '/manager/diligence'
     | '/manager/distributions'
     | '/manager/documents'
@@ -3115,6 +3173,7 @@ export interface FileRouteTypes {
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
+    | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
     | '/my-funds/$fundId'
@@ -3136,6 +3195,7 @@ export interface FileRouteTypes {
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
+    | '/ops/messages'
     | '/ops/nav'
     | '/ops/performance'
     | '/ops/readiness'
@@ -3163,8 +3223,10 @@ export interface FileRouteTypes {
     | '/professional/tasks'
     | '/professional/tax'
     | '/professional/verification'
+    | '/sales/crm'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
+    | '/api/public/crm-unsubscribe'
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
     | '/lovable/email/events'
@@ -3293,6 +3355,7 @@ export interface FileRouteTypes {
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
+    | '/messages'
     | '/my-claims'
     | '/my-equity'
     | '/my-portfolio'
@@ -3389,6 +3452,7 @@ export interface FileRouteTypes {
     | '/manager/capital'
     | '/manager/cash-approvals'
     | '/manager/closing'
+    | '/manager/crm'
     | '/manager/diligence'
     | '/manager/distributions'
     | '/manager/documents'
@@ -3414,6 +3478,7 @@ export interface FileRouteTypes {
     | '/manager/requests'
     | '/manager/tax'
     | '/manager/timeline'
+    | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
     | '/my-funds/$fundId'
@@ -3435,6 +3500,7 @@ export interface FileRouteTypes {
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
+    | '/ops/messages'
     | '/ops/nav'
     | '/ops/performance'
     | '/ops/readiness'
@@ -3462,8 +3528,10 @@ export interface FileRouteTypes {
     | '/professional/tasks'
     | '/professional/tax'
     | '/professional/verification'
+    | '/sales/crm'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
+    | '/api/public/crm-unsubscribe'
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
     | '/lovable/email/events'
@@ -3594,6 +3662,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investor-financials'
     | '/_authenticated/investor-performance'
     | '/_authenticated/investor-reporting'
+    | '/_authenticated/messages'
     | '/_authenticated/my-claims'
     | '/_authenticated/my-equity'
     | '/_authenticated/my-portfolio'
@@ -3693,6 +3762,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/capital'
     | '/_authenticated/manager/cash-approvals'
     | '/_authenticated/manager/closing'
+    | '/_authenticated/manager/crm'
     | '/_authenticated/manager/diligence'
     | '/_authenticated/manager/distributions'
     | '/_authenticated/manager/documents'
@@ -3718,6 +3788,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/requests'
     | '/_authenticated/manager/tax'
     | '/_authenticated/manager/timeline'
+    | '/_authenticated/manager/updates'
     | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
     | '/_authenticated/my-funds/$fundId'
@@ -3739,6 +3810,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/formation-reference'
+    | '/_authenticated/ops/messages'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/performance'
     | '/_authenticated/ops/readiness'
@@ -3766,8 +3838,10 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/tasks'
     | '/_authenticated/professional/tax'
     | '/_authenticated/professional/verification'
+    | '/_authenticated/sales_/crm'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
+    | '/api/public/crm-unsubscribe'
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
     | '/lovable/email/events'
@@ -3899,6 +3973,7 @@ export interface RootRouteChildren {
   SolutionsIndexRoute: typeof SolutionsIndexRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
+  ApiPublicCrmUnsubscribeRoute: typeof ApiPublicCrmUnsubscribeRoute
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   ApiPublicPlaidWebhookRoute: typeof ApiPublicPlaidWebhookRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
@@ -4166,6 +4241,13 @@ declare module '@tanstack/react-router' {
       path: '/investor-reporting'
       fullPath: '/investor-reporting'
       preLoaderRoute: typeof AuthenticatedInvestorReportingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/messages': {
+      id: '/_authenticated/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedMessagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-claims': {
@@ -4889,6 +4971,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerClosingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/crm': {
+      id: '/_authenticated/manager/crm'
+      path: '/manager/crm'
+      fullPath: '/manager/crm'
+      preLoaderRoute: typeof AuthenticatedManagerCrmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/diligence': {
       id: '/_authenticated/manager/diligence'
       path: '/manager/diligence'
@@ -5064,6 +5153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerTimelineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/updates': {
+      id: '/_authenticated/manager/updates'
+      path: '/manager/updates'
+      fullPath: '/manager/updates'
+      preLoaderRoute: typeof AuthenticatedManagerUpdatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/valuations': {
       id: '/_authenticated/manager/valuations'
       path: '/manager/valuations'
@@ -5223,6 +5319,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/formation-reference'
       fullPath: '/ops/formation-reference'
       preLoaderRoute: typeof AuthenticatedOpsFormationReferenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/messages': {
+      id: '/_authenticated/ops/messages'
+      path: '/ops/messages'
+      fullPath: '/ops/messages'
+      preLoaderRoute: typeof AuthenticatedOpsMessagesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/nav': {
@@ -5421,6 +5524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfessionalVerificationRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
     }
+    '/_authenticated/sales_/crm': {
+      id: '/_authenticated/sales_/crm'
+      path: '/sales/crm'
+      fullPath: '/sales/crm'
+      preLoaderRoute: typeof AuthenticatedSalesCrmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/cap-claim': {
       id: '/api/public/cap-claim'
       path: '/api/public/cap-claim'
@@ -5433,6 +5543,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/cap-table-request'
       fullPath: '/api/public/cap-table-request'
       preLoaderRoute: typeof ApiPublicCapTableRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/crm-unsubscribe': {
+      id: '/api/public/crm-unsubscribe'
+      path: '/api/public/crm-unsubscribe'
+      fullPath: '/api/public/crm-unsubscribe'
+      preLoaderRoute: typeof ApiPublicCrmUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/login-attempt': {
@@ -6283,6 +6400,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
   AuthenticatedInvestorPerformanceRoute: typeof AuthenticatedInvestorPerformanceRoute
   AuthenticatedInvestorReportingRoute: typeof AuthenticatedInvestorReportingRoute
+  AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedMyClaimsRoute: typeof AuthenticatedMyClaimsRoute
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
   AuthenticatedMyPortfolioRoute: typeof AuthenticatedMyPortfolioRoute
@@ -6358,6 +6476,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerCapitalRoute: typeof AuthenticatedManagerCapitalRoute
   AuthenticatedManagerCashApprovalsRoute: typeof AuthenticatedManagerCashApprovalsRoute
   AuthenticatedManagerClosingRoute: typeof AuthenticatedManagerClosingRoute
+  AuthenticatedManagerCrmRoute: typeof AuthenticatedManagerCrmRoute
   AuthenticatedManagerDiligenceRoute: typeof AuthenticatedManagerDiligenceRoute
   AuthenticatedManagerDistributionsRoute: typeof AuthenticatedManagerDistributionsRoute
   AuthenticatedManagerDocumentsRoute: typeof AuthenticatedManagerDocumentsRoute
@@ -6383,6 +6502,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTaxRoute: typeof AuthenticatedManagerTaxRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
+  AuthenticatedManagerUpdatesRoute: typeof AuthenticatedManagerUpdatesRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
@@ -6404,6 +6524,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsFormationReferenceRoute: typeof AuthenticatedOpsFormationReferenceRoute
+  AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
@@ -6417,6 +6538,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
+  AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
@@ -6478,6 +6600,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,
   AuthenticatedInvestorPerformanceRoute: AuthenticatedInvestorPerformanceRoute,
   AuthenticatedInvestorReportingRoute: AuthenticatedInvestorReportingRoute,
+  AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedMyClaimsRoute: AuthenticatedMyClaimsRoute,
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
   AuthenticatedMyPortfolioRoute: AuthenticatedMyPortfolioRoute,
@@ -6564,6 +6687,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerCashApprovalsRoute:
     AuthenticatedManagerCashApprovalsRoute,
   AuthenticatedManagerClosingRoute: AuthenticatedManagerClosingRoute,
+  AuthenticatedManagerCrmRoute: AuthenticatedManagerCrmRoute,
   AuthenticatedManagerDiligenceRoute: AuthenticatedManagerDiligenceRoute,
   AuthenticatedManagerDistributionsRoute:
     AuthenticatedManagerDistributionsRoute,
@@ -6595,6 +6719,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTaxRoute: AuthenticatedManagerTaxRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
+  AuthenticatedManagerUpdatesRoute: AuthenticatedManagerUpdatesRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
@@ -6620,6 +6745,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsFormationReferenceRoute:
     AuthenticatedOpsFormationReferenceRoute,
+  AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
@@ -6633,6 +6759,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
+  AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
@@ -6750,6 +6877,7 @@ const rootRouteChildren: RootRouteChildren = {
   SolutionsIndexRoute: SolutionsIndexRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
+  ApiPublicCrmUnsubscribeRoute: ApiPublicCrmUnsubscribeRoute,
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   ApiPublicPlaidWebhookRoute: ApiPublicPlaidWebhookRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,

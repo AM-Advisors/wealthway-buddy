@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listMessageThreads } from "@/lib/portal-messages.functions";
 import { PortalMessageThread } from "@/components/portal-message-thread";
+import { SupportInbox } from "@/components/support-inbox";
+import { getCrmWorkspace } from "@/lib/crm.functions";
 
 export const Route = createFileRoute("/_authenticated/manager/messages")({
   component: Messages,
@@ -59,6 +61,9 @@ function Messages() {
       t.offering_name.toLowerCase().includes(q)
     );
   });
+
+  const loadFunds = useServerFn(getCrmWorkspace);
+  const funds = useQuery({ queryKey: ["crm", "fund", "all"], queryFn: () => loadFunds({ data: { scope: "fund" } }) });
 
   const waiting = threads.reduce((sum, t) => sum + t.unread_from_investor, 0);
 
@@ -134,6 +139,12 @@ function Messages() {
           ))
         )}
       </div>
+
+      <section className="mt-12">
+        <h2 className="text-2xl">Harmonious team</h2>
+        <p className="mb-4 mt-1 text-sm text-muted-foreground">Questions about your Funds for the Harmonious team.</p>
+        <SupportInbox mode="manager" funds={funds.data?.fundOptions ?? []} />
+      </section>
     </main>
   );
 }

@@ -39,12 +39,16 @@ const INVESTOR_NAV: ClientNavLink[] = [
   { title: "Reports", url: "/investor-reporting", icon: "report" },
   { title: "Documents", url: "/documents", icon: "document" },
   { title: "Tax", url: "/tax", icon: "tax" },
+  { title: "Messages", url: "/messages", icon: "message" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 
 const FUND_MANAGER_NAV: ClientNavLink[] = [
   { title: "Home", url: "/manager", icon: "home" },
+  { title: "Updates", url: "/manager/updates", icon: "bell" },
   { title: "My Funds", url: "/my-funds", icon: "building" },
+  { title: "Contacts & deals", url: "/manager/crm", icon: "people" },
+  { title: "Messages", url: "/manager/messages", icon: "message" },
   { title: "Investors", url: "/manager/investors", icon: "people" },
   { title: "Capital", url: "/manager/capital", icon: "money" },
   { title: "Reports", url: "/manager/reporting", icon: "report" },

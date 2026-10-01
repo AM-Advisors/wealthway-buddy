@@ -10,7 +10,7 @@ import { topbarShowsLogo } from "@/components/portal-topbar";
 const routes = readdirSync("src/routes/_authenticated").map((f) => f.replace(/\.tsx$/, ""));
 const routeExists = (url: string) => {
   const flat = url.replace(/^\//, "").replace(/\//g, ".") || "index";
-  return routes.includes(flat) || routes.includes(`${flat}.index`) || (flat === "admin" && routes.includes("admin.index"));
+  return routes.includes(flat) || routes.map((r) => r.replace(/_\./g, ".")).includes(flat) || routes.includes(`${flat}.index`) || (flat === "admin" && routes.includes("admin.index"));
 };
 
 function session(kinds: string[], roles: string[] = ["admin"]): NavigationSession {
@@ -102,7 +102,7 @@ describe("Operations sidebar consolidation", () => {
     const s = { ...session(["investor"]), staffRoles: ["sales"] };
     const sales = getNavigation(s, "investor", "/sales");
     expect(sales.shell).toBe("ops");
-    expect(sales.operations.map((item) => item.url)).toEqual(["/sales"]);
+    expect(sales.operations.map((item) => item.url)).toEqual(["/sales", "/sales/crm"]);
     expect(getNavigation(s, "investor", "/home").shell).toBe("client");
     expect(getNavigation(session(["investor"]), "investor", "/sales").shell).toBe("client");
   });

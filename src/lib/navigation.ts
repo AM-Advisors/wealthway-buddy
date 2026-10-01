@@ -105,7 +105,7 @@ export function getNavigation(
   const commercialStaff = Boolean(session?.staffRoles?.some((role) => role === "sales" || role === "sales_management"));
   const salesPage = isUnder(pathname, "/sales");
   const operations = staff ? [OPS_HOME, ...opsNavigation(session?.operationsCapabilities ?? [])] : commercialStaff && salesPage
-    ? [{ id: "sales", title: "Sales", url: "/sales", icon: "briefcase" }] : [];
+    ? [{ id: "sales", title: "Sales", url: "/sales", icon: "briefcase" }, { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" }] : [];
 
   const hasClientWorkspace = workspaces.some((w) => w.surface === "client");
   const onInternalPage = INTERNAL_PATH_PREFIXES.some((p) => isUnder(pathname, p));

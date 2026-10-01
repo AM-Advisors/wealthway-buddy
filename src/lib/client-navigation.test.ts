@@ -30,6 +30,7 @@ describe("client navigation by workspace", () => {
       "Reports",
       "Documents",
       "Tax",
+      "Messages",
       "Profile",
     ]);
   });
@@ -37,7 +38,10 @@ describe("client navigation by workspace", () => {
   it("gives a fund manager exactly the manager menu", () => {
     expect(titles("fund_manager")).toEqual([
       "Home",
+      "Updates",
       "My Funds",
+      "Contacts & deals",
+      "Messages",
       "Investors",
       "Capital",
       "Reports",

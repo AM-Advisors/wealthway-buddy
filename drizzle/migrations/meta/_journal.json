@@ -680,6 +680,13 @@
       "when": 1790827876830,
       "tag": "0096_accounting_phase5",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1790829413629,
+      "tag": "0097_crm_messaging_phase7",
+      "breakpoints": true
     }
   ]
 }
