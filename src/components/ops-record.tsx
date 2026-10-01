@@ -30,6 +30,7 @@ import {
 import { allowedActions, recordPath, recordTabs, RECORD_AREA, type OpsRecordType } from "@/lib/ops-records";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
+import { FundCapTable } from "@/components/fund-cap-table";
 
 const LABELS: Record<OpsRecordType, { title: string; plural: string }> = {
   client: { title: "Client", plural: "Clients" },
@@ -389,6 +390,8 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         <ClientFundsPanel clientId={id} />
       ) : type === "fund" && active === "side-letters" ? (
         <SideLetterRegistry fundId={id} />
+      ) : type === "fund" && active === "cap-table" ? (
+        <FundCapTable fundId={id} />
       ) : (
         <TabBody type={type} id={id} tab={active} />
       )}
