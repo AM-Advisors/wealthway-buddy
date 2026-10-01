@@ -197,18 +197,13 @@ function ClientShell() {
     : pathname.startsWith("/client/cap-table")
       ? "cap-table"
       : "settings";
-  const sections = [
-    { key: "funds", to: "/client/funds", label: `Funds${funds.length ? ` (${funds.length})` : ""}`, icon: Briefcase },
-    { key: "cap-table", to: "/client/cap-table", label: "Cap Table", icon: PieChart },
-    { key: "settings", to: "/client", label: "Settings", icon: Settings },
-  ] as const;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Client portal
+            {section === "settings" ? "Settings" : section === "funds" ? "Funds" : "Cap Table"}
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl">{client.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
