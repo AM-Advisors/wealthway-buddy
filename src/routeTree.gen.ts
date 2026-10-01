@@ -290,6 +290,7 @@ import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './route
 import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from './routes/_authenticated/professional.acting.$delegationId'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
+import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
@@ -1914,6 +1915,12 @@ const ApiPublicEmailOpenRoute = ApiPublicEmailOpenRouteImport.update({
   path: '/api/public/email/open',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksBankAlertsRoute =
+  ApiPublicHooksBankAlertsRouteImport.update({
+    id: '/api/public/hooks/bank-alerts',
+    path: '/api/public/hooks/bank-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksInvoiceRemindersRoute =
   ApiPublicHooksInvoiceRemindersRouteImport.update({
     id: '/api/public/hooks/invoice-reminders',
@@ -2309,6 +2316,7 @@ export interface FileRoutesByFullPath {
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -2606,6 +2614,7 @@ export interface FileRoutesByTo {
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -2911,6 +2920,7 @@ export interface FileRoutesById {
   '/_authenticated/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -3216,6 +3226,7 @@ export interface FileRouteTypes {
     | '/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -3513,6 +3524,7 @@ export interface FileRouteTypes {
     | '/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -3817,6 +3829,7 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/acting/$delegationId'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -3892,6 +3905,7 @@ export interface RootRouteChildren {
   OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
+  ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
@@ -5869,6 +5883,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmailOpenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/bank-alerts': {
+      id: '/api/public/hooks/bank-alerts'
+      path: '/api/public/hooks/bank-alerts'
+      fullPath: '/api/public/hooks/bank-alerts'
+      preLoaderRoute: typeof ApiPublicHooksBankAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/invoice-reminders': {
       id: '/api/public/hooks/invoice-reminders'
       path: '/api/public/hooks/invoice-reminders'
@@ -6735,6 +6756,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
+  ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,

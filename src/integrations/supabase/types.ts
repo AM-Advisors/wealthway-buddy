@@ -2336,6 +2336,150 @@ export type Database = {
           },
         ]
       }
+      bank_alert_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          alert_id: string
+          assignee_user_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          alert_id: string
+          assignee_user_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          alert_id?: string
+          assignee_user_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_alert_events_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "bank_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_alerts: {
+        Row: {
+          amount_cents: number | null
+          bank_account_id: string | null
+          bank_transaction_id: string | null
+          dedupe_key: string
+          detail: Json
+          detected_at: string
+          id: string
+          kind: string
+          offering_id: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          bank_account_id?: string | null
+          bank_transaction_id?: string | null
+          dedupe_key: string
+          detail?: Json
+          detected_at?: string
+          id?: string
+          kind: string
+          offering_id: string
+        }
+        Update: {
+          amount_cents?: number | null
+          bank_account_id?: string | null
+          bank_transaction_id?: string | null
+          dedupe_key?: string
+          detail?: Json
+          detected_at?: string
+          id?: string
+          kind?: string
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_alerts_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_alerts_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_alerts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_balance_snapshots: {
+        Row: {
+          as_of: string
+          balance_cents: number
+          bank_account_id: string | null
+          created_at: string
+          id: string
+          offering_id: string
+          recorded_by: string | null
+          source: string
+        }
+        Insert: {
+          as_of: string
+          balance_cents: number
+          bank_account_id?: string | null
+          created_at?: string
+          id?: string
+          offering_id: string
+          recorded_by?: string | null
+          source: string
+        }
+        Update: {
+          as_of?: string
+          balance_cents?: number
+          bank_account_id?: string | null
+          created_at?: string
+          id?: string
+          offering_id?: string
+          recorded_by?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_balance_snapshots_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_balance_snapshots_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_reconciliations: {
         Row: {
           acknowledged_at: string | null
@@ -5997,6 +6141,117 @@ export type Database = {
             columns: ["period_id"]
             isOneToOne: false
             referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      close_sheet_decisions: {
+        Row: {
+          created_at: string
+          decided_by: string
+          decision: string
+          id: string
+          reason: string | null
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          reason?: string | null
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          reason?: string | null
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "close_sheet_decisions_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: true
+            referencedRelation: "close_sheet_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      close_sheet_versions: {
+        Row: {
+          approval_deadline: string | null
+          created_at: string
+          id: string
+          note: string | null
+          prepared_by: string
+          sheet_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          approval_deadline?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          prepared_by: string
+          sheet_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          approval_deadline?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          prepared_by?: string
+          sheet_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "close_sheet_versions_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "close_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      close_sheets: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          offering_id: string
+          sheet_key: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          kind: string
+          offering_id: string
+          sheet_key: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          offering_id?: string
+          sheet_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "close_sheets_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -27675,6 +27930,359 @@ export type Database = {
           },
         ]
       }
+      qbo_account_mappings: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string
+          id: string
+          offering_id: string
+          qbo_account_name: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          offering_id: string
+          qbo_account_name: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          offering_id?: string
+          qbo_account_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_account_mappings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qbo_account_mappings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_company_links: {
+        Row: {
+          company_name: string
+          created_at: string
+          created_by: string
+          id: string
+          mode: string
+          note: string | null
+          offering_id: string
+          realm_id: string | null
+          status: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          mode?: string
+          note?: string | null
+          offering_id: string
+          realm_id?: string | null
+          status: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          mode?: string
+          note?: string | null
+          offering_id?: string
+          realm_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_company_links_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_drift_snapshots: {
+        Row: {
+          as_of: string
+          created_at: string
+          created_by: string
+          explanation: string | null
+          id: string
+          max_diff_cents: number
+          offering_id: string
+          rows: Json
+        }
+        Insert: {
+          as_of: string
+          created_at?: string
+          created_by: string
+          explanation?: string | null
+          id?: string
+          max_diff_cents?: number
+          offering_id: string
+          rows: Json
+        }
+        Update: {
+          as_of?: string
+          created_at?: string
+          created_by?: string
+          explanation?: string | null
+          id?: string
+          max_diff_cents?: number
+          offering_id?: string
+          rows?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_drift_snapshots_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_inbound_items: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          journal_entry_id: string | null
+          lines: Json
+          memo: string | null
+          offering_id: string
+          outcome: string
+          qbo_txn_id: string
+          run_id: string
+          total_cents: number
+          txn_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          lines?: Json
+          memo?: string | null
+          offering_id: string
+          outcome: string
+          qbo_txn_id: string
+          run_id: string
+          total_cents?: number
+          txn_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          lines?: Json
+          memo?: string | null
+          offering_id?: string
+          outcome?: string
+          qbo_txn_id?: string
+          run_id?: string
+          total_cents?: number
+          txn_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_inbound_items_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qbo_inbound_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qbo_inbound_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "qbo_sync_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_outbound_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          entry_ids: string[]
+          id: string
+          note: string | null
+          offering_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          entry_ids: string[]
+          id?: string
+          note?: string | null
+          offering_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          entry_ids?: string[]
+          id?: string
+          note?: string | null
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_outbound_batches_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_outbound_decisions: {
+        Row: {
+          batch_id: string
+          created_at: string
+          decided_by: string
+          decision: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_outbound_decisions_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: true
+            referencedRelation: "qbo_outbound_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_outbound_items: {
+        Row: {
+          batch_id: string
+          created_at: string
+          detail: string | null
+          id: string
+          journal_entry_id: string
+          outcome: string
+          qbo_txn_id: string | null
+          recorded_by: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          journal_entry_id: string
+          outcome: string
+          qbo_txn_id?: string | null
+          recorded_by: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          journal_entry_id?: string
+          outcome?: string
+          qbo_txn_id?: string | null
+          recorded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_outbound_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "qbo_outbound_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qbo_outbound_items_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qbo_sync_runs: {
+        Row: {
+          counts: Json
+          created_at: string
+          direction: string
+          file_name: string | null
+          id: string
+          offering_id: string
+          source: string
+          started_by: string
+        }
+        Insert: {
+          counts?: Json
+          created_at?: string
+          direction: string
+          file_name?: string | null
+          id?: string
+          offering_id: string
+          source: string
+          started_by: string
+        }
+        Update: {
+          counts?: Json
+          created_at?: string
+          direction?: string
+          file_name?: string | null
+          id?: string
+          offering_id?: string
+          source?: string
+          started_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qbo_sync_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reconciliation_events: {
         Row: {
           action: string
@@ -32504,6 +33112,7 @@ export type Database = {
         | "adjustment"
         | "reversal"
         | "migration"
+        | "quickbooks"
       journal_status: "draft" | "reviewed" | "approved" | "posted" | "reversed"
       ledger_account_type:
         | "asset"
@@ -32995,6 +33604,7 @@ export const Constants = {
         "adjustment",
         "reversal",
         "migration",
+        "quickbooks",
       ],
       journal_status: ["draft", "reviewed", "approved", "posted", "reversed"],
       ledger_account_type: [
