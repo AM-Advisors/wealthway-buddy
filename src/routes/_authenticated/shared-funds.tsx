@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { getSharedFund, listMySharedFunds } from "@/lib/fund-team-access.functions";
 import { fundTeamRoleLabel } from "@/lib/fund-team-access";
+import { AssistantDrafts } from "@/components/fund-team-drafts";
 
 export const Route = createFileRoute("/_authenticated/shared-funds")({
   head: () => ({
@@ -80,6 +81,7 @@ function Page() {
               )}
             </section>
           )}
+          {fund.data?.role === "fund_assistant" && fundId && <AssistantDrafts fundId={fundId} />}
           {fund.isError && <p className="text-sm text-destructive">You no longer have access to this fund.</p>}
         </>
       )}
