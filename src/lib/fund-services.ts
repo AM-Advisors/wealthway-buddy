@@ -56,6 +56,7 @@ export type TransitionInput = {
   hasEinLetter?: boolean;
   hasCertificate?: boolean;
   boiPartyCount?: number;
+  hasFormationAuthorization?: boolean | undefined;
 };
 
 /** Returns an error message, or null when the move is allowed. */
@@ -68,6 +69,7 @@ export function checkTransition(t: TransitionInput): string | null {
     if (t.kind === "boi" && !(t.boiPartyCount && t.boiPartyCount > 0)) return "Add at least one beneficial owner or company applicant.";
   }
   if (t.to === "reviewed" && t.preparedBy && t.preparedBy === t.actorId) return "A different Harmonious team member must review this.";
+  if (t.to === "submitted" && t.kind === "formation" && t.hasFormationAuthorization === false) return "Record the client's authorization for Harmonious to form the entity first.";
   if (t.to === "submitted" && !has("submittedOn")) return "Enter the date Harmonious submitted it.";
   if (t.to === "completed") {
     if (t.kind === "formation" && !t.hasCertificate) return "Upload the Certificate of Formation first.";
