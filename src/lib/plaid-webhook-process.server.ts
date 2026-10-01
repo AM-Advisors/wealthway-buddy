@@ -51,6 +51,8 @@ export async function processPlaidWebhook(delivery: Delivery): Promise<PlaidProc
       .from("bank_accounts")
       .update({ status: "needs_attention" })
       .eq("item_id", itemId);
+    const { scanBankAlerts } = await import("@/lib/accounting-phase5.server");
+    await scanBankAlerts(link.offering_id).catch(() => null);
     return {
       status: "processed",
       detail: "Bank connection flagged as needing attention.",
@@ -113,6 +115,24 @@ export async function processPlaidWebhook(delivery: Delivery): Promise<PlaidProc
       "bank feed webhook",
     );
     matched = auto.total;
+  }
+
+  // Alerts are signals only; a failure here never fails the feed.
+  try {
+    const withdrawals = result.transactions
+      .filter((t) => t.amount > 0 && !t.pending)
+      .map((t) => ({ plaidId: t.transaction_id, date: t.date, amountCents: Math.round(t.amount * 100), name: t.merchant_name || t.name }));
+    const { getAccounts } = await import("@/lib/plaid.server");
+    const accts = await getAccounts(link.access_token).catch(() => null);
+    const { data: ours } = await supabaseAdmin.from("bank_accounts").select("id").eq("item_id", itemId).limit(1);
+    const total = (accts?.accounts ?? []).reduce((s, a) => s + (a.balances?.current ?? 0), 0);
+    const balances = accts && accts.accounts.some((a) => a.balances?.current != null)
+      ? [{ bankAccountId: (ours?.[0] as any)?.id ?? null, balanceCents: Math.round(total * 100) }]
+      : [];
+    const { recordFeedSnapshotAndScan } = await import("@/lib/accounting-phase5.server");
+    await recordFeedSnapshotAndScan(link.offering_id, { withdrawals, balances });
+  } catch (err) {
+    console.error("[plaid] bank alert scan skipped", (err as Error).message);
   }
 
   return {

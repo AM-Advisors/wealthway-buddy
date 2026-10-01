@@ -64,6 +64,7 @@ export type PlaidAccount = {
   name: string;
   mask: string | null;
   official_name: string | null;
+  balances?: { current: number | null; available: number | null } | null;
 };
 
 export function getAccounts(accessToken: string) {
