@@ -722,6 +722,20 @@
       "when": 1790884800121,
       "tag": "0102_screen_protection_events",
       "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1790885690595,
+      "tag": "0103_account_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1790885970831,
+      "tag": "0104_security_session_revocations",
+      "breakpoints": true
     }
   ]
 }

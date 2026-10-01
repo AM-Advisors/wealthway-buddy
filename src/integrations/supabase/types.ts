@@ -21990,6 +21990,51 @@ export type Database = {
           },
         ]
       }
+      known_devices: {
+        Row: {
+          country: string | null
+          device_hash: string
+          first_seen: string
+          id: string
+          last_city: string | null
+          last_ip: string | null
+          last_region: string | null
+          last_seen: string
+          revoked_at: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          country?: string | null
+          device_hash: string
+          first_seen?: string
+          id?: string
+          last_city?: string | null
+          last_ip?: string | null
+          last_region?: string | null
+          last_seen?: string
+          revoked_at?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          country?: string | null
+          device_hash?: string
+          first_seen?: string
+          id?: string
+          last_city?: string | null
+          last_ip?: string | null
+          last_region?: string | null
+          last_seen?: string
+          revoked_at?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       kyc_verifications: {
         Row: {
           address_check_status: Database["public"]["Enums"]["check_status"]
@@ -22588,6 +22633,75 @@ export type Database = {
           last_read_at?: string
           thread_key?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      mfa_recovery_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          salt: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          salt: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          salt?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mfa_reset_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          id: string
+          identity_check: string
+          reason: string
+          requested_by: string
+          status: string
+          target_email: string | null
+          target_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          identity_check: string
+          reason: string
+          requested_by: string
+          status?: string
+          target_email?: string | null
+          target_user_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          identity_check?: string
+          reason?: string
+          requested_by?: string
+          status?: string
+          target_email?: string | null
+          target_user_id?: string
         }
         Relationships: []
       }
@@ -29604,6 +29718,117 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          accuracy_m: number | null
+          action: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_hash: string | null
+          email: string | null
+          event_type: string
+          gps_declined: boolean
+          id: string
+          ip: string | null
+          lat: number | null
+          lng: number | null
+          location_source: string
+          path: string | null
+          region: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          action?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_hash?: string | null
+          email?: string | null
+          event_type: string
+          gps_declined?: boolean
+          id?: string
+          ip?: string | null
+          lat?: number | null
+          lng?: number | null
+          location_source?: string
+          path?: string | null
+          region?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          action?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_hash?: string | null
+          email?: string | null
+          event_type?: string
+          gps_declined?: boolean
+          id?: string
+          ip?: string | null
+          lat?: number | null
+          lng?: number | null
+          location_source?: string
+          path?: string | null
+          region?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_revoke_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      security_session_revocations: {
+        Row: {
+          reason: string | null
+          revoked_after: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          reason?: string | null
+          revoked_after: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          reason?: string | null
+          revoked_after?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_catalog: {
         Row: {
           active: boolean
@@ -33669,6 +33894,7 @@ export type Database = {
           on_file: boolean
         }[]
       }
+      purge_security_events: { Args: never; Returns: number }
       read_offering_rp_identifier: {
         Args: { _offering: string }
         Returns: {

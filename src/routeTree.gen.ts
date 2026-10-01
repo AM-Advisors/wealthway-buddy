@@ -55,6 +55,7 @@ import { Route as AuthenticatedProfessionalRouteImport } from './routes/_authent
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedProviderRouteImport } from './routes/_authenticated/provider'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
+import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedSharedFundsRouteImport } from './routes/_authenticated/shared-funds'
 import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated/shares'
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
@@ -121,6 +122,7 @@ import { Route as AuthenticatedAdminPricingRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminRateProposalsRouteImport } from './routes/_authenticated/admin.rate-proposals'
 import { Route as AuthenticatedAdminRequestsRouteImport } from './routes/_authenticated/admin.requests'
 import { Route as AuthenticatedAdminSecurityRouteImport } from './routes/_authenticated/admin.security'
+import { Route as AuthenticatedAdminSecurityActivityRouteImport } from './routes/_authenticated/admin.security-activity'
 import { Route as AuthenticatedAdminServicesRouteImport } from './routes/_authenticated/admin.services'
 import { Route as AuthenticatedAdminSetupRouteImport } from './routes/_authenticated/admin.setup'
 import { Route as AuthenticatedAdminSignoffRouteImport } from './routes/_authenticated/admin.signoff'
@@ -301,6 +303,7 @@ import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/publi
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
+import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -556,6 +559,11 @@ const AuthenticatedProviderRoute = AuthenticatedProviderRouteImport.update({
 const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSharedFundsRoute =
@@ -924,6 +932,12 @@ const AuthenticatedAdminSecurityRoute =
   AuthenticatedAdminSecurityRouteImport.update({
     id: '/admin/security',
     path: '/admin/security',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSecurityActivityRoute =
+  AuthenticatedAdminSecurityActivityRouteImport.update({
+    id: '/admin/security-activity',
+    path: '/admin/security-activity',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminServicesRoute =
@@ -1984,6 +1998,11 @@ const ApiPublicPacketTokenRoute = ApiPublicPacketTokenRouteImport.update({
   path: '/api/public/packet/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
+  id: '/api/public/security/revoke',
+  path: '/api/public/security/revoke',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksBoxSignRoute =
   ApiPublicWebhooksBoxSignRouteImport.update({
     id: '/api/public/webhooks/box-sign',
@@ -2150,6 +2169,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/sales': typeof AuthenticatedSalesRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/shared-funds': typeof AuthenticatedSharedFundsRoute
   '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
@@ -2215,6 +2235,7 @@ export interface FileRoutesByFullPath {
   '/admin/rate-proposals': typeof AuthenticatedAdminRateProposalsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
+  '/admin/security-activity': typeof AuthenticatedAdminSecurityActivityRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
@@ -2386,6 +2407,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -2460,6 +2482,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/provider': typeof AuthenticatedProviderRoute
   '/sales': typeof AuthenticatedSalesRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/shared-funds': typeof AuthenticatedSharedFundsRoute
   '/shares': typeof AuthenticatedSharesRoute
   '/sign-off': typeof AuthenticatedSignOffRoute
@@ -2525,6 +2548,7 @@ export interface FileRoutesByTo {
   '/admin/rate-proposals': typeof AuthenticatedAdminRateProposalsRoute
   '/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/admin/security': typeof AuthenticatedAdminSecurityRoute
+  '/admin/security-activity': typeof AuthenticatedAdminSecurityActivityRoute
   '/admin/services': typeof AuthenticatedAdminServicesRoute
   '/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
@@ -2693,6 +2717,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -2772,6 +2797,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/provider': typeof AuthenticatedProviderRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
+  '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/shared-funds': typeof AuthenticatedSharedFundsRoute
   '/_authenticated/shares': typeof AuthenticatedSharesRoute
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
@@ -2837,6 +2863,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/rate-proposals': typeof AuthenticatedAdminRateProposalsRoute
   '/_authenticated/admin/requests': typeof AuthenticatedAdminRequestsRoute
   '/_authenticated/admin/security': typeof AuthenticatedAdminSecurityRoute
+  '/_authenticated/admin/security-activity': typeof AuthenticatedAdminSecurityActivityRoute
   '/_authenticated/admin/services': typeof AuthenticatedAdminServicesRoute
   '/_authenticated/admin/setup': typeof AuthenticatedAdminSetupRoute
   '/_authenticated/admin/signoff': typeof AuthenticatedAdminSignoffRoute
@@ -3008,6 +3035,7 @@ export interface FileRoutesById {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -3087,6 +3115,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/provider'
     | '/sales'
+    | '/security'
     | '/shared-funds'
     | '/shares'
     | '/sign-off'
@@ -3152,6 +3181,7 @@ export interface FileRouteTypes {
     | '/admin/rate-proposals'
     | '/admin/requests'
     | '/admin/security'
+    | '/admin/security-activity'
     | '/admin/services'
     | '/admin/setup'
     | '/admin/signoff'
@@ -3323,6 +3353,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -3397,6 +3428,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/provider'
     | '/sales'
+    | '/security'
     | '/shared-funds'
     | '/shares'
     | '/sign-off'
@@ -3462,6 +3494,7 @@ export interface FileRouteTypes {
     | '/admin/rate-proposals'
     | '/admin/requests'
     | '/admin/security'
+    | '/admin/security-activity'
     | '/admin/services'
     | '/admin/setup'
     | '/admin/signoff'
@@ -3630,6 +3663,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -3708,6 +3742,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/provider'
     | '/_authenticated/sales'
+    | '/_authenticated/security'
     | '/_authenticated/shared-funds'
     | '/_authenticated/shares'
     | '/_authenticated/sign-off'
@@ -3773,6 +3808,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/rate-proposals'
     | '/_authenticated/admin/requests'
     | '/_authenticated/admin/security'
+    | '/_authenticated/admin/security-activity'
     | '/_authenticated/admin/services'
     | '/_authenticated/admin/setup'
     | '/_authenticated/admin/signoff'
@@ -3944,6 +3980,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -4023,6 +4060,7 @@ export interface RootRouteChildren {
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
+  ApiPublicSecurityRevokeRoute: typeof ApiPublicSecurityRevokeRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -4350,6 +4388,13 @@ declare module '@tanstack/react-router' {
       path: '/sales'
       fullPath: '/sales'
       preLoaderRoute: typeof AuthenticatedSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/security': {
+      id: '/_authenticated/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/shared-funds': {
@@ -4812,6 +4857,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/security'
       fullPath: '/admin/security'
       preLoaderRoute: typeof AuthenticatedAdminSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/security-activity': {
+      id: '/_authenticated/admin/security-activity'
+      path: '/admin/security-activity'
+      fullPath: '/admin/security-activity'
+      preLoaderRoute: typeof AuthenticatedAdminSecurityActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/services': {
@@ -6074,6 +6126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPacketTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/security/revoke': {
+      id: '/api/public/security/revoke'
+      path: '/api/public/security/revoke'
+      fullPath: '/api/public/security/revoke'
+      preLoaderRoute: typeof ApiPublicSecurityRevokeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/box-sign': {
       id: '/api/public/webhooks/box-sign'
       path: '/api/public/webhooks/box-sign'
@@ -6476,6 +6535,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProviderRoute: typeof AuthenticatedProviderRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
+  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedSharedFundsRoute: typeof AuthenticatedSharedFundsRoute
   AuthenticatedSharesRoute: typeof AuthenticatedSharesRoute
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
@@ -6526,6 +6586,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRateProposalsRoute: typeof AuthenticatedAdminRateProposalsRoute
   AuthenticatedAdminRequestsRoute: typeof AuthenticatedAdminRequestsRoute
   AuthenticatedAdminSecurityRoute: typeof AuthenticatedAdminSecurityRoute
+  AuthenticatedAdminSecurityActivityRoute: typeof AuthenticatedAdminSecurityActivityRoute
   AuthenticatedAdminServicesRoute: typeof AuthenticatedAdminServicesRoute
   AuthenticatedAdminSetupRoute: typeof AuthenticatedAdminSetupRoute
   AuthenticatedAdminSignoffRoute: typeof AuthenticatedAdminSignoffRoute
@@ -6677,6 +6738,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProviderRoute: AuthenticatedProviderRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
+  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedSharedFundsRoute: AuthenticatedSharedFundsRoute,
   AuthenticatedSharesRoute: AuthenticatedSharesRoute,
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
@@ -6734,6 +6796,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRateProposalsRoute: AuthenticatedAdminRateProposalsRoute,
   AuthenticatedAdminRequestsRoute: AuthenticatedAdminRequestsRoute,
   AuthenticatedAdminSecurityRoute: AuthenticatedAdminSecurityRoute,
+  AuthenticatedAdminSecurityActivityRoute:
+    AuthenticatedAdminSecurityActivityRoute,
   AuthenticatedAdminServicesRoute: AuthenticatedAdminServicesRoute,
   AuthenticatedAdminSetupRoute: AuthenticatedAdminSetupRoute,
   AuthenticatedAdminSignoffRoute: AuthenticatedAdminSignoffRoute,
@@ -6956,6 +7020,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
+  ApiPublicSecurityRevokeRoute: ApiPublicSecurityRevokeRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

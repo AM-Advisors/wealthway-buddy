@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, FileSignature, LogOut, Repeat, UserRound } from "lucide-react";
+import { ChevronsUpDown, FileSignature, LogOut, Repeat, UserRound, ShieldCheck } from "lucide-react";
 
 import { useClientWorkspace } from "@/components/client-workspace";
 import {
