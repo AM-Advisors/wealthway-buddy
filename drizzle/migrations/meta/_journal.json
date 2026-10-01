@@ -715,6 +715,13 @@
       "when": 1790881494975,
       "tag": "0101_side_letter_registry",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1790884800121,
+      "tag": "0102_screen_protection_events",
+      "breakpoints": true
     }
   ]
 }
