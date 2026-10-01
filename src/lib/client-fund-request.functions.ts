@@ -131,6 +131,15 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       });
       const { structure: _s, ...rest } = prefill;
       await db.from("fund_setups").update(rest).eq("id", (setup as any).id);
+      // SS-4 answers prefill EIN & SS-4 for Operations review; also kept on the request. Never filed.
+      const { ss4For } = await import("@/lib/fund-request-model");
+      const ss4 = ss4For(r);
+      if (ss4) {
+        const { error } = await context.supabase.rpc("save_offering_entity_details", {
+          p_offering_id: offeringId, p_has_ein: false, p_ein: "", p_ss4: ss4 as any,
+        });
+        if (error) console.warn("SS-4 prefill kept on request only:", error.message);
+      }
     }
 
     const details = { ...r, _kind: KIND, duplicate_review: duplicate };
