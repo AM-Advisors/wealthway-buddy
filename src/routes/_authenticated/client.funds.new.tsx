@@ -26,7 +26,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, autoServices, emptyRequest, isSpv, missingFields,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -78,7 +78,11 @@ function NewFundRequest() {
     });
   const setStructureOrExemption = (k: "vehicle_structure" | "offering_exemption", v: string) =>
     setR((p) => {
-      const next = { ...p, [k]: v, ...(k === "offering_exemption" ? { investor_eligibility: eligibilityFor(v) } : {}) };
+      const leavingSeries = k === "vehicle_structure" && p.vehicle_structure === "Series LLC" && v !== "Series LLC";
+      const next = {
+        ...p, [k]: v, ...(k === "offering_exemption" ? { investor_eligibility: eligibilityFor(v) } : {}),
+        ...(leavingSeries ? { series_home: "", series_fee_ack: false, ss4: {}, jurisdiction: seriesJurisdiction(p.series_home) ? "" : p.jurisdiction } : {}),
+      };
       return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
     });
 
