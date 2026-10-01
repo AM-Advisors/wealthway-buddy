@@ -14,7 +14,7 @@ import {
 const db = () => supabaseAdmin as any;
 
 const FIELD_KEYS: Record<ServiceKind, string[]> = {
-  formation: ["state", "entityType", "registeredAgent", "submittedOn", "completedOn", "confirmationNumber", "notes"],
+  formation: ["state", "entityType", "registeredAgent", "processingOption", "nameCheckResult", "formationDate", "actionRequired", "actionRequiredReason", "submittedOn", "completedOn", "confirmationNumber", "notes"],
   ein: ["responsibleParty", "submittedOn", "completedOn", "notes"],
   boi: ["submittedOn", "completedOn", "confirmationNumber", "exemptionReason", "notes"],
 };
@@ -30,7 +30,7 @@ async function staffFor(userId: string, offeringId: string) {
   return a;
 }
 
-async function ensureOrder(offeringId: string, kind: ServiceKind) {
+export async function ensureOrder(offeringId: string, kind: ServiceKind) {
   const { data } = await db().from("fund_service_orders").select("*").eq("offering_id", offeringId).eq("kind", kind).maybeSingle();
   if (data) return data;
   const { data: created, error } = await db().from("fund_service_orders").upsert({ offering_id: offeringId, kind }, { onConflict: "offering_id,kind" }).select("*").single();
@@ -38,8 +38,8 @@ async function ensureOrder(offeringId: string, kind: ServiceKind) {
   return created;
 }
 
-async function logEvent(orderId: string, userId: string, ev: string, from: string | null, to: string | null, detail: Record<string, unknown> = {}) {
-  await db().from("fund_service_order_events").insert({ order_id: orderId, actor_user_id: userId, event: ev, from_status: from, to_status: to, detail });
+export async function logEvent(orderId: string, userId: string, ev: string, from: string | null, to: string | null, detail: Record<string, unknown> = {}, managerVisible = false) {
+  await db().from("fund_service_order_events").insert({ order_id: orderId, actor_user_id: userId, event: ev, from_status: from, to_status: to, detail, manager_visible: managerVisible });
 }
 
 async function evidenceFlags(offeringId: string) {
@@ -123,7 +123,12 @@ export async function moveService(userId: string, input: { offeringId: string; k
     const { count } = await db().from("fund_boi_parties").select("id", { count: "exact", head: true }).eq("offering_id", input.offeringId).is("removed_at", null);
     boiPartyCount = count ?? 0;
   }
-  const err = checkTransition({
+  let hasFormationAuthorization: boolean | undefined;
+  if (input.kind === "formation") {
+    const { count } = await db().from("fund_formation_authorizations").select("id", { count: "exact", head: true }).eq("offering_id", input.offeringId);
+    hasFormationAuthorization = (count ?? 0) > 0;
+  }
+  const err = checkTransition({ hasFormationAuthorization,
     kind: input.kind, from: order.status, to: input.to, actorId: userId, preparedBy: order.prepared_by,
     fields: order.fields ?? {}, hasCertificate: ev.hasCertificate, hasEinLetter: ev.hasEinLetter, boiPartyCount,
   });
@@ -136,7 +141,7 @@ export async function moveService(userId: string, input: { offeringId: string; k
   // Optimistic concurrency: only move from the status we checked.
   const { data: moved } = await db().from("fund_service_orders").update(patch).eq("id", order.id).eq("status", order.status).select("id");
   if (!moved?.length) throw new Error("Someone else just updated this service. Refresh and try again.");
-  await logEvent(order.id, userId, "status_changed", order.status, input.to, input.note ? { note: input.note.slice(0, 1000) } : {});
+  await logEvent(order.id, userId, "status_changed", order.status, input.to, input.note ? { note: input.note.slice(0, 1000) } : {}, true);
 
   if (input.kind === "ein" && ev.setupId && (input.to === "submitted" || input.to === "completed")) {
     const col = input.to === "submitted" ? "ein_requested_at" : "ein_received_at";
