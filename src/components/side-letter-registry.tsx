@@ -33,6 +33,21 @@ const expiryBadge: Record<string, { label: string; variant: "default" | "seconda
   not_effective: { label: "Not yet effective", variant: "outline" },
 };
 
+type SideLetterList = {
+  userId: string;
+  actorKind: string;
+  canPropose: boolean;
+  letters: { id: string; onboardingId: string | null; status: string; version: number; snapshot: SideLetterSnapshot; expiry: string }[];
+  requests: {
+    id: string; sideLetterId: string; kind: string; before: SideLetterSnapshot | null; after: SideLetterSnapshot;
+    reason: string; proposedBy: string; proposerKind: string; status: string; createdAt: string; canDecide: boolean;
+  }[];
+  mfnQueue: { sourceId: string; termId: string; holderId: string }[];
+  mfnReviews: { id: string; sourceId: string; termId: string; holderId: string; decision: string; reason: string }[];
+  events: { id: string; sideLetterId: string | null; event: string; createdAt: string; detail: Record<string, unknown> }[];
+  investors: { onboardingId: string; label: string }[];
+};
+
 type Draft = {
   mode: "create" | "amend" | "terminate";
   sideLetterId: string | null;
@@ -85,7 +100,7 @@ export function SideLetterRegistry({ fundId }: { fundId: string }) {
 
   if (q.isLoading) return <Card><CardContent className="p-6 text-sm text-muted-foreground">Loading side letters…</CardContent></Card>;
   if (q.error) return <Card><CardContent className="p-6 text-sm text-destructive">{(q.error as Error).message}</CardContent></Card>;
-  const d = q.data!;
+  const d = q.data as unknown as SideLetterList;
   const letterById = new Map(d.letters.map((l) => [l.id, l]));
   const pending = d.requests.filter((r) => r.status === "pending");
   const canMfn = d.actorKind === "staff" || d.actorKind === "manager";
