@@ -88,7 +88,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
     const base = url.split("?")[0] ?? url;
     if (base === "/client") {
       // Settings covers every client-portal page except Funds and Cap Table.
-      return pathname.startsWith("/client") && !pathname.startsWith("/client/funds") && !pathname.startsWith("/client/cap-table");
+      return pathname.startsWith("/client") && !pathname.startsWith("/client/funds") && !pathname.startsWith("/client/cap-table") && !pathname.startsWith("/client/home");
     }
     if (base === "/home" || base === "/manager" || base === "/professional") {
       return pathname === base;

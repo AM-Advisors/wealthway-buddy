@@ -56,6 +56,7 @@ describe("client navigation by workspace", () => {
 
   it("gives a company user exactly the company menu", () => {
     expect(titles("company")).toEqual([
+      "Home",
       "Funds",
       "Cap Table",
       "Stakeholders",

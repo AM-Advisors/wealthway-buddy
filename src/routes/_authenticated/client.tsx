@@ -192,7 +192,9 @@ function ClientShell() {
     },
   ];
 
-  const section = pathname.startsWith("/client/funds")
+  const section = pathname.startsWith("/client/home")
+    ? "home"
+    : pathname.startsWith("/client/funds")
     ? "funds"
     : pathname.startsWith("/client/cap-table")
       ? "cap-table"
@@ -203,7 +205,7 @@ function ClientShell() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {section === "settings" ? "Settings" : section === "funds" ? "Funds" : "Cap Table"}
+            {section === "settings" ? "Settings" : section === "home" ? "Home" : section === "funds" ? "Funds" : "Cap Table"}
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl">{client.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -61,6 +61,7 @@ const FUND_MANAGER_NAV: ClientNavLink[] = [
 ];
 
 const COMPANY_NAV: ClientNavLink[] = [
+  { title: "Home", url: "/client/home", icon: "home" },
   { title: "Funds", url: "/client/funds", icon: "briefcase" },
   { title: "Cap Table", url: "/client/cap-table", icon: "pie" },
   { title: "Stakeholders", url: "/client/cap-table/investors", icon: "people" },

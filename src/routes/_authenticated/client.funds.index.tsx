@@ -63,7 +63,7 @@ function ClientFundsPage() {
           {k === "all" ? "All" : k === "open" ? "Open" : "In setup"}
         </Button>
       ))}
-      <Button asChild size="sm" className="ml-auto"><Link to="/client/services/request">Launch a new fund or SPV</Link></Button>
+      <Button asChild size="sm" className="ml-auto"><Link to="/client/funds/new">Launch a new fund or SPV</Link></Button>
     </div>
     <Card>
       <CardHeader>
