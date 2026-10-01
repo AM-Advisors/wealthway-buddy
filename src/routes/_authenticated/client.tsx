@@ -231,22 +231,6 @@ function ClientShell() {
         )}
       </div>
 
-      <nav aria-label="Client sections" className="mt-6 flex gap-1 border-b">
-        {sections.map((sec) => (
-          <Link
-            key={sec.key}
-            to={sec.to}
-            className={cn(
-              "-mb-px flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
-              section === sec.key ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <sec.icon className="h-4 w-4" />
-            {sec.label}
-          </Link>
-        ))}
-      </nav>
-
       {section === "settings" ? (
         <div className="mt-6 flex flex-col gap-6 md:flex-row">
           <aside className="md:w-56 md:shrink-0">

@@ -48,19 +48,21 @@ describe("client navigation by workspace", () => {
       "Financial reviews",
       "Documents",
       "Agreements",
+      "Cap Table",
+      "Settings",
       "Profile",
     ]);
   });
 
   it("gives a company user exactly the company menu", () => {
     expect(titles("company")).toEqual([
-      "Home",
-      "Company",
-      "Cap table",
+      "Funds",
+      "Cap Table",
       "Stakeholders",
       "Transactions",
       "Documents",
       "Reports",
+      "Settings",
       "Profile",
     ]);
   });
