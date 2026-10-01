@@ -30043,6 +30043,292 @@ export type Database = {
           },
         ]
       }
+      side_letter_change_requests: {
+        Row: {
+          after_snapshot: Json
+          before_snapshot: Json | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          id: string
+          kind: string
+          offering_id: string
+          proposed_by: string
+          proposer_kind: string
+          reason: string
+          side_letter_id: string
+          status: string
+        }
+        Insert: {
+          after_snapshot: Json
+          before_snapshot?: Json | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          kind: string
+          offering_id: string
+          proposed_by: string
+          proposer_kind: string
+          reason: string
+          side_letter_id: string
+          status?: string
+        }
+        Update: {
+          after_snapshot?: Json
+          before_snapshot?: Json | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          kind?: string
+          offering_id?: string
+          proposed_by?: string
+          proposer_kind?: string
+          reason?: string
+          side_letter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "side_letter_change_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "side_letter_change_requests_side_letter_id_fkey"
+            columns: ["side_letter_id"]
+            isOneToOne: false
+            referencedRelation: "side_letters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      side_letter_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          offering_id: string
+          side_letter_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          offering_id: string
+          side_letter_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          offering_id?: string
+          side_letter_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "side_letter_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "side_letter_events_side_letter_id_fkey"
+            columns: ["side_letter_id"]
+            isOneToOne: false
+            referencedRelation: "side_letters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      side_letter_mfn_reviews: {
+        Row: {
+          created_at: string
+          decided_by: string
+          decision: string
+          holder_side_letter_id: string
+          id: string
+          offering_id: string
+          reason: string
+          source_side_letter_id: string
+          source_term_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by: string
+          decision: string
+          holder_side_letter_id: string
+          id?: string
+          offering_id: string
+          reason: string
+          source_side_letter_id: string
+          source_term_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string
+          decision?: string
+          holder_side_letter_id?: string
+          id?: string
+          offering_id?: string
+          reason?: string
+          source_side_letter_id?: string
+          source_term_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "side_letter_mfn_reviews_holder_side_letter_id_fkey"
+            columns: ["holder_side_letter_id"]
+            isOneToOne: false
+            referencedRelation: "side_letters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "side_letter_mfn_reviews_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "side_letter_mfn_reviews_source_side_letter_id_fkey"
+            columns: ["source_side_letter_id"]
+            isOneToOne: false
+            referencedRelation: "side_letters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      side_letter_versions: {
+        Row: {
+          change_request_id: string | null
+          created_at: string
+          id: string
+          side_letter_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          change_request_id?: string | null
+          created_at?: string
+          id?: string
+          side_letter_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          change_request_id?: string | null
+          created_at?: string
+          id?: string
+          side_letter_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "side_letter_versions_side_letter_id_fkey"
+            columns: ["side_letter_id"]
+            isOneToOne: false
+            referencedRelation: "side_letters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      side_letters: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_version: number
+          document_reference: string | null
+          effective_date: string | null
+          expiry_date: string | null
+          id: string
+          investor_label: string
+          mfn_enabled: boolean
+          mfn_scope: string | null
+          offering_id: string
+          onboarding_id: string | null
+          person_id: string | null
+          renewal_note: string | null
+          status: string
+          terms: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_version?: number
+          document_reference?: string | null
+          effective_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          investor_label: string
+          mfn_enabled?: boolean
+          mfn_scope?: string | null
+          offering_id: string
+          onboarding_id?: string | null
+          person_id?: string | null
+          renewal_note?: string | null
+          status?: string
+          terms?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_version?: number
+          document_reference?: string | null
+          effective_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          investor_label?: string
+          mfn_enabled?: boolean
+          mfn_scope?: string | null
+          offering_id?: string
+          onboarding_id?: string | null
+          person_id?: string | null
+          renewal_note?: string | null
+          status?: string
+          terms?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "side_letters_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "side_letters_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "side_letters_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signature_audit_events: {
         Row: {
           application_id: string
@@ -33105,6 +33391,10 @@ export type Database = {
       }
       can_review_operations: { Args: never; Returns: boolean }
       can_view_diligence: { Args: { _offering_id: string }; Returns: boolean }
+      can_view_side_letters: {
+        Args: { _offering_id: string }
+        Returns: boolean
+      }
       cap_holder_can_view: {
         Args: { _stakeholder_id: string }
         Returns: boolean
