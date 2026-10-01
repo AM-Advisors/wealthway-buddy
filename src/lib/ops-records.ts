@@ -56,6 +56,7 @@ export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
     { id: "tax", title: "Tax", area: "tax" },
     { id: "regulatory", title: "Regulatory", area: "regulatory" },
     { id: "documents", title: "Documents", area: "documents" },
+    { id: "side-letters", title: "Side Letters", area: "documents" },
     { id: "activity", title: "Activity", area: "funds" },
   ],
   investor: [
