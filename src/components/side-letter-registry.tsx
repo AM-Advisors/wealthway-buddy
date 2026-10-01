@@ -44,7 +44,7 @@ type SideLetterList = {
   }[];
   mfnQueue: { sourceId: string; termId: string; holderId: string }[];
   mfnReviews: { id: string; sourceId: string; termId: string; holderId: string; decision: string; reason: string }[];
-  events: { id: string; sideLetterId: string | null; event: string; createdAt: string; detail: Record<string, unknown> }[];
+  events: { id: string; sideLetterId: string | null; event: string; createdAt: string; reason: string | null }[];
   investors: { onboardingId: string; label: string }[];
 };
 
@@ -81,7 +81,8 @@ export function SideLetterRegistry({ fundId }: { fundId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
   const decideM = useMutation({
-    mutationFn: (v: { requestId: string; decision: "approved" | "declined" | "withdrawn"; reason?: string }) => decide({ data: v }),
+    mutationFn: (v: { requestId: string; decision: "approved" | "declined" | "withdrawn"; reason?: string | undefined }) =>
+      decide({ data: { requestId: v.requestId, decision: v.decision, ...(v.reason ? { reason: v.reason } : {}) } }),
     onSuccess: () => {
       toast.success("Decision recorded.");
       refresh();
@@ -253,7 +254,7 @@ function LetterDetail({
   labelOf,
 }: {
   letter: { snapshot: SideLetterSnapshot; version: number };
-  events: { id: string; event: string; createdAt: string; detail: Record<string, unknown> }[];
+  events: { id: string; event: string; createdAt: string; reason: string | null }[];
   reviews: { id: string; sourceId: string; holderId: string; termId: string; decision: string; reason: string }[];
   labelOf: (id: string) => string;
 }) {
@@ -300,7 +301,7 @@ function LetterDetail({
           {events.map((e) => (
             <li key={e.id}>
               {new Date(e.createdAt).toLocaleString()} — {e.event.replace(/_/g, " ")}
-              {typeof e.detail?.["reason"] === "string" ? `: ${e.detail["reason"]}` : ""}
+              {e.reason ? `: ${e.reason}` : ""}
             </li>
           ))}
         </ul>

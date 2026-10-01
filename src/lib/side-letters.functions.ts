@@ -202,7 +202,7 @@ export const listSideLetters = createServerFn({ method: "GET" })
         sideLetterId: e.side_letter_id as string | null,
         event: e.event as string,
         createdAt: e.created_at as string,
-        detail: e.detail as Record<string, unknown>,
+        reason: typeof e.detail?.reason === "string" ? (e.detail.reason as string) : null,
       })),
       investors: ((onboardings ?? []) as any[]).map((o) => ({ onboardingId: o.id as string, label: nameOf(o) })),
     };
