@@ -195,6 +195,7 @@ import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsEmailHealthRouteImport } from './routes/_authenticated/ops.email-health'
 import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
+import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes/_authenticated/ops.formation-reference'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
@@ -1354,6 +1355,12 @@ const AuthenticatedOpsFinancialsRoute =
     path: '/ops/financials',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsFormationReferenceRoute =
+  AuthenticatedOpsFormationReferenceRouteImport.update({
+    id: '/ops/formation-reference',
+    path: '/ops/formation-reference',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
   id: '/ops/nav',
   path: '/ops/nav',
@@ -2211,6 +2218,7 @@ export interface FileRoutesByFullPath {
   '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
+  '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2508,6 +2516,7 @@ export interface FileRoutesByTo {
   '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
+  '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2811,6 +2820,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
+  '/_authenticated/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -3115,6 +3125,7 @@ export interface FileRouteTypes {
     | '/ops/email-health'
     | '/ops/financial-reviews'
     | '/ops/financials'
+    | '/ops/formation-reference'
     | '/ops/nav'
     | '/ops/performance'
     | '/ops/readiness'
@@ -3412,6 +3423,7 @@ export interface FileRouteTypes {
     | '/ops/email-health'
     | '/ops/financial-reviews'
     | '/ops/financials'
+    | '/ops/formation-reference'
     | '/ops/nav'
     | '/ops/performance'
     | '/ops/readiness'
@@ -3714,6 +3726,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/email-health'
     | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
+    | '/_authenticated/ops/formation-reference'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/performance'
     | '/_authenticated/ops/readiness'
@@ -5191,6 +5204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFinancialsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/formation-reference': {
+      id: '/_authenticated/ops/formation-reference'
+      path: '/ops/formation-reference'
+      fullPath: '/ops/formation-reference'
+      preLoaderRoute: typeof AuthenticatedOpsFormationReferenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/nav': {
       id: '/_authenticated/ops/nav'
       path: '/ops/nav'
@@ -6362,6 +6382,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsEmailHealthRoute: typeof AuthenticatedOpsEmailHealthRoute
   AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
+  AuthenticatedOpsFormationReferenceRoute: typeof AuthenticatedOpsFormationReferenceRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
@@ -6576,6 +6597,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsEmailHealthRoute: AuthenticatedOpsEmailHealthRoute,
   AuthenticatedOpsFinancialReviewsRoute: AuthenticatedOpsFinancialReviewsRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
+  AuthenticatedOpsFormationReferenceRoute:
+    AuthenticatedOpsFormationReferenceRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,

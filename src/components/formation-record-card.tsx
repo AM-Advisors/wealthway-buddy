@@ -85,7 +85,7 @@ export function FormationRecordCard({ offeringId }: { offeringId: string }) {
   );
 }
 
-function Item({ k, v }: { k: string; v?: string | null }) {
+function Item({ k, v }: { k: string; v?: string | null | undefined }) {
   return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd>{v || "—"}</dd></div>;
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

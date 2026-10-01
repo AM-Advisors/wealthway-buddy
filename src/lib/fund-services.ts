@@ -56,7 +56,7 @@ export type TransitionInput = {
   hasEinLetter?: boolean;
   hasCertificate?: boolean;
   boiPartyCount?: number;
-  hasFormationAuthorization?: boolean;
+  hasFormationAuthorization?: boolean | undefined;
 };
 
 /** Returns an error message, or null when the move is allowed. */
