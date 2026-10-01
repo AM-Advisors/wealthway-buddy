@@ -701,6 +701,13 @@
       "when": 1790879082705,
       "tag": "0099_fund_team_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1790881311431,
+      "tag": "0100_tighten_requirements_and_intake_policies",
+      "breakpoints": true
     }
   ]
 }
