@@ -11,7 +11,9 @@ import {
   History,
   Home,
   LogOut,
+  PieChart,
   Receipt,
+  Settings,
   Table,
   UserRound,
   Users,
@@ -60,6 +62,8 @@ const ICONS: Record<string, typeof Home> = {
   money: Receipt,
   table: Table,
   tasks: ClipboardList,
+  pie: PieChart,
+  settings: Settings,
 };
 
 /**
@@ -82,7 +86,11 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const isActive = (url: string) => {
     const base = url.split("?")[0] ?? url;
-    if (base === "/home" || base === "/manager" || base === "/client" || base === "/professional") {
+    if (base === "/client") {
+      // Settings covers every client-portal page except Funds and Cap Table.
+      return pathname.startsWith("/client") && !pathname.startsWith("/client/funds") && !pathname.startsWith("/client/cap-table");
+    }
+    if (base === "/home" || base === "/manager" || base === "/professional") {
       return pathname === base;
     }
     return pathname === base || pathname.startsWith(`${base}/`);

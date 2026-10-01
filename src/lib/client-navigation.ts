@@ -55,17 +55,19 @@ const FUND_MANAGER_NAV: ClientNavLink[] = [
   { title: "Financial reviews", url: "/manager/financial-reviews", icon: "report" },
   { title: "Documents", url: "/manager/documents", icon: "document" },
   { title: "Agreements", url: "/manager/agreements", icon: "document" },
+  { title: "Cap Table", url: "/client/cap-table", icon: "pie" },
+  { title: "Settings", url: "/client", icon: "settings" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 
 const COMPANY_NAV: ClientNavLink[] = [
-  { title: "Home", url: "/client", icon: "home" },
-  { title: "Company", url: "/client/services", icon: "building" },
-  { title: "Cap table", url: "/client/cap-table/table", icon: "table" },
+  { title: "Funds", url: "/client/funds", icon: "briefcase" },
+  { title: "Cap Table", url: "/client/cap-table", icon: "pie" },
   { title: "Stakeholders", url: "/client/cap-table/investors", icon: "people" },
   { title: "Transactions", url: "/client/cap-table/securities", icon: "money" },
   { title: "Documents", url: "/client/cap-table/documents", icon: "document" },
   { title: "Reports", url: "/client/cap-table/reports", icon: "report" },
+  { title: "Settings", url: "/client", icon: "settings" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 

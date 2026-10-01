@@ -197,18 +197,13 @@ function ClientShell() {
     : pathname.startsWith("/client/cap-table")
       ? "cap-table"
       : "settings";
-  const sections = [
-    { key: "funds", to: "/client/funds", label: `Funds${funds.length ? ` (${funds.length})` : ""}`, icon: Briefcase },
-    { key: "cap-table", to: "/client/cap-table", label: "Cap Table", icon: PieChart },
-    { key: "settings", to: "/client", label: "Settings", icon: Settings },
-  ] as const;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Client portal
+            {section === "settings" ? "Settings" : section === "funds" ? "Funds" : "Cap Table"}
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl">{client.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -230,22 +225,6 @@ function ClientShell() {
           </div>
         )}
       </div>
-
-      <nav aria-label="Client sections" className="mt-6 flex gap-1 border-b">
-        {sections.map((sec) => (
-          <Link
-            key={sec.key}
-            to={sec.to}
-            className={cn(
-              "-mb-px flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
-              section === sec.key ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <sec.icon className="h-4 w-4" />
-            {sec.label}
-          </Link>
-        ))}
-      </nav>
 
       {section === "settings" ? (
         <div className="mt-6 flex flex-col gap-6 md:flex-row">
