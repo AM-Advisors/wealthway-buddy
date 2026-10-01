@@ -193,7 +193,7 @@ function RequestRouter() {
           {chosen.value === "launch_fund" ? (
             <div>
               <Label className="text-xs">What type of fund are you setting up?</Label>
-              <Select value={answers["fund_type"] ?? ""} onValueChange={(v) => { const a: Record<string, string> = { ...answers, fund_type: v, vehicle_structure: defaultVehicle("launch_fund", v) }; setAnswers(a); setPicked(coreServicesFor(a["vehicle_structure"], a["offering_exemption"])); }}>
+              <Select value={answers["fund_type"] ?? ""} onValueChange={(v) => { const a: Record<string, string> = { ...answers, fund_type: v, vehicle_structure: defaultVehicle("launch_fund", v) }; setAnswers(a); setPicked(coreServicesFor(a["vehicle_structure"], a["offering_exemption"], a["jurisdiction"])); }}>
                 <SelectTrigger><SelectValue placeholder="Choose a fund type" /></SelectTrigger>
                 <SelectContent>
                   {FUND_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
