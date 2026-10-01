@@ -308,6 +308,7 @@ import { Route as AuthenticatedAdminClientsClientIdEntitiesRouteImport } from '.
 import { Route as AuthenticatedClientAgreementsSowSowIdRouteImport } from './routes/_authenticated/client.agreements.sow.$sowId'
 import { Route as AuthenticatedManagerFundFundIdIndexRouteImport } from './routes/_authenticated/manager.fund.$fundId.index'
 import { Route as AuthenticatedManagerFundFundIdAssetsRouteImport } from './routes/_authenticated/manager.fund.$fundId.assets'
+import { Route as AuthenticatedManagerFundFundIdCapTableRouteImport } from './routes/_authenticated/manager.fund.$fundId.cap-table'
 import { Route as AuthenticatedManagerFundFundIdComplianceRouteImport } from './routes/_authenticated/manager.fund.$fundId.compliance'
 import { Route as AuthenticatedManagerFundFundIdDocumentsRouteImport } from './routes/_authenticated/manager.fund.$fundId.documents'
 import { Route as AuthenticatedManagerFundFundIdInvestorsRouteImport } from './routes/_authenticated/manager.fund.$fundId.investors'
@@ -2024,6 +2025,12 @@ const AuthenticatedManagerFundFundIdAssetsRoute =
     path: '/assets',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedManagerFundFundIdCapTableRoute =
+  AuthenticatedManagerFundFundIdCapTableRouteImport.update({
+    id: '/cap-table',
+    path: '/cap-table',
+    getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdComplianceRoute =
   AuthenticatedManagerFundFundIdComplianceRouteImport.update({
     id: '/compliance',
@@ -2395,6 +2402,7 @@ export interface FileRoutesByFullPath {
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
+  '/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
@@ -2701,6 +2709,7 @@ export interface FileRoutesByTo {
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
+  '/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
@@ -3015,6 +3024,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/_authenticated/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
+  '/_authenticated/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
   '/_authenticated/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
   '/_authenticated/manager/fund/$fundId/documents': typeof AuthenticatedManagerFundFundIdDocumentsRoute
   '/_authenticated/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
@@ -3329,6 +3339,7 @@ export interface FileRouteTypes {
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/manager/fund/$fundId/assets'
+    | '/manager/fund/$fundId/cap-table'
     | '/manager/fund/$fundId/compliance'
     | '/manager/fund/$fundId/documents'
     | '/manager/fund/$fundId/investors'
@@ -3635,6 +3646,7 @@ export interface FileRouteTypes {
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/manager/fund/$fundId/assets'
+    | '/manager/fund/$fundId/cap-table'
     | '/manager/fund/$fundId/compliance'
     | '/manager/fund/$fundId/documents'
     | '/manager/fund/$fundId/investors'
@@ -3948,6 +3960,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
     | '/_authenticated/manager/fund/$fundId/assets'
+    | '/_authenticated/manager/fund/$fundId/cap-table'
     | '/_authenticated/manager/fund/$fundId/compliance'
     | '/_authenticated/manager/fund/$fundId/documents'
     | '/_authenticated/manager/fund/$fundId/investors'
@@ -6110,6 +6123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdAssetsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/manager/fund/$fundId/cap-table': {
+      id: '/_authenticated/manager/fund/$fundId/cap-table'
+      path: '/cap-table'
+      fullPath: '/manager/fund/$fundId/cap-table'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdCapTableRouteImport
+      parentRoute: typeof AuthenticatedManagerFundFundIdRoute
+    }
     '/_authenticated/manager/fund/$fundId/compliance': {
       id: '/_authenticated/manager/fund/$fundId/compliance'
       path: '/compliance'
@@ -6381,6 +6401,7 @@ const AuthenticatedProfessionalRouteWithChildren =
 
 interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdAssetsRoute: typeof AuthenticatedManagerFundFundIdAssetsRoute
+  AuthenticatedManagerFundFundIdCapTableRoute: typeof AuthenticatedManagerFundFundIdCapTableRoute
   AuthenticatedManagerFundFundIdComplianceRoute: typeof AuthenticatedManagerFundFundIdComplianceRoute
   AuthenticatedManagerFundFundIdDocumentsRoute: typeof AuthenticatedManagerFundFundIdDocumentsRoute
   AuthenticatedManagerFundFundIdInvestorsRoute: typeof AuthenticatedManagerFundFundIdInvestorsRoute
@@ -6398,6 +6419,8 @@ const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundI
   {
     AuthenticatedManagerFundFundIdAssetsRoute:
       AuthenticatedManagerFundFundIdAssetsRoute,
+    AuthenticatedManagerFundFundIdCapTableRoute:
+      AuthenticatedManagerFundFundIdCapTableRoute,
     AuthenticatedManagerFundFundIdComplianceRoute:
       AuthenticatedManagerFundFundIdComplianceRoute,
     AuthenticatedManagerFundFundIdDocumentsRoute:
