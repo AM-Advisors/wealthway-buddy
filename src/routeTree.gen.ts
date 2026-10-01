@@ -314,6 +314,7 @@ import { Route as AuthenticatedManagerFundFundIdInvestorsRouteImport } from './r
 import { Route as AuthenticatedManagerFundFundIdOnboardingLinkRouteImport } from './routes/_authenticated/manager.fund.$fundId.onboarding-link'
 import { Route as AuthenticatedManagerFundFundIdReadinessRouteImport } from './routes/_authenticated/manager.fund.$fundId.readiness'
 import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './routes/_authenticated/manager.fund.$fundId.settings'
+import { Route as AuthenticatedManagerFundFundIdSideLettersRouteImport } from './routes/_authenticated/manager.fund.$fundId.side-letters'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
 import { Route as AuthenticatedManagerFundFundIdTransactionsRouteImport } from './routes/_authenticated/manager.fund.$fundId.transactions'
 import { Route as AuthenticatedOpsTaxKindIdRouteImport } from './routes/_authenticated/ops.tax_.$kind.$id'
@@ -2059,6 +2060,12 @@ const AuthenticatedManagerFundFundIdSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedManagerFundFundIdSideLettersRoute =
+  AuthenticatedManagerFundFundIdSideLettersRouteImport.update({
+    id: '/side-letters',
+    path: '/side-letters',
+    getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdTeamRoute =
   AuthenticatedManagerFundFundIdTeamRouteImport.update({
     id: '/team',
@@ -2394,6 +2401,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
+  '/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
@@ -2699,6 +2707,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
+  '/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
@@ -3012,6 +3021,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/_authenticated/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
   '/_authenticated/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
+  '/_authenticated/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/_authenticated/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/_authenticated/ops/tax_/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
@@ -3325,6 +3335,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
     | '/manager/fund/$fundId/settings'
+    | '/manager/fund/$fundId/side-letters'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
     | '/ops/tax/$kind/$id'
@@ -3630,6 +3641,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
     | '/manager/fund/$fundId/settings'
+    | '/manager/fund/$fundId/side-letters'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
     | '/ops/tax/$kind/$id'
@@ -3942,6 +3954,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/onboarding-link'
     | '/_authenticated/manager/fund/$fundId/readiness'
     | '/_authenticated/manager/fund/$fundId/settings'
+    | '/_authenticated/manager/fund/$fundId/side-letters'
     | '/_authenticated/manager/fund/$fundId/team'
     | '/_authenticated/manager/fund/$fundId/transactions'
     | '/_authenticated/ops/tax_/$kind/$id'
@@ -6139,6 +6152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdSettingsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/manager/fund/$fundId/side-letters': {
+      id: '/_authenticated/manager/fund/$fundId/side-letters'
+      path: '/side-letters'
+      fullPath: '/manager/fund/$fundId/side-letters'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdSideLettersRouteImport
+      parentRoute: typeof AuthenticatedManagerFundFundIdRoute
+    }
     '/_authenticated/manager/fund/$fundId/team': {
       id: '/_authenticated/manager/fund/$fundId/team'
       path: '/team'
@@ -6367,6 +6387,7 @@ interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdOnboardingLinkRoute: typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   AuthenticatedManagerFundFundIdReadinessRoute: typeof AuthenticatedManagerFundFundIdReadinessRoute
   AuthenticatedManagerFundFundIdSettingsRoute: typeof AuthenticatedManagerFundFundIdSettingsRoute
+  AuthenticatedManagerFundFundIdSideLettersRoute: typeof AuthenticatedManagerFundFundIdSideLettersRoute
   AuthenticatedManagerFundFundIdTeamRoute: typeof AuthenticatedManagerFundFundIdTeamRoute
   AuthenticatedManagerFundFundIdTransactionsRoute: typeof AuthenticatedManagerFundFundIdTransactionsRoute
   AuthenticatedManagerFundFundIdIndexRoute: typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -6389,6 +6410,8 @@ const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundI
       AuthenticatedManagerFundFundIdReadinessRoute,
     AuthenticatedManagerFundFundIdSettingsRoute:
       AuthenticatedManagerFundFundIdSettingsRoute,
+    AuthenticatedManagerFundFundIdSideLettersRoute:
+      AuthenticatedManagerFundFundIdSideLettersRoute,
     AuthenticatedManagerFundFundIdTeamRoute:
       AuthenticatedManagerFundFundIdTeamRoute,
     AuthenticatedManagerFundFundIdTransactionsRoute:
