@@ -45,6 +45,51 @@ export const CLASS_TERM_OPTIONS = {
   hurdle: ["None", "6%", "8%", "10%", "Other", "Not applicable"],
 };
 
+export const SERIES_HOMES = [
+  { value: "hcam_tx", label: "HCAM TX", jurisdiction: "Texas" },
+  { value: "hcam_wy", label: "HCAM WY", jurisdiction: "Wyoming" },
+  { value: "am_spv", label: "AM SPV Fund Management", jurisdiction: "Delaware" },
+  { value: "own", label: "Bring my own", jurisdiction: null },
+  { value: "new", label: "Set up new", jurisdiction: null },
+] as const;
+export const SERIES_NEW_ANNUAL_FEE = "$2,000 per year";
+export const isSeries = (r: Pick<FundRequest, "vehicle_structure">) => r.vehicle_structure === "Series LLC";
+/** Jurisdiction fixed by a Harmonious-managed Series LLC home, else null. */
+export const seriesJurisdiction = (home: string) => SERIES_HOMES.find((h) => h.value === home)?.jurisdiction ?? null;
+export const isHarmoniousSeries = (r: Pick<FundRequest, "vehicle_structure" | "series_home">) =>
+  isSeries(r) && ["hcam_tx", "hcam_wy", "am_spv"].includes(r.series_home);
+/** SS-4 is collected when an already-formed series under a Harmonious master has no EIN. */
+export const needsSs4 = (r: FundRequest) => isHarmoniousSeries(r) && r.already_formed === "yes" && r.has_ein === "no";
+
+export type SeriesInfo = { legal_name: string; jurisdiction: string; date_formed: string; contact_name: string; contact_email: string; notes: string };
+export const SS4_FIELDS: { key: string; label: string; required?: boolean; long?: boolean }[] = [
+  { key: "legal_name", label: "1. Legal name of entity", required: true },
+  { key: "trade_name", label: "2. Trade name (if different)" },
+  { key: "care_of", label: "3. Executor / trustee / care of" },
+  { key: "mailing_street", label: "4a. Mailing address", required: true },
+  { key: "mailing_city_state_zip", label: "4b. City, state, ZIP", required: true },
+  { key: "street_address", label: "5a. Street address (if different)" },
+  { key: "street_city_state_zip", label: "5b. City, state, ZIP" },
+  { key: "county_state", label: "6. County and state of principal business", required: true },
+  { key: "responsible_party_name", label: "7a. Responsible party name", required: true },
+  { key: "llc_members", label: "8b. Number of LLC members", required: true },
+  { key: "entity_detail", label: "9a. Type of entity" },
+  { key: "state_incorporated", label: "9b. State of formation", required: true },
+  { key: "reason", label: "10. Reason for applying", required: true },
+  { key: "date_started", label: "11. Date business started (YYYY-MM-DD)", required: true },
+  { key: "closing_month", label: "12. Closing month of accounting year", required: true },
+  { key: "employees_other", label: "13. Expected employees (0 if none)" },
+  { key: "first_wages_date", label: "14. First date wages paid (or N/A)" },
+  { key: "principal_activity", label: "16. Principal activity", required: true },
+  { key: "principal_line", label: "17. Principal line of business / products", long: true },
+  { key: "previous_ein", label: "18. Previous EIN (if ever applied)" },
+  { key: "designee_name", label: "Third-party designee name" },
+  { key: "designee_phone", label: "Designee phone" },
+  { key: "applicant_name_title", label: "Applicant name and title", required: true },
+  { key: "applicant_phone", label: "Applicant phone", required: true },
+];
+const blankSeries = (): SeriesInfo => ({ legal_name: "", jurisdiction: "", date_formed: "", contact_name: "", contact_email: "", notes: "" });
+
 export type RequestClass = { name: string; fee: string; carry: string; hurdle: string; minimum: string };
 export type RequestPerson = { name: string; email: string; title: string };
 export type RequestDocument = { kind: string; fileName: string; path: string };
@@ -66,6 +111,12 @@ export type FundRequest = {
   already_formed: "yes" | "no" | "";
   date_formed: string;
   has_ein: "yes" | "no" | "";
+  series_home: string;
+  series_existing: SeriesInfo;
+  series_new: SeriesInfo;
+  series_fee_ack: boolean;
+  ein_obtained_by: "harmonious" | "client" | "";
+  ss4: Record<string, string>;
   offering_exemption: string;
   investor_eligibility: string;
   management_fee: string;
@@ -91,6 +142,7 @@ export function emptyRequest(kind = ""): FundRequest {
     bank_or_custodian: "", counsel: "", auditor: "", tax_preparer: "Harmonious",
     legal_name: "", vehicle_structure: kind ? defaultVehicle(kind === "spv" ? "launch_spv" : "launch_fund", kind) : "",
     jurisdiction: "", already_formed: "", date_formed: "", has_ein: "",
+    series_home: "", series_existing: blankSeries(), series_new: blankSeries(), series_fee_ack: false, ein_obtained_by: "", ss4: {},
     offering_exemption: "", investor_eligibility: "", management_fee: "", carried_interest: "", preferred_return: "",
     gp_commitment: "", fund_term: "", investment_period: "",
     classes: [{ name: "Class A", fee: "", carry: "", hurdle: "", minimum: "" }],
@@ -109,6 +161,18 @@ export function missingFields(r: FundRequest): Partial<Record<RequestStepKey, st
   if (!r.fund_name.trim()) add("details", "Fund name");
   if (!r.vehicle_structure) add("entity", "Vehicle / entity structure");
   if (!r.jurisdiction) add("entity", "Jurisdiction");
+  if (isSeries(r)) {
+    if (!r.series_home) add("entity", "Series LLC home");
+    const own = r.series_home === "own" ? r.series_existing : r.series_home === "new" ? r.series_new : null;
+    if (own && (!own.legal_name?.trim() || !own.jurisdiction || !own.contact_name?.trim() || !own.contact_email?.trim())) add("entity", r.series_home === "own" ? "Existing Series LLC details" : "New Series LLC details");
+    if (r.series_home === "new" && !r.series_fee_ack) add("entity", "Acknowledge the $2,000 annual Series LLC fee");
+  }
+  if (r.already_formed === "no" && !r.ein_obtained_by) add("entity", "Who will obtain the EIN");
+  if (r.already_formed === "yes" && !r.has_ein) add("entity", "Has an EIN");
+  if (needsSs4(r)) {
+    const miss = SS4_FIELDS.filter((f) => f.required && !String(r.ss4?.[f.key] ?? "").trim());
+    if (miss.length) add("entity", `SS-4: ${miss.map((f) => f.label.replace(/^[\dab]+\.\s*/, "")).join(", ")}`);
+  }
   if (!r.offering_exemption) add("economics", "Offering exemption");
   if (!r.signatory.name.trim() || !r.signatory.email.trim()) add("people", "Signatory name and email");
   return out;
@@ -141,8 +205,23 @@ export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { n
     target_raise_cents: dollarsToCents(r.target_raise),
     min_investment_cents: dollarsToCents(r.minimum_investment) ?? 0,
     banking_path: r.banking_path || null,
-    ein_path: r.has_ein === "yes" ? "existing" : r.has_ein === "no" ? "harmonious" : null,
+    ein_path: einPathFor(r),
   };
+}
+
+export function einPathFor(r: FundRequest): "existing" | "harmonious" | "client" | null {
+  if (r.already_formed === "no") return r.ein_obtained_by || null;
+  if (r.has_ein === "yes") return "existing";
+  if (r.has_ein === "no") return "harmonious";
+  return null;
+}
+
+/** SS-4 answers for Fund Setup (never contains a taxpayer ID). */
+export function ss4For(r: FundRequest): Record<string, string | boolean> | null {
+  if (!needsSs4(r)) return null;
+  const out: Record<string, string | boolean> = { is_llc: true, llc_us_organized: true, entity_kind: "partnership" };
+  for (const f of SS4_FIELDS) { const v = String(r.ss4?.[f.key] ?? "").trim(); if (v) out[f.key] = v; }
+  return out;
 }
 
 /** Fund Setup draft values staff will see as "From client request". */
@@ -181,8 +260,14 @@ export function flatAnswers(r: FundRequest): Record<string, string> {
     else if (k === "classes") out[k] = (v as RequestClass[]).map((c) => `${c.name}: fee ${c.fee || "—"}, carry ${c.carry || "—"}, hurdle ${c.hurdle || "—"}`).join("; ");
     else if (k === "managers") out[k] = (v as RequestPerson[]).map((p) => `${p.name} <${p.email}>`).join("; ");
     else if (k === "signatory") out[k] = `${r.signatory.name} <${r.signatory.email}> ${r.signatory.title}`.trim();
+    else if (k === "series_existing" || k === "series_new") {
+      if (r.series_home === (k === "series_existing" ? "own" : "new")) out[k] = Object.entries(v as SeriesInfo).filter(([, x]) => x).map(([a, x]) => `${a}: ${x}`).join("; ");
+    }
+    else if (k === "series_fee_ack") { if (v && r.series_home === "new") out["invoice_item"] = `New Series LLC management — ${SERIES_NEW_ANNUAL_FEE} (client acknowledged; Operations to invoice)`; }
+    else if (k === "ss4") { const s4 = ss4For(r); if (s4) out[k] = Object.entries(s4).map(([a, x]) => `${a}: ${x}`).join("; "); }
     else if (k === "documents") out[k] = (v as RequestDocument[]).map((d) => `${d.kind}: ${d.fileName}`).join("; ");
   }
+  if (r.series_home) out["series_home"] = SERIES_HOMES.find((h) => h.value === r.series_home)?.label ?? r.series_home;
   return out;
 }
 

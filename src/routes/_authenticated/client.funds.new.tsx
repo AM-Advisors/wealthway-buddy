@@ -26,7 +26,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, autoServices, emptyRequest, isSpv, missingFields,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -78,9 +78,29 @@ function NewFundRequest() {
     });
   const setStructureOrExemption = (k: "vehicle_structure" | "offering_exemption", v: string) =>
     setR((p) => {
-      const next = { ...p, [k]: v, ...(k === "offering_exemption" ? { investor_eligibility: eligibilityFor(v) } : {}) };
+      const leavingSeries = k === "vehicle_structure" && p.vehicle_structure === "Series LLC" && v !== "Series LLC";
+      const next = {
+        ...p, [k]: v, ...(k === "offering_exemption" ? { investor_eligibility: eligibilityFor(v) } : {}),
+        ...(leavingSeries ? { series_home: "", series_fee_ack: false, ss4: {}, jurisdiction: seriesJurisdiction(p.series_home) ? "" : p.jurisdiction } : {}),
+      };
       return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
     });
+
+  const seriesKey = r.series_home === "own" ? "series_existing" : "series_new";
+  const seriesInfo = r[seriesKey] ?? { legal_name: "", jurisdiction: "", date_formed: "", contact_name: "", contact_email: "", notes: "" };
+  const setSeriesInfo = (k: keyof typeof seriesInfo, v: string) => setR((p) => ({ ...p, [seriesKey]: { ...seriesInfo, [k]: v } }));
+  const setSeriesHome = (home: string) => setR((p) => {
+    const j = seriesJurisdiction(home);
+    const next = { ...p, series_home: home, jurisdiction: j ?? (seriesJurisdiction(p.series_home) ? "" : p.jurisdiction) };
+    return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
+  });
+  // Prefill SS-4 lines we already know when the section first appears.
+  useEffect(() => {
+    if (!needsSs4(r)) return;
+    const known: Record<string, string> = { legal_name: r.legal_name, state_incorporated: r.jurisdiction, date_started: r.date_formed, entity_detail: "Series LLC (partnership)", applicant_name_title: [r.signatory.name, r.signatory.title].filter(Boolean).join(", ") };
+    const fill = Object.fromEntries(Object.entries(known).filter(([k, v]) => v && !r.ss4?.[k]));
+    if (Object.keys(fill).length) setR((p) => ({ ...p, ss4: { ...fill, ...p.ss4 } }));
+  }, [needsSs4(r)]);
 
   const saveDraft = useMutation({
     mutationFn: async () => {
@@ -173,12 +193,53 @@ function NewFundRequest() {
                 <Grid>
                   <F label="Legal name"><Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" /></F>
                   <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
-                  <F label="Jurisdiction *"><Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} /></F>
+                  {isSeries(r) && (
+                    <F label="Series LLC home *"><Pick value={r.series_home} onChange={setSeriesHome} options={SERIES_HOMES.map((h) => ({ value: h.value, label: h.label }))} /></F>
+                  )}
+                  <F label="Jurisdiction *">
+                    {seriesJurisdiction(r.series_home) && isSeries(r)
+                      ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Series LLC home)" />
+                      : <Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} />}
+                  </F>
                   <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No — Harmonious to form" }]} /></F>
                   {r.already_formed === "yes" && <F label="Date formed"><DatePick value={r.date_formed} onChange={(v) => set("date_formed", v)} /></F>}
-                  <F label="Has an EIN?"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No — Harmonious to apply" }]} /></F>
+                  {r.already_formed === "no" && <F label="Who will obtain the EIN? *"><Pick value={r.ein_obtained_by} onChange={(v) => set("ein_obtained_by", v as any)} options={[{ value: "harmonious", label: "Harmonious" }, { value: "client", label: "We will" }]} /></F>}
+                  {r.already_formed === "yes" && <F label="Has an EIN? *"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} /></F>}
                 </Grid>
                 <p className="text-xs text-muted-foreground">Don't type the EIN here — upload the IRS letter instead.</p>
+                {isSeries(r) && (r.series_home === "own" || r.series_home === "new") && (
+                  <div className="space-y-3 rounded-md border p-3">
+                    <p className="text-sm font-medium">{r.series_home === "own" ? "Your existing Series LLC" : "New Series LLC to set up"}</p>
+                    {r.series_home === "new" && (
+                      <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                        <p className="font-medium">Harmonious charges {SERIES_NEW_ANNUAL_FEE} to manage a new Series LLC.</p>
+                        <label className="mt-2 flex items-center gap-2"><Checkbox checked={r.series_fee_ack} onCheckedChange={(c) => set("series_fee_ack", c === true)} /> I understand and agree to this annual fee.</label>
+                      </div>
+                    )}
+                    <Grid>
+                      <F label={r.series_home === "own" ? "Legal name *" : "Proposed master LLC name *"}><Input value={seriesInfo.legal_name} onChange={(e) => setSeriesInfo("legal_name", e.target.value)} /></F>
+                      <F label="Jurisdiction *"><Pick value={seriesInfo.jurisdiction} onChange={(v) => setSeriesInfo("jurisdiction", v)} options={JURISDICTIONS} /></F>
+                      {r.series_home === "own" && <F label="Formation date"><DatePick value={seriesInfo.date_formed} onChange={(v) => setSeriesInfo("date_formed", v)} /></F>}
+                      <F label="Manager / contact name *"><Input value={seriesInfo.contact_name} onChange={(e) => setSeriesInfo("contact_name", e.target.value)} /></F>
+                      <F label="Manager / contact email *"><Input type="email" value={seriesInfo.contact_email} onChange={(e) => setSeriesInfo("contact_email", e.target.value)} /></F>
+                    </Grid>
+                    <F label="Notes"><Textarea value={seriesInfo.notes} onChange={(e) => setSeriesInfo("notes", e.target.value)} placeholder={r.series_home === "own" ? "EIN status, registered agent, anything we should know" : "Anything we should know"} /></F>
+                  </div>
+                )}
+                {needsSs4(r) && (
+                  <div className="space-y-3 rounded-md border p-3">
+                    <p className="text-sm font-medium">IRS Form SS-4 — EIN application</p>
+                    <p className="text-xs text-muted-foreground">Harmonious reviews this before anything is submitted to the IRS. Don't enter a Social Security number here — we'll collect it securely.</p>
+                    <Grid>
+                      {SS4_FIELDS.filter((f) => !f.long).map((f) => (
+                        <F key={f.key} label={`${f.label}${f.required ? " *" : ""}`}><Input value={r.ss4?.[f.key] ?? ""} onChange={(e) => set("ss4", { ...r.ss4, [f.key]: e.target.value })} /></F>
+                      ))}
+                    </Grid>
+                    {SS4_FIELDS.filter((f) => f.long).map((f) => (
+                      <F key={f.key} label={f.label}><Textarea value={r.ss4?.[f.key] ?? ""} onChange={(e) => set("ss4", { ...r.ss4, [f.key]: e.target.value })} /></F>
+                    ))}
+                  </div>
+                )}
                 <DocUploads clientId={id} kinds={ENTITY_DOC_KINDS} docs={r.documents} onChange={(d) => set("documents", d)} />
               </>
             )}
