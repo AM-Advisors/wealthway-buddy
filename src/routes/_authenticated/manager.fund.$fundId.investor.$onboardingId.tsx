@@ -39,6 +39,8 @@ function InvestorRecordPage() {
   const resolve = useServerFn(resolveSuggestionFn);
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
+  const loadSideLetters = useServerFn(listInvestorSideLetters);
+  const { data: sideLetters } = useQuery({ queryKey: ["investor-side-letters", onboardingId], queryFn: () => loadSideLetters({ data: { fundId, onboardingId } }) });
   const [edit, setEdit] = useState<Record<string, string>>({});
   const set = (k: string) => (e: { target: { value: string } }) => setEdit((s) => ({ ...s, [k]: e.target.value }));
   const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); };
