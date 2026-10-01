@@ -36,7 +36,8 @@ function ClientFundPage() {
 
   if (fq.isLoading) return <p className="text-sm text-muted-foreground">Loading fund…</p>;
   if (fq.error || !fq.data) return <p className="text-sm text-destructive">{(fq.error as any)?.message ?? "Couldn't load this fund."}</p>;
-  const { fund: f, setup, steps, sideLetters } = fq.data;
+  const { setup, steps, sideLetters } = fq.data;
+  const f = fq.data.fund as any;
   const pending = steps.filter((s) => !s.done);
   const cap = cq.data;
 
