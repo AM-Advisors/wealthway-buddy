@@ -31,7 +31,7 @@ export const getFundCapTable = createServerFn({ method: "GET" })
     const { data: setup } = await db.from("fund_setups").select("id").eq("offering_id", data.fundId).maybeSingle();
     const [{ data: obs }, { data: letters }, { data: econ }] = await Promise.all([
       db.from("investor_onboardings")
-        .select("id, stage, funding_status, offering_class_key, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, removed_at, persons(legal_first_name, legal_last_name, preferred_name), investment_profiles(display_name, legal_name)")
+        .select("id, stage, funding_status, offering_class_key, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, removed_at, persons(legal_first_name, legal_last_name, preferred_name), investment_profiles(legal_name)")
         .eq("offering_id", data.fundId),
       db.from("side_letters").select("id, onboarding_id, status, mfn_enabled, effective_date, expiry_date, terms").eq("offering_id", data.fundId),
       setup
@@ -54,7 +54,7 @@ export const getFundCapTable = createServerFn({ method: "GET" })
         return {
           id: o.id,
           investorName: name || "Unnamed investor",
-          profileName: o.investment_profiles?.display_name || o.investment_profiles?.legal_name || null,
+          profileName: o.investment_profiles?.legal_name || null,
           classKey: o.offering_class_key,
           stage: o.stage,
           fundingStatus: o.funding_status,
