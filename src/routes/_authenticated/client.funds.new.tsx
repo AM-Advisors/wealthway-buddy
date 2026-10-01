@@ -335,7 +335,7 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
 function Pick({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: (string | { value: string; label: string })[] }) {
   const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
   return (
-    <Select value={value || undefined} onValueChange={onChange}>
+    <Select {...(value ? { value } : {})} onValueChange={onChange}>
       <SelectTrigger><SelectValue placeholder="Choose…" /></SelectTrigger>
       <SelectContent>{opts.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
     </Select>
@@ -386,7 +386,7 @@ function DocUploads({ clientId, kinds, docs, onChange }: { clientId: string | nu
   const [busy, setBusy] = useState(false);
   const pick = async (file: File | undefined) => {
     if (!file || !clientId) return;
-    if (file.size > 10 * 1024 * 1024) return toast.error("Files must be 10 MB or smaller.");
+    if (file.size > 10 * 1024 * 1024) { toast.error("Files must be 10 MB or smaller."); return; }
     setBusy(true);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());

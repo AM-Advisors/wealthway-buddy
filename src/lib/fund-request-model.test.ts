@@ -38,6 +38,6 @@ describe("fund request", () => {
     expect(JSON.stringify(p)).not.toMatch(/complete/);
   });
   it("flattens answers for the Operations queue", () => {
-    expect(flatAnswers(filled()).signatory).toContain("jane@example.com");
+    expect(flatAnswers(filled())['signatory']).toContain("jane@example.com");
   });
 });
