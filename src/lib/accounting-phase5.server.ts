@@ -78,8 +78,8 @@ async function names(ids: (string | null | undefined)[]) {
   const list = [...new Set(ids.filter(Boolean) as string[])];
   const m = new Map<string, string>();
   if (!list.length) return m;
-  const { data } = await db().from("profiles").select("id, full_name, email").in("id", list);
-  for (const p of (data ?? []) as any[]) m.set(p.id, p.full_name || p.email || "Team member");
+  const { data } = await db().from("profiles").select("id, legal_name, email").in("id", list);
+  for (const p of (data ?? []) as any[]) m.set(p.id, p.legal_name || p.email || "Team member");
   return m;
 }
 
