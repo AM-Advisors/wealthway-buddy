@@ -29580,6 +29580,30 @@ export type Database = {
         }
         Relationships: []
       }
+      screen_protection_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          path: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          path?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          path?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_catalog: {
         Row: {
           active: boolean

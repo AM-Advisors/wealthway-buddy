@@ -217,3 +217,11 @@
     linear-gradient(to bottom, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px);
   background-size: 44px 44px;
 }
+
+/* Screen protection (signed-in pages): copy limits + blank printouts. */
+html.screen-protected body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+html.screen-protected input, html.screen-protected textarea, html.screen-protected select, html.screen-protected [contenteditable] { -webkit-user-select: text; user-select: text; }
+@media print {
+  html.screen-protected body > * { display: none !important; }
+  html.screen-protected body::after { content: "Printing is disabled on Harmonious."; display: block; padding: 2rem; font-size: 18px; }
+}
