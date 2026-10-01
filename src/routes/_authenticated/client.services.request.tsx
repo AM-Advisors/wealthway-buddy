@@ -129,13 +129,13 @@ function RequestRouter() {
     const a = { ...answers, [key]: v };
     if (key === "offering_exemption") a["investor_eligibility"] = eligibilityFor(v);
     setAnswers(a);
-    if (key === "vehicle_structure" || key === "offering_exemption") {
-      const before = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"]);
-      const after = coreServicesFor(a["vehicle_structure"], a["offering_exemption"]);
+    if (key === "vehicle_structure" || key === "offering_exemption" || key === "jurisdiction") {
+      const before = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"], answers["jurisdiction"]);
+      const after = coreServicesFor(a["vehicle_structure"], a["offering_exemption"], a["jurisdiction"]);
       setPicked((p) => Array.from(new Set([...p.filter((k) => !before.includes(k)), ...after])));
     }
   };
-  const coreKeys = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"]);
+  const coreKeys = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"], answers["jurisdiction"]);
   const all = catalogue.data?.services ?? [];
   const core = all.filter((s) => coreKeys.includes(s.key));
   const addOns = [...suggested, ...rest].filter((s) => !coreKeys.includes(s.key));
@@ -193,7 +193,7 @@ function RequestRouter() {
           {chosen.value === "launch_fund" ? (
             <div>
               <Label className="text-xs">What type of fund are you setting up?</Label>
-              <Select value={answers["fund_type"] ?? ""} onValueChange={(v) => { const a: Record<string, string> = { ...answers, fund_type: v, vehicle_structure: defaultVehicle("launch_fund", v) }; setAnswers(a); setPicked(coreServicesFor(a["vehicle_structure"], a["offering_exemption"])); }}>
+              <Select value={answers["fund_type"] ?? ""} onValueChange={(v) => { const a: Record<string, string> = { ...answers, fund_type: v, vehicle_structure: defaultVehicle("launch_fund", v) }; setAnswers(a); setPicked(coreServicesFor(a["vehicle_structure"], a["offering_exemption"], a["jurisdiction"])); }}>
                 <SelectTrigger><SelectValue placeholder="Choose a fund type" /></SelectTrigger>
                 <SelectContent>
                   {FUND_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}

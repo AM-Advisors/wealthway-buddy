@@ -128,7 +128,7 @@ const months = (v: string) => {
 /** Columns for the closed Fund record created from the request. */
 export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { name: string } {
   const kind = FUND_KIND_TYPES.find((k) => k.value === r.kind);
-  const entityType = r.vehicle_structure.includes("LP") ? "LP" : r.vehicle_structure.includes("Series") ? "Series LLC" : r.vehicle_structure.includes("LLC") ? "LLC" : r.vehicle_structure.includes("company") ? "Corporation" : "Other";
+  const entityType = r.vehicle_structure.includes("GP") ? "GP" : r.vehicle_structure.includes("LP") ? "LP" : r.vehicle_structure.includes("Series") ? "Series LLC" : r.vehicle_structure.includes("LLC") ? "LLC" : r.vehicle_structure.includes("company") ? "Corporation" : "Other";
   return {
     name: r.fund_name.trim(),
     legal_entity_name: r.legal_name.trim() || null,
@@ -186,4 +186,4 @@ export function flatAnswers(r: FundRequest): Record<string, string> {
   return out;
 }
 
-export const autoServices = (r: FundRequest) => coreServicesFor(r.vehicle_structure, r.offering_exemption);
+export const autoServices = (r: FundRequest) => coreServicesFor(r.vehicle_structure, r.offering_exemption, r.jurisdiction);
