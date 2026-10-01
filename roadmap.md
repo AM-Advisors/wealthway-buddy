@@ -138,4 +138,4 @@
 - [x] Add Fund Setup under Funds & SPVs; list all existing Funds/SPVs, provide protected draft creation and summary editing, and show scoped formation/launch readiness for Chapter 1.
 - [ ] Chapter 1 live formation and launch: blocked by missing formation/certificate/EIN evidence, open blocking tasks, unmet launch conditions and no approvals. Resolve the duplicate Chapter 1 records before any authoritative status change; do not manufacture evidence or approvals.
 
-- [ ] Client portal: move current view into client-level Settings; separate Funds and Cap Table screens
+- [x] Client portal: move current view into client-level Settings; separate Funds and Cap Table screens

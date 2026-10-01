@@ -309,6 +309,7 @@ import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as AuthenticatedAdminClientsClientIdEntitiesRouteImport } from './routes/_authenticated/admin.clients.$clientId.entities'
 import { Route as AuthenticatedClientAgreementsSowSowIdRouteImport } from './routes/_authenticated/client.agreements.sow.$sowId'
+import { Route as AuthenticatedClientServicesRequestsRequestIdRouteImport } from './routes/_authenticated/client.services.requests.$requestId'
 import { Route as AuthenticatedManagerFundFundIdIndexRouteImport } from './routes/_authenticated/manager.fund.$fundId.index'
 import { Route as AuthenticatedManagerFundFundIdAssetsRouteImport } from './routes/_authenticated/manager.fund.$fundId.assets'
 import { Route as AuthenticatedManagerFundFundIdCapTableRouteImport } from './routes/_authenticated/manager.fund.$fundId.cap-table'
@@ -2032,6 +2033,12 @@ const AuthenticatedClientAgreementsSowSowIdRoute =
     path: '/sow/$sowId',
     getParentRoute: () => AuthenticatedClientAgreementsRoute,
   } as any)
+const AuthenticatedClientServicesRequestsRequestIdRoute =
+  AuthenticatedClientServicesRequestsRequestIdRouteImport.update({
+    id: '/services/requests/$requestId',
+    path: '/services/requests/$requestId',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdIndexRoute =
   AuthenticatedManagerFundFundIdIndexRouteImport.update({
     id: '/',
@@ -2423,6 +2430,7 @@ export interface FileRoutesByFullPath {
   '/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
+  '/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -2733,6 +2741,7 @@ export interface FileRoutesByTo {
   '/ops/investors': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
+  '/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
   '/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -3051,6 +3060,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
+  '/_authenticated/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
   '/_authenticated/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/_authenticated/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
   '/_authenticated/manager/fund/$fundId/compliance': typeof AuthenticatedManagerFundFundIdComplianceRoute
@@ -3369,6 +3379,7 @@ export interface FileRouteTypes {
     | '/ops/investors/'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
+    | '/client/services/requests/$requestId'
     | '/manager/fund/$fundId/assets'
     | '/manager/fund/$fundId/cap-table'
     | '/manager/fund/$fundId/compliance'
@@ -3679,6 +3690,7 @@ export interface FileRouteTypes {
     | '/ops/investors'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
+    | '/client/services/requests/$requestId'
     | '/manager/fund/$fundId/assets'
     | '/manager/fund/$fundId/cap-table'
     | '/manager/fund/$fundId/compliance'
@@ -3996,6 +4008,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/investors/'
     | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
+    | '/_authenticated/client/services/requests/$requestId'
     | '/_authenticated/manager/fund/$fundId/assets'
     | '/_authenticated/manager/fund/$fundId/cap-table'
     | '/_authenticated/manager/fund/$fundId/compliance'
@@ -6168,6 +6181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientAgreementsSowSowIdRouteImport
       parentRoute: typeof AuthenticatedClientAgreementsRoute
     }
+    '/_authenticated/client/services/requests/$requestId': {
+      id: '/_authenticated/client/services/requests/$requestId'
+      path: '/services/requests/$requestId'
+      fullPath: '/client/services/requests/$requestId'
+      preLoaderRoute: typeof AuthenticatedClientServicesRequestsRequestIdRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/manager/fund/$fundId/': {
       id: '/_authenticated/manager/fund/$fundId/'
       path: '/'
@@ -6374,6 +6394,7 @@ interface AuthenticatedClientRouteChildren {
   AuthenticatedClientServicesEngagementIdRoute: typeof AuthenticatedClientServicesEngagementIdRoute
   AuthenticatedClientServicesRequestRoute: typeof AuthenticatedClientServicesRequestRoute
   AuthenticatedClientServicesIndexRoute: typeof AuthenticatedClientServicesIndexRoute
+  AuthenticatedClientServicesRequestsRequestIdRoute: typeof AuthenticatedClientServicesRequestsRequestIdRoute
 }
 
 const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
@@ -6394,6 +6415,8 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientServicesRequestRoute:
     AuthenticatedClientServicesRequestRoute,
   AuthenticatedClientServicesIndexRoute: AuthenticatedClientServicesIndexRoute,
+  AuthenticatedClientServicesRequestsRequestIdRoute:
+    AuthenticatedClientServicesRequestsRequestIdRoute,
 }
 
 const AuthenticatedClientRouteWithChildren =

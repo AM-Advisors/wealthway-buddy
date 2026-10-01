@@ -12,6 +12,7 @@ import {
   Mail,
   PenLine,
   PieChart,
+  Settings,
 
   ScrollText,
   Send,
@@ -162,7 +163,6 @@ function ClientShell() {
       icon: Mail,
       badge: unreadMessages || undefined,
     },
-    { to: "/client/funds", label: "Funds", icon: Briefcase, badge: funds.length || undefined },
     {
       to: "/client/invoices",
       label: "Invoices",
@@ -176,7 +176,6 @@ function ClientShell() {
       badge: paymentsInProgress || undefined,
     },
     { to: "/client/wires", label: "Wire requests", icon: Send },
-    { to: "/client/cap-table", label: "Cap table", icon: PieChart },
     { to: "/client/banking", label: "Bank accounts", icon: Banknote },
 
     {
@@ -193,6 +192,17 @@ function ClientShell() {
     },
   ];
 
+  const section = pathname.startsWith("/client/funds")
+    ? "funds"
+    : pathname.startsWith("/client/cap-table")
+      ? "cap-table"
+      : "settings";
+  const sections = [
+    { key: "funds", to: "/client/funds", label: `Funds${funds.length ? ` (${funds.length})` : ""}`, icon: Briefcase },
+    { key: "cap-table", to: "/client/cap-table", label: "Cap Table", icon: PieChart },
+    { key: "settings", to: "/client", label: "Settings", icon: Settings },
+  ] as const;
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -202,7 +212,7 @@ function ClientShell() {
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl">{client.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your funds, agreements, invoices and payments with Harmonious in one place.
+            Funds, cap table and your account settings with Harmonious.
           </p>
         </div>
         {clients.length > 1 && (
@@ -221,43 +231,64 @@ function ClientShell() {
         )}
       </div>
 
-      <div className="mt-6 flex flex-col gap-6 md:flex-row">
-        <aside className="md:w-56 md:shrink-0">
-          <nav
-            aria-label="Client portal"
-            className="flex gap-1 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0"
+      <nav aria-label="Client sections" className="mt-6 flex gap-1 border-b">
+        {sections.map((sec) => (
+          <Link
+            key={sec.key}
+            to={sec.to}
+            className={cn(
+              "-mb-px flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+              section === sec.key ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
           >
-            {items.map((item) => {
-              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
-                    active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-                  )}
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  <span>{item.label}</span>
-                  {item.badge ? (
-                    <Badge
-                      variant={active ? "outline" : "secondary"}
-                      className="ml-auto hidden md:inline-flex"
-                    >
-                      {item.badge}
-                    </Badge>
-                  ) : null}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
+            <sec.icon className="h-4 w-4" />
+            {sec.label}
+          </Link>
+        ))}
+      </nav>
 
-        <section className="min-w-0 flex-1">
+      {section === "settings" ? (
+        <div className="mt-6 flex flex-col gap-6 md:flex-row">
+          <aside className="md:w-56 md:shrink-0">
+            <p className="mb-2 hidden px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground md:block">
+              {client.name} settings
+            </p>
+            <nav
+              aria-label="Client settings"
+              className="flex gap-1 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0"
+            >
+              {items.map((item) => {
+                const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={cn(
+                      "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
+                      active && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span>{item.label}</span>
+                    {item.badge ? (
+                      <Badge variant={active ? "outline" : "secondary"} className="ml-auto hidden md:inline-flex">
+                        {item.badge}
+                      </Badge>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </nav>
+          </aside>
+          <section className="min-w-0 flex-1">
+            <Outlet />
+          </section>
+        </div>
+      ) : (
+        <section className="mt-6 min-w-0">
           <Outlet />
         </section>
-      </div>
+      )}
 
       <p className="mt-10 text-xs text-muted-foreground">
         Harmonious provides administrative, technology, onboarding, reporting, payment-facilitation,

@@ -448,7 +448,7 @@ export const updateIntakeAnswers = createServerFn({ method: "POST" })
       source: "portal",
       action: "intake_request_edited",
       target: data.id,
-      old_value: { answers: (row as any).answers, services: (row as any).requested_service_keys } as any,
+      previous_value: { answers: (row as any).answers, services: (row as any).requested_service_keys } as any,
       new_value: { answers: data.answers, services: data.requestedServiceKeys } as any,
     });
     return { ok: true };
