@@ -17589,6 +17589,62 @@ export type Database = {
           },
         ]
       }
+      fund_team_drafts: {
+        Row: {
+          author_user_id: string
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          offering_id: string
+          recipient_email: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_user_id: string
+          body?: string
+          created_at?: string
+          id?: string
+          kind: string
+          offering_id: string
+          recipient_email?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          offering_id?: string
+          recipient_email?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_team_drafts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_team_grant_events: {
         Row: {
           actor_user_id: string | null

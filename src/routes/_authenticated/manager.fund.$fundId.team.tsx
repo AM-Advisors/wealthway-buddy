@@ -2,6 +2,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 
 import { FundTeam } from "@/components/fund-team";
 import { FundTeamAccessBox } from "@/components/fund-team-access-box";
+import { ManagerDraftReview } from "@/components/fund-team-drafts";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/team")({
   head: () => ({
@@ -22,6 +23,7 @@ function Page() {
   return (
     <div className="space-y-6">
       <FundTeamAccessBox fundId={fundId} />
+      <ManagerDraftReview fundId={fundId} />
       <FundTeam fundId={fundId} />
     </div>
   );

@@ -41,6 +41,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { getNavigation } from "@/lib/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listMySharedFunds } from "@/lib/fund-team-access.functions";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -73,6 +76,9 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const navigation = getNavigation(session as never, activeId, pathname);
   const items = navigation.primary;
   const active = options.find((o) => o.id === activeId);
+  const sharedFn = useServerFn(listMySharedFunds);
+  const shared = useQuery({ queryKey: ["my-shared-funds"], queryFn: () => sharedFn(), staleTime: 60_000 });
+  const hasShared = (shared.data?.funds.length ?? 0) > 0;
 
   const isActive = (url: string) => {
     const base = url.split("?")[0] ?? url;
@@ -124,6 +130,16 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              {hasShared && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/shared-funds")} tooltip="Shared funds">
+                    <Link to="/shared-funds" className="flex items-center gap-2">
+                      <Users className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="truncate">Shared funds</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive("/prepared")} tooltip="Notifications and tasks">
                   <Link to="/prepared" className="flex items-center gap-2">
