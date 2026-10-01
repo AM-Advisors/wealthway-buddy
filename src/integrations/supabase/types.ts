@@ -13967,6 +13967,146 @@ export type Database = {
           },
         ]
       }
+      formation_bundles: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          includes_ein: boolean
+          includes_expedite: boolean
+          includes_operating_agreement: boolean
+          includes_registered_agent: boolean
+          name: string
+          service_package_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          includes_ein?: boolean
+          includes_expedite?: boolean
+          includes_operating_agreement?: boolean
+          includes_registered_agent?: boolean
+          name: string
+          service_package_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          includes_ein?: boolean
+          includes_expedite?: boolean
+          includes_operating_agreement?: boolean
+          includes_registered_agent?: boolean
+          name?: string
+          service_package_key?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      formation_providers: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          notes: string | null
+          provider_type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          provider_type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          provider_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      formation_service_prices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_until: string | null
+          entity_type: string | null
+          expedite_fee: number
+          id: string
+          jurisdiction: string
+          provider_fee: number
+          provider_id: string | null
+          service_type: string
+          state_fee: number
+          verified: boolean
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          entity_type?: string | null
+          expedite_fee?: number
+          id?: string
+          jurisdiction: string
+          provider_fee?: number
+          provider_id?: string | null
+          service_type?: string
+          state_fee?: number
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          entity_type?: string | null
+          expedite_fee?: number
+          id?: string
+          jurisdiction?: string
+          provider_fee?: number
+          provider_id?: string | null
+          service_type?: string
+          state_fee?: number
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formation_service_prices_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "formation_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_access_requests: {
         Row: {
           created_at: string
@@ -14815,6 +14955,154 @@ export type Database = {
             columns: ["setup_id"]
             isOneToOne: true
             referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_formation_authorizations: {
+        Row: {
+          authorization_text: string
+          authorized_by_person_id: string
+          authorized_on: string
+          created_at: string
+          id: string
+          method: string
+          offering_id: string
+          recorded_by: string
+          registered_agent_choice: string | null
+        }
+        Insert: {
+          authorization_text: string
+          authorized_by_person_id: string
+          authorized_on: string
+          created_at?: string
+          id?: string
+          method?: string
+          offering_id: string
+          recorded_by: string
+          registered_agent_choice?: string | null
+        }
+        Update: {
+          authorization_text?: string
+          authorized_by_person_id?: string
+          authorized_on?: string
+          created_at?: string
+          id?: string
+          method?: string
+          offering_id?: string
+          recorded_by?: string
+          registered_agent_choice?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_formation_authorizations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_formation_costs: {
+        Row: {
+          created_at: string
+          customer_total: number
+          id: string
+          note: string | null
+          offering_id: string
+          price_id: string | null
+          provider_cost: number
+          recorded_by: string
+          state_fees: number
+        }
+        Insert: {
+          created_at?: string
+          customer_total?: number
+          id?: string
+          note?: string | null
+          offering_id: string
+          price_id?: string | null
+          provider_cost?: number
+          recorded_by: string
+          state_fees?: number
+        }
+        Update: {
+          created_at?: string
+          customer_total?: number
+          id?: string
+          note?: string | null
+          offering_id?: string
+          price_id?: string | null
+          provider_cost?: number
+          recorded_by?: string
+          state_fees?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_formation_costs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_formation_costs_price_id_fkey"
+            columns: ["price_id"]
+            isOneToOne: false
+            referencedRelation: "formation_service_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_formation_discrepancies: {
+        Row: {
+          created_at: string
+          field_label: string
+          id: string
+          offering_id: string
+          our_value: string | null
+          provider_value: string | null
+          recorded_by: string
+          resolution: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          field_label: string
+          id?: string
+          offering_id: string
+          our_value?: string | null
+          provider_value?: string | null
+          recorded_by: string
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          field_label?: string
+          id?: string
+          offering_id?: string
+          our_value?: string | null
+          provider_value?: string | null
+          recorded_by?: string
+          resolution?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_formation_discrepancies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -15883,6 +16171,7 @@ export type Database = {
           event: string
           from_status: string | null
           id: string
+          manager_visible: boolean
           order_id: string
           to_status: string | null
         }
@@ -15893,6 +16182,7 @@ export type Database = {
           event: string
           from_status?: string | null
           id?: string
+          manager_visible?: boolean
           order_id: string
           to_status?: string | null
         }
@@ -15903,6 +16193,7 @@ export type Database = {
           event?: string
           from_status?: string | null
           id?: string
+          manager_visible?: boolean
           order_id?: string
           to_status?: string | null
         }
@@ -15918,6 +16209,7 @@ export type Database = {
       }
       fund_service_orders: {
         Row: {
+          bundle_id: string | null
           created_at: string
           fields: Json
           id: string
@@ -15925,12 +16217,14 @@ export type Database = {
           offering_id: string
           prepared_at: string | null
           prepared_by: string | null
+          provider_id: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          bundle_id?: string | null
           created_at?: string
           fields?: Json
           id?: string
@@ -15938,12 +16232,14 @@ export type Database = {
           offering_id: string
           prepared_at?: string | null
           prepared_by?: string | null
+          provider_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          bundle_id?: string | null
           created_at?: string
           fields?: Json
           id?: string
@@ -15951,6 +16247,7 @@ export type Database = {
           offering_id?: string
           prepared_at?: string | null
           prepared_by?: string | null
+          provider_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -15958,10 +16255,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fund_service_orders_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "formation_bundles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fund_service_orders_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_service_orders_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "formation_providers"
             referencedColumns: ["id"]
           },
         ]
