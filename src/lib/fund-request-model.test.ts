@@ -41,3 +41,24 @@ describe("fund request", () => {
     expect(flatAnswers(filled())['signatory']).toContain("jane@example.com");
   });
 });
+
+import { emptyRequest as _empty, missingFields as _missing, needsSs4 as _needs, seriesJurisdiction as _sj, einPathFor as _ein, ss4For as _ss4 } from "@/lib/fund-request-model";
+describe("Series LLC home, EIN and SS-4", () => {
+  const base = () => ({ ..._empty("spv"), fund_name: "Test", vehicle_structure: "Series LLC", jurisdiction: "Texas", offering_exemption: "506(b)", signatory: { name: "A", email: "a@x.co", title: "" } });
+  it("maps homes to jurisdictions", () => {
+    expect(_sj("hcam_tx")).toBe("Texas"); expect(_sj("hcam_wy")).toBe("Wyoming"); expect(_sj("am_spv")).toBe("Delaware"); expect(_sj("own")).toBeNull();
+  });
+  it("requires home, fee ack for new, and EIN owner when not formed", () => {
+    const r = { ...base(), series_home: "new", already_formed: "no" as const };
+    const m = _missing(r).entity!.join("|");
+    expect(m).toMatch(/New Series LLC details/); expect(m).toMatch(/\$2,000/); expect(m).toMatch(/obtain the EIN/);
+    expect(_ein({ ...r, ein_obtained_by: "client" })).toBe("client");
+  });
+  it("asks for SS-4 only for formed Harmonious series without EIN", () => {
+    const r = { ...base(), series_home: "hcam_tx", already_formed: "yes" as const, has_ein: "no" as const };
+    expect(_needs(r)).toBe(true);
+    expect(_missing(r).entity!.join("|")).toMatch(/SS-4/);
+    expect(_needs({ ...r, series_home: "own" })).toBe(false);
+    expect(_ss4({ ...r, ss4: { legal_name: "X", responsible_party_tin: "123" } })).not.toHaveProperty("responsible_party_tin");
+  });
+});
