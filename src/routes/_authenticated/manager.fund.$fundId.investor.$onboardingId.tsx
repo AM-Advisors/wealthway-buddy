@@ -6,6 +6,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
+import { listInvestorSideLetters } from "@/lib/side-letters.functions";
+import { TERM_CATEGORIES, MFN_SCOPES } from "@/lib/side-letter-model";
 import { CLAIM_STATE_LABELS, SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
 import { money, prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
