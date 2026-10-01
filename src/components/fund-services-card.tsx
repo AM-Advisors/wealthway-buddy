@@ -15,7 +15,10 @@ import { Label } from "@/components/ui/label";
 const FIELDS: Record<ServiceKind, { key: string; label: string; type?: string }[]> = {
   formation: [
     { key: "state", label: "State of formation" }, { key: "entityType", label: "Entity type (e.g. LLC, LP)" },
-    { key: "registeredAgent", label: "Registered agent" }, { key: "submittedOn", label: "Submitted on", type: "date" },
+    { key: "registeredAgent", label: "Registered agent" }, { key: "processingOption", label: "Processing (Standard / Expedited / Same day)" },
+    { key: "nameCheckResult", label: "Name check result" }, { key: "formationDate", label: "Formation date", type: "date" },
+    { key: "actionRequired", label: "Action needed from client (yes / no)" }, { key: "actionRequiredReason", label: "What the client needs to do" },
+    { key: "submittedOn", label: "Submitted on", type: "date" },
     { key: "completedOn", label: "Approved on", type: "date" }, { key: "confirmationNumber", label: "State file number" },
     { key: "notes", label: "Notes" },
   ],

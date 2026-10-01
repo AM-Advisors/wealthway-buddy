@@ -166,6 +166,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Fund Setup", url: "/ops/fund-setup", description: "Details, entity & EIN, Form D, banking, documents and launch", step: "Start" },
       { title: "EIN and SS-4 queue", url: "/ops/ss4", description: "EIN applications across all Funds", cap: "regulatory", step: "Prepare" },
       { title: "Offering statement", url: "/admin/offering-statement", description: "Offering statement drafting", cap: "regulatory", step: "Prepare" },
+      { title: "Formation reference data", url: "/ops/formation-reference", description: "Formation providers, state fees and formation packages", step: "Reference" },
       { title: "Document templates", url: "/ops/document-templates", description: "Reusable fund documents with versioning and approval", step: "Review" },
       { title: "Documents & signatures", url: "/ops/documents", description: "Document repository and signature status", cap: "documents", step: "Track" },
       { title: "Document activity", url: "/admin/document-log", description: "Who opened or signed what", cap: "documents", step: "Reference" },

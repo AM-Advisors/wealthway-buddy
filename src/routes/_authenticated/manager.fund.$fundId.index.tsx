@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ManagerFundHome } from "@/components/manager-fund-home";
 import { ManagerFundDashboard } from "@/components/manager-fund-dashboard";
 import { FundUpdatesFeed } from "@/components/fund-updates-feed";
+import { FormationRecordCard } from "@/components/formation-record-card";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
   head: () => ({ meta: [
@@ -17,5 +18,5 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
 
 function Overview() {
   const { fundId } = Route.useParams();
-  return <div className="space-y-6"><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><ManagerFundHome offeringId={fundId} embedded /></div>;
+  return <div className="space-y-6"><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><FormationRecordCard offeringId={fundId} /><ManagerFundHome offeringId={fundId} embedded /></div>;
 }
