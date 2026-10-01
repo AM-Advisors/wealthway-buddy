@@ -134,7 +134,7 @@ export function ManagerDraftReview({ fundId }: { fundId: string }) {
 
   async function decide(id: string, decision: "used" | "returned") {
     const note = decision === "returned" ? window.prompt("What should the assistant change?") ?? "" : undefined;
-    if (decision === "returned" && !note.trim()) return;
+    if (decision === "returned" && !note?.trim()) return;
     try {
       await reviewFn({ data: { draftId: id, decision, note } });
       qc.invalidateQueries({ queryKey: key });
