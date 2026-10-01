@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { JOURNAL_SOURCE_LABELS } from "@/lib/ledger-trial-balance";
 import { ALERT_LABELS, type AlertKind } from "@/lib/bank-alerts";
 import {
@@ -515,4 +514,3 @@ export function ManagerCloseSheets({ offeringId }: { offeringId: string }) {
   );
 }
 
-export { Textarea };

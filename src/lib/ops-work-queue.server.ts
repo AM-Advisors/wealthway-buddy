@@ -470,6 +470,29 @@ async function reconciliationItems(s: any, lookup: Lookup, now: Date, fundId?: s
 
 async function accountingItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
   const out: WorkItem[] = [];
+
+  let alertQ = s.from("bank_alerts").select("id, offering_id, kind, detected_at, bank_alert_events(action, created_at)").limit(SOURCE_LIMIT);
+  if (fundId) alertQ = alertQ.eq("offering_id", fundId);
+  const { alertState, ALERT_LABELS } = await import("@/lib/bank-alerts");
+  for (const a of (await safely(async () => rows(await alertQ))) as any[]) {
+    if (alertState(a.bank_alert_events ?? []).state === "resolved") continue;
+    out.push(
+      build(lookup, now, {
+        id: `bank-alert:${a.id}`,
+        source: "accounting.bank_alert",
+        area: "accounting",
+        recordType: "fund",
+        recordId: a.offering_id,
+        recordTab: "accounting",
+        title: "Bank alert",
+        reason: (ALERT_LABELS as Record<string, string>)[a.kind] ?? "Bank alert",
+        workflowState: "open",
+        requiredAction: "review",
+        fundId: a.offering_id,
+        at: a.detected_at ?? null,
+      }),
+    );
+  }
   const fundOf = (bookId: string | null) => (bookId ? (lookup.books.get(bookId) ?? null) : null);
 
   const entries = await safely(async () =>

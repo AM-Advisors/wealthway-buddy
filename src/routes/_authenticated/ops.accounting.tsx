@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BankAlertsPanel, CloseSheetsPanel, GeneralLedgerPanel, QuickBooksPanel } from "@/components/accounting-phase5";
 import { TRANSACTION_TYPE_LABELS, type CashTransactionType } from "@/lib/reconciliation-model";
 import {
   advanceJournalForItem,
@@ -152,10 +153,14 @@ function AccountingOperations() {
       ) : null}
 
       <Tabs defaultValue="queue">
-        <TabsList>
+        <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="queue">Reconciliation queue</TabsTrigger>
           <TabsTrigger value="exceptions">Exceptions</TabsTrigger>
           <TabsTrigger value="rules">Accounting mappings</TabsTrigger>
+          <TabsTrigger value="ledger">General ledger</TabsTrigger>
+          <TabsTrigger value="qbo">QuickBooks</TabsTrigger>
+          <TabsTrigger value="alerts">Bank alerts</TabsTrigger>
+          <TabsTrigger value="close">Close sheets</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4 pt-4">
@@ -354,6 +359,10 @@ function AccountingOperations() {
             </div>
           ))}
         </TabsContent>
+        <TabsContent value="ledger" className="pt-4"><GeneralLedgerPanel /></TabsContent>
+        <TabsContent value="qbo" className="pt-4"><QuickBooksPanel /></TabsContent>
+        <TabsContent value="alerts" className="pt-4"><BankAlertsPanel /></TabsContent>
+        <TabsContent value="close" className="pt-4"><CloseSheetsPanel /></TabsContent>
       </Tabs>
     </div>
   );
