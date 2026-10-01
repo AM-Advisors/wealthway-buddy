@@ -1,6 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 
 import { FundTeam } from "@/components/fund-team";
+import { FundTeamAccessBox } from "@/components/fund-team-access-box";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/team")({
   head: () => ({
@@ -18,5 +19,10 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/team"
 
 function Page() {
   const { fundId } = useParams({ from: "/_authenticated/manager/fund/$fundId/team" });
-  return <FundTeam fundId={fundId} />;
+  return (
+    <div className="space-y-6">
+      <FundTeamAccessBox fundId={fundId} />
+      <FundTeam fundId={fundId} />
+    </div>
+  );
 }

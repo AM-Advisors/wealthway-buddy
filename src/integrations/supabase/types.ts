@@ -17589,6 +17589,103 @@ export type Database = {
           },
         ]
       }
+      fund_team_grant_events: {
+        Row: {
+          actor_user_id: string | null
+          after_role: string | null
+          before_role: string | null
+          created_at: string
+          event: string
+          grant_id: string
+          id: string
+          offering_id: string
+          reason: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          after_role?: string | null
+          before_role?: string | null
+          created_at?: string
+          event: string
+          grant_id: string
+          id?: string
+          offering_id: string
+          reason?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          after_role?: string | null
+          before_role?: string | null
+          created_at?: string
+          event?: string
+          grant_id?: string
+          id?: string
+          offering_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_team_grant_events_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "fund_team_grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_team_grants: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          granted_by: string
+          grantee_email: string
+          grantee_user_id: string | null
+          id: string
+          offering_id: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["fund_team_role"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          granted_by: string
+          grantee_email: string
+          grantee_user_id?: string | null
+          id?: string
+          offering_id: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          role: Database["public"]["Enums"]["fund_team_role"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          granted_by?: string
+          grantee_email?: string
+          grantee_user_id?: string | null
+          id?: string
+          offering_id?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["fund_team_role"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_team_grants_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_team_overrides: {
         Row: {
           assigned_at: string
@@ -33493,6 +33590,7 @@ export type Database = {
         | "suspended"
         | "revoked"
         | "expired"
+      fund_team_role: "fund_viewer" | "fund_assistant"
       funding_method: "wire" | "ach"
       identity_check_kind:
         | "identity"
@@ -33983,6 +34081,7 @@ export const Constants = {
         "revoked",
         "expired",
       ],
+      fund_team_role: ["fund_viewer", "fund_assistant"],
       funding_method: ["wire", "ach"],
       identity_check_kind: [
         "identity",
