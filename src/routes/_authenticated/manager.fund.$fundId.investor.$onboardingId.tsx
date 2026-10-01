@@ -6,6 +6,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
+import { listInvestorSideLetters } from "@/lib/side-letters.functions";
+import { TERM_CATEGORIES, MFN_SCOPES } from "@/lib/side-letter-model";
 import { CLAIM_STATE_LABELS, SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
 import { money, prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +39,8 @@ function InvestorRecordPage() {
   const resolve = useServerFn(resolveSuggestionFn);
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
+  const loadSideLetters = useServerFn(listInvestorSideLetters);
+  const { data: sideLetters } = useQuery({ queryKey: ["investor-side-letters", onboardingId], queryFn: () => loadSideLetters({ data: { fundId, onboardingId } }) });
   const [edit, setEdit] = useState<Record<string, string>>({});
   const set = (k: string) => (e: { target: { value: string } }) => setEdit((s) => ({ ...s, [k]: e.target.value }));
   const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); };
@@ -75,6 +79,31 @@ function InvestorRecordPage() {
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
         <Card><CardHeader><CardTitle className="text-base">Investment</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
           <p>Amount: {money(inv.amountCents)}</p><p>Commitment: {money(inv.commitmentCents)}</p>{staff ? <p>Accepted: {money(inv.acceptedCents)}</p> : null}<p>Funded: {money(inv.fundedCents)}</p></CardContent></Card>
+        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Side letter</CardTitle></CardHeader><CardContent className="space-y-3 text-sm">
+          {sideLetters === undefined ? <p className="text-muted-foreground">Loading side letters…</p>
+            : sideLetters.length === 0 ? <p className="text-muted-foreground">No side letter for this investor. Negotiated terms can be recorded on the Fund's Side Letters tab.</p>
+            : sideLetters.map((l) => <div key={l.id} className="space-y-1 rounded-md border p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={l.status === "active" ? "default" : "outline"}>{prettyStatus(l.status)}</Badge>
+                <span className="text-muted-foreground">Version {l.version}</span>
+                {l.expiry === "expired" ? <Badge variant="destructive">Expired</Badge> : l.expiry === "expiring" ? <Badge variant="secondary">Expiring soon</Badge> : null}
+                {l.snapshot.mfnEnabled ? <Badge variant="secondary">MFN · {MFN_SCOPES.find((s) => s.key === l.snapshot.mfnScope)?.label ?? "Most favoured nation"}</Badge> : null}
+              </div>
+              <p className="text-muted-foreground">
+                {l.snapshot.effectiveDate ? `Effective ${l.snapshot.effectiveDate}` : "No effective date"}
+                {l.snapshot.expiryDate ? ` · expires ${l.snapshot.expiryDate}` : ""}
+                {l.snapshot.documentReference ? ` · ${l.snapshot.documentReference}` : ""}
+              </p>
+              {l.snapshot.terms.length ? <ul className="list-disc space-y-1 pl-5">
+                {l.snapshot.terms.map((t) => <li key={t.id}>
+                  <span className="font-medium">{TERM_CATEGORIES.find((c) => c.key === t.category)?.label ?? prettyStatus(t.category)}</span>
+                  {t.value ? ` — ${t.value}` : ""}: {t.description}
+                  {t.applicability ? <span className="text-muted-foreground"> ({t.applicability})</span> : null}
+                </li>)}
+              </ul> : <p className="text-muted-foreground">No terms recorded.</p>}
+            </div>)}
+          <Link to="/manager/fund/$fundId/side-letters" params={{ fundId }} className="inline-block text-primary hover:underline">Open Fund side letters</Link>
+        </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">Readiness</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
           <p className="font-medium">{data.readiness.label}</p>{data.readiness.nextAction ? <p className="text-muted-foreground">Next: {data.readiness.nextAction}</p> : null}
           <p className="text-muted-foreground">{p?.verificationLabel}</p></CardContent></Card>
