@@ -13967,6 +13967,98 @@ export type Database = {
           },
         ]
       }
+      form_pf_filings: {
+        Row: {
+          adviser_name: string
+          created_at: string
+          created_by: string
+          id: string
+          period_end: string
+          period_type: string
+        }
+        Insert: {
+          adviser_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          period_end: string
+          period_type: string
+        }
+        Update: {
+          adviser_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          period_end?: string
+          period_type?: string
+        }
+        Relationships: []
+      }
+      form_pf_versions: {
+        Row: {
+          adviser_size: string
+          crd_number: string | null
+          created_at: string
+          due_date: string | null
+          filed_on: string | null
+          filing_confirmation: string | null
+          filing_id: string
+          id: string
+          note: string | null
+          offering_ids: string[]
+          recorded_by: string
+          regulatory_aum_cents: number | null
+          sec_file_number: string | null
+          sections: string[]
+          status: string
+          version: number
+        }
+        Insert: {
+          adviser_size?: string
+          crd_number?: string | null
+          created_at?: string
+          due_date?: string | null
+          filed_on?: string | null
+          filing_confirmation?: string | null
+          filing_id: string
+          id?: string
+          note?: string | null
+          offering_ids?: string[]
+          recorded_by: string
+          regulatory_aum_cents?: number | null
+          sec_file_number?: string | null
+          sections?: string[]
+          status: string
+          version: number
+        }
+        Update: {
+          adviser_size?: string
+          crd_number?: string | null
+          created_at?: string
+          due_date?: string | null
+          filed_on?: string | null
+          filing_confirmation?: string | null
+          filing_id?: string
+          id?: string
+          note?: string | null
+          offering_ids?: string[]
+          recorded_by?: string
+          regulatory_aum_cents?: number | null
+          sec_file_number?: string | null
+          sections?: string[]
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_pf_versions_filing_id_fkey"
+            columns: ["filing_id"]
+            isOneToOne: false
+            referencedRelation: "form_pf_filings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formation_bundles: {
         Row: {
           active: boolean
@@ -20692,6 +20784,100 @@ export type Database = {
           },
         ]
       }
+      irs_correspondence: {
+        Row: {
+          created_at: string
+          direction: string
+          form_type: string | null
+          id: string
+          notice_code: string | null
+          offering_id: string
+          received_on: string
+          recorded_by: string
+          response_due: string | null
+          share_with_manager: boolean
+          storage_path: string | null
+          subject: string
+          tax_year: number | null
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          form_type?: string | null
+          id?: string
+          notice_code?: string | null
+          offering_id: string
+          received_on: string
+          recorded_by: string
+          response_due?: string | null
+          share_with_manager?: boolean
+          storage_path?: string | null
+          subject: string
+          tax_year?: number | null
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          form_type?: string | null
+          id?: string
+          notice_code?: string | null
+          offering_id?: string
+          received_on?: string
+          recorded_by?: string
+          response_due?: string | null
+          share_with_manager?: boolean
+          storage_path?: string | null
+          subject?: string
+          tax_year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "irs_correspondence_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      irs_correspondence_events: {
+        Row: {
+          correspondence_id: string
+          created_at: string
+          id: string
+          note: string | null
+          recorded_by: string
+          status: string
+          storage_path: string | null
+        }
+        Insert: {
+          correspondence_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          recorded_by: string
+          status: string
+          storage_path?: string | null
+        }
+        Update: {
+          correspondence_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          recorded_by?: string
+          status?: string
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "irs_correspondence_events_correspondence_id_fkey"
+            columns: ["correspondence_id"]
+            isOneToOne: false
+            referencedRelation: "irs_correspondence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           adjusts_entry_id: string | null
@@ -23697,6 +23883,63 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnership_return_details: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          note: string | null
+          offering_id: string
+          recorded_by: string
+          return_id: string
+          stage: string
+          tie_results: Json
+          values_cents: Json
+          version: number
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id: string
+          recorded_by: string
+          return_id: string
+          stage?: string
+          tie_results?: Json
+          values_cents?: Json
+          version: number
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id?: string
+          recorded_by?: string
+          return_id?: string
+          stage?: string
+          tie_results?: Json
+          values_cents?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_return_details_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_return_details_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "partnership_returns"
             referencedColumns: ["id"]
           },
         ]
