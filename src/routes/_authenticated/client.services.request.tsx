@@ -21,7 +21,11 @@ import { REQUEST_INTENTS, getMyServices, submitIntakeRequest } from "@/lib/clien
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
 import { Link } from "@tanstack/react-router";
 import { HelpTip } from "@/components/help-tip";
-import { FUND_TYPES, PROFESSIONAL_DETERMINATION_NOTE, REQUEST_GROUPS, setupSchemaFor } from "@/lib/client-portal-model";
+import { EXEMPTIONS, FUND_TYPES, PROFESSIONAL_DETERMINATION_NOTE, REQUEST_GROUPS, coreServicesFor, defaultVehicle, eligibilityFor, setupSchemaFor } from "@/lib/client-portal-model";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/client/services/request")({
   head: () => ({
@@ -102,7 +106,7 @@ function RequestRouter() {
                 <button
                   key={i!.value}
                   type="button"
-                  onClick={() => { setIntent(i!.value); setAnswers({}); }}
+                  onClick={() => { setIntent(i!.value); const a: Record<string, string> = {}; if (i!.value === "launch_spv") a.vehicle_structure = defaultVehicle(i!.value); setAnswers(a); setPicked(coreServicesFor(a.vehicle_structure)); }}
                   className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <p className="font-medium">{i!.label}</p>
@@ -120,6 +124,21 @@ function RequestRouter() {
     (chosen.suggests as readonly string[]).some((k) => s.key.includes(k) || s.category === k),
   );
   const rest = (catalogue.data?.services ?? []).filter((s) => !suggested.includes(s));
+
+  const setField = (key: string, v: string) => {
+    const a = { ...answers, [key]: v };
+    if (key === "offering_exemption") a.investor_eligibility = eligibilityFor(v);
+    setAnswers(a);
+    if (key === "vehicle_structure" || key === "offering_exemption") {
+      const before = coreServicesFor(answers.vehicle_structure, answers.offering_exemption);
+      const after = coreServicesFor(a.vehicle_structure, a.offering_exemption);
+      setPicked((p) => Array.from(new Set([...p.filter((k) => !before.includes(k)), ...after])));
+    }
+  };
+  const coreKeys = coreServicesFor(answers.vehicle_structure, answers.offering_exemption);
+  const all = catalogue.data?.services ?? [];
+  const core = all.filter((s) => coreKeys.includes(s.key));
+  const addOns = [...suggested, ...rest].filter((s) => !coreKeys.includes(s.key));
 
   const toggle = (key: string) =>
     setPicked((p) => (p.includes(key) ? p.filter((k) => k !== key) : [...p, key]));
@@ -174,7 +193,7 @@ function RequestRouter() {
           {chosen.value === "launch_fund" ? (
             <div>
               <Label className="text-xs">What type of fund are you setting up?</Label>
-              <Select value={answers["fund_type"] ?? ""} onValueChange={(v) => setAnswers({ ...answers, fund_type: v })}>
+              <Select value={answers["fund_type"] ?? ""} onValueChange={(v) => { const a = { ...answers, fund_type: v, vehicle_structure: defaultVehicle("launch_fund", v) }; setAnswers(a); setPicked(coreServicesFor(a.vehicle_structure, a.offering_exemption)); }}>
                 <SelectTrigger><SelectValue placeholder="Choose a fund type" /></SelectTrigger>
                 <SelectContent>
                   {FUND_TYPES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
@@ -191,11 +210,7 @@ function RequestRouter() {
                 {q.label}
                 {q.helpKey ? <HelpTip helpKey={q.helpKey} label={q.label} /> : null}
               </Label>
-              <Input
-                value={answers[q.key] ?? ""}
-                onChange={(e) => setAnswers({ ...answers, [q.key]: e.target.value })}
-                placeholder={q.professional ? PROFESSIONAL_DETERMINATION_NOTE : undefined}
-              />
+              <FieldInput field={q} value={answers[q.key] ?? ""} onChange={(v) => setField(q.key, v)} />
             </div>
           ))}
           <div>
@@ -218,22 +233,17 @@ function RequestRouter() {
             is agreed.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          {[...suggested, ...rest].slice(0, 24).map((s) => (
-            <label
-              key={s.id}
-              className="flex cursor-pointer items-start gap-3 rounded-md border p-3"
-            >
-              <Checkbox checked={picked.includes(s.key)} onCheckedChange={() => toggle(s.key)} />
-              <span className="text-sm">
-                <span className="font-medium">{s.name}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {categoryLabel(s.category)}
-                  {s.standardPriceCents > 0 ? ` · from ${money(s.standardPriceCents)}` : ""}
-                </span>
-              </span>
-            </label>
-          ))}
+        <CardContent className="space-y-4">
+          {core.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Included with your setup</p>
+              {core.map((s) => <ServiceRow key={s.id} s={s} checked={picked.includes(s.key)} onToggle={() => toggle(s.key)} />)}
+            </div>
+          )}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{core.length > 0 ? "Add-ons (à la carte)" : "Services"}</p>
+            {addOns.slice(0, 24).map((s) => <ServiceRow key={s.id} s={s} checked={picked.includes(s.key)} onToggle={() => toggle(s.key)} />)}
+          </div>
         </CardContent>
       </Card>
 
@@ -244,5 +254,88 @@ function RequestRouter() {
         Send to Harmonious
       </Button>
     </div>
+  );
+}
+
+function ServiceRow({ s, checked, onToggle }: { s: any; checked: boolean; onToggle: () => void }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-md border p-3">
+      <Checkbox checked={checked} onCheckedChange={onToggle} />
+      <span className="text-sm">
+        <span className="font-medium">{s.name}</span>
+        <span className="block text-xs text-muted-foreground">
+          {categoryLabel(s.category)}
+          {s.standardPriceCents > 0 ? ` · from ${money(s.standardPriceCents)}` : ""}
+        </span>
+      </span>
+    </label>
+  );
+}
+
+function FieldInput({ field, value, onChange }: { field: any; value: string; onChange: (v: string) => void }) {
+  if (field.kind === "choice" || field.kind === "exemption") {
+    const options: string[] = field.kind === "exemption" ? EXEMPTIONS.map((e) => e.value) : field.options ?? [];
+    const isOther = value && !options.includes(value);
+    const sel = isOther ? "Other" : value;
+    return (
+      <div className="space-y-2">
+        <Select value={sel} onValueChange={(v) => onChange(v)}>
+          <SelectTrigger><SelectValue placeholder="Choose…" /></SelectTrigger>
+          <SelectContent>
+            {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {sel === "Other" && field.kind === "choice" && (
+          <Input placeholder="Please describe" value={isOther ? value : ""} onChange={(e) => onChange(e.target.value || "Other")} />
+        )}
+        {field.kind === "exemption" && value && (
+          <div className="rounded-md border bg-muted p-3 text-xs">
+            <p className="font-medium">Who can invest</p>
+            <p className="mt-1 text-muted-foreground">{eligibilityFor(value)}</p>
+            <p className="mt-1 text-muted-foreground">General guidance — counsel confirms.</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+  if (field.kind === "date") {
+    const d = value ? parseISO(value) : undefined;
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="w-full justify-start font-normal">
+            <CalendarIcon className="mr-2 size-4" />
+            {d ? format(d, "PPP") : <span className="text-muted-foreground">Pick a date</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar mode="single" selected={d} onSelect={(x) => onChange(x ? format(x, "yyyy-MM-dd") : "")} initialFocus className="pointer-events-auto p-3" />
+        </PopoverContent>
+      </Popover>
+    );
+  }
+  if (field.kind === "fee") {
+    const unit = value.startsWith("$") ? "$" : "%";
+    const num = value.replace(/[$%]/g, "");
+    const emit = (n: string, u: string) => onChange(n ? (u === "$" ? `$${n}` : `${n}%`) : "");
+    return (
+      <div className="flex gap-2">
+        <Select value={unit} onValueChange={(u) => emit(num, u)}>
+          <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="%">%</SelectItem>
+            <SelectItem value="$">$</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input inputMode="decimal" value={num} placeholder={unit === "%" ? "e.g. 2" : "e.g. 25000"} onChange={(e) => emit(e.target.value.replace(/[^0-9.]/g, ""), unit)} />
+      </div>
+    );
+  }
+  return (
+    <Input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={field.professional ? PROFESSIONAL_DETERMINATION_NOTE : undefined}
+    />
   );
 }

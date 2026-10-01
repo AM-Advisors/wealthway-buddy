@@ -392,3 +392,64 @@ export const updateIntakeRequest = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/** One of the client's own requests, with Harmonious step progress. */
+export const getMyIntakeRequest = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { data: row, error } = await context.supabase
+      .from("client_intake_requests")
+      .select("id, client_id, intent, summary, answers, requested_service_keys, status, created_at, updated_at")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) throw new Error("Request not found.");
+    const { data: history } = await context.supabase
+      .from("contract_audit_events")
+      .select("action, created_at, new_value")
+      .eq("target", data.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    return {
+      request: row as any,
+      history: ((history ?? []) as any[]).map((h) => ({ action: String(h.action), at: String(h.created_at) })),
+    };
+  });
+
+/** Client edits answers while Harmonious hasn't started review; every change is logged with before/after. */
+export const updateIntakeAnswers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), answers: z.record(z.string(), z.string()), requestedServiceKeys: z.array(z.string()) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    // RLS-scoped read proves the caller is a member of the owning client.
+    const { data: row } = await context.supabase
+      .from("client_intake_requests")
+      .select("id, client_id, status, answers, requested_service_keys")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) throw new Error("Request not found.");
+    const mine = await myClientIds(context);
+    if (!mine.includes(String((row as any).client_id))) throw new Error("Forbidden.");
+    if ((row as any).status !== "submitted") throw new Error("Harmonious has started on this request — send a message to change it.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("client_intake_requests")
+      .update({ answers: data.answers, requested_service_keys: data.requestedServiceKeys })
+      .eq("id", data.id)
+      .eq("status", "submitted");
+    if (error) throw new Error(error.message);
+    await context.supabase.from("contract_audit_events").insert({
+      actor_id: context.userId,
+      client_id: (row as any).client_id,
+      area: "engagements",
+      source: "portal",
+      action: "intake_request_edited",
+      target: data.id,
+      old_value: { answers: (row as any).answers, services: (row as any).requested_service_keys } as any,
+      new_value: { answers: data.answers, services: data.requestedServiceKeys } as any,
+    });
+    return { ok: true };
+  });

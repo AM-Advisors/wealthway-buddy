@@ -138,13 +138,47 @@ export function fundTypeLabel(fundType: string | null | undefined, entityType?: 
   return MY_FUNDS_FILTERS.find((f) => f.key === key)?.label ?? "Other";
 }
 
+export const INVESTMENT_ASSET_TYPES = ["Startup / private company equity", "Real estate", "Private credit / debt", "Fund interest (fund of funds)", "Secondary shares", "Crypto / digital assets", "Other"];
+export const VEHICLE_STRUCTURES = ["Delaware LLC", "Delaware Series LLC (series)", "Delaware LP", "Wyoming LLC", "Cayman exempted company", "Other"];
+export const JURISDICTIONS = ["Delaware", "Wyoming", "Nevada", "Texas", "New York", "Cayman Islands", "BVI", "Other"];
+
+/** Offering exemptions and the investor eligibility each implies (general guidance; counsel confirms). */
+export const EXEMPTIONS: { value: string; eligibility: string }[] = [
+  { value: "506(b)", eligibility: "Unlimited accredited investors and up to 35 non-accredited, sophisticated investors. No general solicitation." },
+  { value: "506(c)", eligibility: "Accredited investors only, with accreditation verified. General solicitation allowed." },
+  { value: "Reg CF", eligibility: "Open to all investors through a registered funding portal; annual investment limits apply to non-accredited investors." },
+  { value: "Reg A (Tier 1)", eligibility: "Open to all investors; state registration (Blue Sky) required." },
+  { value: "Reg A+ (Tier 2)", eligibility: "Open to all investors; non-accredited investors limited to 10% of the greater of income or net worth." },
+  { value: "Not sure", eligibility: "Harmonious and counsel will help determine the exemption and who can invest." },
+];
+export const eligibilityFor = (exemption?: string | null) => EXEMPTIONS.find((e) => e.value === exemption)?.eligibility ?? "";
+
+/** Default structure picked from the service the client chose. */
+export function defaultVehicle(intent: string, fundType?: string | null): string {
+  if (intent === "launch_spv") return "Delaware LLC";
+  if (fundType === "real_estate") return "Delaware LLC";
+  return "Delaware LP";
+}
+
+/** Core rate-card services ticked automatically for a structure + exemption. */
+export function coreServicesFor(vehicle: string | undefined, exemption?: string | null): string[] {
+  if (!vehicle) return [];
+  const keys = ["entity_formation", "ein_ss4", "governing_documents", "subscription_docs", "investor_onboarding", "bank_setup", "registered_agent"];
+  if (vehicle.startsWith("Delaware")) keys.push("delaware_formation");
+  if (exemption === "506(b)" || exemption === "506(c)" || exemption === "Not sure") keys.push("form_d", "blue_sky");
+  if (exemption === "506(b)") keys.push("accreditation_506b");
+  if (exemption === "506(c)") keys.push("accreditation_506c");
+  if (exemption?.startsWith("Reg A (")) keys.push("blue_sky");
+  return keys;
+}
+
 /* ======================================================== setup schemas */
 
-export type SetupField = { key: string; label: string; helpKey?: string; kind?: "text" | "money" | "percent" | "date" | "choice"; options?: string[]; professional?: boolean };
+export type SetupField = { key: string; label: string; helpKey?: string; kind?: "text" | "money" | "percent" | "fee" | "date" | "choice" | "exemption"; options?: string[]; professional?: boolean };
 
 const ECON: SetupField[] = [
-  { key: "management_fee", label: "Management fee", helpKey: "management_fee", kind: "percent" },
-  { key: "carried_interest", label: "Carried interest", helpKey: "carried_interest", kind: "percent" },
+  { key: "management_fee", label: "Management fee", helpKey: "management_fee", kind: "fee" },
+  { key: "carried_interest", label: "Carried interest", helpKey: "carried_interest", kind: "fee" },
   { key: "gp_commitment", label: "GP commitment", helpKey: "gp", kind: "money" },
   { key: "minimum_investment", label: "Minimum investment", kind: "money" },
 ];
@@ -152,7 +186,9 @@ const ECON: SetupField[] = [
 const COMMON_FUND: SetupField[] = [
   { key: "fund_name", label: "Fund name" },
   { key: "target_size", label: "Target Fund size", kind: "money" },
-  { key: "offering_exemption", label: "Offering exemption (506(b) / 506(c))", helpKey: "506b", kind: "choice", options: ["506(b)", "506(c)", "Not sure"], professional: true },
+  { key: "vehicle_structure", label: "Vehicle / entity structure", kind: "choice", options: VEHICLE_STRUCTURES, professional: true },
+  { key: "jurisdiction", label: "Jurisdiction", kind: "choice", options: JURISDICTIONS, professional: true },
+  { key: "offering_exemption", label: "Offering exemption", helpKey: "506b", kind: "exemption", professional: true },
 ];
 
 export const FUND_SETUP_SCHEMAS: Record<FundTypeValue, SetupField[]> = {
@@ -180,13 +216,13 @@ export const FUND_SETUP_SCHEMAS: Record<FundTypeValue, SetupField[]> = {
     { key: "redemptions", label: "Redemption terms", helpKey: "redemption" },
     { key: "liquidity_terms", label: "Liquidity terms (lock-up, gates, notice)" },
     { key: "nav_frequency", label: "NAV frequency", helpKey: "nav", kind: "choice", options: ["Monthly", "Quarterly", "Other"] },
-    { key: "management_fee", label: "Management fee", helpKey: "management_fee", kind: "percent" },
-    { key: "performance_allocation", label: "Performance / incentive allocation", kind: "percent" },
+    { key: "management_fee", label: "Management fee", helpKey: "management_fee", kind: "fee" },
+    { key: "performance_allocation", label: "Performance / incentive allocation", kind: "fee" },
     { key: "high_water_mark", label: "High-water mark / hurdle" },
     { key: "service_providers", label: "Administrator / broker / custodian relationships" },
     { key: "regulatory_setup", label: "Regulatory setup", professional: true },
   ],
-  real_estate: [...COMMON_FUND, { key: "property_focus", label: "Property type / geography" }, { key: "fund_term", label: "Fund term" }, ...ECON.filter((f) => f.key !== "carried_interest"), { key: "promote", label: "Promote", helpKey: "promote", kind: "percent" }],
+  real_estate: [...COMMON_FUND, { key: "property_focus", label: "Property type / geography" }, { key: "fund_term", label: "Fund term" }, ...ECON.filter((f) => f.key !== "carried_interest"), { key: "promote", label: "Promote", helpKey: "promote", kind: "fee" }],
   private_credit: [...COMMON_FUND, { key: "credit_strategy", label: "Credit strategy" }, { key: "fund_term", label: "Fund term" }, ...ECON, { key: "capital_call_structure", label: "Capital call structure", helpKey: "capital_call" }],
   fund_of_funds: [...COMMON_FUND, { key: "underlying_funds", label: "Underlying fund focus" }, ...ECON],
   search_fund: [...COMMON_FUND, { key: "search_focus", label: "Search focus / industry" }, ...ECON],
@@ -195,15 +231,14 @@ export const FUND_SETUP_SCHEMAS: Record<FundTypeValue, SetupField[]> = {
 
 export const SPV_SETUP_SCHEMA: SetupField[] = [
   { key: "spv_name", label: "SPV name", helpKey: "spv" },
-  { key: "investment_asset", label: "Investment / asset" },
+  { key: "investment_asset", label: "Investment / asset type", kind: "choice", options: INVESTMENT_ASSET_TYPES },
   { key: "issuer_target", label: "Issuer / target company" },
   { key: "target_raise", label: "Target raise", kind: "money" },
-  { key: "jurisdiction", label: "Jurisdiction", professional: true },
-  { key: "vehicle_structure", label: "Vehicle / entity structure", professional: true },
-  { key: "offering_exemption", label: "Offering exemption (506(b) / 506(c))", helpKey: "506b", kind: "choice", options: ["506(b)", "506(c)", "Not sure"], professional: true },
-  { key: "investor_eligibility", label: "Investor eligibility", helpKey: "accredited_investor", professional: true },
-  { key: "management_fee", label: "Management fee", helpKey: "management_fee", kind: "percent" },
-  { key: "carried_interest", label: "Carried interest / promote", helpKey: "carried_interest", kind: "percent" },
+  { key: "jurisdiction", label: "Jurisdiction", kind: "choice", options: JURISDICTIONS, professional: true },
+  { key: "vehicle_structure", label: "Vehicle / entity structure", kind: "choice", options: VEHICLE_STRUCTURES, professional: true },
+  { key: "offering_exemption", label: "Offering exemption", helpKey: "506b", kind: "exemption", professional: true },
+  { key: "management_fee", label: "Management fee", helpKey: "management_fee", kind: "fee" },
+  { key: "carried_interest", label: "Carried interest / promote", helpKey: "carried_interest", kind: "fee" },
   { key: "minimum_investment", label: "Minimum investment", kind: "money" },
   { key: "expected_close", label: "Expected close", kind: "date" },
 ];
