@@ -93,8 +93,8 @@ export async function k1History(userId: string, i: { offeringId: string; taxYear
   const rows = (data ?? []) as any[];
   const byId = new Map(rows.map((r) => [r.id, r]));
   const profIds = [...new Set(rows.map((r) => r.investment_profile_id).filter(Boolean))];
-  const { data: profs } = profIds.length ? await db().from("investment_profiles").select("id, display_name, legal_name").in("id", profIds) : { data: [] };
-  const pn = new Map<string, string>(((profs ?? []) as any[]).map((p) => [p.id, p.display_name || p.legal_name || "Investor"]));
+  const { data: profs } = profIds.length ? await db().from("investment_profiles").select("id, display_label, legal_name").in("id", profIds) : { data: [] };
+  const pn = new Map<string, string>(((profs ?? []) as any[]).map((p) => [p.id, p.display_label || p.legal_name || "Investor"]));
   const who = actor.isStaff ? await names(rows.flatMap((r) => [r.prepared_by, r.reviewed_by, r.approved_by])) : new Map();
   // Chains: roots are K-1s that don't supersede anything.
   const children = new Map<string, any>();
@@ -132,7 +132,7 @@ export async function listFormPf(userId: string) {
   const { data: vers } = ids.length ? await db().from("form_pf_versions").select("*").in("filing_id", ids).order("version", { ascending: false }) : { data: [] };
   const fn = await fundNames(((vers ?? []) as any[]).flatMap((v) => v.offering_ids ?? []));
   const who = await names(((vers ?? []) as any[]).map((v) => v.recorded_by));
-  const { data: funds } = await db().from("offerings").select("id, name").is("retired_at", null).order("name");
+  const { data: funds } = await db().from("offerings").select("id, name").is("consolidated_into", null).order("name");
   return {
     userId,
     funds: (funds ?? []) as { id: string; name: string }[],
@@ -208,7 +208,7 @@ export async function listIrs(userId: string, i: { offeringId?: string | undefin
   const { data: evs } = ids.length ? await db().from("irs_correspondence_events").select("*").in("correspondence_id", ids).order("created_at", { ascending: false }) : { data: [] };
   const fn = await fundNames(rows.map((r) => r.offering_id));
   const who = actor.isStaff ? await names(((evs ?? []) as any[]).map((e) => e.recorded_by)) : new Map();
-  const { data: funds } = actor.isStaff ? await db().from("offerings").select("id, name").is("retired_at", null).order("name") : { data: [] };
+  const { data: funds } = actor.isStaff ? await db().from("offerings").select("id, name").is("consolidated_into", null).order("name") : { data: [] };
   return {
     canEdit: actor.isStaff, funds: funds ?? [],
     items: rows.map((r) => {
