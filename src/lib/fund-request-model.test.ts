@@ -15,8 +15,8 @@ const filled = () => ({
 
 describe("fund request", () => {
   it("defaults structure from the type", () => {
-    expect(emptyRequest("spv").vehicle_structure).toBe("Delaware LLC");
-    expect(emptyRequest("venture_capital").vehicle_structure).toBe("Delaware LP");
+    expect(emptyRequest("spv").vehicle_structure).toBe("LLC");
+    expect(emptyRequest("venture_capital").vehicle_structure).toBe("LP");
   });
   it("reports missing required answers by step", () => {
     const m = missingFields(emptyRequest());

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coreServicesFor, defaultVehicle, eligibilityFor } from "./client-portal-model";
+import { VEHICLE_STRUCTURES, coreServicesFor, defaultVehicle, eligibilityFor } from "./client-portal-model";
 
 describe("service request auto-picks", () => {
   it("defaults the structure from the chosen service", () => {
