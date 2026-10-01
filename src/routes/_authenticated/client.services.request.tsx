@@ -129,13 +129,13 @@ function RequestRouter() {
     const a = { ...answers, [key]: v };
     if (key === "offering_exemption") a["investor_eligibility"] = eligibilityFor(v);
     setAnswers(a);
-    if (key === "vehicle_structure" || key === "offering_exemption") {
-      const before = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"]);
-      const after = coreServicesFor(a["vehicle_structure"], a["offering_exemption"]);
+    if (key === "vehicle_structure" || key === "offering_exemption" || key === "jurisdiction") {
+      const before = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"], answers["jurisdiction"]);
+      const after = coreServicesFor(a["vehicle_structure"], a["offering_exemption"], a["jurisdiction"]);
       setPicked((p) => Array.from(new Set([...p.filter((k) => !before.includes(k)), ...after])));
     }
   };
-  const coreKeys = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"]);
+  const coreKeys = coreServicesFor(answers["vehicle_structure"], answers["offering_exemption"], answers["jurisdiction"]);
   const all = catalogue.data?.services ?? [];
   const core = all.filter((s) => coreKeys.includes(s.key));
   const addOns = [...suggested, ...rest].filter((s) => !coreKeys.includes(s.key));
