@@ -161,7 +161,7 @@ export async function draftManualEntry(
 ) {
   await staff(userId);
   const book = await ensureBook(userId, i.offeringId);
-  return draftJournalEntry(userId, { bookId: book.id, entryDate: i.entryDate, memo: i.memo, source: "manual", lines: i.lines });
+  return draftJournalEntry(userId, { bookId: book.id, entryDate: i.entryDate, memo: i.memo, source: "manual", lines: i.lines.map((l) => ({ ...l, memo: l.memo ?? null })) });
 }
 
 async function entryInScope(entryId: string, offeringId: string) {
@@ -493,7 +493,7 @@ export async function recordManualBalance(userId: string, i: { offeringId: strin
   return scanBankAlerts(i.offeringId);
 }
 
-export async function listBankAlerts(userId: string, i: { offeringId?: string | undefined | null | undefined; includeResolved?: boolean }) {
+export async function listBankAlerts(userId: string, i: { offeringId?: string | undefined | null | undefined; includeResolved?: boolean | undefined }) {
   await staff(userId);
   let q = db().from("bank_alerts").select("*, bank_alert_events(*), offerings(name)").order("detected_at", { ascending: false }).limit(300);
   if (i.offeringId) q = q.eq("offering_id", i.offeringId);

@@ -8,7 +8,7 @@
 export const HMS_MARKER = "[HMS:";
 export const hmsTag = (entryId: string) => `${HMS_MARKER}${entryId.slice(0, 8)}]`;
 
-export type QboLine = { account: string; debitCents: number; creditCents: number; memo?: string };
+export type QboLine = { account: string; debitCents: number; creditCents: number; memo?: string | undefined };
 export type QboTxn = { id: string; date: string | null; memo: string; lines: QboLine[] };
 
 /** Minimal RFC-4180 CSV parser (quotes, escaped quotes, CRLF). */
