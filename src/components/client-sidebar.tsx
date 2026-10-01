@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
+  MessageSquare,
   Briefcase,
   Building2,
   ChevronsUpDown,
@@ -45,6 +46,8 @@ const ICONS: Record<string, typeof Home> = {
   home: Home,
   briefcase: Briefcase,
   history: History,
+  bell: Bell,
+  message: MessageSquare,
   report: FileSpreadsheet,
   document: FileText,
   tax: Receipt,

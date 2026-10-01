@@ -149,6 +149,8 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Entities and engagements", url: "/admin/entities", description: "Client entities and engagements", step: "Prepare" },
       { title: "Agreements & SOW", url: "/admin/agreements", description: "Master agreements and statements of work", step: "Prepare" },
       { title: "Service requests & sign-off", url: "/admin/signoff", description: "Requests and documents waiting for sign-off", cap: "tasks", step: "Approve" },
+      { title: "Contacts, deals & campaigns", url: "/sales/crm", description: "Sales contacts, client pipeline and approved email campaigns", step: "Start" },
+      { title: "Messages", url: "/ops/messages", description: "Questions from fund managers and investors", cap: "tasks", step: "Track" },
       { title: "Sales & pricing approvals", url: "/sales", description: "Fund pricing, below-baseline approvals and commercial follow-up", step: "Approve" },
       { title: "Rate card", url: "/admin/pricing", description: "Standard pricing schedules", step: "Reference" },
       { title: "Rate proposals", url: "/admin/rate-proposals", description: "Proposed changes to the rate card", step: "Review" },

@@ -73,6 +73,9 @@ export const ATOMIC_PERMISSIONS: AtomicDef[] = [
     // Phase 7 — contacts, deals and campaigns (Super Administrator assigns; never implied).
     ["crm.view_all", "Contacts & deals — see everyone's", "view"], ["crm.assign", "Contacts & deals — reassign owner", "edit"],
     ["campaigns.approve", "Campaigns — approve", "approve"],
+    // Phase 7 — contacts, deals and campaigns (Super Administrator assigns; never implied).
+    ["crm.view_all", "Contacts & deals — see everyone's", "view"], ["crm.assign", "Contacts & deals — reassign owner", "edit"],
+    ["campaigns.approve", "Campaigns — approve", "approve"],
   ] as const).map(([k, label, summary]): AtomicDef => ({ key: `administration.${k}`, label, area: "administration", summary })),
 ];
 export const ATOMIC_KEYS = ATOMIC_PERMISSIONS.map((a) => a.key);

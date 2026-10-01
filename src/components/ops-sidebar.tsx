@@ -75,7 +75,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const results = query.trim() ? searchOpsIndex(index, query) : null;
 
   const groups = [
-    sections.filter((s) => s.id === "home" || s.id === "sales" || GROUP_OF.get(s.id) === "records"),
+    sections.filter((s) => s.id === "home" || s.id === "sales" || s.id === "sales-crm" || GROUP_OF.get(s.id) === "records"),
     sections.filter((s) => GROUP_OF.get(s.id) === "work"),
     sections.filter((s) => GROUP_OF.get(s.id) === "admin"),
   ].filter((g) => g.length > 0);
@@ -139,7 +139,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                   <SidebarMenu>
                     {group.map((section) => {
                       const Icon = ICONS[section.icon] ?? Home;
-                      const active = section.id === "sales" ? pathname === "/sales" : operationsNavItemIsActive(section.url, pathname);
+                      const active = section.id === "sales" ? pathname === "/sales" : section.id === "sales-crm" ? pathname === "/sales/crm" : operationsNavItemIsActive(section.url, pathname);
                       return (
                         <SidebarMenuItem key={section.id}>
                           <SidebarMenuButton

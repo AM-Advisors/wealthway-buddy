@@ -66,7 +66,7 @@ export function campaignEditProblem(c: { status: CampaignStatus }): string | nul
   return c.status === "draft" || c.status === "declined" ? null : "Only a draft or declined campaign can be edited.";
 }
 
-export type Audience = { tags?: string[]; stages?: DealStage[] };
+export type Audience = { tags?: string[] | undefined; stages?: DealStage[] | undefined };
 export type AudienceContact = { id: string; email: string | null; consent: string; archived_at: string | null; tags: string[]; stages: string[] };
 
 /** Contacts a campaign may actually email, plus why the rest are left out. */

@@ -352,7 +352,7 @@ async function loadConversation(userId: string, id: string) {
   const asStaff = a.opsStaff || a.superUser;
   const asParticipant = participantOf(a, c);
   if (!asStaff && !asParticipant) throw new Error("Conversation not found.");
-  return { a, c, side: asParticipant && !(asStaff && c.requester_user_id !== userId && !a.managedFunds.has(c.offering_id)) ? "participant" : "harmonious" } as const;
+  return { a, c, side: asParticipant ? "participant" : "harmonious" } as const;
 }
 
 export async function getConversation(userId: string, id: string) {
