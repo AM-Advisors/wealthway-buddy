@@ -157,7 +157,7 @@ export async function openBook(userId: string, offeringId: string) {
 
 export async function draftManualEntry(
   userId: string,
-  i: { offeringId: string; entryDate: string; memo: string; lines: { accountId: string; debitCents: number; creditCents: number; memo?: string }[] },
+  i: { offeringId: string; entryDate: string; memo: string; lines: { accountId: string; debitCents: number; creditCents: number; memo?: string | undefined }[] },
 ) {
   await staff(userId);
   const book = await ensureBook(userId, i.offeringId);
@@ -169,7 +169,7 @@ async function entryInScope(entryId: string, offeringId: string) {
   if (!data || data.ledger_books?.offering_id !== offeringId) fail("That entry does not belong to this Fund.");
 }
 
-export async function advanceEntry(userId: string, i: { offeringId: string; entryId: string; to: JournalStatus; reason?: string }) {
+export async function advanceEntry(userId: string, i: { offeringId: string; entryId: string; to: JournalStatus; reason?: string | undefined }) {
   await staff(userId);
   await entryInScope(i.entryId, i.offeringId);
   return advanceJournalEntry(userId, i.entryId, i.to, i.reason);
@@ -234,7 +234,7 @@ export async function qboView(userId: string, offeringId: string) {
   };
 }
 
-export async function setQboLink(userId: string, i: { offeringId: string; companyName: string; realmId?: string | null; status: "linked" | "unlinked"; note?: string | null }) {
+export async function setQboLink(userId: string, i: { offeringId: string; companyName: string; realmId?: string | undefined | null | undefined; status: "linked" | "unlinked"; note?: string | undefined | null | undefined }) {
   await staff(userId);
   await fundName(i.offeringId);
   if (i.status === "linked" && !i.companyName.trim()) fail("Name the QuickBooks company.");
@@ -305,7 +305,7 @@ export async function importQboJournalFile(userId: string, i: { offeringId: stri
   return { counts };
 }
 
-export async function createOutboundBatch(userId: string, i: { offeringId: string; entryIds: string[]; note?: string | null }) {
+export async function createOutboundBatch(userId: string, i: { offeringId: string; entryIds: string[]; note?: string | undefined | null | undefined }) {
   await staff(userId);
   const book = await bookFor(i.offeringId);
   if (!book) fail("This Fund has no ledger yet.");
@@ -344,7 +344,7 @@ async function batchCsv(batch: any) {
   })));
 }
 
-export async function decideOutboundBatch(userId: string, i: { offeringId: string; batchId: string; decision: "approved" | "declined"; reason?: string | null }) {
+export async function decideOutboundBatch(userId: string, i: { offeringId: string; batchId: string; decision: "approved" | "declined"; reason?: string | undefined | null | undefined }) {
   await staff(userId);
   const { data: batch } = await db().from("qbo_outbound_batches").select("*").eq("id", i.batchId).eq("offering_id", i.offeringId).maybeSingle();
   if (!batch) fail("Batch not found.");
@@ -370,7 +370,7 @@ export async function downloadOutboundBatch(userId: string, i: { offeringId: str
   return { csv: await batchCsv(batch) };
 }
 
-export async function recordOutboundResult(userId: string, i: { offeringId: string; batchId: string; entryId: string; outcome: "sent" | "failed" | "already_in_qbo"; qboTxnId?: string | null; detail?: string | null }) {
+export async function recordOutboundResult(userId: string, i: { offeringId: string; batchId: string; entryId: string; outcome: "sent" | "failed" | "already_in_qbo"; qboTxnId?: string | undefined | null | undefined; detail?: string | undefined | null | undefined }) {
   await staff(userId);
   const { data: batch } = await db().from("qbo_outbound_batches").select("id, entry_ids, qbo_outbound_decisions(decision)").eq("id", i.batchId).eq("offering_id", i.offeringId).maybeSingle();
   if (!batch) fail("Batch not found.");
@@ -383,7 +383,7 @@ export async function recordOutboundResult(userId: string, i: { offeringId: stri
   return { ok: true };
 }
 
-export async function runDriftCheck(userId: string, i: { offeringId: string; asOf: string; csv: string; explanation?: string | null }) {
+export async function runDriftCheck(userId: string, i: { offeringId: string; asOf: string; csv: string; explanation?: string | undefined | null | undefined }) {
   await staff(userId);
   const book = await bookFor(i.offeringId);
   if (!book) fail("Open the Fund's ledger first.");
@@ -484,7 +484,7 @@ export async function runBankAlertScan(userId: string, offeringId: string) {
   return scanBankAlerts(offeringId);
 }
 
-export async function recordManualBalance(userId: string, i: { offeringId: string; asOf: string; balanceCents: number; bankAccountId?: string | null }) {
+export async function recordManualBalance(userId: string, i: { offeringId: string; asOf: string; balanceCents: number; bankAccountId?: string | undefined | null | undefined }) {
   await staff(userId);
   await fundName(i.offeringId);
   if (!Number.isFinite(i.balanceCents)) fail("Enter the balance.");
@@ -493,7 +493,7 @@ export async function recordManualBalance(userId: string, i: { offeringId: strin
   return scanBankAlerts(i.offeringId);
 }
 
-export async function listBankAlerts(userId: string, i: { offeringId?: string | null; includeResolved?: boolean }) {
+export async function listBankAlerts(userId: string, i: { offeringId?: string | undefined | null | undefined; includeResolved?: boolean }) {
   await staff(userId);
   let q = db().from("bank_alerts").select("*, bank_alert_events(*), offerings(name)").order("detected_at", { ascending: false }).limit(300);
   if (i.offeringId) q = q.eq("offering_id", i.offeringId);
@@ -510,7 +510,7 @@ export async function listBankAlerts(userId: string, i: { offeringId?: string | 
     .map((r) => ({ ...r, assigneeName: r.assignee ? ppl.get(r.assignee) ?? null : null, events: r.events.map((e) => ({ ...e, actor: ppl.get(e.actor_user_id) ?? null })) }));
 }
 
-export async function actOnBankAlert(userId: string, i: { alertId: string; action: AlertEvent["action"]; note?: string | null; assigneeUserId?: string | null }) {
+export async function actOnBankAlert(userId: string, i: { alertId: string; action: AlertEvent["action"]; note?: string | undefined | null | undefined; assigneeUserId?: string | undefined | null | undefined }) {
   await staff(userId);
   const { data: a } = await db().from("bank_alerts").select("id, bank_alert_events(*)").eq("id", i.alertId).maybeSingle();
   if (!a) fail("Alert not found.");
@@ -582,7 +582,7 @@ async function monthEndFacts(offeringId: string, month: string) {
   });
 }
 
-export async function prepareCloseSheet(userId: string, i: { offeringId: string; kind: "investor_closing" | "month_end"; key: string; approvalDeadline?: string | null; note?: string | null }) {
+export async function prepareCloseSheet(userId: string, i: { offeringId: string; kind: "investor_closing" | "month_end"; key: string; approvalDeadline?: string | undefined | null | undefined; note?: string | undefined | null | undefined }) {
   await staff(userId);
   await fundName(i.offeringId);
   let snapshot: Record<string, unknown>;
@@ -608,7 +608,7 @@ export async function prepareCloseSheet(userId: string, i: { offeringId: string;
   return data;
 }
 
-export async function decideCloseSheet(userId: string, i: { versionId: string; decision: "approved" | "returned"; reason?: string | null }) {
+export async function decideCloseSheet(userId: string, i: { versionId: string; decision: "approved" | "returned"; reason?: string | undefined | null | undefined }) {
   await staff(userId);
   const { data: v } = await db().from("close_sheet_versions").select("id, version, sheet_id, prepared_by, snapshot, close_sheets(offering_id, kind, sheet_key)").eq("id", i.versionId).maybeSingle();
   if (!v) fail("Close sheet version not found.");
