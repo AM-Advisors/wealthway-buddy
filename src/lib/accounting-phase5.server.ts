@@ -264,9 +264,8 @@ export async function importQboJournalFile(userId: string, i: { offeringId: stri
   const maps = await mappingsFor(i.offeringId);
   const { data: prior } = await db().from("qbo_inbound_items").select("qbo_txn_id").eq("offering_id", i.offeringId).eq("outcome", "drafted");
   const drafted = new Set(((prior ?? []) as any[]).map((p) => p.qbo_txn_id));
-  const { data: run, error: runErr } = await db().from("qbo_sync_runs").insert({ offering_id: i.offeringId, direction: "inbound", source: "file", file_name: i.fileName.slice(0, 200), started_by: userId }).select("id").single();
-  if (runErr) fail(runErr.message);
   const counts: Record<string, number> = {};
+  const items: Record<string, unknown>[] = [];
   for (const t of parsed.txns) {
     const c = classifyInbound(t, maps, drafted);
     let outcome: string = c.outcome;
@@ -294,13 +293,15 @@ export async function importQboJournalFile(userId: string, i: { offeringId: stri
         }
       }
     }
-    const { error } = await db().from("qbo_inbound_items").insert({ offering_id: i.offeringId, run_id: run.id, qbo_txn_id: t.id, txn_date: t.date, memo: t.memo || null, lines: t.lines, total_cents: total, outcome, journal_entry_id: entryId, detail });
-    if (error && /duplicate key/i.test(error.message)) outcome = "skipped_duplicate";
-    else if (error) fail(error.message);
+    items.push({ offering_id: i.offeringId, qbo_txn_id: t.id, txn_date: t.date, memo: t.memo || null, lines: t.lines, total_cents: total, outcome, journal_entry_id: entryId, detail });
     counts[outcome] = (counts[outcome] ?? 0) + 1;
   }
-  // Counts are recorded as a follow-up run row so the first stays immutable.
-  await db().from("qbo_sync_runs").insert({ offering_id: i.offeringId, direction: "inbound", source: "file", file_name: `summary:${run.id}`, counts, started_by: userId });
+  const { data: run, error: runErr } = await db().from("qbo_sync_runs").insert({ offering_id: i.offeringId, direction: "inbound", source: "file", file_name: i.fileName.slice(0, 200), counts, started_by: userId }).select("id").single();
+  if (runErr) fail(runErr.message);
+  for (const it of items) {
+    const { error } = await db().from("qbo_inbound_items").insert({ ...it, run_id: run.id });
+    if (error && !/duplicate key/i.test(error.message)) fail(error.message);
+  }
   return { counts };
 }
 
