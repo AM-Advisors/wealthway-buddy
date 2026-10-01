@@ -139,7 +139,7 @@ export function fundTypeLabel(fundType: string | null | undefined, entityType?: 
 }
 
 export const INVESTMENT_ASSET_TYPES = ["Startup / private company equity", "Real estate", "Private credit / debt", "Fund interest (fund of funds)", "Secondary shares", "Crypto / digital assets", "Other"];
-export const VEHICLE_STRUCTURES = ["Delaware LLC", "Delaware Series LLC (series)", "Delaware LP", "Wyoming LLC", "Cayman exempted company", "Other"];
+export const VEHICLE_STRUCTURES = ["Series LLC", "LLC", "LP", "GP"];
 export const JURISDICTIONS = ["Delaware", "Wyoming", "Nevada", "Texas", "New York", "Cayman Islands", "BVI", "Other"];
 
 /** Offering exemptions and the investor eligibility each implies (general guidance; counsel confirms). */
@@ -153,18 +153,18 @@ export const EXEMPTIONS: { value: string; eligibility: string }[] = [
 ];
 export const eligibilityFor = (exemption?: string | null) => EXEMPTIONS.find((e) => e.value === exemption)?.eligibility ?? "";
 
-/** Default structure picked from the service the client chose. */
+/** Default structure picked from the service the client chose (jurisdiction is its own question). */
 export function defaultVehicle(intent: string, fundType?: string | null): string {
-  if (intent === "launch_spv") return "Delaware LLC";
-  if (fundType === "real_estate") return "Delaware LLC";
-  return "Delaware LP";
+  if (intent === "launch_spv") return "LLC";
+  if (fundType === "real_estate") return "LLC";
+  return "LP";
 }
 
-/** Core rate-card services ticked automatically for a structure + exemption. */
-export function coreServicesFor(vehicle: string | undefined, exemption?: string | null): string[] {
+/** Core rate-card services ticked automatically for a structure, jurisdiction and exemption. */
+export function coreServicesFor(vehicle: string | undefined, exemption?: string | null, jurisdiction?: string | null): string[] {
   if (!vehicle) return [];
   const keys = ["entity_formation", "ein_ss4", "governing_documents", "subscription_docs", "investor_onboarding", "bank_setup", "registered_agent"];
-  if (vehicle.startsWith("Delaware")) keys.push("delaware_formation");
+  if (jurisdiction === "Delaware") keys.push("delaware_formation");
   if (exemption === "506(b)" || exemption === "506(c)" || exemption === "Not sure") keys.push("form_d", "blue_sky");
   if (exemption === "506(b)") keys.push("accreditation_506b");
   if (exemption === "506(c)") keys.push("accreditation_506c");
