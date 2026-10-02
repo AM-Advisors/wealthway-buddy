@@ -102,7 +102,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
           i ||
           data
             .profile!.legal_name!.split(/\s+/)
-            .map((p) => p[0] ?? "")
+            .map((p: string) => p[0] ?? "")
             .join("")
             .toUpperCase(),
       );
