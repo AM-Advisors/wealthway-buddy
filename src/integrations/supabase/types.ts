@@ -4691,6 +4691,51 @@ export type Database = {
           },
         ]
       }
+      client_contact_events: {
+        Row: {
+          actor_id: string | null
+          client_id: string
+          contact_id: string
+          created_at: string
+          detail: Json
+          event_kind: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          client_id: string
+          contact_id: string
+          created_at?: string
+          detail?: Json
+          event_kind: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          client_id?: string
+          contact_id?: string
+          created_at?: string
+          detail?: Json
+          event_kind?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contact_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_contact_events_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_contact_scopes: {
         Row: {
           client_id: string
@@ -4764,6 +4809,11 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          invite_cancelled_at: string | null
+          invite_count: number
+          invited_at: string | null
+          is_primary: boolean
+          last_invited_by: string | null
           notes: string | null
           person_id: string | null
           phone: string | null
@@ -4782,6 +4832,11 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          invite_cancelled_at?: string | null
+          invite_count?: number
+          invited_at?: string | null
+          is_primary?: boolean
+          last_invited_by?: string | null
           notes?: string | null
           person_id?: string | null
           phone?: string | null
@@ -4800,6 +4855,11 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          invite_cancelled_at?: string | null
+          invite_count?: number
+          invited_at?: string | null
+          is_primary?: boolean
+          last_invited_by?: string | null
           notes?: string | null
           person_id?: string | null
           phone?: string | null
