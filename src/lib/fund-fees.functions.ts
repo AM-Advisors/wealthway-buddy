@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { CONTRACT_ROLES, STAFF_ROLES } from "@/lib/contracts.functions";
 
 /** Where each fund's wire fee and closing cost come from, and whether they

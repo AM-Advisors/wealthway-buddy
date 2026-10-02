@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 export const QUESTION_STATUSES = ["assigned", "answered", "accepted", "needs_followup"] as const;
 export type QuestionStatus = (typeof QUESTION_STATUSES)[number];

@@ -7,7 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { OPS_AREAS } from "@/lib/ops-capabilities";
 import { WORK_PRIORITIES, WORK_SECTIONS } from "@/lib/ops-work-items";
 

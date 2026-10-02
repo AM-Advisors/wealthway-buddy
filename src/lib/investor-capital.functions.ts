@@ -4,7 +4,7 @@
 // record, not a valuation, audit, tax return or investment advice.
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const EXCLUDED_STATUSES = new Set(["withdrawn", "declined", "rejected", "cancelled"]);
 

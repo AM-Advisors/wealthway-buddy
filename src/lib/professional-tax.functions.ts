@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const kind = z.enum(["1065", "1042", "1099"]);
 const engine = () => import("@/lib/professional-tax.server");

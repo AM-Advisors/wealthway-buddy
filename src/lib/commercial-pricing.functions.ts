@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import {
   assertCanDecide, canApprovePricing, canProposePricing, canViewCommercial, clientFacingStatus,
 } from "@/lib/commercial-pricing";

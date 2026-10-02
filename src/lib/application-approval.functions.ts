@@ -5,7 +5,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { logReviewerActivity } from "@/lib/reviewer-activity.server";
 
 export const APPROVAL_LABELS: Record<string, string> = {

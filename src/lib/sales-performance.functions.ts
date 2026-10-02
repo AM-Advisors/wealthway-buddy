@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { canViewCommercial } from "@/lib/commercial-pricing";
 import { isReconciledFunding } from "@/lib/funding-status";
 

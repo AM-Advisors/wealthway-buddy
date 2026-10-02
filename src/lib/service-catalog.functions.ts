@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { CONTRACT_ROLES, STAFF_ROLES } from "@/lib/contracts.functions";
 
 /** Categories are data, not code paths - adding one never needs a redesign. */

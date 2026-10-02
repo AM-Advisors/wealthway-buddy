@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 // Reviewers are admins (all funds) and fund managers (their assigned funds).
 // Row scoping for fund managers is enforced by the database policies.

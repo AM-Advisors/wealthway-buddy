@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 
 export type NavStep = {

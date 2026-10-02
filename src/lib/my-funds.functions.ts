@@ -7,7 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { buildMyFunds, investorFundView, platformAgreementHistory, workspaceCategories } from "@/lib/client-portal-model";
 
 async function relationshipFundIds(context: any) {

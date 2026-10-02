@@ -3,7 +3,7 @@
  * person's authority from authoritative records; nothing trusts the browser.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 import type { DestinationFields, DistributionType } from "@/lib/distributions-model";
 

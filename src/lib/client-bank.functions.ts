@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /** Confirms the signed-in person is a contact of the client that owns this fund. */
 async function assertClientFund(supabase: any, userId: string, fundId: string) {

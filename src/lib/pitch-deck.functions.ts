@@ -8,7 +8,7 @@
  * has been checked.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { z } from "zod";
 
 const BUCKET = "pitch-decks";

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { assertFundConditions } from "@/lib/fund-conditions.functions";
 import { assertNoHold } from "@/lib/compliance-holds.functions";
 import { NO_SCOPE_MESSAGE } from "@/lib/fund-conditions.functions";

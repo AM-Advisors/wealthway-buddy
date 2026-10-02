@@ -7,7 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { DRIVE_ID_PATTERN, INVESTOR_UNAVAILABLE } from "@/lib/drive-policy";
 
 const idSchema = z.string().regex(DRIVE_ID_PATTERN);

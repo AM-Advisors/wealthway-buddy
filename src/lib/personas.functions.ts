@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { ensureActivePersona } from "@/lib/active-application";
 
 export const ACCOUNT_KINDS = ["individual", "joint", "entity", "trust", "ira"] as const;

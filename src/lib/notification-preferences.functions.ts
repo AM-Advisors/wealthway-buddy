@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /** Whether the signed-in reviewer receives fund alert emails. Defaults to on. */
 export const getAlertPreference = createServerFn({ method: "GET" })

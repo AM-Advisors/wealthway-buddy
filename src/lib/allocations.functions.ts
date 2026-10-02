@@ -3,7 +3,7 @@
 // scope on the server; nothing here trusts an id sent by the browser.
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 export const listAllocationQueue = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

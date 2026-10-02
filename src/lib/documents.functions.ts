@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { applicationIdForOffering } from "@/lib/active-application";
 
 /** Signing happens inside a fund, so every call may name the fund it is for. */

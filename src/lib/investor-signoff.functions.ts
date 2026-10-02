@@ -7,7 +7,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /** The statements an investor confirms when they sign. */
 export const SIGNOFF_ACKNOWLEDGEMENTS = [

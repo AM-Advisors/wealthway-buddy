@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { BRAND_FONTS } from "@/lib/client-branding";
 
 const hex = z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable();

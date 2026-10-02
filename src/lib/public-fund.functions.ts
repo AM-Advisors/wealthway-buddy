@@ -9,7 +9,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const DECK_BUCKET = "pitch-decks";
 const SLIDE_URL_SECONDS = 60 * 30;

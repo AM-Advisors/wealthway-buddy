@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 
 const startSchema = z.object({ offering_document_id: z.string().uuid(), onboarding_id: z.string().uuid().optional() });

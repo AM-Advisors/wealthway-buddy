@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /** Messages Harmonious has emailed to the signed-in contact, newest first.
  *  Reads run as the signed-in person, so only their own copies come back. */

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { requireOperations } from "@/lib/ops-access.functions";
 import { DRIVE_ID_PATTERN, INVESTOR_UNAVAILABLE } from "@/lib/drive-policy";
 

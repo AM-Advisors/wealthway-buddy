@@ -12,3 +12,4 @@
 - Never automate filings, tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts (Playwright, `bun run test:e2e`), run only against QA with synthetic sessions; helpers refuse production URLs — why: keep them out of unit runs and away from real data.
 - Sales uses the Operations shell for authorized Operations staff, while commercial-only Sales staff get a Sales-only menu — why: presentation must not imply wider Operations access.
+- Server functions import requireSupabaseAuth from src/lib/require-auth.ts (same runtime middleware, light context type), never the generated module directly - why: the generated Database-typed context made the whole-app typecheck exceed the preview time limit.

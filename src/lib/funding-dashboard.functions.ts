@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { isReconciledFunding } from "@/lib/funding-status";
 
 async function assertAdmin(supabase: any, userId: string) {

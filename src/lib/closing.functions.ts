@@ -3,7 +3,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
 
 async function canManage(supabase: any, offeringId: string) {

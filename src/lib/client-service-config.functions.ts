@@ -6,7 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import {
   CAP_TIERS, clientServiceStatus, entitlementsFor, mapLegacyServices, priceConfig, selectedPackages,
   validateConfig, type ClientServiceConfig, type RateItem,
