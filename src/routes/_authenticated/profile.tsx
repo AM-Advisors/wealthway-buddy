@@ -5,7 +5,7 @@ import {
   EMPTY_ADDRESS,
   type AddressValue,
 } from "@/components/address-input";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -199,7 +199,8 @@ function ProfilePage() {
           {(data.profiles as any[]).map((p) => {
             const kyb = kybByProfile.get(p.id);
             return (
-              <li key={p.id} className="rounded-md border border-border p-3 text-sm">
+              <li key={p.id} className="rounded-md border border-border text-sm hover:bg-muted/50">
+                <Link to="/profile/$profileId" params={{ profileId: p.id }} className="block p-3">
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-medium">{p.display_label}</span>
                   <span className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -211,6 +212,8 @@ function ProfilePage() {
                     Entity verification: {CHECK_LABEL[kyb.kyb_status] ?? kyb.kyb_status}
                   </p>
                 ) : null}
+                <p className="mt-1 text-xs text-primary">Open details, tax number, owners and accreditation →</p>
+                </Link>
               </li>
             );
           })}

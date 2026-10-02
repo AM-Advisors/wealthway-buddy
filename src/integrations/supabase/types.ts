@@ -19837,6 +19837,41 @@ export type Database = {
           },
         ]
       }
+      investment_profile_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_profile_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investment_profile_relationships: {
         Row: {
           added_by: string | null
@@ -19964,6 +19999,10 @@ export type Database = {
       }
       investment_profiles: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          country: string | null
           created_at: string
           created_by: string | null
           details: Json
@@ -19974,11 +20013,20 @@ export type Database = {
           legal_name: string | null
           owner_user_id: string | null
           person_id: string | null
+          phone: string | null
+          postal_code: string | null
           profile_type: Database["public"]["Enums"]["investment_profile_type"]
+          region: string | null
           status: string
+          tax_id_last4: string | null
+          tax_id_type: string | null
           updated_at: string
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           details?: Json
@@ -19989,11 +20037,20 @@ export type Database = {
           legal_name?: string | null
           owner_user_id?: string | null
           person_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
           profile_type: Database["public"]["Enums"]["investment_profile_type"]
+          region?: string | null
           status?: string
+          tax_id_last4?: string | null
+          tax_id_type?: string | null
           updated_at?: string
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           details?: Json
@@ -20004,8 +20061,13 @@ export type Database = {
           legal_name?: string | null
           owner_user_id?: string | null
           person_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
           profile_type?: Database["public"]["Enums"]["investment_profile_type"]
+          region?: string | null
           status?: string
+          tax_id_last4?: string | null
+          tax_id_type?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -35171,6 +35233,13 @@ export type Database = {
           key_version: number
         }[]
       }
+      read_profile_tax_id: {
+        Args: { _profile: string }
+        Returns: {
+          ciphertext: string
+          iv: string
+        }[]
+      }
       read_tax_identifier: {
         Args: { _form: string }
         Returns: {
@@ -35270,6 +35339,16 @@ export type Database = {
           _last4: string
           _offering: string
           _type: string
+        }
+        Returns: undefined
+      }
+      store_profile_tax_id: {
+        Args: {
+          _actor: string
+          _ciphertext: string
+          _iv: string
+          _key_version: number
+          _profile: string
         }
         Returns: undefined
       }

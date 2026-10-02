@@ -239,6 +239,7 @@ import { Route as AuthenticatedProfessionalSignaturesRouteImport } from './route
 import { Route as AuthenticatedProfessionalTasksRouteImport } from './routes/_authenticated/professional.tasks'
 import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_authenticated/professional.tax'
 import { Route as AuthenticatedProfessionalVerificationRouteImport } from './routes/_authenticated/professional.verification'
+import { Route as AuthenticatedProfileProfileIdRouteImport } from './routes/_authenticated/profile_.$profileId'
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
@@ -1638,6 +1639,12 @@ const AuthenticatedProfessionalVerificationRoute =
     path: '/verification',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedProfileProfileIdRoute =
+  AuthenticatedProfileProfileIdRouteImport.update({
+    id: '/profile_/$profileId',
+    path: '/profile/$profileId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSalesCrmRoute = AuthenticatedSalesCrmRouteImport.update({
   id: '/sales_/crm',
   path: '/sales/crm',
@@ -2449,6 +2456,7 @@ export interface FileRoutesByFullPath {
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
+  '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
@@ -2774,6 +2782,7 @@ export interface FileRoutesByTo {
   '/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
+  '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
@@ -3106,6 +3115,7 @@ export interface FileRoutesById {
   '/_authenticated/professional/tasks': typeof AuthenticatedProfessionalTasksRoute
   '/_authenticated/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/_authenticated/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
+  '/_authenticated/profile_/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
@@ -3439,6 +3449,7 @@ export interface FileRouteTypes {
     | '/professional/tasks'
     | '/professional/tax'
     | '/professional/verification'
+    | '/profile/$profileId'
     | '/sales/crm'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
@@ -3764,6 +3775,7 @@ export interface FileRouteTypes {
     | '/professional/tasks'
     | '/professional/tax'
     | '/professional/verification'
+    | '/profile/$profileId'
     | '/sales/crm'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
@@ -4095,6 +4107,7 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/tasks'
     | '/_authenticated/professional/tax'
     | '/_authenticated/professional/verification'
+    | '/_authenticated/profile_/$profileId'
     | '/_authenticated/sales_/crm'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
@@ -5871,6 +5884,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfessionalVerificationRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
     }
+    '/_authenticated/profile_/$profileId': {
+      id: '/_authenticated/profile_/$profileId'
+      path: '/profile/$profileId'
+      fullPath: '/profile/$profileId'
+      preLoaderRoute: typeof AuthenticatedProfileProfileIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sales_/crm': {
       id: '/_authenticated/sales_/crm'
       path: '/sales/crm'
@@ -6996,6 +7016,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
+  AuthenticatedProfileProfileIdRoute: typeof AuthenticatedProfileProfileIdRoute
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
@@ -7227,6 +7248,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
+  AuthenticatedProfileProfileIdRoute: AuthenticatedProfileProfileIdRoute,
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
