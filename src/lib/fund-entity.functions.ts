@@ -400,6 +400,12 @@ export const updateBankSetupStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export type MercuryReadiness = {
+  configured: boolean; legalName: string; fundName: string; entityType: string; addressOnFile: string; hasEin: boolean;
+  owners: { name: string; email: string | null; phone: string | null; role: string }[];
+  missing: string[]; existing: { id: string; signupLink: string; status: string } | null;
+};
+
 // ---- Mercury account opening (pre-fill only; the applicant submits on Mercury) ----
 
 export const getMercuryReadiness = createServerFn({ method: "POST" })
@@ -408,7 +414,7 @@ export const getMercuryReadiness = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { mercuryReadiness } = await import("@/lib/mercury-onboarding.server");
-    return mercuryReadiness(data.offering_id);
+    return (await mercuryReadiness(data.offering_id)) as MercuryReadiness;
   });
 
 export const startMercuryApplication = createServerFn({ method: "POST" })
@@ -434,7 +440,7 @@ export const startMercuryApplication = createServerFn({ method: "POST" })
       confirmed: z.literal(true),
     }).parse(data),
   )
-  .handler(async ({ context, data }) => {
+  .handler(async ({ context, data }): Promise<{ id: string; signupLink: string; reused: boolean }> => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const email = ((context.claims as any)?.email as string | undefined) ?? null;
     const { startMercuryApplication: start } = await import("@/lib/mercury-onboarding.server");
