@@ -67,6 +67,7 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 }
 
