@@ -83,7 +83,6 @@ export function TeamTab({ fundId }: { fundId: string }) {
         <CardContent>{list(providers, "No providers added yet.")}</CardContent>
       </Card>
 
-      <FeesCard fundId={fundId} d={d} />
       {editing && <MemberEditor key={editing.id ?? `new-${editing.team_role}`} fundId={fundId} member={editing} onClose={() => setEditing(null)} />}
     </div>
   );
@@ -136,6 +135,13 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
       </CardContent>
     </Card>
   );
+}
+
+export function FeesSection({ fundId }: { fundId: string }) {
+  const load = useServerFn(fundTeamFn);
+  const q = useQuery({ queryKey: ["fund-team", fundId], queryFn: () => load({ data: { fundId } }) });
+  if (!q.data) return null;
+  return <FeesCard fundId={fundId} d={q.data} />;
 }
 
 function FeesCard({ fundId, d }: { fundId: string; d: any }) {
