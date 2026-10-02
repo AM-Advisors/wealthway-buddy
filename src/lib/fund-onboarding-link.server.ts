@@ -4,7 +4,7 @@
  * (same Person → Investment Profile → Investment model, idempotent).
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { onboardingActor, assertStaff, forbid, launchedOffering, startOnboarding } from "@/lib/investor-onboarding.server";
+import { onboardingActor, forbid, launchedOffering, startOnboarding } from "@/lib/investor-onboarding.server";
 import { recordAccessEvent } from "@/lib/access-control.server";
 import { appUrl } from "@/lib/app-origins";
 import { generateLinkToken, linkCanStart, linkStatus, publicLinkView, rateLimited, tokenLooksValid, LINK_UNAVAILABLE, RATE_WINDOW_MINUTES } from "@/lib/fund-onboarding-link";
