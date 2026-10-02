@@ -1,13 +1,13 @@
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
+import { Building2, CreditCard, Landmark, Loader2 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getFundPayment, quoteFundPayment, startFundPayment } from "@/lib/fund-payments.functions";
+import { getFundPayment, quoteFundPayment, startFundPayment, startOfflineFundPayment } from "@/lib/fund-payments.functions";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
 const usd = (c: number) => `$${(c / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
