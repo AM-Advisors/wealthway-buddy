@@ -15424,6 +15424,7 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string
+          details: Json
           id: string
           notes: string | null
           offering_id: string
@@ -15437,6 +15438,7 @@ export type Database = {
         Insert: {
           client_id?: string | null
           created_at?: string
+          details?: Json
           id?: string
           notes?: string | null
           offering_id: string
@@ -15450,6 +15452,7 @@ export type Database = {
         Update: {
           client_id?: string | null
           created_at?: string
+          details?: Json
           id?: string
           notes?: string | null
           offering_id?: string
@@ -16038,6 +16041,124 @@ export type Database = {
           },
         ]
       }
+      fund_fee_terms: {
+        Row: {
+          carry_pct: number | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          hurdle_pct: number | null
+          id: string
+          management_fee_basis: string | null
+          management_fee_pct: number | null
+          notes: string | null
+          offering_id: string
+          requested_by: string
+          status: string
+        }
+        Insert: {
+          carry_pct?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          hurdle_pct?: number | null
+          id?: string
+          management_fee_basis?: string | null
+          management_fee_pct?: number | null
+          notes?: string | null
+          offering_id: string
+          requested_by: string
+          status: string
+        }
+        Update: {
+          carry_pct?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          hurdle_pct?: number | null
+          id?: string
+          management_fee_basis?: string | null
+          management_fee_pct?: number | null
+          notes?: string | null
+          offering_id?: string
+          requested_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_fee_terms_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_files: {
+        Row: {
+          body: string | null
+          category: string
+          content_type: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          file_name: string | null
+          id: string
+          offering_id: string
+          signature_boxes: Json
+          size_bytes: number | null
+          status: string
+          storage_path: string | null
+          template_key: string | null
+          title: string
+          uploaded_by: string
+        }
+        Insert: {
+          body?: string | null
+          category?: string
+          content_type?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_name?: string | null
+          id?: string
+          offering_id: string
+          signature_boxes?: Json
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          template_key?: string | null
+          title: string
+          uploaded_by: string
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          content_type?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_name?: string | null
+          id?: string
+          offering_id?: string
+          signature_boxes?: Json
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+          template_key?: string | null
+          title?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_files_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_formation_authorizations: {
         Row: {
           authorization_text: string
@@ -16341,6 +16462,62 @@ export type Database = {
             columns: ["setup_id"]
             isOneToOne: false
             referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_ledger_entries: {
+        Row: {
+          amount_cents: number
+          bank_transaction_id: string | null
+          category: string
+          created_at: string
+          created_by: string
+          description: string
+          direction: string
+          entry_date: string
+          id: string
+          offering_id: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          amount_cents: number
+          bank_transaction_id?: string | null
+          category: string
+          created_at?: string
+          created_by: string
+          description: string
+          direction: string
+          entry_date: string
+          id?: string
+          offering_id: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          bank_transaction_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          direction?: string
+          entry_date?: string
+          id?: string
+          offering_id?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_ledger_entries_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -16910,6 +17087,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fund_pricing_snapshots_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_proposed_assets: {
+        Row: {
+          amount_cents: number | null
+          asset_name: string
+          asset_type: string | null
+          close_request_id: string | null
+          created_at: string
+          created_by: string
+          details: Json
+          id: string
+          issuer_name: string | null
+          offering_id: string
+          purchase_agreement_name: string | null
+          purchase_agreement_path: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          asset_name: string
+          asset_type?: string | null
+          close_request_id?: string | null
+          created_at?: string
+          created_by: string
+          details?: Json
+          id?: string
+          issuer_name?: string | null
+          offering_id: string
+          purchase_agreement_name?: string | null
+          purchase_agreement_path?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          asset_name?: string
+          asset_type?: string | null
+          close_request_id?: string | null
+          created_at?: string
+          created_by?: string
+          details?: Json
+          id?: string
+          issuer_name?: string | null
+          offering_id?: string
+          purchase_agreement_name?: string | null
+          purchase_agreement_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_proposed_assets_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
@@ -18251,6 +18481,59 @@ export type Database = {
           },
         ]
       }
+      fund_team_members: {
+        Row: {
+          company: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          full_name: string
+          id: string
+          offering_id: string
+          permissions: string[]
+          phone: string | null
+          removed_at: string | null
+          removed_by: string | null
+          team_role: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          full_name: string
+          id?: string
+          offering_id: string
+          permissions?: string[]
+          phone?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          team_role: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          offering_id?: string
+          permissions?: string[]
+          phone?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          team_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_team_members_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_team_overrides: {
         Row: {
           assigned_at: string
@@ -18276,6 +18559,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fund_team_overrides_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_transaction_tags: {
+        Row: {
+          asset_label: string | null
+          bank_transaction_id: string
+          offering_id: string
+          onboarding_id: string | null
+          tagged_by: string
+          updated_at: string
+        }
+        Insert: {
+          asset_label?: string | null
+          bank_transaction_id: string
+          offering_id: string
+          onboarding_id?: string | null
+          tagged_by: string
+          updated_at?: string
+        }
+        Update: {
+          asset_label?: string | null
+          bank_transaction_id?: string
+          offering_id?: string
+          onboarding_id?: string | null
+          tagged_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_transaction_tags_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
