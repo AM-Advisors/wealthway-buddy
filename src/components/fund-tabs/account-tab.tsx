@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { fundAccountFn } from "@/lib/fund-tabs.functions";
 import { CentsBarChart, CentsDonut } from "./charts";
 import { RequestHarmoniousButton } from "./request-harmonious";
+import { AutomatedReports } from "./automated-reports";
 import { fmtDate, usd } from "./shared";
 
 const label = (s: string | null | undefined) => (s ? s.replace(/_/g, " ") : "-");
@@ -55,7 +56,9 @@ export function AccountTab({ fundId, fundName, taxDocs }: { fundId: string; fund
         <Card><CardHeader><CardTitle className="text-base">Asset mix (latest NAV)</CardTitle></CardHeader><CardContent><CentsDonut data={mix} /></CardContent></Card>
       </div>
 
-      <Section title="NAV" desc="Approved net asset value. Harmonious prepares and reviews NAV." action={btn("NAV", [])}>
+      <AutomatedReports fundId={fundId} fundName={fundName} />
+
+      <Section title="NAV" desc="Approved net asset value. Harmonious prepares and reviews NAV." action={btn("NAV reporting", ["nav_reporting"])}>
         {q.isLoading ? empty("Loading…") : !nav.length ? empty("No approved NAV yet.") : (
           <table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">As of</th><th className="text-right">NAV</th><th className="text-right">Liabilities</th><th>Status</th></tr></thead>
             <tbody>{[...nav].reverse().map((n: any) => <tr key={n.id} className="border-t"><td className="py-2">{fmtDate(n.as_of_date)}</td><td className="text-right">{usd(Number(n.net_asset_value_cents ?? 0))}</td><td className="text-right">{usd(Number(n.total_liabilities_cents ?? 0))}</td><td className="capitalize">{label(n.status)}</td></tr>)}</tbody></table>
@@ -68,7 +71,7 @@ export function AccountTab({ fundId, fundName, taxDocs }: { fundId: string; fund
         )}
       </Section>
 
-      <Section title="Financial review" desc="Prepare, review and approve memos for each period." action={btn("Financial review", [])}>
+      <Section title="Financial review" desc="Prepare, review and approve memos for each period." action={btn("Financial review", ["financial_review"])}>
         {q.isLoading ? empty("Loading…") : !d?.reviews.length ? empty("No financial reviews yet.") : (
           <div className="divide-y rounded-md border">{d.reviews.map((r: any) => <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"><span>{r.title || "Financial review"} · {period(r.period_start, r.period_end)}</span><Badge variant="outline" className="capitalize">{label(r.status)}</Badge></div>)}</div>
         )}

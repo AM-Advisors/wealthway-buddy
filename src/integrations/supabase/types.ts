@@ -17635,6 +17635,97 @@ export type Database = {
           },
         ]
       }
+      fund_report_drafts: {
+        Row: {
+          computed: Json
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          inputs: Json
+          kind: string
+          offering_id: string
+          payment_id: string | null
+          period_end: string
+          period_start: string
+          status: string
+          submitted_at: string
+          submitted_by: string
+        }
+        Insert: {
+          computed?: Json
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          inputs?: Json
+          kind: string
+          offering_id: string
+          payment_id?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+        }
+        Update: {
+          computed?: Json
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          inputs?: Json
+          kind?: string
+          offering_id?: string
+          payment_id?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_report_drafts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_report_settings: {
+        Row: {
+          frequency: string
+          offering_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          frequency?: string
+          offering_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          frequency?: string
+          offering_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_report_settings_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_reporting_policies: {
         Row: {
           administrator_attribution: string

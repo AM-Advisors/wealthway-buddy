@@ -4,26 +4,44 @@ export const FUND_SETUP_PRICE_ID = "fund_setup_fee_onetime";
 
 export type PayItem = { key: string; name: string; cents: number; source: "setup_fee" | "sow" | "rate_card" };
 
+/** Roles whose approval makes a client's custom price binding: CEO (executive), CRO (sales_management), super_admin. */
+export const PRICE_APPROVER_ROLES = ["executive", "sales_management", "super_admin"];
+
 /**
- * Prices each a la carte key: approved, current SOW pricing (client_pricing) wins, Fund-specific first,
- * otherwise the rate card. Zero-priced items are listed but not charged.
+ * Prices each a la carte key: the most recent published Harmonious rate card, unless the client has a
+ * current custom (SOW) price approved by the CEO or CRO - Fund-specific first. Zero-priced items are listed but not charged.
  */
 export async function priceAddOns(db: any, clientId: string, keys: string[], offeringId?: string | null): Promise<PayItem[]> {
   if (!keys.length) return [];
   const today = new Date().toISOString().slice(0, 10);
-  const [{ data: cat }, { data: cp }] = await Promise.all([
+  const [{ data: cat }, { data: cp }, { data: versions }] = await Promise.all([
     db.from("service_catalog").select("key, name, standard_price_cents").in("key", keys),
-    db.from("client_pricing").select("service_key, contracted_cents, offering_id, approved_at, superseded_at, expires_on, sow_id")
+    db.from("client_pricing").select("service_key, contracted_cents, offering_id, approved_by, approved_at, superseded_at, expires_on, sow_id")
       .eq("client_id", clientId).in("service_key", keys).is("superseded_at", null).not("approved_at", "is", null),
+    db.from("pricing_versions").select("id, published_at").eq("status", "published").order("published_at", { ascending: false }),
   ]);
-  const live = ((cp ?? []) as any[]).filter((p) => p.contracted_cents != null && (!p.expires_on || p.expires_on >= today));
+  const vids = ((versions ?? []) as any[]).map((v) => v.id);
+  const { data: items } = vids.length
+    ? await db.from("pricing_items").select("version_id, service_key, amount_cents, sort_order").in("version_id", vids).in("service_key", keys).order("sort_order")
+    : { data: [] };
+  const approvers = [...new Set(((cp ?? []) as any[]).map((p) => p.approved_by).filter(Boolean))];
+  const { data: roles } = approvers.length ? await db.from("user_roles").select("user_id, role").in("user_id", approvers) : { data: [] };
+  const okApprover = new Set(((roles ?? []) as any[]).filter((r) => PRICE_APPROVER_ROLES.includes(r.role)).map((r) => r.user_id));
+  const live = ((cp ?? []) as any[]).filter((p) => p.contracted_cents != null && (!p.expires_on || p.expires_on >= today) && okApprover.has(p.approved_by));
+  const rateFor = (key: string) => {
+    for (const vid of vids) {
+      const r = ((items ?? []) as any[]).find((i) => i.version_id === vid && i.service_key === key && i.amount_cents != null);
+      if (r) return Number(r.amount_cents);
+    }
+    return null;
+  };
   return keys.map((key) => {
     const c = ((cat ?? []) as any[]).find((x) => x.key === key);
     const sow = live.find((p) => p.service_key === key && offeringId && p.offering_id === offeringId)
       ?? live.find((p) => p.service_key === key && !p.offering_id);
     return sow
       ? { key, name: c?.name ?? key, cents: Number(sow.contracted_cents), source: "sow" as const }
-      : { key, name: c?.name ?? key, cents: Number(c?.standard_price_cents ?? 0), source: "rate_card" as const };
+      : { key, name: c?.name ?? key, cents: rateFor(key) ?? Number(c?.standard_price_cents ?? 0), source: "rate_card" as const };
   });
 }
 
