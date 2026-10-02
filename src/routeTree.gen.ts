@@ -190,6 +190,7 @@ import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_au
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
 import { Route as AuthenticatedMyFundsFundIdRouteImport } from './routes/_authenticated/my-funds.$fundId'
+import { Route as AuthenticatedMyPortfolioOfferingIdRouteImport } from './routes/_authenticated/my-portfolio_.$offeringId'
 import { Route as AuthenticatedOnboardingAccreditationRouteImport } from './routes/_authenticated/onboarding.accreditation'
 import { Route as AuthenticatedOnboardingAmlRouteImport } from './routes/_authenticated/onboarding.aml'
 import { Route as AuthenticatedOnboardingComplianceRouteImport } from './routes/_authenticated/onboarding.compliance'
@@ -1351,6 +1352,12 @@ const AuthenticatedMyFundsFundIdRoute =
     path: '/my-funds/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMyPortfolioOfferingIdRoute =
+  AuthenticatedMyPortfolioOfferingIdRouteImport.update({
+    id: '/my-portfolio_/$offeringId',
+    path: '/my-portfolio/$offeringId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingAccreditationRoute =
   AuthenticatedOnboardingAccreditationRouteImport.update({
     id: '/onboarding/accreditation',
@@ -2409,6 +2416,7 @@ export interface FileRoutesByFullPath {
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
+  '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
@@ -2735,6 +2743,7 @@ export interface FileRoutesByTo {
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
+  '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
@@ -3068,6 +3077,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
+  '/_authenticated/my-portfolio_/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
   '/_authenticated/onboarding/aml': typeof AuthenticatedOnboardingAmlRoute
   '/_authenticated/onboarding/compliance': typeof AuthenticatedOnboardingComplianceRoute
@@ -3402,6 +3412,7 @@ export interface FileRouteTypes {
     | '/manager/valuations'
     | '/manager/wires'
     | '/my-funds/$fundId'
+    | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/compliance'
@@ -3728,6 +3739,7 @@ export interface FileRouteTypes {
     | '/manager/valuations'
     | '/manager/wires'
     | '/my-funds/$fundId'
+    | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
     | '/onboarding/aml'
     | '/onboarding/compliance'
@@ -4060,6 +4072,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
     | '/_authenticated/my-funds/$fundId'
+    | '/_authenticated/my-portfolio_/$offeringId'
     | '/_authenticated/onboarding/accreditation'
     | '/_authenticated/onboarding/aml'
     | '/_authenticated/onboarding/compliance'
@@ -5541,6 +5554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyFundsFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-portfolio_/$offeringId': {
+      id: '/_authenticated/my-portfolio_/$offeringId'
+      path: '/my-portfolio/$offeringId'
+      fullPath: '/my-portfolio/$offeringId'
+      preLoaderRoute: typeof AuthenticatedMyPortfolioOfferingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding/accreditation': {
       id: '/_authenticated/onboarding/accreditation'
       path: '/onboarding/accreditation'
@@ -6983,6 +7003,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
+  AuthenticatedMyPortfolioOfferingIdRoute: typeof AuthenticatedMyPortfolioOfferingIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
   AuthenticatedOnboardingAmlRoute: typeof AuthenticatedOnboardingAmlRoute
   AuthenticatedOnboardingComplianceRoute: typeof AuthenticatedOnboardingComplianceRoute
@@ -7211,6 +7232,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
+  AuthenticatedMyPortfolioOfferingIdRoute:
+    AuthenticatedMyPortfolioOfferingIdRoute,
   AuthenticatedOnboardingAccreditationRoute:
     AuthenticatedOnboardingAccreditationRoute,
   AuthenticatedOnboardingAmlRoute: AuthenticatedOnboardingAmlRoute,
