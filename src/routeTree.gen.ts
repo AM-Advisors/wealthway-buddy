@@ -22,6 +22,7 @@ import { Route as ContactusRouteImport } from './routes/contactus'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as HarmoniousclassroomRouteImport } from './routes/harmoniousclassroom'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
+import { Route as PlaidOauthRouteImport } from './routes/plaid-oauth'
 import { Route as PlatformRouteImport } from './routes/platform'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -405,6 +406,11 @@ const HarmoniousclassroomRoute = HarmoniousclassroomRouteImport.update({
 const ManagerLoginRoute = ManagerLoginRouteImport.update({
   id: '/manager-login',
   path: '/manager-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaidOauthRoute = PlaidOauthRouteImport.update({
+  id: '/plaid-oauth',
+  path: '/plaid-oauth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlatformRoute = PlatformRouteImport.update({
@@ -2259,6 +2265,7 @@ export interface FileRoutesByFullPath {
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/manager-login': typeof ManagerLoginRoute
+  '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -2592,6 +2599,7 @@ export interface FileRoutesByTo {
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/manager-login': typeof ManagerLoginRoute
+  '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -2922,6 +2930,7 @@ export interface FileRoutesById {
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/manager-login': typeof ManagerLoginRoute
+  '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -3258,6 +3267,7 @@ export interface FileRouteTypes {
     | '/fund-administration'
     | '/harmoniousclassroom'
     | '/manager-login'
+    | '/plaid-oauth'
     | '/platform'
     | '/pricing'
     | '/privacy'
@@ -3591,6 +3601,7 @@ export interface FileRouteTypes {
     | '/fund-administration'
     | '/harmoniousclassroom'
     | '/manager-login'
+    | '/plaid-oauth'
     | '/platform'
     | '/pricing'
     | '/privacy'
@@ -3920,6 +3931,7 @@ export interface FileRouteTypes {
     | '/fund-administration'
     | '/harmoniousclassroom'
     | '/manager-login'
+    | '/plaid-oauth'
     | '/platform'
     | '/pricing'
     | '/privacy'
@@ -4256,6 +4268,7 @@ export interface RootRouteChildren {
   FundAdministrationRoute: typeof FundAdministrationRoute
   HarmoniousclassroomRoute: typeof HarmoniousclassroomRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
+  PlaidOauthRoute: typeof PlaidOauthRoute
   PlatformRoute: typeof PlatformRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -4388,6 +4401,13 @@ declare module '@tanstack/react-router' {
       path: '/manager-login'
       fullPath: '/manager-login'
       preLoaderRoute: typeof ManagerLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plaid-oauth': {
+      id: '/plaid-oauth'
+      path: '/plaid-oauth'
+      fullPath: '/plaid-oauth'
+      preLoaderRoute: typeof PlaidOauthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/platform': {
@@ -7391,6 +7411,7 @@ const rootRouteChildren: RootRouteChildren = {
   FundAdministrationRoute: FundAdministrationRoute,
   HarmoniousclassroomRoute: HarmoniousclassroomRoute,
   ManagerLoginRoute: ManagerLoginRoute,
+  PlaidOauthRoute: PlaidOauthRoute,
   PlatformRoute: PlatformRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
