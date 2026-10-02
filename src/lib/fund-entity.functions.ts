@@ -399,3 +399,53 @@ export const updateBankSetupStatus = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type MercuryReadiness = {
+  configured: boolean; legalName: string; fundName: string; entityType: string; addressOnFile: string; hasEin: boolean;
+  owners: { name: string; email: string | null; phone: string | null; role: string }[];
+  missing: string[]; existing: { id: string; signupLink: string; status: string } | null;
+};
+
+// ---- Mercury account opening (pre-fill only; the applicant submits on Mercury) ----
+
+export const getMercuryReadiness = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const { mercuryReadiness } = await import("@/lib/mercury-onboarding.server");
+    return (await mercuryReadiness(data.offering_id)) as MercuryReadiness;
+  });
+
+export const startMercuryApplication = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      offering_id: z.string().uuid(),
+      address: z.object({
+        address1: z.string().trim().min(3).max(200),
+        address2: z.string().trim().max(200).optional(),
+        city: z.string().trim().min(2).max(100),
+        region: z.string().trim().length(2).toUpperCase(),
+        postalCode: z.string().trim().regex(/^\d{5}(-\d{4})?$/),
+      }),
+      phone: z.string().trim().max(30).optional(),
+      website: z.string().trim().max(200).optional(),
+      description: z.string().trim().max(500).optional(),
+      formationDoc: z.object({
+        fileName: z.string().max(200),
+        base64: z.string().max(28_000_000),
+        type: z.enum(["ArticlesOfOrganization", "CertificateOfFormation", "PartnershipAgreement", "ArticlesOfIncorporation"]),
+      }).optional(),
+      confirmed: z.literal(true),
+    }).parse(data),
+  )
+  .handler(async ({ context, data }): Promise<{ id: string; signupLink: string; reused: boolean }> => {
+    await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const email = ((context.claims as any)?.email as string | undefined) ?? null;
+    const { startMercuryApplication: start } = await import("@/lib/mercury-onboarding.server");
+    return start(
+      { offeringId: data.offering_id, address: data.address, phone: data.phone, website: data.website, description: data.description, formationDoc: data.formationDoc },
+      { userId: context.userId, email },
+    );
+  });

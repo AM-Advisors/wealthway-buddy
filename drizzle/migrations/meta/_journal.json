@@ -834,6 +834,13 @@
       "when": 1790951076469,
       "tag": "0118_fund_franchise_fees",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1790956482142,
+      "tag": "0119_mercury_onboarding",
+      "breakpoints": true
     }
   ]
 }

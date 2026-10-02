@@ -313,6 +313,7 @@ import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/ema
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
+import { Route as ApiPublicMercuryOnboardingRouteImport } from './routes/api/public/mercury/onboarding'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -2072,6 +2073,12 @@ const ApiPublicHooksInvoiceRemindersRoute =
     path: '/api/public/hooks/invoice-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicMercuryOnboardingRoute =
+  ApiPublicMercuryOnboardingRouteImport.update({
+    id: '/api/public/mercury/onboarding',
+    path: '/api/public/mercury/onboarding',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNotifyDrainRoute = ApiPublicNotifyDrainRouteImport.update({
   id: '/api/public/notify/drain',
   path: '/api/public/notify/drain',
@@ -2512,6 +2519,7 @@ export interface FileRoutesByFullPath {
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
+  '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -2835,6 +2843,7 @@ export interface FileRoutesByTo {
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
+  '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -3167,6 +3176,7 @@ export interface FileRoutesById {
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
+  '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -3499,6 +3509,7 @@ export interface FileRouteTypes {
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
+    | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/payments/webhook'
@@ -3822,6 +3833,7 @@ export interface FileRouteTypes {
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
+    | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/payments/webhook'
@@ -4153,6 +4165,7 @@ export interface FileRouteTypes {
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
+    | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/payments/webhook'
@@ -4236,6 +4249,7 @@ export interface RootRouteChildren {
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
+  ApiPublicMercuryOnboardingRoute: typeof ApiPublicMercuryOnboardingRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -6375,6 +6389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksInvoiceRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mercury/onboarding': {
+      id: '/api/public/mercury/onboarding'
+      path: '/api/public/mercury/onboarding'
+      fullPath: '/api/public/mercury/onboarding'
+      preLoaderRoute: typeof ApiPublicMercuryOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/notify/drain': {
       id: '/api/public/notify/drain'
       path: '/api/public/notify/drain'
@@ -7335,6 +7356,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
+  ApiPublicMercuryOnboardingRoute: ApiPublicMercuryOnboardingRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
