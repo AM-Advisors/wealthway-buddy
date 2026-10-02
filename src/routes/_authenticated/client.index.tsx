@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { CapTablesCard } from "@/components/cap-table-billing";
 
 import { AttentionCenter } from "@/components/attention-center";
 import { ClientDashboard } from "@/components/client-dashboard";
@@ -51,6 +52,7 @@ function ClientOverviewPage() {
 
   return (
     <div>
+      <div className="mb-4"><CapTablesCard /></div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">

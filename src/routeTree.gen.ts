@@ -132,6 +132,7 @@ import { Route as AuthenticatedAdminSignoffRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminTimelineRouteImport } from './routes/_authenticated/admin.timeline'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
 import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
+import { Route as AuthenticatedClientAddCapTableRouteImport } from './routes/_authenticated/client.add-cap-table'
 import { Route as AuthenticatedClientAgreementsRouteImport } from './routes/_authenticated/client.agreements'
 import { Route as AuthenticatedClientBankingRouteImport } from './routes/_authenticated/client.banking'
 import { Route as AuthenticatedClientCapTableRouteImport } from './routes/_authenticated/client.cap-table'
@@ -1000,6 +1001,12 @@ const AuthenticatedClientIndexRoute =
   AuthenticatedClientIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientAddCapTableRoute =
+  AuthenticatedClientAddCapTableRouteImport.update({
+    id: '/add-cap-table',
+    path: '/add-cap-table',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedClientAgreementsRoute =
@@ -2313,6 +2320,7 @@ export interface FileRoutesByFullPath {
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/add-cap-table': typeof AuthenticatedClientAddCapTableRoute
   '/client/agreements': typeof AuthenticatedClientAgreementsRouteWithChildren
   '/client/banking': typeof AuthenticatedClientBankingRoute
   '/client/cap-table': typeof AuthenticatedClientCapTableRouteWithChildren
@@ -2636,6 +2644,7 @@ export interface FileRoutesByTo {
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/add-cap-table': typeof AuthenticatedClientAddCapTableRoute
   '/client/banking': typeof AuthenticatedClientBankingRoute
   '/client/home': typeof AuthenticatedClientHomeRoute
   '/client/inbox': typeof AuthenticatedClientInboxRoute
@@ -2960,6 +2969,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/_authenticated/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/_authenticated/client/add-cap-table': typeof AuthenticatedClientAddCapTableRoute
   '/_authenticated/client/agreements': typeof AuthenticatedClientAgreementsRouteWithChildren
   '/_authenticated/client/banking': typeof AuthenticatedClientBankingRoute
   '/_authenticated/client/cap-table': typeof AuthenticatedClientCapTableRouteWithChildren
@@ -3288,6 +3298,7 @@ export interface FileRouteTypes {
     | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/add-cap-table'
     | '/client/agreements'
     | '/client/banking'
     | '/client/cap-table'
@@ -3611,6 +3622,7 @@ export interface FileRouteTypes {
     | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/add-cap-table'
     | '/client/banking'
     | '/client/home'
     | '/client/inbox'
@@ -3934,6 +3946,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/signoff'
     | '/_authenticated/admin/timeline'
     | '/_authenticated/admin/wire'
+    | '/_authenticated/client/add-cap-table'
     | '/_authenticated/client/agreements'
     | '/_authenticated/client/banking'
     | '/_authenticated/client/cap-table'
@@ -5055,6 +5068,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/client/'
       preLoaderRoute: typeof AuthenticatedClientIndexRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/add-cap-table': {
+      id: '/_authenticated/client/add-cap-table'
+      path: '/add-cap-table'
+      fullPath: '/client/add-cap-table'
+      preLoaderRoute: typeof AuthenticatedClientAddCapTableRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/client/agreements': {
@@ -6577,6 +6597,7 @@ const AuthenticatedClientFundsRouteWithChildren =
   )
 
 interface AuthenticatedClientRouteChildren {
+  AuthenticatedClientAddCapTableRoute: typeof AuthenticatedClientAddCapTableRoute
   AuthenticatedClientAgreementsRoute: typeof AuthenticatedClientAgreementsRouteWithChildren
   AuthenticatedClientBankingRoute: typeof AuthenticatedClientBankingRoute
   AuthenticatedClientCapTableRoute: typeof AuthenticatedClientCapTableRouteWithChildren
@@ -6596,6 +6617,7 @@ interface AuthenticatedClientRouteChildren {
 }
 
 const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
+  AuthenticatedClientAddCapTableRoute: AuthenticatedClientAddCapTableRoute,
   AuthenticatedClientAgreementsRoute:
     AuthenticatedClientAgreementsRouteWithChildren,
   AuthenticatedClientBankingRoute: AuthenticatedClientBankingRoute,
