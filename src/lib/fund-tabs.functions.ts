@@ -91,3 +91,10 @@ export const addLedgerEntryFn = createServerFn({ method: "POST" }).middleware([r
 export const voidLedgerEntryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(fund.extend({ id: uuid, reason: z.string().trim().min(3).max(500) }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.voidEntry(context.userId, data.fundId, data.id, data.reason); });
+
+export const lastRemindersFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.lastReminders(data.fundId); });
+
+export const sendInvestorRemindersFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ onboardingIds: z.array(uuid).min(1).max(100) }).parse)
+  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.sendReminders(context.userId, data.fundId, data.onboardingIds); });

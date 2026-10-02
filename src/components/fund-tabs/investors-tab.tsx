@@ -9,7 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
-import { investorDetailFn, investorGridFn } from "@/lib/fund-tabs.functions";
+import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn } from "@/lib/fund-tabs.functions";
+import { reminderAllowed, reminderStep } from "@/lib/fund-health";
+import { toast } from "sonner";
 import { fmtDate, usd } from "./shared";
 
 export function InvestorsTab({ fundId }: { fundId: string }) {
@@ -18,6 +20,23 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
   const [open, setOpen] = useState<string | null>(null);
   const [invite, setInvite] = useState(false);
   const rows = q.data ?? [];
+  const loadLast = useServerFn(lastRemindersFn);
+  const remind = useServerFn(sendInvestorRemindersFn);
+  const lq = useQuery({ queryKey: ["fund-reminders", fundId], queryFn: () => loadLast({ data: { fundId } }) });
+  const [picked, setPicked] = useState<string[]>([]);
+  const [sending, setSending] = useState(false);
+  const canRemind = (r: any) => !!r.email && !!reminderStep(r.stage, r.docs, r.wiring) && reminderAllowed(lq.data?.[r.id] ?? null);
+  async function sendReminders() {
+    setSending(true);
+    try {
+      const res = await remind({ data: { fundId, onboardingIds: picked } });
+      const sent = res.filter((x) => x.outcome === "sent").length;
+      const other = res.length - sent;
+      toast.success(`${sent} reminder${sent === 1 ? "" : "s"} sent${other ? `, ${other} skipped or failed` : ""}.`);
+      setPicked([]);
+      await lq.refetch();
+    } catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
+  }
   return (
     <div className="space-y-6">
     <FundOnboardingLinkCard fundId={fundId} />
@@ -27,7 +46,10 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
           <CardTitle className="text-base">Investors</CardTitle>
           <CardDescription>Click an investor to see everything for this deal. Received counts only money matched to the bank.</CardDescription>
         </div>
-        <Button size="sm" onClick={() => setInvite(true)}>Add / invite investors</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Sending…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>
+          <Button size="sm" onClick={() => setInvite(true)}>Add / invite investors</Button>
+        </div>
       </CardHeader>
       <CardContent>
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
@@ -36,11 +58,14 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="py-2">Name</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><span className="sr-only">Select for reminder</span></th><th className="py-2">Name</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className="cursor-pointer border-t hover:bg-muted" onClick={() => setOpen(r.id)}>
+                    <td className="py-2" onClick={(e) => e.stopPropagation()}>
+                      <input type="checkbox" aria-label={`Remind ${r.name}`} disabled={!canRemind(r)} title={canRemind(r) ? "Select to send a reminder" : lq.data?.[r.id] ? "Reminded in the last 3 days" : "Nothing to remind"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
+                    </td>
                     <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
                     <td className="break-all">{r.email ?? "-"}</td>
                     <td>{r.phone ?? "-"}</td>

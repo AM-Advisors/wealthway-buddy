@@ -391,3 +391,41 @@ export const getStage3Migration = createServerFn({ method: "GET" })
       return { ...p, counts: c, total, mismatches: mismatches(c), status: migrationStatus(p, c) };
     });
   });
+
+// ------------------------------------------------------------ client accounts
+
+/** Client accounts available to add a person to (for the account map picker). */
+export const listClientAccountsForAccess = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAccessViewer(context);
+    const db = await admin();
+    const { data } = await db.from("clients").select("id, name").order("name").limit(5000);
+    return ((data ?? []) as any[]).map((c) => ({ id: c.id as string, name: (c.name ?? "Client") as string }));
+  });
+
+/**
+ * Adds or removes a person's membership in a client account. Access
+ * administrators only; never on yourself; audited before the change. Never
+ * grants staff authority - it only makes the client workspace available.
+ */
+export const setClientMembership = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), clientId: z.string().uuid(), add: z.boolean(), role: z.enum(["member", "admin"]).default("member"), reason }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAccessViewer(context);
+    const p = await prepare(context);
+    if (data.targetUserId === p.actorId) throw new Error("You can't change your own client accounts.");
+    const before = p.b.cus.filter((c: any) => c.user_id === data.targetUserId).map((c: any) => c.client_id);
+    const exists = before.includes(data.clientId);
+    if (data.add && exists) throw new Error("This person already belongs to that client account.");
+    if (!data.add && !exists) throw new Error("This person isn't a member of that client account.");
+    const after = data.add ? [...before, data.clientId] : before.filter((x: string) => x !== data.clientId);
+    await recordAccessEvent({ actorUserId: p.actorId, actorIdentity: p.identity, targetUserId: data.targetUserId, action: data.add ? "Client account added" : "Client account removed", scopeType: "client", scopeId: data.clientId, previous: { clients: before }, next: { clients: after, role: data.role }, reason: data.reason, correlationId: p.correlationId });
+    const db = await admin();
+    const { error } = data.add
+      ? await db.from("client_users").insert({ user_id: data.targetUserId, client_id: data.clientId, client_role: data.role, can_approve: false })
+      : await db.from("client_users").delete().eq("user_id", data.targetUserId).eq("client_id", data.clientId);
+    if (error) throw new Error("Could not update the client account.");
+    return { ok: true };
+  });

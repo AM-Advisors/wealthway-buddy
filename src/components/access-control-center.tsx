@@ -38,6 +38,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InviteStaffForm } from "@/components/invite-staff-form";
+import { ClientAccountMap } from "@/components/client-account-map";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -188,6 +189,9 @@ function AccessProfile({ userId }: { userId: string }) {
           ...f.companies.map((x) => `Company - ${x.name}`),
           ...f.professionalMemberships.map((x) => `Professional - ${x.orgName} (${x.status})`),
         ]} />
+      </Section>
+      <Section n={2} title="Client accounts">
+        <ClientAccountMap userId={userId} memberships={f.clientMemberships} managedFunds={f.managedFunds} />
       </Section>
       <Section n={3} title="Assigned roles">
         <List items={data.roles} />

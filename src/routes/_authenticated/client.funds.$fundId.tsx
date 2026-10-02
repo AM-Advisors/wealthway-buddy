@@ -25,6 +25,8 @@ import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
 import { BankingTab } from "@/components/fund-tabs/banking-tab";
 import { RequestCloseDialog } from "@/components/fund-tabs/request-close-dialog";
+import { fundRegulatoryFn } from "@/lib/fund-regulatory.functions";
+import { nextDeadline } from "@/lib/fund-health";
 import { RegulatoryTab } from "@/components/fund-tabs/regulatory-tab";
 
 const TABS = ["todos", "details", "team", "investors", "documents", "banking", "taxes", "assets", "closes", "regulatory"] as const;
@@ -77,6 +79,8 @@ function ClientFundPage() {
   const cq = useQuery({ queryKey: ["client-fund-cap", fundId], queryFn: () => loadCap({ data: { fundId } }) });
   const tq = useQuery({ queryKey: ["client-fund-tabs", fundId], queryFn: () => loadTabs({ data: { fundId } }) });
   const crq = useQuery({ queryKey: ["client-fund-closes", fundId], queryFn: () => loadCloses({ data: { fundId } }) });
+  const loadReg = useServerFn(fundRegulatoryFn);
+  const rq = useQuery({ queryKey: ["fund-regulatory", fundId], queryFn: () => loadReg({ data: { fundId } }) });
 
   if (fq.isLoading) return <p className="text-sm text-muted-foreground">Loading fund…</p>;
   if (fq.error || !fq.data) return <p className="text-sm text-destructive">{(fq.error as any)?.message ?? "Couldn't load this fund."}</p>;
@@ -100,12 +104,14 @@ function ClientFundPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
           { l: "Setup complete", v: setup.percent == null ? "-" : `${setup.percent}%` },
           { l: "Investors", v: cap ? String(cap.totals.investors) : "-" },
           { l: "Committed", v: cap ? usd(cap.totals.commitCents) : "-" },
           { l: "Funded (reconciled)", v: cap ? usd(cap.totals.fundedCents) : "-" },
+          { l: "Open to dos", v: String(steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review").length) },
+          { l: "Next deadline", v: (() => { const n = nextDeadline((rq.data?.calendar ?? []) as any); return n ? `${n.date}` : "-"; })() },
         ].map((k) => (
           <Card key={k.l}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{k.l}</p><p className="text-xl font-semibold">{k.v}</p></CardContent></Card>
         ))}

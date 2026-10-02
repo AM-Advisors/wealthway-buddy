@@ -22120,6 +22120,42 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_reminders: {
+        Row: {
+          created_at: string
+          delivery: string
+          delivery_note: string | null
+          id: string
+          offering_id: string
+          onboarding_id: string
+          recipient_email: string | null
+          sent_by: string
+          step: string
+        }
+        Insert: {
+          created_at?: string
+          delivery?: string
+          delivery_note?: string | null
+          id?: string
+          offering_id: string
+          onboarding_id: string
+          recipient_email?: string | null
+          sent_by: string
+          step: string
+        }
+        Update: {
+          created_at?: string
+          delivery?: string
+          delivery_note?: string | null
+          id?: string
+          offering_id?: string
+          onboarding_id?: string
+          recipient_email?: string | null
+          sent_by?: string
+          step?: string
+        }
+        Relationships: []
+      }
       investor_signoffs: {
         Row: {
           acknowledgements: Json

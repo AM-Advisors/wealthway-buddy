@@ -214,6 +214,7 @@ import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes
 import { Route as AuthenticatedOpsMessagesRouteImport } from './routes/_authenticated/ops.messages'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
+import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticated/ops.queue'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
@@ -1493,6 +1494,11 @@ const AuthenticatedOpsPerformanceRoute =
     path: '/ops/performance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsQueueRoute = AuthenticatedOpsQueueRouteImport.update({
+  id: '/ops/queue',
+  path: '/ops/queue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpsReadinessRoute =
   AuthenticatedOpsReadinessRouteImport.update({
     id: '/ops/readiness',
@@ -2439,6 +2445,7 @@ export interface FileRoutesByFullPath {
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
+  '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -2766,6 +2773,7 @@ export interface FileRoutesByTo {
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
+  '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -3100,6 +3108,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
+  '/_authenticated/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -3435,6 +3444,7 @@ export interface FileRouteTypes {
     | '/ops/messages'
     | '/ops/nav'
     | '/ops/performance'
+    | '/ops/queue'
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/ss4'
@@ -3762,6 +3772,7 @@ export interface FileRouteTypes {
     | '/ops/messages'
     | '/ops/nav'
     | '/ops/performance'
+    | '/ops/queue'
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/ss4'
@@ -4095,6 +4106,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/messages'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/performance'
+    | '/_authenticated/ops/queue'
     | '/_authenticated/ops/readiness'
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/ss4'
@@ -5722,6 +5734,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/queue': {
+      id: '/_authenticated/ops/queue'
+      path: '/ops/queue'
+      fullPath: '/ops/queue'
+      preLoaderRoute: typeof AuthenticatedOpsQueueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/readiness': {
       id: '/_authenticated/ops/readiness'
       path: '/ops/readiness'
@@ -7026,6 +7045,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
+  AuthenticatedOpsQueueRoute: typeof AuthenticatedOpsQueueRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
@@ -7260,6 +7280,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
+  AuthenticatedOpsQueueRoute: AuthenticatedOpsQueueRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
