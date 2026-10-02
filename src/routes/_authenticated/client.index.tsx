@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
@@ -70,6 +70,10 @@ function ClientOverviewPage() {
             <CardTitle className="text-2xl">{paymentsInProgress}</CardTitle>
           </CardHeader>
         </Card>
+      </div>
+
+      <div className="mt-4">
+        <Link to="/client/setup-options" className="text-sm font-medium text-primary underline">Client setup options (white-label branding)</Link>
       </div>
 
       <div className="mt-6">

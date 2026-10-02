@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, FileSignature, LogOut, Repeat, UserRound, ShieldCheck } from "lucide-react";
+import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, Sun, UserRound, ShieldCheck } from "lucide-react";
+import { useThemeMode, type ThemeMode } from "@/lib/theme-mode";
 
 import { useClientWorkspace } from "@/components/client-workspace";
 import {
@@ -37,6 +38,12 @@ export function SidebarAccountFooter({
   const label = name || email || "Your account";
   const initial = (name || email || "H").trim().charAt(0).toUpperCase();
   const others = options.filter((o) => o.id !== activeId);
+  const { mode, setMode } = useThemeMode();
+  const modes: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
+    { value: "light", label: "Light", Icon: Sun },
+    { value: "dark", label: "Dark", Icon: Moon },
+    { value: "auto", label: "Auto", Icon: Monitor },
+  ];
 
   return (
     <SidebarFooter className="border-t border-sidebar-border" data-testid="sidebar-account-footer">
@@ -98,6 +105,22 @@ export function SidebarAccountFooter({
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
               )}
+              <DropdownMenuSeparator />
+              <p className="px-2 pb-1 text-xs text-muted-foreground">Appearance</p>
+              <div className="flex gap-1 px-2 pb-2" role="radiogroup" aria-label="Appearance">
+                {modes.map(({ value, label, Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={mode === value}
+                    onClick={() => setMode(value)}
+                    className={`flex flex-1 items-center justify-center gap-1 rounded-md border px-2 py-1 text-xs ${mode === value ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-muted"}`}
+                  >
+                    <Icon className="size-3.5" /> {label}
+                  </button>
+                ))}
+              </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onSignOut()} className="flex items-center gap-2">
                 <LogOut className="size-4" /> Sign out

@@ -101,6 +101,7 @@ import { Route as AuthenticatedAdminCapTableRequestsRouteImport } from './routes
 import { Route as AuthenticatedAdminClientActivityRouteImport } from './routes/_authenticated/admin.client-activity'
 import { Route as AuthenticatedAdminClientBankAccountsRouteImport } from './routes/_authenticated/admin.client-bank-accounts'
 import { Route as AuthenticatedAdminClientCapTablesRouteImport } from './routes/_authenticated/admin.client-cap-tables'
+import { Route as AuthenticatedAdminClientSetupRouteImport } from './routes/_authenticated/admin.client-setup'
 import { Route as AuthenticatedAdminDistributionsRouteImport } from './routes/_authenticated/admin.distributions'
 import { Route as AuthenticatedAdminDocumentLogRouteImport } from './routes/_authenticated/admin.document-log'
 import { Route as AuthenticatedAdminEmailPreviewRouteImport } from './routes/_authenticated/admin.email-preview'
@@ -139,6 +140,7 @@ import { Route as AuthenticatedClientHomeRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClientInboxRouteImport } from './routes/_authenticated/client.inbox'
 import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authenticated/client.invoices'
 import { Route as AuthenticatedClientPaymentsRouteImport } from './routes/_authenticated/client.payments'
+import { Route as AuthenticatedClientSetupOptionsRouteImport } from './routes/_authenticated/client.setup-options'
 import { Route as AuthenticatedClientSignOffsRouteImport } from './routes/_authenticated/client.sign-offs'
 import { Route as AuthenticatedClientWiresRouteImport } from './routes/_authenticated/client.wires'
 import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
@@ -818,6 +820,12 @@ const AuthenticatedAdminClientCapTablesRoute =
     path: '/admin/client-cap-tables',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminClientSetupRoute =
+  AuthenticatedAdminClientSetupRouteImport.update({
+    id: '/admin/client-setup',
+    path: '/admin/client-setup',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminDistributionsRoute =
   AuthenticatedAdminDistributionsRouteImport.update({
     id: '/admin/distributions',
@@ -1038,6 +1046,12 @@ const AuthenticatedClientPaymentsRoute =
   AuthenticatedClientPaymentsRouteImport.update({
     id: '/payments',
     path: '/payments',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientSetupOptionsRoute =
+  AuthenticatedClientSetupOptionsRouteImport.update({
+    id: '/setup-options',
+    path: '/setup-options',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedClientSignOffsRoute =
@@ -2262,6 +2276,7 @@ export interface FileRoutesByFullPath {
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
+  '/admin/client-setup': typeof AuthenticatedAdminClientSetupRoute
   '/admin/distributions': typeof AuthenticatedAdminDistributionsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
@@ -2299,6 +2314,7 @@ export interface FileRoutesByFullPath {
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
@@ -2582,6 +2598,7 @@ export interface FileRoutesByTo {
   '/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
+  '/admin/client-setup': typeof AuthenticatedAdminClientSetupRoute
   '/admin/distributions': typeof AuthenticatedAdminDistributionsRoute
   '/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
@@ -2616,6 +2633,7 @@ export interface FileRoutesByTo {
   '/client/inbox': typeof AuthenticatedClientInboxRoute
   '/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
@@ -2903,6 +2921,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/client-activity': typeof AuthenticatedAdminClientActivityRoute
   '/_authenticated/admin/client-bank-accounts': typeof AuthenticatedAdminClientBankAccountsRoute
   '/_authenticated/admin/client-cap-tables': typeof AuthenticatedAdminClientCapTablesRoute
+  '/_authenticated/admin/client-setup': typeof AuthenticatedAdminClientSetupRoute
   '/_authenticated/admin/distributions': typeof AuthenticatedAdminDistributionsRoute
   '/_authenticated/admin/document-log': typeof AuthenticatedAdminDocumentLogRoute
   '/_authenticated/admin/email-preview': typeof AuthenticatedAdminEmailPreviewRoute
@@ -2940,6 +2959,7 @@ export interface FileRoutesById {
   '/_authenticated/client/inbox': typeof AuthenticatedClientInboxRoute
   '/_authenticated/client/invoices': typeof AuthenticatedClientInvoicesRoute
   '/_authenticated/client/payments': typeof AuthenticatedClientPaymentsRoute
+  '/_authenticated/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/_authenticated/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/_authenticated/client/wires': typeof AuthenticatedClientWiresRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
@@ -3228,6 +3248,7 @@ export interface FileRouteTypes {
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
+    | '/admin/client-setup'
     | '/admin/distributions'
     | '/admin/document-log'
     | '/admin/email-preview'
@@ -3265,6 +3286,7 @@ export interface FileRouteTypes {
     | '/client/inbox'
     | '/client/invoices'
     | '/client/payments'
+    | '/client/setup-options'
     | '/client/sign-offs'
     | '/client/wires'
     | '/diligence/$offeringId'
@@ -3548,6 +3570,7 @@ export interface FileRouteTypes {
     | '/admin/client-activity'
     | '/admin/client-bank-accounts'
     | '/admin/client-cap-tables'
+    | '/admin/client-setup'
     | '/admin/distributions'
     | '/admin/document-log'
     | '/admin/email-preview'
@@ -3582,6 +3605,7 @@ export interface FileRouteTypes {
     | '/client/inbox'
     | '/client/invoices'
     | '/client/payments'
+    | '/client/setup-options'
     | '/client/sign-offs'
     | '/client/wires'
     | '/diligence/$offeringId'
@@ -3868,6 +3892,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/client-activity'
     | '/_authenticated/admin/client-bank-accounts'
     | '/_authenticated/admin/client-cap-tables'
+    | '/_authenticated/admin/client-setup'
     | '/_authenticated/admin/distributions'
     | '/_authenticated/admin/document-log'
     | '/_authenticated/admin/email-preview'
@@ -3905,6 +3930,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/inbox'
     | '/_authenticated/client/invoices'
     | '/_authenticated/client/payments'
+    | '/_authenticated/client/setup-options'
     | '/_authenticated/client/sign-offs'
     | '/_authenticated/client/wires'
     | '/_authenticated/diligence/$offeringId'
@@ -4800,6 +4826,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminClientCapTablesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/client-setup': {
+      id: '/_authenticated/admin/client-setup'
+      path: '/admin/client-setup'
+      fullPath: '/admin/client-setup'
+      preLoaderRoute: typeof AuthenticatedAdminClientSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/distributions': {
       id: '/_authenticated/admin/distributions'
       path: '/admin/distributions'
@@ -5064,6 +5097,13 @@ declare module '@tanstack/react-router' {
       path: '/payments'
       fullPath: '/client/payments'
       preLoaderRoute: typeof AuthenticatedClientPaymentsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/setup-options': {
+      id: '/_authenticated/client/setup-options'
+      path: '/setup-options'
+      fullPath: '/client/setup-options'
+      preLoaderRoute: typeof AuthenticatedClientSetupOptionsRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/client/sign-offs': {
@@ -6524,6 +6564,7 @@ interface AuthenticatedClientRouteChildren {
   AuthenticatedClientInboxRoute: typeof AuthenticatedClientInboxRoute
   AuthenticatedClientInvoicesRoute: typeof AuthenticatedClientInvoicesRoute
   AuthenticatedClientPaymentsRoute: typeof AuthenticatedClientPaymentsRoute
+  AuthenticatedClientSetupOptionsRoute: typeof AuthenticatedClientSetupOptionsRoute
   AuthenticatedClientSignOffsRoute: typeof AuthenticatedClientSignOffsRoute
   AuthenticatedClientWiresRoute: typeof AuthenticatedClientWiresRoute
   AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
@@ -6544,6 +6585,7 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientInboxRoute: AuthenticatedClientInboxRoute,
   AuthenticatedClientInvoicesRoute: AuthenticatedClientInvoicesRoute,
   AuthenticatedClientPaymentsRoute: AuthenticatedClientPaymentsRoute,
+  AuthenticatedClientSetupOptionsRoute: AuthenticatedClientSetupOptionsRoute,
   AuthenticatedClientSignOffsRoute: AuthenticatedClientSignOffsRoute,
   AuthenticatedClientWiresRoute: AuthenticatedClientWiresRoute,
   AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
@@ -6725,6 +6767,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminClientActivityRoute: typeof AuthenticatedAdminClientActivityRoute
   AuthenticatedAdminClientBankAccountsRoute: typeof AuthenticatedAdminClientBankAccountsRoute
   AuthenticatedAdminClientCapTablesRoute: typeof AuthenticatedAdminClientCapTablesRoute
+  AuthenticatedAdminClientSetupRoute: typeof AuthenticatedAdminClientSetupRoute
   AuthenticatedAdminDistributionsRoute: typeof AuthenticatedAdminDistributionsRoute
   AuthenticatedAdminDocumentLogRoute: typeof AuthenticatedAdminDocumentLogRoute
   AuthenticatedAdminEmailPreviewRoute: typeof AuthenticatedAdminEmailPreviewRoute
@@ -6934,6 +6977,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAdminClientBankAccountsRoute,
   AuthenticatedAdminClientCapTablesRoute:
     AuthenticatedAdminClientCapTablesRoute,
+  AuthenticatedAdminClientSetupRoute: AuthenticatedAdminClientSetupRoute,
   AuthenticatedAdminDistributionsRoute: AuthenticatedAdminDistributionsRoute,
   AuthenticatedAdminDocumentLogRoute: AuthenticatedAdminDocumentLogRoute,
   AuthenticatedAdminEmailPreviewRoute: AuthenticatedAdminEmailPreviewRoute,
