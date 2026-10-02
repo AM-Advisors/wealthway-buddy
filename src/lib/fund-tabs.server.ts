@@ -47,7 +47,7 @@ export async function anyInvestorSigned(fundId: string) {
 
 export async function investorGrid(fundId: string) {
   const { data } = await (await db()).from("investor_onboardings")
-    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profiles(legal_name, profile_type)")
+    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, application_id, investor_user_id, investment_profiles(legal_name, profile_type)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
   // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
   const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];

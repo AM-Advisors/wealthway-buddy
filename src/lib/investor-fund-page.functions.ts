@@ -54,26 +54,6 @@ export const myFundK1sFn = createServerFn({ method: "POST" })
     return (rows ?? []) as any[];
   });
 
-/** Short-lived download link for the investor's own K-1 file, when one exists. */
-export const k1DownloadUrlFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ k1Id: z.string().uuid() }).parse)
-  .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
-      .from("k1_forms")
-      .select("storage_path")
-      .eq("id", data.k1Id)
-      .eq("investor_user_id", context.userId)
-      .maybeSingle();
-    if (!row?.storage_path) throw new Error("This K-1 has no file attached yet.");
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("fund-formation")
-      .createSignedUrl(row.storage_path as string, 300);
-    if (error) throw new Error(error.message);
-    return { url: signed?.signedUrl ?? null };
-  });
-
 /** The investor confirms they received this K-1. A record, never an email. */
 export const acknowledgeK1Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

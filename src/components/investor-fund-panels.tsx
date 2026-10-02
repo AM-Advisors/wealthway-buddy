@@ -305,7 +305,7 @@ export function FundTaxDocumentsPanel({ offeringId }: { offeringId: string }) {
                     {k.investor_acknowledged_at ? "Receipt confirmed" : "Awaiting your confirmation"}
                   </Badge>
                   <Button asChild size="sm" variant="outline">
-                    <Link to="/tax-return">View my tax center</Link>
+                    <Link to="/tax">View my tax center</Link>
                   </Button>
                 </div>
               </div>
