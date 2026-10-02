@@ -24,8 +24,9 @@ import { InvestorsTab } from "@/components/fund-tabs/investors-tab";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
 import { BankingTab } from "@/components/fund-tabs/banking-tab";
 import { RequestCloseDialog } from "@/components/fund-tabs/request-close-dialog";
+import { RegulatoryTab } from "@/components/fund-tabs/regulatory-tab";
 
-const TABS = ["todos", "details", "team", "investors", "documents", "banking", "taxes", "assets", "closes"] as const;
+const TABS = ["todos", "details", "team", "investors", "documents", "banking", "taxes", "assets", "closes", "regulatory"] as const;
 type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/client/funds/$fundId")({
@@ -120,11 +121,13 @@ function ClientFundPage() {
           <TabsTrigger value="taxes">Taxes</TabsTrigger>
           <TabsTrigger value="assets">Assets</TabsTrigger>
           <TabsTrigger value="closes">Closes</TabsTrigger>
+          <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
         </TabsList>
 
         <TabsContent value="todos"><TodosTab fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done) as any} /></TabsContent>
         <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
+        <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 
         <TabsContent value="details" className="space-y-5">
           <Card>

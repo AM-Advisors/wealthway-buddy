@@ -16387,6 +16387,51 @@ export type Database = {
           },
         ]
       }
+      fund_franchise_fees: {
+        Row: {
+          amount_cents: number
+          confirmation_number: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          filed_on: string | null
+          id: string
+          offering_id: string
+          recorded_by: string
+          removed_at: string | null
+          removed_by: string | null
+          state: string
+        }
+        Insert: {
+          amount_cents: number
+          confirmation_number?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          filed_on?: string | null
+          id?: string
+          offering_id: string
+          recorded_by: string
+          removed_at?: string | null
+          removed_by?: string | null
+          state: string
+        }
+        Update: {
+          amount_cents?: number
+          confirmation_number?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          filed_on?: string | null
+          id?: string
+          offering_id?: string
+          recorded_by?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          state?: string
+        }
+        Relationships: []
+      }
       fund_invitations: {
         Row: {
           accepted_at: string | null
