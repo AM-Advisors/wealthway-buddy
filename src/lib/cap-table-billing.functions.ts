@@ -45,7 +45,9 @@ export const getMyCapTables = createServerFn({ method: "POST" })
       db.from("service_entitlements").select("service_key, status").eq("client_id", w.clientId).like("service_key", "cap_table_%").eq("status", "included"),
     ]);
     const list = (subs ?? []) as any[];
-    const hasActive = list.some((s) => s.status === "active" || s.status === "past_due") || ((ents ?? []) as any[]).length > 0;
+    const now = Date.now();
+    const hasActive = list.some((s) => s.status === "active" || s.status === "past_due"
+      || (s.status === "cancelled" && s.current_period_end && new Date(s.current_period_end).getTime() > now)) || ((ents ?? []) as any[]).length > 0;
     return { clientId: w.clientId, canManage: w.canManage, hasActive, subscriptions: list };
   });
 
@@ -74,6 +76,9 @@ export const startCapTableCheckout = createServerFn({ method: "POST" })
     if (!w.canManage) return { error: "Only the client's general partners or Harmonious can add a cap table." };
     const tier = CAP_TABLE_TIERS.find((t) => t.key === data.tier)!;
     const db = await admin();
+    // Abandoned checkouts: drop earlier unpaid attempts for the same company so retries don't pile up.
+    await db.from("cap_table_subscriptions").update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("client_id", w.clientId).eq("status", "pending_payment").ilike("company_name", data.companyName);
     const { data: company, error: cErr } = await db.from("ct_companies")
       .insert({ client_id: w.clientId, name: data.companyName, legal_name: data.legalName || null }).select("id").single();
     if (cErr) return { error: cErr.message };
@@ -90,7 +95,8 @@ export const startCapTableCheckout = createServerFn({ method: "POST" })
       action: tier.contactSales ? "client requested Enterprise cap table pricing" : `client added a cap table (${tier.name})`, target: data.companyName, source: "web",
     });
     if (tier.key === "free") {
-      await grantCapEntitlement(db, w.clientId, "free", true);
+      const { syncClientCapEntitlements } = await import("@/lib/billing.server");
+      await syncClientCapEntitlements(db, w.clientId);
       return { subscriptionId: sub.id, mode: "free" };
     }
     if (tier.contactSales) return { subscriptionId: sub.id, mode: "sales" };
@@ -103,13 +109,8 @@ export const startCapTableCheckout = createServerFn({ method: "POST" })
         const price = prices.data[0];
         if (!price) return { error: "That price isn't available yet." };
         const { data: { user } } = await context.supabase.auth.getUser();
-        let customerId: string | undefined;
-        const found = await stripe.customers.search({ query: `metadata['clientId']:'${w.clientId}'`, limit: 1 });
-        if (found.data[0]) customerId = found.data[0].id;
-        else {
-          const c = await stripe.customers.create({ ...(user?.email ? { email: user.email } : {}), metadata: { clientId: w.clientId, userId: context.userId } });
-          customerId = c.id;
-        }
+        const { customerForClient } = await import("@/lib/billing.server");
+        const customerId = await customerForClient(stripe, w.clientId, user?.email, context.userId);
         await db.from("cap_table_subscriptions").update({ stripe_customer_id: customerId }).eq("id", sub.id);
         const meta = { capSubId: sub.id, clientId: w.clientId, userId: context.userId, tier: tier.key };
         const session = await stripe.checkout.sessions.create({
@@ -144,7 +145,10 @@ export const openCapTableBillingPortal = createServerFn({ method: "POST" })
     if (!sub?.stripe_customer_id) return { error: "No card billing on file yet." };
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
     try {
-      const portal = await createStripeClient(data.environment).billingPortal.sessions.create({ customer: sub.stripe_customer_id, return_url: data.returnUrl });
+      const stripe = createStripeClient(data.environment);
+      const { ensurePortalConfig } = await import("@/lib/billing.server");
+      const configuration = await ensurePortalConfig(stripe);
+      const portal = await stripe.billingPortal.sessions.create({ customer: sub.stripe_customer_id, return_url: data.returnUrl, configuration });
       return { url: portal.url };
     } catch (e) {
       return { error: getStripeErrorMessage(e) };

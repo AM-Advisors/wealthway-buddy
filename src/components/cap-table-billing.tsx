@@ -19,7 +19,7 @@ const LABEL: Record<string, string> = {
 export function CapTablesCard() {
   const fn = useServerFn(getMyCapTables);
   const portal = useServerFn(openCapTableBillingPortal);
-  const q = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => fn({ data: {} }) });
+  const q = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => fn({ data: { environment: getStripeEnvironment() } }) });
   const subs = q.data?.subscriptions ?? [];
   const openBilling = async () => {
     try {
