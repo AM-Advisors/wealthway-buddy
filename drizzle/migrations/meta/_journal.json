@@ -813,6 +813,13 @@
       "when": 1790928864158,
       "tag": "0115_fund_payments_manager_read",
       "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1790929550302,
+      "tag": "0116_close_request_approval_and_filings",
+      "breakpoints": true
     }
   ]
 }
