@@ -47,10 +47,16 @@ export async function anyInvestorSigned(fundId: string) {
 
 export async function investorGrid(fundId: string) {
   const { data } = await (await db()).from("investor_onboardings")
-    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, persons(legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status), investment_profiles(legal_name, profile_type)")
+    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profiles(legal_name, profile_type)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
+  // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
+  const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
+  const { data: people } = ids.length
+    ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status").in("id", ids)
+    : { data: [] as any[] };
+  const byId = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
   return ((data ?? []) as any[]).map((o) => {
-    const p = o.persons ?? {};
+    const p = byId.get(o.person_id) ?? {};
     const entity = !!o.investment_profiles?.profile_type && o.investment_profiles.profile_type !== "individual";
     const kyc = p.kyc_status ?? "not_started";
     const aml = p.aml_status ?? "not_started";
@@ -76,9 +82,13 @@ export async function investorGrid(fundId: string) {
 export async function investorDetail(fundId: string, onboardingId: string) {
   const d = await db();
   const { data: o } = await d.from("investor_onboardings")
-    .select("*, persons(*), investment_profiles(legal_name, profile_type)")
+    .select("*, investment_profiles(legal_name, profile_type)")
     .eq("id", onboardingId).eq("offering_id", fundId).maybeSingle();
   if (!o) throw new Error("That investor is not in this fund.");
+  if (o.person_id) {
+    const { data: person } = await d.from("persons").select("*").eq("id", o.person_id).maybeSingle();
+    (o as any).persons = person ?? null;
+  }
   const [{ data: letters }, { data: tasks }, { data: docs }] = await Promise.all([
     d.from("side_letters").select("id, status, effective_date, terms").eq("onboarding_id", onboardingId),
     d.from("investment_readiness_tasks").select("title, resolved_at").eq("onboarding_id", onboardingId).order("created_at"),
