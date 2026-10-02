@@ -112,10 +112,9 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     const db = await admin();
 
     // The $2,500 setup fee and any a la carte add-ons must be paid first (verified server-side).
-    const { autoServices } = await import("@/lib/fund-request-model");
-    const core = autoServices(r);
+    const { fundAddOnKeys } = await import("@/lib/fund-request-model");
     const pay = await import("@/lib/fund-payments.server");
-    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: (r.service_keys ?? []).filter((k) => !core.includes(k)) });
+    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r) });
     const payment = await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
     // Create the closed Fund. A likely duplicate name becomes a Harmonious review item instead.
