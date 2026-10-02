@@ -42,8 +42,8 @@ describe("fund request", () => {
   });
 });
 
-import { emptyRequest as _empty, missingFields as _missing, needsSs4 as _needs, seriesJurisdiction as _sj, einPathFor as _ein, ss4For as _ss4 } from "@/lib/fund-request-model";
-describe("Series LLC home, EIN and SS-4", () => {
+import { emptyRequest as _empty, missingFields as _missing, needsSs4 as _needs, seriesJurisdiction as _sj, einPathFor as _ein, ss4For as _ss4, seriesLegalName as _sln } from "@/lib/fund-request-model";
+describe("Master LLC, EIN and SS-4", () => {
   const base = () => ({ ..._empty("spv"), fund_name: "Test", vehicle_structure: "Series LLC", jurisdiction: "Texas", offering_exemption: "506(b)", signatory: { name: "A", email: "a@x.co", title: "" } });
   it("maps homes to jurisdictions", () => {
     expect(_sj("hcam_tx")).toBe("Texas"); expect(_sj("hcam_wy")).toBe("Wyoming"); expect(_sj("am_spv")).toBe("Delaware"); expect(_sj("own")).toBeNull();
@@ -60,5 +60,15 @@ describe("Series LLC home, EIN and SS-4", () => {
     expect(_missing(r).entity!.join("|")).toMatch(/SS-4/);
     expect(_needs({ ...r, series_home: "own" })).toBe(false);
     expect(_ss4({ ...r, ss4: { legal_name: "X", responsible_party_tin: "123" } })).not.toHaveProperty("responsible_party_tin");
+  });
+  it("names a Harmonious series as 'a series of' the Master LLC", () => {
+    expect(_sln({ ...base(), series_home: "hcam_tx" })).toBe("Test, a series of HCAM TX");
+    expect(_sln({ ...base(), fund_name: "Acme I", series_home: "am_spv" })).toBe("Acme I, a series of AM SPV Fund Management");
+    expect(_sln({ ...base(), series_home: "own" })).toBe("");
+    expect(_sln({ ...base(), fund_name: "  ", series_home: "hcam_wy" })).toBe("");
+    expect(_sln({ ...base(), vehicle_structure: "LLC", series_home: "hcam_tx" })).toBe("");
+  });
+  it("labels the missing Master LLC answer", () => {
+    expect(_missing({ ...base(), series_home: "" }).entity!.join("|")).toMatch(/Master LLC/);
   });
 });

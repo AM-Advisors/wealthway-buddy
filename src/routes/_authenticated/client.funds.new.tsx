@@ -26,7 +26,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -91,8 +91,18 @@ function NewFundRequest() {
   const setSeriesInfo = (k: keyof typeof seriesInfo, v: string) => setR((p) => ({ ...p, [seriesKey]: { ...seriesInfo, [k]: v } }));
   const setSeriesHome = (home: string) => setR((p) => {
     const j = seriesJurisdiction(home);
-    const next = { ...p, series_home: home, jurisdiction: j ?? (seriesJurisdiction(p.series_home) ? "" : p.jurisdiction) };
+    const withHome = { ...p, series_home: home, jurisdiction: j ?? (seriesJurisdiction(p.series_home) ? "" : p.jurisdiction) };
+    // Auto-name the series legal name under a Harmonious master; keep any custom edit otherwise.
+    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const generated = seriesLegalName(withHome);
+    const next = generated && (wasGenerated || !p.legal_name.trim()) ? { ...withHome, legal_name: generated } : withHome;
     return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
+  });
+  const setFundName = (name: string) => setR((p) => {
+    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const withName = { ...p, fund_name: name };
+    const generated = seriesLegalName(withName);
+    return generated && (wasGenerated || !p.legal_name.trim()) ? { ...withName, legal_name: generated } : withName;
   });
   // Prefill SS-4 lines we already know when the section first appears.
   useEffect(() => {
@@ -173,7 +183,7 @@ function NewFundRequest() {
                 <F label="Fund or SPV type *">
                   <Pick value={r.kind} onChange={setKind} options={FUND_KIND_TYPES.map((k) => ({ value: k.value, label: k.label }))} />
                 </F>
-                <F label={`${spv ? "SPV" : "Fund"} name *`}><Input value={r.fund_name} onChange={(e) => set("fund_name", e.target.value)} /></F>
+                <F label={`${spv ? "SPV" : "Fund"} name *`}><Input value={r.fund_name} onChange={(e) => setFundName(e.target.value)} /></F>
                 <F label="Investment / asset type"><Pick value={r.investment_asset} onChange={(v) => set("investment_asset", v)} options={INVESTMENT_ASSET_TYPES} /></F>
                 <F label={spv ? "Target raise" : "Target fund size"}><Money value={r.target_raise} onChange={(v) => set("target_raise", v)} /></F>
                 <F label="Minimum investment"><Money value={r.minimum_investment} onChange={(v) => set("minimum_investment", v)} /></F>
@@ -191,14 +201,19 @@ function NewFundRequest() {
             {step === "entity" && (
               <>
                 <Grid>
-                  <F label="Legal name"><Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" /></F>
+                  <F label="Legal name">
+                    <Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" />
+                    {seriesLegalName(r) && r.legal_name === seriesLegalName(r) && (
+                      <p className="mt-1 text-xs text-muted-foreground">Generated from the fund name and Master LLC - edit if needed.</p>
+                    )}
+                  </F>
                   <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
                   {isSeries(r) && (
-                    <F label="Series LLC home *"><Pick value={r.series_home} onChange={setSeriesHome} options={SERIES_HOMES.map((h) => ({ value: h.value, label: h.label }))} /></F>
+                    <F label="Master LLC *"><Pick value={r.series_home} onChange={setSeriesHome} options={SERIES_HOMES.map((h) => ({ value: h.value, label: h.label }))} /></F>
                   )}
                   <F label="Jurisdiction *">
                     {seriesJurisdiction(r.series_home) && isSeries(r)
-                      ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Series LLC home)" />
+                      ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Master LLC)" />
                       : <Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} />}
                   </F>
                   <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No - Harmonious to form" }]} /></F>

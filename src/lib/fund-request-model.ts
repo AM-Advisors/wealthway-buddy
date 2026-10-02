@@ -54,10 +54,16 @@ export const SERIES_HOMES = [
 ] as const;
 export const SERIES_NEW_ANNUAL_FEE = "$2,000 per year";
 export const isSeries = (r: Pick<FundRequest, "vehicle_structure">) => r.vehicle_structure === "Series LLC";
-/** Jurisdiction fixed by a Harmonious-managed Series LLC home, else null. */
+/** Jurisdiction fixed by a Harmonious-managed Master LLC, else null. */
 export const seriesJurisdiction = (home: string) => SERIES_HOMES.find((h) => h.value === home)?.jurisdiction ?? null;
 export const isHarmoniousSeries = (r: Pick<FundRequest, "vehicle_structure" | "series_home">) =>
   isSeries(r) && ["hcam_tx", "hcam_wy", "am_spv"].includes(r.series_home);
+/** Legal name for a series under a Harmonious master: "{Fund name}, a series of {Master LLC}". */
+export const seriesLegalName = (r: Pick<FundRequest, "fund_name" | "vehicle_structure" | "series_home">) => {
+  if (!isHarmoniousSeries(r) || !r.fund_name.trim()) return "";
+  const master = SERIES_HOMES.find((h) => h.value === r.series_home)?.label ?? "";
+  return `${r.fund_name.trim()}, a series of ${master}`;
+};
 /** SS-4 is collected when an already-formed series under a Harmonious master has no EIN. */
 export const needsSs4 = (r: FundRequest) => isHarmoniousSeries(r) && r.already_formed === "yes" && r.has_ein === "no";
 
@@ -162,7 +168,7 @@ export function missingFields(r: FundRequest): Partial<Record<RequestStepKey, st
   if (!r.vehicle_structure) add("entity", "Vehicle / entity structure");
   if (!r.jurisdiction) add("entity", "Jurisdiction");
   if (isSeries(r)) {
-    if (!r.series_home) add("entity", "Series LLC home");
+    if (!r.series_home) add("entity", "Master LLC");
     const own = r.series_home === "own" ? r.series_existing : r.series_home === "new" ? r.series_new : null;
     if (own && (!own.legal_name?.trim() || !own.jurisdiction || !own.contact_name?.trim() || !own.contact_email?.trim())) add("entity", r.series_home === "own" ? "Existing Series LLC details" : "New Series LLC details");
     if (r.series_home === "new" && !r.series_fee_ack) add("entity", "Acknowledge the $2,000 annual Series LLC fee");
