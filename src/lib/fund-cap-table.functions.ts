@@ -80,8 +80,10 @@ function stripNull(t: ClassTerms): Partial<ClassTerms> {
   return Object.fromEntries(Object.entries(t).filter(([, v]) => v != null)) as Partial<ClassTerms>;
 }
 
-/** True when the user belongs to the Client that owns this Fund (client portal access). */
+/** True when the user belongs to the Client that owns this Fund, or manages it (client portal access). */
 export async function isClientMemberOfFund(db: any, uid: string, fundId: string): Promise<boolean> {
+  const { data: fm } = await db.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", fundId).maybeSingle();
+  if (fm) return true;
   const { data: off } = await db.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
   if (!off?.client_id) return false;
   const { data: cu } = await db.from("client_users").select("id").eq("user_id", uid).eq("client_id", off.client_id).maybeSingle();

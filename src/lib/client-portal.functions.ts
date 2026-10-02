@@ -21,7 +21,17 @@ export const getClientPortal = createServerFn({ method: "GET" })
       .select("client_id, client_role")
       .eq("user_id", context.userId);
 
-    const clientIds = [...new Set((memberships ?? []).map((m: any) => String(m.client_id)))];
+    // Fund managers belong here too: a fund they manage ties them to its
+    // client even before setup finishes and a contact row exists.
+    const { data: managed } = await context.supabase
+      .from("fund_managers")
+      .select("offerings(client_id)")
+      .eq("user_id", context.userId);
+
+    const clientIds = [...new Set([
+      ...(memberships ?? []).map((m: any) => String(m.client_id)),
+      ...(managed ?? []).map((m: any) => String((m as any).offerings?.client_id)).filter((id) => id && id !== "null"),
+    ])];
     if (clientIds.length === 0) {
       return { clients: [], client: null } as const;
     }
