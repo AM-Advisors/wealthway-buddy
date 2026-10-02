@@ -806,6 +806,13 @@
       "when": 1790927303812,
       "tag": "0114_fund_tabs_team_documents_books_close_details",
       "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1790928864158,
+      "tag": "0115_fund_payments_manager_read",
+      "breakpoints": true
     }
   ]
 }
