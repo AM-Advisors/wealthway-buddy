@@ -22,6 +22,7 @@ import {
 import { Logo, LogoIcon } from "@/components/Logo";
 import { ClientBrandStyles, useClientBrand } from "@/components/client-brand";
 import { useClientWorkspace } from "@/components/client-workspace";
+import { getMyCapTables } from "@/lib/cap-table-billing.functions";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import {
   DropdownMenu,
@@ -79,7 +80,13 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { session, options, activeId } = useClientWorkspace();
 
   const navigation = getNavigation(session as never, activeId, pathname);
-  const items = navigation.primary;
+  const capFn = useServerFn(getMyCapTables);
+  const caps = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => capFn({ data: {} }), staleTime: 60_000 });
+  const capLinks = ["/client/cap-table"];
+  // Cap Table links only show once the client has an active (or free) cap table.
+  const items = caps.data?.hasActive
+    ? navigation.primary
+    : navigation.primary.filter((i: { url: string }) => !capLinks.some((c) => i.url === c || i.url.startsWith(`${c}/`)));
   const active = options.find((o) => o.id === activeId);
   const brand = useClientBrand(active?.kind === "company");
   const sharedFn = useServerFn(listMySharedFunds);
