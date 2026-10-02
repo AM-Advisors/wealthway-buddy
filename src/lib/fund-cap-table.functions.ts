@@ -82,10 +82,18 @@ function stripNull(t: ClassTerms): Partial<ClassTerms> {
 
 /** True when the user belongs to the Client that owns this Fund, or manages it (client portal access). */
 export async function isClientMemberOfFund(db: any, uid: string, fundId: string): Promise<boolean> {
-  const { data: fm } = await db.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", fundId).maybeSingle();
-  if (fm) return true;
   const { data: off } = await db.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
   if (!off?.client_id) return false;
+  // A fund manager of any fund under this client can view the client's funds,
+  // matching the list page (database read rules already allow the same).
+  const { data: fm } = await db
+    .from("fund_managers")
+    .select("id, offerings!inner(client_id)")
+    .eq("user_id", uid)
+    .eq("offerings.client_id", off.client_id)
+    .limit(1)
+    .maybeSingle();
+  if (fm) return true;
   const { data: cu } = await db.from("client_users").select("id").eq("user_id", uid).eq("client_id", off.client_id).maybeSingle();
   return !!cu;
 }
