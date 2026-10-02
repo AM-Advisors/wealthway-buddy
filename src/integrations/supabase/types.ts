@@ -3492,6 +3492,113 @@ export type Database = {
         }
         Relationships: []
       }
+      cap_table_subscription_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event_kind: string
+          id: string
+          subscription_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_kind: string
+          id?: string
+          subscription_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_kind?: string
+          id?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_table_subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "cap_table_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cap_table_subscriptions: {
+        Row: {
+          billing_interval: string
+          cancel_at_period_end: boolean
+          client_id: string
+          company_id: string | null
+          company_name: string
+          created_at: string
+          created_by: string | null
+          current_period_end: string | null
+          environment: string
+          id: string
+          price_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          billing_interval?: string
+          cancel_at_period_end?: boolean
+          client_id: string
+          company_id?: string | null
+          company_name: string
+          created_at?: string
+          created_by?: string | null
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          price_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          billing_interval?: string
+          cancel_at_period_end?: boolean
+          client_id?: string
+          company_id?: string | null
+          company_name?: string
+          created_at?: string
+          created_by?: string | null
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          price_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cap_table_subscriptions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_table_subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cap_transfers: {
         Row: {
           client_id: string
