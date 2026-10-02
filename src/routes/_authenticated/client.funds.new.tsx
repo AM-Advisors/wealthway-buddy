@@ -26,7 +26,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -91,8 +91,18 @@ function NewFundRequest() {
   const setSeriesInfo = (k: keyof typeof seriesInfo, v: string) => setR((p) => ({ ...p, [seriesKey]: { ...seriesInfo, [k]: v } }));
   const setSeriesHome = (home: string) => setR((p) => {
     const j = seriesJurisdiction(home);
-    const next = { ...p, series_home: home, jurisdiction: j ?? (seriesJurisdiction(p.series_home) ? "" : p.jurisdiction) };
+    const withHome = { ...p, series_home: home, jurisdiction: j ?? (seriesJurisdiction(p.series_home) ? "" : p.jurisdiction) };
+    // Auto-name the series legal name under a Harmonious master; keep any custom edit otherwise.
+    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const generated = seriesLegalName(withHome);
+    const next = generated && (wasGenerated || !p.legal_name.trim()) ? { ...withHome, legal_name: generated } : withHome;
     return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
+  });
+  const setFundName = (name: string) => setR((p) => {
+    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const withName = { ...p, fund_name: name };
+    const generated = seriesLegalName(withName);
+    return generated && (wasGenerated || !p.legal_name.trim()) ? { ...withName, legal_name: generated } : withName;
   });
   // Prefill SS-4 lines we already know when the section first appears.
   useEffect(() => {
