@@ -16,7 +16,7 @@ export type ReportInputs = Partial<Record<(typeof REPORT_FIELDS)[number]["key"],
 
 const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 
-export function computeNav(i: ReportInputs, priorNavCents: number | null) {
+export function computeNav(i: any, priorNavCents: number | null) {
   const gross = n(i.cash) + n(i.investments_fv) + n(i.receivables) + n(i.other_assets);
   const nav = gross - n(i.liabilities);
   const units = i.units && i.units > 0 ? i.units : null;
@@ -30,7 +30,7 @@ export function computeNav(i: ReportInputs, priorNavCents: number | null) {
   };
 }
 
-export function computeReview(i: ReportInputs, priorNavCents: number | null, feePct: number | null, committedCents: number | null, months: number) {
+export function computeReview(i: any, priorNavCents: number | null, feePct: number | null, committedCents: number | null, months: number) {
   const nav = computeNav(i, priorNavCents);
   const expenses = n(i.management_fee) + n(i.fund_expenses);
   const flags: string[] = [];

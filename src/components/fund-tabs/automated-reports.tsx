@@ -60,7 +60,7 @@ export function AutomatedReports({ fundId, fundName }: { fundId: string; fundNam
     onError: (e: Error) => toast.error(e.message),
   });
   const dm = useMutation({
-    mutationFn: (a: { id: string; approve: boolean; note?: string }) => decide({ data: a }),
+    mutationFn: (a: { id: string; approve: boolean; note?: string | undefined }) => decide({ data: a }),
     onSuccess: () => { toast.success("Saved"); refresh(); }, onError: (e: Error) => toast.error(e.message),
   });
   const fm = useMutation({ mutationFn: (f: "monthly" | "quarterly") => setFreq({ data: { fundId, frequency: f } }), onSuccess: () => { setPeriod(null); refresh(); }, onError: (e: Error) => toast.error(e.message) });
