@@ -30,6 +30,8 @@ type ClientWorkspaceValue = {
   options: WorkspaceOption[];
   activeId: string | null;
   activeKind: WorkspaceKind | null;
+  /** Client account chosen in the switcher, when the person has several. */
+  activeClientId: string | null;
   switchTo: (workspaceId: string) => Promise<void>;
   clearWorkspace: () => void;
 };
@@ -40,6 +42,7 @@ const Ctx = createContext<ClientWorkspaceValue>({
   options: [],
   activeId: null,
   activeKind: null,
+  activeClientId: null,
   switchTo: async () => {},
   clearWorkspace: () => {},
 });
@@ -114,6 +117,8 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
     const pathKind = workspaceKindForPath(pathname);
     const fromPath = options.find((o) => pathKind !== null && o.kind === pathKind);
     const stored = options.find((o) => o.id === activeId);
+    // Several client accounts share the company area: keep the chosen one.
+    if (stored && fromPath && stored.kind === fromPath.kind) return stored;
     return fromPath ?? stored ?? options.find((o) => o.surface === "client") ?? options[0] ?? null;
   }, [options, activeId, pathname]);
 
@@ -156,6 +161,7 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
     options,
     activeId: resolvedActive?.id ?? null,
     activeKind: (resolvedActive?.kind as WorkspaceKind | undefined) ?? null,
+    activeClientId: resolvedActive?.id?.startsWith("client:") ? resolvedActive.id.slice(7) : null,
     switchTo,
     clearWorkspace,
   };

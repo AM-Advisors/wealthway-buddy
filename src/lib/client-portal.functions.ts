@@ -262,13 +262,17 @@ export const signClientSow = createServerFn({ method: "POST" })
  *  the same send. Never throws - a failed email must not break the portal. */
 export const maybeSendClientWelcome = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) =>
+    z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     try {
       const { data: memberships } = await context.supabase
         .from("client_users")
         .select("client_id")
         .eq("user_id", context.userId);
-      const clientId = memberships?.[0]?.client_id as string | undefined;
+      const ids = (memberships ?? []).map((m: any) => String(m.client_id));
+      const clientId = data.clientId && ids.includes(data.clientId) ? data.clientId : ids[0];
       if (!clientId) return { sent: false as const, reason: "no_client" as const };
 
       const { data: already } = await context.supabase

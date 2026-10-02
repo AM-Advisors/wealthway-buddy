@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
+import { useClientWorkspace } from "@/components/client-workspace";
 import { getClientPortal, maybeSendClientWelcome } from "@/lib/client-portal.functions";
 
 type ClientPortalContextValue = {
@@ -16,7 +17,12 @@ const ClientPortalContext = createContext<ClientPortalContextValue | null>(null)
 export function ClientPortalProvider({ children }: { children: ReactNode }) {
   const load = useServerFn(getClientPortal);
   const sendWelcome = useServerFn(maybeSendClientWelcome);
-  const [clientId, setClientId] = useState<string | null>(null);
+  const { activeClientId } = useClientWorkspace();
+  const [clientId, setClientId] = useState<string | null>(activeClientId);
+  // The workspace switcher decides which client account is shown.
+  useEffect(() => {
+    if (activeClientId) setClientId(activeClientId);
+  }, [activeClientId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["client-portal", clientId],
@@ -28,7 +34,7 @@ export function ClientPortalProvider({ children }: { children: ReactNode }) {
   // (portal link + next steps). The server sends it once per person per client.
   useEffect(() => {
     if (data?.client) {
-      sendWelcome({}).catch(() => undefined);
+      sendWelcome({ data: { clientId: (data.client as any).id } } as any).catch(() => undefined);
     }
   }, [data?.client, sendWelcome]);
 
