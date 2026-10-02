@@ -30,7 +30,7 @@ export const PUBLIC_PAGES: SitemapEntry[] = [
 
 /** Path prefixes that must never appear in the public sitemap. */
 export const NEVER_IN_SITEMAP = [
-  "/auth", "/client-login", "/manager-login", "/reset-password", "/ops", "/admin",
+  "/auth", "/client-login", "/investor-login", "/investor", "/manager-login", "/reset-password", "/ops", "/admin",
   "/staff", "/manager", "/client", "/professional", "/investor", "/fund/", "/invest/",
   "/shares/", "/cap-claim/", "/api/",
 ];

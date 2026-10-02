@@ -21,6 +21,8 @@ import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as ContactusRouteImport } from './routes/contactus'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as HarmoniousclassroomRouteImport } from './routes/harmoniousclassroom'
+import { Route as InvestorRouteImport } from './routes/investor'
+import { Route as InvestorLoginRouteImport } from './routes/investor-login'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
 import { Route as PlaidOauthRouteImport } from './routes/plaid-oauth'
 import { Route as PlatformRouteImport } from './routes/platform'
@@ -76,6 +78,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
+import { Route as InvestorIndexRouteImport } from './routes/investor.index'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
@@ -249,6 +252,7 @@ import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/publi
 import { Route as ApiPublicCrmUnsubscribeRouteImport } from './routes/api/public/crm-unsubscribe'
 import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/login-attempt'
 import { Route as ApiPublicPlaidWebhookRouteImport } from './routes/api/public/plaid-webhook'
+import { Route as InvestorFundOfferingIdRouteImport } from './routes/investor.fund.$offeringId'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as OnboardIOnboardingIdRouteImport } from './routes/onboard.i.$onboardingId'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
@@ -401,6 +405,16 @@ const FundAdministrationRoute = FundAdministrationRouteImport.update({
 const HarmoniousclassroomRoute = HarmoniousclassroomRouteImport.update({
   id: '/harmoniousclassroom',
   path: '/harmoniousclassroom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestorRoute = InvestorRouteImport.update({
+  id: '/investor',
+  path: '/investor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestorLoginRoute = InvestorLoginRouteImport.update({
+  id: '/investor-login',
+  path: '/investor-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManagerLoginRoute = ManagerLoginRouteImport.update({
@@ -687,6 +701,11 @@ const InvestSlugRoute = InvestSlugRouteImport.update({
   id: '/invest/$slug',
   path: '/invest/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const InvestorIndexRoute = InvestorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InvestorRoute,
 } as any)
 const JoinTokenRoute = JoinTokenRouteImport.update({
   id: '/join/$token',
@@ -1695,6 +1714,11 @@ const ApiPublicPlaidWebhookRoute = ApiPublicPlaidWebhookRouteImport.update({
   path: '/api/public/plaid-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvestorFundOfferingIdRoute = InvestorFundOfferingIdRouteImport.update({
+  id: '/fund/$offeringId',
+  path: '/fund/$offeringId',
+  getParentRoute: () => InvestorRoute,
+} as any)
 const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   id: '/lovable/email/events',
   path: '/lovable/email/events',
@@ -2264,6 +2288,8 @@ export interface FileRoutesByFullPath {
   '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
+  '/investor': typeof InvestorRouteWithChildren
+  '/investor-login': typeof InvestorLoginRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -2326,6 +2352,7 @@ export interface FileRoutesByFullPath {
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/solutions/': typeof SolutionsIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
@@ -2485,6 +2512,7 @@ export interface FileRoutesByFullPath {
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
+  '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -2598,6 +2626,7 @@ export interface FileRoutesByTo {
   '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
+  '/investor-login': typeof InvestorLoginRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -2658,6 +2687,7 @@ export interface FileRoutesByTo {
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth': typeof AuthIndexRoute
+  '/investor': typeof InvestorIndexRoute
   '/resources': typeof ResourcesIndexRoute
   '/solutions': typeof SolutionsIndexRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
@@ -2814,6 +2844,7 @@ export interface FileRoutesByTo {
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
+  '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -2929,6 +2960,8 @@ export interface FileRoutesById {
   '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
+  '/investor': typeof InvestorRouteWithChildren
+  '/investor-login': typeof InvestorLoginRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -2991,6 +3024,7 @@ export interface FileRoutesById {
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
   '/auth/': typeof AuthIndexRoute
+  '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/solutions/': typeof SolutionsIndexRoute
   '/_authenticated/account/agreements': typeof AuthenticatedAccountAgreementsRoute
@@ -3150,6 +3184,7 @@ export interface FileRoutesById {
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
   '/api/public/login-attempt': typeof ApiPublicLoginAttemptRoute
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
+  '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -3266,6 +3301,8 @@ export interface FileRouteTypes {
     | '/contactus'
     | '/fund-administration'
     | '/harmoniousclassroom'
+    | '/investor'
+    | '/investor-login'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -3328,6 +3365,7 @@ export interface FileRouteTypes {
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth/'
+    | '/investor/'
     | '/resources/'
     | '/solutions/'
     | '/account/agreements'
@@ -3487,6 +3525,7 @@ export interface FileRouteTypes {
     | '/api/public/crm-unsubscribe'
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
+    | '/investor/fund/$offeringId'
     | '/lovable/email/events'
     | '/onboard/i/$onboardingId'
     | '/admin/'
@@ -3600,6 +3639,7 @@ export interface FileRouteTypes {
     | '/contactus'
     | '/fund-administration'
     | '/harmoniousclassroom'
+    | '/investor-login'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -3660,6 +3700,7 @@ export interface FileRouteTypes {
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth'
+    | '/investor'
     | '/resources'
     | '/solutions'
     | '/account/agreements'
@@ -3816,6 +3857,7 @@ export interface FileRouteTypes {
     | '/api/public/crm-unsubscribe'
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
+    | '/investor/fund/$offeringId'
     | '/lovable/email/events'
     | '/onboard/i/$onboardingId'
     | '/admin'
@@ -3930,6 +3972,8 @@ export interface FileRouteTypes {
     | '/contactus'
     | '/fund-administration'
     | '/harmoniousclassroom'
+    | '/investor'
+    | '/investor-login'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -3992,6 +4036,7 @@ export interface FileRouteTypes {
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
     | '/auth/'
+    | '/investor/'
     | '/resources/'
     | '/solutions/'
     | '/_authenticated/account/agreements'
@@ -4151,6 +4196,7 @@ export interface FileRouteTypes {
     | '/api/public/crm-unsubscribe'
     | '/api/public/login-attempt'
     | '/api/public/plaid-webhook'
+    | '/investor/fund/$offeringId'
     | '/lovable/email/events'
     | '/onboard/i/$onboardingId'
     | '/_authenticated/admin/'
@@ -4267,6 +4313,8 @@ export interface RootRouteChildren {
   ContactusRoute: typeof ContactusRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
   HarmoniousclassroomRoute: typeof HarmoniousclassroomRoute
+  InvestorRoute: typeof InvestorRouteWithChildren
+  InvestorLoginRoute: typeof InvestorLoginRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
   PlaidOauthRoute: typeof PlaidOauthRoute
   PlatformRoute: typeof PlatformRoute
@@ -4394,6 +4442,20 @@ declare module '@tanstack/react-router' {
       path: '/harmoniousclassroom'
       fullPath: '/harmoniousclassroom'
       preLoaderRoute: typeof HarmoniousclassroomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investor': {
+      id: '/investor'
+      path: '/investor'
+      fullPath: '/investor'
+      preLoaderRoute: typeof InvestorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investor-login': {
+      id: '/investor-login'
+      path: '/investor-login'
+      fullPath: '/investor-login'
+      preLoaderRoute: typeof InvestorLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manager-login': {
@@ -4780,6 +4842,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/invest/$slug'
       preLoaderRoute: typeof InvestSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/investor/': {
+      id: '/investor/'
+      path: '/'
+      fullPath: '/investor/'
+      preLoaderRoute: typeof InvestorIndexRouteImport
+      parentRoute: typeof InvestorRoute
     }
     '/join/$token': {
       id: '/join/$token'
@@ -5991,6 +6060,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/plaid-webhook'
       preLoaderRoute: typeof ApiPublicPlaidWebhookRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/investor/fund/$offeringId': {
+      id: '/investor/fund/$offeringId'
+      path: '/fund/$offeringId'
+      fullPath: '/investor/fund/$offeringId'
+      preLoaderRoute: typeof InvestorFundOfferingIdRouteImport
+      parentRoute: typeof InvestorRoute
     }
     '/lovable/email/events': {
       id: '/lovable/email/events'
@@ -7397,6 +7473,20 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface InvestorRouteChildren {
+  InvestorIndexRoute: typeof InvestorIndexRoute
+  InvestorFundOfferingIdRoute: typeof InvestorFundOfferingIdRoute
+}
+
+const InvestorRouteChildren: InvestorRouteChildren = {
+  InvestorIndexRoute: InvestorIndexRoute,
+  InvestorFundOfferingIdRoute: InvestorFundOfferingIdRoute,
+}
+
+const InvestorRouteWithChildren = InvestorRoute._addFileChildren(
+  InvestorRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -7410,6 +7500,8 @@ const rootRouteChildren: RootRouteChildren = {
   ContactusRoute: ContactusRoute,
   FundAdministrationRoute: FundAdministrationRoute,
   HarmoniousclassroomRoute: HarmoniousclassroomRoute,
+  InvestorRoute: InvestorRouteWithChildren,
+  InvestorLoginRoute: InvestorLoginRoute,
   ManagerLoginRoute: ManagerLoginRoute,
   PlaidOauthRoute: PlaidOauthRoute,
   PlatformRoute: PlatformRoute,

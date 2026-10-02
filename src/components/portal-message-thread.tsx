@@ -87,7 +87,7 @@ export function PortalMessageThread({
                     <span>{m.sender_name ?? (m.sender_role === "investor" ? "Investor" : "Fund team")}</span>
                     {m.sender_role !== "investor" ? (
                       <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-                        {m.sender_role === "admin" ? "Admin" : "Fund manager"}
+                        {m.sender_role === "admin" ? (mine === "investor" ? "Fund administrator" : "Admin") : "Fund manager"}
                       </Badge>
                     ) : null}
                     <span>{when(m.created_at)}</span>

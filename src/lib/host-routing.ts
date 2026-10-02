@@ -46,6 +46,7 @@ const SHARED_PREFIXES = [
   "/auth",
   "/reset-password",
   "/client-login",
+  "/investor-login",
   "/manager-login",
   "/robots.txt",
   "/sitemap.xml",
