@@ -91,7 +91,7 @@ function ClientFundsPage() {
                 </p>
               </div>
               <Badge variant={f.is_open ? "default" : "secondary"}>
-                {f.is_open ? "Open" : "Closed"}
+                {f.is_open ? "Open" : "In setup"}
               </Badge>
             </div>
             <dl className="mt-3 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
