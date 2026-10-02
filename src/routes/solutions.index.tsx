@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
+import { OfferingSection } from "@/components/marketing/offering-section";
 import { Button } from "@/components/ui/button";
 import { seoLinks, seoMeta } from "@/lib/seo";
 
@@ -49,6 +50,7 @@ function SolutionsPage() {
           <Button asChild variant="outline"><Link to="/resources">Read the guides</Link></Button>
         </div>
       </section>
+      <OfferingSection />
     </MarketingShell>
   );
 }

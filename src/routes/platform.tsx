@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { marketingHead } from "@/lib/marketing/seo";
 
 import { Button } from "@/components/ui/button";
+import { OfferingSection } from "@/components/marketing/offering-section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -97,6 +98,8 @@ function PlatformPage() {
             ))}
           </div>
         </section>
+
+        <OfferingSection />
 
         <section className="border-y bg-secondary/50">
           <div className="mx-auto max-w-6xl px-4 py-20">
