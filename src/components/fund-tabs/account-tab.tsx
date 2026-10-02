@@ -7,6 +7,7 @@ import { fundAccountFn } from "@/lib/fund-tabs.functions";
 import { CentsBarChart, CentsDonut } from "./charts";
 import { RequestHarmoniousButton } from "./request-harmonious";
 import { AutomatedReports } from "./automated-reports";
+import { K1Report } from "./k1-report";
 import { fmtDate, usd } from "./shared";
 
 const label = (s: string | null | undefined) => (s ? s.replace(/_/g, " ") : "-");
@@ -57,6 +58,7 @@ export function AccountTab({ fundId, fundName, taxDocs }: { fundId: string; fund
       </div>
 
       <AutomatedReports fundId={fundId} fundName={fundName} />
+      <K1Report fundId={fundId} />
 
       <Section title="NAV" desc="Approved net asset value. Harmonious prepares and reviews NAV." action={btn("NAV reporting", ["nav_reporting"])}>
         {q.isLoading ? empty("Loading…") : !nav.length ? empty("No approved NAV yet.") : (

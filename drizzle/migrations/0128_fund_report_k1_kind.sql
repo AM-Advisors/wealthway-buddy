@@ -1,0 +1,2 @@
+ALTER TABLE public.fund_report_drafts DROP CONSTRAINT IF EXISTS fund_report_drafts_kind_check;
+ALTER TABLE public.fund_report_drafts ADD CONSTRAINT fund_report_drafts_kind_check CHECK (kind IN ('nav','financial_review','k1'));
