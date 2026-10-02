@@ -109,7 +109,7 @@ export const getClientFund = createServerFn({ method: "GET" })
     const { data: setup } = await db.from("fund_setups").select("id, stage, launch_state").eq("offering_id", data.fundId).maybeSingle();
     const [{ data: tasks }, { data: letters }] = await Promise.all([
       setup
-        ? db.from("fund_setup_tasks").select("label, section, status, responsible_party, sort_order").eq("setup_id", setup.id).order("sort_order")
+        ? db.from("fund_setup_tasks").select("id, label, description, section, status, responsible_party, response, notes, due_date, sort_order").eq("setup_id", setup.id).order("sort_order")
         : Promise.resolve({ data: [] }),
       db.from("side_letters").select("status").eq("offering_id", data.fundId),
     ]);
@@ -117,8 +117,13 @@ export const getClientFund = createServerFn({ method: "GET" })
     const done = (t: any) => ["complete", "completed", "done", "not_applicable", "waived"].includes(String(t.status));
     const percent = all.length ? Math.round((all.filter(done).length / all.length) * 100) : null;
     const steps = all.map((t) => ({
+      id: String(t.id),
       label: String(t.label),
+      description: t.description ? String(t.description) : null,
       section: t.section ? String(t.section) : null,
+      status: String(t.status),
+      dueDate: t.due_date ? String(t.due_date) : null,
+      answer: typeof t.response?.answer === "string" ? String(t.response.answer) : "",
       done: done(t),
       owner: String(t.responsible_party ?? "").toLowerCase().includes("client") ? "You" : "Harmonious",
     }));

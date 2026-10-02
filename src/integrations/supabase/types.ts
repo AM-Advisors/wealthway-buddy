@@ -16662,6 +16662,7 @@ export type Database = {
           items: Json
           kind: string
           paid_at: string | null
+          payment_method: string
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -16679,6 +16680,7 @@ export type Database = {
           items?: Json
           kind: string
           paid_at?: string | null
+          payment_method?: string
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -16696,6 +16698,7 @@ export type Database = {
           items?: Json
           kind?: string
           paid_at?: string | null
+          payment_method?: string
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
