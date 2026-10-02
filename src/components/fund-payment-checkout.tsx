@@ -76,7 +76,7 @@ export function FundPaymentDialog({ open, onOpenChange, target, onPaid }: {
     const r = await startOffline({ data: { target, method: m } });
     setBusy(false);
     if ("error" in r) { toast.error(r.error); return; }
-    setOffline(r);
+    setOffline({ ...r, method: m });
   };
 
   const close = (v: boolean) => { if (!v) { setMethod(null); setOffline(null); } onOpenChange(v); };
