@@ -4704,14 +4704,20 @@ export type Database = {
       client_branding: {
         Row: {
           accent_color: string | null
+          billing_environment: string | null
+          billing_status: string | null
           body_font: string | null
+          cancel_at_period_end: boolean
           client_id: string
           created_at: string
+          current_period_end: string | null
           display_name: string | null
           heading_font: string | null
           logo_path: string | null
           monthly_fee_cents: number
           primary_color: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           subdomain: string | null
           unlocked_at: string | null
           unlocked_by: string | null
@@ -4721,14 +4727,20 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          billing_environment?: string | null
+          billing_status?: string | null
           body_font?: string | null
+          cancel_at_period_end?: boolean
           client_id: string
           created_at?: string
+          current_period_end?: string | null
           display_name?: string | null
           heading_font?: string | null
           logo_path?: string | null
           monthly_fee_cents?: number
           primary_color?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subdomain?: string | null
           unlocked_at?: string | null
           unlocked_by?: string | null
@@ -4738,14 +4750,20 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          billing_environment?: string | null
+          billing_status?: string | null
           body_font?: string | null
+          cancel_at_period_end?: boolean
           client_id?: string
           created_at?: string
+          current_period_end?: string | null
           display_name?: string | null
           heading_font?: string | null
           logo_path?: string | null
           monthly_fee_cents?: number
           primary_color?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subdomain?: string | null
           unlocked_at?: string | null
           unlocked_by?: string | null

@@ -15,7 +15,8 @@ import {
   customAppAddress,
   isWhitelabelActive,
 } from "@/lib/client-branding";
-import { requestPaidWhitelabel, saveClientBranding } from "@/lib/client-branding.functions";
+import { openWhitelabelBilling, requestPaidWhitelabel, saveClientBranding } from "@/lib/client-branding.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 const DEFAULT = "__default";
 
@@ -26,6 +27,11 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
   const active = isWhitelabelActive(status);
   const request = useServerFn(requestPaidWhitelabel);
   const save = useServerFn(saveClientBranding);
+  const billing = useServerFn(openWhitelabelBilling);
+  const openBilling = async () => {
+    const r = await billing({ data: { clientId, environment: getStripeEnvironment(), returnUrl: window.location.href } });
+    if ("error" in r) toast.error(r.error); else window.open(r.url, "_blank");
+  };
 
   const [logo, setLogo] = useState<string | null | undefined>(undefined);
   const [displayName, setDisplayName] = useState("");
@@ -47,8 +53,12 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
 
   const refresh = () => qc.invalidateQueries({ queryKey });
   const req = useMutation({
-    mutationFn: () => request({ data: { clientId } }),
-    onSuccess: () => { toast.success("White-label requested. Harmonious will set up the monthly card billing."); refresh(); },
+    mutationFn: async () => {
+      const r = await request({ data: { clientId, environment: getStripeEnvironment(), returnUrl: window.location.href } });
+      if ("error" in r) throw new Error(r.error);
+      return r;
+    },
+    onSuccess: (r) => { window.open(r.url, "_blank"); toast.success("Card checkout opened in a new tab. Branding unlocks as soon as payment confirms."); refresh(); },
     onError: (e) => toast.error((e as Error).message),
   });
   const sv = useMutation({
@@ -93,7 +103,16 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
         </div>
       )}
       {status === "payment_pending" && (
-        <p className="text-sm text-muted-foreground">Harmonious is setting up the monthly card billing. Branding unlocks once it's active.</p>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <p>Waiting for card payment. Branding unlocks as soon as the payment confirms.</p>
+          {canEdit && <Button size="sm" variant="outline" disabled={req.isPending} onClick={() => req.mutate()}>Open card checkout again</Button>}
+        </div>
+      )}
+      {status === "active_paid" && canEdit && branding?.stripe_customer_id && (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {branding?.current_period_end && <span>{branding.cancel_at_period_end ? "Access ends" : "Renews"} {new Date(branding.current_period_end).toLocaleDateString()}{branding.billing_status === "past_due" ? " - payment needs attention" : ""}</span>}
+          <Button size="sm" variant="ghost" onClick={openBilling}>Manage billing (card, invoices or cancel)</Button>
+        </div>
       )}
       {active && (
         <fieldset disabled={!canEdit} className="space-y-4">

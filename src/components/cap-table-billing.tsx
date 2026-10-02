@@ -19,7 +19,7 @@ const LABEL: Record<string, string> = {
 export function CapTablesCard() {
   const fn = useServerFn(getMyCapTables);
   const portal = useServerFn(openCapTableBillingPortal);
-  const q = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => fn({ data: {} }) });
+  const q = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => fn({ data: { environment: getStripeEnvironment() } }) });
   const subs = q.data?.subscriptions ?? [];
   const openBilling = async () => {
     try {
@@ -50,7 +50,7 @@ export function CapTablesCard() {
               <p className="font-medium">{s.company_name}</p>
               <p className="text-xs text-muted-foreground">
                 {CAP_TABLE_TIERS.find((t) => t.key === s.tier)?.name ?? s.tier} plan, billed {s.billing_interval}
-                {s.current_period_end ? `, renews ${new Date(s.current_period_end).toLocaleDateString()}` : ""}
+                {s.current_period_end ? `, ${s.cancel_at_period_end || s.status === "cancelled" ? "access ends" : "renews"} ${new Date(s.current_period_end).toLocaleDateString()}` : ""}
                 {s.cancel_at_period_end ? " (ends at period end)" : ""}
               </p>
             </div>

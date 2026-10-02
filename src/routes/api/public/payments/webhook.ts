@@ -12,30 +12,63 @@ async function db() {
   return supabaseAdmin as any;
 }
 
-async function syncSubscription(sub: any, env: StripeEnv, deleted = false) {
-  const capSubId = sub.metadata?.capSubId;
-  if (!capSubId) return;
-  const d = await db();
-  const { data: row } = await d.from("cap_table_subscriptions").select("id, client_id, tier, status, environment").eq("id", capSubId).maybeSingle();
-  if (!row || row.environment !== env) return;
+function parts(sub: any) {
   const item = sub.items?.data?.[0];
   const priceId: string | undefined = item?.price?.lookup_key || item?.price?.metadata?.lovable_external_id;
+  const periodEnd = item?.current_period_end ?? sub.current_period_end;
+  return {
+    priceId,
+    periodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+    customer: typeof sub.customer === "string" ? sub.customer : sub.customer?.id,
+  };
+}
+
+async function syncCapSubscription(sub: any, env: StripeEnv, deleted: boolean) {
+  const capSubId = sub.metadata?.capSubId;
+  const d = await db();
+  let q = d.from("cap_table_subscriptions").select("id, client_id, tier, status, environment");
+  q = capSubId ? q.eq("id", capSubId) : q.eq("stripe_subscription_id", sub.id);
+  const { data: row } = await q.maybeSingle();
+  if (!row || row.environment !== env) return;
+  const { priceId, periodEnd, customer } = parts(sub);
   const tier = priceId?.match(/^cap_table_(\w+?)_(monthly|annual)$/)?.[1] ?? row.tier;
   const interval = priceId?.endsWith("_annual") ? "annual" : "monthly";
-  const periodEnd = item?.current_period_end ?? sub.current_period_end;
   const status = deleted ? "cancelled" : (STATUS[sub.status] ?? "pending_payment");
   await d.from("cap_table_subscriptions").update({
     status, tier, billing_interval: interval, price_id: priceId ?? null,
-    stripe_subscription_id: sub.id, stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer?.id,
-    current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
-    cancel_at_period_end: Boolean(sub.cancel_at_period_end), updated_at: new Date().toISOString(),
+    stripe_subscription_id: sub.id, stripe_customer_id: customer,
+    current_period_end: periodEnd, cancel_at_period_end: Boolean(sub.cancel_at_period_end), updated_at: new Date().toISOString(),
   }).eq("id", row.id);
   if (status !== row.status || tier !== row.tier) {
-    await d.from("cap_table_subscription_events").insert({ subscription_id: row.id, event_kind: `status_${status}`, detail: { from: row.status, tier } });
+    await d.from("cap_table_subscription_events").insert({ subscription_id: row.id, event_kind: `status_${status}`, detail: { from: row.status, from_tier: row.tier, tier } });
   }
-  const { grantCapEntitlement } = await import("@/lib/cap-table-billing.functions");
-  if (tier !== row.tier) await grantCapEntitlement(d, row.client_id, row.tier, false);
-  await grantCapEntitlement(d, row.client_id, tier, status === "active" || status === "past_due");
+  const { syncClientCapEntitlements } = await import("@/lib/billing.server");
+  await syncClientCapEntitlements(d, row.client_id);
+}
+
+async function syncWhitelabel(sub: any, env: StripeEnv, deleted: boolean) {
+  const clientId = sub.metadata?.clientId;
+  if (!clientId) return;
+  const d = await db();
+  const { data: cur } = await d.from("client_branding").select("whitelabel_status, stripe_subscription_id").eq("client_id", clientId).maybeSingle();
+  if (cur?.whitelabel_status === "unlocked_free") return; // free unlock always wins
+  if (cur?.stripe_subscription_id && cur.stripe_subscription_id !== sub.id && deleted) return; // stale subscription
+  const { periodEnd, customer } = parts(sub);
+  const s = deleted ? "cancelled" : (STATUS[sub.status] ?? "pending_payment");
+  const whitelabel_status = s === "active" || s === "past_due" ? "active_paid" : s === "pending_payment" ? "payment_pending" : "off";
+  await d.from("client_branding").upsert({
+    client_id: clientId, whitelabel_status, billing_status: s, billing_environment: env,
+    stripe_subscription_id: sub.id, stripe_customer_id: customer, current_period_end: periodEnd,
+    cancel_at_period_end: Boolean(sub.cancel_at_period_end), updated_at: new Date().toISOString(),
+  }, { onConflict: "client_id" });
+  if (cur?.whitelabel_status !== whitelabel_status) {
+    await d.from("client_branding_events").insert({ client_id: clientId, event_kind: `whitelabel_${whitelabel_status}`, detail: { billing_status: s } });
+  }
+}
+
+async function route(sub: any, env: StripeEnv, deleted = false) {
+  if (sub.metadata?.kind === "whitelabel") return syncWhitelabel(sub, env, deleted);
+  return syncCapSubscription(sub, env, deleted);
 }
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
@@ -49,10 +82,10 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           switch (event.type) {
             case "customer.subscription.created":
             case "customer.subscription.updated":
-              await syncSubscription(event.data.object, rawEnv);
+              await route(event.data.object, rawEnv);
               break;
             case "customer.subscription.deleted":
-              await syncSubscription(event.data.object, rawEnv, true);
+              await route(event.data.object, rawEnv, true);
               break;
             default:
               break;
