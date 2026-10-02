@@ -16,7 +16,7 @@ import { fileToBase64, fmtDate } from "@/components/fund-tabs/shared";
 import { uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import {
   acceptFeesFn, deleteOnboardingDocFn, feeStatusFn, fundUpdatesFn, listOnboardingUploadsFn, myInvestorUpdatesFn,
-  postFundUpdateFn, removeFundUpdateFn, uploadOnboardingDocFn,
+  postFundUpdateFn, removeFundUpdateFn, uploadOnboardingDocFn, updateAttachmentOptionsFn,
 } from "@/lib/investor-extras.functions";
 
 const KINDS = [
