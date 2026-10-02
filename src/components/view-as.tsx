@@ -24,7 +24,7 @@ export function ViewAsPicker({ onboardingId, offeringId, label = "View as…" }:
   });
   const go = async (p: any) => {
     try {
-      await start({ data: { perspective: p.perspective, subjectUserId: p.subjectUserId, offeringId: p.offeringId, onboardingId: p.onboardingId } });
+      await start({ data: { perspective: p.perspective, subjectUserId: p.subjectUserId, offeringId: p.offeringId, onboardingId: p.onboardingId, preview: !!p.preview } });
       qc.removeQueries({ queryKey: ["view-as"] });
       setOpen(false);
       navigate({ to: "/view-as" });
@@ -47,7 +47,7 @@ export function ViewAsPicker({ onboardingId, offeringId, label = "View as…" }:
 
 /** Only the server-confirmed related people; no roles are listed that don't exist. */
 export function PerspectiveList({ items, onPick }: { items: any[]; onPick: (p: any) => void }) {
-  if (!items.length) return <div><p className="text-sm font-medium">No client perspective is available yet</p><p className="text-xs text-muted-foreground">This record does not currently have an investor or fund manager relationship that can be viewed.</p></div>;
+  if (!items.length) return <div><p className="text-sm font-medium">No client perspective is available yet</p><p className="text-xs text-muted-foreground">This record is not linked to a fund or investment yet. Open it from a fund to preview the fund manager view.</p></div>;
   return (
     <>
       {items.map((p) => (
