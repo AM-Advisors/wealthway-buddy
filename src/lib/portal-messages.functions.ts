@@ -61,7 +61,12 @@ export const listPortalMessages = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
 
-    const messages = (rows ?? []) as PortalMessage[];
+    const raw = (rows ?? []) as PortalMessage[];
+    // Investors never see who on the Harmonious staff wrote a message: staff
+    // replies are shown as "Harmonious", never by personal name or account.
+    const messages = isInvestor
+      ? raw.map((m) => (m.sender_role === "admin" ? { ...m, sender_name: "Harmonious", sender_id: null } as PortalMessage : m))
+      : raw;
 
     // Mark the other side's messages as read for whoever is looking.
     const unread = messages
