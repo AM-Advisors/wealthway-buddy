@@ -13,6 +13,8 @@ import { getCrmWorkspace } from "@/lib/crm.functions";
 
 export const Route = createFileRoute("/_authenticated/manager/messages")({
   component: Messages,
+  validateSearch: (s: Record<string, unknown>): { open?: string } =>
+    typeof s["open"] === "string" && s["open"] ? { open: s["open"] } : {},
   head: () => ({
     meta: [
       { title: "Investor messages | Harmonious fund manager" },
@@ -44,7 +46,10 @@ function when(value: string | null) {
 function Messages() {
   const load = useServerFn(listMessageThreads);
   const [search, setSearch] = useState("");
-  const [openId, setOpenId] = useState<string | null>(null);
+  // The open thread lives in the URL so links from the fund pages open it directly.
+  const { open: openId } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const setOpenId = (id: string | null) => navigate({ search: id ? { open: id } : {}, replace: true });
 
   const { data, isLoading } = useQuery({
     queryKey: ["message-threads"],

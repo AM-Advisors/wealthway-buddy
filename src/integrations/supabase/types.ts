@@ -23174,6 +23174,8 @@ export type Database = {
           delivered_at: string | null
           id: string
           investment_profile_id: string | null
+          investor_acknowledged_at: string | null
+          investor_acknowledged_by: string | null
           investor_user_id: string
           is_foreign: boolean
           offering_id: string
@@ -23206,6 +23208,8 @@ export type Database = {
           delivered_at?: string | null
           id?: string
           investment_profile_id?: string | null
+          investor_acknowledged_at?: string | null
+          investor_acknowledged_by?: string | null
           investor_user_id: string
           is_foreign?: boolean
           offering_id: string
@@ -23238,6 +23242,8 @@ export type Database = {
           delivered_at?: string | null
           id?: string
           investment_profile_id?: string | null
+          investor_acknowledged_at?: string | null
+          investor_acknowledged_by?: string | null
           investor_user_id?: string
           is_foreign?: boolean
           offering_id?: string

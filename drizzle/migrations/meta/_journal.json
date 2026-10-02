@@ -869,6 +869,13 @@
       "when": 1790968236777,
       "tag": "0123_investment_profile_details",
       "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1790972739056,
+      "tag": "0124_k1_investor_acknowledgment",
+      "breakpoints": true
     }
   ]
 }

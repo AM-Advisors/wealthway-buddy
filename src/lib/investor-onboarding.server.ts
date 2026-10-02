@@ -25,6 +25,7 @@ import {
   applyExemption,
   invitationRecipientError,
   isAuthoritativeSignature,
+  investorHomeSummary,
   journeySteps,
   managerInvestorStatus,
   nextJourneyStep,
@@ -822,6 +823,54 @@ export async function myInvestments(userId: string) {
       acceptedAmountCents: r.accepted_amount_cents as number | null,
       investmentProfileId: r.investment_profile_id as string | null,
     })),
+  };
+}
+
+/**
+ * The investor's fund page status for one offering: journey steps plus the
+ * application used for private messaging, derived from the single
+ * authoritative onboarding row. No writes here — page views never change
+ * operational state.
+ */
+export async function investorFundStatus(userId: string, offeringId: string) {
+  const { data } = await db()
+    .from("investor_onboardings")
+    .select("*")
+    .eq("investor_user_id", userId)
+    .eq("offering_id", offeringId)
+    .is("removed_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const row = ((data ?? []) as any[])[0];
+  if (!row) return null;
+
+  const facts = await gatherFacts(row);
+  const steps = journeySteps(facts.requirements, {
+    stage: row.stage,
+    approvedToFund: Boolean(row.approved_to_fund_at),
+    fundingStatus: row.funding_status,
+    investorReportsSent: Boolean(row.investor_reports_sent_at),
+  });
+  const summary = investorHomeSummary(steps);
+
+  let applicationId: string | null = (row.application_id as string | null) ?? null;
+  if (!applicationId) {
+    const { data: apps } = await db()
+      .from("investor_applications")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("offering_id", offeringId)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    applicationId = ((apps ?? []) as any[])[0]?.id ?? null;
+  }
+
+  return {
+    onboardingId: row.id as string,
+    applicationId,
+    fundingStatus: (row.funding_status as string | null) ?? null,
+    steps,
+    summary,
   };
 }
 
