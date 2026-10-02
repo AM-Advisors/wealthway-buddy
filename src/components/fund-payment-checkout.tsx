@@ -47,7 +47,7 @@ export function FundPaymentDialog({ open, onOpenChange, target, onPaid }: {
   const status = useServerFn(getFundPayment);
   const [method, setMethod] = useState<"card" | "wire" | "ach" | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [offline, setOffline] = useState<{ paymentId: string; reference: string; totalCents: number } | null>(null);
+  const [offline, setOffline] = useState<{ paymentId: string; reference: string; totalCents: number; method: "wire" | "ach" } | null>(null);
   const [busy, setBusy] = useState(false);
   const paymentId = useRef<string | null>(null);
 
