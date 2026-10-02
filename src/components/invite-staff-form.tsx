@@ -49,7 +49,6 @@ export function InviteStaffForm() {
   return (
     <div className="max-w-2xl space-y-6">
       <p className="text-sm text-muted-foreground">Invite a Harmonious team member. No email is sent automatically; access applies on their first sign-in with this email.</p>
-      </div>
       <Card>
         <CardHeader>
           <CardTitle>User details</CardTitle>
