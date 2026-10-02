@@ -22,9 +22,11 @@ import { SidebarFooter, SidebarMenu, SidebarMenuItem, useSidebar } from "@/compo
  */
 export function SidebarAccountFooter({
   workspaceLabel,
+  userType,
   onSignOut,
 }: {
   workspaceLabel: string;
+  userType?: string;
   onSignOut: () => void;
 }) {
   const { state } = useSidebar();
@@ -54,6 +56,7 @@ export function SidebarAccountFooter({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-medium">{label}</span>
                     <span className="block truncate text-[11px] text-sidebar-foreground/70">{workspaceLabel}</span>
+                    {userType ? <span className="block truncate text-[11px] text-sidebar-foreground/60">{userType}</span> : null}
                   </span>
                   <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
                 </>
@@ -63,6 +66,7 @@ export function SidebarAccountFooter({
               <DropdownMenuLabel className="truncate">{label}</DropdownMenuLabel>
               {email && name ? <p className="truncate px-2 pb-1 text-xs text-muted-foreground">{email}</p> : null}
               <p className="truncate px-2 pb-1 text-xs text-muted-foreground">Workspace: {workspaceLabel}</p>
+              {userType ? <p className="truncate px-2 pb-1 text-xs text-muted-foreground">User type: {userType}</p> : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/profile" className="flex items-center gap-2">
