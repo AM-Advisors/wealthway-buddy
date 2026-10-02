@@ -66,6 +66,21 @@ async function syncWhitelabel(sub: any, env: StripeEnv, deleted: boolean) {
   }
 }
 
+async function syncFundPayment(session: any, env: StripeEnv, outcome: "paid" | "failed") {
+  const id = session.metadata?.paymentId;
+  if (!id) return;
+  const d = await db();
+  const { data: p } = await d.from("fund_payments").select("id, status, environment").eq("id", id).maybeSingle();
+  if (!p || p.environment !== env || p.status === "used" || p.status === outcome) return;
+  if (outcome === "paid" && p.status === "cancelled") return;
+  await d.from("fund_payments").update({
+    status: outcome, paid_at: outcome === "paid" ? new Date().toISOString() : null,
+    stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", p.id);
+  await d.from("fund_payment_events").insert({ payment_id: p.id, event_kind: outcome, detail: { session: session.id } });
+}
+
 async function route(sub: any, env: StripeEnv, deleted = false) {
   if (sub.metadata?.kind === "whitelabel") return syncWhitelabel(sub, env, deleted);
   return syncCapSubscription(sub, env, deleted);
@@ -86,6 +101,15 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
               break;
             case "customer.subscription.deleted":
               await route(event.data.object, rawEnv, true);
+              break;
+            case "checkout.session.completed":
+              if (event.data.object.metadata?.kind === "fund_payment" && event.data.object.payment_status !== "unpaid") await syncFundPayment(event.data.object, rawEnv, "paid");
+              break;
+            case "checkout.session.async_payment_succeeded":
+              if (event.data.object.metadata?.kind === "fund_payment") await syncFundPayment(event.data.object, rawEnv, "paid");
+              break;
+            case "checkout.session.async_payment_failed":
+              if (event.data.object.metadata?.kind === "fund_payment") await syncFundPayment(event.data.object, rawEnv, "failed");
               break;
             default:
               break;

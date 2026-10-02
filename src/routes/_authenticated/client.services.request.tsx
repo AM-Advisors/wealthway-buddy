@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { FundPaymentDialog, PaymentSummary, useFundPayment } from "@/components/fund-payment-checkout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,8 +72,11 @@ function RequestRouter() {
 
   const chosen = REQUEST_INTENTS.find((i) => i.value === intent);
 
+  const [payOpen, setPayOpen] = useState(false);
+  const payTarget = { kind: "service_request" as const, answers, serviceKeys: picked };
+  const quote = useFundPayment(intent ? payTarget : null);
   const mutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (paymentId?: string) =>
       submit({
         data: {
           intent: intent as any,
@@ -80,6 +84,7 @@ function RequestRouter() {
           summary,
           answers,
           requestedServiceKeys: picked,
+          paymentId: paymentId ?? null,
         },
       }),
     onSuccess: () => {
@@ -247,12 +252,22 @@ function RequestRouter() {
         </CardContent>
       </Card>
 
+      {quote.data && quote.data.totalCents > 0 && (
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Add-ons are paid in full before the request is sent</p>
+          <PaymentSummary items={quote.data.items} total={quote.data.totalCents} />
+        </div>
+      )}
       <Button
-        disabled={mutation.isPending || summary.trim().length < 3}
-        onClick={() => mutation.mutate()}
+        disabled={mutation.isPending || !quote.data || summary.trim().length < 3}
+        onClick={() => (quote.data!.totalCents > 0 ? setPayOpen(true) : mutation.mutate(undefined))}
       >
-        Send to Harmonious
+        {quote.data && quote.data.totalCents > 0 ? "Pay and send to Harmonious" : "Send to Harmonious"}
       </Button>
+      {payOpen && (
+        <FundPaymentDialog open={payOpen} onOpenChange={setPayOpen} target={payTarget}
+          onPaid={(pid) => { setPayOpen(false); mutation.mutate(pid); }} />
+      )}
     </div>
   );
 }

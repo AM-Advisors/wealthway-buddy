@@ -16617,6 +16617,103 @@ export type Database = {
           },
         ]
       }
+      fund_payment_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event_kind: string
+          id: string
+          payment_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_kind: string
+          id?: string
+          payment_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_kind?: string
+          id?: string
+          payment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_payment_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "fund_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_payments: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          environment: string
+          id: string
+          items: Json
+          kind: string
+          paid_at: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          total_cents: number
+          updated_at: string
+          used_at: string | null
+          used_for: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          environment: string
+          id?: string
+          items?: Json
+          kind: string
+          paid_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          total_cents: number
+          updated_at?: string
+          used_at?: string | null
+          used_for?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          environment?: string
+          id?: string
+          items?: Json
+          kind?: string
+          paid_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          total_cents?: number
+          updated_at?: string
+          used_at?: string | null
+          used_for?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_pricing_snapshot_lines: {
         Row: {
           baseline_cents: number
