@@ -30,7 +30,7 @@ function MyFundsPage() {
   const funds = q.data?.funds ?? [];
   const shown = filterMyFunds(funds, filter);
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">My Funds</h1>
         <p className="mt-1 text-sm text-muted-foreground">Funds and SPVs you manage or invest in.</p>
