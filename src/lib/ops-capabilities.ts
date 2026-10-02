@@ -237,9 +237,8 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
   {
     id: "administration", title: "Administration", url: "/ops/areas/administration", icon: "settings", group: "admin", queues: ["administration"],
     screens: [
-      { title: "Add user", url: "/admin/add-user", description: "Invite a Harmonious team member and assign permissions", step: "Start" },
       { title: "Client setup options", url: "/admin/client-setup", description: "White-label branding per client", step: "Reference" },
-      { title: "Access Control", url: "/ops/access-control", description: "People, roles, permissions and access audit", step: "Start" },
+      { title: "Access Control", url: "/ops/access-control", description: "Invite people, roles, permissions and access audit", step: "Start" },
       { title: "Compliance & Controls", url: "/ops/compliance", description: "Controls, evidence, access reviews, privacy, vendors, risks, incidents", step: "Review" },
       { title: "Operations team", url: "/ops/team", description: "Staff and their roles", step: "Reference" },
       { title: "Legacy permission settings", url: "/admin/permissions", description: "Older permission configuration (use Access Control for new changes)", step: "Reference" },
