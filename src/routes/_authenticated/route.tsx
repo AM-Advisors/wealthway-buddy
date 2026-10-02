@@ -55,7 +55,9 @@ function AuthenticatedLayout() {
             <main className="min-w-0 flex-1">
               <PolicyGate onSignOut={signOut}>
                 <PortalGate onSignOut={signOut}>
-                  <Outlet />
+                  <OpsAreaGate>
+                    <Outlet />
+                  </OpsAreaGate>
                 </PortalGate>
               </PolicyGate>
             </main>
@@ -81,4 +83,23 @@ function Menu({ onSignOut }: { onSignOut: () => void }) {
   const { shell } = getNavigation(session as never, activeId, pathname);
   if (shell === "ops") return <OpsSidebar onSignOut={onSignOut} />;
   return <ClientSidebar onSignOut={onSignOut} />;
+}
+
+/**
+ * Operations pages are Harmonious-only. Server functions already refuse
+ * non-staff, but non-staff must not see the Operations page shell either.
+ */
+function OpsAreaGate({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { activeId, session, loading } = useClientWorkspace();
+  if (!(pathname === "/ops" || pathname.startsWith("/ops/"))) return <>{children}</>;
+  if (loading) return <div className="p-10 text-sm text-muted-foreground">Loading...</div>;
+  const { shell } = getNavigation(session as never, activeId, pathname);
+  if (shell === "ops") return <>{children}</>;
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-16">
+      <h1 className="text-3xl">Restricted</h1>
+      <p className="mt-3 text-sm text-muted-foreground">This area is limited to Harmonious staff.</p>
+    </div>
+  );
 }
