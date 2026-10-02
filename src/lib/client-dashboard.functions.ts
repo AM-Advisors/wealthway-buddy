@@ -64,8 +64,8 @@ export const getClientCapDashboard = createServerFn({ method: "GET" })
     const ownership = ["Common", "Preferred", "SAFE", "Warrants", "Option Pool"].map((name) => ({ name, value: ownershipMap.get(name) ?? 0 }));
 
     const actorIds = [...new Set(((events ?? []) as any[]).map((e) => e.actor_id).filter(Boolean))];
-    const { data: profs } = actorIds.length ? await db.from("profiles").select("id, full_name, email").in("id", actorIds) : { data: [] };
-    const nameOf = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.full_name || p.email || "Someone"]));
+    const { data: profs } = actorIds.length ? await db.from("profiles").select("id, legal_name, email").in("id", actorIds) : { data: [] };
+    const nameOf = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.legal_name || p.email || "Someone"]));
     const pretty = (a: string) => a.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     const activity = ((events ?? []) as any[]).map((e) => ({ id: e.id, title: pretty(e.action), actor: nameOf.get(e.actor_id) ?? "Harmonious", at: e.occurred_at }));
 
