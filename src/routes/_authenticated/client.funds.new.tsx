@@ -389,7 +389,7 @@ function NewFundRequest() {
                   Sending creates your {spv ? "SPV" : "fund"} in Funds, closed to investors, and tells the Harmonious Operations team. Harmonious confirms every detail before launch. Nothing is filed or sent to investors automatically.
                 </div>
                 {quote.data && <PaymentSummary items={quote.data.items} total={quote.data.totalCents} />}
-                <p className="text-xs text-muted-foreground">The ${"$"}2,500 setup fee and any add-ons are paid by card before the request is sent. Add-ons use your agreed SOW price where one is approved.</p>
+                <p className="text-xs text-muted-foreground">The $2,500 setup fee and any add-ons are paid by card before the request is sent. Add-ons use your agreed SOW price where one is approved.</p>
                 <Button disabled={send.isPending || !quote.data || Object.keys(missing).length > 0} onClick={() => (quote.data!.totalCents > 0 ? setPayOpen(true) : send.mutate(undefined))}>Pay and send to Harmonious</Button>
                 {id && payOpen && (
                   <FundPaymentDialog open={payOpen} onOpenChange={setPayOpen} target={{ kind: "new_fund_request", clientId: id, request: r as any }}
