@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BankFeedPanel } from "@/components/bank-feed-panel";
+import { WireFromBankForm } from "@/components/wire-from-bank-form";
 import { LEDGER_CATEGORIES } from "@/lib/fund-doc-templates";
 import { addLedgerEntryFn, fundBooksFn, tagTransactionFn, voidLedgerEntryFn } from "@/lib/fund-tabs.functions";
 import { fmtDate, toCents, usd } from "./shared";
@@ -28,6 +29,13 @@ export function BankingTab({ fundId }: { fundId: string }) {
           <CardDescription>Connect the fund's bank account securely through Plaid. This is read-only: no money can be moved from here.</CardDescription>
         </CardHeader>
         <CardContent><BankFeedPanel fundId={fundId} /></CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Wire instructions</CardTitle>
+          <CardDescription>Pre-filled from the connected bank. Investors only see these after Harmonious verifies them.</CardDescription>
+        </CardHeader>
+        <CardContent><WireFromBankForm fundId={fundId} /></CardContent>
       </Card>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading books…</p> : q.error || !d ? <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the books."}</p> : (
         <>

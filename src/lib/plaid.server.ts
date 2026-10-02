@@ -47,9 +47,12 @@ export function createLinkToken(opts: { userId: string; fundName: string }) {
     user: { client_user_id: opts.userId },
     client_name: "Harmonious",
     products: ["transactions"],
+    optional_products: ["auth"],
     country_codes: ["US"],
     language: "en",
     webhook: PLAID_WEBHOOK_URL,
+    // OAuth banks (e.g. Platypus OAuth) need a return address registered in the Plaid dashboard.
+    ...(process.env["PLAID_REDIRECT_URI"] ? { redirect_uri: process.env["PLAID_REDIRECT_URI"] } : {}),
   });
 }
 
@@ -101,4 +104,12 @@ export function getTransactions(accessToken: string, startDate: string, endDate:
       options: { count: 500, offset: 0 },
     },
   );
+}
+
+/** Account + routing numbers (read-only Auth product). */
+export function getAuthNumbers(accessToken: string) {
+  return call<{
+    accounts: PlaidAccount[];
+    numbers: { ach: { account_id: string; account: string; routing: string; wire_routing: string | null }[] };
+  }>("/auth/get", { access_token: accessToken });
 }

@@ -64,6 +64,11 @@ export function BankFeedPanel({ fundId }: { fundId: string }) {
     [fundId],
   );
 
+  // Remember where to come back to if the bank sends the user through OAuth.
+  useEffect(() => {
+    if (linkToken) localStorage.setItem("plaid-oauth", JSON.stringify({ linkToken, fundId, back: window.location.pathname + window.location.search }));
+  }, [linkToken, fundId]);
+
   const { open, ready } = usePlaidLink({
     token: linkToken ?? "",
     onSuccess: (publicToken: string | null) => {

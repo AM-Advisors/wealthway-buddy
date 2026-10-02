@@ -180,7 +180,8 @@ export const finishBankConnection = createServerFn({ method: "POST" })
       }
     }
 
-    const first = accounts.accounts[0];
+    // Prefer a checking account; wires land in checking.
+    const first = accounts.accounts.find((a: any) => a.subtype === "checking") ?? accounts.accounts[0];
 
     const { error: saveError } = await supabase.rpc("save_bank_link", {
       p_offering_id: data.fundId,
@@ -377,4 +378,31 @@ export const disconnectBank = createServerFn({ method: "POST" })
     if (rpcError) throw new Error(rpcError.message);
     await supabase.from("bank_accounts").delete().eq("offering_id", data.fundId);
     return { ok: true, message: "Bank account disconnected." };
+  });
+
+/**
+ * Reads the connected account's numbers (read-only) to pre-fill the wire form.
+ * Nothing is stored here; the form is saved through the wire-instruction path.
+ */
+export const prefillWireFromBank = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertFundAccess(supabase, userId, data.fundId);
+    const { data: token, error } = await supabase.rpc("get_bank_access_token", { p_offering_id: data.fundId });
+    if (error || !token) throw new Error("Connect the fund's bank account first.");
+    const { data: acct } = await supabase.from("bank_accounts").select("institution_name, account_name, account_mask").eq("offering_id", data.fundId).maybeSingle();
+    const plaid = await import("@/lib/plaid.server");
+    const auth = await plaid.getAuthNumbers(token as string);
+    const a = auth.accounts.find((x) => x.mask && x.mask === (acct as any)?.account_mask) ?? auth.accounts[0];
+    const n = auth.numbers.ach.find((x) => x.account_id === a?.account_id);
+    if (!a || !n) throw new Error("Your bank didn't share account numbers for this account.");
+    const { data: off } = await supabase.from("offerings").select("legal_entity_name, name").eq("id", data.fundId).maybeSingle();
+    return {
+      bank_name: (acct as any)?.institution_name ?? "",
+      account_name: (off as any)?.legal_entity_name ?? (off as any)?.name ?? a.official_name ?? a.name,
+      account_number: n.account,
+      routing_number: n.wire_routing ?? n.routing,
+    };
   });
