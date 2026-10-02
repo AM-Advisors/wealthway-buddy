@@ -328,7 +328,7 @@ export async function sendReminders(uid: string, fundId: string, onboardingIds: 
       });
     } catch (e) { delivery = "failed"; note = (e as Error).message.slice(0, 300); }
     await d.from("investor_reminders").insert({ offering_id: fundId, onboarding_id: id, step, sent_by: uid, recipient_email: r.email, delivery, delivery_note: note });
-    results.push({ id, outcome: delivery === "sent" ? "sent" : "failed", reason: note ?? undefined });
+    results.push(note ? { id, outcome: "failed", reason: note } : { id, outcome: "sent" });
   }
   return results;
 }

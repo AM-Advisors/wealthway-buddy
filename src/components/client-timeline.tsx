@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { clientTimelineFn } from "@/lib/ops-work-queue.functions";
+import { clientTimelineFn } from "@/lib/cross-client-queue.functions";
 
 /** Read-only timeline of everything that happened for one client. */
 export function ClientTimeline({ clientId }: { clientId: string }) {

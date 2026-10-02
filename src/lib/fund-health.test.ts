@@ -18,7 +18,7 @@ describe("fund health", () => {
   });
 });
 
-import { mergeTimeline } from "@/lib/ops-work-queue.server";
+import { mergeTimeline } from "@/lib/cross-client-queue.server";
 describe("client timeline", () => {
   it("merges newest first and drops undated", () => {
     const out = mergeTimeline([[{ at: "2026-01-01", kind: "a", title: "", detail: "" }], [{ at: "2026-03-01", kind: "b", title: "", detail: "" }, { at: "", kind: "c", title: "", detail: "" }]]);

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { opsWorkQueueFn } from "@/lib/ops-work-queue.functions";
+import { opsWorkQueueFn } from "@/lib/cross-client-queue.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/queue")({
   head: () => ({
