@@ -13,7 +13,7 @@ export const investorDetailFn = createServerFn({ method: "POST" }).middleware([r
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorDetail(data.fundId, data.onboardingId); });
 
 export const fundTeamFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
-  .handler(async ({ data, context }) => { const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); return { ...(await s.team(data.fundId)), staff: a.staff }; });
+  .handler(async ({ data, context }) => { const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); return { ...(await s.team(data.fundId)), staff: a.staff, me: context.userId }; });
 
 export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(fund.extend({
@@ -28,7 +28,9 @@ export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([r
     const d = await s.db();
     const row = { full_name: data.fullName, email: data.email || null, phone: data.phone || null, company: data.company || null, team_role: data.teamRole, permissions: data.permissions };
     if (data.id) {
-      const { error } = await d.from("fund_team_members").update(row).eq("id", data.id).eq("offering_id", data.fundId).is("removed_at", null);
+      const { data: cur } = await d.from("fund_team_members").select("user_id").eq("id", data.id).maybeSingle();
+      const confirm = (cur as any)?.user_id === context.userId ? { roles_confirmed_at: new Date().toISOString() } : {};
+      const { error } = await d.from("fund_team_members").update({ ...row, ...confirm }).eq("id", data.id).eq("offering_id", data.fundId).is("removed_at", null);
       if (error) throw new Error("Couldn't save.");
     } else {
       const { error } = await d.from("fund_team_members").insert({ ...row, offering_id: data.fundId, created_by: context.userId });
