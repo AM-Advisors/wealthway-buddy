@@ -10,7 +10,7 @@ import { safeInternalPath } from "@/lib/app-origins";
  * forwarded. Redirecting grants nothing: the destination re-checks access.
  */
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Redirecting — Harmonious" }, { name: "robots", content: "noindex, nofollow" }] }),
+  head: () => ({ meta: [{ title: "Redirecting - Harmonious" }, { name: "robots", content: "noindex, nofollow" }] }),
   beforeLoad: async () => {
     let to = "/home";
     try {

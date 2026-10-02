@@ -56,7 +56,7 @@ export function IdentityVerificationCard(props: {
           <CardTitle className="text-base">Identity verification</CardTitle>
           <CardDescription>
             Verify your ID and a quick selfie with our secure verification partner. Your results
-            update here automatically — usually within a minute.
+            update here automatically - usually within a minute.
           </CardDescription>
         </div>
         <Badge variant={done ? "default" : "secondary"}>{summary}</Badge>
@@ -100,7 +100,7 @@ export function IdentityVerificationCard(props: {
               </Button>
               <span className="text-xs text-muted-foreground">
                 {props.kycStatus === "review"
-                  ? "Submitted — a reviewer is finishing the check."
+                  ? "Submitted - a reviewer is finishing the check."
                   : "Opens in a new tab; come back here when you're done."}
               </span>
             </>

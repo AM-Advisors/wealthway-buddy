@@ -218,7 +218,7 @@ async function ensureBoxSourceFile(
 
   const safeTitle = resolved.document.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
   const who = resolved.profile.legal_name ?? resolved.profile.email ?? "Investor";
-  const fileName = `${safeTitle} — ${who} — ${resolved.application.id.slice(0, 8)}.pdf`;
+  const fileName = `${safeTitle} - ${who} - ${resolved.application.id.slice(0, 8)}.pdf`;
 
   const fileId = await uploadFile(fileName, bytes);
   const versionId = await fileVersionId(fileId).catch(() => null);
@@ -297,7 +297,7 @@ export async function openSigningSession(
   const signerName = resolved.profile.legal_name ?? resolved.profile.email;
   const detail = await createMultiSignerRequest({
     fileId,
-    documentName: `${resolved.offering?.name ?? "Harmonious"} — ${resolved.document.title}`,
+    documentName: `${resolved.offering?.name ?? "Harmonious"} - ${resolved.document.title}`,
     message: `Please review and sign ${resolved.document.title} for ${resolved.offering?.name ?? "the fund"}.`,
     externalId: `${resolved.application.id}:${resolved.document.id}`,
     redirectUrl: "https://app.harmonious.co/portal",

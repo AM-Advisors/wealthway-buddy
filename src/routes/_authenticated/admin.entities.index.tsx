@@ -11,13 +11,13 @@ import { listEntityRegister } from "@/lib/entities.functions";
 export const Route = createFileRoute("/_authenticated/admin/entities/")({
   head: () => ({
     meta: [
-      { title: "Entities and engagements — Harmonious admin" },
+      { title: "Entities and engagements - Harmonious admin" },
       {
         name: "description",
         content:
           "Every client's companies, funds, SPVs, series and management entities, and the engagements covering them.",
       },
-      { property: "og:title", content: "Entities and engagements — Harmonious admin" },
+      { property: "og:title", content: "Entities and engagements - Harmonious admin" },
       {
         property: "og:description",
         content: "Client entity register and the engagements attached to each one.",
@@ -41,8 +41,8 @@ function EntityRegisterPage() {
     <main className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="text-3xl">Entities and engagements</h1>
       <p className="mb-6 mt-2 text-sm text-muted-foreground">
-        Each client holds a master relationship, a register of entities — companies, funds, SPVs,
-        series, GPs and management companies — and one engagement per entity covering its services,
+        Each client holds a master relationship, a register of entities - companies, funds, SPVs,
+        series, GPs and management companies - and one engagement per entity covering its services,
         commercial terms and delivery.
       </p>
 

@@ -1,9 +1,9 @@
 /**
- * Fund Administration Phase C — pure capital-call, funding and cash-receipt rules.
+ * Fund Administration Phase C - pure capital-call, funding and cash-receipt rules.
  *
  * No database access, no authorization, no side effects. This module decides
  * how much is called, what a bank transaction may legitimately be matched to,
- * which funding exception a variance represents, and — crucially — whether an
+ * which funding exception a variance represents, and - crucially - whether an
  * investment may be described as FUNDED.
  *
  * Deny by default. Funded is never a UI state, never a self-certification and
@@ -54,7 +54,7 @@ export type LifecycleFacts = {
   subscriptionAcceptedAt: string | null;
   admittedAt: string | null;
   calledCents: number;
-  /** Informational only — the investor said they sent money. */
+  /** Informational only - the investor said they sent money. */
   investorInitiatedAt: string | null;
   /** Bank transactions seen against the fund and proposed to this investor. */
   cashDetectedCents: number;
@@ -239,7 +239,7 @@ export type CallLineStatus = "outstanding" | "partially_funded" | "satisfied" | 
 
 /**
  * A call line is only satisfied by authoritative cash. Partial cash stays
- * partial — it never rounds up to satisfied.
+ * partial - it never rounds up to satisfied.
  */
 export function callLineStatus(input: {
   calledCents: number;
@@ -389,7 +389,7 @@ export const FUNDING_EXCEPTION_LABELS: Record<FundingExceptionKind, string> = {
   reversed_transaction: "Reversed transaction",
   currency_discrepancy: "Currency discrepancy",
   fees_deducted: "Fees deducted from wire",
-  ambiguous_match: "Ambiguous — more than one possible investor",
+  ambiguous_match: "Ambiguous - more than one possible investor",
 };
 
 export type IncomingCash = {
@@ -436,7 +436,7 @@ function normalise(text: string | null | undefined) {
 }
 
 /**
- * Propose — never decide — a match between incoming cash and an expected
+ * Propose - never decide - a match between incoming cash and an expected
  * funding. Amount alone is deliberately not sufficient evidence: when two
  * investors could plausibly have sent the same money the result is an
  * ambiguity exception for Harmonious, not a guess.
@@ -494,7 +494,7 @@ export function proposeFundingMatch(
     } else if (sameAmount.length > 1) {
       return base(
         "ambiguous_match",
-        "Two or more investors are expected to send this exact amount — a human must decide.",
+        "Two or more investors are expected to send this exact amount - a human must decide.",
       );
     } else {
       return base("incorrect_reference", "No reference and no expected amount matches this receipt.");
@@ -581,7 +581,7 @@ export function expectedFundingStatus(input: {
 
 /**
  * A self-report is informational. This is the only answer the platform accepts
- * when anyone — investor or manager — claims money has arrived.
+ * when anyone - investor or manager - claims money has arrived.
  */
 export function selfReportEffect(): {
   marksFunded: false;

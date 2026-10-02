@@ -195,7 +195,7 @@ export function ClientDueCalendar({ items }: { items: DueItem[] }) {
             <ul className="mt-2 space-y-1">
               {overdue.slice(0, 5).map((i) => (
                 <li key={i.id} className="text-xs text-muted-foreground">
-                  {i.label} — was due {i.date.slice(0, 10)}
+                  {i.label} - was due {i.date.slice(0, 10)}
                 </li>
               ))}
             </ul>

@@ -291,7 +291,7 @@ export function CapTableBoard({ backTo }: { backTo: "/admin" | "/manager" }) {
                               <Input
                                 value={current.shares}
                                 inputMode="decimal"
-                                placeholder="—"
+                                placeholder="-"
                                 onChange={(e) => setField(row, "shares", e.target.value)}
                                 className="h-8 w-24"
                               />
@@ -331,7 +331,7 @@ export function CapTableBoard({ backTo }: { backTo: "/admin" | "/manager" }) {
                         <td className="py-2 pr-3">{money(fund.totals.funded_cents)}</td>
                         <td className="py-2 pr-3">{money(fund.totals.wire_fees_cents)}</td>
                         <td className="py-2 pr-3">{money(fund.totals.net_received_cents)}</td>
-                        <td className="py-2 pr-3">{fund.totals.shares || "—"}</td>
+                        <td className="py-2 pr-3">{fund.totals.shares || "-"}</td>
                         <td className="py-2 pr-3">{share(fund.totals.ownership_pct)}</td>
                         <td />
                       </tr>

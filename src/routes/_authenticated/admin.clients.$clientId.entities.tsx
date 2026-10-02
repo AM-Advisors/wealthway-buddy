@@ -38,13 +38,13 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/clients/$clientId/entities")({
   head: () => ({
     meta: [
-      { title: "Client entities — Harmonious admin" },
+      { title: "Client entities - Harmonious admin" },
       {
         name: "description",
         content:
           "One client's master relationship, entity register and engagements, with commercial terms and delivery status.",
       },
-      { property: "og:title", content: "Client entities — Harmonious admin" },
+      { property: "og:title", content: "Client entities - Harmonious admin" },
       {
         property: "og:description",
         content: "Master relationship, entities and engagements for one client.",

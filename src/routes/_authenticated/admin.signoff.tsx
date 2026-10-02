@@ -6,13 +6,13 @@ import { listSignoffQueue } from "@/lib/signoff.functions";
 export const Route = createFileRoute("/_authenticated/admin/signoff")({
   head: () => ({
     meta: [
-      { title: "Sign-off — Harmonious" },
+      { title: "Sign-off - Harmonious" },
       {
         name: "description",
         content:
           "Approve or reject client requests: extra services, wire requests, agreements and invoice queries, in one queue.",
       },
-      { property: "og:title", content: "Sign-off — Harmonious" },
+      { property: "og:title", content: "Sign-off - Harmonious" },
       {
         property: "og:description",
         content: "One queue for everything a client is waiting on Harmonious to decide.",

@@ -209,7 +209,7 @@ export const startNdaSigning = createServerFn({ method: "POST" })
       fileId: room.nda_box_file_id,
       signerEmail: email,
       signerName,
-      documentName: `${fundName} — Confidentiality agreement`,
+      documentName: `${fundName} - Confidentiality agreement`,
       message: `Please review and sign the confidentiality agreement for ${fundName}. The diligence materials open as soon as it is signed.`,
       externalId: `nda:${room.id}:${userId}`,
       redirectUrl: `https://app.harmonious.co/diligence/${data.offering_id}`,
@@ -300,7 +300,7 @@ export const getSignedNdaUrl = createServerFn({ method: "POST" })
       .from("signed-documents")
       .createSignedUrl(row.signed_pdf_path, 300);
     if (error || !signed?.signedUrl) throw new Error(error?.message ?? "Could not open the file.");
-    return { url: signed.signedUrl, file_name: `NDA — ${row.signer_name}.pdf` };
+    return { url: signed.signedUrl, file_name: `NDA - ${row.signer_name}.pdf` };
   });
 
 /** Manager view: who has been sent the NDA, who opened it, who signed. */

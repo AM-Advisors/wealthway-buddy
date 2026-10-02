@@ -23,17 +23,17 @@ import {
 
 const money = (cents: number | null | undefined) =>
   cents === null || cents === undefined
-    ? "—"
+    ? "-"
     : `${Number(cents) < 0 ? "−" : ""}$${Math.abs(Number(cents) / 100).toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
 
 const pct = (bps: number | null | undefined) =>
-  bps === null || bps === undefined ? "—" : `${(Number(bps) / 100).toFixed(2)}%`;
+  bps === null || bps === undefined ? "-" : `${(Number(bps) / 100).toFixed(2)}%`;
 
 const times = (value: number | string | null | undefined) =>
-  value === null || value === undefined ? "—" : `${Number(value).toFixed(2)}×`;
+  value === null || value === undefined ? "-" : `${Number(value).toFixed(2)}×`;
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -203,7 +203,7 @@ export function PerformanceReportingBoard({ role }: { role: "harmonious" | "mana
     <Card>
       <CardHeader>
         <CardTitle className="text-base">
-          {run.fundName} — {run.period_label || `${run.period_start} to ${run.period_end}`}
+          {run.fundName} - {run.period_label || `${run.period_start} to ${run.period_end}`}
         </CardTitle>
         <CardDescription>
           Version {run.version} · {label(run.status)} · methodology {run.methodology_version} ·{" "}
@@ -218,7 +218,7 @@ export function PerformanceReportingBoard({ role }: { role: "harmonious" | "mana
           <Metric title="Net return" value={pct(run.net_return_bps)} note="After configured deductions" />
           <Metric
             title="IRR"
-            value={run.irr_status === "solved" ? pct(run.irr_bps) : "—"}
+            value={run.irr_status === "solved" ? pct(run.irr_bps) : "-"}
             note={run.irr_status === "solved" ? "Dated cash flows" : label(run.irr_status)}
           />
           <Metric title="MOIC" value={times(run.moic)} note="Total value / paid-in" />

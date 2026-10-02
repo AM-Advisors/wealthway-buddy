@@ -4,7 +4,7 @@ import type { AuthzFacts } from "@/lib/authorize";
 /**
  * Read-only Access Control Center (Stage 1). Nothing here changes access, and
  * no enforcement path reads from it. Gate: platform super_admin/admin, or a
- * staff capability to manage staff/roles/permissions — checked on the server
+ * staff capability to manage staff/roles/permissions - checked on the server
  * for every call, never from the menu.
  */
 export async function requireAccessViewer(context: any): Promise<string> {
@@ -135,8 +135,8 @@ export function historyFor(b: Bundle, names: Map<string, string>, userId?: strin
     rows.push({ at: g.granted_at, actor: who(g.granted_by), target: who(g.user_id), change: `${what} granted`, scope: "Global", reason: g.reason });
     if (g.revoked_at) rows.push({ at: g.revoked_at, actor: who(g.revoked_by), target: who(g.user_id), change: `${what} revoked`, scope: "Global", reason: null });
   }
-  for (const m of b.fms) if (mine(m.user_id)) rows.push({ at: m.created_at, actor: who(m.granted_by), target: who(m.user_id), change: "Fund Manager access granted", scope: `Fund: ${offer.get(m.offering_id) ?? "—"}`, reason: null });
-  for (const m of b.ifa) if (mine(m.user_id)) rows.push({ at: m.created_at, actor: who(m.granted_by), target: who(m.user_id), change: "Investor fund access granted", scope: `Fund: ${offer.get(m.offering_id) ?? "—"}`, reason: null });
+  for (const m of b.fms) if (mine(m.user_id)) rows.push({ at: m.created_at, actor: who(m.granted_by), target: who(m.user_id), change: "Fund Manager access granted", scope: `Fund: ${offer.get(m.offering_id) ?? "-"}`, reason: null });
+  for (const m of b.ifa) if (mine(m.user_id)) rows.push({ at: m.created_at, actor: who(m.granted_by), target: who(m.user_id), change: "Investor fund access granted", scope: `Fund: ${offer.get(m.offering_id) ?? "-"}`, reason: null });
   for (const d of b.dels) {
     if (!mine(d.delegate_user_id) && !mine(d.principal_user_id)) continue;
     rows.push({ at: d.created_at, actor: who(d.granted_by), target: who(d.delegate_user_id), change: `Delegation (${d.authority_level}) granted by ${who(d.principal_user_id)}`, scope: String(d.scope_type), reason: null });
@@ -144,7 +144,7 @@ export function historyFor(b: Bundle, names: Map<string, string>, userId?: strin
   }
   for (const e of b.auditEvents ?? []) {
     if (userId && e.target_user_id !== userId) continue;
-    rows.push({ at: e.created_at, actor: e.actor_identity ?? who(e.actor_user_id), target: who(e.target_user_id), change: `${e.outcome === "denied" ? "REFUSED — " : ""}${e.action}${e.role_key ? `: ${e.role_key}` : ""}${e.permission ? `: ${e.permission}` : ""}`, scope: e.scope_type ? `${e.scope_type}${e.scope_id ? ` ${e.scope_id}` : ""}` : "—", reason: e.reason, authoritative: true } as any);
+    rows.push({ at: e.created_at, actor: e.actor_identity ?? who(e.actor_user_id), target: who(e.target_user_id), change: `${e.outcome === "denied" ? "REFUSED - " : ""}${e.action}${e.role_key ? `: ${e.role_key}` : ""}${e.permission ? `: ${e.permission}` : ""}`, scope: e.scope_type ? `${e.scope_type}${e.scope_id ? ` ${e.scope_id}` : ""}` : "-", reason: e.reason, authoritative: true } as any);
   }
   return rows.filter((r) => r.at).sort((a, b2) => b2.at.localeCompare(a.at)).slice(0, 500);
 }

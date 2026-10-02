@@ -219,7 +219,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
   {
     id: "tax", title: "Tax", url: "/ops/tax", icon: "tax", group: "work", queues: ["tax"],
     screens: [
-      { title: "Tax workspace", url: "/ops/tax", description: "Prepared returns, 1065s, 1042-Ss and 1099s — prepare and review", step: "Prepare" },
+      { title: "Tax workspace", url: "/ops/tax", description: "Prepared returns, 1065s, 1042-Ss and 1099s - prepare and review", step: "Prepare" },
       { title: "K-1s and investor tax documents", url: "/ops/tax-documents", description: "K-1s and tax documents for investors", step: "Review" },
       { title: "Investor tax forms (W-9 / W-8)", url: "/ops/tax-review", description: "IRS form status, compliance policy and legal wording", step: "Review" },
     ],

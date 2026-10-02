@@ -12,13 +12,13 @@ import { getPortal } from "@/lib/portal.functions";
 export const Route = createFileRoute("/_authenticated/wire")({
   head: () => ({
     meta: [
-      { title: "Wire instructions — Harmonious investor portal" },
+      { title: "Wire instructions - Harmonious investor portal" },
       {
         name: "description",
         content:
           "View your fund's verified bank details, reference code and funding amount for your subscription.",
       },
-      { property: "og:title", content: "Wire instructions — Harmonious investor portal" },
+      { property: "og:title", content: "Wire instructions - Harmonious investor portal" },
       {
         property: "og:description",
         content: "Fund bank details and reference code for your subscription.",
@@ -62,7 +62,7 @@ function WirePage() {
       await navigator.clipboard.writeText(value);
       toast.success(`${label} copied`);
     } catch {
-      toast.error("Could not copy — please select the text manually.");
+      toast.error("Could not copy - please select the text manually.");
     }
   }
 

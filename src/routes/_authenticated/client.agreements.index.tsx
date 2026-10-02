@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/client/agreements/")({
 });
 
 const date = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-US") : "—";
+  value ? new Date(value).toLocaleDateString("en-US") : "-";
 
 const STAGE_LABEL: Record<string, string> = {
   draft: "Being prepared",

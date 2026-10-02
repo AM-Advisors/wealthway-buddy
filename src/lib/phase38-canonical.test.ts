@@ -47,7 +47,7 @@ describe("Person Resolution", () => {
   });
 });
 
-describe("Document Execution Status — all consumers agree", () => {
+describe("Document Execution Status - all consumers agree", () => {
   const cases: [any[], string, string, string][] = [
     [[{ role: "investor", status: "signed" }, { role: "fund_signatory", status: "sent" }], "awaiting_countersignature", "partially_signed", "awaiting_countersignature"],
     [[{ role: "investor", status: "signed" }, { role: "fund_manager", status: "sent" }], "awaiting_countersignature", "partially_signed", "awaiting_countersignature"],
@@ -68,7 +68,7 @@ describe("Document Execution Status — all consumers agree", () => {
   });
 });
 
-describe("Funding Status — all consumers agree", () => {
+describe("Funding Status - all consumers agree", () => {
   it("settled (legacy application) and funded (Investment) are both reconciled; reports are not", () => {
     for (const s of ["funded", "settled"]) {
       expect(isReconciledFunding(s)).toBe(true);

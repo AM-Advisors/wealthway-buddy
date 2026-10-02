@@ -25,13 +25,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/manager/closing")({
   head: () => ({
     meta: [
-      { title: "Closing Desk — Harmonious" },
+      { title: "Closing Desk - Harmonious" },
       {
         name: "description",
         content:
           "Confirm each investor's commitment is fully funded, set the closing date and publish the final documents to their portal.",
       },
-      { property: "og:title", content: "Closing Desk — Harmonious" },
+      { property: "og:title", content: "Closing Desk - Harmonious" },
       {
         property: "og:description",
         content: "Confirm funding, set closing dates and share final documents with investors.",
@@ -407,7 +407,7 @@ function ClosingDocuments({ row }: { row: any }) {
     <div className="space-y-3 rounded-lg border p-3">
       <p className="text-sm font-medium">Final documents</p>
       <p className="text-xs text-muted-foreground">
-        Countersigned subscription agreement, closing statement, side letters — the investor sees
+        Countersigned subscription agreement, closing statement, side letters - the investor sees
         these in their portal straight away.
       </p>
 

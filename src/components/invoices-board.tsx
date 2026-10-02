@@ -35,7 +35,7 @@ import {
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -254,7 +254,7 @@ export function InvoicesBoard() {
         <CardContent className="space-y-3">
           {clientPayments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No client payments reported yet — when a client confirms a wire or ACH from their
+              No client payments reported yet - when a client confirms a wire or ACH from their
               portal it appears here.
             </p>
           ) : (
@@ -272,7 +272,7 @@ export function InvoicesBoard() {
                     </span>
                   </p>
                   <p className="text-muted-foreground">
-                    Sent {inv.client_paid_on ?? "—"}
+                    Sent {inv.client_paid_on ?? "-"}
                     {inv.client_payment_reference
                       ? ` · reference ${inv.client_payment_reference}`
                       : " · no reference given"}

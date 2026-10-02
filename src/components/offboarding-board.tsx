@@ -173,7 +173,7 @@ export function OffboardingBoard() {
                 </Link>
               </div>
               <p className="text-sm text-muted-foreground">
-                Notice {c.noticeReceivedOn ?? "—"} · ends {c.effectiveEndDate ?? "—"}
+                Notice {c.noticeReceivedOn ?? "-"} · ends {c.effectiveEndDate ?? "-"}
                 {c.status !== "closed" && c.daysRemaining !== null
                   ? c.daysRemaining >= 0
                     ? ` · ${c.daysRemaining} days remaining`

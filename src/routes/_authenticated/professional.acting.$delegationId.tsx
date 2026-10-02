@@ -10,7 +10,7 @@ import {
 import { getDelegatedClient } from "@/lib/professional.functions";
 
 const money = (cents: number | null) =>
-  cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 function DelegatedClient() {
   const { delegationId } = useParams({ from: "/_authenticated/professional/acting/$delegationId" });
@@ -59,7 +59,7 @@ function DelegatedClient() {
       />
 
       {view.person ? (
-        <WorkspaceSection title="Client" description="Summary details only — never identity documents.">
+        <WorkspaceSection title="Client" description="Summary details only - never identity documents.">
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-muted-foreground">Name</dt>
@@ -67,22 +67,22 @@ function DelegatedClient() {
             </div>
             <div>
               <dt className="text-muted-foreground">Email</dt>
-              <dd>{view.person.email ?? "—"}</dd>
+              <dd>{view.person.email ?? "-"}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Location</dt>
-              <dd>{view.person.location || "—"}</dd>
+              <dd>{view.person.location || "-"}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Residence</dt>
-              <dd>{view.person.residence ?? "—"}</dd>
+              <dd>{view.person.residence ?? "-"}</dd>
             </div>
           </dl>
         </WorkspaceSection>
       ) : null}
 
       {view.compliance ? (
-        <WorkspaceSection title="Verification" description="Status only — no check provider data.">
+        <WorkspaceSection title="Verification" description="Status only - no check provider data.">
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-muted-foreground">Identity</dt>
@@ -98,7 +98,7 @@ function DelegatedClient() {
               {view.compliance.accreditations.map((a: any, i: number) => (
                 <li key={i}>
                   Accreditation: {a.status}
-                  {a.expiresAt ? ` — expires ${new Date(a.expiresAt).toLocaleDateString()}` : ""}
+                  {a.expiresAt ? ` - expires ${new Date(a.expiresAt).toLocaleDateString()}` : ""}
                 </li>
               ))}
             </ul>
@@ -113,7 +113,7 @@ function DelegatedClient() {
           <ul className="space-y-1 text-sm">
             {view.profiles.map((p: any) => (
               <li key={p.id}>
-                {p.label} — {String(p.type).replace(/_/g, " ")}
+                {p.label} - {String(p.type).replace(/_/g, " ")}
               </li>
             ))}
           </ul>
@@ -127,7 +127,7 @@ function DelegatedClient() {
           <ul className="space-y-1 text-sm">
             {view.investments.map((a: any) => (
               <li key={a.id}>
-                {a.fundName} — {money(a.commitmentCents)} — {String(a.status).replace(/_/g, " ")}
+                {a.fundName} - {money(a.commitmentCents)} - {String(a.status).replace(/_/g, " ")}
               </li>
             ))}
           </ul>
@@ -141,7 +141,7 @@ function DelegatedClient() {
           <ul className="space-y-1 text-sm">
             {view.documents.map((d: any) => (
               <li key={d.id}>
-                {d.name} — {d.status}
+                {d.name} - {d.status}
               </li>
             ))}
           </ul>
@@ -169,7 +169,7 @@ function DelegatedClient() {
           <ul className="space-y-1 text-sm">
             {view.banking.map((b: any) => (
               <li key={b.id}>
-                {b.institution ?? "Account"} — ending {b.endingIn ?? "••••"}
+                {b.institution ?? "Account"} - ending {b.endingIn ?? "••••"}
               </li>
             ))}
           </ul>

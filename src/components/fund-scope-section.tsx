@@ -30,7 +30,7 @@ export function ScopeSection({
   children: React.ReactNode;
 }) {
   // People who cannot read the client's scope (investors, for example) are not
-  // gated here — their access is already governed by the fund itself.
+  // gated here - their access is already governed by the fund itself.
   if (!scope.canRead) return <>{children}</>;
 
   const service = scope.serviceFor(section);

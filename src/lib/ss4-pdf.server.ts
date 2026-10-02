@@ -46,7 +46,7 @@ export interface Ss4Data {
   applicant_fax?: string;
 }
 
-/** Line 9a — Type of entity. */
+/** Line 9a - Type of entity. */
 export const SS4_ENTITY_KINDS = [
   { value: "sole_proprietor", label: "Sole proprietor", box: 0 },
   { value: "partnership", label: "Partnership", box: 2 },
@@ -57,7 +57,7 @@ export const SS4_ENTITY_KINDS = [
   { value: "other", label: "Other", box: 15, detail: "Describe the entity" },
 ] as const;
 
-/** Line 10 — Reason for applying. */
+/** Line 10 - Reason for applying. */
 export const SS4_REASONS = [
   { value: "started_business", label: "Started a new business", box: 0, detail: "Type of business" },
   { value: "banking_purpose", label: "Banking purpose", box: 8, detail: "Purpose" },
@@ -70,7 +70,7 @@ export const SS4_REASONS = [
   { value: "other", label: "Other", box: 7, detail: "Reason" },
 ] as const;
 
-/** Line 16 — Principal activity. */
+/** Line 16 - Principal activity. */
 export const SS4_ACTIVITIES = [
   { value: "finance_insurance", label: "Finance & insurance", box: 10 },
   { value: "real_estate", label: "Real estate", box: 8 },
@@ -81,8 +81,8 @@ export const SS4_ACTIVITIES = [
   { value: "transportation", label: "Transportation & warehousing", box: 4 },
   { value: "accommodation_food", label: "Accommodation & food service", box: 5 },
   { value: "retail", label: "Retail", box: 7 },
-  { value: "wholesale_agent", label: "Wholesale — agent/broker", box: 1 },
-  { value: "wholesale_other", label: "Wholesale — other", box: 6 },
+  { value: "wholesale_agent", label: "Wholesale - agent/broker", box: 1 },
+  { value: "wholesale_other", label: "Wholesale - other", box: 6 },
   { value: "other", label: "Other", box: 11, detail: true },
 ] as const;
 
@@ -207,7 +207,7 @@ export async function fillSs4Pdf(data: Ss4Data): Promise<Uint8Array> {
 
   for (const [line, key] of TEXT_LINES) setText(line, data[key]);
 
-  // Line 8a / 8c — limited liability company
+  // Line 8a / 8c - limited liability company
   if (data.is_llc) {
     check("c1_1", 0);
     check("c1_2", data.llc_us_organized === false ? 1 : 0);
@@ -215,7 +215,7 @@ export async function fillSs4Pdf(data: Ss4Data): Promise<Uint8Array> {
     check("c1_1", 1);
   }
 
-  // Line 9a — type of entity
+  // Line 9a - type of entity
   const entity = SS4_ENTITY_KINDS.find((k) => k.value === data.entity_kind);
   if (entity) {
     check("c1_3", entity.box);
@@ -223,7 +223,7 @@ export async function fillSs4Pdf(data: Ss4Data): Promise<Uint8Array> {
     if (detailLine) setText(detailLine, data.entity_detail);
   }
 
-  // Line 10 — reason for applying
+  // Line 10 - reason for applying
   const reason = SS4_REASONS.find((r) => r.value === data.reason);
   if (reason) {
     check("c1_4", reason.box);
@@ -231,11 +231,11 @@ export async function fillSs4Pdf(data: Ss4Data): Promise<Uint8Array> {
     if (detailLine) setText(detailLine, data.reason_detail);
   }
 
-  // Line 16 — principal activity
+  // Line 16 - principal activity
   const activity = SS4_ACTIVITIES.find((a) => a.value === data.principal_activity);
   if (activity) check("c1_6", activity.box);
 
-  // Line 18 — has the entity applied before
+  // Line 18 - has the entity applied before
   check("c1_7", data.previous_ein_applied ? 0 : 1);
 
   form.flatten();

@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const selectCls = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
-const fmtDate = (s?: string | null) => (s ? new Date(s.length === 10 ? `${s}T12:00:00` : s).toLocaleDateString() : "—");
+const fmtDate = (s?: string | null) => (s ? new Date(s.length === 10 ? `${s}T12:00:00` : s).toLocaleDateString() : "-");
 const usd = (n: number) => n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
 /** One place for the whole formation record. Staff edit; fund managers see a masked read view. */
@@ -64,7 +64,7 @@ export function FormationRecordCard({ offeringId }: { offeringId: string }) {
         <Section title="Formation documents">
           {d.documents.length === 0 ? <p className="text-sm text-muted-foreground">No formation documents yet.</p> : (
             <ul className="divide-y text-sm">{d.documents.map((doc: any) => (
-              <li key={doc.id} className="flex justify-between gap-2 py-1.5"><span>{doc.typeLabel}{doc.title !== doc.typeLabel ? ` — ${doc.title}` : ""} <span className="text-xs text-muted-foreground">v{doc.version}{!doc.current ? " (earlier version)" : ""}</span></span><span className="text-xs text-muted-foreground">{fmtDate(doc.at)}</span></li>
+              <li key={doc.id} className="flex justify-between gap-2 py-1.5"><span>{doc.typeLabel}{doc.title !== doc.typeLabel ? ` - ${doc.title}` : ""} <span className="text-xs text-muted-foreground">v{doc.version}{!doc.current ? " (earlier version)" : ""}</span></span><span className="text-xs text-muted-foreground">{fmtDate(doc.at)}</span></li>
             ))}</ul>
           )}
           {d.canEdit && <DocumentUpload offeringId={offeringId} onChanged={refresh} />}
@@ -86,7 +86,7 @@ export function FormationRecordCard({ offeringId }: { offeringId: string }) {
 }
 
 function Item({ k, v }: { k: string; v?: string | null | undefined }) {
-  return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd>{v || "—"}</dd></div>;
+  return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd>{v || "-"}</dd></div>;
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return <section className="space-y-2 border-t pt-3"><h4 className="text-sm font-semibold">{title}</h4>{children}</section>;
@@ -194,14 +194,14 @@ function Discrepancies({ offeringId, d, onChanged }: { offeringId: string; d: an
       {d.staff.discrepancies.length === 0 && <p className="text-muted-foreground">None recorded.</p>}
       <ul className="space-y-2">{d.staff.discrepancies.map((x: any) => (
         <li key={x.id} className="rounded-md border p-2">
-          <p><span className="font-medium">{x.field}</span>: ours “{x.ours || "—"}”, provider “{x.provider || "—"}” <Badge variant={x.status === "open" ? "destructive" : "secondary"}>{x.status === "open" ? "Open" : "Settled"}</Badge></p>
+          <p><span className="font-medium">{x.field}</span>: ours “{x.ours || "-"}”, provider “{x.provider || "-"}” <Badge variant={x.status === "open" ? "destructive" : "secondary"}>{x.status === "open" ? "Open" : "Settled"}</Badge></p>
           {x.status === "open" ? (
             <div className="mt-1 flex flex-wrap gap-2">
               <Input className="h-8 max-w-xs" placeholder="How it was settled" value={notes[x.id] ?? ""} onChange={(e) => setNotes({ ...notes, [x.id]: e.target.value })} />
               <Button size="sm" variant="outline" disabled={resolve.busy} onClick={() => resolve.run({ offeringId, id: x.id, resolution: "kept_ours", note: notes[x.id] ?? "" }, "Settled")}>Keep ours</Button>
               <Button size="sm" variant="outline" disabled={resolve.busy} onClick={() => resolve.run({ offeringId, id: x.id, resolution: "accepted_provider", note: notes[x.id] ?? "" }, "Settled")}>Use provider's</Button>
             </div>
-          ) : <p className="text-xs text-muted-foreground">{x.resolution === "kept_ours" ? "Kept ours" : x.resolution === "accepted_provider" ? "Used provider's" : "Other"} — {x.note}</p>}
+          ) : <p className="text-xs text-muted-foreground">{x.resolution === "kept_ours" ? "Kept ours" : x.resolution === "accepted_provider" ? "Used provider's" : "Other"} - {x.note}</p>}
         </li>
       ))}</ul>
       <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">

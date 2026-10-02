@@ -31,7 +31,7 @@ export function PortalTopbar(_props: { onSignOut: () => void }) {
   useEffect(() => {
     if (typeof document === "undefined" || !inOperations) return;
     if (!document.title.startsWith("Harmonious Operations")) {
-      document.title = `Harmonious Operations — ${document.title}`;
+      document.title = `Harmonious Operations - ${document.title}`;
     }
   }, [inOperations, pathname]);
 

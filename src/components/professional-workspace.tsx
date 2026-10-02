@@ -69,9 +69,9 @@ export function ActingOnBehalfBanner({
         <div>
           <p className="text-sm font-medium">Acting on behalf of {principalName}</p>
           <p className="text-sm text-muted-foreground">
-            {organizationName ? `Through ${organizationName} — ` : ""}
-            {scopeLabel} — {AUTHORITY_LABELS[authorityLevel] ?? authorityLevel}
-            {expiresAt ? ` — until ${new Date(expiresAt).toLocaleDateString()}` : ""}
+            {organizationName ? `Through ${organizationName} - ` : ""}
+            {scopeLabel} - {AUTHORITY_LABELS[authorityLevel] ?? authorityLevel}
+            {expiresAt ? ` - until ${new Date(expiresAt).toLocaleDateString()}` : ""}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             You can view {capabilities.map((c) => CAPABILITY_LABELS[c] ?? c).join(", ")}. Nothing can

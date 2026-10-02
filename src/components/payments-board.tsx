@@ -26,7 +26,7 @@ import {
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "Draft",

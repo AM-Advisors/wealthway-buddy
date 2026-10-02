@@ -8,7 +8,7 @@ import { canonicalRedirect } from "./lib/host-routing";
  * Keeps each page on its own address: client pages on app.harmonious.co,
  * Harmonious Operations on ops.harmonious.co, old links forwarded to whichever
  * of the two now owns them. Temporary redirects while the new address is being
- * proven. This is addressing only — it grants nothing; every request is still
+ * proven. This is addressing only - it grants nothing; every request is still
  * authorized on the server.
  */
 const canonicalHostMiddleware = createMiddleware().server(async ({ next, request }) => {

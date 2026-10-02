@@ -105,7 +105,7 @@ export const startSigningSession = createServerFn({ method: "POST" })
 
 /**
  * Asks Box what actually happened. Closing the modal calls this; it cannot
- * mark anything signed by itself — only Box's own status can.
+ * mark anything signed by itself - only Box's own status can.
  */
 export const refreshSigningState = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

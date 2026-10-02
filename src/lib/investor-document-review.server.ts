@@ -2,7 +2,7 @@
  * Investor document review: the fund manager approves each investor's
  * signature documents before the investor can sign, and signed agreements are
  * listed back for the manager. Approvals are append-only and tied to the
- * document version in use — a new version needs a fresh approval.
+ * document version in use - a new version needs a fresh approval.
  * Invited funds: an investor sees only funds whose invitation matches their
  * verified email, and starting one runs the normal startOnboarding flow.
  */

@@ -45,7 +45,7 @@ export type DestinationAudit = {
 
 export type DestinationDecision = { allowed: true } | { allowed: false; reason: string };
 
-export const WITHHELD_MESSAGE = "Drive filing withheld — destination permissions too broad";
+export const WITHHELD_MESSAGE = "Drive filing withheld - destination permissions too broad";
 
 /**
  * Decide whether a document of this classification may be filed where the
@@ -164,10 +164,10 @@ export type RepositoryConfig = {
   test: RepositoryRoot | null;
 };
 
-export const INVESTOR_UNAVAILABLE = "Investor Drive filing unavailable — repository permissions require review";
+export const INVESTOR_UNAVAILABLE = "Investor Drive filing unavailable - repository permissions require review";
 export const TEST_UNAVAILABLE = "Test Drive configuration unavailable";
 export const FUND_UNAVAILABLE = "Fund Drive repository unavailable";
-export const HARMONIOUS_STORAGE = "Kept in private Harmonious storage — never filed to Google Drive";
+export const HARMONIOUS_STORAGE = "Kept in private Harmonious storage - never filed to Google Drive";
 
 /** Roots that overlap in any way are treated as misconfigured, never guessed. */
 export function repositoryConfigProblem(c: RepositoryConfig): string | null {

@@ -136,7 +136,7 @@ function ClientInvitation({
             What happens next
           </Text>
           <Text style={body}>
-            1. Choose your password using the button above. The link works once and then expires — we
+            1. Choose your password using the button above. The link works once and then expires - we
             never send passwords by email.
             <br />
             2. Sign the privacy notice, platform terms, fee schedule and electronic-records consent.

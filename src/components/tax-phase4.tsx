@@ -18,8 +18,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const sel = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
-const usd = (c: number | null | undefined) => (c == null ? "—" : (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" }));
-const fmt = (s?: string | null) => (s ? new Date(s.length === 10 ? `${s}T12:00:00` : s).toLocaleDateString() : "—");
+const usd = (c: number | null | undefined) => (c == null ? "-" : (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" }));
+const fmt = (s?: string | null) => (s ? new Date(s.length === 10 ? `${s}T12:00:00` : s).toLocaleDateString() : "-");
 const STAGE_LABEL: Record<DetailStage, string> = { draft: "Draft", ready_for_review: "Ready for review", reviewed: "Reviewed", returned: "Returned for changes" };
 
 function useRun<T>(fn: (a: { data: T }) => Promise<unknown>, done: () => void) {
@@ -74,7 +74,7 @@ function Detail({ returnId }: { returnId: string }) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-2"><CardTitle className="text-base">{d.fundName} — Form 1065, {d.taxYear}</CardTitle><Badge variant="secondary">{d.stage ? STAGE_LABEL[d.stage as DetailStage] : "Not started"}</Badge></div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><CardTitle className="text-base">{d.fundName} - Form 1065, {d.taxYear}</CardTitle><Badge variant="secondary">{d.stage ? STAGE_LABEL[d.stage as DetailStage] : "Not started"}</Badge></div>
         <CardDescription>{d.k1Count} current K-1s. {d.prefilled ? "Amounts below are pre-filled from the prepared return and K-1s; save to start the detail." : `Detail version ${d.detailVersion}.`} Every save adds a version; nothing is filed from here.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -86,7 +86,7 @@ function Detail({ returnId }: { returnId: string }) {
               <div key={l.id} className="grid grid-cols-[1fr_10rem] items-center gap-2 text-sm">
                 <span><span className="text-xs text-muted-foreground">Line {l.line}</span> {l.label}</span>
                 {l.kind === "text" ? <Input disabled={locked} value={ans[l.id] ?? ""} onChange={(e) => setAns({ ...ans, [l.id]: e.target.value })} />
-                  : l.kind === "yesno" ? <select disabled={locked} className={sel} value={ans[l.id] ?? ""} onChange={(e) => setAns({ ...ans, [l.id]: e.target.value })}><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+                  : l.kind === "yesno" ? <select disabled={locked} className={sel} value={ans[l.id] ?? ""} onChange={(e) => setAns({ ...ans, [l.id]: e.target.value })}><option value="">-</option><option value="yes">Yes</option><option value="no">No</option></select>
                   : <Input disabled={locked} inputMode="decimal" className="text-right" value={vals[l.id] ?? ""} onChange={(e) => setVals({ ...vals, [l.id]: e.target.value })} />}
               </div>
             ))}</div>
@@ -105,7 +105,7 @@ function Detail({ returnId }: { returnId: string }) {
         )}
         {d.canEdit && d.history.length > 0 && (
           <section className="space-y-1 border-t pt-3"><h4 className="text-sm font-semibold">History</h4>
-            <ol className="text-sm">{d.history.map((h: any) => <li key={h.version}>v{h.version} · {STAGE_LABEL[h.stage as DetailStage]} · {h.by} · {fmt(h.at)}{h.note ? ` — ${h.note}` : ""}</li>)}</ol>
+            <ol className="text-sm">{d.history.map((h: any) => <li key={h.version}>v{h.version} · {STAGE_LABEL[h.stage as DetailStage]} · {h.by} · {fmt(h.at)}{h.note ? ` - ${h.note}` : ""}</li>)}</ol>
           </section>
         )}
       </CardContent>
@@ -137,11 +137,11 @@ export function K1HistoryPanel() {
             <p className="font-medium">{c.investor} · {c.taxYear}</p>
             <ol className="mt-1 space-y-1">{c.versions.map((v: any) => (
               <li key={v.id}>
-                <span>v{v.version} — {v.status}</span> <span className="text-xs text-muted-foreground">{fmt(v.at)}</span>
+                <span>v{v.version} - {v.status}</span> <span className="text-xs text-muted-foreground">{fmt(v.at)}</span>
                 {d.canSeeDetail ? <>
                   {v.reason && <span className="block text-xs">Reason: {v.reason}</span>}
                   {v.changes?.length > 0 && <span className="block text-xs text-muted-foreground">Changed: {v.changes.map((ch: any) => `Box ${ch.box} ${usd(ch.from)} → ${usd(ch.to)}`).join("; ")}</span>}
-                  <span className="block text-xs text-muted-foreground">Prepared {v.preparedBy ?? "—"} · Reviewed {v.reviewedBy ?? "—"} · Approved {v.approvedBy ?? "—"}</span>
+                  <span className="block text-xs text-muted-foreground">Prepared {v.preparedBy ?? "-"} · Reviewed {v.reviewedBy ?? "-"} · Approved {v.approvedBy ?? "-"}</span>
                 </> : v.changedBoxes > 0 && <span className="block text-xs text-muted-foreground">{v.changedBoxes} boxes changed</span>}
               </li>
             ))}</ol>
@@ -192,7 +192,7 @@ function PfCard({ f, funds, onChanged }: { f: any; funds: { id: string; name: st
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-2"><CardTitle className="text-base">{f.adviserName} — {f.periodType === "annual" ? "Annual" : "Quarterly"}, period ending {fmt(f.periodEnd)}</CardTitle><Badge variant="secondary">{PF_STATUS_LABEL[status]}</Badge></div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><CardTitle className="text-base">{f.adviserName} - {f.periodType === "annual" ? "Annual" : "Quarterly"}, period ending {fmt(f.periodEnd)}</CardTitle><Badge variant="secondary">{PF_STATUS_LABEL[status]}</Badge></div>
         {c?.dueDate && <CardDescription>Due {fmt(c.dueDate)}{c.dueIn != null && status !== "filed_by_adviser" ? (c.dueIn >= 0 ? ` (in ${c.dueIn} days)` : ` (${-c.dueIn} days ago)`) : ""}{c.confirmation ? ` · Filed ${fmt(c.filedOn)}, confirmation ${c.confirmation}` : ""}</CardDescription>}
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
@@ -217,7 +217,7 @@ function PfCard({ f, funds, onChanged }: { f: any; funds: { id: string; name: st
           </div>
         </>}
         <details><summary className="cursor-pointer text-xs text-muted-foreground">History ({f.history.length})</summary>
-          <ol className="mt-1 text-xs">{f.history.map((h: any) => <li key={h.version}>v{h.version} · {PF_STATUS_LABEL[h.status as PfStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` — ${h.note}` : ""}</li>)}</ol>
+          <ol className="mt-1 text-xs">{f.history.map((h: any) => <li key={h.version}>v{h.version} · {PF_STATUS_LABEL[h.status as PfStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` - ${h.note}` : ""}</li>)}</ol>
         </details>
       </CardContent>
     </Card>
@@ -288,12 +288,12 @@ function IrsItem({ r, canEdit, onChanged }: { r: any; canEdit: boolean; onChange
   return (
     <li className="rounded-md border p-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium">{r.fundName} · {kind}{r.noticeCode ? ` ${r.noticeCode}` : ""} — {r.subject}</span>
+        <span className="font-medium">{r.fundName} · {kind}{r.noticeCode ? ` ${r.noticeCode}` : ""} - {r.subject}</span>
         <span className="flex gap-1">{r.dueIn != null && r.dueIn <= 7 && <Badge variant="destructive">{r.dueIn < 0 ? "Response past due" : `Due in ${r.dueIn} days`}</Badge>}<Badge variant="secondary">{IRS_STATUS_LABEL[r.status as IrsStatus]}</Badge></span>
       </div>
       <p className="text-xs text-muted-foreground">{fmt(r.receivedOn)}{r.taxYear ? ` · Tax year ${r.taxYear}` : ""}{r.formType ? ` · Form ${r.formType}` : ""}{r.responseDue ? ` · Response due ${fmt(r.responseDue)}` : ""}{canEdit && r.shareWithManager ? " · Shown to managers" : ""}{canEdit && r.hasDocument ? " · Copy on file" : ""}</p>
       {canEdit && <>
-        <ol className="mt-1 text-xs text-muted-foreground">{r.history.map((h: any, i: number) => <li key={i}>{IRS_STATUS_LABEL[h.status as IrsStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` — ${h.note}` : ""}</li>)}</ol>
+        <ol className="mt-1 text-xs text-muted-foreground">{r.history.map((h: any, i: number) => <li key={i}>{IRS_STATUS_LABEL[h.status as IrsStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` - ${h.note}` : ""}</li>)}</ol>
         {r.status !== "closed" && <div className="mt-2 flex flex-wrap gap-2">
           <Input className="h-8 max-w-sm" placeholder="What happened" value={note} onChange={(e) => setNote(e.target.value)} />
           {r.status === "open" && <Button size="sm" variant="outline" disabled={busy} onClick={() => run({ id: r.id, status: "responded", note }, "Updated").then((ok) => ok && setNote(""))}>Mark responded</Button>}

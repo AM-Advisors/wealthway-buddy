@@ -78,20 +78,20 @@ const SAMPLES: Record<Provider, Sample> = {
       { holder: "Harbourline Ventures", type: "Preferred", klass: "Series A", quantity: 2_400_000, issued: "19 Jun 2024", state: "ready" },
       { holder: "J. Okafor", type: "Option", klass: "Option pool", quantity: 120_000, issued: "02 Feb 2023", state: "ready" },
       {
-        holder: "SPV — Ridgeway Co-Invest",
+        holder: "SPV - Ridgeway Co-Invest",
         type: "Preferred",
         klass: "Series A",
         quantity: 600_000,
         issued: "19 Jun 2024",
         state: "attention",
-        note: "Held through an SPV — we ask who sits behind it before recording.",
+        note: "Held through an SPV - we ask who sits behind it before recording.",
       },
       {
         holder: "Unnamed holder (row 41)",
         type: "Common",
-        klass: "—",
+        klass: "-",
         quantity: 25_000,
-        issued: "—",
+        issued: "-",
         state: "attention",
         note: "No share class and no issue date in the file. Flagged, never guessed.",
       },
@@ -114,7 +114,7 @@ const SAMPLES: Record<Provider, Sample> = {
         status: "resolved",
         raised: "Series A issued equals authorised, leaving nothing spare",
         reason: "Checked against the Series A financing documents.",
-        resolution: "Correct — the round was fully allocated at close. Settled by the founder.",
+        resolution: "Correct - the round was fully allocated at close. Settled by the founder.",
       },
     ],
   },
@@ -132,7 +132,7 @@ const SAMPLES: Record<Provider, Sample> = {
     rows: [
       { holder: "Dana Whitfield", type: "Common", klass: "Common", quantity: 4_000_000, issued: "12 Mar 2021", state: "ready" },
       { holder: "Priya Raman", type: "Common", klass: "Common", quantity: 3_200_000, issued: "12 Mar 2021", state: "ready" },
-      { holder: "Northgate Seed Fund I", type: "SAFE", klass: "—", quantity: 0, issued: "04 Nov 2022", state: "ready", note: "Converts at the next priced round." },
+      { holder: "Northgate Seed Fund I", type: "SAFE", klass: "-", quantity: 0, issued: "04 Nov 2022", state: "ready", note: "Converts at the next priced round." },
       { holder: "Harbourline Ventures", type: "Preferred", klass: "Series A", quantity: 2_400_000, issued: "19 Jun 2024", state: "ready" },
       { holder: "M. Alvarez", type: "Option", klass: "Option pool", quantity: 90_000, issued: "15 Aug 2023", state: "ready" },
       {
@@ -199,11 +199,11 @@ export function DemoMigration() {
             {SAMPLES[key].label} export
           </button>
         ))}
-        <Badge variant="outline">Sample data — not a real company</Badge>
+        <Badge variant="outline">Sample data - not a real company</Badge>
       </div>
 
       <MigrationWizard
-        title={`Acme Labs, Inc. — ${sample.label} migration`}
+        title={`Acme Labs, Inc. - ${sample.label} migration`}
         description={`${sample.fileName} · ${sample.detected}`}
         facts={{
           total: sample.rows.length,
@@ -273,7 +273,7 @@ export function DemoMigration() {
                     <TableCell>{row.type}</TableCell>
                     <TableCell>{row.klass}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {row.quantity ? fmt(row.quantity) : "—"}
+                      {row.quantity ? fmt(row.quantity) : "-"}
                     </TableCell>
                     <TableCell>{row.issued}</TableCell>
                   </TableRow>

@@ -5,16 +5,16 @@ import { getClientIntakes, REG_TYPES } from "@/lib/client-intake.functions";
 import { Badge } from "@/components/ui/badge";
 
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
 const money = (value: string | undefined) => {
   const n = Number(String(value ?? "").replace(/[^0-9.]/g, ""));
   return Number.isFinite(n) && n > 0
     ? n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
-    : "—";
+    : "-";
 };
 
-const regLabel = (v: string) => REG_TYPES.find((r) => r.value === v)?.label ?? v ?? "—";
+const regLabel = (v: string) => REG_TYPES.find((r) => r.value === v)?.label ?? v ?? "-";
 
 /** Staff view: the fund details the client filled in when they first signed in. */
 export function ClientIntakePanel({ clientId }: { clientId: string }) {
@@ -81,7 +81,7 @@ function Row({ label, value }: { label: string; value: string | undefined | null
   return (
     <div className="flex min-w-0 flex-wrap gap-x-2">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 break-words">{String(value ?? "").trim() === "" ? "—" : value}</dd>
+      <dd className="min-w-0 break-words">{String(value ?? "").trim() === "" ? "-" : value}</dd>
     </div>
   );
 }

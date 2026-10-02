@@ -68,17 +68,17 @@ function SecurityActivityPage() {
               {(data?.rows ?? []).map((r: any) => (
                 <tr key={r.id} className="border-t">
                   <td className="p-2 whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</td>
-                  <td>{r.email ?? r.user_id?.slice(0, 8) ?? "—"}</td>
+                  <td>{r.email ?? r.user_id?.slice(0, 8) ?? "-"}</td>
                   <td><Badge variant="outline">{r.event_type.replace(/_/g, " ")}</Badge></td>
-                  <td className="max-w-[220px] truncate">{r.action ?? r.path ?? "—"}</td>
-                  <td>{r.ip ?? "—"}</td>
-                  <td>{[r.city, r.region, r.country].filter(Boolean).join(", ") || "—"}</td>
+                  <td className="max-w-[220px] truncate">{r.action ?? r.path ?? "-"}</td>
+                  <td>{r.ip ?? "-"}</td>
+                  <td>{[r.city, r.region, r.country].filter(Boolean).join(", ") || "-"}</td>
                   <td>
                     {r.lat != null ? (
                       <a className="underline" target="_blank" rel="noreferrer" href={`https://www.openstreetmap.org/?mlat=${r.lat}&mlon=${r.lng}#map=15/${r.lat}/${r.lng}`}>
                         {r.lat.toFixed(4)}, {r.lng.toFixed(4)} (±{Math.round(r.accuracy_m ?? 0)}m)
                       </a>
-                    ) : r.gps_declined ? "Declined" : "—"}
+                    ) : r.gps_declined ? "Declined" : "-"}
                   </td>
                 </tr>
               ))}

@@ -59,8 +59,8 @@ export function appUrl(
 
 /**
  * Accepts only a same-application path. Anything that could leave the
- * application — absolute URLs, protocol-relative paths, backslash tricks,
- * control characters — is refused and the fallback is used instead.
+ * application - absolute URLs, protocol-relative paths, backslash tricks,
+ * control characters - is refused and the fallback is used instead.
  */
 export function safeInternalPath(value: string | null | undefined, fallback = "/"): string {
   if (typeof value !== "string") return fallback;

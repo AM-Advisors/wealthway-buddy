@@ -90,7 +90,7 @@ export const getContractFamily = createServerFn({ method: "GET" })
     };
   });
 
-/** Compare Versions — side-by-side on structured terms with links to source language. */
+/** Compare Versions - side-by-side on structured terms with links to source language. */
 export const compareContractDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ beforeId: z.string().uuid(), afterId: z.string().uuid() }).parse(d))
@@ -368,7 +368,7 @@ export const saveStandardAgreementDraft = createServerFn({ method: "POST" })
     return { draftId: id };
   });
 
-/** Authorized Harmonious review of the preview — must be a different person than the preparer. */
+/** Authorized Harmonious review of the preview - must be a different person than the preparer. */
 export const approveStandardAgreementPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))

@@ -47,8 +47,8 @@ describe("tax routing", () => {
     expect(taxFormExpiresOn("w9", now)).toBeNull();
   });
   it("manager sees only coarse tax labels", () => {
-    expect(managerTaxLabel("valid")).toBe("Tax — Complete");
-    expect(managerTaxLabel("review_required")).toBe("Tax — Needs Attention");
+    expect(managerTaxLabel("valid")).toBe("Tax - Complete");
+    expect(managerTaxLabel("review_required")).toBe("Tax - Needs Attention");
   });
   it("TIN is never stored in full and never returned to managers", () => {
     const srv = readFileSync("src/lib/onboarding-compliance.server.ts", "utf8");

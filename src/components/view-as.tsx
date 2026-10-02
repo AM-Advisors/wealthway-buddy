@@ -137,7 +137,7 @@ export function EditContextBannerView({ ctx, onReturn, onExit }: { ctx: any; onR
   );
 }
 
-/** Server-validated edit context. Display only — grants no permission; saves use their normal checks. */
+/** Server-validated edit context. Display only - grants no permission; saves use their normal checks. */
 export function EditContextBanner() {
   const load = useServerFn(activeEditContextFn);
   const exit = useServerFn(exitEditContextFn);

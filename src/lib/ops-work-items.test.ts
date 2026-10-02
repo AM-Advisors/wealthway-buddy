@@ -29,7 +29,7 @@ const item = (over: Partial<WorkItem> = {}): WorkItem => ({
   recordType: "investor",
   recordId: "inv-1",
   recordTab: "identity",
-  title: "Investor One — identity check",
+  title: "Investor One - identity check",
   reason: "Submitted for review",
   workflowState: "review",
   requiredAction: "review",

@@ -87,7 +87,7 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           );
 
           // Correlation is by the opaque Harmonious reference or the session
-          // Harmonious recorded — never by email address alone.
+          // Harmonious recorded - never by email address alone.
           let verification = await resolveVerification({
             vendorData: body["vendor_data"] ? String(body["vendor_data"]) : null,
             sessionId,

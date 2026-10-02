@@ -113,7 +113,7 @@ export const getOnboardingProgress = createServerFn({ method: "POST" })
         .like("service_key", "cap_table%"),
     ]);
 
-    // Cap table plan per client — included entitlements, highest plan first.
+    // Cap table plan per client - included entitlements, highest plan first.
     const capPlanByClient = new Map<string, string>();
     const keysByClient = new Map<string, string[]>();
     for (const row of ((entitlements ?? []) as any[]).filter(

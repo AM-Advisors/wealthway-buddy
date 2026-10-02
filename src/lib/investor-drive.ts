@@ -1,12 +1,12 @@
 /**
- * Investor Google Drive connection — pure rules (read-only intake).
+ * Investor Google Drive connection - pure rules (read-only intake).
  * Drive is never the source of identity, compliance, ownership or permissions.
  */
 import { neverInDrive, classifyDocument, type DriveClassification } from "@/lib/drive-policy";
 import { isRestrictedEvidence } from "@/lib/drive-intake";
 
-export const BLOCKED_MESSAGE = "Blocked — this document type cannot be imported from Google Drive.";
-export const UPDATED_MESSAGE = "Updated in Google Drive — review new version";
+export const BLOCKED_MESSAGE = "Blocked - this document type cannot be imported from Google Drive.";
+export const UPDATED_MESSAGE = "Updated in Google Drive - review new version";
 export const ALREADY_IMPORTED = "Already imported";
 export const OUTSIDE_APPROVED = "That folder is outside the approved Restricted Investor Records repository.";
 
@@ -22,7 +22,7 @@ export type FolderFacts = { id: string; mimeType: string; driveId: string | null
 
 /** The selected folder must be a live folder beneath the configured root of the configured drive. */
 export function folderProblem(facts: FolderFacts, root: { driveId: string; rootId: string } | null): string | null {
-  if (!root) return "Investor Drive filing unavailable — repository permissions require review";
+  if (!root) return "Investor Drive filing unavailable - repository permissions require review";
   if (!facts || facts.trashed) return "That Drive folder could not be found.";
   if (facts.mimeType !== "application/vnd.google-apps.folder") return "Choose a folder, not a file.";
   if (facts.driveId !== root.driveId) return OUTSIDE_APPROVED;
@@ -50,7 +50,7 @@ export function fileStatus(file: DriveFile, prior: PriorImport[], ctx: { offerin
   return same ? "current" : "updated";
 }
 
-/** Harmonious copies whose Drive original is gone stay in Harmonious — reported, never deleted. */
+/** Harmonious copies whose Drive original is gone stay in Harmonious - reported, never deleted. */
 export function missingFromDrive(files: DriveFile[], prior: PriorImport[], ctx: { offeringId: string; profileId: string }): string[] {
   const present = new Set(files.map((f) => f.id));
   return prior.filter((p) => p.offering_id === ctx.offeringId && p.investment_profile_id === ctx.profileId && !present.has(p.drive_file_id)).map((p) => p.id);
@@ -61,7 +61,7 @@ export const STATUS_LABELS: Record<FileStatus, string> = {
   updated: UPDATED_MESSAGE,
   current: "Current",
   blocked: BLOCKED_MESSAGE,
-  other_context: "Needs Review — imported for a different fund or profile",
+  other_context: "Needs Review - imported for a different fund or profile",
 };
 
 /** Proposed classification is a suggestion; it never approves anything. */

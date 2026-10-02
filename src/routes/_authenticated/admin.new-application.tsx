@@ -15,13 +15,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 export const Route = createFileRoute("/_authenticated/admin/new-application")({
   head: () => ({
     meta: [
-      { title: "Open an Investor Application — Harmonious Admin" },
+      { title: "Open an Investor Application - Harmonious Admin" },
       {
         name: "description",
         content:
           "Open a real investor application against a live Harmonious fund and track its onboarding status from the review queue.",
       },
-      { property: "og:title", content: "Open an Investor Application — Harmonious Admin" },
+      { property: "og:title", content: "Open an Investor Application - Harmonious Admin" },
       {
         property: "og:description",
         content: "Create an investor's application, grant fund access and send the onboarding invitation.",

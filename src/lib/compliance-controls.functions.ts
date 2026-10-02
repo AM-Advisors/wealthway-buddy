@@ -74,8 +74,8 @@ export const getCompliance = createServerFn({ method: "GET" })
     const report = BASELINE_CONTROLS.map((bc) => {
       const row = controlRows.find((r) => r.control_key === bc.key);
       const hasEv = evRows.filter((e) => e.control_key === bc.key);
-      return { control: `${bc.key} — ${bc.name}`, implementation: bc.implementation, available: [bc.evidenceAvailable, hasEv.length ? `${hasEv.length} evidence record(s)` : ""].filter(Boolean).join("; "),
-        missing: hasEv.some((e) => e.reviews.some((r: any) => r.decision === "accepted")) ? "—" : bc.evidenceMissing,
+      return { control: `${bc.key} - ${bc.name}`, implementation: bc.implementation, available: [bc.evidenceAvailable, hasEv.length ? `${hasEv.length} evidence record(s)` : ""].filter(Boolean).join("; "),
+        missing: hasEv.some((e) => e.reviews.some((r: any) => r.decision === "accepted")) ? "-" : bc.evidenceMissing,
         soc2: bc.mappings.filter((m) => m.startsWith("SOC 2:")).map((m) => m.slice(6)).join(", "), gdpr: bc.mappings.filter((m) => m.startsWith("GDPR:")).map((m) => m.slice(5)).join(", "),
         status: row?.status ?? bc.status };
     });

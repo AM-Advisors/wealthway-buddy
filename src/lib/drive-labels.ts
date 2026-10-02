@@ -25,7 +25,7 @@ export function intakeActionsEnabled(input: { repositoryReady: boolean; rowCount
   return input.repositoryReady && input.rowCount > 0;
 }
 
-/** Add Fund heading — client is fixed by the workspace, never chosen in the dialog. */
+/** Add Fund heading - client is fixed by the workspace, never chosen in the dialog. */
 export function addFundTitle(clientName: string | null | undefined): string {
   const n = (clientName ?? "").trim();
   return n ? `Add Fund for ${n}` : "Add Fund";

@@ -192,7 +192,7 @@ export async function buildPreview(db: any, clientId: string, offeringId: string
   } else {
     const r = resolveSowTemplate(templates, type, today);
     if (r.status === "resolved") template = r.template;
-    else templateProblem = r.status === "ambiguous" ? "Two approved templates share the latest version — Harmonious review required." : NO_TEMPLATE_MESSAGE;
+    else templateProblem = r.status === "ambiguous" ? "Two approved templates share the latest version - Harmonious review required." : NO_TEMPLATE_MESSAGE;
   }
   if (!template) blockers.push({ kind: "no_template", message: templateProblem ?? NO_TEMPLATE_MESSAGE });
   if (!lines.length) blockers.push({ kind: "no_services", message: amendment ? "No service changes are pending for this engagement." : "Select at least one service." });
@@ -253,7 +253,7 @@ export async function ensureDraftSow(
     const { error } = await db.from("client_sows").update(payload).eq("id", sowId).is("executed_at", null);
     if (error) throw new Error(error.message);
   } else {
-    const title = `${preview.mode === "amendment" ? "SOW amendment" : "Draft SOW"} — ${preview.offering?.name ?? "Client services"}`;
+    const title = `${preview.mode === "amendment" ? "SOW amendment" : "Draft SOW"} - ${preview.offering?.name ?? "Client services"}`;
     const { data, error } = await db
       .from("client_sows")
       .insert({
@@ -267,7 +267,7 @@ export async function ensureDraftSow(
         approval_status: "pending",
         client_status: "pending",
         amends_sow_id: preview.mode === "amendment" ? preview.executedSow!.id : null,
-        notes: "Draft SOW — Generated from current approved template. Not accepted, signed or executed.",
+        notes: "Draft SOW - Generated from current approved template. Not accepted, signed or executed.",
         created_by: actor,
       })
       .select("id")

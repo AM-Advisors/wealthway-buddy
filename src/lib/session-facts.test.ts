@@ -1,6 +1,6 @@
-// @ts-nocheck — test fixtures use loosely-typed fake database rows.
+// @ts-nocheck - test fixtures use loosely-typed fake database rows.
 /**
- * Consolidation Stage 1 — parity and adversarial proofs for the single
+ * Consolidation Stage 1 - parity and adversarial proofs for the single
  * canonical session resolver (gatherFacts -> resolution -> projections).
  *
  * Parity: each legacy probe's pre-refactor logic is reproduced verbatim below
@@ -248,7 +248,7 @@ describe("parity: canonical resolver vs legacy probes", () => {
     expect(facts.operations.operationsEntry).toBe(true);
     expect(facts.operations.capabilities.length).toBeGreaterThan(0);
     expect(facts.operations.capabilities).not.toContain("capital:execute");
-    // Legacy coarse view says "not allowed" for compliance — unchanged, documented.
+    // Legacy coarse view says "not allowed" for compliance - unchanged, documented.
     expect(operationsAccessProjection(facts.operations).allowed).toBe(false);
   });
 

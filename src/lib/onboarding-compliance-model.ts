@@ -154,12 +154,12 @@ export function taxRequirementState(input: {
   return { state: "missing", reason: `Complete ${IRS_FORM_REVISIONS[routing.formType].title}.` };
 }
 
-export const MANAGER_TAX_LABELS = ["Tax — Required", "Tax — In Progress", "Tax — Complete", "Tax — Needs Attention"] as const;
-export function managerTaxLabel(state: ChecklistState | string): (typeof MANAGER_TAX_LABELS)[number] | "Tax — Not needed" {
-  if (state === "valid") return "Tax — Complete";
-  if (state === "not_applicable") return "Tax — Not needed";
-  if (state === "review_required" || state === "refresh_required") return "Tax — Needs Attention";
-  return "Tax — Required";
+export const MANAGER_TAX_LABELS = ["Tax - Required", "Tax - In Progress", "Tax - Complete", "Tax - Needs Attention"] as const;
+export function managerTaxLabel(state: ChecklistState | string): (typeof MANAGER_TAX_LABELS)[number] | "Tax - Not needed" {
+  if (state === "valid") return "Tax - Complete";
+  if (state === "not_applicable") return "Tax - Not needed";
+  if (state === "review_required" || state === "refresh_required") return "Tax - Needs Attention";
+  return "Tax - Required";
 }
 
 export function tinLast4(tin: string): string | null {

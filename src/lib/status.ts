@@ -12,6 +12,6 @@ export function prettyStatus(status: string) {
 }
 
 export function money(cents?: number | null) {
-  if (!cents) return "—";
+  if (!cents) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }

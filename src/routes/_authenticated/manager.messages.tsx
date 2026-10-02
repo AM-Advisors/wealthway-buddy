@@ -103,7 +103,7 @@ function Messages() {
                     <CardTitle className="text-lg">{t.investor_name}</CardTitle>
                     <CardDescription>
                       {t.offering_name}
-                      {t.investor_email ? ` — ${t.investor_email}` : ""}
+                      {t.investor_email ? ` - ${t.investor_email}` : ""}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">

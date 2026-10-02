@@ -113,7 +113,7 @@ function ProfilePage() {
         </p>
         <p className="mt-3 text-sm">
           Status: <span className="font-medium">{STATE_LABEL[data.onboarding.state] ?? data.onboarding.state}</span>
-          {data.onboarding.nextStep ? ` — next: ${data.onboarding.nextStep}` : ""}
+          {data.onboarding.nextStep ? ` - next: ${data.onboarding.nextStep}` : ""}
         </p>
       </header>
 
@@ -253,8 +253,8 @@ function ProfilePage() {
             {(data.accreditations as any[]).map((a, i) => (
               <li key={i}>
                 {CHECK_LABEL[a.status] ?? a.status}
-                {a.basis ? ` — ${a.basis}` : ""}
-                {a.expires_at ? ` — expires ${new Date(a.expires_at).toLocaleDateString()}` : ""}
+                {a.basis ? ` - ${a.basis}` : ""}
+                {a.expires_at ? ` - expires ${new Date(a.expires_at).toLocaleDateString()}` : ""}
               </li>
             ))}
           </ul>
@@ -293,7 +293,7 @@ function ProfilePage() {
           <ul className="space-y-1 text-sm">
             {(data.history as any[]).map((h, i) => (
               <li key={i} className="text-muted-foreground">
-                {new Date(h.created_at).toLocaleString()} — {STATE_LABEL[h.to_state] ?? h.to_state}
+                {new Date(h.created_at).toLocaleString()} - {STATE_LABEL[h.to_state] ?? h.to_state}
                 {h.reason ? ` (${h.reason})` : ""}
               </li>
             ))}
@@ -307,13 +307,13 @@ function ProfilePage() {
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "My profile — Harmonious" },
+      { title: "My profile - Harmonious" },
       {
         name: "description",
         content:
           "Your personal details, identity verification, investment profiles, accreditation, tax information and activity in one place.",
       },
-      { property: "og:title", content: "My profile — Harmonious" },
+      { property: "og:title", content: "My profile - Harmonious" },
       {
         property: "og:description",
         content: "One identity, many ways to invest: profiles, verification status and activity.",

@@ -60,7 +60,7 @@ const tables: Record<string, any[]> = {
       offering_id: FUND_A,
       batch_number: 5,
       version: 1,
-      title: "Distribution #5 — Q3 2026",
+      title: "Distribution #5 - Q3 2026",
       distribution_type: "return_of_capital",
       status: "final_approval",
       payment_status: "not_started",
@@ -340,7 +340,7 @@ const queue = await import("@/lib/ops-work-queue.server");
 
 const admin = () => contextFor(STAFF_ADMIN);
 
-describe("Fund 360 — Capital shows this fund's distributions only", () => {
+describe("Fund 360 - Capital shows this fund's distributions only", () => {
   it("lists Fund A's batch and never Fund B's", async () => {
     const tab = (await ops.fundTab(admin(), { id: FUND_A, tab: "capital" })) as any;
     expect(tab.distributions.map((b: any) => b.id)).toEqual(["batch-a"]);
@@ -358,7 +358,7 @@ describe("Fund 360 — Capital shows this fund's distributions only", () => {
   });
 });
 
-describe("Fund 360 — Banking keeps the failed payment and hides the bank detail", () => {
+describe("Fund 360 - Banking keeps the failed payment and hides the bank detail", () => {
   it("keeps the returned attempt and its reissue as separate linked records", async () => {
     const tab = (await ops.fundTab(admin(), { id: FUND_A, tab: "banking" })) as any;
     const ids = tab.outboundPayments.map((p: any) => p.id);
@@ -384,7 +384,7 @@ describe("Fund 360 — Banking keeps the failed payment and hides the bank detai
   });
 });
 
-describe("Investor 360 — profiles stay apart and destinations stay masked", () => {
+describe("Investor 360 - profiles stay apart and destinations stay masked", () => {
   it("keeps the individual and the trust as separate distribution lines", async () => {
     const tab = (await ops.investorTab(admin(), { id: INVESTOR_1, tab: "capital" })) as any;
     const profiles = tab.distributions.map((d: any) => d.investment_profile_id);

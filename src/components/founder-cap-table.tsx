@@ -549,9 +549,9 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
                           {SECURITY_TYPES.find((t) => t.value === h.security_type)?.label ??
                             h.security_type}
                         </td>
-                        <td className="py-2 pr-3">{h.share_class ?? "—"}</td>
+                        <td className="py-2 pr-3">{h.share_class ?? "-"}</td>
                         <td className="py-2 pr-3">{num(Number(h.quantity ?? 0))}</td>
-                        <td className="py-2 pr-3">{h.issued_on ?? "—"}</td>
+                        <td className="py-2 pr-3">{h.issued_on ?? "-"}</td>
                         <td className="py-2 pr-3">
                           <Badge variant={h.status === "outstanding" ? "secondary" : "outline"}>
                             {h.status}
@@ -625,7 +625,7 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
                         .filter((h) => h.status === "outstanding")
                         .map((h) => (
                           <option key={h.id} value={h.id}>
-                            {nameById.get(String(h.stakeholder_id))} — {num(Number(h.quantity))}{" "}
+                            {nameById.get(String(h.stakeholder_id))} - {num(Number(h.quantity))}{" "}
                             {h.share_class ?? h.security_type}
                           </option>
                         ))}
@@ -735,9 +735,9 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
                     <div className="min-w-0">
                       <p className="text-sm font-medium">
                         {num(Number(t.quantity))} from{" "}
-                        {nameById.get(String(t.from_stakeholder_id)) ?? "—"} to{" "}
+                        {nameById.get(String(t.from_stakeholder_id)) ?? "-"} to{" "}
                         {t.to_stakeholder_id
-                          ? (nameById.get(String(t.to_stakeholder_id)) ?? "—")
+                          ? (nameById.get(String(t.to_stakeholder_id)) ?? "-")
                           : (t.to_name ?? "a new holder")}
                       </p>
                       <p className="text-xs text-muted-foreground">

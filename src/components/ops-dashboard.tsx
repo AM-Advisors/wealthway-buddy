@@ -116,11 +116,11 @@ export function OpsDashboard() {
                 <tbody>{d.funds.map((f: any) => (
                   <tr key={f.id} className="border-t">
                     <td className="px-2 py-1.5"><Link to="/ops/funds/$fundId" params={{ fundId: f.id }} className="font-medium hover:underline">{f.name}</Link></td>
-                    <td className="px-2 py-1.5">{f.clientName ?? "—"}</td>
+                    <td className="px-2 py-1.5">{f.clientName ?? "-"}</td>
                     <td className="px-2 py-1.5 tabular-nums">{f.investors}</td><td className="px-2 py-1.5 tabular-nums">{f.onboarding}</td><td className="px-2 py-1.5 tabular-nums">{f.ready}</td>
                     <td className="px-2 py-1.5 tabular-nums">{f.needsAttention}</td><td className="px-2 py-1.5 tabular-nums">{f.funded}</td>
                     <td className="px-2 py-1.5"><Badge variant={f.agreement === "complete" ? "secondary" : "outline"}>{AGREEMENT_LABEL[f.agreement] ?? f.agreement}</Badge></td>
-                    <td className="px-2 py-1.5">{f.nextAction ? `${f.nextAction.label}${f.nextAction.owner ? ` · ${OWNER_LABEL[f.nextAction.owner] ?? ""}` : ""}` : "—"}</td>
+                    <td className="px-2 py-1.5">{f.nextAction ? `${f.nextAction.label}${f.nextAction.owner ? ` · ${OWNER_LABEL[f.nextAction.owner] ?? ""}` : ""}` : "-"}</td>
                   </tr>
                 ))}</tbody>
               </table>

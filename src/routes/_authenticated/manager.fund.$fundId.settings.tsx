@@ -3,8 +3,8 @@ import { FundWorkspaceSection } from "@/components/fund-workspace-section";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/settings")({
   head: () => ({ meta: [
-    { title: "Fund settings — Harmonious" }, { name: "description", content: "Manage fund details, public access, permissions, dates, alerts, and assigned team." },
-    { property: "og:title", content: "Fund settings — Harmonious" }, { property: "og:description", content: "Manage fund details, access, permissions, dates, and assigned team." },
+    { title: "Fund settings - Harmonious" }, { name: "description", content: "Manage fund details, public access, permissions, dates, alerts, and assigned team." },
+    { property: "og:title", content: "Fund settings - Harmonious" }, { property: "og:description", content: "Manage fund details, access, permissions, dates, and assigned team." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }), component: Page,
 });

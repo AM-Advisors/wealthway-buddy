@@ -131,8 +131,8 @@ export function PolicyDocumentsBoard() {
                 <div className="space-y-3 rounded-md border p-4">
                   <p className="text-sm font-medium">
                     {draft.newVersion
-                      ? "New version — everyone will be asked to accept again."
-                      : "Correcting the current version — nobody is asked again."}
+                      ? "New version - everyone will be asked to accept again."
+                      : "Correcting the current version - nobody is asked again."}
                   </p>
                   <div className="space-y-1.5">
                     <Label>Title</Label>
@@ -252,7 +252,7 @@ export function PolicyAcceptancesBoard() {
                   {POLICY_KINDS.find((k) => k.key === r.kind)?.label ?? r.kind}
                 </td>
                 <td className="px-3 py-2">v{r.version}</td>
-                <td className="px-3 py-2 text-muted-foreground">{r.ip_address ?? "—"}</td>
+                <td className="px-3 py-2 text-muted-foreground">{r.ip_address ?? "-"}</td>
               </tr>
             ))}
             {!rows.length && (

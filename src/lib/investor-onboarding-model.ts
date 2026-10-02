@@ -1,5 +1,5 @@
 /**
- * Fund Administration Phase B — pure investor-onboarding rules.
+ * Fund Administration Phase B - pure investor-onboarding rules.
  *
  * No database access, no authorization, no side effects. This module decides
  * WHAT an investor still has to do, WHICH of their existing verified records
@@ -229,7 +229,7 @@ export interface RequirementResult {
 }
 
 export interface OfferingRequirements {
-  /** Configured during fund setup — never assumed to be 506(c). */
+  /** Configured during fund setup - never assumed to be 506(c). */
   accreditationRequired: boolean;
   accreditationMethod?: string | null;
   qualifiedPurchaserRequired?: boolean;
@@ -329,7 +329,7 @@ export interface DeterminationInput {
 }
 
 /**
- * determineOnboardingRequirements — the returning-investor engine.
+ * determineOnboardingRequirements - the returning-investor engine.
  * Reuses everything that is currently valid, refreshes everything that is not.
  */
 export function determineOnboardingRequirements(input: DeterminationInput): RequirementResult[] {
@@ -592,7 +592,7 @@ export interface FundingGateInput {
   openBlockingExceptions: number;
 }
 
-/** canInvestorFund — funding instructions stay locked until every one of these holds. */
+/** canInvestorFund - funding instructions stay locked until every one of these holds. */
 export function canInvestorFund(input: FundingGateInput): { allowed: boolean; reasons: string[] } {
   const reasons: string[] = [];
   if (input.openBlockingExceptions > 0) reasons.push("There is an open issue on this investment.");
@@ -613,7 +613,7 @@ export interface ClosingGateInput extends FundingGateInput {
   acceptedAmountCents?: number | null;
 }
 
-/** canCloseInvestment — the final server-side admission gate. */
+/** canCloseInvestment - the final server-side admission gate. */
 export function canCloseInvestment(input: ClosingGateInput): { allowed: boolean; reasons: string[] } {
   const reasons: string[] = [];
   const funding = canInvestorFund(input);

@@ -17,13 +17,13 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/audit")({
   head: () => ({
     meta: [
-      { title: "Audit log — Harmonious" },
+      { title: "Audit log - Harmonious" },
       {
         name: "description",
         content:
           "A read-only trail of wires, distributions, investor checks, filings, compliance holds and scope changes with timestamps.",
       },
-      { property: "og:title", content: "Audit log — Harmonious" },
+      { property: "og:title", content: "Audit log - Harmonious" },
       {
         property: "og:description",
         content: "Every money movement, investor check, filing and hold recorded with who acted and when.",
@@ -60,7 +60,7 @@ function AuditLogPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Audit log</h1>
         <p className="text-sm text-muted-foreground">
           A read-only record of what happened, who did it and when. Entries report what Harmonious
-          recorded and each provider's outcome — they are not legal or regulatory determinations.
+          recorded and each provider's outcome - they are not legal or regulatory determinations.
         </p>
       </header>
 

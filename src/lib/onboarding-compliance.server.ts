@@ -171,7 +171,7 @@ export async function resolveStage2(input: Stage2Input) {
     : routing.status === "determined"
       ? { state: "valid" }
       : facts
-        ? { state: "review_required", reason: "Tax Classification — Needs Review" }
+        ? { state: "review_required", reason: "Tax Classification - Needs Review" }
         : { state: "missing", reason: "Answer a few tax questions." };
   const tax = !facts && routing.status !== "determined" && input.taxRequired
     ? { state: "missing" as const, reason: "Answer the tax questions first." }
@@ -407,7 +407,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
   };
 }
 
-/** Record factual tax answers. The server — never the browser — derives the form. */
+/** Record factual tax answers. The server - never the browser - derives the form. */
 export async function submitTaxFacts(userId: string, input: { onboardingId: string; answers: TaxIntakeAnswers }) {
   const { d, ob, profile } = await loadOwnOnboarding(userId, input.onboardingId);
   const asked = taxIntakeQuestions(profile.profile_type, input.answers);
@@ -432,7 +432,7 @@ export async function submitTaxFacts(userId: string, input: { onboardingId: stri
   if (error) fail(error.message);
   for (const p of (prev ?? []) as any[]) await d.from("investor_tax_facts").update({ superseded_by: inserted.id }).eq("id", p.id);
   if (routing.status === "needs_review") {
-    await raiseOpsException(ob.id, "tax_classification_review", `Tax Classification — Needs Review: ${routing.reason}`, userId);
+    await raiseOpsException(ob.id, "tax_classification_review", `Tax Classification - Needs Review: ${routing.reason}`, userId);
   }
   return routing.status === "determined"
     ? { status: "determined" as const, form: IRS_FORM_REVISIONS[routing.formType].title }

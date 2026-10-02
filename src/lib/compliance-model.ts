@@ -1,5 +1,5 @@
 /**
- * Stage 2.7 — Compliance & Controls (pure model). Records how controls are
+ * Stage 2.7 - Compliance & Controls (pure model). Records how controls are
  * designed and operated; it never certifies SOC 2 or GDPR compliance, never
  * decides legal questions, and never changes the systems it describes.
  */
@@ -126,7 +126,7 @@ export function statusProblem(status: ControlStatus, evidence: EvidenceLite[], e
 
 /** Separation of duties: the collector/operator never reviews their own evidence, whatever permissions they hold. */
 export function evidenceReviewProblem(o: { reviewerId: string; collectedBy: string | null; operatorId: string | null; sodRequired: boolean; alreadyReviewedByMe: boolean }): string | null {
-  if (o.sodRequired && (o.reviewerId === o.collectedBy || o.reviewerId === o.operatorId)) return "The operator or collector can't review this evidence — a different person must.";
+  if (o.sodRequired && (o.reviewerId === o.collectedBy || o.reviewerId === o.operatorId)) return "The operator or collector can't review this evidence - a different person must.";
   if (o.alreadyReviewedByMe) return "You've already reviewed this evidence; add a new version instead.";
   return null;
 }
@@ -148,7 +148,7 @@ const opt = (...o: string[]) => o;
 
 export const REGISTERS: Record<string, RegisterSpec> = {
   data_map: { kind: "data_map", label: "Data Map", prefix: "DM", statuses: opt("draft", "approved", "retired"),
-    note: "Describes categories only — never store personal data here.",
+    note: "Describes categories only - never store personal data here.",
     fields: [
       { key: "systems", label: "Systems containing it", required: true }, { key: "purpose", label: "Purpose", required: true },
       { key: "classification", label: "Classification", type: "select", options: CLASSIFICATIONS, required: true },
@@ -156,7 +156,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "recipients", label: "Recipients" }, { key: "retention", label: "Retention category" },
     ] },
   processing: { kind: "processing", label: "Processing Activities", prefix: "PA", statuses: opt("draft", "approved", "retired"),
-    note: "Lawful basis and controller/processor role must be set and approved by the privacy/legal owner — the software never decides them.",
+    note: "Lawful basis and controller/processor role must be set and approved by the privacy/legal owner - the software never decides them.",
     fields: [
       { key: "purpose", label: "Business purpose", required: true },
       { key: "role", label: "Controller/processor role", type: "select", options: ["Controller", "Processor", "Joint controller", "Undetermined"], humanOnly: true },
@@ -169,7 +169,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "review_date", label: "Review date", type: "date" },
     ] },
   retention: { kind: "retention", label: "Retention", prefix: "RS", statuses: opt("draft", "approved", "under_review"),
-    note: "Policy and workflow only — nothing is deleted automatically. Retention disposition is not the same as deleting an unused draft.",
+    note: "Policy and workflow only - nothing is deleted automatically. Retention disposition is not the same as deleting an unused draft.",
     fields: [
       { key: "classification", label: "Classification", type: "select", options: CLASSIFICATIONS, required: true },
       { key: "purpose", label: "Purpose" }, { key: "basis", label: "Retention basis", required: true },
@@ -227,7 +227,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "due", label: "Due date", type: "date" }, { key: "review_date", label: "Review date", type: "date" },
     ] },
   incident: { kind: "incident", label: "Incidents", prefix: "INC", statuses: opt("open", "contained", "investigating", "corrective_action", "closed"),
-    note: "Whether regulators or customers must be notified is a human/legal/privacy decision — the software only records it.",
+    note: "Whether regulators or customers must be notified is a human/legal/privacy decision - the software only records it.",
     fields: [
       { key: "discovered_at", label: "Discovered at", type: "date", required: true }, { key: "reported_by", label: "Reported by", type: "person" },
       { key: "systems", label: "Systems affected" }, { key: "data", label: "Data involved" },
@@ -248,7 +248,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "retest", label: "Retest" }, { key: "closure_evidence_id", label: "Closure evidence ID" }, { key: "closed", label: "Closed date", type: "date" },
     ] },
   jml: { kind: "jml", label: "Joiner / Mover / Leaver", prefix: "JML", statuses: opt("open", "in_progress", "complete"),
-    note: "Tracking only — no HR integration; access changes still happen in Access Control.",
+    note: "Tracking only - no HR integration; access changes still happen in Access Control.",
     fields: [
       { key: "event", label: "Event", type: "select", options: ["joiner", "mover", "leaver"], required: true },
       { key: "person", label: "Person", type: "person", required: true },
@@ -294,8 +294,8 @@ export function recordProblem(kind: string, status: string, data: Record<string,
   for (const [k, v] of Object.entries(data)) {
     if (!allowed.has(k)) return `Unexpected field "${k}".`;
     if (SECRET_KEY.test(k)) return "Credentials and secrets can't be stored here.";
-    if (typeof v === "string" && SECRET_VALUE.test(v)) return "That looks like a credential or secret — don't store it here.";
-    if (typeof v === "string" && TIN.test(v)) return "That looks like a tax ID — reference the audit record instead of copying it.";
+    if (typeof v === "string" && SECRET_VALUE.test(v)) return "That looks like a credential or secret - don't store it here.";
+    if (typeof v === "string" && TIN.test(v)) return "That looks like a tax ID - reference the audit record instead of copying it.";
   }
   for (const f of spec.fields) if (f.required && (data[f.key] === undefined || data[f.key] === "" || data[f.key] === null)) return `${f.label} is required.`;
   if (kind === "risk" && (status === "accepted" || data["treatment"] === "accept") && !data["accepted_by"]) return "Risk acceptance must name the approving person.";
@@ -327,7 +327,7 @@ export const EVIDENCE_QUERIES = {
   super_admins: { control: "AC-03", label: "Current Super Administrators" },
   staff_roles: { control: "AC-02", label: "Harmonious staff roles" },
   privileged_roles: { control: "AC-03", label: "Privileged roles" },
-  privileged_accounts: { control: "AC-07", label: "Privileged accounts — individual assignment" },
+  privileged_accounts: { control: "AC-07", label: "Privileged accounts - individual assignment" },
   direct_grants: { control: "AC-02", label: "Direct grants" },
   explicit_denies: { control: "AC-02", label: "Explicit denies" },
   expired_access: { control: "AC-05", label: "Expired access" },

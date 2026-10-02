@@ -14,10 +14,10 @@ import { createClientWireRequest } from "@/lib/client-portal.functions";
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const date = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-US") : "—";
+  value ? new Date(value).toLocaleDateString("en-US") : "-";
 
 const STATUS: Record<string, string> = {
   pending: "With Harmonious for review",

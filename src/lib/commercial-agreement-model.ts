@@ -101,7 +101,7 @@ export function commercialAgreementStatus(structure: ContractStructure, msa: Doc
     headline: "Agreement Follow-Up Required", supporting, followUpItems };
 }
 
-/** What a client/fund manager sees — non-disruptive and free of internal notes. */
+/** What a client/fund manager sees - non-disruptive and free of internal notes. */
 export function clientAgreementNotice(s: Pick<CommercialAgreementStatus, "overall">): { title: string; body: string } | null {
   // "Setup needs review" is an internal Harmonious item; clients see nothing for it.
   if (s.overall !== "follow_up") return null;

@@ -42,10 +42,10 @@ type Sow = {
 };
 
 const date = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-US") : "—";
+  value ? new Date(value).toLocaleDateString("en-US") : "-";
 
 const stamp = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleString("en-US") : "—";
+  value ? new Date(value).toLocaleString("en-US") : "-";
 
 type State = {
   label: string;
@@ -64,7 +64,7 @@ function stateFor(sow: Sow): State {
     };
   if (sow.status === "draft")
     return {
-      label: "Draft — not ready yet",
+      label: "Draft - not ready yet",
       tone: "outline",
       detail: "Your Harmonious contact is still preparing this agreement. Nothing to sign yet.",
       canAct: false,
@@ -78,7 +78,7 @@ function stateFor(sow: Sow): State {
     };
   if (sow.client_status === "signed")
     return {
-      label: "Signed by you — waiting on Harmonious approval",
+      label: "Signed by you - waiting on Harmonious approval",
       tone: "secondary",
       detail: `Signed ${stamp(sow.client_signed_at)} by ${sow.client_signature_name ?? "you"}${sow.client_signature_title ? `, ${sow.client_signature_title}` : ""}. An administrator reviews it before it takes effect.`,
       canAct: false,
@@ -195,7 +195,7 @@ export function ClientSowPanel({ sows }: { sows: Sow[] }) {
                   </>
                 ) : (
                   <span className="text-xs text-muted-foreground">
-                    No document uploaded yet — ask your Harmonious contact for a copy.
+                    No document uploaded yet - ask your Harmonious contact for a copy.
                   </span>
                 )}
                 {state.canAct && (

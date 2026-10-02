@@ -3,7 +3,7 @@
  *
  * Pure rules with no database, network or browser access. Navigation is derived
  * from the workspace a person is actually in and the relationships the server
- * resolved for them — never from an email address, a hostname or anything the
+ * resolved for them - never from an email address, a hostname or anything the
  * browser chose for itself. Showing or hiding a link is a courtesy; the backend
  * still decides every request.
  */
@@ -154,7 +154,7 @@ const FUND_TAB_ORDER: FundCapability[] = [
 
 /**
  * Tabs shown when a manager opens a fund. Only capabilities the server has
- * granted appear — and only for a fund this person actually manages.
+ * granted appear - and only for a fund this person actually manages.
  */
 export function fundWorkspaceTabs(
   fundId: string,
@@ -305,7 +305,7 @@ export function navigationTelemetry(input: {
 /**
  * Which menu a page should get. Client pages get the client menu; the internal
  * sections keep the internal menu until the operations console moves to its own
- * address. This is presentation only — the backend still authorizes every
+ * address. This is presentation only - the backend still authorizes every
  * request either way.
  */
 export function menuForContext(input: {
@@ -328,7 +328,7 @@ export function contextToClear(): string[] {
 }
 
 /**
- * Remembered things that say nothing about a record or a relationship — only
+ * Remembered things that say nothing about a record or a relationship - only
  * how the screen was arranged last time. These survive a workspace switch.
  */
 export const COSMETIC_STORAGE_KEYS = ["harmonious.sidebar.openGroups"];

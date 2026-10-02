@@ -5,13 +5,13 @@ import { ClientOnboardingBoard } from "@/components/client-onboarding-board";
 export const Route = createFileRoute("/_authenticated/admin/onboarding")({
   head: () => ({
     meta: [
-      { title: "Client onboarding — Harmonious admin" },
+      { title: "Client onboarding - Harmonious admin" },
       {
         name: "description",
         content:
           "Invite a new client's people, walk them through the privacy notice, terms, fee schedule and out-of-scope requests, and track their onboarding.",
       },
-      { property: "og:title", content: "Client onboarding — Harmonious admin" },
+      { property: "og:title", content: "Client onboarding - Harmonious admin" },
       {
         property: "og:description",
         content: "Invite client contacts and track every onboarding step in one place.",

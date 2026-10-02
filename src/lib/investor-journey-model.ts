@@ -1,5 +1,5 @@
 /**
- * The four-step investor experience, derived — never stored.
+ * The four-step investor experience, derived - never stored.
  *
  *   About You → Verification → Sign → Fund
  *
@@ -85,7 +85,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   } else if (facts.approvedToFund) {
     if (facts.investorReportsSent || ["bank_transaction_detected", "reconciliation_pending", "partially_funded"].includes(String(facts.fundingStatus))) {
       fund = "in_progress";
-      fundMessage = "Thanks — we'll confirm as soon as your bank transfer is received and matched.";
+      fundMessage = "Thanks - we'll confirm as soon as your bank transfer is received and matched.";
     } else {
       fund = "action_required";
       fundMessage = "Your subscription has been accepted. You can now view secure wiring instructions.";
@@ -186,7 +186,7 @@ export function investorHomeSummary(steps: JourneyStepView[], facts: { waitingOn
 
 /**
  * The offering's configured exemption sets a floor on its requirements.
- * It only ever tightens configuration — it never relaxes it.
+ * It only ever tightens configuration - it never relaxes it.
  * 506(c): every investor's accreditation must be verified (REG_TYPES).
  */
 export function applyExemption(

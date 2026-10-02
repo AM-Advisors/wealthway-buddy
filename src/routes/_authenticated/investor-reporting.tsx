@@ -5,13 +5,13 @@ import { InvestorReportingCenter } from "@/components/investor-reporting-center"
 export const Route = createFileRoute("/_authenticated/investor-reporting")({
   head: () => ({
     meta: [
-      { title: "Your reports — Harmonious" },
+      { title: "Your reports - Harmonious" },
       {
         name: "description",
         content:
           "Your reporting packages, capital statements and documents, kept separate for each investment profile.",
       },
-      { property: "og:title", content: "Your reports — Harmonious" },
+      { property: "og:title", content: "Your reports - Harmonious" },
       {
         property: "og:description",
         content: "Reporting periods, capital activity and documents for each of your investments.",

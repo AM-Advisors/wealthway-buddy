@@ -46,7 +46,7 @@ export async function invoiceRecipients(clientId: string) {
 /**
  * What actually happened to an invoice's email, per recipient. Read-only:
  * pulls Lovable's delivery events and matches them to the people who should
- * have received it. Never throws — a logging outage must not break the board.
+ * have received it. Never throws - a logging outage must not break the board.
  */
 export async function invoiceDelivery(
   clientId: string,

@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-const fmt = (d: string | null | undefined) => (d ? new Date(d).toLocaleString() : "—");
+const fmt = (d: string | null | undefined) => (d ? new Date(d).toLocaleString() : "-");
 const toIso = (v: string) => (v ? new Date(v).toISOString() : null);
 
 type Canonical = {
@@ -45,10 +45,10 @@ export function AtomicDrawer({ rows, area, summary }: { rows: AtomicRow[]; area:
         {list.map((r) => (
           <li key={r.key}>
             <span className={r.global ? "font-medium" : r.scoped.length ? "" : "text-muted-foreground"}>{r.global ? "✓" : r.scoped.length ? "◐" : "·"} {r.label}</span>
-            {r.destructive ? <Badge variant="outline" className="ml-1">lifecycle — never implied</Badge> : null}
+            {r.destructive ? <Badge variant="outline" className="ml-1">lifecycle - never implied</Badge> : null}
             <span className="ml-2 text-xs text-muted-foreground">{r.key}</span>
             <div className="text-xs text-muted-foreground">
-              {r.global ? `Source: ${r.sources.join(", ")} — scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} — scope: ${x.scope}`).join("; ") : "Not granted"}
+              {r.global ? `Source: ${r.sources.join(", ")} - scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} - scope: ${x.scope}`).join("; ") : "Not granted"}
             </div>
           </li>
         ))}
@@ -72,7 +72,7 @@ function useRefresh() {
 const LegacyNote = () => (
   <p className="text-xs text-muted-foreground">
     <Badge variant="outline">Effective in canonical resolver</Badge> scoped roles, direct grants and denies. Existing business
-    screens still use their own checks (<Badge variant="secondary">Legacy endpoint not yet migrated</Badge>) until Stage 3 — a deny here
+    screens still use their own checks (<Badge variant="secondary">Legacy endpoint not yet migrated</Badge>) until Stage 3 - a deny here
     doesn't yet block them. Harmonious platform roles and suspension take effect everywhere immediately.
   </p>
 );
@@ -133,7 +133,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
   return (
     <div className="space-y-4 rounded-md border p-3">
       <LegacyNote />
-      {self ? <p className="text-xs text-destructive">This is your own account — you can't grant yourself access or change your own state.</p> : null}
+      {self ? <p className="text-xs text-destructive">This is your own account - you can't grant yourself access or change your own state.</p> : null}
       <label className="block text-xs font-medium">Reason (required for every change)
         <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} className="mt-1" placeholder="Why is this change being made?" />
       </label>
@@ -149,7 +149,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
           {["harmonious", "client", "fund", "company", "custom"].map((cat) => (
             <optgroup key={cat} label={cat[0]!.toUpperCase() + cat.slice(1)}>
               {roles.filter((r) => r.category === cat).map((r) => (
-                <option key={r.key} value={r.key} disabled={r.superAdminOnly && !ctx?.isSuper}>{r.label}{r.superAdminOnly ? " — Super Administrator only" : ""}</option>
+                <option key={r.key} value={r.key} disabled={r.superAdminOnly && !ctx?.isSuper}>{r.label}{r.superAdminOnly ? " - Super Administrator only" : ""}</option>
               ))}
             </optgroup>
           ))}
@@ -165,14 +165,14 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
             const t = ctx?.templates.find((x) => x.platformRole === r);
             return (
               <li key={r} className="flex items-center justify-between gap-2">
-                <span>{t?.label ?? r} <Badge variant="outline">Legacy platform role — no expiry</Badge></span>
+                <span>{t?.label ?? r} <Badge variant="outline">Legacy platform role - no expiry</Badge></span>
                 {t ? <Button size="sm" variant="outline" disabled={run.isPending} onClick={() => run.mutate(() => revokeRole({ data: { targetUserId: userId, roleKey: t.key, assignmentId: null, reason } }))}>Remove</Button> : <span className="text-xs text-muted-foreground">not managed here</span>}
               </li>
             );
           })}
           {canonical.assignments.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-2">
-              <span className={a.live ? "" : "text-muted-foreground line-through"}><Badge variant="secondary">RBAC assignment — effective/expiring</Badge> {a.label} — {a.scope} {a.expiresAt ? `· until ${fmt(a.expiresAt)}` : ""} {a.revokedAt ? "· revoked" : !a.live ? "· not in effect" : ""}</span>
+              <span className={a.live ? "" : "text-muted-foreground line-through"}><Badge variant="secondary">RBAC assignment - effective/expiring</Badge> {a.label} - {a.scope} {a.expiresAt ? `· until ${fmt(a.expiresAt)}` : ""} {a.revokedAt ? "· revoked" : !a.live ? "· not in effect" : ""}</span>
               {!a.revokedAt ? <Button size="sm" variant="outline" disabled={run.isPending} onClick={() => run.mutate(() => revokeRole({ data: { targetUserId: userId, roleKey: a.roleKey, assignmentId: a.id, reason } }))}>Revoke</Button> : null}
             </li>
           ))}
@@ -195,11 +195,11 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
         </div>
         <ScopePicker scopeTypes={["global", "client", "fund", "company", "investment_profile", "investment"]} value={permScope} onChange={setPermScope} />
         <Button size="sm" disabled={!perm || run.isPending || (self && effect === "allow")} onClick={() => run.mutate(() => grant({ data: { targetUserId: userId, permission: perm, effect, scope: permScope as any, reason, ...dateArgs } }))}>{effect === "deny" ? "Record deny" : "Grant permission"}</Button>
-        <p className="text-xs text-muted-foreground">Full TIN, sensitive tax evidence, raw ID/KYC evidence, compliance exception approval, money execution and legal signing authority aren't offered here — they have dedicated controls.</p>
+        <p className="text-xs text-muted-foreground">Full TIN, sensitive tax evidence, raw ID/KYC evidence, compliance exception approval, money execution and legal signing authority aren't offered here - they have dedicated controls.</p>
         <ul className="space-y-1 text-sm">
           {canonical.grants.map((g) => (
             <li key={g.id} className="flex items-center justify-between gap-2">
-              <span className={g.live ? "" : "text-muted-foreground line-through"}><Badge variant={g.effect === "deny" ? "destructive" : "outline"}>{g.effect === "deny" ? "Deny" : "Grant"}</Badge> {g.permission} — {g.scope}{g.revokedAt ? " · revoked" : !g.live ? " · not in effect" : ""}</span>
+              <span className={g.live ? "" : "text-muted-foreground line-through"}><Badge variant={g.effect === "deny" ? "destructive" : "outline"}>{g.effect === "deny" ? "Deny" : "Grant"}</Badge> {g.permission} - {g.scope}{g.revokedAt ? " · revoked" : !g.live ? " · not in effect" : ""}</span>
               {!g.revokedAt ? <Button size="sm" variant="outline" disabled={run.isPending} onClick={() => run.mutate(() => revokeGrant({ data: { targetUserId: userId, grantId: g.id, reason } }))}>Revoke</Button> : null}
             </li>
           ))}
@@ -216,7 +216,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
   );
 }
 
-/** Person Matrix — one person's effective permissions from the canonical resolver. */
+/** Person Matrix - one person's effective permissions from the canonical resolver. */
 export function PersonMatrix({ canonical }: { canonical: Canonical }) {
   const [open, setOpen] = useState<string | null>(null);
   const areas = [...new Set(canonical.matrix.map((m) => m.permission.split(".")[0]!))];
@@ -252,8 +252,8 @@ export function PersonMatrix({ canonical }: { canonical: Canonical }) {
         <Card><CardContent className="space-y-1 p-3 text-sm">
           <p className="font-medium">{hit.permission}</p>
           <p>{hit.text}</p>
-          {hit.scoped.map((s, i) => <p key={i} className="text-muted-foreground">{s.source === "Direct deny" ? "✕" : "✓"} {s.source} — scope: {s.scope} (not valid outside it)</p>)}
-          <p className="text-xs">Decision: <span className="font-medium">{hit.global ? "Allow — all resources" : hit.scoped.length ? "Allow — listed scopes only" : "Deny (no source grants it)"}</span>{hit.sources.length ? ` · source: ${hit.sources.join(", ")}` : ""}</p>
+          {hit.scoped.map((s, i) => <p key={i} className="text-muted-foreground">{s.source === "Direct deny" ? "✕" : "✓"} {s.source} - scope: {s.scope} (not valid outside it)</p>)}
+          <p className="text-xs">Decision: <span className="font-medium">{hit.global ? "Allow - all resources" : hit.scoped.length ? "Allow - listed scopes only" : "Deny (no source grants it)"}</span>{hit.sources.length ? ` · source: ${hit.sources.join(", ")}` : ""}</p>
           <p className="text-xs text-muted-foreground">Protected conditions still apply regardless of this cell: {PROTECTED_PERMISSIONS.join(", ")} are never granted by roles or grants; maker-checker, dual control and immutability rules are enforced separately.</p>
         </CardContent></Card>
       ) : null}
@@ -280,7 +280,7 @@ export function RoleAdmin() {
   });
   if (!ctx) return null;
   const rows = [
-    ...ctx.templates.map((t) => ({ key: t.key, label: t.label, version: 1, count: t.permissions.length, assigned: t.assigned, createdBy: "Harmonious (built-in)", updatedBy: "—", status: "active", kind: t.category })),
+    ...ctx.templates.map((t) => ({ key: t.key, label: t.label, version: 1, count: t.permissions.length, assigned: t.assigned, createdBy: "Harmonious (built-in)", updatedBy: "-", status: "active", kind: t.category })),
     ...ctx.custom.map((c) => ({ key: c.key, label: c.label, version: c.version, count: c.permissions.length, assigned: c.assigned, createdBy: c.createdBy, updatedBy: c.updatedBy, status: c.status, kind: "custom" })),
   ];
   return (
@@ -320,7 +320,7 @@ export function RoleAdmin() {
             ) : null}
             <Textarea rows={2} placeholder="Reason (required)" value={reason} onChange={(e) => setReason(e.target.value)} />
             <Button size="sm" disabled={!key || run.isPending} onClick={() => run.mutate()}>Save</Button>
-            <p className="text-xs text-muted-foreground">Edits and deactivation save a new version; earlier versions stay unchanged, so past assignments and audit evidence keep their original meaning. Predefined templates can't be edited — clone them.</p>
+            <p className="text-xs text-muted-foreground">Edits and deactivation save a new version; earlier versions stay unchanged, so past assignments and audit evidence keep their original meaning. Predefined templates can't be edited - clone them.</p>
           </CardContent>
         </Card>
       ) : <p className="text-xs text-muted-foreground">Only a Super Administrator can create or change roles.</p>}
@@ -338,15 +338,15 @@ export function NeedsReview() {
     <div className="mt-4 space-y-6">
       <section className="space-y-2">
         <h2 className="font-medium">Needs review</h2>
-        {data.needsReview.length ? data.needsReview.map((n: any, i: number) => <div key={n.userId + i} className="text-sm"><p><span className="font-medium">{n.person}</span> — {n.issue}</p>{n.detail ? <p className="text-xs text-muted-foreground">{n.detail}</p> : null}</div>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
+        {data.needsReview.length ? data.needsReview.map((n: any, i: number) => <div key={n.userId + i} className="text-sm"><p><span className="font-medium">{n.person}</span> - {n.issue}</p>{n.detail ? <p className="text-xs text-muted-foreground">{n.detail}</p> : null}</div>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
       </section>
       <Stage3Panel />
       <section className="space-y-2">
-        <h2 className="font-medium">Legacy client role migration — dry run (nobody is migrated)</h2>
+        <h2 className="font-medium">Legacy client role migration - dry run (nobody is migrated)</h2>
         <div className="overflow-x-auto rounded-md border"><Table>
           <TableHeader><TableRow>{["Person", "Legacy role", "Current client", "Current effective actions", "Proposed role", "Proposed scope", "Added permissions", "Lost permissions", "Result"].map((h) => <TableHead key={h}>{h}</TableHead>)}</TableRow></TableHeader>
           <TableBody>{data.dryRun.map((r, i) => (
-            <TableRow key={i}><TableCell>{r.person}</TableCell><TableCell>{r.legacyRole}</TableCell><TableCell>{r.currentClient ?? "—"}</TableCell><TableCell className="text-xs">{r.currentActions.join(", ")}</TableCell><TableCell>{r.proposedRole}</TableCell><TableCell>{r.proposedScope ?? "—"}</TableCell><TableCell className="text-xs">{r.added.join(", ") || "none"}</TableCell><TableCell className="text-xs">{r.lost.join(", ") || "none"}</TableCell><TableCell className="text-xs font-medium">{r.result}</TableCell></TableRow>
+            <TableRow key={i}><TableCell>{r.person}</TableCell><TableCell>{r.legacyRole}</TableCell><TableCell>{r.currentClient ?? "-"}</TableCell><TableCell className="text-xs">{r.currentActions.join(", ")}</TableCell><TableCell>{r.proposedRole}</TableCell><TableCell>{r.proposedScope ?? "-"}</TableCell><TableCell className="text-xs">{r.added.join(", ") || "none"}</TableCell><TableCell className="text-xs">{r.lost.join(", ") || "none"}</TableCell><TableCell className="text-xs font-medium">{r.result}</TableCell></TableRow>
           ))}</TableBody>
         </Table></div>
       </section>
@@ -371,7 +371,7 @@ function Stage3Panel() {
   const { data } = useQuery({ queryKey: ["access-stage3"], queryFn: () => get() });
   return (
     <section className="space-y-2">
-      <h2 className="font-medium">Stage 3 migration — shadow pilot (legacy checks stay in charge)</h2>
+      <h2 className="font-medium">Stage 3 migration - shadow pilot (legacy checks stay in charge)</h2>
       <div className="overflow-x-auto rounded-md border"><Table>
         <TableHeader><TableRow>{["Area", "Endpoint/Function", "Legacy", "Canonical", "Match", "Shadow Count", "Mismatches", "Migration Status"].map((h) => <TableHead key={h}>{h}</TableHead>)}</TableRow></TableHeader>
         <TableBody>{(data ?? []).map((r) => (
@@ -379,8 +379,8 @@ function Stage3Panel() {
             <TableCell>{r.area}</TableCell>
             <TableCell className="text-xs"><div className="font-mono">{r.endpoint}</div><div className="text-muted-foreground">{r.file}</div>{r.reclassified ? <div className="mt-1 rounded bg-muted p-1">Reclassified: {r.reclassified}</div> : null}{(r as any).note ? <div className="mt-1 rounded bg-muted p-1">{(r as any).note}</div> : null}</TableCell>
             <TableCell className="text-xs">{r.legacy}</TableCell>
-            <TableCell className="text-xs">{r.canonical ?? "—"}</TableCell>
-            <TableCell className="text-xs">{r.total ? `${r.counts.allow_allow} allow/allow · ${r.counts.deny_deny} deny/deny · ${r.counts.legacy_allow_rbac_deny} legacy-allow/RBAC-deny · ${r.counts.legacy_deny_rbac_allow} legacy-deny/RBAC-allow` : "—"}</TableCell>
+            <TableCell className="text-xs">{r.canonical ?? "-"}</TableCell>
+            <TableCell className="text-xs">{r.total ? `${r.counts.allow_allow} allow/allow · ${r.counts.deny_deny} deny/deny · ${r.counts.legacy_allow_rbac_deny} legacy-allow/RBAC-deny · ${r.counts.legacy_deny_rbac_allow} legacy-deny/RBAC-allow` : "-"}</TableCell>
             <TableCell>{r.total}</TableCell>
             <TableCell>{r.mismatches}</TableCell>
             <TableCell><Badge variant={r.status === "Blocked" ? "destructive" : "secondary"}>{r.status}</Badge></TableCell>

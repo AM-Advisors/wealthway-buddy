@@ -185,7 +185,7 @@ describe("CTAs and leads", () => {
     expect(() => leadSchema.parse({ name: "", workEmail: "bad", company: "", intent: "spv" })).toThrow();
     expect(() => leadSchema.parse({ name: "a", workEmail: "a@b.co", company: "c", intent: "admin" })).toThrow();
   });
-  it("lead submission only writes marketing_leads — never grants application access", () => {
+  it("lead submission only writes marketing_leads - never grants application access", () => {
     const src = read("src/lib/marketing/leads.functions.ts");
     expect(src.match(/\.from\("([a-z_]+)"\)/g)).toEqual(['.from("marketing_leads")']);
     expect(src).not.toMatch(/auth\.admin|user_roles|client_users|signUp/);

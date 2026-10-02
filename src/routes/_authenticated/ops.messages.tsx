@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/ops/messages")({
   head: () => ({
     meta: [
-      { title: "Messages — Harmonious Operations" },
+      { title: "Messages - Harmonious Operations" },
       { name: "description", content: "Answer questions from fund managers and investors sent to the Harmonious team." },
-      { property: "og:title", content: "Messages — Harmonious Operations" },
+      { property: "og:title", content: "Messages - Harmonious Operations" },
       { property: "og:description", content: "One inbox for fund manager and investor questions to Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -157,7 +157,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     await db.from("client_intake_requests").insert({
       client_id: data.clientId,
       intent: isSpv(r) ? "launch_spv" : "launch_fund",
-      summary: `New ${isSpv(r) ? "SPV" : "fund"} request: ${r.fund_name}${duplicate ? " (possible duplicate name — review)" : ""}`,
+      summary: `New ${isSpv(r) ? "SPV" : "fund"} request: ${r.fund_name}${duplicate ? " (possible duplicate name - review)" : ""}`,
       answers: { ...flatAnswers(r), new_fund_request: "yes", ...(offeringId ? { offering_id: offeringId } : {}) },
       requested_service_keys: r.service_keys ?? [],
       status: "submitted",
@@ -188,7 +188,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
           templateData: {
             itemLabel: `New ${isSpv(r) ? "SPV" : "fund"} request`,
             fundName: r.fund_name,
-            detail: `${client?.name ?? "A client"} asked Harmonious to set up a new ${isSpv(r) ? "SPV" : "fund"}.${duplicate ? " The name may match an existing fund — please review." : " Fund Setup is pre-filled from their answers."}`,
+            detail: `${client?.name ?? "A client"} asked Harmonious to set up a new ${isSpv(r) ? "SPV" : "fund"}.${duplicate ? " The name may match an existing fund - please review." : " Fund Setup is pre-filled from their answers."}`,
             raisedBy: client?.name ?? "Client",
             portalUrl: offeringId ? `${OPS_SITE}/ops/funds` : `${OPS_SITE}/admin/services`,
           },

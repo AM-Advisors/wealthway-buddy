@@ -30,7 +30,7 @@ function Documents() {
                   <span className="text-xs text-muted-foreground">{d.status}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {d.client} — {String(d.kind).replace(/_/g, " ")}
+                  {d.client} - {String(d.kind).replace(/_/g, " ")}
                 </p>
               </li>
             ))}
@@ -48,7 +48,7 @@ function Documents() {
           <ul className="space-y-1 text-sm">
             {statements.map((s: any) => (
               <li key={s.id}>
-                {s.client} — {new Date(s.date).toLocaleDateString()} (v{s.version})
+                {s.client} - {new Date(s.date).toLocaleDateString()} (v{s.version})
               </li>
             ))}
           </ul>

@@ -103,7 +103,7 @@ function Body() {
         <h1 className="text-xl font-semibold tracking-tight">Exposure and verification</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Funds, SPVs and advisers declare what they believe they hold in {data.company.name}. Confirming a claim
-          records the company's answer — it never issues or moves shares.
+          records the company's answer - it never issues or moves shares.
         </p>
       </div>
 
@@ -190,7 +190,7 @@ function ClaimCard({
   const [note, setNote] = useState("");
   const [adjusted, setAdjusted] = useState("");
   const [caseOpen, setCaseOpen] = useState(false);
-  const [caseTitle, setCaseTitle] = useState(`Unverified claim — ${claim.claimantName}`);
+  const [caseTitle, setCaseTitle] = useState(`Unverified claim - ${claim.claimantName}`);
   const [caseSummary, setCaseSummary] = useState("");
   const [severity, setSeverity] = useState("medium");
 
@@ -306,7 +306,7 @@ function ClaimCard({
           <ul className="text-sm text-muted-foreground">
             {claim.documents.map((doc) => (
               <li key={doc.id}>
-                {doc.title} — {doc.reference}
+                {doc.title} - {doc.reference}
               </li>
             ))}
           </ul>
@@ -524,10 +524,10 @@ function IssuerPanel({
                   <tr key={issuer.id} className="border-t">
                     <td className="py-2 font-medium">{issuer.name}</td>
                     <td className="py-2">{issuer.issuerType}</td>
-                    <td className="py-2">{issuer.contactEmail ?? "—"}</td>
+                    <td className="py-2">{issuer.contactEmail ?? "-"}</td>
                     <td className="py-2 text-right">{fmtNumber(issuer.claimCount)}</td>
                     <td className="py-2 text-right">{fmtNumber(issuer.verifiedQuantity)}</td>
-                    <td className="py-2">{issuer.lastActivity ? fmtDate(issuer.lastActivity) : "—"}</td>
+                    <td className="py-2">{issuer.lastActivity ? fmtDate(issuer.lastActivity) : "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -564,7 +564,7 @@ function InvitePanel({
       setLink(`${origin}${result.path}`);
       setName("");
       setEmail("");
-      toast.success("Link created — copy it and send it to the claimant.");
+      toast.success("Link created - copy it and send it to the claimant.");
       onChanged();
     },
     onError: (error: unknown) =>
@@ -610,7 +610,7 @@ function InvitePanel({
                 <Label htmlFor="invite-link">Send this link</Label>
                 <Input id="invite-link" readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  This is shown once. It cannot be recovered later — create a new link if it is lost.
+                  This is shown once. It cannot be recovered later - create a new link if it is lost.
                 </p>
               </div>
             ) : null}

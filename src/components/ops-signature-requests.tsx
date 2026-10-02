@@ -12,7 +12,7 @@ import {
 } from "@/lib/document-signing.functions";
 
 function when(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
@@ -70,7 +70,7 @@ export function OpsSignatureRequests({ offeringId }: { offeringId?: string }) {
                 <CardTitle className="text-base">{request.documentTitle}</CardTitle>
                 <CardDescription>
                   Sent {when(request.sentAt)} · document version{" "}
-                  {request.sourceVersionId ? request.sourceVersionId.slice(-8) : "—"}
+                  {request.sourceVersionId ? request.sourceVersionId.slice(-8) : "-"}
                   {request.signedVersionId
                     ? ` · signed version ${request.signedVersionId.slice(-8)}`
                     : ""}

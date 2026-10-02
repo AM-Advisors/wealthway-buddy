@@ -115,7 +115,7 @@ function EditClientDialog({ clientId, initial, staff, onClose }: { clientId: str
           <div className="space-y-1">
             <Label htmlFor="ec-type">Client type</Label>
             <select id="ec-type" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f["client_type"] ?? ""} onChange={(e) => set("client_type", e.target.value)}>
-              <option value="">—</option>
+              <option value="">-</option>
               {CLIENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
@@ -128,7 +128,7 @@ function EditClientDialog({ clientId, initial, staff, onClose }: { clientId: str
           <div className="space-y-1">
             <Label htmlFor="ec-owner">Harmonious relationship owner</Label>
             <select id="ec-owner" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f["relationship_owner_id"] ?? ""} onChange={(e) => set("relationship_owner_id", e.target.value)}>
-              <option value="">—</option>
+              <option value="">-</option>
               {staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </div>
@@ -145,7 +145,7 @@ function EditClientDialog({ clientId, initial, staff, onClose }: { clientId: str
           {text("payment_terms_days", "Payment terms (days)", "number")}
           {(["line1", "city", "state", "postal_code", "country"] as const).map((k) => (
             <div key={k} className="space-y-1">
-              <Label htmlFor={`ec-addr-${k}`}>Address — {k.replace("_", " ")}</Label>
+              <Label htmlFor={`ec-addr-${k}`}>Address - {k.replace("_", " ")}</Label>
               <Input id={`ec-addr-${k}`} value={f["address"]?.[k] ?? ""} onChange={(e) => set("address", { ...(f["address"] ?? {}), [k]: e.target.value })} />
             </div>
           ))}
@@ -196,7 +196,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{p.fullName} {p.status === "inactive" ? <Badge variant="outline">Inactive</Badge> : null}</p>
-                <p className="text-xs text-muted-foreground">{[p.title, p.email, p.phone].filter(Boolean).join(" · ") || "—"}</p>
+                <p className="text-xs text-muted-foreground">{[p.title, p.email, p.phone].filter(Boolean).join(" · ") || "-"}</p>
               </div>
               <div className="flex gap-2">
                 {caps.includes("manage_people") ? <Button size="sm" variant="outline" onClick={() => setEdit(p)}>Edit</Button> : null}
@@ -214,7 +214,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
               <span className="text-muted-foreground">Fund / company scope: </span>
               {p.scopes.length ? p.scopes.map((s: any) => (
                 <span key={s.id} className="mr-2 inline-flex items-center gap-1">
-                  {roleLabel(s.role)} — {s.offeringId ? fundName.get(s.offeringId) ?? "Fund" : (d.companies as any[]).find((c) => c.id === s.companyId)?.name ?? "Company"}
+                  {roleLabel(s.role)} - {s.offeringId ? fundName.get(s.offeringId) ?? "Fund" : (d.companies as any[]).find((c) => c.id === s.companyId)?.name ?? "Company"}
                   {caps.includes("manage_roles") ? (
                     <button type="button" className="text-destructive" aria-label="Remove scope" onClick={() => scope({ data: { clientId, contactId: p.id, offeringId: s.offeringId, companyId: s.companyId, role: s.role, add: false } }).then(refresh, err)}>×</button>
                   ) : null}
@@ -374,10 +374,10 @@ export function ClientServicesPricingPanel({ clientId }: { clientId: string }) {
                         </td>
                         <td className={s.cents == null ? "text-destructive" : ""}>
                           {s.priceStatus === "conflict" && s.cents == null ? "Pricing conflict" : money(s.cents)}
-                          {s.customPending ? <span className="block text-xs text-muted-foreground">Custom — awaiting approval</span> : null}
+                          {s.customPending ? <span className="block text-xs text-muted-foreground">Custom - awaiting approval</span> : null}
                         </td>
-                        <td>{s.frequency ?? s.pricingModel ?? "—"}</td>
-                        <td className="text-xs">{s.source ? PRICING_SOURCES[s.source as keyof typeof PRICING_SOURCES] ?? s.source : "—"}</td>
+                        <td>{s.frequency ?? s.pricingModel ?? "-"}</td>
+                        <td className="text-xs">{s.source ? PRICING_SOURCES[s.source as keyof typeof PRICING_SOURCES] ?? s.source : "-"}</td>
                         <td className="text-xs">{s.sowStatus}</td>
                         <td className="space-x-1 whitespace-nowrap text-right">
                           {caps.includes("manage_pricing") && s.status === "proposed" ? <Button size="sm" variant="ghost" onClick={() => setOverriding(s)}>Price</Button> : null}
@@ -423,7 +423,7 @@ function AddServicesDialog({ clientId, groups, funds, existing, onClose }: { cli
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add Services</DialogTitle>
-          <DialogDescription>Only approved catalog services. Selecting a service proposes it — nothing is contracted or activated.</DialogDescription>
+          <DialogDescription>Only approved catalog services. Selecting a service proposes it - nothing is contracted or activated.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap gap-2">
           <select aria-label="Service scope" className="h-9 rounded-md border bg-background px-2 text-sm" value={scope} onChange={(e) => { setScope(e.target.value); setPicked(new Set()); }}>
@@ -482,7 +482,7 @@ function OverrideDialog({ clientId, sel, onClose }: { clientId: string; sel: any
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Custom price — {sel.serviceName}</DialogTitle>
+          <DialogTitle>Custom price - {sel.serviceName}</DialogTitle>
           <DialogDescription>Applies to {sel.scopeLabel} only. The standard price list is not changed. Another person with pricing permission must approve it before the SOW can go to signature.</DialogDescription>
         </DialogHeader>
         <p className="text-sm">Current: {money(sel.cents)} {sel.source ? `(${PRICING_SOURCES[sel.source as keyof typeof PRICING_SOURCES] ?? sel.source})` : ""}</p>
@@ -510,7 +510,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">SOW Preview — {p.offering?.name ?? "Client-wide"} {p.mode === "amendment" ? "(amendment)" : ""}</CardTitle>
+        <CardTitle className="text-base">SOW Preview - {p.offering?.name ?? "Client-wide"} {p.mode === "amendment" ? "(amendment)" : ""}</CardTitle>
         <CardDescription>
           {p.executedSow && p.mode === "amendment" ? "An executed SOW already covers this engagement. It stays unchanged; changes go into an amendment for review and signature." : "Generating creates a Draft SOW only. It still needs review, approval and client signature."}
         </CardDescription>
@@ -519,7 +519,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
         <dl className="grid gap-2 sm:grid-cols-2">
           <div><dt className="text-xs text-muted-foreground">Template</dt><dd>{p.template ? `${p.template.name} v${p.template.version} (effective ${p.template.effectiveDate})` : "None available"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Governing agreement</dt><dd>{p.governing ? p.governing.title : "No approved MSA on file"}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Existing draft</dt><dd>{p.draftSow ? "Yes — generating updates it" : "No"}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Existing draft</dt><dd>{p.draftSow ? "Yes - generating updates it" : "No"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Special terms</dt><dd>{p.specialTerms.length ? p.specialTerms.join("; ") : "None approved"}</dd></div>
         </dl>
         <table className="w-full">
@@ -528,10 +528,10 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
             {p.lines.map((l: any) => (
               <tr key={l.selectionId} className="border-t align-top">
                 <td className="py-1">{l.change === "remove" ? "Remove: " : ""}{l.serviceName}</td>
-                <td className="text-xs text-muted-foreground">{l.scope ?? "—"}</td>
-                <td>{l.frequency ?? l.pricingModel ?? "—"}</td>
-                <td>{l.change === "remove" ? "—" : money(l.cents)}</td>
-                <td className="text-xs">{l.pricingSource ? PRICING_SOURCES[l.pricingSource as keyof typeof PRICING_SOURCES] : "—"}</td>
+                <td className="text-xs text-muted-foreground">{l.scope ?? "-"}</td>
+                <td>{l.frequency ?? l.pricingModel ?? "-"}</td>
+                <td>{l.change === "remove" ? "-" : money(l.cents)}</td>
+                <td className="text-xs">{l.pricingSource ? PRICING_SOURCES[l.pricingSource as keyof typeof PRICING_SOURCES] : "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -554,7 +554,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
             <Button
               disabled={!p.template || !p.lines.length || (!!templateId && reason.trim().length < 5)}
               onClick={() => gen({ data: { clientId, offeringId, templateId, overrideReason: reason || undefined } }).then((r) => {
-                toast.success(r.outcome === "reused_executed" ? "An executed SOW already covers this — reused." : r.outcome === "no_template" ? "No approved template — task raised." : "Draft SOW saved. It is not signed or executed.");
+                toast.success(r.outcome === "reused_executed" ? "An executed SOW already covers this - reused." : r.outcome === "no_template" ? "No approved template - task raised." : "Draft SOW saved. It is not signed or executed.");
                 q.refetch(); onDone();
               }, err)}
             >
@@ -588,7 +588,7 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2">
           <div>
             <CardTitle className="text-base">Funds & SPVs</CardTitle>
-            <CardDescription>MSA: {d.msaStatus}. A fund can exist without Harmonious being contractually engaged — that needs an executed SOW.</CardDescription>
+            <CardDescription>MSA: {d.msaStatus}. A fund can exist without Harmonious being contractually engaged - that needs an executed SOW.</CardDescription>
           </div>
           {caps.includes("link_funds") ? (
             <div className="flex gap-2">
@@ -606,12 +606,12 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
                   <tr key={f.id} className="border-t align-top">
                     <td className="py-1.5"><Link to="/ops/funds/$fundId" params={{ fundId: f.id } as any} className="text-primary hover:underline">{f.name}</Link></td>
                     <td>{f.type}</td>
-                    <td>{f.managers.join(", ") || "—"}</td>
+                    <td>{f.managers.join(", ") || "-"}</td>
                     <td>{f.setupStatus}</td>
                     <td>{f.services.length}</td>
                     <td className="min-w-48">
                       <details>
-                        <summary className="cursor-pointer"><Badge variant={f.coverage?.status?.startsWith("covered") ? "default" : f.coverage?.status === "needs_review" || f.coverage?.status === "msa_only" ? "secondary" : "outline"}>{f.coverage?.label ?? "—"}</Badge></summary>
+                        <summary className="cursor-pointer"><Badge variant={f.coverage?.status?.startsWith("covered") ? "default" : f.coverage?.status === "needs_review" || f.coverage?.status === "msa_only" ? "secondary" : "outline"}>{f.coverage?.label ?? "-"}</Badge></summary>
                         <div className="mt-1 space-y-1 text-xs text-muted-foreground">
                           <p>MSA: {f.coverage?.msa?.title ?? "none on file"}</p>
                           {(f.coverage?.sows ?? []).map((s: any) => <p key={s.id}>{s.executed ? "Executed" : "Draft"}: {s.title}{s.version ? ` v${s.version}` : ""} · {s.funds} fund(s) · {s.services.length} service(s)</p>)}
@@ -620,8 +620,8 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
                       </details>
                     </td>
                     <td><Badge variant={f.sowStatus === "Executed" ? "default" : f.sowStatus === "No SOW" ? "destructive" : "secondary"}>{f.sowStatus}</Badge></td>
-                    <td>{f.sowVersion ? `v${f.sowVersion}` : "—"}</td>
-                    <td className="text-xs">{f.pricingSources.map((s: string) => PRICING_SOURCES[s as keyof typeof PRICING_SOURCES] ?? s).join(", ") || "—"}</td>
+                    <td>{f.sowVersion ? `v${f.sowVersion}` : "-"}</td>
+                    <td className="text-xs">{f.pricingSources.map((s: string) => PRICING_SOURCES[s as keyof typeof PRICING_SOURCES] ?? s).join(", ") || "-"}</td>
                     <td className="text-xs">{f.driveStatus}</td>
                     <td>{f.contractuallyEngaged ? "Yes" : "No"}</td>
                   </tr>
@@ -690,7 +690,7 @@ function CreateFundDialog({ clientId, clientName, onClose }: { clientId: string;
         ) : <p className="text-xs text-muted-foreground">Add services for this fund afterwards on Services & Pricing.</p>}
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [], packageKeys: (proposed.data?.packages ?? []).length ? chosen : undefined } }).then((r) => { if (r.duplicate) toast.message("This client already has a fund with that name — nothing new was created."); else toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
+          <Button disabled={busy || f.name.trim().length < 2} onClick={() => { setBusy(true); create({ data: { clientId, ...f, regType: f.regType as any, serviceKeys: [], packageKeys: (proposed.data?.packages ?? []).length ? chosen : undefined } }).then((r) => { if (r.duplicate) toast.message("This client already has a fund with that name - nothing new was created."); else toast.success(`Fund created in setup. Contract coverage: ${r.coverage.label}. No SOW was created.`); onClose(); }, err).finally(() => setBusy(false)); }}>Create</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -708,7 +708,7 @@ function LinkFundDialog({ clientId, onClose }: { clientId: string; onClose: () =
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Link Existing Fund/SPV</DialogTitle>
-          <DialogDescription>A fund that belongs to another client is never moved silently — it needs a reason and a second person's review.</DialogDescription>
+          <DialogDescription>A fund that belongs to another client is never moved silently - it needs a reason and a second person's review.</DialogDescription>
         </DialogHeader>
         <Input placeholder="Search funds" value={term} onChange={(e) => setTerm(e.target.value)} />
         <Input placeholder="Reason (required for a fund owned by another client)" value={reason} onChange={(e) => setReason(e.target.value)} />

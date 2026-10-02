@@ -262,7 +262,7 @@ export function allocationWeights(
 
 /**
  * Split a fund-level amount across weights so the parts add back to the whole
- * exactly — largest remainder, no rounding leakage.
+ * exactly - largest remainder, no rounding leakage.
  */
 export function distributeAmount(totalCents: number, weights: Weight[]): Map<string, number> {
   const result = new Map<string, number>();
@@ -562,7 +562,7 @@ export type CommitmentState = {
 
 /**
  * The commitment position as at a date, rebuilt from history. The original
- * commitment is never overwritten — amendments are separate events.
+ * commitment is never overwritten - amendments are separate events.
  */
 export function commitmentAsOf(events: CommitmentEvent[], asOf?: string): CommitmentState {
   const cutoff = asOf ? time(asOf) : Number.POSITIVE_INFINITY;
@@ -639,7 +639,7 @@ export type FeeTerm = {
   frequency: FeeFrequency;
   startsOn: string;
   endsOn?: string | null;
-  /** [{ from: "2028-01-01", rateBps: 150 }] — applied by effective date. */
+  /** [{ from: "2028-01-01", rateBps: 150 }] - applied by effective date. */
   stepDowns?: { from: string; rateBps: number }[];
   waiverBps?: number;
   offsetPct?: number;
@@ -663,7 +663,7 @@ export type FeeCalculation = {
   netFeeCents: number;
 };
 
-/** Fee for one period from versioned terms — never a typed-in number. */
+/** Fee for one period from versioned terms - never a typed-in number. */
 export function managementFee(
   term: FeeTerm,
   basisAmountCents: number,

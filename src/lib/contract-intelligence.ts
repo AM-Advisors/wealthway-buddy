@@ -1,6 +1,6 @@
 import { EXTENDED_RELATIONSHIP_TYPES } from "@/lib/contract-coverage";
 /**
- * Contract intelligence — pure, deterministic rules (browser-safe, no I/O).
+ * Contract intelligence - pure, deterministic rules (browser-safe, no I/O).
  *
  * Everything here works only from human-reviewed terms and reviewer-recorded
  * relationships. Nothing decides which legal provision controls, whether a
@@ -256,7 +256,7 @@ export type FamilyNode = { doc: DocLite; children: FamilyNode[]; links: { type: 
 /**
  * Client → Master agreement → SOW → Amendment → New version, built only from
  * explicit links (parent / supersedes set at upload, or reviewer-recorded
- * relationships) — never from upload order.
+ * relationships) - never from upload order.
  */
 export function buildFamily(docs: DocLite[], rels: Relationship[]): FamilyNode[] {
   const byId = new Map(docs.map((d) => [d.id, { doc: d, children: [] as FamilyNode[], links: [] as { type: string; to: string }[] }]));
@@ -325,7 +325,7 @@ export type ContractConflict = {
   documentIds: string[];
   provisions: ConflictProvision[];
 };
-export const CONFLICT_TASK_TITLE = "Contract Scope Conflict — Review Required";
+export const CONFLICT_TASK_TITLE = "Contract Scope Conflict - Review Required";
 
 const isActive = (d: DocLite, today: string) =>
   d.review_status !== "superseded" &&
@@ -477,7 +477,7 @@ export const LIFECYCLE_STATUSES = [
   "Renewal Window", "Notice Window", "Expiring", "Expired", "Superseded", "Terminated",
 ] as const;
 export type LifecycleStatus = (typeof LIFECYCLE_STATUSES)[number];
-export const UNABLE = "Unable to calculate — review required";
+export const UNABLE = "Unable to calculate - review required";
 
 export type Lifecycle = {
   status: LifecycleStatus;
@@ -556,7 +556,7 @@ export const RENEWAL_REMINDER_DAYS = [90, 60, 30, 14] as const;
 
 /**
  * At most one renewal reminder per document: the tightest interval reached.
- * It is a reminder only — nothing renews, terminates or sends notice.
+ * It is a reminder only - nothing renews, terminates or sends notice.
  */
 export function renewalReminder(lc: Lifecycle, today: string): { daysLeft: number; bucket: number } | null {
   if (!lc.renewalDate || lc.status === "Superseded" || lc.status === "Terminated") return null;
@@ -606,7 +606,7 @@ export type PriceResolution<T extends PriceRow = PriceRow> =
  * Client + Fund (if any) + Service + Date → the approved contract price.
  * History is kept: superseded rows still answer for dates before their
  * replacement took effect. Equally-applicable rows with different amounts are
- * a conflict — never silently chosen.
+ * a conflict - never silently chosen.
  */
 export function resolveContractPrice<T extends PriceRow>(
   rows: T[],
@@ -659,7 +659,7 @@ const STAFF_ROLES = new Set(Object.keys(CONTRACT_ROLE_BASELINE).concat(["fund_ad
 
 /**
  * Contract capabilities for a person. Explicit grants only count for active
- * Harmonious staff — a Fund Manager or investor gets nothing, whatever a grant row says.
+ * Harmonious staff - a Fund Manager or investor gets nothing, whatever a grant row says.
  */
 export function contractCapabilitiesFor(roles: readonly string[], grants: readonly string[] = []): ContractCapability[] {
   if (!roles.some((r) => STAFF_ROLES.has(r))) return [];
@@ -760,7 +760,7 @@ const SECTION_TERM_HINTS: [string, RegExp][] = [
 
 /**
  * Structured terms for an executed standard agreement come from the approved
- * template itself (plus the populated business fields) — not from AI.
+ * template itself (plus the populated business fields) - not from AI.
  */
 export function standardTemplateTerms(
   version: { version: string },

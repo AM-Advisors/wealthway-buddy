@@ -257,7 +257,7 @@ function ChangeOrderRow({
         {order.lines.map((l: any) => (
           <div key={l.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span>
-              {l.action} — {l.serviceName}{" "}
+              {l.action} - {l.serviceName}{" "}
               <span className="text-xs text-muted-foreground">
                 standard {money(l.standardPriceCents)}
               </span>

@@ -16,9 +16,9 @@ import { SalesOverviewTab } from "@/components/sales-overview-tab";
 export const Route = createFileRoute("/_authenticated/sales")({
   head: () => ({
     meta: [
-      { title: "Sales — Harmonious" },
+      { title: "Sales - Harmonious" },
       { name: "description", content: "Harmonious Sales: clients, fund requests, fund pricing, pricing approvals, Client Pricing and pricing history." },
-      { property: "og:title", content: "Sales — Harmonious" },
+      { property: "og:title", content: "Sales - Harmonious" },
       { property: "og:description", content: "Commercial pricing and agreements for Harmonious staff." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/sales")({
   component: SalesPage,
 });
 
-const money = (c: number | null | undefined) => (c == null ? "—" : `$${(Number(c) / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`);
+const money = (c: number | null | undefined) => (c == null ? "-" : `$${(Number(c) / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`);
 const statusLabel = (s: string) => COMMERCIAL_STATUS_LABEL[s as keyof typeof COMMERCIAL_STATUS_LABEL] ?? s;
 
 function SalesPage() {
@@ -77,7 +77,7 @@ function FundPricing({ d }: { d: any }) {
   const [reason, setReason] = useState("");
   const m = useMutation({
     mutationFn: () => save({ data: { offeringId: fundId, reason: reason || undefined, prices: Object.fromEntries(Object.entries(prices).filter(([, v]) => v !== "").map(([k, v]) => [k, Math.round(Number(v) * 100)])) } }),
-    onSuccess: (r: any) => { toast.success(r.status === "approved" ? "Pricing approved." : "Below baseline — sent for pricing approval."); setPrices({}); void qc.invalidateQueries({ queryKey: ["sales-overview"] }); },
+    onSuccess: (r: any) => { toast.success(r.status === "approved" ? "Pricing approved." : "Below baseline - sent for pricing approval."); setPrices({}); void qc.invalidateQueries({ queryKey: ["sales-overview"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save."),
   });
   return (
@@ -122,12 +122,12 @@ function Approvals({ d }: { d: any }) {
             <div className="mt-3 space-y-2">
               <Input placeholder="Decision reason" value={reason[r.id] ?? ""} onChange={(e) => setReason({ ...reason, [r.id]: e.target.value })} />
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" disabled={m.isPending} onClick={() => m.mutate({ requestId: r.id, approve: true, scope: "fund_only" })}>Approve — This Fund Only</Button>
-                <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate({ requestId: r.id, approve: true, scope: "client_future" })}>Approve — Client Pricing, Future Funds</Button>
+                <Button size="sm" disabled={m.isPending} onClick={() => m.mutate({ requestId: r.id, approve: true, scope: "fund_only" })}>Approve - This Fund Only</Button>
+                <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate({ requestId: r.id, approve: true, scope: "client_future" })}>Approve - Client Pricing, Future Funds</Button>
                 <Button size="sm" variant="ghost" disabled={m.isPending} onClick={() => m.mutate({ requestId: r.id, approve: false })}>Decline</Button>
               </div>
             </div>
-          ) : r.status === "pending" ? <p className="mt-2 text-xs text-muted-foreground">{r.requested_by === d.me ? "You requested this — another approver must decide." : "Waiting for Sales Management."}</p> : null}
+          ) : r.status === "pending" ? <p className="mt-2 text-xs text-muted-foreground">{r.requested_by === d.me ? "You requested this - another approver must decide." : "Waiting for Sales Management."}</p> : null}
         </li>
       ))}
     </ul>
@@ -145,7 +145,7 @@ function ClientPricing({ d }: { d: any }) {
   });
   return (
     <div className="space-y-6">
-      <Rows items={d.clientPricing} empty="No Client Pricing." render={(p: any) => (<><span>{p.clientName} · {p.label}<span className="block text-xs text-muted-foreground">From {p.effective_date ?? "—"}{p.expires_on ? ` to ${p.expires_on}` : ""}{p.approval_reason ? ` · ${p.approval_reason}` : ""}</span></span><span>{money(p.contracted_cents)} <span className="text-xs text-muted-foreground">(rate card {money(p.standard_cents)})</span>{p.superseded_at ? <Badge variant="outline" className="ml-2">Superseded</Badge> : null}</span></>)} />
+      <Rows items={d.clientPricing} empty="No Client Pricing." render={(p: any) => (<><span>{p.clientName} · {p.label}<span className="block text-xs text-muted-foreground">From {p.effective_date ?? "-"}{p.expires_on ? ` to ${p.expires_on}` : ""}{p.approval_reason ? ` · ${p.approval_reason}` : ""}</span></span><span>{money(p.contracted_cents)} <span className="text-xs text-muted-foreground">(rate card {money(p.standard_cents)})</span>{p.superseded_at ? <Badge variant="outline" className="ml-2">Superseded</Badge> : null}</span></>)} />
       {d.canApprove ? (
         <div className="grid gap-2 rounded-md border p-4 sm:grid-cols-2">
           <h2 className="text-lg sm:col-span-2">Set Client Pricing for future funds</h2>

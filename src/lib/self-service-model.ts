@@ -1,10 +1,10 @@
 /**
- * Client self-service — pure presentation over existing authoritative records.
+ * Client self-service - pure presentation over existing authoritative records.
  *
  * Nothing here stores a status. Fund-request lifecycle labels are read from
  * fund_requests + fund_setups + fund_setup_tasks; milestones group the
  * existing setup sections; the investor list parser only prepares rows for
- * review — sending always happens one invitation at a time through the
+ * review - sending always happens one invitation at a time through the
  * existing invitation function.
  */
 

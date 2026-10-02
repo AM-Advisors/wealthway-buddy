@@ -87,7 +87,7 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
           const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
           const result = await syncBoxSignRequest(signRequestId, opts);
           if (result.status === "unknown_sign_request") {
-            // Not a fund document — it may be a diligence-room NDA.
+            // Not a fund document - it may be a diligence-room NDA.
             const { syncNdaSignRequest } = await import("@/lib/nda-sign-complete.server");
             const nda = await syncNdaSignRequest(signRequestId, opts);
             console.log("[box-sign] webhook nda", trigger, signRequestId, nda.status);

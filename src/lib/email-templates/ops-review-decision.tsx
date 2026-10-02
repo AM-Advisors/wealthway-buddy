@@ -47,7 +47,7 @@ function OpsReviewDecision({
   return (
     <Html lang="en" dir="ltr">
       <Head />
-      <Preview>{`${itemLabel} — ${shape.title}`}</Preview>
+      <Preview>{`${itemLabel} - ${shape.title}`}</Preview>
       <Body
         style={{
           backgroundColor: '#ffffff',
@@ -109,7 +109,7 @@ function OpsReviewDecision({
 export const template = {
   component: OpsReviewDecision,
   subject: (data: Record<string, any>) =>
-    `${data['itemLabel'] ?? 'An item'} — ${
+    `${data['itemLabel'] ?? 'An item'} - ${
       DECISIONS[data['decision'] as string]?.title ?? 'reviewed by operations'
     }`,
   displayName: 'Operations review decision',

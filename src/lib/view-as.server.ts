@@ -1,5 +1,5 @@
 /**
- * View As — server-side authorization perspective (read-only).
+ * View As - server-side authorization perspective (read-only).
  * Never uses, mints or substitutes a client token; never touches client sign-in
  * history or security settings. Every call re-validates staff authority, the
  * sign-in session and the canonical relationship. Client-supplied IDs are used
@@ -18,7 +18,7 @@ async function nameOf(userId: string) {
   return (data?.legal_name as string | null) ?? "Unnamed person";
 }
 
-/** Canonical relationship check — fund_managers row or the investment's own investor. */
+/** Canonical relationship check - fund_managers row or the investment's own investor. */
 async function relationshipHolds(p: { perspective: Perspective; subjectUserId: string; offeringId: string | null; onboardingId: string | null }) {
   const subject = await onboardingActor(p.subjectUserId);
   if (!subjectAllowed(subject)) return false;
@@ -128,8 +128,8 @@ export async function viewAsFund(staffUserId: string, authSessionId: string | nu
 /**
  * Switch explicitly from View As (read-only) to Edit as Harmonious. Ends the
  * perspective and records which client view was being inspected, so the
- * following edit — made through the existing Operations form and save path,
- * under the staff member's own account — is traceable to View As.
+ * following edit - made through the existing Operations form and save path,
+ * under the staff member's own account - is traceable to View As.
  */
 export async function beginEditAsHarmonious(staffUserId: string, authSessionId: string | null) {
   const p = await resolvePerspective(staffUserId, authSessionId);

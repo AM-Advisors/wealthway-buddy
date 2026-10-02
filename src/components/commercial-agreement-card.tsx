@@ -10,7 +10,7 @@ import { getCommercialAgreementStatus, updateContractStructure } from "@/lib/com
 import { CONTRACT_STRUCTURES, CONTRACT_STRUCTURE_LABELS, DOC_STATUS_LABELS, type ContractStructure } from "@/lib/commercial-agreement-model";
 
 /**
- * Operations view of the Harmonious MSA/SOW. Informational only — it never
+ * Operations view of the Harmonious MSA/SOW. Informational only - it never
  * marks anything signed and never blocks the fund or the client.
  */
 export function CommercialAgreementCard({ clientId, offeringId }: { clientId?: string; offeringId?: string }) {

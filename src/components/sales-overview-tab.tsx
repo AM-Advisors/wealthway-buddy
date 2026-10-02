@@ -5,7 +5,7 @@ import { CapitalByFundChart, ChartCard, DonutChart } from "@/components/dashboar
 import { getSalesPerformance } from "@/lib/sales-performance.functions";
 import { COMMERCIAL_STATUS_LABEL } from "@/lib/commercial-pricing";
 
-const money = (c: number | null | undefined) => (c == null ? "—" : `$${(Number(c) / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`);
+const money = (c: number | null | undefined) => (c == null ? "-" : `$${(Number(c) / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`);
 const STAGE_LABEL = { invited: "Invited", started: "Onboarding", signed: "Signed", funded: "Funded" } as const;
 
 export function SalesOverviewTab() {

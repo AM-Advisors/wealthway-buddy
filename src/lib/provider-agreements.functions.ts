@@ -231,7 +231,7 @@ export const saveAgreementRate = createServerFn({ method: "POST" })
     }
     await audit(context, who, {
       action: data.id ? "price changed" : "price added",
-      target: `${agreement.title} — ${row.label}`,
+      target: `${agreement.title} - ${row.label}`,
       next: row,
     });
     return { ok: true };
@@ -260,7 +260,7 @@ export const removeAgreementRate = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await audit(context, who, {
       action: "price removed",
-      target: `${agreement.title} — ${(rate as any).label}`,
+      target: `${agreement.title} - ${(rate as any).label}`,
       previous: rate,
     });
     return { ok: true };
@@ -308,7 +308,7 @@ export const saveAgreementCondition = createServerFn({ method: "POST" })
     }
     await audit(context, who, {
       action: data.id ? "condition changed" : "condition added",
-      target: `${agreement.title} — ${row.label}`,
+      target: `${agreement.title} - ${row.label}`,
       next: row,
     });
     return { ok: true };
@@ -369,7 +369,7 @@ export const removeAgreementCondition = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await audit(context, who, {
       action: "condition removed",
-      target: `${agreement.title} — ${(condition as any).label}`,
+      target: `${agreement.title} - ${(condition as any).label}`,
       previous: condition,
     });
     return { ok: true };

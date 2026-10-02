@@ -1,11 +1,11 @@
 /**
- * Client Access Manager — the principal's (or staff's) control over who may
+ * Client Access Manager - the principal's (or staff's) control over who may
  * see their information.
  *
  * Grants are deny-by-default and, in Phase 3A, read-only: only viewing
  * capabilities at "view" authority can be granted here. Suspension and
  * revocation take effect on the next server call, and nothing is ever hard
- * deleted — the delegation row and its audit history stay for the record.
+ * deleted - the delegation row and its audit history stay for the record.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";

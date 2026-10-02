@@ -9,9 +9,9 @@ import { getPlatformAgreements } from "@/lib/my-funds.functions";
 export const Route = createFileRoute("/_authenticated/account/agreements")({
   head: () => ({
     meta: [
-      { title: "Agreements & Policies — Harmonious" },
+      { title: "Agreements & Policies - Harmonious" },
       { name: "description", content: "Platform terms, e-sign consent, privacy and pricing acknowledgments you have accepted, with full history." },
-      { property: "og:title", content: "Agreements & Policies — Harmonious" },
+      { property: "og:title", content: "Agreements & Policies - Harmonious" },
       { property: "og:description", content: "Your accepted platform agreements and their history." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/account/agreements")({
   component: AgreementsPage,
 });
 
-const when = (v: string | null) => (v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—");
+const when = (v: string | null) => (v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-");
 
 function Rows({ rows, empty }: { rows: any[]; empty: string }) {
   if (!rows.length) return <p className="text-sm text-muted-foreground">{empty}</p>;
@@ -54,7 +54,7 @@ function AgreementsPage() {
         <CardContent><Rows rows={d?.agreements ?? []} empty={q.isLoading ? "Loading…" : "Nothing accepted yet."} /></CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="text-base">Pricing & Commercial Terms</CardTitle><CardDescription>Platform-level pricing acknowledgments — not fund SOWs.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="text-base">Pricing & Commercial Terms</CardTitle><CardDescription>Platform-level pricing acknowledgments - not fund SOWs.</CardDescription></CardHeader>
         <CardContent><Rows rows={d?.pricing ?? []} empty={q.isLoading ? "Loading…" : "No pricing acknowledgments."} /></CardContent>
       </Card>
       <Card>

@@ -8,7 +8,7 @@ import { listAgreementPipeline } from "@/lib/agreement-prep.functions";
 
 /**
  * The agreements pipeline. Every column is worked out from the authoritative
- * signer records and Box's own status — there is no separate status anyone can
+ * signer records and Box's own status - there is no separate status anyone can
  * edit by hand.
  */
 export function AgreementsPipeline({ offeringId }: { offeringId?: string }) {
@@ -64,7 +64,7 @@ export function AgreementsPipeline({ offeringId }: { offeringId?: string }) {
                   <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
                     {row.signers.map((s: any, i: number) => (
                       <li key={i}>
-                        {s.name ?? "Signer"} —{" "}
+                        {s.name ?? "Signer"} -{" "}
                         {s.roleKey ? roleLabel(s.roleKey) : (s.capacityLabel ?? "Signer")} · {s.status}
                       </li>
                     ))}

@@ -51,7 +51,7 @@ export function InvestorSignoffCard() {
         },
       }),
     onSuccess: () => {
-      toast.success("Thank you — your fund and commitment are approved.");
+      toast.success("Thank you - your fund and commitment are approved.");
       setName("");
       setTitle("");
       queryClient.invalidateQueries({ queryKey: ["investor-signoff"] });

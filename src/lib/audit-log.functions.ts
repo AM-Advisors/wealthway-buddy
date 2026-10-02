@@ -143,7 +143,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         summary: d.summary ?? "Wire decision recorded",
         detail: joinDetail([
           `Previous value: ${meta['previous'] ?? "not set"}`,
-          `New value: ${meta['next'] ?? d.outcome ?? "—"}`,
+          `New value: ${meta['next'] ?? d.outcome ?? "-"}`,
           d.note,
         ]),
         amountCents: (meta['amount_cents'] as number) ?? null,
@@ -210,7 +210,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
             ? (clientName.get(i.client_id) ?? null)
             : null,
         category: "Payment instruction",
-        summary: `${i.direction ?? "payment"} — ${i.purpose ?? "instruction"}`,
+        summary: `${i.direction ?? "payment"} - ${i.purpose ?? "instruction"}`,
         detail: joinDetail([
           i.beneficiary_name ? `To ${i.beneficiary_name}` : null,
           i.beneficiary_account ? `Account ${mask(i.beneficiary_account)}` : null,
@@ -384,11 +384,11 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         actor: personName.get(d.actor_id) ?? null,
         fundName: w.fund ?? (d.offering_id ? (fundName.get(d.offering_id) ?? null) : null),
         category: `${label} decision`,
-        summary: `${label} changed from ${meta['previous'] ?? "not set"} to ${meta['next'] ?? d.outcome ?? "—"}`,
+        summary: `${label} changed from ${meta['previous'] ?? "not set"} to ${meta['next'] ?? d.outcome ?? "-"}`,
         detail: joinDetail([
           w.person ? `Investor ${w.person}` : null,
           `Previous value: ${meta['previous'] ?? "not set"}`,
-          `New value: ${meta['next'] ?? d.outcome ?? "—"}`,
+          `New value: ${meta['next'] ?? d.outcome ?? "-"}`,
           d.note,
         ]),
         amountCents: null,
@@ -424,7 +424,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         actor: w.person,
         fundName: w.fund,
         category: "Accreditation",
-        summary: `Accreditation record (${r.reg_type ?? "—"}, ${r.method ?? "—"})`,
+        summary: `Accreditation record (${r.reg_type ?? "-"}, ${r.method ?? "-"})`,
         detail: joinDetail([
           r.qualifies === null || r.qualifies === undefined
             ? null
@@ -468,7 +468,7 @@ export const listFilingAudit = createServerFn({ method: "GET" })
       at: f.updated_at ?? f.created_at,
       actor: f.owner_name ?? personName.get(f.created_by) ?? null,
       fundName: f.offering_id ? (fundName.get(f.offering_id) ?? null) : null,
-      category: f.category ? `Filing — ${f.category}` : "Filing",
+      category: f.category ? `Filing - ${f.category}` : "Filing",
       summary: f.label ?? f.key ?? "Compliance item",
       detail: joinDetail([
         f.due_date ? `Due ${dateOnly(f.due_date)}` : null,
@@ -508,7 +508,7 @@ export const listHoldAudit = createServerFn({ method: "GET" })
           ? (clientName.get(h.client_id) ?? null)
           : null,
       category: "Compliance hold",
-      summary: `${String(h.scope ?? "").replace(/_/g, " ")} paused — ${String(h.reason ?? "").replace(/_/g, " ")}`,
+      summary: `${String(h.scope ?? "").replace(/_/g, " ")} paused - ${String(h.reason ?? "").replace(/_/g, " ")}`,
       detail: joinDetail([
         h.placed_at ? `Placed ${dateOnly(h.placed_at)}` : null,
         h.cleared_at ? `Cleared ${dateOnly(h.cleared_at)}` : null,
@@ -553,8 +553,8 @@ export const listScopeAudit = createServerFn({ method: "GET" })
         : e.client_id
           ? (clientName.get(e.client_id) ?? null)
           : null,
-      category: e.area ? `Scope — ${e.area}` : "Scope",
-      summary: `${e.action ?? "changed"}${e.target ? ` — ${e.target}` : ""}`,
+      category: e.area ? `Scope - ${e.area}` : "Scope",
+      summary: `${e.action ?? "changed"}${e.target ? ` - ${e.target}` : ""}`,
       detail: joinDetail([
         e.actor_role ? `As ${e.actor_role}` : null,
         e.approval ? `Approval: ${e.approval}` : null,

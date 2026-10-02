@@ -8,9 +8,9 @@ import { getInvestorNotices } from "@/lib/investor-reporting.functions";
 export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({
     meta: [
-      { title: "Activity — Harmonious" },
+      { title: "Activity - Harmonious" },
       { name: "description", content: "Recent activity across your investments with Harmonious." },
-      { property: "og:title", content: "Activity — Harmonious" },
+      { property: "og:title", content: "Activity - Harmonious" },
       {
         property: "og:description",
         content: "Recent activity across your investments with Harmonious.",

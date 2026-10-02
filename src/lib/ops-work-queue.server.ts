@@ -1,7 +1,7 @@
 /**
  * Server side of the Operations work queue (server-only module).
  *
- * Every item below is read straight from the workflow record that owns it —
+ * Every item below is read straight from the workflow record that owns it -
  * an onboarding, a capital call, a bank line, a journal entry, a valuation, a
  * NAV version, an allocation run, a report, a document. Nothing is written,
  * no status is duplicated, and no due date or owner appears unless the source
@@ -143,7 +143,7 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordType: "investor",
         recordId: o.investor_user_id,
         recordTab: identity ? "identity" : "investments",
-        title: `${lookup.people.get(o.investor_user_id) ?? "Investor"} — onboarding`,
+        title: `${lookup.people.get(o.investor_user_id) ?? "Investor"} - onboarding`,
         reason:
           o.stage === "harmonious_review"
             ? "Submitted for Harmonious review"
@@ -183,7 +183,7 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordType: "investor",
         recordId: parent.investor_user_id,
         recordTab: "identity",
-        title: `${lookup.people.get(parent.investor_user_id) ?? "Investor"} — onboarding exception`,
+        title: `${lookup.people.get(parent.investor_user_id) ?? "Investor"} - onboarding exception`,
         reason: String(e.exception_type ?? "Exception raised").replace(/_/g, " "),
         workflowState: String(e.status ?? "open"),
         requiredAction: "review",
@@ -220,7 +220,7 @@ async function onboardingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordId: onInvestor ? h.subject_user_id : h.offering_id,
         recordTab: onInvestor ? "identity" : "overview",
         title: onInvestor
-          ? `${lookup.people.get(h.subject_user_id) ?? "Investor"} — compliance hold`
+          ? `${lookup.people.get(h.subject_user_id) ?? "Investor"} - compliance hold`
           : "Compliance hold on the fund",
         reason: "A compliance hold is in place",
         workflowState: "active",
@@ -285,7 +285,7 @@ async function identityItems(s: any, lookup: Lookup, now: Date) {
         recordType: "investor",
         recordId: app.user_id,
         recordTab: "identity",
-        title: `${lookup.people.get(app.user_id) ?? "Investor"} — identity check`,
+        title: `${lookup.people.get(app.user_id) ?? "Investor"} - identity check`,
         reason: "Identity verification needs a decision",
         workflowState: String(k.status),
         requiredAction: "review",
@@ -309,7 +309,7 @@ async function identityItems(s: any, lookup: Lookup, now: Date) {
         recordType: "investor",
         recordId: app.user_id,
         recordTab: "identity",
-        title: `${lookup.people.get(app.user_id) ?? "Investor"} — accreditation`,
+        title: `${lookup.people.get(app.user_id) ?? "Investor"} - accreditation`,
         reason: "Accreditation needs a decision",
         workflowState: String(a.status),
         requiredAction: "review",
@@ -378,7 +378,7 @@ async function capitalItems(s: any, lookup: Lookup, now: Date, fundId?: string) 
         recordType: "fund",
         recordId: f.offering_id,
         recordTab: "capital",
-        title: `${lookup.people.get(f.investor_user_id) ?? "Investor"} — expected funding`,
+        title: `${lookup.people.get(f.investor_user_id) ?? "Investor"} - expected funding`,
         reason: partial ? "Only part of the expected amount has arrived" : "Funds are still expected",
         workflowState: String(f.status),
         requiredAction: "review",
@@ -551,7 +551,7 @@ async function accountingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordType: "fund",
         recordId: fund,
         recordTab: "accounting",
-        title: `Period close — ${p.label ?? p.period_end ?? ""}`.trim(),
+        title: `Period close - ${p.label ?? p.period_end ?? ""}`.trim(),
         reason: p.status === "review" ? "Close review in progress" : "Soft closed and awaiting review",
         workflowState: String(p.status),
         requiredAction: "review",
@@ -582,7 +582,7 @@ async function accountingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordType: "fund",
         recordId: v.offering_id,
         recordTab: "accounting",
-        title: `Valuation — ${v.asset_name ?? "holding"}`,
+        title: `Valuation - ${v.asset_name ?? "holding"}`,
         reason: returned
           ? "Valuation was challenged and sent back"
           : v.status === "review"
@@ -618,7 +618,7 @@ async function accountingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordType: "fund",
         recordId: n.offering_id,
         recordTab: "accounting",
-        title: `NAV — ${n.period_label ?? n.as_of_date ?? ""}`.trim(),
+        title: `NAV - ${n.period_label ?? n.as_of_date ?? ""}`.trim(),
         reason: challenged
           ? "The fund manager has challenged this NAV"
           : n.status === "draft"
@@ -657,7 +657,7 @@ async function accountingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
         recordType: "fund",
         recordId: r.offering_id,
         recordTab: "accounting",
-        title: `Allocation run — ${r.period_end ?? ""}`.trim(),
+        title: `Allocation run - ${r.period_end ?? ""}`.trim(),
         reason: difference
           ? "The run does not tie back to fund net assets"
           : challenged
@@ -702,7 +702,7 @@ async function reportingItems(s: any, lookup: Lookup, now: Date, fundId?: string
         recordType: "fund",
         recordId: r.offering_id,
         recordTab: "accounting",
-        title: `${String(r.report_type ?? "report").replace(/_/g, " ")} — ${r.period_end ?? ""}`.trim(),
+        title: `${String(r.report_type ?? "report").replace(/_/g, " ")} - ${r.period_end ?? ""}`.trim(),
         reason: challenged
           ? "The fund manager has challenged this report"
           : r.status === "approved"
@@ -738,7 +738,7 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
       recordType: "investor",
       recordId: d.user_id,
       recordTab: "documents",
-      title: `${lookup.people.get(d.user_id) ?? "Investor"} — ${String(d.doc_kind ?? "document").replace(/_/g, " ")}`,
+      title: `${lookup.people.get(d.user_id) ?? "Investor"} - ${String(d.doc_kind ?? "document").replace(/_/g, " ")}`,
       reason: "Uploaded document is waiting for review",
       workflowState: String(d.review_status),
       requiredAction: "review",
@@ -749,7 +749,7 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
   );
 }
 
-/** Contract ingestion alerts — derived per document, so never duplicated. */
+/** Contract ingestion alerts - derived per document, so never duplicated. */
 async function contractItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
   if (fundId) return [];
   const { contractAlerts } = await import("@/lib/contract-ingestion");
@@ -766,7 +766,7 @@ async function contractItems(s: any, lookup: Lookup, now: Date, fundId?: string)
         recordType: "client",
         recordId: d.client_id,
         recordTab: "contracts",
-        title: `${a.title} — ${d.title}`,
+        title: `${a.title} - ${d.title}`,
         reason: a.title,
         workflowState: a.kind,
         requiredAction: a.kind === "awaiting_review" || a.kind === "amendment_review" ? "approve" : "prepare",
@@ -796,17 +796,17 @@ async function engagementItems(s: any, lookup: Lookup, now: Date, fundId?: strin
     if (app.executed || app.draft) continue;
     if (!(sels as any[]).some((x) => x.offering_id === f.id) && !(sows as any[]).length) continue;
     if (resolveSowTemplate(templates as any[], engagementTypeFor(f), today).status === "resolved") continue;
-    out.push(base({ id: `engagement:${f.id}:no_template`, recordId: f.client_id, recordTab: "funds", title: `${NO_TEMPLATE_MESSAGE} — ${f.name}`, reason: NO_TEMPLATE_MESSAGE, workflowState: "no_template", requiredAction: "prepare", clientId: f.client_id, fundId: f.id, at: f.created_at }));
+    out.push(base({ id: `engagement:${f.id}:no_template`, recordId: f.client_id, recordTab: "funds", title: `${NO_TEMPLATE_MESSAGE} - ${f.name}`, reason: NO_TEMPLATE_MESSAGE, workflowState: "no_template", requiredAction: "prepare", clientId: f.client_id, fundId: f.id, at: f.created_at }));
   }
   for (const w of sows as any[]) {
     if (w.executed_at || (fundId && w.offering_id !== fundId)) continue;
     const b = Array.isArray(w.review_blockers) ? w.review_blockers : [];
     if (!b.length) continue;
-    out.push(base({ id: `engagement:sow:${w.id}:blocked`, recordId: w.client_id, recordTab: "services", title: `SOW needs attention — ${w.title}`, reason: b.map((x: any) => x.message).join(" "), workflowState: "sow_blocked", requiredAction: "prepare", clientId: w.client_id, at: w.updated_at }));
+    out.push(base({ id: `engagement:sow:${w.id}:blocked`, recordId: w.client_id, recordTab: "services", title: `SOW needs attention - ${w.title}`, reason: b.map((x: any) => x.message).join(" "), workflowState: "sow_blocked", requiredAction: "prepare", clientId: w.client_id, at: w.updated_at }));
   }
   for (const x of sels as any[]) {
     if (x.override_status !== "pending_approval" || (fundId && x.offering_id !== fundId)) continue;
-    out.push(base({ id: `engagement:price:${x.id}`, recordId: x.client_id, recordTab: "services", title: `Custom pricing awaiting approval — ${x.service_key}`, reason: "Custom pricing must be approved by a second person.", workflowState: "pricing_override", requiredAction: "approve", clientId: x.client_id, at: x.updated_at }));
+    out.push(base({ id: `engagement:price:${x.id}`, recordId: x.client_id, recordTab: "services", title: `Custom pricing awaiting approval - ${x.service_key}`, reason: "Custom pricing must be approved by a second person.", workflowState: "pricing_override", requiredAction: "approve", clientId: x.client_id, at: x.updated_at }));
   }
   for (const r of reassign as any[]) {
     if (fundId && r.offering_id !== fundId) continue;
@@ -815,7 +815,7 @@ async function engagementItems(s: any, lookup: Lookup, now: Date, fundId?: strin
   return out;
 }
 
-/** Scope conflicts and renewal reminders — derived, one row per conflict / document. */
+/** Scope conflicts and renewal reminders - derived, one row per conflict / document. */
 async function contractIntelligenceItems(s: any, lookup: Lookup, now: Date, docs: any[]) {
   if (!docs.length) return [];
   const { detectConflicts, computeLifecycle, renewalReminder, CONFLICT_TASK_TITLE } = await import("@/lib/contract-intelligence");
@@ -838,7 +838,7 @@ async function contractIntelligenceItems(s: any, lookup: Lookup, now: Date, docs
         recordType: "client",
         recordId: clientId,
         recordTab: "contracts",
-        title: `${CONFLICT_TASK_TITLE} — ${c.title}`,
+        title: `${CONFLICT_TASK_TITLE} - ${c.title}`,
         reason: c.title,
         workflowState: c.kind,
         requiredAction: "approve",
@@ -858,8 +858,8 @@ async function contractIntelligenceItems(s: any, lookup: Lookup, now: Date, docs
         recordType: "client",
         recordId: d.client_id,
         recordTab: "contracts",
-        title: `Renewal in ${r.daysLeft} days (${r.bucket}-day reminder) — ${d.title}`,
-        reason: "Renewal reminder — nothing renews or is sent automatically",
+        title: `Renewal in ${r.daysLeft} days (${r.bucket}-day reminder) - ${d.title}`,
+        reason: "Renewal reminder - nothing renews or is sent automatically",
         workflowState: "renewal",
         requiredAction: "prepare",
         clientId: d.client_id,
@@ -888,7 +888,7 @@ async function driveExceptionItems(s: any, lookup: Lookup, now: Date, fundId?: s
         recordType: "fund",
         recordId: r.offering_id,
         recordTab: "documents",
-        title: `Google Drive — ${String(r.issue_type).replace(/_/g, " ")}`,
+        title: `Google Drive - ${String(r.issue_type).replace(/_/g, " ")}`,
         reason: "Google Drive filing needs attention",
         workflowState: String(r.issue_type),
         requiredAction: "prepare",
@@ -904,7 +904,7 @@ async function driveExceptionItems(s: any, lookup: Lookup, now: Date, fundId?: s
  * Every line below is read from the distribution record that owns it. There is
  * no queue status: a batch waiting for review is simply a batch whose own
  * status says so, and it leaves the queue the moment that status moves. Money
- * detail never travels with an item — only the fund, the stage and the reason.
+ * detail never travels with an item - only the fund, the stage and the reason.
  */
 async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: string) {
   const out: WorkItem[] = [];
@@ -942,7 +942,7 @@ async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: str
         recordType: "fund",
         recordId: b.offering_id,
         recordTab: "capital",
-        title: `${b.title ?? `Distribution #${b.batch_number}`} — ${b.recipient_count ?? 0} investors`,
+        title: `${b.title ?? `Distribution #${b.batch_number}`} - ${b.recipient_count ?? 0} investors`,
         reason: unbalanced ? "Gross less withholding and fees does not equal the net payments" : stage.reason,
         workflowState: String(b.status),
         requiredAction: unbalanced ? "review" : stage.action,
@@ -975,7 +975,7 @@ async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: str
         recordType: "fund",
         recordId: e.offering_id,
         recordTab: "banking",
-        title: `Distribution exception — ${String(e.kind ?? "exception").replace(/_/g, " ")}`,
+        title: `Distribution exception - ${String(e.kind ?? "exception").replace(/_/g, " ")}`,
         reason: String(e.kind ?? "exception").replace(/_/g, " "),
         workflowState: String(e.status ?? "open"),
         requiredAction: "review",
@@ -1011,7 +1011,7 @@ async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: str
         recordType: "investor",
         recordId: c.investor_user_id,
         recordTab: "capital",
-        title: `${lookup.people.get(c.investor_user_id) ?? "Investor"} — payment destination change`,
+        title: `${lookup.people.get(c.investor_user_id) ?? "Investor"} - payment destination change`,
         reason: cooling
           ? "In the cooling-off period before the new destination can be used"
           : "A change of payment destination is waiting for verification and approval",
@@ -1081,7 +1081,7 @@ async function distributionItems(s: any, lookup: Lookup, now: Date, fundId?: str
         recordType: "fund",
         recordId: l.offering_id,
         recordTab: reconciled ? "accounting" : "banking",
-        title: `${l.display_name ?? "Investor"} — paid, ${reconciled ? "awaiting accounting" : "awaiting reconciliation"}`,
+        title: `${l.display_name ?? "Investor"} - paid, ${reconciled ? "awaiting accounting" : "awaiting reconciliation"}`,
         reason: reconciled
           ? "The bank payment is reconciled and the journal has not been posted"
           : "The bank has confirmed the payment and it is not reconciled yet",
@@ -1115,7 +1115,7 @@ async function fundRequestItems(s: any, lookup: Lookup, now: Date) {
       recordType: "client",
       recordId: r.client_id,
       recordTab: "overview",
-      title: `New fund request — ${r.fund_name}`,
+      title: `New fund request - ${r.fund_name}`,
       reason: "New fund request requires review",
       workflowState: String(r.status),
       requiredAction: "review",

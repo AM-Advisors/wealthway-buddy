@@ -17,13 +17,13 @@ import { acceptPolicies, getPolicyStatus } from "@/lib/policies.functions";
 export const Route = createFileRoute("/_authenticated/sign-off")({
   head: () => ({
     meta: [
-      { title: "Your sign-off — Harmonious" },
+      { title: "Your sign-off - Harmonious" },
       {
         name: "description",
         content:
           "Read and sign the privacy notice, platform terms, fee schedule, electronic-records consent and fund migration agreement, and see when each was signed.",
       },
-      { property: "og:title", content: "Your sign-off — Harmonious" },
+      { property: "og:title", content: "Your sign-off - Harmonious" },
       {
         property: "og:description",
         content: "Sign the Harmonious platform documents and keep a record of each signature.",
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/sign-off")({
 });
 
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
 function SignOffPage() {
   const fetchStatus = useServerFn(getPolicyStatus);

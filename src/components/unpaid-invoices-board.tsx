@@ -22,7 +22,7 @@ import { listInvoices } from "@/lib/invoices.functions";
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -188,7 +188,7 @@ export function UnpaidInvoicesBoard() {
                   </div>
                   <div className="min-w-40">
                     <p className={`text-sm ${late ? "text-destructive" : ""}`}>
-                      Due {inv.due_date ?? "—"}
+                      Due {inv.due_date ?? "-"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {days === null

@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/statements")({
   head: () => ({
     meta: [
-      { title: "Capital account statements — Harmonious" },
+      { title: "Capital account statements - Harmonious" },
       {
         name: "description",
         content:
           "Your capital account statement for each period: opening capital, contributions, income, fees, distributions and closing capital.",
       },
-      { property: "og:title", content: "Capital account statements — Harmonious" },
+      { property: "og:title", content: "Capital account statements - Harmonious" },
       {
         property: "og:description",
         content: "Period by period capital account statements for every fund you are invested in.",

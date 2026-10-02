@@ -47,7 +47,7 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
   FUNDING_REQUIRED: R("FUNDING_REQUIRED", "investor_onboardings", {
     investor: "Send your funds using the secure wiring instructions.", fund_manager: "Waiting for the investor's wire.", harmonious: "Awaiting investor funds." }, { investor: "/onboard" }),
   FUNDING_RECONCILIATION_REQUIRED: R("FUNDING_RECONCILIATION_REQUIRED", "bank_transactions", {
-    investor: "Thanks — we'll confirm once your transfer is received and matched.", fund_manager: "Wire reported; Harmonious is reconciling.", harmonious: "Reconcile incoming wire." }, { harmonious: "/ops/readiness" }),
+    investor: "Thanks - we'll confirm once your transfer is received and matched.", fund_manager: "Wire reported; Harmonious is reconciling.", harmonious: "Reconcile incoming wire." }, { harmonious: "/ops/readiness" }),
   FUNDING_EXCEPTION: R("FUNDING_EXCEPTION", "bank_transactions", {
     investor: "Harmonious is reviewing your transfer and will contact you if anything is needed.", fund_manager: "Funding issue with Harmonious.", harmonious: "Resolve funding exception." }, { harmonious: "/ops/readiness" }),
   BANKING_VERIFICATION_REQUIRED: R("BANKING_VERIFICATION_REQUIRED", "funding_instruction_versions", {
@@ -85,8 +85,8 @@ export function reasonForItem(item: { key: string; status: string; action?: stri
 export type NextActionView = { code: ReasonCode; audience: ReasonAudience | null; text: string; destination: string | null; canResolve: boolean; blocking: boolean };
 
 /**
- * One condition, many presentations: the viewer's wording and — only when the
- * viewer owns the step — a destination. Otherwise it explains who is handling it.
+ * One condition, many presentations: the viewer's wording and - only when the
+ * viewer owns the step - a destination. Otherwise it explains who is handling it.
  */
 export function nextActionFor(result: Pick<ReadinessResult, "items" | "nextAction">, viewer: ReasonAudience): NextActionView | null {
   if (!result.nextAction || !result.nextAction.owner) return null;

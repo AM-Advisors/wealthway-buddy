@@ -134,7 +134,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   };
   const readinessCell = (id: string) => {
     const rr = readinessById.get(id); const st = rosterReadiness(rr);
-    return { st, label: ROSTER_READINESS_LABELS[st], next: rr?.nextAction?.label ?? (st === "unknown" ? "—" : "No action needed"), owner: rosterOwner(rr) };
+    return { st, label: ROSTER_READINESS_LABELS[st], next: rr?.nextAction?.label ?? (st === "unknown" ? "-" : "No action needed"), owner: rosterOwner(rr) };
   };
 
   return (
@@ -211,7 +211,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
                   <tr key={r.onboardingId} className="align-top hover:bg-muted/30">
                     <td className="px-2 py-3"><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} className="font-medium hover:underline">{r.name}</Link>
                       <div className="mt-1"><Badge variant={claimTone[r.claimState]} title={r.claimState === "prepared" ? "Entered by the Fund team or Harmonious. No one has access until the investor signs in with this email." : undefined}>{CLAIM_STATE_LABELS[r.claimState]}</Badge></div></td>
-                    <td className="px-2 py-3">{r.profileLabel ?? "—"}<p className="text-xs text-muted-foreground">{r.profileType ?? "Profile needed"}</p></td>
+                    <td className="px-2 py-3">{r.profileLabel ?? "-"}<p className="text-xs text-muted-foreground">{r.profileType ?? "Profile needed"}</p></td>
                     <td className="px-2 py-3">{money(r.amountCents)}<p className="text-xs text-muted-foreground">{prettyStatus(r.stage)}</p></td>
                     <td className="px-2 py-3"><Badge variant={recordTone[r.recordStatus]}>{r.recordStatusLabel}</Badge></td>
                     <td className="px-2 py-3"><Badge variant={readinessTone[rc.st]}>{rc.label}</Badge></td>
@@ -226,7 +226,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
                     <td className="px-2 py-3">{money(s.commitmentCents)}<p className="text-xs text-muted-foreground">{prettyStatus(row.stage)}</p></td>
                     <td className="px-2 py-3 text-muted-foreground" colSpan={2}>Verification {s.verification} · Documents {s.documents} · Funding {s.funding}</td>
                     <td className="px-2 py-3 text-muted-foreground">{s.nextAction}</td>
-                    <td className="px-2 py-3 text-muted-foreground">—</td>
+                    <td className="px-2 py-3 text-muted-foreground">-</td>
                     <td className="px-2 py-3">{legacyMenu(row.applicationId, s.investor)}</td>
                   </tr>); })}
               </tbody>

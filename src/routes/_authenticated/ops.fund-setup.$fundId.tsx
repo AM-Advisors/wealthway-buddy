@@ -10,9 +10,9 @@ import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
   head: () => ({ meta: [
-    { title: "Fund Setup Detail — Harmonious" },
+    { title: "Fund Setup Detail - Harmonious" },
     { name: "description", content: "Fund formation and launch readiness for Harmonious staff." },
-    { property: "og:title", content: "Fund Setup Detail — Harmonious" },
+    { property: "og:title", content: "Fund Setup Detail - Harmonious" },
     { property: "og:description", content: "Fund formation and launch readiness for Harmonious staff." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" },
   ] }),

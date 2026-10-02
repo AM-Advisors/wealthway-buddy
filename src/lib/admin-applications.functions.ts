@@ -205,7 +205,7 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
         });
         invitation = result.sent
           ? `Invitation sent to ${email}.`
-          : "The invitation was not sent — that address has opted out or previously bounced.";
+          : "The invitation was not sent - that address has opted out or previously bounced.";
       } catch {
         invitation = "The application was created, but the invitation email could not be sent.";
       }

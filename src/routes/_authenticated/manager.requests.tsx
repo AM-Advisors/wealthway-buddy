@@ -5,12 +5,12 @@ import { FundAccessRequests } from "@/components/fund-access-requests";
 export const Route = createFileRoute("/_authenticated/manager/requests")({
   head: () => ({
     meta: [
-      { title: "Access requests — Harmonious" },
+      { title: "Access requests - Harmonious" },
       {
         name: "description",
         content: "Investors who asked for access from your public fund pages.",
       },
-      { property: "og:title", content: "Access requests — Harmonious" },
+      { property: "og:title", content: "Access requests - Harmonious" },
       {
         property: "og:description",
         content: "Follow up with investors who requested the full fund materials.",

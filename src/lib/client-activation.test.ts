@@ -44,7 +44,7 @@ describe("manager roster owner and summary", () => {
     expect(rosterOwner(row("a", "investor"))).toBe("Investor");
     expect(rosterOwner(row("a", "harmonious"))).toBe("Harmonious");
     expect(rosterOwner(row("a", "fund_manager"))).toBe("Fund Manager");
-    expect(rosterOwner({ ...row("a", "investor"), closeReady: true })).toBe("—");
+    expect(rosterOwner({ ...row("a", "investor"), closeReady: true })).toBe("-");
   });
   it("splits Needs Investor and Needs Harmonious from the same readiness rows", () => {
     const s = fundInvestorsSummary(["a", "b", "c"], [row("a", "investor"), row("b", "harmonious"), { ...row("c", null), closeReady: true }], 2);

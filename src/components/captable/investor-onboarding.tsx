@@ -29,7 +29,7 @@ type Investor = Awaited<ReturnType<typeof getInvestorOnboarding>>["investors"][n
 
 const numFmt = (value: number) => Number(value ?? 0).toLocaleString("en-US");
 const dateFmt = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—";
+  value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "-";
 
 const STAGES: Record<Investor["stage"], { label: string; hint: string }> = {
   needs_email: { label: "Needs an email", hint: "Add the investor's email to invite them." },
@@ -453,7 +453,7 @@ function PreviewDialog({
                         {v.name} · {dateFmt(v.closedOn)}
                       </span>
                       <span className="tabular-nums">
-                        {v.pricePerShare === null ? "—" : `$${v.pricePerShare.toLocaleString()}`}
+                        {v.pricePerShare === null ? "-" : `$${v.pricePerShare.toLocaleString()}`}
                       </span>
                     </li>
                   ))}

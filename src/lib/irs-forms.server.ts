@@ -90,7 +90,7 @@ export async function renderOfficialTaxForm(input: {
     page.drawText(value.slice(0, 90), { x: 220, y, size: 10, font: f, color: rgb(0.13, 0.12, 0.13) });
     y -= 20;
   };
-  page.drawText(input.signature ? "Electronic signature record" : "PREVIEW — NOT SIGNED", { x: 56, y, size: 16, font: bold });
+  page.drawText(input.signature ? "Electronic signature record" : "PREVIEW - NOT SIGNED", { x: 56, y, size: 16, font: bold });
   y -= 32;
   line("Form", `${rev.title} (${rev.revision})`);
   line("Official source", rev.sourceUrl);

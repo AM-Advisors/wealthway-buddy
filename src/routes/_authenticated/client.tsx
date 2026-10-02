@@ -32,13 +32,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/client")({
   head: () => ({
     meta: [
-      { title: "Client Portal — Harmonious" },
+      { title: "Client Portal - Harmonious" },
       {
         name: "description",
         content:
           "Your Harmonious client portal: the funds we administer for you, your statement of work, what it covers, your invoices and approved payments.",
       },
-      { property: "og:title", content: "Client Portal — Harmonious" },
+      { property: "og:title", content: "Client Portal - Harmonious" },
       {
         property: "og:description",
         content: "Funds, statement of work, invoices and approved payments in one place.",
@@ -53,7 +53,7 @@ export const Route = createFileRoute("/_authenticated/client")({
 function ClientPortalLayout() {
   const logSignIn = useServerFn(recordPortalSignIn);
   useEffect(() => {
-    // Once per browser session — covers Google sign-ins, which the password
+    // Once per browser session - covers Google sign-ins, which the password
     // form's own attempt logging never sees.
     if (sessionStorage.getItem("harmonious-sign-in-logged")) return;
     sessionStorage.setItem("harmonious-sign-in-logged", "1");

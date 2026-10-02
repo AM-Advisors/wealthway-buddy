@@ -1,5 +1,5 @@
 /**
- * Client Contacts (Phase 3.10B) — pure rules. Primary Contact is a designation
+ * Client Contacts (Phase 3.10B) - pure rules. Primary Contact is a designation
  * on one Contact; new rows are matched to existing Client contacts through the
  * canonical Person Resolution rules so nobody is created twice.
  */

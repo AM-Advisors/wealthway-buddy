@@ -1,6 +1,6 @@
-// @ts-nocheck — fixtures are loosely typed.
+// @ts-nocheck - fixtures are loosely typed.
 /**
- * Consolidation Stage 2 — parity proofs for the single navigation generator
+ * Consolidation Stage 2 - parity proofs for the single navigation generator
  * against each of the three menus it replaces (AppSidebar internal menu,
  * ClientSidebar, OpsSidebar), plus revocation and no-query guarantees.
  */

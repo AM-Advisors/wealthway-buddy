@@ -43,7 +43,7 @@ export function SidebarAccountFooter({
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Account menu"
-              title={collapsed ? `${label} — ${workspaceLabel}` : undefined}
+              title={collapsed ? `${label} - ${workspaceLabel}` : undefined}
               className="flex w-full min-w-0 items-center gap-2 rounded-md p-1.5 text-left text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-medium text-sidebar-primary-foreground">

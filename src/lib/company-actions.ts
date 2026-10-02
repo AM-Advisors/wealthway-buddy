@@ -2,7 +2,7 @@
  * Company (client engagement) billing and fee-proposal actions for the Action
  * Center. Pure: every item is derived from the invoice or service-request row
  * that owns it. Nothing here invents a due date, payment state, approval state,
- * owner or priority — the only date used is `invoices.due_date`.
+ * owner or priority - the only date used is `invoices.due_date`.
  *
  * This replaces the separate "Needs you" calculation the company Home used to
  * run in the browser; the rules below are the same rules, now in one place.
@@ -64,7 +64,7 @@ export function companyInvoiceItems(
           title: approved ? `Pay ${label}` : `Approve ${label}`,
           workflowState: approved && state === "issued" ? "client_approved" : state,
           status: approved
-            ? "You approved this invoice — payment is due"
+            ? "You approved this invoice - payment is due"
             : "This invoice is waiting for your approval",
           sourceTable: "invoices",
           sourceId: i.id,
@@ -137,7 +137,7 @@ export function companyFeeProposalItems(
           title: `${name} request`,
           status:
             state === "signed"
-              ? "Signed — Harmonious is switching this on"
+              ? "Signed - Harmonious is switching this on"
               : "Harmonious is reviewing your request",
         }),
       );

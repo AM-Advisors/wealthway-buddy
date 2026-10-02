@@ -88,7 +88,7 @@ function OpsReviewRequest({
 export const template = {
   component: OpsReviewRequest,
   subject: (data: Record<string, any>) =>
-    `Operations review needed — ${data['itemLabel'] ?? 'a new item'} (${data['fundName'] ?? 'a fund'})`,
+    `Operations review needed - ${data['itemLabel'] ?? 'a new item'} (${data['fundName'] ?? 'a fund'})`,
   displayName: 'Operations review request',
   previewData: {
     itemLabel: 'Schedule K-1',

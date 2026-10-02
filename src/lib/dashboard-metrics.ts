@@ -1,6 +1,6 @@
 import { isReconciledFunding } from "@/lib/funding-status";
 /**
- * Role dashboards — the single place every dashboard number is defined.
+ * Role dashboards - the single place every dashboard number is defined.
  *
  * Pure functions over canonical readiness results, onboarding rows, reconciled
  * funding status and commercial-agreement projections. Nothing here stores or
@@ -196,7 +196,7 @@ export type TrendPoint = { bucket: string; started: number; completed: number };
 
 /**
  * Buckets only real recorded timestamps. Returns null when there are fewer
- * than two recorded events in range — the UI then explains instead of drawing.
+ * than two recorded events in range - the UI then explains instead of drawing.
  */
 export function trend(started: string[], completed: string[], range: TrendRange, now = Date.now()): TrendPoint[] | null {
   const days = TREND_RANGES[range];

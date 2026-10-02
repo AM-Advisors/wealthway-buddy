@@ -25,7 +25,7 @@ const RANGES = [
 ];
 
 const when = (value: string) =>
-  value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
 const money = (cents: number | null) =>
   cents === null || cents === undefined

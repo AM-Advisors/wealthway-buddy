@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const money = (cents: number | null | undefined) =>
-  cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 export function InvestorOnboardingOps() {
   const qc = useQueryClient();
@@ -95,7 +95,7 @@ export function InvestorOnboardingOps() {
                 {item.offeringName ?? item.offeringId} · {money(item.requestedAmountCents)}
               </div>
               {item.materialCorrections > 0 ? (
-                <div className="mt-1 text-xs font-medium text-destructive">Investor corrected {item.materialCorrections} prepared detail{item.materialCorrections === 1 ? "" : "s"} — review requirements</div>
+                <div className="mt-1 text-xs font-medium text-destructive">Investor corrected {item.materialCorrections} prepared detail{item.materialCorrections === 1 ? "" : "s"} - review requirements</div>
               ) : null}
             </button>
           ))}
@@ -184,7 +184,7 @@ export function InvestorOnboardingOps() {
                     .map((e: any) => (
                       <div key={e.id} className="flex items-center justify-between rounded-md border p-2 text-sm">
                         <span>
-                          {String(e.exception_type).replace(/_/g, " ")} — {e.detail ?? "no detail"}
+                          {String(e.exception_type).replace(/_/g, " ")} - {e.detail ?? "no detail"}
                         </span>
                         <Button
                           size="sm"

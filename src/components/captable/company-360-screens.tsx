@@ -263,10 +263,10 @@ function ReverseDialog({ tx, onClose }: { tx: WsTx; onClose: () => void }) {
 /* ------------------------------------------------------------ Transactions */
 function TxTable({ txs }: { txs: WsTx[] }) {
   const { workspace } = useCapTable();
-  const name = (id: string | null) => (id ? workspace?.stakeholders.find((s) => s.id === id)?.name ?? "—" : "—");
+  const name = (id: string | null) => (id ? workspace?.stakeholders.find((s) => s.id === id)?.name ?? "-" : "-");
   const cls = (id: string | null) => {
     const s = id ? workspace?.securities.find((x) => x.id === id) : null;
-    return s ? s.className ?? s.securityLabel : "—";
+    return s ? s.className ?? s.securityLabel : "-";
   };
   const [reversing, setReversing] = useState<WsTx | null>(null);
   const canManage = Boolean((workspace as any)?.canManage);
@@ -285,7 +285,7 @@ function TxTable({ txs }: { txs: WsTx[] }) {
               <td className="p-2 capitalize">
                 {t.reversesTransactionId ? "Reversal" : t.kind.replace(/_/g, " ")}
                 {t.reversesTransactionId ? <a className="block text-xs text-primary underline" href={`#tx-${t.reversesTransactionId}`}>Reverses original</a> : null}
-                {reversedBy.has(t.id) ? <a className="block text-xs text-primary underline" href={`#tx-${reversedBy.get(t.id)}`}>Reversed — see correction</a> : null}
+                {reversedBy.has(t.id) ? <a className="block text-xs text-primary underline" href={`#tx-${reversedBy.get(t.id)}`}>Reversed - see correction</a> : null}
               </td>
               <td className="p-2">{name(t.counterpartyId)}</td>
               <td className="p-2">{name(t.stakeholderId)}</td>
@@ -314,7 +314,7 @@ function TransactionsInner() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Company equity events only — never fund bank or capital movements. Finalized entries cannot be edited or deleted; corrections are recorded as reversals that link back to the original. <HelpTip helpKey="reversal" />
+        Company equity events only - never fund bank or capital movements. Finalized entries cannot be edited or deleted; corrections are recorded as reversals that link back to the original. <HelpTip helpKey="reversal" />
       </p>
       <div className="flex flex-wrap gap-2">
         {(["all", "draft", "review", "posted"] as const).map((f) => (

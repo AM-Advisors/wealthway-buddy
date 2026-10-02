@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { statusTone } from "@/lib/status";
 
 function when(value: string | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleString();
 }
 

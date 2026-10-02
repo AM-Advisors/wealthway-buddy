@@ -5,13 +5,13 @@ import { InvestorOnboardingOps } from "@/components/investor-onboarding-ops";
 export const Route = createFileRoute("/_authenticated/admin/investor-onboarding")({
   head: () => ({
     meta: [
-      { title: "Investor onboarding review — Harmonious admin" },
+      { title: "Investor onboarding review - Harmonious admin" },
       {
         name: "description",
         content:
           "Review each investor's checks, approve them to fund, accept their subscription and admit them to the fund.",
       },
-      { property: "og:title", content: "Investor onboarding review — Harmonious admin" },
+      { property: "og:title", content: "Investor onboarding review - Harmonious admin" },
       {
         property: "og:description",
         content: "Harmonious review queue for investor subscriptions.",

@@ -13,9 +13,9 @@ import { DeleteFundDialog } from "@/components/delete-fund-dialog";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/")({
   head: () => ({ meta: [
-    { title: "Fund Setup — Harmonious" },
+    { title: "Fund Setup - Harmonious" },
     { name: "description", content: "Harmonious Fund and SPV setup register." },
-    { property: "og:title", content: "Fund Setup — Harmonious" },
+    { property: "og:title", content: "Fund Setup - Harmonious" },
     { property: "og:description", content: "Harmonious Fund and SPV setup register." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

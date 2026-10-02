@@ -37,8 +37,8 @@ export function PacketDownloadCard({ offeringId }: { offeringId: string }) {
           Offering packet
         </CardTitle>
         <CardDescription>
-          One PDF with the fund summary, the documents you need to review, and — where we have
-          shared them with you — the wire instructions.
+          One PDF with the fund summary, the documents you need to review, and - where we have
+          shared them with you - the wire instructions.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -53,7 +53,7 @@ export function PacketDownloadCard({ offeringId }: { offeringId: string }) {
         {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
         <p className="text-xs text-muted-foreground">
           The packet always reflects the latest documents. We will never email you a change of bank
-          details — always confirm wire instructions by phone before sending funds.
+          details - always confirm wire instructions by phone before sending funds.
         </p>
       </CardContent>
     </Card>

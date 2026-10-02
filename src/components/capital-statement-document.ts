@@ -6,7 +6,7 @@ import { type PdfDocSpec } from "@/lib/pdf-render";
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const day = (value: string | null | undefined) =>
   value
@@ -15,12 +15,12 @@ const day = (value: string | null | undefined) =>
         month: "long",
         day: "numeric",
       })
-    : "—";
+    : "-";
 
 const pct = (value: number | null | undefined) =>
   typeof value === "number"
     ? `${value < 0.01 && value > 0 ? value.toFixed(4) : value.toFixed(2)}%`
-    : "—";
+    : "-";
 
 export function capitalStatementFileName(statement: any) {
   const snap = statement?.snapshot ?? {};
@@ -36,7 +36,7 @@ export function capitalStatementPdfSpec(statement: any): PdfDocSpec {
     { label: "Ownership", value: pct(s.ownershipPct) },
     {
       label: "Units held",
-      value: s.shares === null || s.shares === undefined ? "—" : String(s.shares),
+      value: s.shares === null || s.shares === undefined ? "-" : String(s.shares),
     },
   ];
   if (s.shareClass) interest.push({ label: "Class", value: String(s.shareClass) });
@@ -61,7 +61,7 @@ export function capitalStatementPdfSpec(statement: any): PdfDocSpec {
       {
         heading: "Investor",
         rows: [
-          { label: "Name", value: String(s.investorName ?? "—") },
+          { label: "Name", value: String(s.investorName ?? "-") },
           ...(s.ownershipTitle ? [{ label: "Held as", value: String(s.ownershipTitle) }] : []),
           { label: "Closing date", value: day(s.closingDate) },
         ],

@@ -5,7 +5,7 @@ import { SupportInbox } from "@/components/support-inbox";
 export const Route = createFileRoute("/_authenticated/messages")({
   head: () => ({
     meta: [
-      { title: "Message Harmonious — Investor portal" },
+      { title: "Message Harmonious - Investor portal" },
       { name: "description", content: "Ask the Harmonious team a question and see their replies." },
       { property: "og:title", content: "Message Harmonious" },
       { property: "og:description", content: "Private conversations with the Harmonious team." },

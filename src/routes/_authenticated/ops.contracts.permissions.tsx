@@ -11,9 +11,9 @@ import { listContractGrants, setContractGrant } from "@/lib/contract-intelligenc
 export const Route = createFileRoute("/_authenticated/ops/contracts/permissions")({
   head: () => ({
     meta: [
-      { title: "Contract permissions — Harmonious operations" },
+      { title: "Contract permissions - Harmonious operations" },
       { name: "description", content: "Granular contract permissions for Harmonious staff." },
-      { property: "og:title", content: "Contract permissions — Harmonious operations" },
+      { property: "og:title", content: "Contract permissions - Harmonious operations" },
       { property: "og:description", content: "Who may upload, review, approve and price contracts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

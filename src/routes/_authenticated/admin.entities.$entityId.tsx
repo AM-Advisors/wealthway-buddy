@@ -13,13 +13,13 @@ import { ENTITY_TYPES, getEntity } from "@/lib/entities.functions";
 export const Route = createFileRoute("/_authenticated/admin/entities/$entityId")({
   head: () => ({
     meta: [
-      { title: "Entity — Harmonious admin" },
+      { title: "Entity - Harmonious admin" },
       {
         name: "description",
         content:
           "One entity's details, parent and related entities, and the engagements Harmonious delivers for it.",
       },
-      { property: "og:title", content: "Entity — Harmonious admin" },
+      { property: "og:title", content: "Entity - Harmonious admin" },
       {
         property: "og:description",
         content: "Entity details, related entities and engagements.",
@@ -86,7 +86,7 @@ function EntityPage() {
         <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
           <p>
             <span className="text-muted-foreground">Formed:</span>{" "}
-            {e.formationDate ? new Date(e.formationDate).toLocaleDateString("en-US") : "—"}
+            {e.formationDate ? new Date(e.formationDate).toLocaleDateString("en-US") : "-"}
           </p>
           <p>
             <span className="text-muted-foreground">Tax ID:</span>{" "}
@@ -104,7 +104,7 @@ function EntityPage() {
                 {data.parent.legalName}
               </Link>
             ) : (
-              "—"
+              "-"
             )}
           </p>
           <p>
@@ -118,7 +118,7 @@ function EntityPage() {
                 {data.offering.name}
               </Link>
             ) : (
-              "—"
+              "-"
             )}
           </p>
           {e.notes && <p className="sm:col-span-2 text-muted-foreground">{e.notes}</p>}

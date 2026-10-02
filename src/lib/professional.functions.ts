@@ -1,5 +1,5 @@
 /**
- * Phase 3A server functions — the professional workspace (read-only).
+ * Phase 3A server functions - the professional workspace (read-only).
  *
  * No function here writes client data. Each one re-resolves the delegation and
  * runs the centralized authorization decision against the real resource, so a
@@ -16,7 +16,7 @@ const delegationInput = z.object({ delegation_id: z.string().uuid() });
 export const getProfessionalStanding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Membership alone reveals no client data — it only opens the workspace.
+    // Membership alone reveals no client data - it only opens the workspace.
     const { gatherFacts, professionalStandingProjection } = await import("@/lib/session-facts.server");
     return professionalStandingProjection(await gatherFacts(context));
   });

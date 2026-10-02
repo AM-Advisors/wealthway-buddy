@@ -8,9 +8,9 @@ export const Route = createFileRoute("/_authenticated/ops/clients/$clientId")({
   }),
   head: () => ({
     meta: [
-      { title: "Client 360 — Harmonious operations" },
+      { title: "Client 360 - Harmonious operations" },
       { name: "description", content: "Everything Harmonious holds for one client: relationships, funds, companies, documents and activity." },
-      { property: "og:title", content: "Client 360 — Harmonious operations" },
+      { property: "og:title", content: "Client 360 - Harmonious operations" },
       { property: "og:description", content: "Everything Harmonious holds for one client: relationships, funds, companies, documents and activity." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

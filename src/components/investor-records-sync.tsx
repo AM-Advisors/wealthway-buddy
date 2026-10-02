@@ -80,7 +80,7 @@ export function InvestorRecordsSync({ fundId }: { fundId: string }) {
                   <Badge variant="outline">{i.categoryLabel}</Badge>
                   {i.confidence && i.confidence in CONFIDENCE_LABELS ? <Badge variant="secondary">{CONFIDENCE_LABELS[i.confidence as keyof typeof CONFIDENCE_LABELS]}</Badge> : null}
                   {i.status === "later" ? <Badge variant="outline">Review later</Badge> : null}
-                  {i.protected ? <Badge variant="destructive">Funded/closed — protected</Badge> : null}
+                  {i.protected ? <Badge variant="destructive">Funded/closed - protected</Badge> : null}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {i.actions.map((a) => (

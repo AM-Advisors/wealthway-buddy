@@ -5,13 +5,13 @@ import { PerformanceReportingBoard } from "@/components/performance-reporting-bo
 export const Route = createFileRoute("/_authenticated/ops/performance")({
   head: () => ({
     meta: [
-      { title: "Performance reporting — Harmonious operations" },
+      { title: "Performance reporting - Harmonious operations" },
       {
         name: "description",
         content:
           "Prepare, review, approve and publish fund and investor performance from approved accounting records.",
       },
-      { property: "og:title", content: "Performance reporting — Harmonious operations" },
+      { property: "og:title", content: "Performance reporting - Harmonious operations" },
       {
         property: "og:description",
         content: "Fund and investor return measures derived from posted accounting and approved NAV.",

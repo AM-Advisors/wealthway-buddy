@@ -59,7 +59,7 @@ describe("investor records sync classification", () => {
   it("several possible Persons are a Duplicate Candidate", () => {
     expect(classifyFolder({ name: "Sam Lee", linkedProfileId: null }, [], [{ personId: "x", profileIds: [] }, { personId: "y", profileIds: [] }]).category).toBe("duplicate_candidate");
   });
-  it("no match is a candidate only — never auto-created", () => {
+  it("no match is a candidate only - never auto-created", () => {
     const c = classifyFolder({ name: "Unknown", linkedProfileId: null }, [], []);
     expect(c.category).toBe("new_investor_candidate");
     expect(actionsFor("new_investor_candidate")).toEqual(["create_investor", "link", "not_investor", "review_later"]);

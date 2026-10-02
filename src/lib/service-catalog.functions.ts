@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { CONTRACT_ROLES, STAFF_ROLES } from "@/lib/contracts.functions";
 
-/** Categories are data, not code paths — adding one never needs a redesign. */
+/** Categories are data, not code paths - adding one never needs a redesign. */
 export const SERVICE_CATEGORIES = [
   { value: "administration", label: "Administration" },
   { value: "cap_table", label: "Cap table" },
@@ -45,7 +45,7 @@ export const SERVICE_STATUSES = [
 
 /**
  * Delivery workflows a service can start once its agreement is executed.
- * Adding a workflow here makes it selectable on any service — no code branch per service.
+ * Adding a workflow here makes it selectable on any service - no code branch per service.
  */
 export const DELIVERY_WORKFLOWS = [
   { value: "fund_onboarding", label: "Fund onboarding", path: "/admin/setup" },
@@ -66,7 +66,7 @@ export const DELIVERY_WORKFLOWS = [
 ] as const;
 
 export const workflowLabel = (key: string | null) =>
-  DELIVERY_WORKFLOWS.find((w) => w.value === key)?.label ?? key ?? "—";
+  DELIVERY_WORKFLOWS.find((w) => w.value === key)?.label ?? key ?? "-";
 
 export const workflowPath = (key: string | null) =>
   DELIVERY_WORKFLOWS.find((w) => w.value === key)?.path ?? null;

@@ -39,7 +39,7 @@ export function ComplianceCenter() {
     <div className="space-y-4 p-6">
       <div>
         <h1 className="text-2xl font-semibold">Compliance & Controls</h1>
-        <p className="text-sm text-muted-foreground">How Harmonious controls are designed, operated and evidenced. This supports SOC 2 readiness and privacy governance — it does not certify compliance.</p>
+        <p className="text-sm text-muted-foreground">How Harmonious controls are designed, operated and evidenced. This supports SOC 2 readiness and privacy governance - it does not certify compliance.</p>
       </div>
       <Tabs defaultValue="home">
         <TabsList className="flex-wrap h-auto">
@@ -111,7 +111,7 @@ function Controls({ d }: { d: Data }) {
         <Card key={c.control_key}>
           <CardContent className="space-y-2 p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <button className="font-medium" onClick={() => setOpen(open === c.control_key ? null : c.control_key)}>{c.control_key} — {c.name}</button>
+              <button className="font-medium" onClick={() => setOpen(open === c.control_key ? null : c.control_key)}>{c.control_key} - {c.name}</button>
               <StatusBadge s={c.status} /><Badge variant="outline">v{c.version}</Badge><Badge variant="outline">{c.control_type}</Badge><Badge variant="outline">{c.frequency.replace("_", " ")}</Badge>
               {c.mappings.map((m: string) => <Badge key={m} variant="secondary">{m}</Badge>)}
             </div>
@@ -132,16 +132,16 @@ function ControlDetail({ d, c, onEdit }: { d: Data; c: any; onEdit: () => void }
   const [ev, setEv] = useState<string>("");
   const [note, setNote] = useState("");
   const [req, setReq] = useState("");
-  const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? "—";
+  const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? "-";
   const can = (p: string) => d.perms.includes(p);
   const evs = d.evidence.filter((e: any) => e.control_key === c.control_key);
   return (
     <div className="space-y-3 border-t pt-3 text-sm">
       <div className="grid gap-1 md:grid-cols-2">
         <div><b>Objective:</b> {c.objective}</div><div><b>System / process:</b> {c.system_process}</div>
-        <div><b>Owner:</b> {c.owner_label || "—"}</div><div><b>Operator:</b> {name(c.operator_user_id)} · <b>Reviewer:</b> {name(c.reviewer_user_id)} {c.sod_required ? "(must differ)" : ""}</div>
+        <div><b>Owner:</b> {c.owner_label || "-"}</div><div><b>Operator:</b> {name(c.operator_user_id)} · <b>Reviewer:</b> {name(c.reviewer_user_id)} {c.sod_required ? "(must differ)" : ""}</div>
         <div><b>Evidence requirements:</b> {c.evidence_requirements}</div><div><b>Implementation:</b> {c.implementation}</div>
-        <div><b>Last performed:</b> {c.last_performed?.slice(0, 10) ?? "—"} · <b>Last tested:</b> {c.last_tested?.slice(0, 10) ?? "—"}</div><div><b>Next due:</b> {c.next_due ?? "Per event / on change"} · <b>Exceptions:</b> {c.exceptions}</div>
+        <div><b>Last performed:</b> {c.last_performed?.slice(0, 10) ?? "-"} · <b>Last tested:</b> {c.last_tested?.slice(0, 10) ?? "-"}</div><div><b>Next due:</b> {c.next_due ?? "Per event / on change"} · <b>Exceptions:</b> {c.exceptions}</div>
         <div><b>Effective:</b> {c.effective_at.slice(0, 10)}</div>
       </div>
       <div><b>Version history</b> (versions are never rewritten)
@@ -206,7 +206,7 @@ function Evidence({ d }: { d: Data }) {
   const [open, setOpen] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const can = (p: string) => d.perms.includes(p);
-  const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? (id ? "Unknown" : "—");
+  const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? (id ? "Unknown" : "-");
   return (
     <div className="space-y-4">
       {can("administration.evidence.collect") && (
@@ -237,7 +237,7 @@ function Evidence({ d }: { d: Data }) {
               {e.reviews.map((r: any) => <Badge key={r.id} variant={r.decision === "accepted" ? "default" : "destructive"}>{r.decision} by {name(r.reviewer_user_id)}</Badge>)}
               {!e.reviews.length && <Badge variant="outline">Awaiting review</Badge>}
             </div>
-            <div className="text-xs text-muted-foreground">ID {e.id.slice(0, 8)} · {e.source} · period {e.period_start ?? "—"} → {e.period_end ?? "—"} · collected {e.collected_at.slice(0, 16).replace("T", " ")} by {name(e.collected_by)} · {e.query_version ?? "manual"} · fingerprint {e.fingerprint?.slice(0, 16) ?? "—"}</div>
+            <div className="text-xs text-muted-foreground">ID {e.id.slice(0, 8)} · {e.source} · period {e.period_start ?? "-"} → {e.period_end ?? "-"} · collected {e.collected_at.slice(0, 16).replace("T", " ")} by {name(e.collected_by)} · {e.query_version ?? "manual"} · fingerprint {e.fingerprint?.slice(0, 16) ?? "-"}</div>
             {open === e.id && (
               <div className="space-y-2">
                 <pre className="max-h-64 overflow-auto rounded bg-muted p-2 text-xs">{JSON.stringify(e.summary?.items ?? e.summary, null, 2)}</pre>
@@ -246,7 +246,7 @@ function Evidence({ d }: { d: Data }) {
                     <Input className="w-72" placeholder="Review note" value={note} onChange={(x) => setNote(x.target.value)} />
                     <Button size="sm" onClick={() => act(() => review({ data: { evidence_id: e.id, decision: "accepted", note } }), "Evidence accepted")}>Accept</Button>
                     <Button size="sm" variant="destructive" onClick={() => act(() => review({ data: { evidence_id: e.id, decision: "exception", note } }), "Exception recorded")}>Record exception</Button>
-                    {e.system_generated && can("administration.evidence.collect") && <Button size="sm" variant="outline" onClick={() => act(() => collect({ data: { query: e.artifact_reference.replace("rbac:", ""), period_start: e.period_start, period_end: e.period_end, supersedes_id: e.id } }), "Regenerated — original retained")}>Regenerate (keeps original)</Button>}
+                    {e.system_generated && can("administration.evidence.collect") && <Button size="sm" variant="outline" onClick={() => act(() => collect({ data: { query: e.artifact_reference.replace("rbac:", ""), period_start: e.period_start, period_end: e.period_end, supersedes_id: e.id } }), "Regenerated - original retained")}>Regenerate (keeps original)</Button>}
                   </div>
                 )}
               </div>
@@ -266,7 +266,7 @@ function Reviews({ d }: { d: Data }) {
   const [f, setF] = useState({ title: "Quarterly Harmonious Privileged Access Review", population: "privileged", period_start: quarterStart(), period_end: today(), reviewer_user_id: "" });
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [targets, setTargets] = useState<Record<string, string>>({});
-  const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? "—";
+  const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? "-";
   return (
     <div className="space-y-4">
       {d.perms.includes("administration.access_reviews.manage") && (
@@ -289,13 +289,13 @@ function Reviews({ d }: { d: Data }) {
             <p className="text-xs text-muted-foreground">Period {r.period_start} → {r.period_end} · population {r.population} ({r.snapshot.items.length}) · reviewer {name(r.reviewer_user_id)} · snapshot {r.snapshot.taken_at.slice(0, 16).replace("T", " ")} · fingerprint {r.fingerprint.slice(0, 16)}</p></CardHeader>
             <CardContent className="overflow-x-auto">
               <table className="w-full text-xs"><thead><tr className="text-left text-muted-foreground">{["Person", "Account type", "Role(s)", "Scope", "Sensitive Access", "Grant Source", "Granted By", "Last Used", "Expiry", "Review Decision"].map((h) => <th key={h} className="p-1">{h}</th>)}</tr></thead>
-                <tbody>{r.snapshot.items.map((i: any) => { const dd = decided(i.key); const roles: any[] = i.roles ?? [{ role: i.role, source: i.source, scope: i.scope, granted_by: i.granted_by, granted_at: "—", expiry: i.expiry, sensitive: i.sensitive }]; return (
-                  <tr key={i.key} className="border-t align-top"><td className="p-1"><div>{i.person}</div><div className="font-mono text-[10px] text-muted-foreground">{i.user_id}</div>{i.last_sign_in !== undefined ? <div className="text-[10px] text-muted-foreground">Last sign-in {i.last_sign_in ? String(i.last_sign_in).slice(0, 10) : "Never"} · {i.active === false ? "Suspended" : "Active"}</div> : null}{(i.flags ?? []).map((f: string) => <div key={f} className="mt-1 rounded bg-muted p-1 text-[10px]">{f}</div>)}</td><td className="p-1">{i.account_type ?? "—"}</td>
+                <tbody>{r.snapshot.items.map((i: any) => { const dd = decided(i.key); const roles: any[] = i.roles ?? [{ role: i.role, source: i.source, scope: i.scope, granted_by: i.granted_by, granted_at: "-", expiry: i.expiry, sensitive: i.sensitive }]; return (
+                  <tr key={i.key} className="border-t align-top"><td className="p-1"><div>{i.person}</div><div className="font-mono text-[10px] text-muted-foreground">{i.user_id}</div>{i.last_sign_in !== undefined ? <div className="text-[10px] text-muted-foreground">Last sign-in {i.last_sign_in ? String(i.last_sign_in).slice(0, 10) : "Never"} · {i.active === false ? "Suspended" : "Active"}</div> : null}{(i.flags ?? []).map((f: string) => <div key={f} className="mt-1 rounded bg-muted p-1 text-[10px]">{f}</div>)}</td><td className="p-1">{i.account_type ?? "-"}</td>
                     <td className="p-1"><details><summary className="cursor-pointer">{i.role}</summary>
                       <ul className="mt-1 space-y-1">{roles.map((x, n) => <li key={n} className="rounded border p-1">{x.role} · {x.source} · scope {x.scope} · by {x.granted_by} · at {String(x.granted_at).slice(0, 16).replace("T", " ")} · expiry {x.expiry}{x.sensitive ? ` · ${x.sensitive}` : ""}</li>)}
                         <li className="text-muted-foreground">Direct grants/denies: {(i.direct_grants ?? []).join("; ") || "None"}</li></ul></details></td>
-                    <td className="p-1">{i.scope}</td><td className="p-1">{i.sensitive || "—"}</td><td className="p-1">{i.source}</td><td className="p-1">{i.granted_by}</td><td className="p-1">{i.last_used}</td><td className="p-1">{i.expiry}</td>
-                    <td className="p-1">{dd ? <span>{dd.decision === "approve" ? "keep" : dd.decision}{dd.target ? ` (${dd.target})` : ""}{dd.note ? ` — ${dd.note}` : ""}</span> : mine ? (
+                    <td className="p-1">{i.scope}</td><td className="p-1">{i.sensitive || "-"}</td><td className="p-1">{i.source}</td><td className="p-1">{i.granted_by}</td><td className="p-1">{i.last_used}</td><td className="p-1">{i.expiry}</td>
+                    <td className="p-1">{dd ? <span>{dd.decision === "approve" ? "keep" : dd.decision}{dd.target ? ` (${dd.target})` : ""}{dd.note ? ` - ${dd.note}` : ""}</span> : mine ? (
                       <div className="flex flex-wrap gap-1"><Input className="h-7 w-40" placeholder="Note" value={notes[i.key] ?? ""} onChange={(e) => setNotes({ ...notes, [i.key]: e.target.value })} />
                         <select className={sel + " h-7"} value={targets[i.key] ?? ""} onChange={(e) => setTargets({ ...targets, [i.key]: e.target.value })}><option value="">Whole subject</option>{roles.map((x) => <option key={x.role} value={x.role}>{x.role}</option>)}{(i.direct_grants ?? []).map((g: string) => <option key={g} value={g}>{g}</option>)}</select>
                         {(["approve", "revoke", "reduce", "investigate"] as const).map((x) => <Button key={x} size="sm" variant="outline" className="h-7 px-2" onClick={() => act(() => decide({ data: { review_id: r.id, item_key: i.key, decision: x, note: notes[i.key] ?? "", target: targets[i.key] || null } }), "Decision recorded")}>{x === "approve" ? "Keep" : x === "reduce" ? "Reduce" : x === "investigate" ? "Investigate" : "Revoke"}</Button>)}</div>
@@ -333,7 +333,7 @@ function Register({ d, kind }: { d: Data; kind: string }) {
             if (f.type === "select") return <select key={f.key} className={sel} value={v ?? ""} onChange={(e) => set(e.target.value || null)}><option value="">{label}…</option>{f.options!.map((o) => <option key={o} value={o}>{o}</option>)}</select>;
             if (f.type === "person") return <select key={f.key} className={sel} value={v ?? ""} onChange={(e) => set(e.target.value || null)}><option value="">{label}…</option>{d.staff.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}</select>;
             if (f.key === "provider_id") return <select key={f.key} className={sel} value={v ?? ""} onChange={(e) => set(e.target.value || null)}><option value="">Existing provider record…</option>{d.providers.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>;
-            if (f.key === "control_key") return <select key={f.key} className={sel} value={v ?? ""} onChange={(e) => set(e.target.value || null)}><option value="">{label}…</option>{d.controls.map((c: any) => <option key={c.control_key} value={c.control_key}>{c.control_key} — {c.name}</option>)}</select>;
+            if (f.key === "control_key") return <select key={f.key} className={sel} value={v ?? ""} onChange={(e) => set(e.target.value || null)}><option value="">{label}…</option>{d.controls.map((c: any) => <option key={c.control_key} value={c.control_key}>{c.control_key} - {c.name}</option>)}</select>;
             if (f.type === "long") return <Textarea key={f.key} placeholder={label} value={v ?? ""} onChange={(e) => set(e.target.value)} />;
             return <div key={f.key}><Input type={f.type === "date" ? "date" : "text"} placeholder={label} title={label} value={v ?? ""} onChange={(e) => set(e.target.value)} />{f.type === "date" && <span className="text-xs text-muted-foreground">{label}</span>}</div>;
           })}
@@ -362,7 +362,7 @@ function Report({ d }: { d: Data }) {
     <div className="overflow-x-auto">
       <p className="mb-2 text-sm text-muted-foreground">Initial control mapping based on what exists in the application. Nothing is marked Operating or Tested without collected, reviewed evidence.</p>
       <table className="w-full text-xs"><thead><tr className="text-left text-muted-foreground">{["Control", "Existing Implementation", "Evidence Available", "Evidence Missing", "SOC 2", "GDPR", "Status"].map((h) => <th key={h} className="p-1">{h}</th>)}</tr></thead>
-        <tbody>{d.report.map((r: any) => <tr key={r.control} className="border-t align-top"><td className="p-1 font-medium">{r.control}</td><td className="p-1">{r.implementation}</td><td className="p-1">{r.available}</td><td className="p-1">{r.missing}</td><td className="p-1">{r.soc2}</td><td className="p-1">{r.gdpr || "—"}</td><td className="p-1"><StatusBadge s={r.status} /></td></tr>)}</tbody></table>
+        <tbody>{d.report.map((r: any) => <tr key={r.control} className="border-t align-top"><td className="p-1 font-medium">{r.control}</td><td className="p-1">{r.implementation}</td><td className="p-1">{r.available}</td><td className="p-1">{r.missing}</td><td className="p-1">{r.soc2}</td><td className="p-1">{r.gdpr || "-"}</td><td className="p-1"><StatusBadge s={r.status} /></td></tr>)}</tbody></table>
     </div>
   );
 }

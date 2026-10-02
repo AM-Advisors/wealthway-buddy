@@ -2,10 +2,10 @@
  * Every URL currently indexed on the Wix site (www.harmonious.co), classified
  * for the future cutover. Source: Wix sitemaps, captured during the Stage 1 audit.
  *
- * KEEP        — the new site must serve this exact path before cutover.
- * REDIRECT    — permanent (301) redirect to `target`.
- * CONSOLIDATE — merged with a sibling page into `target` (301).
- * REVIEW      — needs a Harmonious decision before cutover.
+ * KEEP        - the new site must serve this exact path before cutover.
+ * REDIRECT    - permanent (301) redirect to `target`.
+ * CONSOLIDATE - merged with a sibling page into `target` (301).
+ * REVIEW      - needs a Harmonious decision before cutover.
  */
 export type UrlAction = "KEEP" | "REDIRECT" | "CONSOLIDATE" | "REVIEW";
 export interface WixUrl {
@@ -31,7 +31,7 @@ export const WIX_PAGES: WixUrl[] = [
   { path: "/about-1", action: "CONSOLIDATE", target: "/about" },
   { path: "/privacy-policy", action: "REDIRECT", target: "/privacy" },
   { path: "/terms-conditions", action: "REDIRECT", target: "/terms" },
-  { path: "/founderfunds", action: "REVIEW", note: "Founder SPVs vs Emerging Managers — depends on current page content" },
+  { path: "/founderfunds", action: "REVIEW", note: "Founder SPVs vs Emerging Managers - depends on current page content" },
   { path: "/spvlife", action: "REVIEW", note: "Purpose unclear" },
   { path: "/file-share", action: "REVIEW", note: "Likely a utility page; do not index" },
   { path: "/items", action: "REVIEW", note: "Wix system page; probably retire" },
@@ -53,7 +53,7 @@ export const WIX_CLASSROOM_CATEGORIES: WixUrl[] = [
   "real-estate-fund",
 ].map((slug) => ({ path: `/harmoniousclassroom/categories/${slug}`, action: "KEEP" as const }));
 
-/** Every Wix article slug. All are KEEP — exact /post/<slug> preserved. */
+/** Every Wix article slug. All are KEEP - exact /post/<slug> preserved. */
 export const WIX_ARTICLE_SLUGS = [
   "founder-s-friday-how-to-bring-on-more-investors",
   "train-your-brain-to-pitch-like-an-investor",

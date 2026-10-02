@@ -21,11 +21,11 @@ function money(cents: number | null | undefined) {
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
-/** Some services have no flat price — they're quoted each time they're asked for. */
+/** Some services have no flat price - they're quoted each time they're asked for. */
 export function feeText(cents: number | null | undefined, model?: string | null) {
   if (cents === null || cents === undefined) {
     return model === "per_request"
-      ? "Quoted per request — the amount depends on the services required"
+      ? "Quoted per request - the amount depends on the services required"
       : "Quoted at the time";
   }
   const amount = money(cents);
@@ -40,7 +40,7 @@ const WAITING: Record<string, string> = {
   requested: "Waiting on Harmonious to review it.",
   in_review: "Harmonious is reviewing it.",
   quoted: "Waiting on your signature.",
-  signed: "Signed — waiting on Harmonious to switch it on.",
+  signed: "Signed - waiting on Harmonious to switch it on.",
   activated: "Active. It's part of your scope now.",
   declined: "Declined by Harmonious.",
   withdrawn: "Withdrawn.",
@@ -154,7 +154,7 @@ export function MyServiceRequests() {
 
         {signing ? (
           <div className="space-y-3 rounded-md border border-primary p-4">
-            <p className="text-sm font-medium">Sign the amendment — {signing.serviceName}</p>
+            <p className="text-sm font-medium">Sign the amendment - {signing.serviceName}</p>
             <p className="text-sm">
               Fee:{" "}
               <span className="font-medium">

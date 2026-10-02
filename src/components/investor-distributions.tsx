@@ -25,7 +25,7 @@ import {
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const STATUS_LABEL: Record<string, string> = {
   not_started: "Being prepared",
@@ -54,7 +54,7 @@ export function InvestorDistributions() {
   const confirmM = useMutation({
     mutationFn: (lineId: string) => confirm({ data: { lineId } }),
     onSuccess: () => {
-      toast.success("Thank you — your confirmation has been recorded.");
+      toast.success("Thank you - your confirmation has been recorded.");
       queryClient.invalidateQueries({ queryKey: ["my-distributions"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "That didn't save."),
@@ -170,7 +170,7 @@ function PaymentDestinations() {
         <ul className="text-sm text-muted-foreground">
           {((data?.instructions ?? []) as any[]).map((i) => (
             <li key={i.id}>
-              {i.bankName ?? i.method} ending {i.maskedAccount ?? "—"} · {i.status.replace(/_/g, " ")}
+              {i.bankName ?? i.method} ending {i.maskedAccount ?? "-"} · {i.status.replace(/_/g, " ")}
             </li>
           ))}
         </ul>

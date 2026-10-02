@@ -207,7 +207,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
   const bind = (k: string) => ({ value: f[k] ?? "", disabled: !d.canEdit, onChange: (e: any) => setF({ ...f, [k]: e.target.value }) });
   const sel = (k: string, opts: [string, string][]) => (
     <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" {...bind(k)}>
-      <option value="">—</option>
+      <option value="">-</option>
       {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>
   );
@@ -314,7 +314,7 @@ function PresetSelect({ options, value, na, onChange, disabled, suffix = "", pre
         else if (v === "") { setCustom(false); onChange(null, false); }
         else { setCustom(false); onChange(Number(v), false); }
       }}>
-        <option value="">{allowDefault ? "Same as fund default" : "—"}</option>
+        <option value="">{allowDefault ? "Same as fund default" : "-"}</option>
         {options.map((o) => <option key={o} value={String(o)}>{prefix}{o.toLocaleString()}{suffix}</option>)}
         <option value="other">Other…</option>
         <option value="na">Not applicable</option>
@@ -336,7 +336,7 @@ function TextPresetSelect({ options, value, na, onChange, disabled }: { options:
         else if (v === "") { setCustom(false); onChange(null, false); }
         else { setCustom(false); onChange(v, false); }
       }}>
-        <option value="">—</option>
+        <option value="">-</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
         <option value="other">Other…</option>
         <option value="na">Not applicable</option>
@@ -376,7 +376,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
       <CardHeader>
         <CardTitle className="text-base">Economics & Classes</CardTitle>
         <p className="text-sm text-muted-foreground">
-          {d.economics.status === "draft" ? `Draft v${d.economics.version} — needs approval by a second Harmonious reviewer.` : d.economics.approvedVersion ? `Approved v${d.economics.approvedVersion}. Saving creates a new draft; the approved version stays in use until the new one is approved.` : "No economics recorded yet."}
+          {d.economics.status === "draft" ? `Draft v${d.economics.version} - needs approval by a second Harmonious reviewer.` : d.economics.approvedVersion ? `Approved v${d.economics.approvedVersion}. Saving creates a new draft; the approved version stays in use until the new one is approved.` : "No economics recorded yet."}
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -387,13 +387,13 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
           </Field>
           <Field label="Basis">
             <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.basis ?? ""} onChange={(e) => setFee({ basis: e.target.value || null })}>
-              {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">—</option>}
+              {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">-</option>}
               <option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
             </select>
           </Field>
           <Field label="Frequency">
             <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.frequency ?? ""} onChange={(e) => setFee({ frequency: e.target.value || null })}>
-              {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">—</option>}
+              {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">-</option>}
               <option value="one_time">One time</option><option value="annual">Annual</option><option value="quarterly">Quarterly</option><option value="monthly">Monthly</option>
             </select>
           </Field>

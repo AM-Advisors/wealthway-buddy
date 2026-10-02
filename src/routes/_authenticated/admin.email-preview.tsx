@@ -25,13 +25,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/admin/email-preview")({
   head: () => ({
     meta: [
-      { title: "Email Preview — Harmonious Admin" },
+      { title: "Email Preview - Harmonious Admin" },
       {
         name: "description",
         content:
           "Preview Harmonious investor emails exactly as they render in an inbox, with editable sample content.",
       },
-      { property: "og:title", content: "Email Preview — Harmonious Admin" },
+      { property: "og:title", content: "Email Preview - Harmonious Admin" },
       {
         property: "og:description",
         content: "See how branded onboarding emails look to investors before sending.",
@@ -380,7 +380,7 @@ function EmailPreviewPage() {
             <CardHeader className="border-b">
               <CardDescription>Subject line</CardDescription>
               <CardTitle className="text-base">
-                {previewQuery.data?.subject ?? (previewQuery.isLoading ? "Rendering…" : "—")}
+                {previewQuery.data?.subject ?? (previewQuery.isLoading ? "Rendering…" : "-")}
               </CardTitle>
             </CardHeader>
             <CardContent className="bg-muted/40 p-4">

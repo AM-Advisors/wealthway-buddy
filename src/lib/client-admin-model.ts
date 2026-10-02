@@ -1,5 +1,5 @@
 /**
- * Client 360 administration — pure rules.
+ * Client 360 administration - pure rules.
  *
  * The chain this file encodes:
  *   Client → People/Roles → Fund/Engagement → Applicable Services → Pricing
@@ -7,7 +7,7 @@
  *
  * Three rules hold everywhere:
  *  - descriptive Client relationship roles never become application authority;
- *  - selecting a service only ever makes it Proposed — Contracted comes only
+ *  - selecting a service only ever makes it Proposed - Contracted comes only
  *    from a fully executed SOW (also enforced in the database);
  *  - nothing is guessed: no price, no template and no precedence decision.
  */
@@ -52,7 +52,7 @@ export function applicationAuthorityFromRoles(_roles: readonly string[]): {
 
 /**
  * The funds a person may open in the portal: exactly the fund_managers rows
- * they hold — never every fund of the Client, whatever their descriptive role.
+ * they hold - never every fund of the Client, whatever their descriptive role.
  */
 export function portalFundAccess(
   userId: string | null,
@@ -313,7 +313,7 @@ export function resolveSowTemplate(
   return { status: "resolved", template: ok[0]! };
 }
 
-/** A manual override may choose another approved template — never draft/retired, always with a reason. */
+/** A manual override may choose another approved template - never draft/retired, always with a reason. */
 export function validateTemplateOverride(
   t: SowTemplate | undefined,
   engagementType: string,
@@ -348,7 +348,7 @@ export const isExecuted = (s: SowLite) => !!s.executed_at;
 
 /**
  * The SOW that covers this client + scope. Only this client's SOW for this
- * exact fund (or its client-wide SOW when no fund) — never another client's
+ * exact fund (or its client-wide SOW when no fund) - never another client's
  * or another fund's negotiated SOW.
  */
 export function findApplicableSow(sows: readonly SowLite[], clientId: string, offeringId: string | null) {
@@ -437,13 +437,13 @@ export function buildSowLines(input: {
         blockers.push({
           kind: resolved.status === "conflict" ? "pricing_conflict" : "pricing_required",
           serviceKey: svc.key,
-          message: resolved.status === "conflict" ? `${svc.name}: pricing conflict — Harmonious review required.` : `${svc.name}: Pricing Required.`,
+          message: resolved.status === "conflict" ? `${svc.name}: pricing conflict - Harmonious review required.` : `${svc.name}: Pricing Required.`,
         });
       }
       if (eff.customPending) blockers.push({ kind: "custom_pricing_unapproved", serviceKey: svc.key, message: `${svc.name}: custom pricing awaits approval.` });
       if (!(svc.standard_scope || svc.description)) blockers.push({ kind: "missing_scope", serviceKey: svc.key, message: `${svc.name}: no service scope on the catalog item.` });
       const ex = (input.excludedWork ?? "").toLowerCase();
-      if (ex && ex.includes(svc.name.toLowerCase())) blockers.push({ kind: "contract_conflict", serviceKey: svc.key, message: `${svc.name}: the Client's approved agreement lists this as excluded work — SOW requires Harmonious review.` });
+      if (ex && ex.includes(svc.name.toLowerCase())) blockers.push({ kind: "contract_conflict", serviceKey: svc.key, message: `${svc.name}: the Client's approved agreement lists this as excluded work - SOW requires Harmonious review.` });
     }
     lines.push({
       selectionId: sel.id,
@@ -478,4 +478,4 @@ export const SERVICE_STATE_LABEL: Record<string, string> = {
   removed: "Removed",
 };
 
-export const NO_TEMPLATE_MESSAGE = "SOW required — no approved current template available";
+export const NO_TEMPLATE_MESSAGE = "SOW required - no approved current template available";

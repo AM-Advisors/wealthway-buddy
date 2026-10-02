@@ -64,7 +64,7 @@ export function PrepareInvestor({ fundId }: { fundId: string }) {
   });
   const sendM = useMutation({
     mutationFn: async () => { const r: any = await save({ data: payload() }); setDraftId(r.id); return send({ data: { offeringId: fundId, draftId: r.id } }); },
-    onSuccess: (r: any) => { toast.success(r.emailSent ? "Onboarding sent." : "Onboarding created — the email could not be sent, use Resend."); setReview(false); setDraftId(null); void qc.invalidateQueries(); },
+    onSuccess: (r: any) => { toast.success(r.emailSent ? "Onboarding sent." : "Onboarding created - the email could not be sent, use Resend."); setReview(false); setDraftId(null); void qc.invalidateQueries(); },
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
 
@@ -95,7 +95,7 @@ export function PrepareInvestor({ fundId }: { fundId: string }) {
         {roles.length ? (
           <section className="space-y-2">
             <h4 className="text-sm font-medium">Related people</h4>
-            <p className="text-xs text-muted-foreground">Placeholders only — each person still completes their own verification.</p>
+            <p className="text-xs text-muted-foreground">Placeholders only - each person still completes their own verification.</p>
             {people.map((p, i) => (
               <div key={i} className="grid gap-2 sm:grid-cols-3">
                 <Select value={p.role} onValueChange={(v) => setPeople(people.map((x, j) => (j === i ? { ...x, role: v } : x)))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{roles.map((r) => <SelectItem key={r} value={r}>{r.replace(/_/g, " ")}</SelectItem>)}</SelectContent></Select>
@@ -132,7 +132,7 @@ export function PrepareInvestor({ fundId }: { fundId: string }) {
         {review ? (
           <section className="space-y-2 rounded-md border bg-muted/40 p-4 text-sm">
             <h4 className="font-medium">Investor onboarding preview</h4>
-            <p><span className="text-muted-foreground">Investor:</span> {f["display_name"] || f["legal_name"] || "—"} · {f["email"]} · {PROFILES.find((p) => p[0] === profile)?.[1]} · {f["commitment"] ? `$${f["commitment"]}` : "no amount"}</p>
+            <p><span className="text-muted-foreground">Investor:</span> {f["display_name"] || f["legal_name"] || "-"} · {f["email"]} · {PROFILES.find((p) => p[0] === profile)?.[1]} · {f["commitment"] ? `$${f["commitment"]}` : "no amount"}</p>
             <p><span className="text-muted-foreground">Requirements:</span> identity verification, tax form, accreditation and eligibility are set by the fund's configuration and completed by the investor.</p>
             <p><span className="text-muted-foreground">Documents:</span> {selected.map((s) => docs.find((d) => d.id === s.documentId)?.title).join(", ") || "none"}</p>
             <p><span className="text-muted-foreground">Signing:</span> {selected.some((s) => { const d = docs.find((x) => x.id === s.documentId); return d && signingModeOf(d) === "investor_then_manager"; }) ? "Fund Manager countersignature required" : "Investor only"}</p>
@@ -153,7 +153,7 @@ export function PrepareInvestor({ fundId }: { fundId: string }) {
             {data.drafts.map((d: any) => (
               <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm last:border-0">
                 <span>{d.display_name || d.email}</span>
-                <span className="flex gap-2"><Badge variant="outline">{preparedLabel(d.preparer_capacity)}</Badge><Badge variant={d.status === "sent" ? "secondary" : "default"}>{d.status === "draft" ? "Draft — not sent" : d.status === "sent" ? "Invitation sent" : "Cancelled"}</Badge></span>
+                <span className="flex gap-2"><Badge variant="outline">{preparedLabel(d.preparer_capacity)}</Badge><Badge variant={d.status === "sent" ? "secondary" : "default"}>{d.status === "draft" ? "Draft - not sent" : d.status === "sent" ? "Invitation sent" : "Cancelled"}</Badge></span>
               </div>
             ))}
           </section>

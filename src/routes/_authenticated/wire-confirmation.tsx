@@ -17,13 +17,13 @@ import { getFunding, submitWireConfirmation, wireConfirmationSchema } from "@/li
 export const Route = createFileRoute("/_authenticated/wire-confirmation")({
   head: () => ({
     meta: [
-      { title: "Confirm your wire — Harmonious investor portal" },
+      { title: "Confirm your wire - Harmonious investor portal" },
       {
         name: "description",
         content:
           "Tell Harmonious the details of the wire you sent so your subscription can be matched and reviewed.",
       },
-      { property: "og:title", content: "Confirm your wire — Harmonious investor portal" },
+      { property: "og:title", content: "Confirm your wire - Harmonious investor portal" },
       {
         property: "og:description",
         content: "Submit your wire details for review by the Harmonious team.",
@@ -129,7 +129,7 @@ function WireConfirmationPage() {
         <h1 className="font-heading text-3xl font-semibold text-foreground">Confirm your wire</h1>
         <p className="text-muted-foreground">
           Once you've sent your transfer, tell us the details here. Your Harmonious contact reviews
-          it and marks your subscription funded — you'll see the status update on this page.
+          it and marks your subscription funded - you'll see the status update on this page.
         </p>
       </header>
 
@@ -191,7 +191,7 @@ function WireConfirmationPage() {
           {settled ? (
             <Card>
               <CardContent className="p-6 text-muted-foreground">
-                Your subscription is fully funded — no further confirmation is needed.
+                Your subscription is fully funded - no further confirmation is needed.
               </CardContent>
             </Card>
           ) : !isWire || !acknowledged ? (

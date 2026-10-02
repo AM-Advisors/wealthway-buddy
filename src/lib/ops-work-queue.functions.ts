@@ -1,6 +1,6 @@
 /**
  * The two calls Operations Home makes. Both are authenticated, and the work
- * itself is gathered and narrowed on the server — the browser never receives
+ * itself is gathered and narrowed on the server - the browser never receives
  * an item the signed-in staff member is not entitled to act on.
  */
 

@@ -306,7 +306,7 @@ export async function sendCampaign(userId: string, d: { id: string; confirmCount
     }
   }
   await db.from("crm_campaigns").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", c.id);
-  await logActivity({ scope: c.scope, offering_id: c.offering_id, campaign_id: c.id, actor_user_id: userId, kind: "campaign_sent", summary: `Campaign sent: ${c.name} — ${tally.sent} delivered${tally.suppressed ? `, ${tally.suppressed} suppressed` : ""}${tally.failed ? `, ${tally.failed} failed` : ""}`, details: tally });
+  await logActivity({ scope: c.scope, offering_id: c.offering_id, campaign_id: c.id, actor_user_id: userId, kind: "campaign_sent", summary: `Campaign sent: ${c.name} - ${tally.sent} delivered${tally.suppressed ? `, ${tally.suppressed} suppressed` : ""}${tally.failed ? `, ${tally.failed} failed` : ""}`, details: tally });
   return tally;
 }
 

@@ -50,7 +50,7 @@ type Item = {
 };
 
 function day(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   const d = new Date(`${value}T00:00:00`);
   return Number.isNaN(d.getTime())
     ? value
@@ -186,7 +186,7 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
           <Input
             value={draft.label}
             onChange={(e) => setDraft({ ...draft, label: e.target.value })}
-            placeholder="Form D — initial notice filing"
+            placeholder="Form D - initial notice filing"
           />
         </div>
         <div className="grid gap-2">

@@ -13,12 +13,12 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Set a New Password — Harmonious" },
+      { title: "Set a New Password - Harmonious" },
       {
         name: "description",
         content: "Choose a new password for your Harmonious investor account.",
       },
-      { property: "og:title", content: "Set a New Password — Harmonious" },
+      { property: "og:title", content: "Set a New Password - Harmonious" },
       { property: "og:description", content: "Choose a new password for your investor account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

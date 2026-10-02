@@ -2,7 +2,7 @@
  * Address lookup and validation transport (server only).
  *
  * Credentials never reach the browser: suggestions and validation are proxied
- * through the server. Two credential routes are supported — the Lovable
+ * through the server. Two credential routes are supported - the Lovable
  * connector gateway, and a directly configured Google Maps Platform server
  * key. When neither is configured, or the provider is unavailable, the
  * controlled manual-entry path stays open and the address is simply queued for

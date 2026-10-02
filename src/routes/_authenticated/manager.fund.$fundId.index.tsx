@@ -8,9 +8,9 @@ import { ManagerCloseSheets } from "@/components/accounting-phase5";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
   head: () => ({ meta: [
-    { title: "Fund overview — Harmonious" },
+    { title: "Fund overview - Harmonious" },
     { name: "description", content: "Fund profile, readiness, capital, scope, providers, and recent investor activity." },
-    { property: "og:title", content: "Fund overview — Harmonious" },
+    { property: "og:title", content: "Fund overview - Harmonious" },
     { property: "og:description", content: "Fund profile, readiness, capital, scope, providers, and recent investor activity." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),

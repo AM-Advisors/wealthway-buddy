@@ -87,7 +87,7 @@ export function CapTableRequestsBoard() {
         <h1 className="text-2xl sm:text-3xl">Cap table requests</h1>
         <p className="text-sm text-muted-foreground">
           Founders who asked to move their cap table across from the website. Contact them, then send
-          the portal invitation from client onboarding — an account is never created automatically.
+          the portal invitation from client onboarding - an account is never created automatically.
         </p>
       </header>
 
@@ -215,7 +215,7 @@ export function CapTableRequestsBoard() {
                       <Textarea
                         rows={2}
                         maxLength={2000}
-                        placeholder="Internal note — not shown to the founder."
+                        placeholder="Internal note - not shown to the founder."
                         value={notes[lead.id] ?? lead.internalNote ?? ""}
                         onChange={(e) => setNotes((prev) => ({ ...prev, [lead.id]: e.target.value }))}
                       />

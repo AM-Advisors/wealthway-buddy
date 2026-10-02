@@ -6,13 +6,13 @@ import { useClientPortal } from "@/components/client-portal-context";
 export const Route = createFileRoute("/_authenticated/client/wires")({
   head: () => ({
     meta: [
-      { title: "Wire requests — Harmonious" },
+      { title: "Wire requests - Harmonious" },
       {
         name: "description",
         content:
           "Request an outbound wire or ACH from a fund we administer and track Harmonious's checks and approvals.",
       },
-      { property: "og:title", content: "Wire requests — Harmonious" },
+      { property: "og:title", content: "Wire requests - Harmonious" },
       {
         property: "og:description",
         content: "Request outbound wires and track Harmonious's checks and approvals.",

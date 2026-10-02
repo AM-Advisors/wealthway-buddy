@@ -21,13 +21,13 @@ import { downloadOfferingPacket } from "@/lib/offering-documents.functions";
 export const Route = createFileRoute("/_authenticated/admin/packet/$fundId")({
   head: () => ({
     meta: [
-      { title: "Fund offering packet — Harmonious admin" },
+      { title: "Fund offering packet - Harmonious admin" },
       {
         name: "description",
         content:
           "Private offering packet for a Harmonious fund: documents, bank details and shareable investor download links.",
       },
-      { property: "og:title", content: "Fund offering packet — Harmonious admin" },
+      { property: "og:title", content: "Fund offering packet - Harmonious admin" },
       {
         property: "og:description",
         content: "Documents, bank details and shareable packet links for one fund.",
@@ -51,7 +51,7 @@ const WIRE_LABEL: Record<string, string> = {
 };
 
 function money(cents?: number | null) {
-  if (cents == null) return "—";
+  if (cents == null) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -114,7 +114,7 @@ function PacketPage() {
       await navigator.clipboard.writeText(shareUrl(token));
       toast.success("Link copied");
     } catch {
-      toast.error("Could not copy — select the link manually.");
+      toast.error("Could not copy - select the link manually.");
     }
   }
 

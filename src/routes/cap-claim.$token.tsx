@@ -148,7 +148,7 @@ function ClaimPage() {
       ) : done ? (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Thank you — your claim is with the company</CardTitle>
+            <CardTitle>Thank you - your claim is with the company</CardTitle>
             <CardDescription>
               They will review it against their register and contact you at the address this link was sent to.
             </CardDescription>

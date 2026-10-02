@@ -5,13 +5,13 @@ import { InvestorReportingBoard } from "@/components/investor-reporting-board";
 export const Route = createFileRoute("/_authenticated/ops/reporting")({
   head: () => ({
     meta: [
-      { title: "Investor reporting — Harmonious" },
+      { title: "Investor reporting - Harmonious" },
       {
         name: "description",
         content:
           "Assemble, review, approve and publish investor reporting packages from approved records only.",
       },
-      { property: "og:title", content: "Investor reporting — Harmonious" },
+      { property: "og:title", content: "Investor reporting - Harmonious" },
       {
         property: "og:description",
         content: "The reporting package queue, delivery status and amendments.",

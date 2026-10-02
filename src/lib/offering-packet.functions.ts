@@ -254,7 +254,7 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
       result = await sendTemplateEmail("investor-message", data.email, {
         templateData: {
           investorName: data.name || "Investor",
-          subject: `${offeringName} — offering packet`,
+          subject: `${offeringName} - offering packet`,
           body: bodyParts.join("\n\n"),
           offeringName,
           pixelUrl,

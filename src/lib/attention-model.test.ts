@@ -41,7 +41,7 @@ describe("plain status wording", () => {
   });
 
   it("describes a detected transfer without claiming it is settled", () => {
-    expect(plainStatus("processing")).toBe("Transfer detected — Harmonious is confirming it");
+    expect(plainStatus("processing")).toBe("Transfer detected - Harmonious is confirming it");
   });
 
   it("shows an unmapped state rather than hiding it", () => {

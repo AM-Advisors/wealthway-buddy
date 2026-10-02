@@ -1,7 +1,7 @@
 /**
  * Stage 3A.1 canonical decisions for exactly two read functions:
  * operations.functions.ts :: getOperationsAccess and :: listOperationsTeam.
- * Pure; never enforced. Inputs are role/assignment facts only — never email
+ * Pure; never enforced. Inputs are role/assignment facts only - never email
  * domain, sign-in provider, client/investor/professional membership, or
  * account classification.
  */

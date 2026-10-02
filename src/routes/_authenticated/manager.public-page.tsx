@@ -12,12 +12,12 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/manager/public-page")({
   head: () => ({
     meta: [
-      { title: "Public fund page — Harmonious" },
+      { title: "Public fund page - Harmonious" },
       {
         name: "description",
         content: "Publish a public page for your fund with the pitch deck, documents and cap table.",
       },
-      { property: "og:title", content: "Public fund page — Harmonious" },
+      { property: "og:title", content: "Public fund page - Harmonious" },
       {
         property: "og:description",
         content: "Switch your fund's public page on and edit what visitors read first.",

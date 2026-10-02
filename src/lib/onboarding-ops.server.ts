@@ -40,7 +40,7 @@ export async function staffTaxReviewList(userId: string) {
     const requiredForm = fact?.form_type ?? f?.form_type ?? null;
     return {
       profileId: pid,
-      profileName: p?.legal_name ?? p?.display_label ?? "—",
+      profileName: p?.legal_name ?? p?.display_label ?? "-",
       profileType: p?.profile_type ?? null,
       classification: f?.classification ?? null,
       requiredForm: requiredForm ? IRS_FORM_REVISIONS[requiredForm as keyof typeof IRS_FORM_REVISIONS]?.title ?? requiredForm : null,

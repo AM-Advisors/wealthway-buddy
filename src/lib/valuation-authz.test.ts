@@ -332,7 +332,7 @@ describe("ledger handoff", () => {
     expect(draftJournalEntry).toHaveBeenCalledTimes(1);
     const [, payload] = (draftJournalEntry as any).mock.calls[0];
     expect(payload.sourceTable).toBe("portfolio_valuations");
-    // Prepared only — the existing review/approve/post workflow still applies.
+    // Prepared only - the existing review/approve/post workflow still applies.
     expect(payload.lines).toHaveLength(2);
   });
 });

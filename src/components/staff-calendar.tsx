@@ -26,8 +26,8 @@ type Kind = "request" | "quote" | "hold" | "signoff" | "payment";
 interface CalendarItem {
   id: string;
   kind: Kind;
-  day: string; // yyyy-mm-dd — the day it is due
-  raised: string; // yyyy-mm-dd — the day it arrived
+  day: string; // yyyy-mm-dd - the day it is due
+  raised: string; // yyyy-mm-dd - the day it arrived
   dueLabel: string;
   title: string;
   clientId: string;
@@ -105,7 +105,7 @@ function dueKey(from: string | null | undefined, days: number) {
   return dayKey(d);
 }
 
-/** "due today", "due in 3 days", "3 days late" — plain wording for a due date. */
+/** "due today", "due in 3 days", "3 days late" - plain wording for a due date. */
 function dueWording(key: string) {
   if (!key) return "No due date";
   const [y, m, d] = key.split("-").map(Number);
@@ -167,7 +167,7 @@ export function StaffCalendar() {
         dueLabel: "Reply to the client by",
         title: serviceLabel(r.service_key),
         clientId: String(r.client_id),
-        clientName: r.clientName ?? "—",
+        clientName: r.clientName ?? "-",
         fundName: r.fundName ?? null,
         detail:
           (r.status === "requested" ? "Waiting for a first look" : "In review") +
@@ -196,12 +196,12 @@ export function StaffCalendar() {
         dueLabel: signed ? "Switch the service on by" : "Client signature due by",
         title: serviceLabel(q.service_key),
         clientId: String(q.client_id),
-        clientName: q.clientName ?? "—",
+        clientName: q.clientName ?? "-",
         fundName: q.fundName ?? null,
         detail:
           (fee ? `${fee} proposed` : "No fee set") +
           (q.effective_date ? ` · starts ${q.effective_date}` : " · no start date yet"),
-        status: signed ? "Signed — activate" : "With the client",
+        status: signed ? "Signed - activate" : "With the client",
         overdue: isPast(due || raised),
       });
     }
@@ -218,7 +218,7 @@ export function StaffCalendar() {
         dueLabel: "Clear or escalate by",
         title: h.service_key ? serviceLabel(h.service_key) : `${h.scope ?? "Client"} hold`,
         clientId: String(h.client_id),
-        clientName: h.clientName ?? "—",
+        clientName: h.clientName ?? "-",
         fundName: h.fundName ?? null,
         detail: `${h.reason ?? "On hold"} · open ${age} day${age === 1 ? "" : "s"}`,
         status: "Open hold",
@@ -237,7 +237,7 @@ export function StaffCalendar() {
         dueLabel: "Chase the signature by",
         title: `${s.personName} to sign`,
         clientId: String(s.client_id),
-        clientName: s.clientName ?? "—",
+        clientName: s.clientName ?? "-",
         fundName: null,
         detail: s.outstanding
           .map((o: any) => `${o.title} (v${o.version})`)
@@ -258,7 +258,7 @@ export function StaffCalendar() {
         dueLabel: "Payment due by",
         title: `${i.number ?? "Invoice"} ${money(i.total_cents) ?? ""}`.trim(),
         clientId: String(i.client_id),
-        clientName: i.clientName ?? "—",
+        clientName: i.clientName ?? "-",
         fundName: i.fundName ?? null,
         detail: `${String(i.status).replace(/_/g, " ")}${
           i.approval_status ? ` · client approval ${String(i.approval_status).replace(/_/g, " ")}` : ""
@@ -279,7 +279,7 @@ export function StaffCalendar() {
         dueLabel: "Match against the bank by",
         title: `${p.number ?? "Invoice"} reported paid`,
         clientId: String(p.client_id),
-        clientName: p.clientName ?? "—",
+        clientName: p.clientName ?? "-",
         fundName: p.fundName ?? null,
         detail: `${(p.client_payment_method ?? "payment").toString().toUpperCase()} · reference ${
           p.client_payment_reference ?? "none given"
@@ -477,7 +477,7 @@ export function StaffCalendar() {
                   cell.inMonth ? "" : "bg-muted/30 text-muted-foreground",
                   isSelected ? "ring-2 ring-inset ring-primary" : "hover:bg-muted/40",
                 ].join(" ")}
-                aria-label={`${longDay(cell.key)} — ${dayItems.length} item${dayItems.length === 1 ? "" : "s"} due`}
+                aria-label={`${longDay(cell.key)} - ${dayItems.length} item${dayItems.length === 1 ? "" : "s"} due`}
               >
                 <span
                   className={[

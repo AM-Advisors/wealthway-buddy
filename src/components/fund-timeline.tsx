@@ -74,7 +74,7 @@ export function FundTimeline({
         <CardTitle>Key dates</CardTitle>
         <CardDescription>
           {next
-            ? `Next up: ${next.title} — ${longDate(next.event_date)} (${daysAway(next.event_date)}).`
+            ? `Next up: ${next.title} - ${longDate(next.event_date)} (${daysAway(next.event_date)}).`
             : "Every date the fund has shared."}
         </CardDescription>
       </CardHeader>

@@ -31,13 +31,13 @@ import { AddressInput, addressFromSnake, addressToSnake } from "@/components/add
 export const Route = createFileRoute("/_authenticated/admin/investors")({
   head: () => ({
     meta: [
-      { title: "Investor Database — Harmonious Admin" },
+      { title: "Investor Database - Harmonious Admin" },
       {
         name: "description",
         content:
           "Every investor on file with the onboarding step they are on, plus manual editing of their contact, entity and commitment details.",
       },
-      { property: "og:title", content: "Investor Database — Harmonious Admin" },
+      { property: "og:title", content: "Investor Database - Harmonious Admin" },
       {
         property: "og:description",
         content: "See every investor's onboarding step and correct their details by hand.",
@@ -61,7 +61,7 @@ export const Route = createFileRoute("/_authenticated/admin/investors")({
 const INVESTOR_TYPES = ["individual", "joint", "entity", "trust", "ira"] as const;
 
 function money(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -134,7 +134,7 @@ function InvestorDatabase() {
     onSuccess: (_r, vars) => {
       toast.success(
         vars.decision === "approved"
-          ? "Accreditation approved — this investor can now reach the wire step."
+          ? "Accreditation approved - this investor can now reach the wire step."
           : vars.decision === "declined"
             ? "Accreditation declined."
             : "Sent back for more review.",

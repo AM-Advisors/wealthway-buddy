@@ -1,5 +1,5 @@
 /**
- * Side Letter Registry — pure model. Side letters are a versioned record only:
+ * Side Letter Registry - pure model. Side letters are a versioned record only:
  * they never change fee calculations, capital accounts, distributions,
  * readiness or launch. MFN outcomes are explicit human decisions.
  */

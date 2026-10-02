@@ -13,9 +13,9 @@ export const Route = createFileRoute("/_authenticated/ops/contracts/compare")({
   validateSearch: z.object({ before: z.string().uuid().optional(), after: z.string().uuid().optional() }),
   head: () => ({
     meta: [
-      { title: "Compare contract versions — Harmonious operations" },
+      { title: "Compare contract versions - Harmonious operations" },
       { name: "description", content: "Side-by-side comparison of approved contract terms." },
-      { property: "og:title", content: "Compare contract versions — Harmonious operations" },
+      { property: "og:title", content: "Compare contract versions - Harmonious operations" },
       { property: "og:description", content: "Added, removed and changed contract terms with source language." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -53,7 +53,7 @@ function Compare() {
       </Link>
       <h1 className="text-2xl">Compare Versions</h1>
       <p className="text-sm text-muted-foreground">
-        A mechanical comparison of structured terms. It shows what changed — it does not decide what a change means legally or which provision controls.
+        A mechanical comparison of structured terms. It shows what changed - it does not decide what a change means legally or which provision controls.
         {!d.basedOnApprovedTerms ? " One of these documents isn't approved yet, so some values are still proposals." : ""}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -97,10 +97,10 @@ function Compare() {
 }
 
 function Side({ s, docId }: { s: any; docId: string }) {
-  if (!s) return <p className="text-muted-foreground">—</p>;
+  if (!s) return <p className="text-muted-foreground">-</p>;
   return (
     <div className="space-y-1">
-      <p>{s.value ?? "—"}{s.amountCents != null ? ` · $${(s.amountCents / 100).toLocaleString()}` : ""}</p>
+      <p>{s.value ?? "-"}{s.amountCents != null ? ` · $${(s.amountCents / 100).toLocaleString()}` : ""}</p>
       {!s.reviewed ? <Badge variant="outline">Not yet reviewed</Badge> : null}
       {s.page || s.section ? (
         <Link to="/ops/contracts/$documentId" params={{ documentId: docId }} className="block text-xs text-muted-foreground underline">

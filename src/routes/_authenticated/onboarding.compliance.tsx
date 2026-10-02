@@ -12,13 +12,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/onboarding/compliance")({
   head: () => ({
     meta: [
-      { title: "KYC & AML Submissions — Harmonious Investor Portal" },
+      { title: "KYC & AML Submissions - Harmonious Investor Portal" },
       {
         name: "description",
         content:
           "Track your identity and anti-money-laundering checks, send the documents your fund asked for, and see every submission and decision.",
       },
-      { property: "og:title", content: "KYC & AML Submissions — Harmonious" },
+      { property: "og:title", content: "KYC & AML Submissions - Harmonious" },
       {
         property: "og:description",
         content: "Your identity and screening checks, documents and decision history in one place.",

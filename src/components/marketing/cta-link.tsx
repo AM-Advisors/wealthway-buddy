@@ -5,7 +5,7 @@ import { CTAS, CTA_DESTINATION, type CtaId } from "@/lib/marketing/site-config";
 
 /**
  * Intent-specific call to action. Always opens the public contact form with
- * the CTA and intent attached for attribution — never account creation.
+ * the CTA and intent attached for attribution - never account creation.
  */
 export function CtaLink({
   cta,

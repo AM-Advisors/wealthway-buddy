@@ -1,5 +1,5 @@
 /**
- * Canonical Fund Setup — pure rules (no I/O).
+ * Canonical Fund Setup - pure rules (no I/O).
  *
  * The offering row is the single source for the fund's Legal Name, entity,
  * signatory and offering terms. Economics and classes live in the existing
@@ -219,7 +219,7 @@ function tally(required: [boolean, string][]): Result {
   return { status: filled === 0 ? "not_started" : "in_progress", next };
 }
 
-/** Fund Setup status per section — separate from Investment Readiness. */
+/** Fund Setup status per section - separate from Investment Readiness. */
 export function sectionStatuses(f: SetupFacts): Record<CanonicalSection, Result> {
   const term = termApplies(f.fundType);
   const details = tally([

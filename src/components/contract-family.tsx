@@ -49,7 +49,7 @@ export function ContractFamilyPanel({ clientId }: { clientId: string }) {
         <Card className="border-destructive/50">
           <CardHeader>
             <CardTitle className="text-base">{CONFLICT_TASK_TITLE}</CardTitle>
-            <CardDescription>Flagged from reviewed terms. Harmonious never decides which provision controls — a reviewer records the relationship and precedence.</CardDescription>
+            <CardDescription>Flagged from reviewed terms. Harmonious never decides which provision controls - a reviewer records the relationship and precedence.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {d.conflicts.map((c: any) => (
@@ -79,7 +79,7 @@ export function ContractFamilyPanel({ clientId }: { clientId: string }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Contract family</CardTitle>
-          <CardDescription>Built only from recorded links (amends, supersedes, reviewer relationships) — never from upload order.</CardDescription>
+          <CardDescription>Built only from recorded links (amends, supersedes, reviewer relationships) - never from upload order.</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="text-sm">{d.family.map((n: any) => <Node key={n.id} n={n} lifecycles={d.lifecycles} depth={0} />)}</ul>
@@ -92,7 +92,7 @@ export function ContractFamilyPanel({ clientId }: { clientId: string }) {
         return (
           <Card key={doc.id}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{doc.title} — lifecycle</CardTitle>
+              <CardTitle className="text-base">{doc.title} - lifecycle</CardTitle>
               <CardDescription>
                 Status: <strong>{lc.status}</strong>. Dates come only from approved terms. Nothing renews, terminates or sends notice automatically.
               </CardDescription>
@@ -103,7 +103,7 @@ export function ContractFamilyPanel({ clientId }: { clientId: string }) {
                 <Row k="Initial term end" v={show(lc.initialTermEnd)} />
                 <Row k="Automatic renewal" v={lc.autoRenews == null ? UNABLE : lc.autoRenews ? "Yes" : "No"} />
                 <Row k="Renewal date" v={lc.autoRenews === false ? "Does not renew" : show(lc.renewalDate)} />
-                <Row k="Expiration date" v={lc.autoRenews === true ? "Renews — see renewal date" : show(lc.expirationDate)} />
+                <Row k="Expiration date" v={lc.autoRenews === true ? "Renews - see renewal date" : show(lc.expirationDate)} />
                 <Row k="Notice deadline" v={show(lc.noticeDeadline)} />
                 {lc.reminder ? <Row k="Reminder" v={`Renewal in ${lc.reminder.daysLeft} days`} /> : null}
               </dl>
@@ -127,7 +127,7 @@ export function ContractFamilyPanel({ clientId }: { clientId: string }) {
           Recorded relationships:{" "}
           {d.relationships
             .filter((r: any) => r.status === "active")
-            .map((r: any) => `${title(r.document_id)} — ${relLabel(r.relationship_type)}${r.related_document_id ? ` ${title(r.related_document_id)}` : ""}`)
+            .map((r: any) => `${title(r.document_id)} - ${relLabel(r.relationship_type)}${r.related_document_id ? ` ${title(r.related_document_id)}` : ""}`)
             .join("; ")}
         </p>
       ) : null}

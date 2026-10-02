@@ -72,13 +72,13 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: "Cookies and service providers we use",
       bullets: [
-        "Satschel — compliance verification for KYC/AML, accreditation verification and liveness testing. Privacy notice: https://simplici.io/privacy-notice",
-        "Legal Inc — registered agent provider. Privacy policy: https://legalinc.com/privacypolicy/",
-        "Google — usage analytics for this Site. Privacy policy: https://policies.google.com/technologies/partner-sites",
-        "Stripe — card payments. Stripe uses a cookie to remember who you are and to enable the website to process payments without storing card information on its own servers. Privacy policy: https://stripe.com/privacy",
-        "Airtable — data and workflow syncing. Privacy policy: https://www.airtable.com/privacy",
-        "HubSpot — CRM and reporting. Privacy policy: https://legal.hubspot.com/privacy-policy",
-        "Plaid — read-only bank account verification and transaction matching where you choose to link an account. Privacy policy: https://plaid.com/legal/",
+        "Satschel - compliance verification for KYC/AML, accreditation verification and liveness testing. Privacy notice: https://simplici.io/privacy-notice",
+        "Legal Inc - registered agent provider. Privacy policy: https://legalinc.com/privacypolicy/",
+        "Google - usage analytics for this Site. Privacy policy: https://policies.google.com/technologies/partner-sites",
+        "Stripe - card payments. Stripe uses a cookie to remember who you are and to enable the website to process payments without storing card information on its own servers. Privacy policy: https://stripe.com/privacy",
+        "Airtable - data and workflow syncing. Privacy policy: https://www.airtable.com/privacy",
+        "HubSpot - CRM and reporting. Privacy policy: https://legal.hubspot.com/privacy-policy",
+        "Plaid - read-only bank account verification and transaction matching where you choose to link an account. Privacy policy: https://plaid.com/legal/",
       ],
     },
     {
@@ -227,7 +227,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
       paragraphs: [
         "Access to the Platform is granted to named individuals. You are responsible for keeping sign-in credentials confidential, for the activity carried out under your account, and for telling us promptly if you believe an account has been compromised or a person should no longer have access.",
         "You agree not to share accounts, attempt to access data belonging to another client, interfere with the operation or security of the Platform, or use it to store or transmit unlawful material. We may suspend access where we reasonably believe these Terms have been breached or where continued access presents a security, legal or regulatory risk.",
-        "Roles and permissions in the Platform reflect the authority recorded for your organisation. Certain actions — including approving fees and authorising payment instructions — are restricted to people holding the relevant authority.",
+        "Roles and permissions in the Platform reflect the authority recorded for your organisation. Certain actions - including approving fees and authorising payment instructions - are restricted to people holding the relevant authority.",
       ],
     },
     {
@@ -319,7 +319,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
 
 /** Flattens a document into the plain text stored on the accepted policy version. */
 export function legalPlainText(doc: LegalDocument): string {
-  const parts: string[] = [`${doc.title} — last updated ${doc.updated}`, ""];
+  const parts: string[] = [`${doc.title} - last updated ${doc.updated}`, ""];
   for (const block of doc.blocks) {
     if (block.heading) parts.push(block.heading);
     for (const p of block.paragraphs ?? []) parts.push(p);
@@ -446,7 +446,7 @@ export const CAP_TABLE_TERMS: LegalDocument = {
     {
       heading: "4. Setup before you can record shares",
       paragraphs: [
-        "You must complete CapTable setup — company details, authorized shares, certificate signatory and the acknowledgement of these terms — before shares, imports or transfers can be recorded. This applies whether you use the portal or any other route into the Service.",
+        "You must complete CapTable setup - company details, authorized shares, certificate signatory and the acknowledgement of these terms - before shares, imports or transfers can be recorded. This applies whether you use the portal or any other route into the Service.",
       ],
     },
     {

@@ -5,7 +5,7 @@
  * Every function takes figures that already came from posted accounting, an
  * approved NAV, or a finalized allocation run, and turns them into return
  * measures with an explicit, testable methodology. When the inputs cannot
- * support a measure the function says so — it never fabricates a result.
+ * support a measure the function says so - it never fabricates a result.
  */
 
 export { segregationError } from "@/lib/financial-reporting-model";
@@ -259,7 +259,7 @@ export interface PerformanceMethodology {
 
 export const DEFAULT_METHODOLOGY: PerformanceMethodology = {
   version: "perf-v1",
-  label: "Harmonious standard — dated cash flows, paid-in capital",
+  label: "Harmonious standard - dated cash flows, paid-in capital",
   fundType: "spv",
   calculationMethod: "capital_flows",
   metrics: FUND_TYPE_METRICS.spv,
@@ -372,7 +372,7 @@ function npv(flows: { t: number; amount: number }[], rate: number): number {
  * Date-sensitive IRR over actual dated cash flows.
  *
  * Returns an explicit status instead of a number whenever the inputs cannot
- * support one — a missing sign, a period too short to annualise, several
+ * support one - a missing sign, a period too short to annualise, several
  * mathematical roots, or no root at all.
  */
 export function xirr(input: readonly DatedCashFlow[]): IrrResult {
@@ -927,7 +927,7 @@ export interface BenchmarkEntry {
 
 /**
  * Benchmarks are optional. A value is only ever reported for the exact period
- * it covers — a stale or missing value is labelled, never substituted.
+ * it covers - a stale or missing value is labelled, never substituted.
  */
 export function normaliseBenchmark(
   entry: Partial<BenchmarkEntry> & { name: string; source: string; periodStart: string; periodEnd: string },
@@ -967,7 +967,7 @@ export interface InvestorPerformanceInputs {
   endingCapitalCents: number;
   paidInCapitalCents: number;
   commitmentCents: number;
-  /** Dated cash flows for this position only — never the fund's. */
+  /** Dated cash flows for this position only - never the fund's. */
   cashFlows: DatedCashFlow[];
   lifetimeDistributionsCents: number;
 }

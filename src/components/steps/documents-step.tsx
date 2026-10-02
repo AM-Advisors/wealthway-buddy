@@ -213,7 +213,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
               <CardTitle>Subscription particulars</CardTitle>
               <CardDescription>
                 Minimum commitment{" "}
-                {data?.offering ? formatUsd(data.offering.min_investment_cents) : "—"}.
+                {data?.offering ? formatUsd(data.offering.min_investment_cents) : "-"}.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -273,7 +273,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                     value={signerName}
                     onChange={(e) => setSignerName(e.target.value)}
                   />
-                  <p className="font-display text-2xl">{signerName || "—"}</p>
+                  <p className="font-display text-2xl">{signerName || "-"}</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="initials">Initials</Label>

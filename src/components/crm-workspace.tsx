@@ -21,10 +21,10 @@ import {
 } from "@/lib/crm.functions";
 
 type Scope = "harmonious" | "fund";
-const money = (c: number | null) => (c == null ? "—" : (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }));
+const money = (c: number | null) => (c == null ? "-" : (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }));
 const err = (e: unknown) => toast.error(e instanceof Error ? e.message : "Something went wrong.");
 const CONSENT: Record<string, string> = { unknown: "No consent recorded", opted_in: "Opted in", unsubscribed: "Unsubscribed" };
-const STATUS: Record<string, string> = { draft: "Draft", submitted: "Waiting for approval", approved: "Approved — ready to send", declined: "Declined", sending: "Sending…", sent: "Sent" };
+const STATUS: Record<string, string> = { draft: "Draft", submitted: "Waiting for approval", approved: "Approved - ready to send", declined: "Declined", sending: "Sending…", sent: "Sent" };
 
 /**
  * Contacts, deals and campaigns. `scope` decides whose records: "harmonious"
@@ -89,7 +89,7 @@ export function CrmWorkspace({ scope, title, description }: { scope: Scope; titl
                   {contacts.length === 0 ? <TableRow><TableCell colSpan={6} className="text-sm text-muted-foreground">No contacts yet.</TableCell></TableRow> : contacts.map((c: any) => (
                     <TableRow key={c.id} className={c.archived_at ? "opacity-60" : ""}>
                       <TableCell><div className="font-medium">{c.full_name}</div><div className="text-xs text-muted-foreground">{c.email ?? "No email"}</div></TableCell>
-                      <TableCell className="text-sm">{c.organization ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{c.organization ?? "-"}</TableCell>
                       <TableCell><Badge variant={c.consent === "opted_in" ? "default" : "outline"}>{CONSENT[c.consent]}</Badge></TableCell>
                       {scope === "fund" && <TableCell className="text-sm">{c.fund_name}</TableCell>}
                       <TableCell className="text-sm">{c.owner_name}</TableCell>
@@ -113,7 +113,7 @@ export function CrmWorkspace({ scope, title, description }: { scope: Scope; titl
                       {list.map((x: any) => (
                         <button key={x.id} onClick={() => setEditDeal(x)} className="w-full rounded border bg-background p-2 text-left text-sm hover:border-primary">
                           <div className="font-medium">{x.title}</div>
-                          <div className="text-xs text-muted-foreground">{contactName.get(x.contact_id) ?? "—"} · {money(x.amount_cents)}</div>
+                          <div className="text-xs text-muted-foreground">{contactName.get(x.contact_id) ?? "-"} · {money(x.amount_cents)}</div>
                         </button>
                       ))}
                     </div>
@@ -352,7 +352,7 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
           <div className="mt-4 space-y-5 text-sm">
             <div className="space-y-1">
               <div>{c.email ?? "No email"}{c.phone ? ` · ${c.phone}` : ""}</div>
-              <div className="text-muted-foreground">{[c.title, c.organization].filter(Boolean).join(", ") || "—"}</div>
+              <div className="text-muted-foreground">{[c.title, c.organization].filter(Boolean).join(", ") || "-"}</div>
               {c.tags?.length > 0 && <div className="flex flex-wrap gap-1">{c.tags.map((t: string) => <Badge key={t} variant="outline">{t}</Badge>)}</div>}
               <div className="flex gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => { onEdit(c); onClose(); }}>Edit</Button>

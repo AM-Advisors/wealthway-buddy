@@ -2,7 +2,7 @@
  * Processing of a verified Plaid webhook.
  *
  * Defensive by design: the webhook only tells us *that* something changed for
- * an item. We never trust financial values carried in the delivery — we
+ * an item. We never trust financial values carried in the delivery - we
  * re-fetch authoritative transactions from Plaid and write those.
  */
 

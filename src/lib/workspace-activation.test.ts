@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 const inv = readFileSync("src/lib/invitations.functions.ts", "utf8");
 const slice = (name: string) => inv.slice(inv.indexOf(`export const ${name}`), inv.indexOf("export const", inv.indexOf(`export const ${name}`) + 10) >>> 0 || undefined);
 
-describe("Operational workspace activation — server authorization", () => {
+describe("Operational workspace activation - server authorization", () => {
   it("search existing people: fund-scoped and Harmonious staff only; email masked", () => {
     const s = slice("searchExistingInvestors");
     expect(s).toMatch(/assertFundAllowed\(ctx, data\.fundId\)/);

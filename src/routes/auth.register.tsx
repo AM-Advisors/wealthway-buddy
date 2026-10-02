@@ -17,13 +17,13 @@ export const Route = createFileRoute("/auth/register")({
   head: () => ({
     meta: [
         { name: "robots", content: "noindex, nofollow" },
-      { title: "Create Your Investor Account — Harmonious" },
+      { title: "Create Your Investor Account - Harmonious" },
       {
         name: "description",
         content:
           "Create the Harmonious investor account that matches your fund invitation and begin your onboarding.",
       },
-      { property: "og:title", content: "Create Your Investor Account — Harmonious" },
+      { property: "og:title", content: "Create Your Investor Account - Harmonious" },
       {
         property: "og:description",
         content: "Register with the email address your fund invitation was sent to.",

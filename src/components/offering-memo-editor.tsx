@@ -118,7 +118,7 @@ export function OfferingMemoEditor({ offeringId }: { offeringId?: string }) {
             </CardDescription>
           </div>
           <Badge variant={published ? "default" : "secondary"}>
-            {published ? "Visible to investors" : "Draft — only your team"}
+            {published ? "Visible to investors" : "Draft - only your team"}
           </Badge>
         </CardHeader>
         <CardContent className="space-y-6">

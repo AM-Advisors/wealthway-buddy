@@ -18,7 +18,7 @@ import {
 import { listFundFeeSources, setFundFeeSource } from "@/lib/fund-fees.functions";
 
 function money(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
@@ -111,7 +111,7 @@ export function FeeSourcesBoard() {
             {rows.map((r: any) => (
               <TableRow key={`${r.offeringId}-${r.kind}`}>
                 <TableCell className="font-medium">{r.fundName}</TableCell>
-                <TableCell>{r.clientName ?? "—"}</TableCell>
+                <TableCell>{r.clientName ?? "-"}</TableCell>
                 <TableCell>{r.kindLabel}</TableCell>
                 <TableCell>{money(r.cents)}</TableCell>
                 <TableCell>

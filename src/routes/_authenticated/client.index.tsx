@@ -12,13 +12,13 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 export const Route = createFileRoute("/_authenticated/client/")({
   head: () => ({
     meta: [
-      { title: "Portal overview — Harmonious" },
+      { title: "Portal overview - Harmonious" },
       {
         name: "description",
         content:
           "Your funds, pending requests, approved fees, invoices and payments with Harmonious at a glance.",
       },
-      { property: "og:title", content: "Portal overview — Harmonious" },
+      { property: "og:title", content: "Portal overview - Harmonious" },
       {
         property: "og:description",
         content: "Fund status, pending requests, approved fees and payments in one place.",

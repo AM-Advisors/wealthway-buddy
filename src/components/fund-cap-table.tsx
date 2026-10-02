@@ -11,7 +11,7 @@ import { getFundCapTable } from "@/lib/fund-cap-table.functions";
 const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 function termText(t: CapRow["terms"][number]) {
-  const base = t.classValue == null ? "—" : `${t.classValue}%`;
+  const base = t.classValue == null ? "-" : `${t.classValue}%`;
   return t.overrideText ? `${base} (class), ${t.overrideText} per side letter` : base;
 }
 
@@ -47,7 +47,7 @@ export function FundCapTable({ fundId, sideLettersHref }: { fundId: string; side
         <Stat label="Funded (reconciled)" value={usd(d.totals.fundedCents)} />
       </div>
       {!d.hasApprovedTerms && (
-        <p className="text-sm text-muted-foreground">No approved Fund terms yet, so class terms show as "—".</p>
+        <p className="text-sm text-muted-foreground">No approved Fund terms yet, so class terms show as "-".</p>
       )}
 
       <Card>
@@ -97,10 +97,10 @@ export function FundCapTable({ fundId, sideLettersHref }: { fundId: string; side
                 <tr key={r.id} className="border-t align-top">
                   <td className="py-2 pr-3"><div className="font-medium">{r.investorName}</div>{r.profileName && <div className="text-xs text-muted-foreground">{r.profileName}</div>}</td>
                   <td className="pr-3">{r.classKey || "Unassigned"}</td>
-                  <td className="pr-3 capitalize">{(r.stage ?? "—").replace(/_/g, " ")}</td>
+                  <td className="pr-3 capitalize">{(r.stage ?? "-").replace(/_/g, " ")}</td>
                   <td className="pr-3 text-right">{usd(r.commitmentCountedCents)}</td>
                   <td className="pr-3 text-right">{usd(r.fundedCountedCents)}</td>
-                  <td className="pr-3 text-right">{r.units ?? "—"}</td>
+                  <td className="pr-3 text-right">{r.units ?? "-"}</td>
                   <td className="pr-3 text-right">{r.pctCommitted}%</td>
                   <td className="pr-3 text-right">{r.pctFunded}%</td>
                   <td className="pr-3 text-xs">

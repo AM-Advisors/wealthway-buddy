@@ -86,13 +86,13 @@ function ProfessionalLayout() {
 export const Route = createFileRoute("/_authenticated/professional")({
   head: () => ({
     meta: [
-      { title: "Professional workspace — Harmonious" },
+      { title: "Professional workspace - Harmonious" },
       {
         name: "description",
         content:
           "Clients who have authorised you, with the profiles, funds, investments, documents and status their delegation covers.",
       },
-      { property: "og:title", content: "Professional workspace — Harmonious" },
+      { property: "og:title", content: "Professional workspace - Harmonious" },
       {
         property: "og:description",
         content: "Delegated, read-only access to the clients who authorised you.",

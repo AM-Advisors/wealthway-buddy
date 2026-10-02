@@ -8,7 +8,7 @@ export type PipelineStage = "invited" | "started" | "signed" | "funded";
 /**
  * Sales Overview: capital raised, commercial totals, investor pipeline and
  * recent sales activity. Read-only. Pipeline shows investor name, stage and
- * amounts only — never emails, tax, identity, KYC, bank or compliance data.
+ * amounts only - never emails, tax, identity, KYC, bank or compliance data.
  * Funded = reconciled money only (funding-status.ts).
  */
 export const getSalesPerformance = createServerFn({ method: "GET" })

@@ -12,9 +12,9 @@ export const Route = createFileRoute("/join/$token")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Investor Onboarding — Harmonious" },
+      { title: "Investor Onboarding - Harmonious" },
       { name: "description", content: "Begin secure investor onboarding through Harmonious." },
-      { property: "og:title", content: "Investor Onboarding — Harmonious" },
+      { property: "og:title", content: "Investor Onboarding - Harmonious" },
       { property: "og:description", content: "Begin secure investor onboarding through Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -60,7 +60,7 @@ function JoinPage() {
               <h1 className="font-heading text-2xl font-semibold">{q.data!.fundName}</h1>
               {q.data!.managedBy ? <p className="text-sm text-muted-foreground">Managed by {q.data!.managedBy}</p> : null}
             </div>
-            <p className="text-sm text-muted-foreground">{user ? "Continue to choose how you're investing and finish your investment." : "Sign in or create your Harmonious account to continue. If you already have one, use it — you can pick an investing profile you already have or add a new one."}</p>
+            <p className="text-sm text-muted-foreground">{user ? "Continue to choose how you're investing and finish your investment." : "Sign in or create your Harmonious account to continue. If you already have one, use it - you can pick an investing profile you already have or add a new one."}</p>
             <Button className="w-full" disabled={busy || loading} onClick={begin}>{busy ? "Opening…" : user ? "Continue" : "Sign in to continue"}</Button>
             {err ? <p className="text-sm text-destructive">{err}</p> : null}
           </>

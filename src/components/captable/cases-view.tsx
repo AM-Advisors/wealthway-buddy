@@ -150,7 +150,7 @@ function CaseCard({
           <ul className="space-y-2 border-l pl-4">
             {item.notes.map((entry) => (
               <li key={entry.id} className="text-sm">
-                <span className="text-muted-foreground">{fmtDate(entry.createdAt)} — </span>
+                <span className="text-muted-foreground">{fmtDate(entry.createdAt)} - </span>
                 {entry.note}
               </li>
             ))}

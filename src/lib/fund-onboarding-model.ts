@@ -1,7 +1,7 @@
 import { isReconciledFunding } from "@/lib/funding-status";
 /**
  * Fund-specific onboarding: pure rules for dual signature sequencing, funding
- * projection and fresh-authentication wire reveal. No storage here — every
+ * projection and fresh-authentication wire reveal. No storage here - every
  * input comes from authoritative records evaluated on the server.
  */
 

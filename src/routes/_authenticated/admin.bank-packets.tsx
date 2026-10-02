@@ -16,9 +16,9 @@ import { listBankPackets, retireBankPacket, uploadBankPacket } from "@/lib/fund-
 export const Route = createFileRoute("/_authenticated/admin/bank-packets")({
   head: () => ({
     meta: [
-      { title: "Bank setup packets — Harmonious" },
+      { title: "Bank setup packets - Harmonious" },
       { name: "description", content: "Manage the bank account setup paperwork clients receive when Harmonious coordinates banking." },
-      { property: "og:title", content: "Bank setup packets — Harmonious" },
+      { property: "og:title", content: "Bank setup packets - Harmonious" },
       { property: "og:description", content: "Manage partner bank setup paperwork for new funds and SPVs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -83,7 +83,7 @@ function BankPacketsPage() {
           <Card key={b.value}>
             <CardHeader><CardTitle className="text-base">{bankLabel(b.value)}</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              {rows.length === 0 ? <p className="text-muted-foreground">No packet yet — clients are told Harmonious will send paperwork.</p> : rows.map((p) => (
+              {rows.length === 0 ? <p className="text-muted-foreground">No packet yet - clients are told Harmonious will send paperwork.</p> : rows.map((p) => (
                 <div key={p.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
                   <div>
                     <p className="font-medium">{p.title}</p>

@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { isReconciledFunding } from "@/lib/funding-status";
 
 const money = (cents: number | null | undefined) =>
-  cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 const PROFILE_TYPES = [
   ["individual", "Individual"],
@@ -56,7 +56,7 @@ function useAction<T>(fn: (v: T) => Promise<any>, ok: string | null, done: () =>
 }
 
 /**
- * Complete Your Investment — four steps: About You, Verification, Sign, Fund.
+ * Complete Your Investment - four steps: About You, Verification, Sign, Fund.
  * Every state shown here is derived on the server from authoritative records.
  */
 export function InvestorOnboardingJourney({
@@ -354,7 +354,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
         ) : (
           <p className="text-sm text-muted-foreground">Signed and submitted. Copies are in your Documents.</p>
         )}
-        <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it — this can take a minute.</p>
+        <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it - this can take a minute.</p>
       </CardContent>
     </Card>
   );
@@ -369,7 +369,7 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
     queryFn: () => fundingFn({ data: { onboardingId } }),
     enabled: reveal,
   });
-  const sent = useAction(sentFn, "Thanks — we'll confirm once your transfer is received and matched.", done);
+  const sent = useAction(sentFn, "Thanks - we'll confirm once your transfer is received and matched.", done);
   const f: any = funding.data;
   const step = (d.journey ?? []).find((s: any) => s.key === "fund");
   const amount = d.acceptedAmountCents ?? d.requestedAmountCents;
@@ -390,7 +390,7 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : f?.unlocked ? (
               <div className="space-y-2 rounded-md border p-4 text-sm">
-                <p><strong>Bank:</strong> {f.instructions.bankName ?? "—"}</p>
+                <p><strong>Bank:</strong> {f.instructions.bankName ?? "-"}</p>
                 {f.instructions.details && typeof f.instructions.details === "object"
                   ? Object.entries(f.instructions.details).map(([k, v]) => (
                       <p key={k}><strong>{k.replace(/_/g, " ")}:</strong> {String(v)}</p>

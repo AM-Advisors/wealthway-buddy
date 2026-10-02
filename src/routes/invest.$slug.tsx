@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const SITE = "https://app.harmonious.co";
 
 const money = (cents: number | null | undefined) =>
-  cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 export const Route = createFileRoute("/invest/$slug")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -32,9 +32,9 @@ export const Route = createFileRoute("/invest/$slug")({
     return {
       meta: [
         { name: "robots", content: "noindex, nofollow" },
-        { title: `Invest in ${name} — Harmonious` },
+        { title: `Invest in ${name} - Harmonious` },
         { name: "description", content: description },
-        { property: "og:title", content: `Invest in ${name} — Harmonious` },
+        { property: "og:title", content: `Invest in ${name} - Harmonious` },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: `${SITE}/invest/${params.slug}` },

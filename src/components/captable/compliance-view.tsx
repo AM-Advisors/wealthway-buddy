@@ -46,7 +46,7 @@ const SOURCE_LABEL: Record<string, string> = {
 };
 
 function fmtDateTime(value: string | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("en-US", {
@@ -171,7 +171,7 @@ function Body() {
           <CardDescription>
             Every ownership change, ledger entry and filed document for{" "}
             {workspace?.company?.name ?? "this company"}, in one record. Entries are written as they
-            happen and are never edited or removed — corrections are recorded as new entries.
+            happen and are never edited or removed - corrections are recorded as new entries.
           </CardDescription>
         </CardHeader>
         {summary ? (
@@ -298,13 +298,13 @@ function Body() {
                         <Badge variant="outline">{SOURCE_LABEL[row.source] ?? row.source}</Badge>
                       </TableCell>
                       <TableCell className="font-medium">{row.action.replace(/[._]/g, " ")}</TableCell>
-                      <TableCell>{row.stakeholder ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{row.entityLabel ?? "—"}</TableCell>
+                      <TableCell>{row.stakeholder ?? "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{row.entityLabel ?? "-"}</TableCell>
                       <TableCell className="max-w-[22rem] text-muted-foreground">
-                        {row.detail ?? row.change ?? row.reason ?? "—"}
+                        {row.detail ?? row.change ?? row.reason ?? "-"}
                       </TableCell>
                       <TableCell className="capitalize text-muted-foreground">
-                        {row.status ?? "—"}
+                        {row.status ?? "-"}
                       </TableCell>
                     </TableRow>
                   ))
@@ -338,11 +338,11 @@ function Body() {
                   (data?.documents ?? []).map((doc) => (
                     <TableRow key={doc.id}>
                       <TableCell className="font-medium">{doc.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{doc.docType ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{doc.docType ?? "-"}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {doc.linkedLabel ?? doc.linkedType ?? "—"}
+                        {doc.linkedLabel ?? doc.linkedType ?? "-"}
                       </TableCell>
-                      <TableCell>{doc.stakeholder ?? "—"}</TableCell>
+                      <TableCell>{doc.stakeholder ?? "-"}</TableCell>
                       <TableCell className="capitalize text-muted-foreground">{doc.status}</TableCell>
                       <TableCell className="whitespace-nowrap">{fmtDate(doc.createdAt)}</TableCell>
                     </TableRow>

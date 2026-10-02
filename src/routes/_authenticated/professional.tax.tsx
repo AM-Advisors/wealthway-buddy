@@ -38,7 +38,7 @@ function Tax() {
                 {docs.map((t: any) => (
                   <li key={t.id} className="rounded-md border border-border p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{t.name}</span><span className="text-xs text-muted-foreground">{t.year ?? ""}</span></div>
-                    <p className="mt-1 text-xs text-muted-foreground">{t.client} — {String(t.type).replace(/_/g, " ")}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{t.client} - {String(t.type).replace(/_/g, " ")}</p>
                   </li>
                 ))}
               </ul>
@@ -53,9 +53,9 @@ function Tax() {
 export const Route = createFileRoute("/_authenticated/professional/tax")({
   head: () => ({
     meta: [
-      { title: "Tax — Harmonious professional workspace" },
+      { title: "Tax - Harmonious professional workspace" },
       { name: "description", content: "Delegated 1065s, 1042-Ss, 1099s and prepared returns to prepare and review." },
-      { property: "og:title", content: "Tax — Harmonious professional workspace" },
+      { property: "og:title", content: "Tax - Harmonious professional workspace" },
       { property: "og:description", content: "Prepare and review delegated Fund tax work." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

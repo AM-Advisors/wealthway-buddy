@@ -80,7 +80,7 @@ export function LegalDocumentReadership({ offeringId }: { offeringId: string }) 
                           <span className={r.isTeam ? "" : "font-medium text-foreground"}>
                             {r.name || r.email || "Someone"}
                           </span>
-                          {r.isTeam ? " (your team)" : ""} — first {when(r.firstOpened)}, last{" "}
+                          {r.isTeam ? " (your team)" : ""} - first {when(r.firstOpened)}, last{" "}
                           {when(r.lastOpened)}
                           {r.opens > 0 ? `, opened ${r.opens}×` : ""}
                           {r.downloads > 0 ? `, downloaded ${r.downloads}×` : ""}

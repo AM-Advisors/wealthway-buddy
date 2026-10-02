@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
- * Harmonious CapTable — investor onboarding.
+ * Harmonious CapTable - investor onboarding.
  *
  * Bringing an investor into the portal is four plain steps: put their email on
  * the record, send the invitation, decide what they are allowed to see, then

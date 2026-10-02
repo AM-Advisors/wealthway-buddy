@@ -85,7 +85,7 @@ const reviewSchema = z.object({
   note: z.string().trim().max(2000).optional(),
 });
 
-/** The client's own decision — approve, reject, or ask for changes. */
+/** The client's own decision - approve, reject, or ask for changes. */
 export const reviewPreparedItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => reviewSchema.parse(data))

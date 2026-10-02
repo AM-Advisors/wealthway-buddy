@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const when = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleString("en-US") : "—";
+  value ? new Date(value).toLocaleString("en-US") : "-";
 
 /** Plain-English stage for each payment, so a client can tell at a glance
  *  whether Harmonious is still checking it, approving it, or has sent it. */

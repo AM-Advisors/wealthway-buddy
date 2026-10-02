@@ -40,7 +40,7 @@ export function timelineText(e: TimelineEntry, statusLabel: (s: string) => strin
     case "discrepancy_resolved": text = forManager ? "Detail confirmed" : "Discrepancy resolved"; break;
     default: text = "Formation updated";
   }
-  if (!forManager && e.note) text += ` — ${e.note}`;
+  if (!forManager && e.note) text += ` - ${e.note}`;
   return text;
 }
 

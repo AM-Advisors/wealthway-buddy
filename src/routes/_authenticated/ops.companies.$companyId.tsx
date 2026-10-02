@@ -8,9 +8,9 @@ export const Route = createFileRoute("/_authenticated/ops/companies/$companyId")
   }),
   head: () => ({
     meta: [
-      { title: "Company 360 — Harmonious operations" },
+      { title: "Company 360 - Harmonious operations" },
       { name: "description", content: "One company: cap table, stakeholders, transactions, documents and reports." },
-      { property: "og:title", content: "Company 360 — Harmonious operations" },
+      { property: "og:title", content: "Company 360 - Harmonious operations" },
       { property: "og:description", content: "One company: cap table, stakeholders, transactions, documents and reports." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

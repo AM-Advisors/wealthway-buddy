@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
- * Harmonious CapTable — Phase 3: fundraising.
+ * Harmonious CapTable - Phase 3: fundraising.
  *
  * Priced rounds, SAFEs, convertible notes and direct investments are tracked
  * as commitments. A commitment never changes the official ledger on its own:

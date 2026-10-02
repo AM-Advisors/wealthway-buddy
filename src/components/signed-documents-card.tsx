@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const when = (value: string | null) =>
-  value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
 /** Signed copies for one fund, with their Box filing status. */
 export function SignedDocumentsCard({ offeringId }: { offeringId: string }) {

@@ -54,7 +54,7 @@ const draftInput = z.object({
   reason: z.string().max(500).optional().nullable(),
 });
 
-/** Save Draft — never sends, accepts, signs or funds anything. */
+/** Save Draft - never sends, accepts, signs or funds anything. */
 export const saveInvestorDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => draftInput.parse(d))
@@ -95,7 +95,7 @@ export const saveInvestorDraft = createServerFn({ method: "POST" })
     return { id, capacity };
   });
 
-/** Send Onboarding — reuses the existing invitation engine. */
+/** Send Onboarding - reuses the existing invitation engine. */
 export const sendPreparedInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), draftId: z.string().uuid() }).parse(d))

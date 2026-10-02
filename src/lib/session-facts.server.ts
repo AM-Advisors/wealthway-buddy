@@ -6,7 +6,7 @@
  * Rules:
  *  - facts come only from records someone deliberately created;
  *  - nothing is inferred from the email address, hostname or browser;
- *  - nothing is cached — each request re-reads, so revocation, deactivation
+ *  - nothing is cached - each request re-reads, so revocation, deactivation
  *    and expiry take effect on the very next request.
  */
 import { emptyFacts, type RelationshipFacts } from "@/lib/session-resolution";
@@ -34,7 +34,7 @@ export type DelegationFact = {
   revokedAt: string | null;
   /** status active, not revoked and not past its expiry. */
   current: boolean;
-  /** current AND accepted (or acceptance not required) — usable authority. */
+  /** current AND accepted (or acceptance not required) - usable authority. */
   usable: boolean;
 };
 
@@ -44,7 +44,7 @@ export type StaffFacts = {
   /** Harmonious internal roles only. */
   staffRoles: string[];
   operationsEntry: boolean;
-  /** Granular Operations capabilities — never collapsed into a boolean. */
+  /** Granular Operations capabilities - never collapsed into a boolean. */
   capabilities: OpsCapability[];
 };
 
@@ -93,13 +93,13 @@ export function staffFactsFromRoles(roles: string[]): StaffFacts {
   };
 }
 
-/** Staff facts alone (one query) — for per-request Operations guards. */
+/** Staff facts alone (one query) - for per-request Operations guards. */
 export async function gatherStaffFacts(context: any): Promise<StaffFacts> {
   const { data } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
   return staffFactsFromRoles(((data ?? []) as any[]).map((r) => String(r.role)));
 }
 
-/** Identity alone (one query) — for callers that only need name/email. */
+/** Identity alone (one query) - for callers that only need name/email. */
 export async function gatherPersonFacts(context: any) {
   const { data } = await context.supabase
     .from("profiles")
@@ -245,7 +245,7 @@ export function operationsAccessProjection(s: StaffFacts) {
 /**
  * Professional STANDING (may this person open the professional workspace?) is
  * deliberately separate from AUTHORITY to act for a client (canAct, per
- * resource). Standing = an active firm seat, or a current delegation — current
+ * resource). Standing = an active firm seat, or a current delegation - current
  * includes one still awaiting acceptance, because the delegate must be able to
  * open the workspace to accept it. Such a delegation authorizes nothing: it is
  * not counted in `usableDelegations` and canAct refuses it.

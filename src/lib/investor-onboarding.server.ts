@@ -1,10 +1,10 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 /**
- * Fund Administration Phase B — server-only investor onboarding engine.
+ * Fund Administration Phase B - server-only investor onboarding engine.
  *
  * This is an ORCHESTRATION layer. It owns no compliance truth of its own: it
- * reads the authoritative records already in the platform —
+ * reads the authoritative records already in the platform -
  *
  *   persons                          identity, KYC, AML
  *   investment_profiles              who is investing (individual / LLC / trust / ...)
@@ -778,7 +778,7 @@ async function syncInvitation(row: any) {
     .eq("id", row.invitation_id);
 }
 
-/** "I sent my funds" — informational only; it never makes an investment funded. */
+/** "I sent my funds" - informational only; it never makes an investment funded. */
 export async function investorReportsFundsSent(userId: string, onboardingId: string) {
   const { actor, row } = await assertInvestorOwns(userId, onboardingId);
   if (!row.approved_to_fund_at) forbid("funding has not been unlocked for this investment.");
@@ -910,7 +910,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
 
 // --------------------------------------------------------- funding
 
-/** Approved, versioned banking instructions — released only by Harmonious. */
+/** Approved, versioned banking instructions - released only by Harmonious. */
 export async function fundingInstructions(userId: string, onboardingId: string) {
   const { row, role } = await assertOnboardingAccess(userId, onboardingId);
   if (role === "manager") forbid("fund managers do not receive investor funding instructions.");
@@ -1094,7 +1094,7 @@ export async function reviewDetail(userId: string, onboardingId: string) {
           id: facts.person.id,
           kycStatus: facts.person.kyc_status,
           amlStatus: facts.person.aml_status,
-          // Never the reference or full identifier — last four only.
+          // Never the reference or full identifier - last four only.
           taxIdLast4: facts.person.tax_id_last4,
         }
       : null,
@@ -1363,7 +1363,7 @@ export async function acceptSubscription(
     stage: "accepted",
     accepted_by: actor.userId,
     accepted_at: nowIso(),
-    acceptance_capacity: `${input.signerName} — ${input.capacity}`,
+    acceptance_capacity: `${input.signerName} - ${input.capacity}`,
   });
   await recordEvent({
     onboardingId: row.id,
@@ -1561,7 +1561,7 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
       }),
     );
   }
-  // Invitations nobody has opened yet — shown as "Invited", never as progress.
+  // Invitations nobody has opened yet - shown as "Invited", never as progress.
   let invQuery = db()
     .from("fund_invitations")
     .select("id, offering_id, email, invited_name, intended_amount_cents, status, onboarding_status, created_at")
@@ -1641,7 +1641,7 @@ export async function inviteInvestor(
   return {
     invitationId: data.id as string,
     token: data.token as string,
-    // Derived from the offering's configuration — never chosen at invite time.
+    // Derived from the offering's configuration - never chosen at invite time.
     exemption: ((invitedOffering as any).reg_type ?? null) as string | null,
     link: `/onboard/${data.token}`,
     emailSent: await sendOnboardInvitationEmail(data, invitedOffering, actor.userId),
@@ -1650,7 +1650,7 @@ export async function inviteInvestor(
 
 /**
  * The one onboarding email. Only the opaque invitation reference travels in
- * the link — never KYC, profile, bank or document identifiers.
+ * the link - never KYC, profile, bank or document identifiers.
  */
 export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string) {
   try {
@@ -1788,7 +1788,7 @@ export async function onboardPortalDetail(userId: string, onboardingId: string) 
 /**
  * Start (or resume) the existing Didit verification session for the
  * application behind this investment. Same session, webhook and
- * reconciliation paths — no second verification system.
+ * reconciliation paths - no second verification system.
  */
 export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string, returnPath?: string | null) {
   const { row } = await assertInvestorOwns(userId, onboardingId);
@@ -1924,9 +1924,9 @@ export async function computeReadinessFor(row: any, closeAmountCents?: number | 
 }
 
 /**
- * reconcileInvestmentReadiness — the one canonical, idempotent reconciliation.
+ * reconcileInvestmentReadiness - the one canonical, idempotent reconciliation.
  * Called after a canonical record changes (mutation completion, provider webhook,
- * or an explicitly authorized staff reconciliation) — never by rendering a page.
+ * or an explicitly authorized staff reconciliation) - never by rendering a page.
  * Writes only readiness history (real transitions) and work items.
  */
 export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { actorUserId: string | null; trigger: string }) {

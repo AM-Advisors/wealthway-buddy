@@ -29,7 +29,7 @@ export function comparisonNeedsReview(result: AddressComparison): boolean {
 
 /**
  * Only a material mismatch is conflicting evidence. "Unable to compare" means
- * the comparison could not be settled — it may still need review, but it must
+ * the comparison could not be settled - it may still need review, but it must
  * never be presented as the two addresses disagreeing.
  */
 export function comparisonIsConflict(result: AddressComparison): boolean {

@@ -17,14 +17,14 @@ import {
 
 const money = (cents: number | null | undefined) =>
   cents === null || cents === undefined
-    ? "—"
+    ? "-"
     : `${Number(cents) < 0 ? "−" : ""}$${Math.abs(Number(cents) / 100).toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
 
 const pct = (bps: number | null | undefined) =>
-  bps === null || bps === undefined ? "—" : `${(Number(bps) / 100).toFixed(2)}%`;
+  bps === null || bps === undefined ? "-" : `${(Number(bps) / 100).toFixed(2)}%`;
 
 const label = (value: unknown) => String(value ?? "").replaceAll("_", " ");
 
@@ -47,7 +47,7 @@ function PackageView({ packageId }: { packageId: string }) {
 
   const acknowledge = useMutation({
     mutationFn: async () => record({ data: { packageId, event: "acknowledged" } }),
-    onSuccess: () => toast.success("Thank you — your acknowledgement is recorded"),
+    onSuccess: () => toast.success("Thank you - your acknowledgement is recorded"),
     onError: (error) => toast.error((error as Error)?.message ?? "Could not record that"),
   });
 
@@ -69,7 +69,7 @@ function PackageView({ packageId }: { packageId: string }) {
                   <p className="text-xs text-muted-foreground">{label(key)}</p>
                   <p className="truncate text-sm">
                     {value === null || value === undefined
-                      ? "—"
+                      ? "-"
                       : typeof value === "object"
                         ? JSON.stringify(value)
                         : String(value)}
@@ -166,7 +166,7 @@ export function InvestorReportingCenter() {
                     · MOIC{" "}
                     {item.latestPerformance.moic
                       ? `${Number(item.latestPerformance.moic).toFixed(2)}×`
-                      : "—"}
+                      : "-"}
                   </p>
                 ) : null}
 

@@ -60,12 +60,12 @@ export function CapTableSettings() {
           </CardHeader>
           <CardContent className="grid gap-3 pt-0 text-sm sm:grid-cols-2">
             <Detail label="Legal name" value={company.legalName ?? company.name} />
-            <Detail label="Entity type" value={company.entityType ?? "—"} />
-            <Detail label="Jurisdiction" value={company.jurisdiction ?? "—"} />
+            <Detail label="Entity type" value={company.entityType ?? "-"} />
+            <Detail label="Jurisdiction" value={company.jurisdiction ?? "-"} />
             <Detail label="Incorporated" value={fmtDate(company.incorporationDate)} />
             <Detail label="Authorised shares" value={fmtNumber(company.authorizedShares)} />
-            <Detail label="Par value" value={company.parValue === null ? "—" : String(company.parValue)} />
-            <Detail label="Fiscal year end" value={company.fiscalYearEnd ?? "—"} />
+            <Detail label="Par value" value={company.parValue === null ? "-" : String(company.parValue)} />
+            <Detail label="Fiscal year end" value={company.fiscalYearEnd ?? "-"} />
             <Detail label="Currency" value={company.currency} />
           </CardContent>
         </Card>

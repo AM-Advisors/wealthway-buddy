@@ -16,13 +16,13 @@ import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/i
 export const Route = createFileRoute("/_authenticated/client/invoices")({
   head: () => ({
     meta: [
-      { title: "Your invoices — Harmonious" },
+      { title: "Your invoices - Harmonious" },
       {
         name: "description",
         content:
           "View and pay your Harmonious invoices, including fund wire fees and closing costs, and confirm the transfer you sent.",
       },
-      { property: "og:title", content: "Your invoices — Harmonious" },
+      { property: "og:title", content: "Your invoices - Harmonious" },
       {
         property: "og:description",
         content: "Approve invoices, pay wire fees and closing costs, and confirm your transfer.",
@@ -41,7 +41,7 @@ function ClientInvoicesRoute() {
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -81,7 +81,7 @@ function ClientInvoicesPage() {
     onSuccess: (_r, input: any) => {
       toast.success(
         input.decision === "approved"
-          ? "Thank you — your approval has been recorded."
+          ? "Thank you - your approval has been recorded."
           : "We've recorded your query and the team will be in touch.",
       );
       refresh();
@@ -92,7 +92,7 @@ function ClientInvoicesPage() {
   const confirmPayment = useMutation({
     mutationFn: (input: any) => declare({ data: input }),
     onSuccess: () => {
-      toast.success("Thanks — we'll confirm once the funds arrive.");
+      toast.success("Thanks - we'll confirm once the funds arrive.");
       refresh();
     },
     onError: (e: any) => toast.error(e?.message ?? "That didn't save."),
@@ -214,7 +214,7 @@ function ClientInvoicesPage() {
                       onClick={() => {
                         void printInvoice(inv).then((opened) => {
                           if (!opened) {
-                            toast.error("Your browser blocked the new tab — allow pop-ups and try again.");
+                            toast.error("Your browser blocked the new tab - allow pop-ups and try again.");
                           }
                         });
                       }}
@@ -227,7 +227,7 @@ function ClientInvoicesPage() {
 
                   {inv.status === "issued" && inv.approval_status === "pending" ? (
                     <div className="space-y-2 rounded-md border p-3">
-                      <p className="text-sm font-medium">Step 1 — approve this invoice</p>
+                      <p className="text-sm font-medium">Step 1 - approve this invoice</p>
                       <Label htmlFor={`signer-${inv.id}`}>Type your full name to approve</Label>
                       <Input
                         id={`signer-${inv.id}`}
@@ -276,7 +276,7 @@ function ClientInvoicesPage() {
                   inv.approval_status === "approved" &&
                   !inv.client_payment_declared_at ? (
                     <div className="space-y-3 rounded-md border p-3">
-                      <p className="text-sm font-medium">Step 2 — pay and confirm</p>
+                      <p className="text-sm font-medium">Step 2 - pay and confirm</p>
                       <p className="text-sm text-muted-foreground">
                         Send the payment from your fund's operating account using the remittance
                         details your Harmonious contact provided, then confirm it below so we can

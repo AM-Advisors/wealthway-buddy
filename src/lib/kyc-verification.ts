@@ -688,7 +688,7 @@ export function evaluateHarmoniousDecision(input: HarmoniousInput): HarmoniousDe
     detail: { addressMatch },
   });
 
-  // AML — always kept separate from identity verification --------------------
+  // AML - always kept separate from identity verification --------------------
   let amlStatus = n.aml.status;
   if (amlStatus === "approved" && n.aml.warnings.length) amlStatus = "review";
   checks.push({

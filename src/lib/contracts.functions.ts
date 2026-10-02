@@ -587,7 +587,7 @@ export const requestService = createServerFn({ method: "POST" })
     const { notifyClientAdmins } = await import("@/lib/client-notify.server");
     await notifyClientAdmins(data.clientId, {
       eventKey: `service-request-open:${created.id}`,
-      headline: `Service request pending — ${serviceName}`,
+      headline: `Service request pending - ${serviceName}`,
       intro:
         "a request to add a service to your scope is open with Harmonious. We will review it and come back with a written fee proposal for your signature.",
       details: [
@@ -689,7 +689,7 @@ export const proposeRateToClient = createServerFn({ method: "POST" })
     const { notifyClientAdmins, money } = await import("@/lib/client-notify.server");
     await notifyClientAdmins(data.clientId, {
       eventKey: `rate-proposal:${created.id}`,
-      headline: `Fee proposal for your approval — ${serviceName}`,
+      headline: `Fee proposal for your approval - ${serviceName}`,
       intro:
         "Harmonious has put a written fee in front of you for approval. Nothing is added to your scope and nothing is invoiced until you sign it.",
       details: [
@@ -904,7 +904,7 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
     const { notifyClientAdmins, money } = await import("@/lib/client-notify.server");
     await notifyClientAdmins(request.client_id, {
       eventKey: `service-request-quoted:${data.id}:${data.feeCents}`,
-      headline: `Fee proposal ready — ${quotedService}`,
+      headline: `Fee proposal ready - ${quotedService}`,
       intro:
         "your service request now has a written fee proposal and is pending your signature. Nothing is added to your scope until you sign it.",
       details: [

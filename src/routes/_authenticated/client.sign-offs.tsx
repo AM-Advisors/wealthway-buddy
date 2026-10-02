@@ -7,13 +7,13 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 export const Route = createFileRoute("/_authenticated/client/sign-offs")({
   head: () => ({
     meta: [
-      { title: "Sign-offs — Harmonious" },
+      { title: "Sign-offs - Harmonious" },
       {
         name: "description",
         content:
           "Documents and fee proposals awaiting your signature: policy sign-offs, service requests and amendments.",
       },
-      { property: "og:title", content: "Sign-offs — Harmonious" },
+      { property: "og:title", content: "Sign-offs - Harmonious" },
       {
         property: "og:description",
         content: "Sign policy documents and approve service requests and fee proposals.",

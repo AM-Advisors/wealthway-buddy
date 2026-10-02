@@ -20,7 +20,7 @@ interface InvestorInvitationProps {
   offeringName?: string
   portalUrl?: string
   contactEmail?: string
-  /** Optional onboarding step key — highlights progress and tailors the CTA. */
+  /** Optional onboarding step key - highlights progress and tailors the CTA. */
   currentStep?: string
   ctaUrl?: string
   ctaLabel?: string
@@ -60,12 +60,12 @@ function InvestorInvitation({
   const heading = invitationHeadline(offeringName, currentStep)
   const lead = step
     ? step.lead
-    : `Your investor onboarding for ${offeringName} is ready. Everything happens in your secure portal — you can pause at any point and pick up exactly where you left off.`
+    : `Your investor onboarding for ${offeringName} is ready. Everything happens in your secure portal - you can pause at any point and pick up exactly where you left off.`
 
   return (
     <Html>
       <Head />
-      <Preview>Begin your {offeringName} onboarding — identity, accreditation, documents and funding.</Preview>
+      <Preview>Begin your {offeringName} onboarding - identity, accreditation, documents and funding.</Preview>
       <Body
         style={{
           backgroundColor: '#ffffff',
@@ -196,7 +196,7 @@ function InvestorInvitation({
           <Hr style={{ borderColor: '#e6ecf3', margin: '32px 0 16px' }} />
           <Text style={{ color: '#606060', fontSize: '12px', lineHeight: '18px' }}>
             Questions? Reply to this message or contact us at {contactEmail}. Harmonious will never
-            ask you to send funds to bank details received by email — always confirm wire
+            ask you to send funds to bank details received by email - always confirm wire
             instructions by phone.
           </Text>
           <OpenPixel url={pixelUrl} />

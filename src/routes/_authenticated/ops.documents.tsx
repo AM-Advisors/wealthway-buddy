@@ -15,13 +15,13 @@ import { DriveImportsCard } from "@/components/drive-import";
 export const Route = createFileRoute("/_authenticated/ops/documents")({
   head: () => ({
     meta: [
-      { title: "Documents and signatures — Harmonious operations" },
+      { title: "Documents and signatures - Harmonious operations" },
       {
         name: "description",
         content:
           "Track every agreement out for signature: required signers, capacity, sent, viewed, signed, declined and expired.",
       },
-      { property: "og:title", content: "Documents and signatures — Harmonious operations" },
+      { property: "og:title", content: "Documents and signatures - Harmonious operations" },
       {
         property: "og:description",
         content:

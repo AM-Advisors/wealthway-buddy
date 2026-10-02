@@ -1,5 +1,5 @@
 /**
- * Phase 7 — contacts, deals, campaigns and messaging (pure rules).
+ * Phase 7 - contacts, deals, campaigns and messaging (pure rules).
  *
  * Visibility:
  *  - Super Administrator sees everything.

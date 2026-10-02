@@ -5,12 +5,12 @@ import { InvestorFinancialsPanel } from "@/components/investor-financials-panel"
 export const Route = createFileRoute("/_authenticated/investor-financials")({
   head: () => ({
     meta: [
-      { title: "Fund reports — Harmonious" },
+      { title: "Fund reports - Harmonious" },
       {
         name: "description",
         content: "Financial reports published to you for the funds you are invested in.",
       },
-      { property: "og:title", content: "Fund reports — Harmonious" },
+      { property: "og:title", content: "Fund reports - Harmonious" },
       {
         property: "og:description",
         content: "Published fund financial reports for your investments.",

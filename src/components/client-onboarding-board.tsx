@@ -29,7 +29,7 @@ import {
 } from "@/lib/client-onboarding.functions";
 
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 const roleLabel = (v: string) => CLIENT_CONTACT_ROLES.find((r) => r.value === v)?.label ?? v;
 
 const emptyInvite = { email: "", name: "", role: "client_readonly", canApprove: false, note: "" };
@@ -302,7 +302,7 @@ export function ClientOnboardingBoard() {
                               {i.invite_status === "sent"
                                 ? `Welcome email sent ${when(i.invite_sent_at)}`
                                 : i.invite_status
-                                  ? `Not delivered — ${i.invite_note ?? "the welcome email did not go out"}`
+                                  ? `Not delivered - ${i.invite_note ?? "the welcome email did not go out"}`
                                   : "No welcome email sent"}
                             </span>
                           </span>
@@ -440,7 +440,7 @@ export function ClientOnboardingBoard() {
               ) : (
                 data.activity.map((row: any, index: number) => (
                   <p key={index} className="text-muted-foreground">
-                    {when(row.created_at)} — {row.action}
+                    {when(row.created_at)} - {row.action}
                     {row.target ? ` · ${row.target}` : ""}
                   </p>
                 ))

@@ -543,9 +543,9 @@ export const removeFundAccess = createServerFn({ method: "POST" })
 // ------------------------------------------------ Fund workspace (activation)
 
 function maskEmail(email: string | null): string {
-  if (!email) return "—";
+  if (!email) return "-";
   const [local, domain] = email.split("@");
-  if (!domain) return "—";
+  if (!domain) return "-";
   return `${(local ?? "").slice(0, 1)}•••@${domain}`;
 }
 

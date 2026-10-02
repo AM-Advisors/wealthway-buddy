@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
- * Harmonious CapTable — migration concierge ("have Harmonious do it for me").
+ * Harmonious CapTable - migration concierge ("have Harmonious do it for me").
  *
  * The founder hands their export over, a named specialist picks it up and works
  * it, anything unclear comes back to the founder as a question, and the founder
@@ -751,7 +751,7 @@ export const sendForFounderReview = createServerFn({ method: "POST" })
     await notifyFounder(context, row.company_id as string, {
       headline: "Your cap table is ready for review",
       intro:
-        "We have finished preparing your cap table. Please review it in the portal — nothing is recorded until you approve it.",
+        "We have finished preparing your cap table. Please review it in the portal - nothing is recorded until you approve it.",
       details: [
         { label: "Lines prepared", value: String(summary.lines) },
         { label: "Shares", value: summary.shares.toLocaleString("en-US") },
@@ -824,8 +824,8 @@ function pick(row: Record<string, any>, keys: string[]): string {
 
 /**
  * The migration assistant. A specialist (or a founder's own export handed to
- * us) drops in several files at once — shareholders, grants, rounds and a
- * document list — and each one becomes its own reviewable batch, all grouped
+ * us) drops in several files at once - shareholders, grants, rounds and a
+ * document list - and each one becomes its own reviewable batch, all grouped
  * under a single concierge case.
  *
  * Nothing reaches the live cap table here: the founder still approves the
@@ -944,7 +944,7 @@ export const startMigrationAssistant = createServerFn({ method: "POST" })
 
     if (!created.length) {
       throw new Error(
-        "Add at least one shareholders, grants or rounds file — a document list on its own has nothing to reconcile.",
+        "Add at least one shareholders, grants or rounds file - a document list on its own has nothing to reconcile.",
       );
     }
 

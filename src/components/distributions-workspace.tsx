@@ -39,7 +39,7 @@ import {
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 /** Everything Harmonious needs to move a distribution safely from proposal to posted. */
 export function DistributionsWorkspace() {

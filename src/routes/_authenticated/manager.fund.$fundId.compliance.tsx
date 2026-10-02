@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/compliance")({
   head: () => ({ meta: [
-    { title: "Fund compliance — Harmonious" }, { name: "description", content: "Review fund obligations, investor KYC, AML, accreditation evidence, and exceptions." },
-    { property: "og:title", content: "Fund compliance — Harmonious" }, { property: "og:description", content: "Review fund obligations and investor compliance evidence." },
+    { title: "Fund compliance - Harmonious" }, { name: "description", content: "Review fund obligations, investor KYC, AML, accreditation evidence, and exceptions." },
+    { property: "og:title", content: "Fund compliance - Harmonious" }, { property: "og:description", content: "Review fund obligations and investor compliance evidence." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }), component: Page,
 });

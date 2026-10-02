@@ -22,14 +22,14 @@ import type { NavCheckCode } from "@/lib/nav-model";
 
 const money = (cents: number | null | undefined) =>
   cents === null || cents === undefined
-    ? "—"
+    ? "-"
     : `${cents < 0 ? "−" : ""}$${Math.abs(Number(cents) / 100).toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
 
 const pct = (value: number | null | undefined) =>
-  value === null || value === undefined ? "—" : `${Number(value).toFixed(2)}%`;
+  value === null || value === undefined ? "-" : `${Number(value).toFixed(2)}%`;
 
 const STATUS_TONE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -207,11 +207,11 @@ export function NavBoard({ role }: { role: "harmonious" | "manager" }) {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <CardTitle className="text-base">
-                      {nav.fund_name} — {nav.period_label ?? nav.as_of_date}
+                      {nav.fund_name} - {nav.period_label ?? nav.as_of_date}
                     </CardTitle>
                     <CardDescription>
                       As at {nav.as_of_date} · version {nav.version} · cut off{" "}
-                      {nav.source_cutoff_at ? String(nav.source_cutoff_at).slice(0, 16).replace("T", " ") : "—"}
+                      {nav.source_cutoff_at ? String(nav.source_cutoff_at).slice(0, 16).replace("T", " ") : "-"}
                     </CardDescription>
                   </div>
                   <Badge className={STATUS_TONE[nav.status] ?? ""}>{nav.status}</Badge>

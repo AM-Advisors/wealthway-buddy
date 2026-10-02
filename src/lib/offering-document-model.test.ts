@@ -18,7 +18,7 @@ import {
 const server = readFileSync("src/lib/offering-document-setup.server.ts", "utf8");
 const ui = readFileSync("src/components/offering-documents-setup.tsx", "utf8");
 
-describe("offering documents — versions and approval", () => {
+describe("offering documents - versions and approval", () => {
   it("uploads create new versions and never overwrite", () => {
     expect(server).toMatch(/version = Number\(latest\?\.version \?\? 0\) \+ 1/);
     expect(server).not.toMatch(/offering_document_versions"\)\.delete/);

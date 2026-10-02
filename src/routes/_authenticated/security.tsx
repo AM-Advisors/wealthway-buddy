@@ -15,9 +15,9 @@ import { generateRecoveryCodes, getMySecurity, signOutOtherSessions } from "@/li
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
     meta: [
-      { title: "Account security — Harmonious" },
+      { title: "Account security - Harmonious" },
       { name: "description", content: "Manage passkeys, authenticator apps, recovery codes, devices and sign-in history." },
-      { property: "og:title", content: "Account security — Harmonious" },
+      { property: "og:title", content: "Account security - Harmonious" },
       { property: "og:description", content: "Passkeys, two-step sign-in, devices and sign-in history." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -83,7 +83,7 @@ function SecurityPage() {
     void loadFactors();
   }
   async function remove(id: string) {
-    if (factors.length <= 1) { toast.error("Keep at least one method — two-step sign-in is required."); return; }
+    if (factors.length <= 1) { toast.error("Keep at least one method - two-step sign-in is required."); return; }
     const { error } = await supabase.auth.mfa.unenroll({ factorId: id });
     if (error) { toast.error(error.message); return; }
     toast.success("Method removed");
@@ -166,9 +166,9 @@ function SecurityPage() {
         <CardContent className="space-y-1">
           {(data?.events ?? []).map((e) => (
             <div key={e.id} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm last:border-0">
-              <span>{EVENT_LABELS[e.event_type] ?? e.event_type}{e.action ? ` — ${e.action}` : ""}</span>
+              <span>{EVENT_LABELS[e.event_type] ?? e.event_type}{e.action ? ` - ${e.action}` : ""}</span>
               <span className="text-xs text-muted-foreground">
-                {[e.city, e.country].filter(Boolean).join(", ") || "—"} · {e.ip ?? "—"} · {fmt(e.created_at)}
+                {[e.city, e.country].filter(Boolean).join(", ") || "-"} · {e.ip ?? "-"} · {fmt(e.created_at)}
               </span>
             </div>
           ))}

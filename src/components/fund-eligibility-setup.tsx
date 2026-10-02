@@ -34,7 +34,7 @@ export function FundEligibilitySetup({ fundId }: { fundId: string }) {
 
   const saveM = useMutation({
     mutationFn: () => save({ data: { offeringId: fundId, requirements: (rows ?? []) as any } }),
-    onSuccess: () => { toast.success("Draft saved — another authorized person must approve it"); qc.invalidateQueries({ queryKey: ["fund-eligibility-setup", fundId] }); },
+    onSuccess: () => { toast.success("Draft saved - another authorized person must approve it"); qc.invalidateQueries({ queryKey: ["fund-eligibility-setup", fundId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const approveM = useMutation({

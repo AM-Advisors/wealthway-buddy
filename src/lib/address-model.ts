@@ -3,7 +3,7 @@
  *
  * Google Places finds an address. Google Address Validation normalises and
  * assesses it. Didit proof of address evidences that a person is connected to
- * it. Harmonious — and only Harmonious — decides the compliance state. These
+ * it. Harmonious - and only Harmonious - decides the compliance state. These
  * are four different functions and they stay four different pieces of state.
  */
 
@@ -81,7 +81,7 @@ export const ADDRESS_SOURCE_LABELS: Record<AddressSource, string> = {
 
 /**
  * Authority ranking. A lower-authority source never overwrites a
- * higher-authority record — a difference in formatting is a comparison to
+ * higher-authority record - a difference in formatting is a comparison to
  * review, not a licence to replace a legal or documentary address.
  */
 const SOURCE_AUTHORITY: Record<AddressSource, number> = {
@@ -354,7 +354,7 @@ export function stateForVerdict(
 }
 
 /**
- * True when an address should be picked up again by reconciliation — it was
+ * True when an address should be picked up again by reconciliation - it was
  * saved while the validation provider was unreachable, so it is neither
  * validated nor in review, just waiting.
  */

@@ -345,7 +345,7 @@ describe("publication", () => {
     expect(patch.manager_visible).toBe(true);
   });
 
-  it("never rewrites a published report — a correction supersedes it", async () => {
+  it("never rewrites a published report - a correction supersedes it", async () => {
     await expect(server.advancePerformanceRun(PUBLISHER, RUN_A_PUBLISHED, "approved")).rejects.toThrow();
     await expect(server.revisePerformanceRun(PUBLISHER, RUN_A_PUBLISHED, "short")).rejects.toThrow();
   });

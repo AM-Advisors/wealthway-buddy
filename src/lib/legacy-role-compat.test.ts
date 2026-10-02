@@ -70,7 +70,7 @@ describe("Harmonious timed access", () => {
     expect(authorize(live, perm, { type: "global", id: null }).allowed).toBe(true);
     expect(authorize(dead, perm, { type: "global", id: null }).allowed).toBe(false);
   });
-  it("legacy platform roles stay unchanged — timed access doesn't write user_roles", () => {
+  it("legacy platform roles stay unchanged - timed access doesn't write user_roles", () => {
     const src = readFileSync("src/lib/access-admin.functions.ts", "utf8");
     expect(src).toContain("if (t?.platformRole && !timed)");
     expect(src).toContain("can't be timed");

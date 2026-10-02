@@ -20,13 +20,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/manager/approvals")({
   head: () => ({
     meta: [
-      { title: "Investor Approvals — Harmonious Fund Managers" },
+      { title: "Investor Approvals - Harmonious Fund Managers" },
       {
         name: "description",
         content:
           "Review each investor's completed onboarding file and approve it before funding opens, or send it back with a note.",
       },
-      { property: "og:title", content: "Investor Approvals — Harmonious Fund Managers" },
+      { property: "og:title", content: "Investor Approvals - Harmonious Fund Managers" },
       {
         property: "og:description",
         content: "Approve investor applications before they reach the funding step.",
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/manager/approvals")({
 });
 
 function money(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -105,7 +105,7 @@ function ApprovalsPage() {
       if (vars.decision === "approved") {
         toast.success(
           res?.welcome?.sent
-            ? "Approved — welcome email sent to the investor."
+            ? "Approved - welcome email sent to the investor."
             : "Approved. Funding is now open for this investor.",
         );
       } else if (vars.decision === "declined") {

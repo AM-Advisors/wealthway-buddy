@@ -107,7 +107,7 @@ export const template: TemplateEntry = {
   previewData: {
     eventLabel: 'Bounced',
     recipient: 'operations@harmonious.co',
-    subjectLine: 'Welcome to Harmonious — start your onboarding',
+    subjectLine: 'Welcome to Harmonious - start your onboarding',
     occurredAt: new Date().toISOString(),
     detail: 'The mailbox rejected this message. Future sends to this address are blocked.',
   },

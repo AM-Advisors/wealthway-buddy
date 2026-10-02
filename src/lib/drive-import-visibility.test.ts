@@ -89,7 +89,7 @@ describe("canonical document visibility", () => {
   it("accreditation evidence never reaches managers and enters Needs Review", () => {
     const d = doc({ category: "investor", classification: "investor_general", document_type: "accreditation_evidence", investment_profile_id: "p-ind", review_state: reviewStateFor("investor", "accreditation_evidence") });
     expect(audienceFor(managerA, d)).toBeNull();
-    expect(presentImport(d, "staff", [d], "Accreditation evidence").review).toBe("Evidence received — needs review");
+    expect(presentImport(d, "staff", [d], "Accreditation evidence").review).toBe("Evidence received - needs review");
   });
   it("tax/KYC evidence is still refused by the importer", () => {
     expect(isRestrictedEvidence("W-9 Smith.pdf")).toBe(true);
@@ -99,7 +99,7 @@ describe("canonical document visibility", () => {
 
 describe("presentation, versions and search", () => {
   it("historical executed stays distinct from Box-verified", () => {
-    expect(executionLabel(executionEvidenceFor({ historicalExecuted: true, recordStatus: "historical" }))).toBe("Historical Executed — Administrator Attestation");
+    expect(executionLabel(executionEvidenceFor({ historicalExecuted: true, recordStatus: "historical" }))).toBe("Historical Executed - Administrator Attestation");
     expect(executionLabel("box_verified")).toBeNull();
   });
   it("only staff receive Drive provenance", () => {

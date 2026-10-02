@@ -1,5 +1,5 @@
 /**
- * Fund Investor Onboarding Link — pure rules shared by server and tests.
+ * Fund Investor Onboarding Link - pure rules shared by server and tests.
  * The link is an entry point into the existing onboarding flow, never a
  * credential: it names one Fund/Offering and grants nothing on its own.
  */

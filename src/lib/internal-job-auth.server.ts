@@ -3,7 +3,7 @@
  *
  * Internal jobs (cron runs, drains, retries) are not user traffic: they must
  * present a dedicated server-side shared secret before any privileged work
- * — service-role database access, provider calls, notifications — happens.
+ * - service-role database access, provider calls, notifications - happens.
  *
  * Rules enforced here:
  *  - The secret lives only in server environment configuration (CRON_SECRET,
@@ -71,7 +71,7 @@ export function isInternalJobRequest(request: Request): boolean {
   return timingSafeEqualStrings(provided, expected);
 }
 
-/** Generic rejection — reveals nothing about the expected credential. */
+/** Generic rejection - reveals nothing about the expected credential. */
 export function internalJobUnauthorized(): Response {
   return new Response("unauthorized", {
     status: 401,

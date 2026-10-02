@@ -2,7 +2,7 @@
  * Contract coverage, related-document selection, pricing input normalisation,
  * the September 2026 standard package definition and Harmonious staff RBAC.
  *
- * Pure rules only — no I/O. Server functions call these; the UI mirrors them.
+ * Pure rules only - no I/O. Server functions call these; the UI mirrors them.
  * Nothing here creates, executes or rewrites a contract, SOW or Fund.
  */
 import { z } from "zod";
@@ -40,7 +40,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function docStatusLabel(d: DocLite) {
-  return STATUS_LABEL[d.review_status ?? ""] ?? (d.review_status ? d.review_status.replace(/_/g, " ") : "—");
+  return STATUS_LABEL[d.review_status ?? ""] ?? (d.review_status ? d.review_status.replace(/_/g, " ") : "-");
 }
 
 function fmtDate(iso: string | null | undefined) {
@@ -50,13 +50,13 @@ function fmtDate(iso: string | null | undefined) {
   return `Effective ${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
 }
 
-/** "Master Service Agreement — Effective Sep 1, 2026 — Active · v2" */
+/** "Master Service Agreement - Effective Sep 1, 2026 - Active · v2" */
 export function docLabel(d: DocLite) {
   const type = DOC_TYPE_LABEL[d.doc_type] ?? d.doc_type;
   const name = d.title && d.title.trim() ? d.title.trim() : type;
   const head = name.toLowerCase().includes(type.toLowerCase()) ? name : `${name} (${type})`;
   const v = d.version && d.version > 1 ? ` · v${d.version}` : "";
-  return `${head} — ${fmtDate(d.effective_date)} — ${docStatusLabel(d)}${v}`;
+  return `${head} - ${fmtDate(d.effective_date)} - ${docStatusLabel(d)}${v}`;
 }
 
 /* ================================================== relationship types */
@@ -87,7 +87,7 @@ export type RelatedOption = { id: string; label: string; doc: DocLite; suggested
  * Related-document options for the document currently being viewed.
  * Excludes the current document and superseded/failed documents. Preselects
  * only when exactly one valid, currently-active candidate matches the chosen
- * relationship's expected counterparty type — never guesses otherwise.
+ * relationship's expected counterparty type - never guesses otherwise.
  */
 export function relatedDocumentOptions(current: DocLite, docs: readonly DocLite[], relationshipType: string) {
   const def = EXTENDED_RELATIONSHIP_TYPES.find((r) => r.value === relationshipType);
@@ -107,9 +107,9 @@ export function relatedDocumentOptions(current: DocLite, docs: readonly DocLite[
     hint: !expected
       ? null
       : activeTyped.length === 0
-        ? "No active document of the expected type — choose carefully."
+        ? "No active document of the expected type - choose carefully."
         : activeTyped.length > 1
-          ? "More than one possible agreement — choose the one this relates to."
+          ? "More than one possible agreement - choose the one this relates to."
           : null,
   };
 }
@@ -150,7 +150,7 @@ export const pricingNeedsAmount = (m: string) => !!PRICING_MODELS.find((x) => x.
 export const PRICE_INPUT_MESSAGE = "Enter a valid service price or select another pricing method.";
 
 /**
- * "$7,500.00" → 750000. Returns null for blank or malformed input — never NaN.
+ * "$7,500.00" → 750000. Returns null for blank or malformed input - never NaN.
  * Accepts $, commas, spaces and up to two decimals; rejects negatives and
  * anything else (e.g. "7.5.0", "abc", "1e5").
  */
@@ -274,9 +274,9 @@ export type FundCoverageStatus =
 
 export const COVERAGE_LABEL: Record<FundCoverageStatus, string> = {
   covered: "Covered",
-  covered_client_wide: "Covered — Client-wide SOW",
-  msa_only: "MSA only — Review required",
-  not_contracted: "No SOW — Not yet contracted",
+  covered_client_wide: "Covered - Client-wide SOW",
+  msa_only: "MSA only - Review required",
+  not_contracted: "No SOW - Not yet contracted",
   sow_required: "SOW required",
   needs_review: "Contract review required",
   no_governing_agreement: "No governing agreement",
@@ -304,11 +304,11 @@ export function resolveFundCoverage(input: {
   const explicit = executed.filter((s) => sowCoversFund(s, input.offeringId));
   if (explicit.length === 1) {
     const s = explicit[0]!;
-    return { status: "covered" as const, label: `Covered — ${s.title}${s.template_version ? ` v${s.template_version}` : ""}`, sows: [s], msa: input.governingMsa };
+    return { status: "covered" as const, label: `Covered - ${s.title}${s.template_version ? ` v${s.template_version}` : ""}`, sows: [s], msa: input.governingMsa };
   }
-  if (explicit.length > 1) return { status: "needs_review" as const, label: "Contract review required — more than one SOW lists this Fund", sows: explicit, msa: input.governingMsa };
+  if (explicit.length > 1) return { status: "needs_review" as const, label: "Contract review required - more than one SOW lists this Fund", sows: explicit, msa: input.governingMsa };
   const clientWide = executed.filter((s) => s.fund_scope === "client_wide");
-  if (clientWide.length === 1) return { status: "covered_client_wide" as const, label: `Covered — Client-wide SOW (${clientWide[0]!.title})`, sows: clientWide, msa: input.governingMsa };
+  if (clientWide.length === 1) return { status: "covered_client_wide" as const, label: `Covered - Client-wide SOW (${clientWide[0]!.title})`, sows: clientWide, msa: input.governingMsa };
   if (clientWide.length > 1) return { status: "needs_review" as const, label: COVERAGE_LABEL.needs_review, sows: clientWide, msa: input.governingMsa };
   // Executed SOWs exist but their Fund scope doesn't list this Fund, or is unknown:
   // a person decides whether the Fund can be associated under the approved scope.
@@ -340,10 +340,10 @@ export function resolveServiceCoverage(selected: readonly string[], coveringSows
     amendmentNeeded: status === "partially_covered",
     message:
       status === "already_contracted"
-        ? "Already contracted — no new SOW."
+        ? "Already contracted - no new SOW."
         : status === "partially_covered"
-          ? "Partially covered — an amendment may be needed for the uncovered services."
-          : "Not covered — draft a new SOW or amendment only if you choose to proceed.",
+          ? "Partially covered - an amendment may be needed for the uncovered services."
+          : "Not covered - draft a new SOW or amendment only if you choose to proceed.",
   };
 }
 
@@ -351,13 +351,13 @@ export function resolveServiceCoverage(selected: readonly string[], coveringSows
 
 export const SEPT_2026_PACKAGE = {
   key: "harmonious_standard_2026_09",
-  title: "Harmonious Master Service Agreement — September 2026",
+  title: "Harmonious Master Service Agreement - September 2026",
   status: "proposed" as const,
   components: [
     { key: "msa", kind: "msa", title: "Master Service Agreement", level: "client" },
     { key: "spv_sow", kind: "sow", title: "SPV Services Statement of Work", level: "engagement" },
-    { key: "appendix_a", kind: "appendix", title: "Appendix A — Fund Administration", level: "engagement", partOf: "spv_sow" },
-    { key: "exhibit_a", kind: "fee_schedule", title: "Exhibit A — Fees and Expenses", level: "engagement", partOf: "spv_sow" },
+    { key: "appendix_a", kind: "appendix", title: "Appendix A - Fund Administration", level: "engagement", partOf: "spv_sow" },
+    { key: "exhibit_a", kind: "fee_schedule", title: "Exhibit A - Fees and Expenses", level: "engagement", partOf: "spv_sow" },
   ],
   /** Base SPV fee, tiered by capital raised (from the addendum; confirm against the signed PDF). */
   spvBaseFeeTiers: [

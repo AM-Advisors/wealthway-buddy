@@ -1,7 +1,7 @@
 import { canonicalExecutionStatus, type CanonicalExecutionStatus } from "@/lib/document-execution-status";
 /**
  * Pure rules for the Box-connected signing experience. No database, no Box
- * calls — everything here is decidable from values, so it can be tested
+ * calls - everything here is decidable from values, so it can be tested
  * directly and reused by the server, the investor app and Operations.
  *
  * Box remains the authoritative repository and the signing ceremony. These

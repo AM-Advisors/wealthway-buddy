@@ -5,13 +5,13 @@ import { OnboardingProgressBoard } from "@/components/onboarding-progress-board"
 export const Route = createFileRoute("/_authenticated/admin/onboarding-progress")({
   head: () => ({
     meta: [
-      { title: "Onboarding progress — Harmonious admin" },
+      { title: "Onboarding progress - Harmonious admin" },
       {
         name: "description",
         content:
           "Track every client's sign-in, document sign-off, fund details and invoice status, and flag the engagements that have gone quiet.",
       },
-      { property: "og:title", content: "Onboarding progress — Harmonious admin" },
+      { property: "og:title", content: "Onboarding progress - Harmonious admin" },
       {
         property: "og:description",
         content: "Stage-by-stage onboarding progress for every Harmonious client.",

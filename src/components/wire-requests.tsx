@@ -127,11 +127,11 @@ export function WireRequestForm() {
               onChange={(e) => setApplicationId(e.target.value)}
               disabled={!offeringId}
             >
-              <option value="">Fund level — no single investor</option>
+              <option value="">Fund level - no single investor</option>
               {((investorData?.investors ?? []) as any[]).map((i) => (
                 <option key={i.application_id} value={i.application_id}>
                   {i.name}
-                  {i.commitment_cents ? ` — ${money(i.commitment_cents)}` : ""}
+                  {i.commitment_cents ? ` - ${money(i.commitment_cents)}` : ""}
                 </option>
               ))}
             </select>
@@ -248,7 +248,7 @@ export function WireRequestQueue({ compact = false }: { compact?: boolean }) {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="space-y-0.5">
                 <p className="font-medium">
-                  {money(r.amount_cents)} — {r.fund_name}
+                  {money(r.amount_cents)} - {r.fund_name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {r.investor_name ? `For ${r.investor_name}. ` : "Fund level. "}

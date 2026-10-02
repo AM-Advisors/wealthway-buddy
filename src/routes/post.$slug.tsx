@@ -15,7 +15,7 @@ export const Route = createFileRoute("/post/$slug")({
     return { article };
   },
   head: ({ loaderData, params }) => {
-    if (!loaderData) return { meta: [{ title: "Article not found — Harmonious" }, { name: "robots", content: "noindex" }] };
+    if (!loaderData) return { meta: [{ title: "Article not found - Harmonious" }, { name: "robots", content: "noindex" }] };
     const a = loaderData.article;
     
     return marketingHead({

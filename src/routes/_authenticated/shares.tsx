@@ -8,13 +8,13 @@ import { getMyShares } from "@/lib/cap-certificates.functions";
 export const Route = createFileRoute("/_authenticated/shares")({
   head: () => ({
     meta: [
-      { title: "My shares — Harmonious" },
+      { title: "My shares - Harmonious" },
       {
         name: "description",
         content:
           "View the shares you hold and download your share certificates from the company's register on Harmonious.",
       },
-      { property: "og:title", content: "My shares — Harmonious" },
+      { property: "og:title", content: "My shares - Harmonious" },
       {
         property: "og:description",
         content: "Your units held, certificates and issue dates in one place.",

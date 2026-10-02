@@ -11,13 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/admin/funding")({
   head: () => ({
     meta: [
-      { title: "Funding Dashboard — Harmonious Admin" },
+      { title: "Funding Dashboard - Harmonious Admin" },
       {
         name: "description",
         content:
           "Live funding snapshot for every Harmonious fund: capital raised, commitments in progress and progress toward the target raise.",
       },
-      { property: "og:title", content: "Funding Dashboard — Harmonious Admin" },
+      { property: "og:title", content: "Funding Dashboard - Harmonious Admin" },
       {
         property: "og:description",
         content: "Per-fund raised, in-progress applications and target-raise progress.",
@@ -30,12 +30,12 @@ export const Route = createFileRoute("/_authenticated/admin/funding")({
 });
 
 function money(cents?: number | null) {
-  if (!cents) return "—";
+  if (!cents) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
 function pct(value: number | null) {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "-";
   return `${value}%`;
 }
 

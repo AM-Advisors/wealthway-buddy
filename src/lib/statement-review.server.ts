@@ -3,7 +3,7 @@
  * financial review memos. Statements are drafted automatically at closing;
  * a Harmonious team member other than the producer approves or returns each
  * one. Investors only ever see approved statements (RLS enforces it too).
- * Emails go out only when staff press "send notice" — never automatically.
+ * Emails go out only when staff press "send notice" - never automatically.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { assertStaff, onboardingActor } from "@/lib/investor-onboarding.server";

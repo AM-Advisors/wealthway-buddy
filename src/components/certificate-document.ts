@@ -10,15 +10,15 @@ const day = (value: string | null | undefined) =>
         month: "long",
         day: "numeric",
       })
-    : "—";
+    : "-";
 
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const qty = (value: number | null | undefined) =>
-  typeof value === "number" ? value.toLocaleString("en-US", { maximumFractionDigits: 4 }) : "—";
+  typeof value === "number" ? value.toLocaleString("en-US", { maximumFractionDigits: 4 }) : "-";
 
 export function certificateFileName(certificate: any) {
   const holder = String(certificate?.snapshot?.holderName ?? "holder").replace(
@@ -33,32 +33,32 @@ export function certificatePdfSpec(certificate: any): PdfDocSpec {
 
   const statusNote =
     certificate?.status === "issued"
-      ? `Signed by ${certificate?.signer_name ?? "—"}${
+      ? `Signed by ${certificate?.signer_name ?? "-"}${
           certificate?.signer_title ? `, ${certificate.signer_title}` : ""
         } on ${day(certificate?.signed_at)}.`
       : certificate?.status === "cancelled" || certificate?.status === "replaced"
         ? `This certificate was ${certificate.status} on ${day(certificate?.cancelled_at)}${
-            certificate?.cancelled_reason ? ` — ${certificate.cancelled_reason}` : ""
+            certificate?.cancelled_reason ? ` - ${certificate.cancelled_reason}` : ""
           }.`
-        : "Draft — not yet signed by the company signatory.";
+        : "Draft - not yet signed by the company signatory.";
 
   return {
     kicker: "Share certificate",
     title: String(s.companyName ?? "Share certificate"),
-    subtitle: `Certificate ${certificate?.certificate_no ?? "—"}`,
+    subtitle: `Certificate ${certificate?.certificate_no ?? "-"}`,
     badge: String(certificate?.status ?? ""),
     sections: [
       {
         heading: "Holding",
         rows: [
-          { label: "Certificate number", value: String(certificate?.certificate_no ?? "—") },
-          { label: "Holder", value: String(s.holderName ?? "—") },
-          { label: "Security", value: String(s.securityType ?? "—") },
-          { label: "Class", value: String(s.shareClass || "—") },
+          { label: "Certificate number", value: String(certificate?.certificate_no ?? "-") },
+          { label: "Holder", value: String(s.holderName ?? "-") },
+          { label: "Security", value: String(s.securityType ?? "-") },
+          { label: "Class", value: String(s.shareClass || "-") },
           { label: "Units held", value: qty(s.quantity) },
           { label: "Price per unit", value: money(s.pricePerShareCents) },
           { label: "Issued on", value: day(s.issuedOn) },
-          { label: "Verification code", value: String(certificate?.verification_code ?? "—") },
+          { label: "Verification code", value: String(certificate?.verification_code ?? "-") },
         ],
       },
       { heading: "Status", text: statusNote },

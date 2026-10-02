@@ -16,13 +16,13 @@ export { prettyStatus, statusTone };
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
-      { title: "Compliance Review Queue — Harmonious Admin" },
+      { title: "Compliance Review Queue - Harmonious Admin" },
       {
         name: "description",
         content:
           "Review investor applications: KYC, AML screening, accreditation evidence, signed fund documents and funding status.",
       },
-      { property: "og:title", content: "Compliance Review Queue — Harmonious Admin" },
+      { property: "og:title", content: "Compliance Review Queue - Harmonious Admin" },
       {
         property: "og:description",
         content: "Internal console for reviewing and approving investor onboarding applications.",

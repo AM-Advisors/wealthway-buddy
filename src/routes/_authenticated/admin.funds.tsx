@@ -34,13 +34,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/admin/funds")({
   head: () => ({
     meta: [
-      { title: "Fund Setup — Harmonious Admin" },
+      { title: "Fund Setup - Harmonious Admin" },
       {
         name: "description",
         content:
           "Configure each Harmonious fund: Reg D 506(b) or 506(c), subscription documents and wire instructions.",
       },
-      { property: "og:title", content: "Fund Setup — Harmonious Admin" },
+      { property: "og:title", content: "Fund Setup - Harmonious Admin" },
       {
         property: "og:description",
         content: "Per-fund paperwork, wire details and exemption type for investor onboarding.",
@@ -129,7 +129,7 @@ const blankDoc = (): DocForm => ({
 });
 
 function money(cents?: number | null) {
-  if (!cents) return "—";
+  if (!cents) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -501,7 +501,7 @@ function FundsPage() {
                                     : "admin"
                             }`,
                         )
-                        .join(" · ") || "—"}
+                        .join(" · ") || "-"}
                     </p>
                   ) : null}
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -576,7 +576,7 @@ function FundsPage() {
 
                 {(o.documents ?? []).length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No paperwork yet — investors will have nothing to review or sign for this fund.
+                    No paperwork yet - investors will have nothing to review or sign for this fund.
                   </p>
                 )}
 
@@ -800,7 +800,7 @@ function ChangeHistory({ offeringId, documents }: { offeringId: string; document
                 {e.changes.map((c, i) => (
                   <p key={`${e.id}-${i}`} className="text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">{FIELD_LABELS[c.field] ?? c.field}</span>:{" "}
-                    {c.from ?? "—"} → {c.to ?? "—"}
+                    {c.from ?? "-"} → {c.to ?? "-"}
                   </p>
                 ))}
                 {e.actor_email && (

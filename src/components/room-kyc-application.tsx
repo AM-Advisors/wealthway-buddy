@@ -150,7 +150,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
   const submitMutation = useMutation({
     mutationFn: () => submitAll({ data: { offering_id: offeringId } }),
     onSuccess: () => {
-      toast.success("Application sent — the fund team will review it.");
+      toast.success("Application sent - the fund team will review it.");
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["step-rail", offeringId] });
       queryClient.invalidateQueries({ queryKey: ["diligence-activity", offeringId] });
@@ -231,7 +231,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
         <CardContent className="space-y-3 text-sm">
           {bothApproved ? (
             <p className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-emerald-900">
-              You are approved. The funding step is open — you can send your wire or set up a debit.
+              You are approved. The funding step is open - you can send your wire or set up a debit.
             </p>
           ) : inReview ? (
             <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
@@ -333,7 +333,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle className="text-base">2. Your documents</CardTitle>
           <CardDescription>
-            A government ID and something showing your home address dated in the last three months — a utility
+            A government ID and something showing your home address dated in the last three months - a utility
             bill or bank statement works.
           </CardDescription>
         </CardHeader>

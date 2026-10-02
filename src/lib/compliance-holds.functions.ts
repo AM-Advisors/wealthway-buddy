@@ -181,7 +181,7 @@ export const placeHold = createServerFn({ method: "POST" })
       offering_id: data.offeringId ?? null,
       area: "compliance hold",
       action: "placed",
-      target: `${data.scope} — ${data.reason}`,
+      target: `${data.scope} - ${data.reason}`,
       new_value: { scope: data.scope, reason: data.reason } as any,
       source: "web",
     });
@@ -225,7 +225,7 @@ export const clearHold = createServerFn({ method: "POST" })
       offering_id: hold.offering_id,
       area: "compliance hold",
       action: "cleared",
-      target: `${hold.scope} — ${hold.reason}`,
+      target: `${hold.scope} - ${hold.reason}`,
       previous_value: { status: "active" } as any,
       new_value: { status: "cleared", note: data.note } as any,
       source: "web",

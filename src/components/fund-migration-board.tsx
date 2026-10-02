@@ -411,7 +411,7 @@ export function FundMigrationBoard({ offeringId }: { offeringId: string }) {
                 {rows.map((r) => (
                   <tr key={r.id} className="border-t align-top">
                     <td className="px-3 py-2">
-                      <span className="block">{r.full_name || "—"}</span>
+                      <span className="block">{r.full_name || "-"}</span>
                       <span className="block text-xs text-muted-foreground">{r.email || "No email"}</span>
                       {r.error_text && (
                         <span className="mt-1 block text-xs text-destructive">{r.error_text}</span>

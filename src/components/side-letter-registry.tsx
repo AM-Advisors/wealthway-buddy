@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const catLabel = (k: string) => TERM_CATEGORIES.find((c) => c.key === k)?.label ?? k;
-const scopeLabel = (k: string | null) => MFN_SCOPES.find((s) => s.key === k)?.label ?? "—";
+const scopeLabel = (k: string | null) => MFN_SCOPES.find((s) => s.key === k)?.label ?? "-";
 const expiryBadge: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   active: { label: "Active", variant: "default" },
   expiring: { label: "Expiring within 60 days", variant: "secondary" },
@@ -181,7 +181,7 @@ export function SideLetterRegistry({ fundId }: { fundId: string }) {
               letter={letterById.get(openId)!}
               events={d.events.filter((e) => e.sideLetterId === openId)}
               reviews={d.mfnReviews.filter((r) => r.holderId === openId || r.sourceId === openId)}
-              labelOf={(id) => letterById.get(id)?.snapshot.investorLabel ?? "—"}
+              labelOf={(id) => letterById.get(id)?.snapshot.investorLabel ?? "-"}
             />
           ) : null}
         </CardContent>
@@ -232,8 +232,8 @@ export function SideLetterRegistry({ fundId }: { fundId: string }) {
             return (
               <MfnRow
                 key={`${m.sourceId}-${m.termId}-${m.holderId}`}
-                holder={letterById.get(m.holderId)?.snapshot.investorLabel ?? "—"}
-                source={src?.snapshot.investorLabel ?? "—"}
+                holder={letterById.get(m.holderId)?.snapshot.investorLabel ?? "-"}
+                source={src?.snapshot.investorLabel ?? "-"}
                 term={term}
                 canDecide={canMfn}
                 busy={mfnM.isPending}
@@ -263,11 +263,11 @@ function LetterDetail({
     <div className="mt-4 rounded-md border p-4 space-y-3 text-sm">
       <div className="grid gap-2 sm:grid-cols-3">
         <div><span className="text-muted-foreground">Version</span><div>{letter.version}</div></div>
-        <div><span className="text-muted-foreground">Effective</span><div>{s.effectiveDate ?? "—"}</div></div>
+        <div><span className="text-muted-foreground">Effective</span><div>{s.effectiveDate ?? "-"}</div></div>
         <div><span className="text-muted-foreground">Expiry</span><div>{s.expiryDate ?? "None"}</div></div>
         <div><span className="text-muted-foreground">MFN</span><div>{s.mfnEnabled ? scopeLabel(s.mfnScope) : "No"}</div></div>
-        <div><span className="text-muted-foreground">Signed document</span><div>{s.documentReference ?? "—"}</div></div>
-        <div><span className="text-muted-foreground">Renewal</span><div>{s.renewalNote ?? "—"}</div></div>
+        <div><span className="text-muted-foreground">Signed document</span><div>{s.documentReference ?? "-"}</div></div>
+        <div><span className="text-muted-foreground">Renewal</span><div>{s.renewalNote ?? "-"}</div></div>
       </div>
       <div>
         <div className="font-medium mb-1">Terms</div>
@@ -277,7 +277,7 @@ function LetterDetail({
             <li key={t.id}>
               <Badge variant="outline" className="mr-2">{catLabel(t.category)}</Badge>
               {t.description}
-              {t.value ? <span className="text-muted-foreground"> — {t.value}</span> : null}
+              {t.value ? <span className="text-muted-foreground"> - {t.value}</span> : null}
               {t.applicability ? <span className="text-muted-foreground"> ({t.applicability})</span> : null}
             </li>
           ))}
@@ -289,7 +289,7 @@ function LetterDetail({
           <ul className="space-y-1">
             {reviews.map((r) => (
               <li key={r.id}>
-                {labelOf(r.holderId)} ← {labelOf(r.sourceId)}: <span className="capitalize">{r.decision.replace("_", " ")}</span> — {r.reason}
+                {labelOf(r.holderId)} ← {labelOf(r.sourceId)}: <span className="capitalize">{r.decision.replace("_", " ")}</span> - {r.reason}
               </li>
             ))}
           </ul>
@@ -300,7 +300,7 @@ function LetterDetail({
         <ul className="space-y-1 text-muted-foreground">
           {events.map((e) => (
             <li key={e.id}>
-              {new Date(e.createdAt).toLocaleString()} — {e.event.replace(/_/g, " ")}
+              {new Date(e.createdAt).toLocaleString()} - {e.event.replace(/_/g, " ")}
               {e.reason ? `: ${e.reason}` : ""}
             </li>
           ))}
@@ -393,7 +393,7 @@ function DraftForm({
                 >
                   <option value="none">No MFN</option>
                   {MFN_SCOPES.map((m) => (
-                    <option key={m.key} value={m.key}>MFN — {m.label}</option>
+                    <option key={m.key} value={m.key}>MFN - {m.label}</option>
                   ))}
                 </select>
               </div>
@@ -470,7 +470,7 @@ function PendingRow({
         <ul className="text-xs space-y-0.5">
           {r.after.terms.map((t) => {
             const k = `${t.category}|${t.description}|${t.value ?? ""}`;
-            return <li key={t.id}>{beforeTerms.has(k) ? "•" : "+"} {catLabel(t.category)}: {t.description}{t.value ? ` — ${t.value}` : ""}</li>;
+            return <li key={t.id}>{beforeTerms.has(k) ? "•" : "+"} {catLabel(t.category)}: {t.description}{t.value ? ` - ${t.value}` : ""}</li>;
           })}
           {(r.before?.terms ?? []).filter((t) => !afterTerms.has(`${t.category}|${t.description}|${t.value ?? ""}`)).map((t) => (
             <li key={t.id} className="text-destructive">− {catLabel(t.category)}: {t.description}</li>
@@ -517,7 +517,7 @@ function MfnRow({
     <div className="rounded-md border p-3 text-sm space-y-2">
       <div>
         <span className="font-medium">{holder}</span> may be entitled to{" "}
-        <strong>{term ? `${catLabel(term.category)}: ${term.description}${term.value ? ` — ${term.value}` : ""}` : "a term"}</strong> granted to {source}.
+        <strong>{term ? `${catLabel(term.category)}: ${term.description}${term.value ? ` - ${term.value}` : ""}` : "a term"}</strong> granted to {source}.
       </div>
       {canDecide ? (
         <div className="flex flex-wrap items-center gap-2">

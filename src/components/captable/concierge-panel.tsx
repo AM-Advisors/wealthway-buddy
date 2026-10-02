@@ -117,7 +117,7 @@ export function ConciergeHandoverDialog({
               checked={urgent}
               onChange={(event) => setUrgent(event.target.checked)}
             />
-            <span>This is time sensitive — we have a round or a closing coming up.</span>
+            <span>This is time sensitive - we have a round or a closing coming up.</span>
           </label>
         </div>
         <DialogFooter>
@@ -162,7 +162,7 @@ export function ConciergePanel({
   const answerer = useMutation({
     mutationFn: (input: { exceptionId: string; response: string }) => answer({ data: input }),
     onSuccess: () => {
-      toast.success("Thank you — sent to your specialist.");
+      toast.success("Thank you - sent to your specialist.");
       refresh();
     },
     onError: (err: unknown) =>
@@ -308,7 +308,7 @@ export function ConciergePanel({
         {kase.reviewStatus === "changes_requested" ? (
           <p className="text-sm text-muted-foreground">
             Sent back on {fmtDate(kase.reviewedAt)}
-            {kase.reviewNote ? ` — “${kase.reviewNote}”` : ""}. We are making those changes.
+            {kase.reviewNote ? ` - “${kase.reviewNote}”` : ""}. We are making those changes.
           </p>
         ) : null}
         {kase.recordedAt ? (

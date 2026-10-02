@@ -14,8 +14,8 @@ import {
 
 /**
  * The conditions from the client's statement of work for one fund, what each
- * one currently looks like, and — for the Harmonious team with contract
- * authority — the record needed to clear one or accept an added fee.
+ * one currently looks like, and - for the Harmonious team with contract
+ * authority - the record needed to clear one or accept an added fee.
  */
 export function FundConditionsPanel({ offeringId }: { offeringId: string }) {
   const load = useServerFn(getFundConditions);
@@ -126,7 +126,7 @@ export function FundConditionsPanel({ offeringId }: { offeringId: string }) {
               {finding.clearedAt ? (
                 <p className="mt-1 text-xs text-muted-foreground">
                   Cleared by Harmonious on {new Date(finding.clearedAt).toLocaleDateString()}
-                  {finding.clearedReason ? ` — ${finding.clearedReason}` : ""}
+                  {finding.clearedReason ? ` - ${finding.clearedReason}` : ""}
                 </p>
               ) : null}
             </div>

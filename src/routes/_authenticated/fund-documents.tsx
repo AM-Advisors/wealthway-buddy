@@ -15,13 +15,13 @@ import { getOfferingDocumentFileUrl } from "@/lib/offering-files.functions";
 export const Route = createFileRoute("/_authenticated/fund-documents")({
   head: () => ({
     meta: [
-      { title: "Fund Legal Documents — Harmonious Investor Portal" },
+      { title: "Fund Legal Documents - Harmonious Investor Portal" },
       {
         name: "description",
         content:
           "Read the partnership, subscription and offering documents for your fund, and send back your own paperwork, before you confirm a commitment.",
       },
-      { property: "og:title", content: "Fund Legal Documents — Harmonious Investor Portal" },
+      { property: "og:title", content: "Fund Legal Documents - Harmonious Investor Portal" },
       {
         property: "og:description",
         content: "Every legal document for your fund in one place, before you commit capital.",

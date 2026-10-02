@@ -40,13 +40,13 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/services")({
   head: () => ({
     meta: [
-      { title: "Services administration — Harmonious" },
+      { title: "Services administration - Harmonious" },
       {
         name: "description",
         content:
           "Manage the Harmonious service catalogue, packages, standard pricing and the queue of client requests.",
       },
-      { property: "og:title", content: "Services administration — Harmonious" },
+      { property: "og:title", content: "Services administration - Harmonious" },
       {
         property: "og:description",
         content: "Service catalogue, packages, pricing and client requests.",
@@ -159,7 +159,7 @@ function ServicesAdmin() {
           <h1 className="text-3xl">Services administration</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             The catalogue, packages and pricing behind every Harmonious engagement. New services are
-            configured here — no rebuild needed.
+            configured here - no rebuild needed.
           </p>
         </div>
         <Button asChild size="sm" variant="outline">
@@ -741,7 +741,7 @@ function RequestsTab({ requests, onSaved }: { requests: any[]; onSaved: () => vo
           <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
             <div>
               <CardTitle className="text-base">
-                {intentLabel(r.intent)} — {r.clientName}
+                {intentLabel(r.intent)} - {r.clientName}
               </CardTitle>
               <CardDescription>
                 {r.entityName ?? "No specific entity"} ·{" "}

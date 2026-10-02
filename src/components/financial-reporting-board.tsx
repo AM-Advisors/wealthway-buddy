@@ -27,7 +27,7 @@ import {
 
 const money = (cents: number | null | undefined) =>
   cents === null || cents === undefined
-    ? "—"
+    ? "-"
     : `${Number(cents) < 0 ? "−" : ""}$${Math.abs(Number(cents) / 100).toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
@@ -371,7 +371,7 @@ export function FinancialReportingBoard({ role }: { role: "harmonious" | "manage
               <CardTitle className="text-base">Workpapers</CardTitle>
               <CardDescription>
                 {isStaff
-                  ? "Built from source records — no spreadsheets. A second person signs each one off."
+                  ? "Built from source records - no spreadsheets. A second person signs each one off."
                   : "Workpapers Harmonious has shared with you."}
               </CardDescription>
             </CardHeader>

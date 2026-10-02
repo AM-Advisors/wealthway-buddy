@@ -9,9 +9,9 @@ import { getInvestorFundView } from "@/lib/my-funds.functions";
 export const Route = createFileRoute("/_authenticated/my-funds/$fundId")({
   head: () => ({
     meta: [
-      { title: "Fund — Harmonious" },
+      { title: "Fund - Harmonious" },
       { name: "description", content: "Your investment in this fund, with the documents and activity available to you." },
-      { property: "og:title", content: "Fund — Harmonious" },
+      { property: "og:title", content: "Fund - Harmonious" },
       { property: "og:description", content: "Your view of a fund you invest in." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/my-funds/$fundId")({
   component: InvestorFundPage,
 });
 
-const money = (c: number | null | undefined) => (c == null ? "—" : `$${Math.round(c / 100).toLocaleString("en-US")}`);
+const money = (c: number | null | undefined) => (c == null ? "-" : `$${Math.round(c / 100).toLocaleString("en-US")}`);
 
 function InvestorFundPage() {
   const { fundId } = Route.useParams();
@@ -49,7 +49,7 @@ function InvestorFundPage() {
           {v.myInvestments.length === 0 ? <p className="text-muted-foreground">No investment on record yet.</p> : v.myInvestments.map((p: any) => (
             <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
               <span>{p.kind === "application" ? `Application · commitment ${money(p.commitment_cents)}` : p.display_name ?? "Position"}</span>
-              <Badge variant="outline">{String(p.status ?? "—").replace(/_/g, " ")}</Badge>
+              <Badge variant="outline">{String(p.status ?? "-").replace(/_/g, " ")}</Badge>
             </div>
           ))}
         </CardContent>

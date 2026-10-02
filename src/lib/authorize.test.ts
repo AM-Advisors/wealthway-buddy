@@ -79,7 +79,7 @@ describe("canonical resolver", () => {
     }
     for (const t of ROLE_TEMPLATES) expect(t.permissions.some(isProtected)).toBe(false);
   });
-  it("maker/checker still applies — approver can't approve their own item", () => {
+  it("maker/checker still applies - approver can't approve their own item", () => {
     const d = authorize(superAdmin, "funds.approve", fundA, { preparedBy: "sa" });
     expect(d.allowed).toBe(false);
     expect(d.protectedConditions).toContain("maker_checker");
@@ -88,7 +88,7 @@ describe("canonical resolver", () => {
   });
 });
 
-describe("access changes — no privilege escalation", () => {
+describe("access changes - no privilege escalation", () => {
   it("ordinary staff can't grant Super Admin; only super admins can", () => {
     expect(accessChangeProblem(ops, { kind: "assign_role", targetUserId: "x", roleKey: "super_admin", scope: g })).toBeTruthy();
     expect(accessChangeProblem(F({ userId: "ad", roles: ["admin"] }), { kind: "assign_role", targetUserId: "x", roleKey: "super_admin", scope: g })).toBeTruthy();

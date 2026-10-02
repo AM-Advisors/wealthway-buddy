@@ -107,7 +107,7 @@ function Body() {
                     <TableCell className="text-right">{fmtNumber(cls.authorized)}</TableCell>
                     <TableCell className="text-right">{fmtMoney(cls.pricePerShare, 4)}</TableCell>
                     <TableCell className="text-right">
-                      {cls.liquidationPreference ? `${cls.liquidationPreference}×` : "—"}
+                      {cls.liquidationPreference ? `${cls.liquidationPreference}×` : "-"}
                     </TableCell>
                     <TableCell className="text-right">{cls.conversionRatio}×</TableCell>
                   </TableRow>
@@ -150,7 +150,7 @@ function Body() {
               <TableBody>
                 {workspace!.securities.map((s) => (
                   <TableRow key={s.id}>
-                    <TableCell className="font-medium">{s.label ?? "—"}</TableCell>
+                    <TableCell className="font-medium">{s.label ?? "-"}</TableCell>
                     <TableCell>{s.stakeholder}</TableCell>
                     <TableCell>{s.securityLabel}</TableCell>
                     <TableCell className="text-right">{fmtNumber(s.quantity)}</TableCell>
@@ -168,7 +168,7 @@ function Body() {
                           onDone={refetch}
                         />
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </TableCell>
                   </TableRow>
@@ -208,7 +208,7 @@ export function AddStakeholderDialog({ onDone }: { onDone: () => void }) {
         },
       }),
     onSuccess: () => {
-      toast.success("Stakeholder added. This does not create any ownership — use Issue Security to record shares.");
+      toast.success("Stakeholder added. This does not create any ownership - use Issue Security to record shares.");
       setForm({ name: "", email: "", type: "investor", entityName: "", title: "" });
       setOpen(false);
       onDone();

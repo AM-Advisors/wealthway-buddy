@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * Agreement preparation — adversarial tests.
+ * Agreement preparation - adversarial tests.
  *
  * Preparation decides who signs and where the Box Sign fields go. None of it
  * may be taken on trust from the browser: the fund or company relationship is

@@ -6,7 +6,7 @@ import { STAFF_ROLES } from "@/lib/contracts.functions";
 
 /** Staff view of every client's cap table: shareholders, share records,
  *  certificates and transfers. Harmonious keeps the record and can issue or
- *  cancel a certificate on the company's written instruction — the company's
+ *  cancel a certificate on the company's written instruction - the company's
  *  own signatory is always named on the certificate. */
 
 const ISSUING_ROLES = ["admin", "super_admin", "operations", "legal", "fund_administration"];

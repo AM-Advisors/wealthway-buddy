@@ -185,7 +185,7 @@ const contactInput = z.object({
 });
 
 /**
- * Contacts are records only — a designation never creates platform access or authority.
+ * Contacts are records only - a designation never creates platform access or authority.
  * Primary Contact is a designation on a Contact, never a second Person. New
  * contacts are matched against this Client's existing contacts through the
  * canonical Person Resolution rules; removed contacts are deactivated, never deleted.
@@ -232,7 +232,7 @@ export const saveExpectedServices = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: catalog } = await db.from("service_catalog").select("key").in("key", data.services);
     const valid = ((catalog ?? []) as any[]).map((r) => r.key as string);
-    // Expected services only — nothing becomes an active engagement here.
+    // Expected services only - nothing becomes an active engagement here.
     await db.from("clients").update({ expected_services: valid, intake_step: 4 }).eq("id", data.clientId);
     await audit(context, roles, { clientId: data.clientId, area: "client", action: "expected services set", next: valid });
     return { services: valid };
@@ -346,7 +346,7 @@ async function runExtraction(context: any, roles: string[], documentId: string) 
   } catch (e) {
     await db.from("contract_extractions").insert({ document_id: documentId, model: "none", prompt_version: mod.EXTRACTION_PROMPT_VERSION, status: "failed", error: (e as Error).message, created_by: context.userId });
     await db.from("client_governing_documents").update({ review_status: "manual_review_required" }).eq("id", documentId);
-    await audit(context, roles, { clientId: doc.client_id, action: "extraction failed — manual review required", target: documentId });
+    await audit(context, roles, { clientId: doc.client_id, action: "extraction failed - manual review required", target: documentId });
     return;
   }
   if (mod.readableQuality(chars) === "poor") {
@@ -470,7 +470,7 @@ export const reviewTerm = createServerFn({ method: "POST" })
     const { data: term } = await db.from("contract_terms").select("*, client_governing_documents(client_id, review_status)").eq("id", data.termId).maybeSingle();
     if (!term) throw new Error("Not found.");
     const doc = (term as any).client_governing_documents;
-    if (doc.review_status === "approved" || doc.review_status === "superseded") throw new Error("Approved terms can't change — upload an amendment.");
+    if (doc.review_status === "approved" || doc.review_status === "superseded") throw new Error("Approved terms can't change - upload an amendment.");
     const nextValue = data.value === undefined ? term.current_value : data.value;
     const valueChanged = (nextValue ?? null) !== (term.current_value ?? null) || (data.amountCents !== undefined && data.amountCents !== term.amount_cents);
     if (data.status === "corrected" && !data.reason) throw new Error("Give a reason for the correction.");
@@ -532,7 +532,7 @@ export const updateContractDocument = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: doc } = await db.from("client_governing_documents").select("*").eq("id", data.documentId).maybeSingle();
     if (!doc) throw new Error("Not found.");
-    if (doc.review_status === "approved" || doc.review_status === "superseded") throw new Error("Approved documents can't change — upload an amendment.");
+    if (doc.review_status === "approved" || doc.review_status === "superseded") throw new Error("Approved documents can't change - upload an amendment.");
     if (data.precedenceStatus === "confirmed" && !(data.precedenceNote ?? doc.precedence_note ?? "").trim())
       throw new Error("Record the reason or source for the precedence determination.");
     if (data.appliesToOfferingIds?.length) {
@@ -567,7 +567,7 @@ export const updateContractDocument = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** "Approve Contract Terms" — the only path by which terms become operational. */
+/** "Approve Contract Terms" - the only path by which terms become operational. */
 export const approveContractTerms = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ documentId: z.string().uuid() }).parse(d))
@@ -597,7 +597,7 @@ export const approveContractTerms = createServerFn({ method: "POST" })
     return applyApprovedPricing(context, roles, doc, (terms ?? []) as any[]);
   });
 
-/** Configure Contract Pricing — applies an approved document's reviewed prices (idempotent). */
+/** Configure Contract Pricing - applies an approved document's reviewed prices (idempotent). */
 export const applyContractPricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ documentId: z.string().uuid() }).parse(d))

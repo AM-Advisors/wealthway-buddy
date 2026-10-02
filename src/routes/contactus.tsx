@@ -24,7 +24,7 @@ export const Route = createFileRoute("/contactus")({
   head: () =>
     marketingHead({
       path: "/contactus",
-      title: "Contact Harmonious — Schedule a Demo",
+      title: "Contact Harmonious - Schedule a Demo",
       description:
         "Talk to Harmonious about fund administration, SPVs, cap table management, investor onboarding or moving an existing fund.",
       breadcrumbs: [
@@ -83,7 +83,7 @@ function ContactPage() {
 
         {state === "sent" ? (
           <div className="rounded-xl border bg-card p-8" role="status">
-            <h2 className="text-xl">Thanks — we've got it.</h2>
+            <h2 className="text-xl">Thanks - we've got it.</h2>
             <p className="mt-2 text-muted-foreground">We'll be in touch shortly.</p>
           </div>
         ) : (

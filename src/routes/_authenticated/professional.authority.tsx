@@ -122,7 +122,7 @@ function AuthorityDocuments() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Signing on a client's behalf always needs written legal authority on file — a power of
+        Signing on a client's behalf always needs written legal authority on file - a power of
         attorney, resolution, trustee authorisation or similar. Uploading one is not enough: Harmonious
         reviews it, and signing only becomes possible once it is accepted.
       </p>
@@ -247,7 +247,7 @@ function AuthorityDocuments() {
                       (t: string) =>
                         SIGNABLE_DOCUMENT_LABELS[t as SignableDocumentType] ?? t,
                     )
-                    .join(", ") || "—"}
+                    .join(", ") || "-"}
                   {d.expires_at ? ` · expires ${new Date(d.expires_at).toLocaleDateString()}` : ""}
                 </p>
               </div>
@@ -266,13 +266,13 @@ function AuthorityDocuments() {
 export const Route = createFileRoute("/_authenticated/professional/authority")({
   head: () => ({
     meta: [
-      { title: "Authority documents — Harmonious" },
+      { title: "Authority documents - Harmonious" },
       {
         name: "description",
         content:
           "Submit powers of attorney, resolutions and trustee authorisations that permit delegated signing.",
       },
-      { property: "og:title", content: "Authority documents — Harmonious" },
+      { property: "og:title", content: "Authority documents - Harmonious" },
       { property: "og:description", content: "Documented legal authority for delegated signing." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

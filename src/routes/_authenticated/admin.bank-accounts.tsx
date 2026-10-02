@@ -5,13 +5,13 @@ import { BankAccountsBoard } from "@/components/bank-accounts-board";
 export const Route = createFileRoute("/_authenticated/admin/bank-accounts")({
   head: () => ({
     meta: [
-      { title: "Bank accounts — Harmonious Admin" },
+      { title: "Bank accounts - Harmonious Admin" },
       {
         name: "description",
         content:
           "Record each fund's receiving account so incoming wires match the right fund and invoice.",
       },
-      { property: "og:title", content: "Bank accounts — Harmonious Admin" },
+      { property: "og:title", content: "Bank accounts - Harmonious Admin" },
       {
         property: "og:description",
         content: "Receiving account details for every fund, and deposits still waiting to match.",

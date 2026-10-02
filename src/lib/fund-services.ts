@@ -21,7 +21,7 @@ export const STATUS_LABELS: Record<ServiceStatus, string> = {
   reviewed: "Reviewed",
   submitted: "Submitted by Harmonious",
   completed: "Completed",
-  rejected: "Rejected — needs changes",
+  rejected: "Rejected - needs changes",
   exempt: "Exempt",
 };
 

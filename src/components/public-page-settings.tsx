@@ -60,7 +60,7 @@ export function PublicPageSettings({ offeringId }: { offeringId: string }) {
           <div>
             <p className="font-medium">Show this fund publicly</p>
             <p className="text-xs text-muted-foreground">
-              {enabled ? `Live at ${path}` : "Off — nobody outside your team can see the page."}
+              {enabled ? `Live at ${path}` : "Off - nobody outside your team can see the page."}
             </p>
           </div>
           <Switch checked={enabled} onCheckedChange={setEnabled} />

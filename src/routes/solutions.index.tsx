@@ -4,7 +4,7 @@ import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Button } from "@/components/ui/button";
 import { seoLinks, seoMeta } from "@/lib/seo";
 
-const TITLE = "Solutions — Harmonious";
+const TITLE = "Solutions - Harmonious";
 const DESCRIPTION =
   "Fund administration, SPVs, cap table management and investor onboarding from Harmonious, on one record of every fund, investor and investment.";
 

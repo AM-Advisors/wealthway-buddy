@@ -1,7 +1,7 @@
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 
 /** Contact roles that run the engagement on the client's side. Read-only
- *  contacts are deliberately left out — they cannot act on any of these. */
+ *  contacts are deliberately left out - they cannot act on any of these. */
 const ADMIN_CLIENT_ROLES = [
   "client_gp",
   "client_signatory",

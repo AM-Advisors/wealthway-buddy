@@ -4,10 +4,10 @@
  * readiness consume this; none re-implement the rule.
  *
  * Compatibility map (read-only findings, no values changed):
- *  - investor_onboardings.funding_status (text) — canonical Investment record.
+ *  - investor_onboardings.funding_status (text) - canonical Investment record.
  *    "funded" is written only by the bank match → reconciliation → posting chain.
  *  - investor_applications.funding_status (payment_status enum: not_started,
- *    awaiting_wire, processing, settled, failed, returned, cancelled) — legacy
+ *    awaiting_wire, processing, settled, failed, returned, cancelled) - legacy
  *    application record. "settled" is written only after a staff-recorded
  *    settlement or a reconciled bank match, so it historically represents
  *    reconciled money and is treated as a synonym of "funded" here.
@@ -78,7 +78,7 @@ export function canonicalFundingState(f: FundingFacts): CanonicalFundingState {
   return "ready_for_funding";
 }
 
-/** Reconciled funded capital only — never intended/subscription/reported amounts. */
+/** Reconciled funded capital only - never intended/subscription/reported amounts. */
 export function reconciledFundedCents<T>(rows: readonly T[], status: (r: T) => string | null | undefined, amount: (r: T) => number | null | undefined): number {
   return rows.reduce((n, r) => (isReconciledFunding(status(r)) ? n + Number(amount(r) ?? 0) : n), 0);
 }

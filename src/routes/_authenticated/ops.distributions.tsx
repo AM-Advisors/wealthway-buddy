@@ -7,13 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const Route = createFileRoute("/_authenticated/ops/distributions")({
   head: () => ({
     meta: [
-      { title: "Distributions and payments — Harmonious operations" },
+      { title: "Distributions and payments - Harmonious operations" },
       {
         name: "description",
         content:
           "Prepare, review, approve, send and reconcile fund distributions, withholding and outbound payments.",
       },
-      { property: "og:title", content: "Distributions and payments — Harmonious operations" },
+      { property: "og:title", content: "Distributions and payments - Harmonious operations" },
       {
         property: "og:description",
         content:

@@ -1,7 +1,7 @@
 /**
  * Investor sign-off: before Harmonious records capital for an investor, the
  * investor confirms in the portal which fund they are investing in and the
- * commitment amount. Sign-offs are versioned snapshots and are never edited —
+ * commitment amount. Sign-offs are versioned snapshots and are never edited -
  * if the commitment changes, the investor signs again.
  */
 import { createServerFn } from "@tanstack/react-start";

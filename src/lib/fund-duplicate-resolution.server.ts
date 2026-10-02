@@ -113,7 +113,7 @@ async function snapshot(id: string): Promise<{ snap: FundSnapshot; secret: { ein
     },
     capital: {
       subscribedCents: live.reduce((n, i) => n + Number(i.accepted_amount_cents ?? i.commitment_amount_cents ?? i.requested_amount_cents ?? 0), 0),
-      // Reconciled only — an investor-reported or "sent" wire never counts.
+      // Reconciled only - an investor-reported or "sent" wire never counts.
       reconciledFundedCents: investments.filter((i) => isReconciledFunding(i.funding_status)).reduce((n, i) => n + Number(i.funded_amount_cents ?? 0), 0),
     },
     documents: { offeringDocuments, versions, executed: investments.filter((i) => i.signature_id || i.executed_snapshot).length, historical },
@@ -197,7 +197,7 @@ export async function decidePair(context: any, input: { fundIds: string[]; decis
   return reviewFor(input.fundIds);
 }
 
-/** Different Funds — completes once a rename (via the audited rename flow) makes the names unique. */
+/** Different Funds - completes once a rename (via the audited rename flow) makes the names unique. */
 export async function completeKeepSeparate(context: any, reviewId: string) {
   const actor = await requireAdmin(context);
   const db = await admin();

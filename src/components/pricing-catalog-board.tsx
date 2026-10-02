@@ -29,7 +29,7 @@ import {
 
 const money = (cents: number | null | undefined) =>
   cents === null || cents === undefined
-    ? "—"
+    ? "-"
     : (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 type ItemDraft = {
@@ -202,7 +202,7 @@ export function PricingCatalogBoard({
                   id="version-label"
                   value={versionLabel}
                   onChange={(e) => setVersionLabel(e.target.value)}
-                  placeholder="Exhibit A — 2026"
+                  placeholder="Exhibit A - 2026"
                 />
               </div>
               <div>

@@ -11,9 +11,9 @@ import { getClientFund, getFundCapTable } from "@/lib/fund-cap-table.functions";
 export const Route = createFileRoute("/_authenticated/client/funds/$fundId")({
   head: () => ({
     meta: [
-      { title: "Fund — Harmonious client portal" },
+      { title: "Fund - Harmonious client portal" },
       { name: "description", content: "Fund details, setup progress, investors and cap table for your fund." },
-      { property: "og:title", content: "Fund — Harmonious client portal" },
+      { property: "og:title", content: "Fund - Harmonious client portal" },
       { property: "og:description", content: "Fund details, setup progress, investors and cap table." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/client/funds/$fundId")({
 });
 
 const usd = (c: number | null | undefined) =>
-  typeof c === "number" ? (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) : "—";
+  typeof c === "number" ? (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) : "-";
 const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Not recorded";
 
@@ -54,10 +54,10 @@ function ClientFundPage() {
 
       <div className="grid gap-3 sm:grid-cols-4">
         {[
-          { l: "Setup complete", v: setup.percent == null ? "—" : `${setup.percent}%` },
-          { l: "Investors", v: cap ? String(cap.totals.investors) : "—" },
-          { l: "Committed", v: cap ? usd(cap.totals.commitCents) : "—" },
-          { l: "Funded (reconciled)", v: cap ? usd(cap.totals.fundedCents) : "—" },
+          { l: "Setup complete", v: setup.percent == null ? "-" : `${setup.percent}%` },
+          { l: "Investors", v: cap ? String(cap.totals.investors) : "-" },
+          { l: "Committed", v: cap ? usd(cap.totals.commitCents) : "-" },
+          { l: "Funded (reconciled)", v: cap ? usd(cap.totals.fundedCents) : "-" },
         ].map((k) => (
           <Card key={k.l}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{k.l}</p><p className="text-xl font-semibold">{k.v}</p></CardContent></Card>
         ))}
@@ -89,7 +89,7 @@ function ClientFundPage() {
               <div key={i} className="flex items-center gap-3 text-sm">
                 {s.done ? <CheckCircle2 className="size-4 text-primary" /> : <Clock className="size-4 text-muted-foreground" />}
                 <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
-                {!s.done && <Badge variant="outline" className="ml-auto">{s.owner === "Harmonious" ? "Harmonious — pending" : "Waiting on you"}</Badge>}
+                {!s.done && <Badge variant="outline" className="ml-auto">{s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
               </div>
             ))}
           </div>
@@ -114,12 +114,12 @@ function ClientFundPage() {
                   {cap.rows.map((r) => (
                     <tr key={r.id} className="border-t">
                       <td className="py-2"><p className="font-medium">{r.investorName}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
-                      <td>{r.classKey || "—"}</td>
-                      <td className="capitalize">{r.stage || "—"}</td>
+                      <td>{r.classKey || "-"}</td>
+                      <td className="capitalize">{r.stage || "-"}</td>
                       <td className="text-right">{usd(r.commitmentCountedCents)}</td>
                       <td className="text-right">{usd(r.fundedCountedCents)}</td>
                       <td className="text-right">{r.pctCommitted.toFixed(2)}%</td>
-                      <td>{r.sideLetter ? <Badge variant="secondary">{r.sideLetter.status}</Badge> : "—"}</td>
+                      <td>{r.sideLetter ? <Badge variant="secondary">{r.sideLetter.status}</Badge> : "-"}</td>
                     </tr>
                   ))}
                 </tbody>

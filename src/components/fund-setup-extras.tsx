@@ -75,7 +75,7 @@ export function ServiceProvidersSection({ offeringId }: { offeringId: string }) 
               else setP({ ...p, taxPreparerIsHarmonious: false, taxPreparer: "", __other: false });
             }}
           >
-            <option value="">—</option>
+            <option value="">-</option>
             <option value="harmonious">Harmonious</option>
             <option value="other">Someone else…</option>
           </select>
@@ -187,7 +187,7 @@ export function RegulatoryFilingsCard({ offeringId, children }: { offeringId: st
               <ul className="space-y-1 text-sm">
                 {formD.map((x) => (
                   <li key={x.id} className="flex items-center justify-between gap-2 rounded border px-2 py-1">
-                    <span>{x.filingDate ?? "No date"} · <span className="capitalize">{x.kind}</span> · Accession {x.accessionNumber ?? "—"}{x.efdId ? ` · EFD ${x.efdId}` : ""}</span>
+                    <span>{x.filingDate ?? "No date"} · <span className="capitalize">{x.kind}</span> · Accession {x.accessionNumber ?? "-"}{x.efdId ? ` · EFD ${x.efdId}` : ""}</span>
                     {can && <Button size="sm" variant="ghost" onClick={() => remove({ data: { offeringId, id: x.id } }).then(refresh)}>Remove</Button>}
                   </li>
                 ))}
@@ -221,7 +221,7 @@ export function RegulatoryFilingsCard({ offeringId, children }: { offeringId: st
             {f.type === "blue_sky" && (
               <div className="space-y-1"><Label className="text-xs">State</Label>
                 <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" {...bind("state")}>
-                  <option value="">—</option>{US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  <option value="">-</option>{US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select></div>
             )}
             <div className="space-y-1"><Label className="text-xs">Filing date</Label><Input type="date" {...bind("filingDate")} /></div>

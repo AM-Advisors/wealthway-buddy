@@ -241,7 +241,7 @@ function AssignmentPanel({
               <SelectContent>
                 {users.map((u) => (
                   <SelectItem key={u.userId} value={u.userId}>
-                    {u.legalName ? `${u.legalName} — ${u.email}` : u.email}
+                    {u.legalName ? `${u.legalName} - ${u.email}` : u.email}
                   </SelectItem>
                 ))}
               </SelectContent>

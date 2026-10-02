@@ -58,7 +58,7 @@ function WireRequestApproved({
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
-        Wire request approved for {fundName} — {amount}
+        Wire request approved for {fundName} - {amount}
       </Preview>
       <Body
         style={{
@@ -118,7 +118,7 @@ function WireRequestApproved({
               </Column>
               <Column>
                 <Text style={label}>Expected date</Text>
-                <Text style={{ ...value, margin: 0 }}>{expectedDate || '—'}</Text>
+                <Text style={{ ...value, margin: 0 }}>{expectedDate || '-'}</Text>
               </Column>
             </Row>
             {investorName ? (
@@ -197,7 +197,7 @@ function WireRequestApproved({
 export const template = {
   component: WireRequestApproved,
   subject: (data: Record<string, any>) =>
-    `Wire request approved — ${data?.['fundName'] ?? 'your fund'} ${data?.['amount'] ?? ''}`.trim(),
+    `Wire request approved - ${data?.['fundName'] ?? 'your fund'} ${data?.['amount'] ?? ''}`.trim(),
   displayName: 'Wire request approved',
   previewData: {
     contactName: 'Alyssa',

@@ -2,7 +2,7 @@
  * Existing Fund duplicate resolution (pure). No I/O.
  *
  * Harmonious decides whether two same-named Funds are the same Fund. Nothing
- * here picks a canonical Fund, merges values, or resolves a conflict — it only
+ * here picks a canonical Fund, merges values, or resolves a conflict - it only
  * compares facts, lists conflicts, and describes what a confirmed
  * consolidation would keep, move and preserve.
  */
@@ -36,8 +36,8 @@ export type PairFacts = { einDiffers: boolean; bankingDiffers: boolean };
 
 export type Decision = "same_fund" | "different_funds" | "needs_review";
 export const DECISION_LABELS: Record<Decision, string> = {
-  same_fund: "Same Fund — Consolidate",
-  different_funds: "Different Funds — Keep Separate",
+  same_fund: "Same Fund - Consolidate",
+  different_funds: "Different Funds - Keep Separate",
   needs_review: "Needs Further Review",
 };
 
@@ -51,7 +51,7 @@ const norm = (v: string | null | undefined) => normalizeFundName(v);
 const differs = (a: string | null | undefined, b: string | null | undefined) => !!norm(a) && !!norm(b) && norm(a) !== norm(b);
 
 /**
- * Every conflict is "Conflict — Harmonious Decision Required". Blocking
+ * Every conflict is "Conflict - Harmonious Decision Required". Blocking
  * conflicts cannot be acknowledged away: they must be fixed at the source
  * (for example, retire one banking version) before consolidation can run.
  */
@@ -134,8 +134,8 @@ export function consolidationBlockers(review: ReviewState, report: ImpactReport 
   if (!review.fundIds.includes(input.canonicalId) || !review.fundIds.includes(input.duplicateId)) out.push("Both Funds must belong to this duplicate pair.");
   if (!report) out.push("Review the impact report first.");
   for (const c of report?.conflicts ?? []) {
-    if (c.blocking) out.push(`Conflict — Harmonious Decision Required: ${c.label}. Resolve it at the source first.`);
-    else if (!review.acknowledged.includes(c.kind)) out.push(`Conflict — Harmonious Decision Required: ${c.label}.`);
+    if (c.blocking) out.push(`Conflict - Harmonious Decision Required: ${c.label}. Resolve it at the source first.`);
+    else if (!review.acknowledged.includes(c.kind)) out.push(`Conflict - Harmonious Decision Required: ${c.label}.`);
   }
   if (!input.confirmed) out.push("Confirm Consolidation must be ticked.");
   if (input.reason.trim().length < 5) out.push("A reason is required.");

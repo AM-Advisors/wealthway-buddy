@@ -383,7 +383,7 @@ export function CapCertificatesPanel({
 
           {lastLink ? (
             <div className="rounded-md border bg-muted/40 p-3 text-sm break-all">
-              <p className="mb-1 font-medium">Copy this link now — it is shown once.</p>
+              <p className="mb-1 font-medium">Copy this link now - it is shown once.</p>
               {lastLink}
             </div>
           ) : null}
@@ -415,7 +415,7 @@ export function CapCertificatesPanel({
                           {a.revoked_at ? "Withdrawn" : expired ? "Expired" : "Active"}
                         </td>
                         <td className="py-2 pr-3">
-                          {a.view_count ? `${a.view_count}×` : "—"}
+                          {a.view_count ? `${a.view_count}×` : "-"}
                           {a.last_seen_at
                             ? ` · ${new Date(a.last_seen_at).toLocaleDateString()}`
                             : ""}

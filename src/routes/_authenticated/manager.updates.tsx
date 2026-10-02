@@ -9,9 +9,9 @@ import { markManagerUpdatesRead } from "@/lib/crm.functions";
 export const Route = createFileRoute("/_authenticated/manager/updates")({
   head: () => ({
     meta: [
-      { title: "Updates — Harmonious fund manager" },
+      { title: "Updates - Harmonious fund manager" },
       { name: "description", content: "Fund progress, investor messages, Harmonious replies, deals and campaigns in one list." },
-      { property: "og:title", content: "Updates — Harmonious" },
+      { property: "og:title", content: "Updates - Harmonious" },
       { property: "og:description", content: "Everything happening on your Funds, in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -121,7 +121,7 @@ export interface PortfolioRow {
 }
 
 /**
- * Fund policy — not fund access — decides what an investor sees about the
+ * Fund policy - not fund access - decides what an investor sees about the
  * underlying companies. With no policy the answer is nothing.
  */
 export function portfolioForInvestor(

@@ -9,7 +9,7 @@
  * Controls preserved here:
  *  - nothing trusts a fund, book, report or period id sent by the browser;
  *  - preparer ≠ reviewer ≠ approver, and Harmonious alone publishes;
- *  - a published report is never edited — corrections are new versions;
+ *  - a published report is never edited - corrections are new versions;
  *  - every published figure keeps the snapshot it was produced from.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -1559,7 +1559,7 @@ export async function reportingQueue(userId: string, offeringId?: string) {
   const bucket = (status: string) => rows.filter((r) => r.status === status);
   return {
     funds: (funds ?? []) as { id: string; name: string }[],
-    reports: rows.map((r) => ({ ...r, fundName: nameById.get(r.offering_id) ?? "—" })),
+    reports: rows.map((r) => ({ ...r, fundName: nameById.get(r.offering_id) ?? "-" })),
     awaitingPreparation: bucket("draft"),
     awaitingReview: bucket("prepared"),
     awaitingApproval: bucket("review"),

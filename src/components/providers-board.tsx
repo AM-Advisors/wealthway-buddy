@@ -243,7 +243,7 @@ export function ProvidersBoard({ canManage }: { canManage: boolean }) {
                 <p className="text-sm text-muted-foreground">
                   {costsByProvider.get(p.id)!.count} cost
                   {costsByProvider.get(p.id)!.count === 1 ? "" : "s"} logged ·{" "}
-                  {money(costsByProvider.get(p.id)!.total)} — see the Expenses tab.
+                  {money(costsByProvider.get(p.id)!.total)} - see the Expenses tab.
                 </p>
               ) : null}
               {p.service_dependency ? (

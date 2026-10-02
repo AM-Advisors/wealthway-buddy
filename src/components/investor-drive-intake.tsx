@@ -96,7 +96,7 @@ function Row({ investorUserId, row, ready }: { investorUserId: string; row: any;
       </div>
       {c ? (
         <p className="text-xs text-muted-foreground">
-          Eligible found {last.found ?? "—"} · Already imported {last.imported ?? row.importedCount} · Changed in Drive {last.updated ?? "—"} · Needs review {last.needsReview ?? "—"} · Blocked {last.blocked ?? "—"}
+          Eligible found {last.found ?? "-"} · Already imported {last.imported ?? row.importedCount} · Changed in Drive {last.updated ?? "-"} · Needs review {last.needsReview ?? "-"} · Blocked {last.blocked ?? "-"}
         </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
@@ -135,7 +135,7 @@ function Row({ investorUserId, row, ready }: { investorUserId: string; row: any;
       ) : null}
       {scan && c ? (
         <div className="space-y-1">
-          {scan.missingCount ? <p className="text-xs text-muted-foreground">{scan.missingCount} imported document(s) are no longer in Drive — the Harmonious copies are kept.</p> : null}
+          {scan.missingCount ? <p className="text-xs text-muted-foreground">{scan.missingCount} imported document(s) are no longer in Drive - the Harmonious copies are kept.</p> : null}
           {scan.items.map((i: any) => {
             const importable = i.status === "new" || i.status === "updated";
             return (
@@ -169,7 +169,7 @@ function Row({ investorUserId, row, ready }: { investorUserId: string; row: any;
           >
             Import Documents
           </Button>
-          <p className="text-xs text-muted-foreground">Imported copies go to private Harmonious storage and need review. Classification is not approval — accreditation evidence does not mark anyone accredited.</p>
+          <p className="text-xs text-muted-foreground">Imported copies go to private Harmonious storage and need review. Classification is not approval - accreditation evidence does not mark anyone accredited.</p>
         </div>
       ) : null}
     </div>

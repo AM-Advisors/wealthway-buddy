@@ -49,7 +49,7 @@ const MIGRATION_STEPS = [
   [
     "03",
     "You approve every row",
-    "Review the mapped rows side by side with what they will become. Nothing is recorded against your company until you say so — and a concierge review is available if you would rather we walked it with you.",
+    "Review the mapped rows side by side with what they will become. Nothing is recorded against your company until you say so - and a concierge review is available if you would rather we walked it with you.",
   ],
 ] as const;
 
@@ -63,7 +63,7 @@ const COVERAGE = [
 ] as const;
 
 const RECORD = [
-  ["Verify ownership", "Claimed positions are compared with your register and either verified, adjusted, queried or disputed — with the ownership chain shown in full."],
+  ["Verify ownership", "Claimed positions are compared with your register and either verified, adjusted, queried or disputed - with the ownership chain shown in full."],
   ["Document exposure", "Every SPV, nominee and feeder in your holder base is recorded, with who sits behind it."],
   ["Maintain the record", "Certificates, documents and an append-only audit history: who changed what, when, and what it was before."],
 ] as const;
@@ -93,7 +93,7 @@ function CapTableLanding() {
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-primary-foreground/75">
               Control how your private shares move. Verify ownership, document exposure and maintain
-              the record — the ownership operating system for private companies, not simply a cap
+              the record - the ownership operating system for private companies, not simply a cap
               table.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
@@ -149,7 +149,7 @@ function CapTableLanding() {
               See A Migration, Before You Start One
             </h2>
             <p className="mt-4 max-w-2xl text-muted-foreground">
-              This is a full sample migration for an invented company, Acme Labs — the file read,
+              This is a full sample migration for an invented company, Acme Labs - the file read,
               the columns matched, the share totals reconciled and the exceptions raised. Switch
               between a Carta and a Pulley export to see how each is handled.
             </p>
@@ -198,8 +198,8 @@ function CapTableLanding() {
             ))}
           </div>
           <p className="mt-8 max-w-3xl text-sm text-muted-foreground">
-            Harmonious keeps the record and administers the workflow. Every ownership decision — who
-            may hold shares, what a transfer is worth, what is approved — stays with the company and
+            Harmonious keeps the record and administers the workflow. Every ownership decision - who
+            may hold shares, what a transfer is worth, what is approved - stays with the company and
             its own counsel.
           </p>
         </section>
@@ -234,7 +234,7 @@ function CapTableLanding() {
             </h2>
             <p className="mt-4 max-w-2xl text-primary-foreground/75">
               Tell us where your records live today. We confirm the details with you and open your
-              workspace — you review every row before it is recorded.
+              workspace - you review every row before it is recorded.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Button size="lg" variant="secondary" onClick={() => ask("carta")}>

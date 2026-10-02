@@ -1,6 +1,6 @@
 /**
  * Vesting maths, shared by the employee portal and the company equity desk.
- * Everything is derived from the schedule on the grant — nothing is stored.
+ * Everything is derived from the schedule on the grant - nothing is stored.
  */
 
 export type VestingSchedule = {

@@ -17,7 +17,7 @@ export function normalizeFundName(v: string | null | undefined): string {
 }
 
 const ENTITY_SUFFIXES = new Set(["llc", "lp", "llp", "inc", "ltd", "l", "p", "co", "corp", "the", "a", "series", "of"]);
-/** Looser key for "similar" warnings only — never for blocking. */
+/** Looser key for "similar" warnings only - never for blocking. */
 export function looseFundKey(v: string | null | undefined): string {
   return normalizeFundName(v)
     .split(" ")
@@ -66,7 +66,7 @@ export function duplicateFundIdFromError(message: string | null | undefined): st
 
 export const SYNC_CATEGORIES = {
   matched: "Matched",
-  existing_person_missing_investment: "Existing Person — Missing Investment",
+  existing_person_missing_investment: "Existing Person - Missing Investment",
   new_investor_candidate: "New Investor Candidate",
   suggested_update: "Suggested Update",
   conflict: "Conflict",
@@ -82,7 +82,7 @@ export type SyncCategory = keyof typeof SYNC_CATEGORIES;
 
 export const CONFIDENCE_LABELS = {
   exact: "Exact Match",
-  likely: "Likely Match — Review Required",
+  likely: "Likely Match - Review Required",
   none: "No Match",
   conflict: "Conflict",
   duplicate: "Duplicate Candidate",
@@ -148,7 +148,7 @@ const nameKey = (v: string | null | undefined) => normalizeFundName(v);
 
 /**
  * Classify one Drive investor folder. `linkedProfileId` is set when the folder is
- * already mapped (canonical link) — the only path to an Exact Match. A name
+ * already mapped (canonical link) - the only path to an Exact Match. A name
  * match is never better than "likely".
  */
 export function classifyFolder(

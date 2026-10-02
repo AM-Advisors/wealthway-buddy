@@ -28,10 +28,10 @@ const money = (cents: number, currency = "USD") =>
   (Number(cents) / 100).toLocaleString("en-US", { style: "currency", currency });
 
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
 const day = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleDateString("en-US") : "—";
+  v ? new Date(v).toLocaleDateString("en-US") : "-";
 
 const tone = (status: string) =>
   status === "accepted"
@@ -328,7 +328,7 @@ export function ProviderSubmissionsBoard() {
           <CardTitle className="text-base">Who can sign in for a provider</CardTitle>
           <CardDescription>
             Add the person's work email. They sign in with that address and see only their own
-            company's submissions — no client or fund records.
+            company's submissions - no client or fund records.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

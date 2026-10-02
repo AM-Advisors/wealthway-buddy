@@ -34,7 +34,7 @@ interface Row {
 /**
  * Recalculates the fund's cap table and emails every investor whose ownership,
  * commitment or received amount moved since the last message we sent them.
- * Never throws — notification failures must not break the action that caused
+ * Never throws - notification failures must not break the action that caused
  * them.
  */
 export async function notifyOwnershipChange(

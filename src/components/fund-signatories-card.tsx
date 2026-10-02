@@ -88,7 +88,7 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
                 <Label className="text-xs">Person on the Client account or Fund team</Label>
                 <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={key} onChange={(e) => setKey(e.target.value)}>
                   <option value="">Choose…</option>
-                  {d.candidates.map((c) => <option key={c.key} value={c.key}>{c.name} — {c.source}{c.detail ? ` (${c.detail})` : ""}</option>)}
+                  {d.candidates.map((c) => <option key={c.key} value={c.key}>{c.name} - {c.source}{c.detail ? ` (${c.detail})` : ""}</option>)}
                 </select>
                 {d.candidates.length === 0 && <p className="text-xs text-muted-foreground">Everyone listed is already a signatory. Add a new person instead.</p>}
               </div>
@@ -107,7 +107,7 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
             {review && (
               <div className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm">
                 <p>{review}</p>
-                <Button size="sm" variant="outline" disabled={busy} onClick={() => submit(true)}>This is a separate person — add anyway</Button>
+                <Button size="sm" variant="outline" disabled={busy} onClick={() => submit(true)}>This is a separate person - add anyway</Button>
               </div>
             )}
             <Button size="sm" disabled={busy || (mode === "pick" ? !key : np.fullName.trim().length < 2)} onClick={() => submit(false)}>Add signatory</Button>

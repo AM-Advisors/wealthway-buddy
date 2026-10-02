@@ -5,13 +5,13 @@ import { ClientActivityBoard } from "@/components/client-activity-board";
 export const Route = createFileRoute("/_authenticated/admin/client-activity")({
   head: () => ({
     meta: [
-      { title: "Client portal activity — Harmonious" },
+      { title: "Client portal activity - Harmonious" },
       {
         name: "description",
         content:
           "A timestamped record of what each client did in their portal: fund setup, documents signed, invoice approvals and payments reported.",
       },
-      { property: "og:title", content: "Client portal activity — Harmonious" },
+      { property: "og:title", content: "Client portal activity - Harmonious" },
       {
         property: "og:description",
         content: "Fund setup, signing, invoice approvals and payments, with timestamps, by client.",

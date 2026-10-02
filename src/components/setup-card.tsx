@@ -28,7 +28,7 @@ const label = (key: string) => LABELS[key] ?? key;
 
 /**
  * "Complete your setup" on the client home page. Progress and the next step
- * come from the outstanding requirements the server resolved — the page never
+ * come from the outstanding requirements the server resolved - the page never
  * works them out for itself.
  */
 export function SetupCard() {
@@ -69,7 +69,7 @@ export function SetupCard() {
               if (path) navigate({ to: path as never });
             }}
           >
-            Continue — {label(next)}
+            Continue - {label(next)}
           </Button>
         )}
       </CardContent>

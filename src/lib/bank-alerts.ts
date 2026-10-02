@@ -1,6 +1,6 @@
 /**
  * Bank alert detection. Pure: given bank facts, return the alerts that should
- * exist. Alerts are signals for staff — resolving one never changes a bank
+ * exist. Alerts are signals for staff - resolving one never changes a bank
  * record, and nothing here moves money.
  */
 export type AlertKind = "unmatched_deposit" | "balance_mismatch" | "feed_stale" | "unexpected_withdrawal";

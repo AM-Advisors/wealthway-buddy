@@ -188,7 +188,7 @@ export const saveSigningTemplate = createServerFn({ method: "POST" })
     });
   });
 
-/** The final review shown before sending. Pure summary — nothing is sent here. */
+/** The final review shown before sending. Pure summary - nothing is sent here. */
 export const reviewPreparedAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
@@ -284,7 +284,7 @@ export const sendPreparedAgreement = createServerFn({ method: "POST" })
 
 /**
  * The agreements pipeline. Every bucket is derived from the authoritative
- * signer records and Box's own status — never from a stored dashboard status.
+ * signer records and Box's own status - never from a stored dashboard status.
  */
 export const listAgreementPipeline = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

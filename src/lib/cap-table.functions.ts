@@ -65,7 +65,7 @@ function pct(part: number, whole: number) {
 /**
  * Builds the live cap table for one fund out of applications, confirmed
  * subscriptions and settled payments. Reads fund-wide rows with the admin
- * client because an investor may only read their own rows under RLS — the
+ * client because an investor may only read their own rows under RLS - the
  * caller's access is verified first and other holders stay anonymous unless
  * the manager has switched cap table visibility on for them.
  */

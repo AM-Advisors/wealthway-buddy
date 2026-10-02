@@ -4,11 +4,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
- * Harmonious CapTable — Phase 2.
+ * Harmonious CapTable - Phase 2.
  *
  * Employee equity and investor records, plus the holder-side portal where each
  * person sees only their own position. Permissions are per holder and set by the
- * company; nothing a holder does here changes the official ledger on its own —
+ * company; nothing a holder does here changes the official ledger on its own -
  * an exercise request stays pending until someone with authority records it.
  */
 

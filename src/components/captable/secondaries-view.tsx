@@ -50,7 +50,7 @@ const STAGE_LABEL: Record<string, string> = {
   restriction_review: "Restriction review",
   rofr: "Right of first refusal",
   consent: "Awaiting company consent",
-  approved: "Approved — ready to close",
+  approved: "Approved - ready to close",
   closed: "Closed to the ledger",
   rejected: "Rejected",
   withdrawn: "Withdrawn",
@@ -77,7 +77,7 @@ const RESTRICTION_LABEL: Record<string, string> = {
 
 const ROFR_LABEL: Record<string, string> = {
   not_started: "Not started",
-  offered: "Offered — awaiting response",
+  offered: "Offered - awaiting response",
   waived: "Waived",
   expired: "Expired unexercised",
   exercised: "Exercised by the company",
@@ -451,7 +451,7 @@ function TransferDialog({
               <Input type="date" value={requestedOn} onChange={(e) => setRequestedOn(e.target.value)} />
             </Field>
             <Field label="Proposed value">
-              <Input value={proposed ? fmtMoney(proposed, 0) : "—"} readOnly disabled />
+              <Input value={proposed ? fmtMoney(proposed, 0) : "-"} readOnly disabled />
             </Field>
           </div>
           <Field label="Notes">
@@ -511,7 +511,7 @@ function RestrictionDialog({
               <SelectContent>
                 <SelectItem value="clear">No restriction blocks the sale</SelectItem>
                 <SelectItem value="conditions">Permitted with conditions</SelectItem>
-                <SelectItem value="blocked">Restricted — cannot proceed</SelectItem>
+                <SelectItem value="blocked">Restricted - cannot proceed</SelectItem>
               </SelectContent>
             </Select>
           </Field>
@@ -572,7 +572,7 @@ function RofrDialog({
             <Select value={outcome} onValueChange={(v) => setOutcome(v as typeof outcome)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="offered">Offered — awaiting response</SelectItem>
+                <SelectItem value="offered">Offered - awaiting response</SelectItem>
                 <SelectItem value="waived">Waived</SelectItem>
                 <SelectItem value="expired">Expired unexercised</SelectItem>
                 <SelectItem value="exercised">Exercised by the company</SelectItem>
@@ -761,7 +761,7 @@ function CloseDialog({
           <DialogTitle>Close the transfer</DialogTitle>
           <DialogDescription>
             This moves {fmtNumber(transfer.quantity)} shares from {transfer.seller} to {transfer.buyer}
-            {" "}and updates ownership. It cannot be undone — record a correcting transaction instead.
+            {" "}and updates ownership. It cannot be undone - record a correcting transaction instead.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">

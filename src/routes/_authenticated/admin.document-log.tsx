@@ -16,13 +16,13 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/_authenticated/admin/document-log")({
   head: () => ({
     meta: [
-      { title: "Document Activity Log — Harmonious Admin" },
+      { title: "Document Activity Log - Harmonious Admin" },
       {
         name: "description",
         content:
           "Every fund document upload, signature and review decision with timestamps and the person responsible.",
       },
-      { property: "og:title", content: "Document Activity Log — Harmonious Admin" },
+      { property: "og:title", content: "Document Activity Log - Harmonious Admin" },
       {
         property: "og:description",
         content: "Audit every document uploaded, signed, edited or rejected across Harmonious funds.",
@@ -100,7 +100,7 @@ function DocumentLogPage() {
         <div>
           <h1 className="text-2xl">Document activity</h1>
           <p className="mt-1 text-muted-foreground">
-            Every document added, uploaded, signed or rejected — with the time it happened and who did it.
+            Every document added, uploaded, signed or rejected - with the time it happened and who did it.
           </p>
         </div>
         <Button asChild size="sm" variant="outline">

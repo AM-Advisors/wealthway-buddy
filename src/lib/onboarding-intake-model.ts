@@ -204,7 +204,7 @@ export function irsFieldValues(formType: string, f: TaxFormFill): { text: Record
 /**
  * Facts each official form requires that the platform must hold before the
  * form can be populated. Anything missing stops the form at Needs Information
- * — required boxes are never left blank and never guessed.
+ * - required boxes are never left blank and never guessed.
  */
 export function missingTaxFormFacts(formType: string, f: Partial<TaxFormFill>): string[] {
   const missing: string[] = [];
@@ -249,7 +249,7 @@ export function w9ClassificationFor(profileType: string | null | undefined): Tax
 
 /**
  * Full-TIN retention decision. Harmonious prepares K-1s and information
- * returns, which need the payee's full TIN, so it is retained — encrypted,
+ * returns, which need the payee's full TIN, so it is retained - encrypted,
  * outside the Data API, readable only with the sensitive-tax capability.
  */
 export const FULL_TIN_RETAINED = true;

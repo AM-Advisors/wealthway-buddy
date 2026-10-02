@@ -13,9 +13,9 @@ import { getClientHome } from "@/lib/client-fund-request.functions";
 export const Route = createFileRoute("/_authenticated/client/home")({
   head: () => ({
     meta: [
-      { title: "Home — Harmonious client portal" },
+      { title: "Home - Harmonious client portal" },
       { name: "description", content: "Your funds, new fund requests, setup progress and what's waiting on you." },
-      { property: "og:title", content: "Home — Harmonious client portal" },
+      { property: "og:title", content: "Home - Harmonious client portal" },
       { property: "og:description", content: "Your funds, requests and setup progress at a glance." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -46,11 +46,11 @@ function ClientHome() {
 
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[
-          { l: "Funds", v: h ? String(h.totals.funds) : "—" },
-          { l: "Open to investors", v: h ? String(h.totals.open) : "—" },
-          { l: "Investors", v: h ? String(h.totals.investors) : "—" },
-          { l: "Committed", v: h ? usd(h.totals.commitCents) : "—" },
-          { l: "Funded (bank-matched)", v: h ? usd(h.totals.fundedCents) : "—" },
+          { l: "Funds", v: h ? String(h.totals.funds) : "-" },
+          { l: "Open to investors", v: h ? String(h.totals.open) : "-" },
+          { l: "Investors", v: h ? String(h.totals.investors) : "-" },
+          { l: "Committed", v: h ? usd(h.totals.commitCents) : "-" },
+          { l: "Funded (bank-matched)", v: h ? usd(h.totals.fundedCents) : "-" },
         ].map((k) => (
           <Card key={k.l}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{k.l}</p><p className="text-xl font-semibold">{k.v}</p></CardContent></Card>
         ))}
@@ -67,9 +67,9 @@ function ClientHome() {
                 {r.status === "request_draft" ? (
                   <Button asChild size="sm" variant="outline"><Link to="/client/funds/new" search={{ draft: r.id }}>Continue draft</Link></Button>
                 ) : r.offeringId ? (
-                  <Link to="/client/funds/$fundId" params={{ fundId: r.offeringId }}><Badge variant="outline">Harmonious — pending review</Badge></Link>
+                  <Link to="/client/funds/$fundId" params={{ fundId: r.offeringId }}><Badge variant="outline">Harmonious - pending review</Badge></Link>
                 ) : (
-                  <Badge variant="outline">{r.duplicate ? "Harmonious reviewing a possible duplicate" : "Harmonious — pending review"}</Badge>
+                  <Badge variant="outline">{r.duplicate ? "Harmonious reviewing a possible duplicate" : "Harmonious - pending review"}</Badge>
                 )}
               </div>
             ))}
@@ -96,7 +96,7 @@ function ClientHome() {
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span className="font-medium">{f.name}</span>
                 <span className="flex items-center gap-2">
-                  {f.harmoniousPending > 0 && <Badge variant="outline">Harmonious — {f.harmoniousPending} pending</Badge>}
+                  {f.harmoniousPending > 0 && <Badge variant="outline">Harmonious - {f.harmoniousPending} pending</Badge>}
                   <Badge variant={f.isOpen ? "default" : "secondary"}>{f.isOpen ? "Open" : "In setup"}</Badge>
                 </span>
               </div>

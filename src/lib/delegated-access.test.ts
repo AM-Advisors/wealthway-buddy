@@ -318,7 +318,7 @@ describe("database policies", () => {
 });
 
 /* ---------------- Consolidation Stage 3: acceptance semantics ---------------- */
-describe("Stage 3 — acceptance is required before a delegation authorizes", () => {
+describe("Stage 3 - acceptance is required before a delegation authorizes", () => {
   const pro = (n: number) => `77777777-7777-4777-8777-00000000000${n}`;
 
   for (const [n, state] of [

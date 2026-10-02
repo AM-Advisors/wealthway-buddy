@@ -23,7 +23,7 @@ import {
 
 /**
  * Raises one movement of money for review. Harmonious facilitates the payment
- * on instruction — it does not hold funds as a bank, custodian or escrow agent.
+ * on instruction - it does not hold funds as a bank, custodian or escrow agent.
  * Anything outside the client's active statement of work is refused here.
  */
 export function RaisePaymentCard({

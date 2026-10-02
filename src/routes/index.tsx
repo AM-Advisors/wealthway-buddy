@@ -29,7 +29,7 @@ const PILLARS = [
   },
   {
     title: "Onboard The Investors",
-    body: "Identity verification, AML screening, accreditation under Rule 506(b) or 506(c), document e-signature and investor funding workflows — in one guided flow.",
+    body: "Identity verification, AML screening, accreditation under Rule 506(b) or 506(c), document e-signature and investor funding workflows - in one guided flow.",
     to: "/platform",
     cta: "See the platform",
   },
@@ -144,7 +144,7 @@ function Index() {
             </h2>
             <p className="mt-4 max-w-2xl text-muted-foreground">
               Control how your private shares move. Verify ownership, document exposure and maintain
-              the record. Already on Carta or Pulley? Your history comes with you — export the file,
+              the record. Already on Carta or Pulley? Your history comes with you - export the file,
               we recognise the format, and you approve every row before it is recorded.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">

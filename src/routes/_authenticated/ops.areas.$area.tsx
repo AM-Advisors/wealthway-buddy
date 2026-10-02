@@ -32,9 +32,9 @@ export const Route = createFileRoute("/_authenticated/ops/areas/$area")({
     const title = loaderData ? opsWorkArea(loaderData.areaId)?.title : "Work area";
     return {
       meta: [
-        { title: `${title} — Harmonious Operations` },
+        { title: `${title} - Harmonious Operations` },
         { name: "description", content: `What's waiting in ${title} and every screen for that process.` },
-        { property: "og:title", content: `${title} — Harmonious Operations` },
+        { property: "og:title", content: `${title} - Harmonious Operations` },
         { property: "og:description", content: `What's waiting in ${title} and every screen for that process.` },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary" },
@@ -69,7 +69,7 @@ function WorkAreaPage() {
   const caps = (session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? [];
   const allowed = areaVisible(area, caps);
   const accessFn = useServerFn(getAccessControlAccess);
-  // UX only — the server functions re-check on every call.
+  // UX only - the server functions re-check on every call.
   const { data: acl } = useQuery({ queryKey: ["access-control-access"], queryFn: () => accessFn(), enabled: area.id === "administration" });
   const screens = visibleScreens(allowedScreens(area, caps), { accessControl: acl?.allowed === true });
 

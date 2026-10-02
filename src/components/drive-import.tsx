@@ -36,7 +36,7 @@ type Row = AssociationRow & { name: string; importAsNewVersion?: boolean; addAss
 
 const sel = "h-9 w-full rounded-md border bg-background px-2 text-sm";
 
-/** Import from Google Drive — Super Administrators only (checked again on the server). */
+/** Import from Google Drive - Super Administrators only (checked again on the server). */
 export function DriveImportButton({ offeringId, investorUserId, label = "Import from Google Drive" }: { offeringId?: string | undefined; investorUserId?: string | undefined; label?: string }) {
   const access = useServerFn(getDriveIntakeAccess);
   const q = useQuery({ queryKey: ["drive-intake-access"], queryFn: () => access(), retry: false });
@@ -283,7 +283,7 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
               <Badge variant="outline">{documentTypeLabel(r.category, r.documentType) ?? r.documentType}</Badge>
               <Badge variant="secondary">{CLASSIFICATION_LABELS[r.classification as keyof typeof CLASSIFICATION_LABELS]}</Badge>
               {r.version > 1 ? <Badge variant="outline">v{r.version}</Badge> : null}
-              {r.reviewState === "evidence_received_needs_review" ? <Badge variant="destructive">Evidence received — needs review</Badge> : null}
+              {r.reviewState === "evidence_received_needs_review" ? <Badge variant="destructive">Evidence received - needs review</Badge> : null}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               {r.fundName}{r.profileLabel ? ` · ${r.profileLabel}` : ""} · {r.recordStatus === "historical" ? "Historical record" : "Current document"} · {EXECUTION_LABELS[r.executionEvidence as keyof typeof EXECUTION_LABELS]}

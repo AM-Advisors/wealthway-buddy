@@ -1,8 +1,8 @@
 /**
  * Canonical accounting and reporting vocabulary.
  *
- * Every number Harmonious publishes — NAV, capital accounts, financial
- * statements, performance, tax allocations, cap table reports — resolves back
+ * Every number Harmonious publishes - NAV, capital accounts, financial
+ * statements, performance, tax allocations, cap table reports - resolves back
  * to these definitions. Report builders must not invent their own states,
  * account names or period rules.
  */

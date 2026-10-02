@@ -30,7 +30,7 @@ function Organization() {
                 <span className="text-xs capitalize text-muted-foreground">{m.status}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {String(m.organizationType ?? "").replace(/_/g, " ")} — seat: {m.seatRole}
+                {String(m.organizationType ?? "").replace(/_/g, " ")} - seat: {m.seatRole}
               </p>
             </li>
           ))}

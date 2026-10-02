@@ -7,12 +7,12 @@ export const Route = createFileRoute("/_authenticated/ops/banking")({
 
   head: () => ({
     meta: [
-      { title: "Banking requests — Harmonious operations" },
+      { title: "Banking requests - Harmonious operations" },
       {
         name: "description",
         content: "Approve or send back each fund's request to have Harmonious open its bank account.",
       },
-      { property: "og:title", content: "Banking requests — Harmonious operations" },
+      { property: "og:title", content: "Banking requests - Harmonious operations" },
       {
         property: "og:description",
         content: "Track Mercury, Texas Capital and Customers Bank account openings.",

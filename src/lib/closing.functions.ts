@@ -235,7 +235,7 @@ export const confirmClosing = createServerFn({ method: "POST" })
       action: "closing_confirmed",
       area: "closing",
       outcome: "approved",
-      summary: `Closed on ${data.closing_date} — fully funded`,
+      summary: `Closed on ${data.closing_date} - fully funded`,
       note,
       metadata: { funded_amount_cents: data.funded_amount_cents },
     });
@@ -279,7 +279,7 @@ export const confirmClosing = createServerFn({ method: "POST" })
           await sendTemplateEmail("investor-message", profile.email, {
             templateData: {
               investorName: profile.legal_name ?? "Investor",
-              subject: `Your investment has closed — ${offering?.name ?? "your fund"}`,
+              subject: `Your investment has closed - ${offering?.name ?? "your fund"}`,
               offeringName: offering?.name ?? "your fund",
               body: `We have received your funds in full and your investment closed on ${data.closing_date}.\n\nAmount received: ${amount}\n\nYour closing date and final documents are now in your portal at https://app.harmonious.co/home.${
                 note ? `\n\nNote from the team: ${note}` : ""

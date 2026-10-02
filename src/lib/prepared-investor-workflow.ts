@@ -189,7 +189,7 @@ export function requiredMergeFields(profileType: string, signingMode: string): s
   return base;
 }
 
-/** Produces values + provenance. Returns a copy — the profile is never mutated by a document. */
+/** Produces values + provenance. Returns a copy - the profile is never mutated by a document. */
 export function mergeDocument(input: MergeInput, required: string[]): {
   values: Record<string, string>; sources: Record<string, MergeSource>; missing: { field: string; message: string; profileKey: string }[];
 } {
@@ -289,7 +289,7 @@ export function nextAction(r: ManagerRowInput): NextAction {
 const coarse = (s?: string | null) =>
   s === "approved" ? "Complete" : s === "rejected" || s === "needs_info" || s === "refresh_required" ? "Needs information" : s === "in_review" || s === "pending_review" ? "Compliance review" : "Not started";
 
-/** Coarse statuses only — never evidence, TINs, raw provider or screening results. */
+/** Coarse statuses only - never evidence, TINs, raw provider or screening results. */
 export function managerSafeRow(r: ManagerRowInput & { name: string; investingAs: string; commitmentCents: number }) {
   return {
     investor: r.name, investingAs: r.investingAs, commitmentCents: r.commitmentCents,
@@ -318,15 +318,15 @@ export type ActionFacts = {
 export function deriveActions(f: ActionFacts): DerivedAction[] {
   const out: DerivedAction[] = [];
   const push = (a: DerivedAction) => { if (!out.some((x) => x.key === a.key)) out.push(a); };
-  for (const d of f.drafts ?? []) if (d.canSend) push({ key: `draft_ready:${d.id}`, persona: "fund_manager", title: `Investor draft ready to send — ${d.name}`, href: `/manager/funds/${f.fundId}?tab=investors&draft=${d.id}`, fundId: f.fundId, subjectId: d.id });
+  for (const d of f.drafts ?? []) if (d.canSend) push({ key: `draft_ready:${d.id}`, persona: "fund_manager", title: `Investor draft ready to send - ${d.name}`, href: `/manager/funds/${f.fundId}?tab=investors&draft=${d.id}`, fundId: f.fundId, subjectId: d.id });
   for (const i of f.myInvestments ?? []) {
     const base = `/onboard/i/${i.onboardingId}`;
-    if (i.unreviewedPrepared) push({ key: `confirm_info:${i.onboardingId}`, persona: "investor", title: `Confirm your investment information — ${f.fundName}`, href: `${base}#confirm`, fundId: f.fundId, subjectId: i.onboardingId });
+    if (i.unreviewedPrepared) push({ key: `confirm_info:${i.onboardingId}`, persona: "investor", title: `Confirm your investment information - ${f.fundName}`, href: `${base}#confirm`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.needsInfo) push({ key: `needs_info:${i.onboardingId}`, persona: "investor", title: "Additional information required", href: `${base}#requirements`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.identityPending) push({ key: `identity:${i.onboardingId}`, persona: "investor", title: "Complete identity verification", href: `${base}#verification`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.docsToReview) push({ key: `review_docs:${i.onboardingId}`, persona: "investor", title: "Review your documents", href: `${base}#documents`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.docsToSign) push({ key: `sign_docs:${i.onboardingId}`, persona: "investor", title: "Sign investment documents", href: `${base}#documents`, fundId: f.fundId, subjectId: i.onboardingId });
-    if (i.approvedToFund) push({ key: `approved_fund:${i.onboardingId}`, persona: "investor", title: `Approved to fund — ${f.fundName}`, href: `/investment/${i.onboardingId}?step=fund`, fundId: f.fundId, subjectId: i.onboardingId });
+    if (i.approvedToFund) push({ key: `approved_fund:${i.onboardingId}`, persona: "investor", title: `Approved to fund - ${f.fundName}`, href: `/investment/${i.onboardingId}?step=fund`, fundId: f.fundId, subjectId: i.onboardingId });
   }
   for (const c of f.countersign ?? []) if (c.iAmSignatory) push({ key: `countersign:${c.onboardingId}:${c.documentTitle}`, persona: "fund_manager", title: `Countersign ${c.investorName}'s ${c.documentTitle}`, href: `/manager/funds/${f.fundId}?tab=investors&onboarding=${c.onboardingId}`, fundId: f.fundId, subjectId: c.onboardingId });
   for (const o of f.opsReview ?? []) if (o.allowed) push({ key: `ops:${o.category}:${o.onboardingId}`, persona: "harmonious", title: `${o.category}`, href: `/admin/investor-onboarding?onboarding=${o.onboardingId}`, fundId: f.fundId, subjectId: o.onboardingId });
@@ -393,7 +393,7 @@ export type SnapshotRow = {
   status: string; merge_values: Record<string, string>; reviewed_by: string | null; reviewed_fingerprint: string | null;
 };
 
-export const SIGNING_UNAVAILABLE = "Signing unavailable — this document needs to be reviewed again.";
+export const SIGNING_UNAVAILABLE = "Signing unavailable - this document needs to be reviewed again.";
 
 /**
  * Server-side gate before any Box session is created. Never trusts a browser flag:
@@ -406,8 +406,8 @@ export function signingGate(input: {
 }): { ok: true; snapshotId: string; version: number } | { ok: false; error: string; next: "complete_information" | "review_document" | "regenerate" | "wait" } {
   const s = input.latest;
   if (input.missing.length) return { ok: false, error: `${SIGNING_UNAVAILABLE} ${input.missing.map((m) => m.message).join(" ")}`, next: "complete_information" };
-  if (!input.templateReady || !input.signerConfigReady) return { ok: false, error: "Signing unavailable — this document isn't prepared for signature yet.", next: "wait" };
-  if (!input.prerequisitesMet) return { ok: false, error: "Signing unavailable — finish the earlier steps first.", next: "wait" };
+  if (!input.templateReady || !input.signerConfigReady) return { ok: false, error: "Signing unavailable - this document isn't prepared for signature yet.", next: "wait" };
+  if (!input.prerequisitesMet) return { ok: false, error: "Signing unavailable - finish the earlier steps first.", next: "wait" };
   if (!s || s.onboarding_id !== input.onboardingId || s.offering_id !== input.offeringId || s.document_id !== input.documentId) return { ok: false, error: SIGNING_UNAVAILABLE, next: "review_document" };
   if (["stale", "superseded"].includes(s.status)) return { ok: false, error: SIGNING_UNAVAILABLE, next: "regenerate" };
   if (fingerprint(s.merge_values) !== fingerprint(input.currentMergeValues)) return { ok: false, error: SIGNING_UNAVAILABLE, next: "regenerate" };

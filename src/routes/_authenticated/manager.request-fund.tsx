@@ -15,9 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/manager/request-fund")({
   head: () => ({
     meta: [
-      { title: "Request New Fund / SPV — Harmonious" },
+      { title: "Request New Fund / SPV - Harmonious" },
       { name: "description", content: "Ask Harmonious to set up a new fund or SPV in four short steps." },
-      { property: "og:title", content: "Request New Fund / SPV — Harmonious" },
+      { property: "og:title", content: "Request New Fund / SPV - Harmonious" },
       { property: "og:description", content: "Ask Harmonious to set up a new fund or SPV in four short steps." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -73,7 +73,7 @@ function RequestFund() {
 
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
   const canNext = step === 0 ? !!f.kind : step === 1 ? f.fundName.trim().length >= 2 : true;
-  const kindLabel = FUND_REQUEST_KINDS.find((k) => k.value === f.kind)?.label ?? "—";
+  const kindLabel = FUND_REQUEST_KINDS.find((k) => k.value === f.kind)?.label ?? "-";
 
   if (options.isSuccess && clients.length === 0) {
     return <main className="mx-auto max-w-xl px-4 py-12"><h1 className="text-2xl">Request New Fund / SPV</h1><p className="mt-2 text-sm text-muted-foreground">Your account isn't linked to a firm yet. Harmonious will set that up with you.</p></main>;

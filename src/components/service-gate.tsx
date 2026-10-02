@@ -101,7 +101,7 @@ export function RequestServiceCard({
     in_review: "Harmonious is reviewing this request. You'll see the fee proposal here when it's ready.",
     quoted: "Harmonious has proposed a fee. Review and sign it from your portal to go ahead.",
     signed: "You've signed the amendment. Harmonious will switch the service on shortly.",
-    activated: "Active — this service is now part of your scope.",
+    activated: "Active - this service is now part of your scope.",
     declined: "Harmonious has declined this request. The reason is on your portal.",
     withdrawn: "This request was withdrawn.",
   };

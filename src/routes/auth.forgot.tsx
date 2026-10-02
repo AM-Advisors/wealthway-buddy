@@ -12,13 +12,13 @@ export const Route = createFileRoute("/auth/forgot")({
   head: () => ({
     meta: [
         { name: "robots", content: "noindex, nofollow" },
-      { title: "Reset Your Password — Harmonious" },
+      { title: "Reset Your Password - Harmonious" },
       {
         name: "description",
         content:
           "Request a secure link to set a new password for your Harmonious investor account.",
       },
-      { property: "og:title", content: "Reset Your Password — Harmonious" },
+      { property: "og:title", content: "Reset Your Password - Harmonious" },
       { property: "og:description", content: "Get back into your Harmonious investor account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -98,7 +98,7 @@ describe("repository boundary", () => {
 });
 
 describe("association rules", () => {
-  it("filename alone never establishes identity — prefill comes only from tagged folders", () => {
+  it("filename alone never establishes identity - prefill comes only from tagged folders", () => {
     const pre = prefillFromHierarchy(["UNTAGGED", "FUNDROOT000"], mappings);
     expect(pre).toEqual({ mappingId: null, offeringId: null, profileId: null });
     expect(rowProblems(invRow({ profileId: null }), "Jane Smith subscription.pdf")).toContain("Choose the Investor / Investment Profile.");

@@ -5,13 +5,13 @@ import { ClientBankAccountsBoard } from "@/components/client-bank-accounts-board
 export const Route = createFileRoute("/_authenticated/admin/client-bank-accounts")({
   head: () => ({
     meta: [
-      { title: "Client bank accounts — Harmonious Admin" },
+      { title: "Client bank accounts - Harmonious Admin" },
       {
         name: "description",
         content:
           "Record the account each client pays from so portal payments settle their invoices automatically.",
       },
-      { property: "og:title", content: "Client bank accounts — Harmonious Admin" },
+      { property: "og:title", content: "Client bank accounts - Harmonious Admin" },
       {
         property: "og:description",
         content: "Paying account details for every client, kept for automatic invoice matching.",

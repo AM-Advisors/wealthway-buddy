@@ -279,7 +279,7 @@ function AdminReviewPanel() {
         <CardTitle className="text-base">Administrator review</CardTitle>
         <CardDescription>
           Everyone who holds administrator access right now. Signing in with a Harmonious Google
-          account no longer grants it — access is given by an administrator below and recorded in
+          account no longer grants it - access is given by an administrator below and recorded in
           the audit trail. Review this list and remove anyone who no longer needs it.
         </CardDescription>
       </CardHeader>

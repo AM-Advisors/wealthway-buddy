@@ -225,7 +225,7 @@ export async function startVerificationSession(input: {
     headers: { "content-type": "application/json", "x-api-key": key },
     body: JSON.stringify({
       workflow_id: workflowId,
-      // Opaque Harmonious correlation id — never the email address.
+      // Opaque Harmonious correlation id - never the email address.
       vendor_data: verification.verification_ref,
       metadata: { verification_ref: verification.verification_ref },
       callback: `${input.origin}${input.returnPath ?? "/home"}`,

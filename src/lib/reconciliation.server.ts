@@ -100,7 +100,7 @@ export async function raiseException(input: {
       context: input.context ?? {},
       opened_by: input.openedBy ?? null,
     });
-  // A unique-violation means the exception is already open — that is the point.
+  // A unique-violation means the exception is already open - that is the point.
   if (error && !String(error.message).includes("duplicate key")) fail(error.message);
 }
 
@@ -466,7 +466,7 @@ export async function reviewReconciliation(
       .maybeSingle();
     if (!txn) fail("Bank transaction not found.");
 
-    // A corrected investor must actually belong to this fund — an id from the
+    // A corrected investor must actually belong to this fund - an id from the
     // browser never selects the record on its own.
     let applicationId = input.correction?.applicationId ?? rec.matched_application_id;
     let investorUserId = input.correction?.investorUserId ?? rec.investor_user_id;
@@ -881,7 +881,7 @@ export async function reconciliationQueue(
       id: r.id as string,
       bankTransactionId: r.bank_transaction_id as string,
       fundId: r.offering_id as string | null,
-      fundName: fundName.get(String(r.offering_id)) ?? "—",
+      fundName: fundName.get(String(r.offering_id)) ?? "-",
       postedOn: t?.posted_on ?? null,
       amountCents: Number(t?.amount_cents ?? 0),
       counterparty: t?.name ?? null,

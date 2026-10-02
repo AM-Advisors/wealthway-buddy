@@ -121,7 +121,7 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
       agreements: ((sows ?? []) as any[]).map((s) => ({
         id: s.id as string,
         clientId: s.client_id as string,
-        clientName: clientById.get(s.client_id)?.legal_name || clientById.get(s.client_id)?.name || "—",
+        clientName: clientById.get(s.client_id)?.legal_name || clientById.get(s.client_id)?.name || "-",
         title: s.title as string,
         stage: (s.stage as string) ?? "draft",
         status: s.status as string,
@@ -135,7 +135,7 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
         id: c.id as string,
         sowId: (c.sow_id as string) ?? null,
         clientId: c.client_id as string,
-        clientName: clientById.get(c.client_id)?.legal_name || clientById.get(c.client_id)?.name || "—",
+        clientName: clientById.get(c.client_id)?.legal_name || clientById.get(c.client_id)?.name || "-",
         sectionTitle: c.section_title as string,
         status: c.status as string,
         createdAt: c.created_at as string,
@@ -143,7 +143,7 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
       requests: ((requests ?? []) as any[]).map((r) => ({
         id: r.id as string,
         clientId: r.client_id as string,
-        clientName: clientById.get(r.client_id)?.legal_name || clientById.get(r.client_id)?.name || "—",
+        clientName: clientById.get(r.client_id)?.legal_name || clientById.get(r.client_id)?.name || "-",
         fundName: r.fund_name as string,
         status: r.status as string,
         sowId: (r.sow_id as string) ?? null,
@@ -551,7 +551,7 @@ export const createAmendment = createServerFn({ method: "POST" })
     await audit(context, who, {
       action: "sow.amendment_created",
       clientId: (sow as any).client_id,
-      target: `${(sow as any).title} — amendment ${nextNo}`,
+      target: `${(sow as any).title} - amendment ${nextNo}`,
     });
 
     return { id: (created as any).id as string, amendmentNo: nextNo };
@@ -719,7 +719,7 @@ export const getAgreementDocument = createServerFn({ method: "GET" })
     </style></head><body>
       <h1>${escapeHtml((sow as any).title)}</h1>
       <p class="meta">${escapeHtml(clientName)} and ${HARMONIOUS_LEGAL_NAME} · Effective ${
-        (sow as any).effective_date ?? "—"
+        (sow as any).effective_date ?? "-"
       }${(sow as any).executed_at ? ` · Executed ${new Date((sow as any).executed_at).toLocaleDateString("en-US")}` : " · Draft"}</p>
       ${body}
       <h2>Pricing summary${

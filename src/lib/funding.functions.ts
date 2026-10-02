@@ -144,7 +144,7 @@ async function assertFundable(
   documents_status: string;
   manager_review_status?: string | null;
 }) {
-  // The fund team has to approve the identity application first — nobody
+  // The fund team has to approve the identity application first - nobody
   // reaches wire instructions on an unapproved file.
   if (app.kyc_status && app.kyc_status !== "approved") {
     throw new Error(
@@ -418,7 +418,7 @@ export const markWireSent = createServerFn({ method: "POST" })
 
 /**
  * Investor submits the details of a wire they have already sent.
- * The payment moves to "processing" (pending review) — only an admin can settle it.
+ * The payment moves to "processing" (pending review) - only an admin can settle it.
  */
 export const submitWireConfirmation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

@@ -25,7 +25,7 @@ function kindLabel(value: string) {
 }
 
 /**
- * When `fundId` is given the card only shows — and only files — paperwork for
+ * When `fundId` is given the card only shows - and only files - paperwork for
  * that fund. Without it the person picks the fund themselves.
  */
 export function InvestorUploads({ fundId }: { fundId?: string | null } = {}) {

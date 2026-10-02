@@ -31,9 +31,9 @@ import { Textarea } from "@/components/ui/textarea";
 const num = (v: any) => Number(v ?? 0).toLocaleString("en-US", { maximumFractionDigits: 4 });
 const money = (cents: any) =>
   cents == null
-    ? "—"
+    ? "-"
     : (Number(cents) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
-const day = (v: any) => (v ? new Date(v).toLocaleDateString() : "—");
+const day = (v: any) => (v ? new Date(v).toLocaleDateString() : "-");
 
 const STATUS_TONE: Record<string, string> = {
   issued: "default",

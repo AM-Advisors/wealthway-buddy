@@ -16,9 +16,9 @@ import { listSowTemplates, saveSowTemplate, setSowTemplateStatus } from "@/lib/c
 export const Route = createFileRoute("/_authenticated/ops/contracts/sow-templates")({
   head: () => ({
     meta: [
-      { title: "SOW templates — Harmonious operations" },
+      { title: "SOW templates - Harmonious operations" },
       { name: "description", content: "Versioned Harmonious SOW templates: draft, approved/current and retired." },
-      { property: "og:title", content: "SOW templates — Harmonious operations" },
+      { property: "og:title", content: "SOW templates - Harmonious operations" },
       { property: "og:description", content: "Versioned Harmonious SOW templates used to prepare draft SOWs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -72,7 +72,7 @@ function SowTemplates() {
       <Card>
         <CardHeader><CardTitle className="text-base">All versions</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
-          {!templates.length ? <p className="text-sm text-muted-foreground">No templates yet. Until one is approved, new funds show "SOW required — no approved current template available".</p> : (
+          {!templates.length ? <p className="text-sm text-muted-foreground">No templates yet. Until one is approved, new funds show "SOW required - no approved current template available".</p> : (
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">Template</th><th>Type</th><th>Version</th><th>Effective</th><th>Status</th><th>Approved</th><th>Retired</th><th /></tr></thead>
               <tbody>
@@ -83,8 +83,8 @@ function SowTemplates() {
                     <td>v{t.version}</td>
                     <td>{t.effective_date}</td>
                     <td><Badge variant={t.status === "approved" ? "default" : "secondary"}>{t.status === "approved" ? "Approved / Current" : t.status === "retired" ? "Retired" : "Draft"}</Badge></td>
-                    <td>{t.approved_at ? t.approved_at.slice(0, 10) : "—"}</td>
-                    <td>{t.retired_at ? t.retired_at.slice(0, 10) : "—"}</td>
+                    <td>{t.approved_at ? t.approved_at.slice(0, 10) : "-"}</td>
+                    <td>{t.retired_at ? t.retired_at.slice(0, 10) : "-"}</td>
                     <td className="space-x-1 text-right">
                       {caps.includes("approve_terms") && t.status === "draft" && t.created_by !== me ? <Button size="sm" onClick={() => setStatus({ data: { id: t.id, status: "approved" } }).then(refresh, err)}>Approve</Button> : null}
                       {caps.includes("approve_terms") && t.status === "approved" ? <Button size="sm" variant="ghost" onClick={() => setStatus({ data: { id: t.id, status: "retired" } }).then(refresh, err)}>Retire</Button> : null}

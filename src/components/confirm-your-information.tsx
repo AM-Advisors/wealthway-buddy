@@ -23,7 +23,7 @@ export function ConfirmYourInformation({ onboardingId }: { onboardingId: string 
     setBusy(true);
     try {
       await confirm({ data: { onboardingId, corrections: edits } });
-      toast.success("Thanks — your information is confirmed.");
+      toast.success("Thanks - your information is confirmed.");
       qc.invalidateQueries({ queryKey: ["investor-prefill", onboardingId] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
@@ -38,7 +38,7 @@ export function ConfirmYourInformation({ onboardingId }: { onboardingId: string 
             {f.editable && editing ? (
               <Input aria-label={f.label} defaultValue={f.value ?? ""} onChange={(e) => setEdits((s) => ({ ...s, [f.key]: e.target.value }))} />
             ) : (
-              <p className="text-sm">{f.value == null || f.value === "" ? "—" : f.key.endsWith("_cents") ? money(f.value) : String(f.value)}</p>
+              <p className="text-sm">{f.value == null || f.value === "" ? "-" : f.key.endsWith("_cents") ? money(f.value) : String(f.value)}</p>
             )}
           </div>
         ))}

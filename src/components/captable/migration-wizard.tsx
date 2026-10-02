@@ -104,7 +104,7 @@ export function migrationSteps(facts: WizardFacts): WizardStep[] {
     detail: recorded
       ? "Recorded on the cap table"
       : cancelled
-        ? "This file was cancelled — nothing was recorded"
+        ? "This file was cancelled - nothing was recorded"
         : openQuestions > 0
           ? `${fmtNumber(openQuestions)} open ${openQuestions === 1 ? "question" : "questions"} with the founder`
           : "Accept the file to record it",

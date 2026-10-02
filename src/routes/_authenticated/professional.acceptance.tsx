@@ -46,7 +46,7 @@ function AwaitingAcceptance() {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         You are accepting exactly what the client granted. Nothing here can be widened or changed by
-        you — if the client later changes it, you will be asked to accept again.
+        you - if the client later changes it, you will be asked to accept again.
       </p>
 
       {items.map((item) => (
@@ -54,7 +54,7 @@ function AwaitingAcceptance() {
           <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
             <CardTitle className="text-lg">{item.principalName}</CardTitle>
             <Badge variant="secondary">
-              {item.acceptanceState === "renewal_required" ? "Changed — accept again" : "Awaiting you"}
+              {item.acceptanceState === "renewal_required" ? "Changed - accept again" : "Awaiting you"}
             </Badge>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -77,7 +77,7 @@ function AwaitingAcceptance() {
               <div>
                 <dt className="text-xs text-muted-foreground">Dates</dt>
                 <dd>
-                  {item.effectiveAt ? new Date(item.effectiveAt).toLocaleDateString() : "—"} –{" "}
+                  {item.effectiveAt ? new Date(item.effectiveAt).toLocaleDateString() : "-"} –{" "}
                   {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : "no end date"}
                 </dd>
               </div>
@@ -148,12 +148,12 @@ function AwaitingAcceptance() {
 export const Route = createFileRoute("/_authenticated/professional/acceptance")({
   head: () => ({
     meta: [
-      { title: "Authorisations awaiting acceptance — Harmonious" },
+      { title: "Authorisations awaiting acceptance - Harmonious" },
       {
         name: "description",
         content: "Review and accept the authorisations clients have granted you.",
       },
-      { property: "og:title", content: "Authorisations awaiting acceptance — Harmonious" },
+      { property: "og:title", content: "Authorisations awaiting acceptance - Harmonious" },
       { property: "og:description", content: "Accept client authorisations before acting." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { getFundFeeRates, setFundFeeSource } from "@/lib/fund-fees.functions";
 
 function money(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
@@ -68,7 +68,7 @@ export function FundFeePanel({ offeringId }: { offeringId: string }) {
                 <p className="font-medium">{kind.label}</p>
                 <p className="text-sm text-muted-foreground">
                   {money(kind.current.cents)} · {sourceText(kind.current.source)}
-                  {kind.current.reason ? ` — ${kind.current.reason}` : ""}
+                  {kind.current.reason ? ` - ${kind.current.reason}` : ""}
                 </p>
               </div>
               {off ? <Badge variant="destructive">Differs from agreed rate</Badge> : null}
