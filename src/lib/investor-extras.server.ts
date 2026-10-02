@@ -181,3 +181,17 @@ export async function removeUpdate(userId: string, fundId: string, id: string) {
   await (await db()).from("fund_investor_updates").update({ removed_at: new Date().toISOString(), removed_by: userId }).eq("id", id).eq("offering_id", fundId);
   return { ok: true };
 }
+
+/** Fund documents and assets a manager may reference in an update. */
+export async function updateAttachmentOptions(userId: string, fundId: string) {
+  await assertFund(userId, fundId);
+  const d = await db();
+  const [{ data: files }, { data: assets }] = await Promise.all([
+    d.from("fund_files").select("id, title, file_name").eq("offering_id", fundId).is("deleted_at", null).not("storage_path", "is", null).order("created_at", { ascending: false }),
+    d.from("portfolio_assets").select("id, asset_name, issuer_name").eq("offering_id", fundId).order("acquisition_date", { ascending: false }),
+  ]);
+  return {
+    files: ((files ?? []) as any[]).map((f) => ({ id: String(f.id), name: String(f.title || f.file_name) })),
+    assets: ((assets ?? []) as any[]).map((a) => ({ id: String(a.id), name: String(a.asset_name || a.issuer_name || "Asset") })),
+  };
+}

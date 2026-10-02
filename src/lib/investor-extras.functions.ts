@@ -51,3 +51,8 @@ export const removeFundUpdateFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ fundId: uuid, id: uuid }).parse)
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => (await x()).removeUpdate(context.userId, data.fundId, data.id));
+
+export const updateAttachmentOptionsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ fundId: uuid }).parse)
+  .handler(async ({ data, context }) => (await x()).updateAttachmentOptions(context.userId, data.fundId));
