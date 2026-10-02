@@ -72,7 +72,7 @@ export function TeamTab({ fundId }: { fundId: string }) {
       </Card>
 
       <FeesCard fundId={fundId} d={d} />
-      {editing && <MemberEditor fundId={fundId} member={editing} onClose={() => setEditing(null)} />}
+      {editing && <MemberEditor key={editing.id ?? `new-${editing.team_role}`} fundId={fundId} member={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
