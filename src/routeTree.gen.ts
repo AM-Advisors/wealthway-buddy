@@ -21,6 +21,7 @@ import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as ContactusRouteImport } from './routes/contactus'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as HarmoniousclassroomRouteImport } from './routes/harmoniousclassroom'
+import { Route as InvestorLoginRouteImport } from './routes/investor-login'
 import { Route as ManagerLoginRouteImport } from './routes/manager-login'
 import { Route as PlaidOauthRouteImport } from './routes/plaid-oauth'
 import { Route as PlatformRouteImport } from './routes/platform'
@@ -401,6 +402,11 @@ const FundAdministrationRoute = FundAdministrationRouteImport.update({
 const HarmoniousclassroomRoute = HarmoniousclassroomRouteImport.update({
   id: '/harmoniousclassroom',
   path: '/harmoniousclassroom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestorLoginRoute = InvestorLoginRouteImport.update({
+  id: '/investor-login',
+  path: '/investor-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManagerLoginRoute = ManagerLoginRouteImport.update({
@@ -2264,6 +2270,7 @@ export interface FileRoutesByFullPath {
   '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
+  '/investor-login': typeof InvestorLoginRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -2598,6 +2605,7 @@ export interface FileRoutesByTo {
   '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
+  '/investor-login': typeof InvestorLoginRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -2929,6 +2937,7 @@ export interface FileRoutesById {
   '/contactus': typeof ContactusRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
+  '/investor-login': typeof InvestorLoginRoute
   '/manager-login': typeof ManagerLoginRoute
   '/plaid-oauth': typeof PlaidOauthRoute
   '/platform': typeof PlatformRoute
@@ -3266,6 +3275,7 @@ export interface FileRouteTypes {
     | '/contactus'
     | '/fund-administration'
     | '/harmoniousclassroom'
+    | '/investor-login'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -3600,6 +3610,7 @@ export interface FileRouteTypes {
     | '/contactus'
     | '/fund-administration'
     | '/harmoniousclassroom'
+    | '/investor-login'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -3930,6 +3941,7 @@ export interface FileRouteTypes {
     | '/contactus'
     | '/fund-administration'
     | '/harmoniousclassroom'
+    | '/investor-login'
     | '/manager-login'
     | '/plaid-oauth'
     | '/platform'
@@ -4267,6 +4279,7 @@ export interface RootRouteChildren {
   ContactusRoute: typeof ContactusRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
   HarmoniousclassroomRoute: typeof HarmoniousclassroomRoute
+  InvestorLoginRoute: typeof InvestorLoginRoute
   ManagerLoginRoute: typeof ManagerLoginRoute
   PlaidOauthRoute: typeof PlaidOauthRoute
   PlatformRoute: typeof PlatformRoute
@@ -4394,6 +4407,13 @@ declare module '@tanstack/react-router' {
       path: '/harmoniousclassroom'
       fullPath: '/harmoniousclassroom'
       preLoaderRoute: typeof HarmoniousclassroomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investor-login': {
+      id: '/investor-login'
+      path: '/investor-login'
+      fullPath: '/investor-login'
+      preLoaderRoute: typeof InvestorLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manager-login': {
@@ -7410,6 +7430,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactusRoute: ContactusRoute,
   FundAdministrationRoute: FundAdministrationRoute,
   HarmoniousclassroomRoute: HarmoniousclassroomRoute,
+  InvestorLoginRoute: InvestorLoginRoute,
   ManagerLoginRoute: ManagerLoginRoute,
   PlaidOauthRoute: PlaidOauthRoute,
   PlatformRoute: PlatformRoute,
