@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 
 import { CapitalByFundChart, Kpi } from "@/components/dashboard-charts";
 import { InvitedFunds } from "@/components/investor-document-review";
+import { InvestorUpdatesCard } from "@/components/investor-onboarding-extras";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ export function InvestorDashboard() {
   return (
     <section className="space-y-4" aria-label="Your investments">
       <InvitedFunds />
+      <InvestorUpdatesCard />
       <Card className="border-primary/50">
         <CardHeader className="pb-2"><CardDescription>Next action · {p.fundName}</CardDescription>
           <CardTitle className="text-xl">{p.nextAction ?? (p.complete ? "You're all set" : "You're caught up")}</CardTitle>
