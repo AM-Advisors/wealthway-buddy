@@ -42,8 +42,8 @@ describe("fund request", () => {
   });
 });
 
-import { emptyRequest as _empty, missingFields as _missing, needsSs4 as _needs, seriesJurisdiction as _sj, einPathFor as _ein, ss4For as _ss4 } from "@/lib/fund-request-model";
-describe("Series LLC home, EIN and SS-4", () => {
+import { emptyRequest as _empty, missingFields as _missing, needsSs4 as _needs, seriesJurisdiction as _sj, einPathFor as _ein, ss4For as _ss4, seriesLegalName as _sln } from "@/lib/fund-request-model";
+describe("Master LLC, EIN and SS-4", () => {
   const base = () => ({ ..._empty("spv"), fund_name: "Test", vehicle_structure: "Series LLC", jurisdiction: "Texas", offering_exemption: "506(b)", signatory: { name: "A", email: "a@x.co", title: "" } });
   it("maps homes to jurisdictions", () => {
     expect(_sj("hcam_tx")).toBe("Texas"); expect(_sj("hcam_wy")).toBe("Wyoming"); expect(_sj("am_spv")).toBe("Delaware"); expect(_sj("own")).toBeNull();
