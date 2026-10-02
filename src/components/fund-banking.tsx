@@ -27,6 +27,7 @@ import {
 } from "@/lib/wire-instructions.functions";
 import { ManagerBankingSummary } from "@/components/manager-banking-summary";
 import { BANK_CHOICES, getFundEntity, requestBankSetup } from "@/lib/fund-entity.functions";
+import { MercuryApplicationCard } from "@/components/mercury-application-card";
 
 const FIELDS: { key: string; label: string; hint?: string }[] = [
   { key: "bank_name", label: "Receiving bank" },
@@ -236,6 +237,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
                     </SelectContent>
                   </Select>
                 </div>
+                {bank === "mercury" && <MercuryApplicationCard fundId={fundId} />}
                 <div className="grid gap-1.5">
                   <Label htmlFor="bank-request-note">Anything we should know (optional)</Label>
                   <Textarea

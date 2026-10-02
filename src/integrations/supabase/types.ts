@@ -2432,6 +2432,44 @@ export type Database = {
           },
         ]
       }
+      bank_application_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          request_id: string
+          source: string
+          status: string
+          summary: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          request_id: string
+          source: string
+          status: string
+          summary?: Json
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          request_id?: string
+          source?: string
+          status?: string
+          summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_application_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "offering_bank_setup_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_balance_snapshots: {
         Row: {
           as_of: string
@@ -24513,13 +24551,17 @@ export type Database = {
           note: string | null
           notified_at: string | null
           offering_id: string
+          provider_ref: string | null
+          provider_status: string | null
           requested_by: string | null
           requested_by_email: string | null
           review_note: string | null
           review_status: string
           reviewed_at: string | null
           reviewed_by: string | null
+          signup_link: string | null
           status: string
+          submitted_payload_hash: string | null
           updated_at: string
         }
         Insert: {
@@ -24529,13 +24571,17 @@ export type Database = {
           note?: string | null
           notified_at?: string | null
           offering_id: string
+          provider_ref?: string | null
+          provider_status?: string | null
           requested_by?: string | null
           requested_by_email?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          signup_link?: string | null
           status?: string
+          submitted_payload_hash?: string | null
           updated_at?: string
         }
         Update: {
@@ -24545,13 +24591,17 @@ export type Database = {
           note?: string | null
           notified_at?: string | null
           offering_id?: string
+          provider_ref?: string | null
+          provider_status?: string | null
           requested_by?: string | null
           requested_by_email?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
+          signup_link?: string | null
           status?: string
+          submitted_payload_hash?: string | null
           updated_at?: string
         }
         Relationships: [
