@@ -18697,6 +18697,7 @@ export type Database = {
       }
       fund_team_members: {
         Row: {
+          added_as: string | null
           company: string | null
           created_at: string
           created_by: string
@@ -18708,9 +18709,12 @@ export type Database = {
           phone: string | null
           removed_at: string | null
           removed_by: string | null
+          roles_confirmed_at: string | null
           team_role: string
+          user_id: string | null
         }
         Insert: {
+          added_as?: string | null
           company?: string | null
           created_at?: string
           created_by: string
@@ -18722,9 +18726,12 @@ export type Database = {
           phone?: string | null
           removed_at?: string | null
           removed_by?: string | null
+          roles_confirmed_at?: string | null
           team_role: string
+          user_id?: string | null
         }
         Update: {
+          added_as?: string | null
           company?: string | null
           created_at?: string
           created_by?: string
@@ -18736,7 +18743,9 @@ export type Database = {
           phone?: string | null
           removed_at?: string | null
           removed_by?: string | null
+          roles_confirmed_at?: string | null
           team_role?: string
+          user_id?: string | null
         }
         Relationships: [
           {
