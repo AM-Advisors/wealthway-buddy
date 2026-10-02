@@ -55,6 +55,7 @@ const CLOSE_STATUS: Record<string, string> = {
   in_review: "In review",
   completed: "Completed",
   returned: "Returned",
+  approved: "Approved - filings in progress",
 };
 
 function Empty({ text }: { text: string }) {

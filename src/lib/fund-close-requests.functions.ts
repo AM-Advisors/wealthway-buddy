@@ -181,6 +181,14 @@ export const updateFundCloseRequestStatus = createServerFn({ method: "POST" })
     const { data: cur } = await db.from("fund_close_requests").select("status").eq("id", data.id).maybeSingle();
     if (!cur) throw new Error("Close request not found.");
     if (cur.status === "completed") throw new Error("Completed close requests can't be changed.");
+    if (data.status === "completed") {
+      if (cur.status !== "approved") throw new Error("Approve the close and record its filings before completing it.");
+      const { data: fl } = await db.from("fund_close_filings").select("status").eq("close_request_id", data.id);
+      const rows = (fl ?? []) as any[];
+      if (!rows.length) throw new Error("Generate the Form D and state filings first.");
+      if (rows.some((f) => f.status === "prepared")) throw new Error("Every filing must be recorded as filed or not required before completing.");
+    }
+    if (cur.status === "approved" && data.status === "in_review") throw new Error("Approved close requests can't go back to review; return it instead.");
     const note = data.note.trim() || null;
     await db.from("fund_close_requests").update({ status: data.status, staff_note: note ?? undefined, updated_at: new Date().toISOString() }).eq("id", data.id);
     await db.from("fund_close_request_events").insert({ close_request_id: data.id, actor_id: context.userId, from_status: cur.status, to_status: data.status, note });
