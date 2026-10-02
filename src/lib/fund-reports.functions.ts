@@ -12,7 +12,7 @@ export const fundReportsFn = createServerFn({ method: "POST" }).middleware([requ
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); const d = await s.db();
     const [{ data: set }, { data: drafts }] = await Promise.all([
       d.from("fund_report_settings").select("frequency").eq("offering_id", data.fundId).maybeSingle(),
-      d.from("fund_report_drafts").select("id, kind, period_start, period_end, inputs, computed, status, submitted_at, decided_at, decision_note").eq("offering_id", data.fundId).order("period_end", { ascending: false }).limit(48),
+      d.from("fund_report_drafts").select("id, kind, period_start, period_end, inputs, computed, status, submitted_at, decided_at, decision_note").eq("offering_id", data.fundId).in("kind", ["nav", "financial_review"]).order("period_end", { ascending: false }).limit(48),
     ]);
     return { staff: a.staff, frequency: ((set as any)?.frequency ?? "quarterly") as "monthly" | "quarterly", drafts: (drafts ?? []) as any[] };
   });
@@ -51,14 +51,14 @@ export const submitReportFiguresFn = createServerFn({ method: "POST" }).middlewa
       paymentId = v?.id ?? null;
     }
     const { computeNav, computeReview, monthsBetween } = await import("@/lib/fund-report-model");
-    const { data: prior } = await d.from("fund_report_drafts").select("computed").eq("offering_id", data.fundId).eq("status", "approved").lt("period_end", data.periodStart).order("period_end", { ascending: false }).limit(1).maybeSingle();
+    const { data: prior } = await d.from("fund_report_drafts").select("computed").eq("offering_id", data.fundId).eq("kind", "nav").eq("status", "approved").lt("period_end", data.periodStart).order("period_end", { ascending: false }).limit(1).maybeSingle();
     const priorNav = (prior as any)?.computed?.navCents ?? null;
     let computed: Record<string, unknown>;
     if (data.kind === "nav") computed = computeNav(data.inputs, priorNav);
     else {
       const { data: fee } = await d.from("fund_fee_terms").select("management_fee_pct").eq("offering_id", data.fundId).eq("status", "active").maybeSingle();
-      const { data: ob } = await d.from("investor_onboardings").select("commitment_cents").eq("offering_id", data.fundId).is("removed_at", null);
-      const committed = ((ob ?? []) as any[]).reduce((t, o) => t + Number(o.commitment_cents ?? 0), 0);
+      const { data: ob } = await d.from("investor_onboardings").select("commitment_amount_cents").eq("offering_id", data.fundId).is("removed_at", null);
+      const committed = ((ob ?? []) as any[]).reduce((t, o) => t + Number(o.commitment_amount_cents ?? 0), 0);
       computed = computeReview(data.inputs, priorNav, (fee as any)?.management_fee_pct ?? null, committed || null, monthsBetween(data.periodStart, data.periodEnd));
     }
     const { data: row, error } = await d.from("fund_report_drafts").insert({
@@ -76,7 +76,7 @@ export const decideReportFn = createServerFn({ method: "POST" }).middleware([req
   .handler(async ({ data, context }) => {
     const s = await srv(); if (!(await s.isStaff(context.userId))) throw new Error("Only Harmonious can approve reports.");
     const d = await s.db();
-    const { data: r } = await d.from("fund_report_drafts").select("id, status, submitted_by").eq("id", data.id).maybeSingle();
+    const { data: r } = await d.from("fund_report_drafts").select("id, status, submitted_by").eq("id", data.id).in("kind", ["nav", "financial_review"]).maybeSingle();
     if (!r || (r as any).status !== "submitted") throw new Error("This report isn't waiting for review.");
     if ((r as any).submitted_by === context.userId) throw new Error("A different person must review figures you entered.");
     if (!data.approve && !data.note?.trim()) throw new Error("Add a note explaining what to fix.");
