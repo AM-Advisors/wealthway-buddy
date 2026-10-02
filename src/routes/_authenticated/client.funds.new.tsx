@@ -183,7 +183,7 @@ function NewFundRequest() {
                 <F label="Fund or SPV type *">
                   <Pick value={r.kind} onChange={setKind} options={FUND_KIND_TYPES.map((k) => ({ value: k.value, label: k.label }))} />
                 </F>
-                <F label={`${spv ? "SPV" : "Fund"} name *`}><Input value={r.fund_name} onChange={(e) => set("fund_name", e.target.value)} /></F>
+                <F label={`${spv ? "SPV" : "Fund"} name *`}><Input value={r.fund_name} onChange={(e) => setFundName(e.target.value)} /></F>
                 <F label="Investment / asset type"><Pick value={r.investment_asset} onChange={(v) => set("investment_asset", v)} options={INVESTMENT_ASSET_TYPES} /></F>
                 <F label={spv ? "Target raise" : "Target fund size"}><Money value={r.target_raise} onChange={(v) => set("target_raise", v)} /></F>
                 <F label="Minimum investment"><Money value={r.minimum_investment} onChange={(v) => set("minimum_investment", v)} /></F>
@@ -201,14 +201,19 @@ function NewFundRequest() {
             {step === "entity" && (
               <>
                 <Grid>
-                  <F label="Legal name"><Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" /></F>
+                  <F label="Legal name">
+                    <Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" />
+                    {seriesLegalName(r) && r.legal_name === seriesLegalName(r) && (
+                      <p className="mt-1 text-xs text-muted-foreground">Generated from the fund name and Master LLC - edit if needed.</p>
+                    )}
+                  </F>
                   <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
                   {isSeries(r) && (
-                    <F label="Series LLC home *"><Pick value={r.series_home} onChange={setSeriesHome} options={SERIES_HOMES.map((h) => ({ value: h.value, label: h.label }))} /></F>
+                    <F label="Master LLC *"><Pick value={r.series_home} onChange={setSeriesHome} options={SERIES_HOMES.map((h) => ({ value: h.value, label: h.label }))} /></F>
                   )}
                   <F label="Jurisdiction *">
                     {seriesJurisdiction(r.series_home) && isSeries(r)
-                      ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Series LLC home)" />
+                      ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Master LLC)" />
                       : <Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} />}
                   </F>
                   <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No - Harmonious to form" }]} /></F>
