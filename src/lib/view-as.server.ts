@@ -19,7 +19,7 @@ async function nameOf(userId: string) {
 }
 
 /** Canonical relationship check - fund_managers row or the investment's own investor. */
-async function relationshipHolds(p: { perspective: Perspective; subjectUserId: string; offeringId: string | null; onboardingId: string | null; preview?: boolean }) {
+async function relationshipHolds(p: { perspective: Perspective; subjectUserId: string; offeringId: string | null; onboardingId: string | null; preview?: boolean | undefined }) {
   // Preview: fund manager screens rendered from the fund's own records; no client account involved.
   if (p.preview) {
     if (p.perspective !== "fund_manager" || !p.offeringId) return false;
@@ -61,7 +61,7 @@ export async function listPerspectives(staffUserId: string, input: { onboardingI
   return out;
 }
 
-export async function startViewAs(staffUserId: string, authSessionId: string | null, p: { perspective: Perspective; subjectUserId: string; offeringId: string; onboardingId: string | null; preview?: boolean }) {
+export async function startViewAs(staffUserId: string, authSessionId: string | null, p: { perspective: Perspective; subjectUserId: string; offeringId: string; onboardingId: string | null; preview?: boolean | undefined }) {
   await assertStaff(staffUserId);
   if (p.preview) p = { ...p, subjectUserId: staffUserId, onboardingId: null };
   if (!(await relationshipHolds(p))) {
