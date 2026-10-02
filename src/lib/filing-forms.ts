@@ -50,7 +50,7 @@ export function buildFormD({ filing, offering: o, related, firstSaleDate }: Form
       : [f("Related persons (executive officers, directors, promoters)", null)] },
     { title: "Item 4. Industry group", fields: [
       { label: "Industry group", value: "Pooled Investment Fund" },
-      f("Fund type (hedge, private equity, venture capital, other)", o?.fund_type === "other" ? o?.fund_type_other : o?.fund_type),
+      f("Fund type (hedge, private equity, venture capital, other)", o?.fund_type === "other" ? o?.fund_type_other : o?.fund_type ? String(o.fund_type).replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) : null),
       f("Is the issuer registered as an investment company under the Investment Company Act of 1940?", "No"),
     ] },
     { title: "Item 5. Issuer size", fields: [{ label: "Aggregate net asset value range", value: "Decline to disclose" }] },
