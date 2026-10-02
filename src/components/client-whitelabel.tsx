@@ -65,7 +65,7 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
 
   const onFile = (f: File | undefined) => {
     if (!f) return;
-    if (f.size > 250_000) return toast.error("Please use a logo under 250 KB.");
+    if (f.size > 250_000) { toast.error("Please use a logo under 250 KB."); return; }
     const r = new FileReader();
     r.onload = () => setLogo(String(r.result));
     r.readAsDataURL(f);
