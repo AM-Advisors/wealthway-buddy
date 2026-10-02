@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { marketingHead } from "@/lib/marketing/seo";
 
-import heroImage from "@/assets/platform-funding.png";
+import heroImage from "@/assets/site-portal-fund.jpg";
+import investorsShot from "@/assets/site-portal-investors.jpg";
+import { OfferingSection } from "@/components/marketing/offering-section";
+import { FUND_TABS } from "@/lib/marketing/offering";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -35,7 +38,7 @@ const PILLARS = [
   },
   {
     title: "Administer The Fund",
-    body: "Cap table, capital calls, closings, distributions and investor reporting, kept current as commitments and wires land.",
+    body: "Capital accounts and statements, wire instructions, closes, Form D and Blue Sky filings and tax, with every deadline tracked.",
     to: "/fund-administration",
     cta: "Fund administration",
   },
@@ -97,9 +100,9 @@ function Index() {
 
             <img
               src={heroImage}
-              alt="The Harmonious funding dashboard showing capital raised and progress across funds"
-              width={1600}
-              height={1008}
+              alt="A fund in the Harmonious portal with To dos, Team, Investors, Documents, Banking, Regulatory and other tabs"
+              width={2160}
+              height={760}
               className="w-full rounded-2xl border border-primary-foreground/15 shadow-2xl"
             />
           </div>
@@ -130,6 +133,22 @@ function Index() {
                 </Link>
               </article>
             ))}
+          </div>
+        </section>
+
+        <OfferingSection />
+
+        <section className="border-t bg-card">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 lg:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Every fund, one page</p>
+              <h2 className="mt-4 text-3xl leading-tight sm:text-4xl">Everything About Your Fund In One Place</h2>
+              <p className="mt-4 text-muted-foreground">Each fund opens on what is waiting on you, with a tab for each part of running it. Share your investor link, track commitments and request a close in a few clicks.</p>
+              <ul className="mt-6 flex flex-wrap gap-2">
+                {FUND_TABS.map((t) => <li key={t} className="rounded-full border px-3 py-1 text-xs">{t}</li>)}
+              </ul>
+            </div>
+            <img src={investorsShot} alt="The Investors tab of a fund, with the investor share link and investor list" width={1776} height={1010} loading="lazy" className="w-full rounded-2xl border shadow-xl" />
           </div>
         </section>
 
