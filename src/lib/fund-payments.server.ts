@@ -58,3 +58,14 @@ export async function consumePayment(db: any, args: { paymentId: string | null |
   await db.from("fund_payment_events").insert({ payment_id: p.id, event_kind: "used", actor_id: args.actorId, detail: { used_for: args.usedFor } });
   return p.id as string;
 }
+
+/** Puts a claimed payment back if the submission failed after claiming it. */
+export async function releasePayment(db: any, paymentId: string | null, actorId: string, reason: string) {
+  if (!paymentId) return;
+  await db.from("fund_payments").update({ status: "paid", used_at: null, used_for: null, updated_at: new Date().toISOString() }).eq("id", paymentId).eq("status", "used");
+  await db.from("fund_payment_events").insert({ payment_id: paymentId, event_kind: "released", actor_id: actorId, detail: { reason: reason.slice(0, 300) } });
+}
+
+export async function linkPayment(db: any, paymentId: string | null, usedFor: string | null) {
+  if (paymentId && usedFor) await db.from("fund_payments").update({ used_for: usedFor }).eq("id", paymentId);
+}
