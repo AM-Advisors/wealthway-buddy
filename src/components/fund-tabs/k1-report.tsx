@@ -42,7 +42,7 @@ export function K1Report({ fundId }: { fundId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
   const dm = useMutation({
-    mutationFn: (a: { id: string; approve: boolean; note?: string }) => decide({ data: a }),
+    mutationFn: (a: { id: string; approve: boolean; note?: string | undefined }) => decide({ data: a }),
     onSuccess: (r) => { toast.success(r.recorded ? `${r.recorded} K-1 draft(s) added to the tax records.` : "Saved"); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });

@@ -47,7 +47,7 @@ export const submitK1FiguresFn = createServerFn({ method: "POST" }).middleware([
       paymentId = v?.id ?? null;
     }
     const { allocateK1 } = await import("@/lib/k1-report-model");
-    const computed = allocateK1(data.totals, await investorsOf(d, data.fundId));
+    const computed = allocateK1(data.totals as any, await investorsOf(d, data.fundId));
     const { data: row, error } = await d.from("fund_report_drafts").insert({
       offering_id: data.fundId, kind: "k1", period_start: start, period_end: end,
       inputs: { ...data.totals, taxYear: data.taxYear, notes: data.notes }, computed, payment_id: paymentId, submitted_by: context.userId,
