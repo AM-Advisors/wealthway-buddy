@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CloseFilingsPanel } from "@/components/close-filings-panel";
+import { approveFundCloseRequest } from "@/lib/close-filings.functions";
 import { listAllCloseRequests, updateFundCloseRequestStatus } from "@/lib/fund-close-requests.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/close-requests")({
@@ -24,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/ops/close-requests")({
   component: Page,
 });
 
-const LABEL: Record<string, string> = { submitted: "Submitted", in_review: "In review", completed: "Completed", returned: "Returned" };
+const LABEL: Record<string, string> = { submitted: "Submitted", in_review: "In review", approved: "Approved", completed: "Completed", returned: "Returned" };
 
 function Page() {
   const load = useServerFn(listAllCloseRequests);
@@ -33,7 +35,7 @@ function Page() {
     <div className="mx-auto w-full max-w-6xl space-y-4 p-4 md:p-6">
       <div>
         <h1 className="text-xl font-semibold">Close requests</h1>
-        <p className="text-sm text-muted-foreground">Submitted by fund managers. Updating a status here doesn't file, charge or move money.</p>
+        <p className="text-sm text-muted-foreground">Submitted by fund managers. Approve a close, generate its Form D and state filing packets, then file them yourself and record the confirmation. Nothing is submitted, charged or moved automatically.</p>
       </div>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
        q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
@@ -48,6 +50,16 @@ function Row({ r }: { r: any }) {
   const update = useServerFn(updateFundCloseRequestStatus);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const approve = useServerFn(approveFundCloseRequest);
+  async function doApprove() {
+    setBusy(true);
+    try {
+      await approve({ data: { id: r.id, note } });
+      toast.success("Close approved. You can now generate the filings.");
+      setNote("");
+      await qc.invalidateQueries({ queryKey: ["ops-close-requests"] });
+    } catch (e: any) { toast.error(e?.message ?? "Couldn't approve."); } finally { setBusy(false); }
+  }
   async function set(status: "in_review" | "completed" | "returned") {
     setBusy(true);
     try {
@@ -77,10 +89,12 @@ function Row({ r }: { r: any }) {
           <div className="flex flex-wrap gap-2">
             <Input placeholder="Note (required to return)" value={note} onChange={(e) => setNote(e.target.value)} className="max-w-sm" />
             {r.status === "submitted" && <Button size="sm" variant="outline" disabled={busy} onClick={() => set("in_review")}>Start review</Button>}
-            <Button size="sm" disabled={busy} onClick={() => set("completed")}>Mark completed</Button>
+            {r.status === "in_review" && <Button size="sm" disabled={busy} onClick={doApprove}>Approve close</Button>}
+            {r.status === "approved" && <Button size="sm" disabled={busy} onClick={() => set("completed")}>Mark completed</Button>}
             <Button size="sm" variant="destructive" disabled={busy} onClick={() => set("returned")}>Return</Button>
           </div>
         )}
+        {(r.status === "approved" || r.status === "completed") && <CloseFilingsPanel requestId={r.id} canPrepare={r.status === "approved"} />}
       </CardContent>
     </Card>
   );
