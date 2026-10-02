@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CapTablesCard } from "@/components/cap-table-billing";
+import { ClientCapDashboard } from "@/components/client-cap-dashboard";
 import { Progress } from "@/components/ui/progress";
 import { getClientHome } from "@/lib/client-fund-request.functions";
 
@@ -44,6 +45,8 @@ function ClientHome() {
         <Button asChild size="sm" variant="outline"><Link to="/client/add-cap-table"><PieChart className="mr-1 size-4" />Add a cap table</Link></Button>
         <Button asChild size="sm" variant="outline"><Link to="/client"><Settings className="mr-1 size-4" />Settings</Link></Button>
       </div>
+
+      {id && <ClientCapDashboard clientId={id} />}
 
       <CapTablesCard />
 
