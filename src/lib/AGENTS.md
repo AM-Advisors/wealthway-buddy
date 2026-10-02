@@ -53,3 +53,4 @@
 - Fund-request service choices are shaped by src/lib/fund-request-model.ts (SERVICE_BUNDLES, HIDDEN_FUND_SERVICE_KEYS, autoServices, fundAddOnKeys); pricing and submission both use fundAddOnKeys - why: what the client sees is exactly what is charged.
 
 - Fund managers count as members of the client that owns any fund they manage: getClientPortal unions fund_managers clients into clientIds, and isClientMemberOfFund accepts a manager of any fund under the same client. Why: a manager who requests a fund must see it in "Funds we administer for you" and open it during setup, before any contact row exists.
+- Fund close requests (src/lib/fund-close-requests.functions.ts) are manager-submitted and staff-reviewed only; status changes never file, charge, close or move money, and history is append-only - why: closes need Harmonious review.
