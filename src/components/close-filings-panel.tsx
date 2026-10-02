@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FilingFormDialog } from "@/components/filing-form-dialog";
-import { generateCloseFilings, listCloseFilings, recordCloseFiling } from "@/lib/close-filings.functions";
+import { generateCloseFilings, getFilingForm, listCloseFilings, recordCloseFiling } from "@/lib/close-filings.functions";
 
 const money = (c: number | null | undefined) =>
   c == null ? "needs review" : `$${(c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -33,15 +33,44 @@ export function CloseFilingsPanel({ requestId, canPrepare }: { requestId: string
     }
   }
   const rows = q.data ?? [];
+  const formFn = useServerFn(getFilingForm);
+  const [packing, setPacking] = useState(false);
+  async function downloadPacket() {
+    setPacking(true);
+    try {
+      const [{ PDFDocument }, { renderFilingPdf }] = await Promise.all([import("pdf-lib"), import("@/lib/filing-pdf")]);
+      const out = await PDFDocument.create();
+      for (const f of rows) {
+        const form = await formFn({ data: { id: f.id } });
+        const part = await PDFDocument.load(await renderFilingPdf(form as any));
+        for (const pg of await out.copyPages(part, part.getPageIndices())) out.addPage(pg);
+      }
+      const bytes = await out.save();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/pdf" }));
+      a.download = "filing-packet.pdf";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      toast.error("Couldn't build the packet.");
+    } finally {
+      setPacking(false);
+    }
+  }
   return (
     <div className="mt-3 space-y-2 rounded-md border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-medium">Filings</p>
+        <div className="flex flex-wrap gap-2">
+        {rows.length > 0 && (
+          <Button size="sm" disabled={packing} onClick={downloadPacket}>{packing ? "Building packet..." : "Download filing packet (PDF)"}</Button>
+        )}
         {canPrepare && (
           <Button size="sm" variant="outline" disabled={busy} onClick={prepare}>
             {rows.length ? "Prepare any missing filings" : "Generate Form D and state filings"}
           </Button>
         )}
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">
         File each one on EDGAR or the state system yourself, then record it here. Someone other than the preparer must record it.
