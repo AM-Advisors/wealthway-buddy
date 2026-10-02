@@ -293,7 +293,7 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
     const core = coreServicesFor(data.answers["vehicle_structure"], data.answers["offering_exemption"], data.answers["jurisdiction"]);
     const pay = await import("@/lib/fund-payments.server");
     const quote = await pay.buildQuote(supabaseAdmin, { clientId, kind: "service_request", addOnKeys: data.requestedServiceKeys.filter((k) => !core.includes(k)) });
-    const paymentId = await pay.verifyPayment(supabaseAdmin, { paymentId: data.paymentId, clientId, kind: "service_request", expected: quote.items, usedFor: null, actorId: context.userId });
+    const payment = await pay.verifyPayment(supabaseAdmin, { paymentId: data.paymentId, clientId, kind: "service_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
     const { data: created, error } = await context.supabase
       .from("client_intake_requests")
@@ -302,8 +302,8 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
         entity_id: data.entityId || null,
         engagement_id: data.engagementId || null,
         intent: data.intent,
-        summary: data.summary.trim(),
-        answers: data.answers,
+        summary: payment?.awaiting ? `${data.summary.trim()} (awaiting wire/ACH payment)` : data.summary.trim(),
+        answers: payment?.awaiting ? { ...data.answers, payment_pending: "yes" } : data.answers,
         requested_service_keys: data.requestedServiceKeys,
         status: "submitted",
         requested_by: context.userId,
@@ -312,7 +312,7 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    await pay.markPaymentUsed(supabaseAdmin, paymentId, (created as any).id, context.userId);
+    await pay.markPaymentUsed(supabaseAdmin, payment?.id ?? null, (created as any).id, context.userId);
 
     await context.supabase.from("contract_audit_events").insert({
       actor_id: context.userId,

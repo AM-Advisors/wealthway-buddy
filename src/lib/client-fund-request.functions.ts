@@ -116,7 +116,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     const core = autoServices(r);
     const pay = await import("@/lib/fund-payments.server");
     const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: (r.service_keys ?? []).filter((k) => !core.includes(k)) });
-    const paymentId = await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
+    const payment = await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
     // Create the closed Fund. A likely duplicate name becomes a Harmonious review item instead.
     let offeringId: string | null = null;
