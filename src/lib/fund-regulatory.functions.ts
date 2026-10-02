@@ -16,8 +16,9 @@ export type CalendarItem = { date: string; title: string; detail: string; kind: 
 const addDays = (d: string, n: number) => { const x = new Date(d + "T00:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 const addYears = (d: string, n: number) => { const x = new Date(d + "T00:00:00Z"); x.setUTCFullYear(x.getUTCFullYear() + n); return x.toISOString().slice(0, 10); };
 
-export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
-  .handler(async ({ data, context }) => {
+export type RegulatoryData = { staff: boolean; filings: any[]; fees: any[]; calendar: CalendarItem[] };
+export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((v: unknown) => fund.parse(v))
+  .handler(async ({ data, context }): Promise<RegulatoryData> => {
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); const d = await s.db();
     const [{ data: closeF }, { data: setupF }, { data: fees }, { data: reqs }] = await Promise.all([
       d.from("fund_close_filings").select("id, close_request_id, filing_type, jurisdiction, status, investor_count, amount_cents, fee_cents, fee_needs_review, is_amendment, confirmation_number, filed_on, prepared_at").eq("offering_id", data.fundId).order("prepared_at", { ascending: false }),
@@ -51,7 +52,7 @@ export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([r
     if (lastFiledD) cal.push({ date: addYears(lastFiledD, 1), title: "Annual Form D amendment", detail: "Due yearly while the offering is ongoing", kind: "form_d", done: false });
     for (const f of (fees ?? []) as any[]) if (f.due_date) cal.push({ date: f.due_date, title: `${f.state} franchise fee`, detail: f.description || "State franchise tax / annual fee", kind: "franchise", done: !!f.filed_on });
     cal.sort((x, y) => x.date.localeCompare(y.date));
-    return { staff: a.staff, filings, fees: fees ?? [], calendar: cal };
+    return { staff: a.staff, filings, fees: (fees ?? []) as any[], calendar: cal };
   });
 
 export const saveFranchiseFeeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
