@@ -88,6 +88,76 @@ export const startFundPayment = createServerFn({ method: "POST" })
     }
   });
 
+/** Wire/ACH: records the payment as awaiting receipt and returns a reference code. Nothing activates until staff confirm receipt. */
+export const startOfflineFundPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ target, method: z.enum(["wire", "ach"]) }).parse(d))
+  .handler(async ({ data, context }): Promise<{ paymentId: string; reference: string; totalCents: number } | { error: string }> => {
+    let t;
+    try { t = await resolveTarget(context, data.target); } catch (e) { return { error: (e as Error).message }; }
+    const db = await admin();
+    const { buildQuote } = await import("@/lib/fund-payments.server");
+    const q = await buildQuote(db, { clientId: t.clientId, kind: data.target.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId });
+    if (q.totalCents === 0) return { error: "Nothing to pay." };
+    const { data: pay, error } = await db.from("fund_payments").insert({
+      client_id: t.clientId, kind: data.target.kind, items: q.items, total_cents: q.totalCents,
+      environment: "offline", payment_method: data.method, status: "awaiting_payment", created_by: context.userId,
+    }).select("id").single();
+    if (error) return { error: error.message };
+    const reference = `HP-${String(pay.id).replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+    await db.from("fund_payment_events").insert({ payment_id: pay.id, event_kind: "offline_started", actor_id: context.userId, detail: { method: data.method, reference, total_cents: q.totalCents } });
+    return { paymentId: pay.id as string, reference, totalCents: q.totalCents };
+  });
+
+/** Staff: list wire/ACH payments still awaiting receipt. */
+export const listOfflineFundPayments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { whoIsStaff } = await import("@/lib/service-catalog.functions");
+    const who = await whoIsStaff(context);
+    if (!who.isStaff) throw new Error("Forbidden: this queue is for the Harmonious team.");
+    const { data, error } = await (context.supabase as any)
+      .from("fund_payments")
+      .select("id, client_id, kind, items, total_cents, payment_method, status, used_for, created_at, clients(name, legal_name)")
+      .in("payment_method", ["wire", "ach"])
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as any[]).map((p) => ({
+      id: p.id as string,
+      clientName: (p.clients?.legal_name ?? p.clients?.name ?? "Client") as string,
+      kind: p.kind as string,
+      items: (p.items ?? []) as { key: string; name: string; cents: number }[],
+      totalCents: p.total_cents as number,
+      method: p.payment_method as string,
+      status: p.status as string,
+      usedFor: (p.used_for as string) ?? null,
+      reference: `HP-${String(p.id).replace(/-/g, "").slice(0, 8).toUpperCase()}`,
+      createdAt: p.created_at as string,
+    }));
+  });
+
+/** Staff: confirm a wire/ACH payment arrived. Manual reconciliation only - never automatic. */
+export const markFundPaymentReceived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), note: z.string().min(3).max(500) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { whoIsStaff } = await import("@/lib/service-catalog.functions");
+    const who = await whoIsStaff(context);
+    if (!who.isStaff) throw new Error("Forbidden: this queue is for the Harmonious team.");
+    const db = await admin();
+    const { data: p } = await db.from("fund_payments").select("id, status, payment_method, used_for").eq("id", data.id).maybeSingle();
+    if (!p) throw new Error("Payment not found.");
+    if (!["wire", "ach"].includes(p.payment_method)) throw new Error("Only wire or ACH payments can be marked received here.");
+    const next = p.used_for ? "used" : "paid";
+    const { data: upd } = await db.from("fund_payments").update({
+      status: next, paid_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }).eq("id", data.id).eq("status", "awaiting_payment").select("id");
+    if (!upd?.length) throw new Error("This payment was already confirmed.");
+    await db.from("fund_payment_events").insert({ payment_id: data.id, event_kind: "payment_received", actor_id: context.userId, detail: { note: data.note, method: p.payment_method, activated: !!p.used_for } });
+    return { ok: true };
+  });
+
 export const getFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))

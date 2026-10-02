@@ -116,7 +116,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     const core = autoServices(r);
     const pay = await import("@/lib/fund-payments.server");
     const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: (r.service_keys ?? []).filter((k) => !core.includes(k)) });
-    const paymentId = await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
+    const payment = await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
     // Create the closed Fund. A likely duplicate name becomes a Harmonious review item instead.
     let offeringId: string | null = null;
@@ -149,7 +149,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       }
     }
 
-    const details = { ...r, _kind: KIND, duplicate_review: duplicate };
+    const details = { ...r, _kind: KIND, duplicate_review: duplicate, ...(payment?.awaiting ? { payment_pending: true } : {}) };
     const intakeRow = {
       client_id: data.clientId, offering_id: offeringId, details, status: "submitted",
       submitted_by: context.userId, submitted_at: new Date().toISOString(),
@@ -164,14 +164,14 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     await db.from("client_intake_requests").insert({
       client_id: data.clientId,
       intent: isSpv(r) ? "launch_spv" : "launch_fund",
-      summary: `New ${isSpv(r) ? "SPV" : "fund"} request: ${r.fund_name}${duplicate ? " (possible duplicate name - review)" : ""}`,
-      answers: { ...flatAnswers(r), new_fund_request: "yes", ...(offeringId ? { offering_id: offeringId } : {}) },
+      summary: `New ${isSpv(r) ? "SPV" : "fund"} request: ${r.fund_name}${duplicate ? " (possible duplicate name - review)" : ""}${payment?.awaiting ? " (awaiting wire/ACH payment)" : ""}`,
+      answers: { ...flatAnswers(r), new_fund_request: "yes", ...(payment?.awaiting ? { payment_pending: "yes" } : {}), ...(offeringId ? { offering_id: offeringId } : {}) },
       requested_service_keys: r.service_keys ?? [],
       status: "submitted",
       requested_by: context.userId,
     });
 
-    await pay.markPaymentUsed(db, paymentId, offeringId, context.userId);
+    await pay.markPaymentUsed(db, payment?.id ?? null, offeringId, context.userId);
 
     await db.from("contract_audit_events").insert({
       actor_id: context.userId, actor_role: String(member.client_role ?? "client"), client_id: data.clientId,
