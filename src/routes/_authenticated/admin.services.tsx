@@ -26,6 +26,7 @@ import {
   updateIntakeRequest,
 } from "@/lib/client-services.functions";
 import { ENTITY_TYPES } from "@/lib/entities.functions";
+import { listOfflineFundPayments, markFundPaymentReceived } from "@/lib/fund-payments.functions";
 import {
   DELIVERY_WORKFLOWS,
   PRICING_MODELS,
@@ -181,6 +182,7 @@ function ServicesAdmin() {
           <TabsTrigger value="requests">
             Client requests ({requests.data?.requests.length ?? 0})
           </TabsTrigger>
+          <TabsTrigger value="payments">Wire & ACH payments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="catalogue" className="mt-4 space-y-4">
