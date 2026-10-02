@@ -2020,11 +2020,12 @@ export async function investmentReadiness(userId: string, onboardingId: string) 
   };
 }
 
-export async function fundReadiness(userId: string, offeringId: string) {
+export async function fundReadiness(userId: string, offeringId: string, viewerOverride?: "manager") {
   const { readinessView } = await import("@/lib/investment-readiness");
   const actor = await onboardingActor(userId);
   if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not manage that fund.");
-  const viewer = actor.isStaff ? "staff" : "manager";
+  // Staff may render the narrower manager view (View As preview); never the reverse.
+  const viewer = viewerOverride === "manager" || !actor.isStaff ? "manager" : "staff";
   const { data } = await db().from("investor_onboardings").select("*").eq("offering_id", offeringId).not("stage", "in", "(declined,cancelled)");
   const rows = (data ?? []) as any[];
   const ids = [...new Set(rows.map((r) => r.investor_user_id))];
