@@ -15,7 +15,6 @@ import {
   CONTACT_TAGS, cancelClientContactInvite, getContactHistory, inviteClientContact,
   listClientContacts, saveClientContact, setClientContactActive,
 } from "@/lib/client-contacts.functions";
-import { toCsv } from "@/lib/company-360-model";
 
 export type Ownership = { securities: number; pctFullyDiluted: number };
 type Contact = NonNullable<Awaited<ReturnType<typeof listClientContacts>>>["contacts"][number];
@@ -30,6 +29,8 @@ const EVENT_LABEL: Record<string, string> = {
   created: "Contact added", edited: "Details edited", invited: "Invite sent", invite_resent: "Invite resent",
   invite_cancelled: "Invite cancelled", deactivated: "Deactivated", reactivated: "Reactivated",
 };
+const st = (k: string) => STATUS[k] ?? STATUS["not_invited"]!;
+const toCsvRows = (rows: string[][]) => rows.map((r) => r.map((v) => /^[=+\-@]/.test(v) ? `'${v}` : v).map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
 const fmt = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "-");
 
 export function ClientContactsDirectory({ ownershipByEmail }: { ownershipByEmail: Record<string, Ownership> }) {
@@ -57,8 +58,8 @@ export function ClientContactsDirectory({ ownershipByEmail }: { ownershipByEmail
 
   const own = (c: Contact) => (c.email ? ownershipByEmail[c.email.toLowerCase()] : undefined);
   const exportCsv = () => {
-    const csv = toCsv([["Name", "Title", "Email", "Phone", "Status", "Roles", "Primary", "Identity", "Securities", "Fully diluted %", "Notes"],
-      ...rows.map((c) => [c.name, c.title ?? "", c.email ?? "", c.phone ?? "", STATUS[c.status].label, c.tags.join("; "),
+    const csv = toCsvRows([["Name", "Title", "Email", "Phone", "Status", "Roles", "Primary", "Identity", "Securities", "Fully diluted %", "Notes"],
+      ...rows.map((c) => [c.name, c.title ?? "", c.email ?? "", c.phone ?? "", st(c.status).label, c.tags.join("; "),
         c.isPrimary ? "Yes" : "", c.identity, String(own(c)?.securities ?? ""), own(c) ? (own(c)!.pctFullyDiluted * 100).toFixed(2) : "", c.notes ?? ""])]);
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
@@ -119,7 +120,7 @@ export function ClientContactsDirectory({ ownershipByEmail }: { ownershipByEmail
                   </td>
                   <td className="p-2">{c.email ?? "-"}</td>
                   <td className="p-2">{c.phone ?? "-"}</td>
-                  <td className="p-2"><Badge variant={STATUS[c.status].variant}>{STATUS[c.status].label}</Badge>
+                  <td className="p-2"><Badge variant={st(c.status).variant}>{st(c.status).label}</Badge>
                     {c.identity !== "unknown" ? <div className="mt-1 text-xs text-muted-foreground">{c.identity === "verified" ? "Identity verified" : "Identity check needed"}</div> : null}
                   </td>
                   <td className="p-2"><div className="flex flex-wrap gap-1">{c.tags.map((t) => <Badge key={t} variant="outline">{t}</Badge>)}</div></td>
@@ -219,7 +220,7 @@ function ContactForm({ clientId, contact, onClose, onSaved }: { clientId: string
   );
 }
 
-function ContactPanel({ c, own }: { c: Contact; own?: Ownership }) {
+function ContactPanel({ c, own }: { c: Contact; own: Ownership | undefined }) {
   const hist = useServerFn(getContactHistory);
   const q = useQuery({ queryKey: ["client-contact-history", c.id], queryFn: () => hist({ data: { id: c.id } }) });
   return (
@@ -229,7 +230,7 @@ function ContactPanel({ c, own }: { c: Contact; own?: Ownership }) {
         {c.title ? <p><span className="text-muted-foreground">Title:</span> {c.title}</p> : null}
         <p><span className="text-muted-foreground">Email:</span> {c.email ?? "-"}</p>
         <p><span className="text-muted-foreground">Phone:</span> {c.phone ?? "-"}</p>
-        <p><span className="text-muted-foreground">Status:</span> {STATUS[c.status].label}{c.invitedAt ? ` (last invited ${fmt(c.invitedAt)}, ${c.inviteCount} total)` : ""}</p>
+        <p><span className="text-muted-foreground">Status:</span> {st(c.status).label}{c.invitedAt ? ` (last invited ${fmt(c.invitedAt)}, ${c.inviteCount} total)` : ""}</p>
         <p><span className="text-muted-foreground">Identity:</span> {c.identity === "verified" ? "Verified" : c.identity === "needed" ? "Check needed" : "No email on file"}</p>
         <p><span className="text-muted-foreground">Roles:</span> {c.tags.join(", ") || "-"}</p>
         <p><span className="text-muted-foreground">Ownership:</span> {own ? `${own.securities.toLocaleString()} securities, ${(own.pctFullyDiluted * 100).toFixed(2)}% fully diluted` : "Not on the cap table"}</p>
