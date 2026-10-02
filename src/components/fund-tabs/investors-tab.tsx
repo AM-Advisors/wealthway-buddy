@@ -97,51 +97,97 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
   );
 }
 
+const STEPS = ["About You", "Verification", "Sign", "Fund"];
+function stepIndex(d: any) {
+  if (d.wiring === "Funded") return 4;
+  if (d.docs === "Signed") return 3;
+  if (d.kycOk) return 2;
+  return d.stage && d.stage !== "invited" ? 1 : 0;
+}
+
+function Row({ k, v }: { k: string; v: React.ReactNode }) {
+  return <div className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">{k}</dt><dd className="text-right break-words">{v || "-"}</dd></div>;
+}
+
 function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | null; onClose: () => void }) {
   const load = useServerFn(investorDetailFn);
   const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => load({ data: { fundId, onboardingId: id! } }), enabled: !!id });
   const d = q.data;
+  const done = d ? stepIndex(d) : 0;
+  const pct = d && d.committedCents ? Math.min(100, Math.round(((d.receivedCents ?? 0) / d.committedCents) * 100)) : 0;
   return (
     <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{d?.name ?? "Investor"}</SheetTitle>
-          <SheetDescription>{d?.profileName ?? "Details for this fund only."}</SheetDescription>
-        </SheetHeader>
-        {q.isLoading ? <p className="mt-4 text-sm text-muted-foreground">Loading…</p> : d && (
-          <div className="mt-4 space-y-5 text-sm">
-            {d.investorUserId ? (
-              <Button asChild size="sm" variant="outline">
-                <Link
-                  to="/manager/messages"
-                  search={{ open: d.applicationId ?? undefined }}
-                >
-                  Open private messages
-                </Link>
-              </Button>
-            ) : null}
-            <dl className="grid grid-cols-2 gap-3">
-              {[
-                ["Email", d.email], ["Phone", d.phone], ["Address", d.address], ["Citizenship", d.citizenship],
-                ["Tax ID", d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null], ["Class", d.classKey],
-                ["Committed", usd(d.committedCents)], ["Received", usd(d.receivedCents)],
-                ["Investment date", d.investmentDate ? fmtDate(d.investmentDate) : null], ["Stage", d.stage.replace(/_/g, " ")],
-                ["KYC/KYB & AML", d.kycLabel], ["Fund documents", d.docs], ["Wiring", d.wiring], ["Latest activity", fmtDate(d.lastActivity)],
-              ].map(([k, v]) => <div key={k as string}><dt className="text-xs text-muted-foreground">{k}</dt><dd className="break-words capitalize-first">{v || "-"}</dd></div>)}
-            </dl>
-            <section>
-              <h4 className="mb-1 font-medium">Open items</h4>
-              {d.openItems.length ? <ul className="list-disc pl-5 text-muted-foreground">{d.openItems.map((t: string) => <li key={t}>{t}</li>)}</ul> : <p className="text-muted-foreground">Nothing open.</p>}
+      <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-xl">
+        <div className="border-b bg-muted/40 p-6">
+          <SheetHeader className="space-y-1 text-left">
+            <SheetTitle className="text-xl">{d?.name ?? "Investor"}</SheetTitle>
+            <SheetDescription>{d?.profileName ?? "Details for this fund only."}</SheetDescription>
+          </SheetHeader>
+          {d && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Badge variant={d.kycOk ? "secondary" : "outline"}>KYC/AML: {d.kycLabel}</Badge>
+              <Badge variant={d.docs === "Signed" ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
+              <Badge variant={d.wiring === "Funded" ? "secondary" : "outline"}>Wiring: {d.wiring}</Badge>
+              {d.investorUserId && (
+                <Button asChild size="sm" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>
+              )}
+            </div>
+          )}
+        </div>
+        {q.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading…</p> : d && (
+          <div className="space-y-6 p-6 text-sm">
+            <section className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
+              <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
+                <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>
             </section>
+
+            <section>
+              <h4 className="mb-2 font-medium">Progress</h4>
+              <ol className="grid grid-cols-4 gap-2">
+                {STEPS.map((s, i) => (
+                  <li key={s} className="text-center">
+                    <div className={`mx-auto mb-1 flex size-7 items-center justify-center rounded-full text-xs font-medium ${i < done ? "bg-primary text-primary-foreground" : i === done ? "border-2 border-primary text-primary" : "bg-muted text-muted-foreground"}`}>{i + 1}</div>
+                    <span className="text-xs">{s}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            {d.openItems.length > 0 && (
+              <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+                <h4 className="mb-1 font-medium">Open items</h4>
+                <ul className="list-disc space-y-0.5 pl-5">{d.openItems.map((t: string) => <li key={t}>{t}</li>)}</ul>
+              </section>
+            )}
+
+            <section>
+              <h4 className="mb-1 font-medium">Contact</h4>
+              <dl className="divide-y">
+                <Row k="Email" v={d.email} /><Row k="Phone" v={d.phone} /><Row k="Address" v={d.address} /><Row k="Citizenship" v={d.citizenship} />
+              </dl>
+            </section>
+
+            <section>
+              <h4 className="mb-1 font-medium">Investment</h4>
+              <dl className="divide-y">
+                <Row k="Class" v={d.classKey} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
+                <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
+                <Row k="Stage" v={<span className="capitalize">{d.stage.replace(/_/g, " ")}</span>} />
+                <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
+              </dl>
+            </section>
+
             <section>
               <h4 className="mb-1 font-medium">Documents</h4>
               {d.documents.length ? (
-                <ul className="divide-y rounded-md border">{d.documents.map((x: any) => <li key={x.id} className="flex justify-between gap-2 p-2"><span>{x.file_name}</span><span className="text-xs text-muted-foreground">{String(x.doc_kind).replace(/_/g, " ")}</span></li>)}</ul>
+                <ul className="divide-y rounded-md border">{d.documents.map((x: any) => <li key={x.id} className="flex justify-between gap-2 p-2"><span className="break-all">{x.file_name}</span><span className="shrink-0 text-xs capitalize text-muted-foreground">{String(x.doc_kind).replace(/_/g, " ")}</span></li>)}</ul>
               ) : <p className="text-muted-foreground">No documents uploaded for this deal yet.</p>}
             </section>
+
             <section>
               <h4 className="mb-1 font-medium">Side letters</h4>
-              {d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>}
+              {d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2 capitalize">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>}
             </section>
           </div>
         )}
