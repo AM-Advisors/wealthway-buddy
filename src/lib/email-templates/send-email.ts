@@ -1,17 +1,15 @@
 import * as React from 'react'
 import { render } from '@react-email/render'
-import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
 import { TEMPLATES } from './registry'
 
-// Server-only: reads LOVABLE_API_KEY. Never import from client components.
+// Server-only: reads LOVABLE_API_KEY and BREVO_API_KEY. Never import from client components.
+
+const BREVO_GATEWAY_URL = 'https://connector-gateway.lovable.dev/brevo'
 
 // Configuration baked in at scaffold time
 const SITE_NAME = "Harmonious"
-// SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
-// It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
-const SENDER_DOMAIN = "notify.onboarding.harmonious.co"
-// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
-// Can be the root domain when display_from_root is enabled - this is cosmetic only.
+// FROM_DOMAIN is the domain shown in the From: header. It must be a sender
+// domain verified in the Brevo account, or sends will be rejected.
 const FROM_DOMAIN = "onboarding.harmonious.co"
 
 export type SendTemplateEmailResult =
@@ -26,11 +24,9 @@ export interface SendTemplateEmailOptions {
 }
 
 /**
- * Renders a registered template and sends it through Lovable's managed email
- * API. Suppression, retries, and rate limits are enforced by Lovable
- * server-side. A suppressed recipient is an expected outcome
- * ({ sent: false }); any other failure throws - EmailAPIError exposes
- * .code and .status for branching.
+ * Renders a registered template and sends it through Brevo (via the
+ * connector gateway). Any failure throws with the provider's status and
+ * message so callers can branch on it.
  */
 export async function sendTemplateEmail(
   templateName: string,
@@ -40,6 +36,10 @@ export async function sendTemplateEmail(
   const apiKey = process.env['LOVABLE_API_KEY']
   if (!apiKey) {
     throw new Error('LOVABLE_API_KEY is not configured')
+  }
+  const brevoKey = process.env['BREVO_API_KEY']
+  if (!brevoKey) {
+    throw new Error('BREVO_API_KEY is not configured')
   }
 
   const template = TEMPLATES[templateName]
@@ -65,27 +65,29 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
-  try {
-    await sendLovableEmail(
-      {
-        to: recipient,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN,
-        subject,
-        html,
-        text,
-        purpose: 'transactional',
-        label: templateName,
-        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        ...(options.replyTo ? { reply_to: options.replyTo } : {}),
-      },
-      { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
-    )
-  } catch (error) {
-    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
-      return { sent: false, reason: 'recipient_suppressed' }
-    }
-    throw error
+  const response = await fetch(`${BREVO_GATEWAY_URL}/smtp/email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      'X-Connection-Api-Key': brevoKey,
+    },
+    body: JSON.stringify({
+      sender: { name: SITE_NAME, email: `noreply@${FROM_DOMAIN}` },
+      to: [{ email: recipient }],
+      subject,
+      htmlContent: html,
+      textContent: text,
+      tags: [templateName],
+      ...(options.replyTo ? { replyTo: { email: options.replyTo } } : {}),
+      headers: { 'X-Idempotency-Key': options.idempotencyKey || crypto.randomUUID() },
+    }),
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    console.error(`[send-email] Brevo send failed [${response.status}]: ${errorBody}`)
+    throw new Error(`Brevo send failed [${response.status}]: ${errorBody}`)
   }
 
   // Mirror the email into the recipient's portal inbox when they are a client
