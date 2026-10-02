@@ -28,14 +28,10 @@ export const getFundTabsData = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     if (!(await canViewFund(db, context.userId, data.fundId))) throw new Error("You don't have access to this Fund.");
-    const [{ data: banks }, { data: taxDocs }, { data: assets }, { data: vals }] = await Promise.all([
+    const [{ data: banks }, { data: taxDocs }] = await Promise.all([
       db.from("bank_accounts").select("id, institution_name, account_name, account_mask, status, last_synced_at").eq("offering_id", data.fundId),
       db.from("fund_tax_documents").select("id, doc_type, tax_year, file_name, review_status, created_at").eq("offering_id", data.fundId).is("investor_user_id", null).order("tax_year", { ascending: false }),
-      db.from("portfolio_assets").select("id, issuer_name, asset_name, asset_class, instrument, acquisition_date, cost_basis_cents, status").eq("offering_id", data.fundId).order("acquisition_date", { ascending: false }),
-      db.from("asset_valuations").select("asset_name, value_cents, valuation_date, status").eq("offering_id", data.fundId).eq("status", "approved").order("valuation_date", { ascending: false }),
     ]);
-    const latest: Record<string, { value_cents: number; valuation_date: string }> = {};
-    for (const v of (vals ?? []) as any[]) if (!latest[v.asset_name]) latest[v.asset_name] = v;
     return {
       banks: ((banks ?? []) as any[]).map((b) => ({
         id: b.id, institution: b.institution_name, name: b.account_name,
