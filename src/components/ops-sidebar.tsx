@@ -167,7 +167,14 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
         )}
       </SidebarContent>
 
-        <SidebarAccountFooter workspaceLabel={salesOnly ? "Harmonious Sales" : "Harmonious Operations"} onSignOut={onSignOut} />
+        <SidebarAccountFooter workspaceLabel="Harmonious" userType={staffUserType(session?.staffRoles ?? [], salesOnly)} onSignOut={onSignOut} />
     </Sidebar>
   );
+}
+
+/** Plain user type shown under the company name: Operations, Sales or Account Manager. */
+function staffUserType(roles: string[], salesOnly: boolean): string {
+  if (roles.includes("client_success")) return "Account Manager";
+  if (salesOnly || (roles.some((r) => r === "sales" || r === "sales_management") && !roles.includes("operations"))) return "Sales";
+  return "Operations";
 }

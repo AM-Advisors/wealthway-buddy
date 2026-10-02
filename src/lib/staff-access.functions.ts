@@ -18,6 +18,14 @@ export const STAFF_ROLES = [
 
 const ROLE_VALUES = STAFF_ROLES.map((r) => r.value) as unknown as [string, ...string[]];
 
+/** User types offered by Add user, each mapped to the Harmonious role it grants. */
+export const USER_TYPES = [
+  { value: "operations", label: "Operations", role: "operations" },
+  { value: "sales", label: "Sales", role: "sales" },
+  { value: "account_manager", label: "Account Manager", role: "client_success" },
+] as const;
+const INVITE_ROLE_VALUES = [...ROLE_VALUES, "sales"] as [string, ...string[]];
+
 async function requireAdmin(context: any) {
   const { data } = await context.supabase
     .from("user_roles")
@@ -93,7 +101,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
     z
       .object({
         email: z.string().trim().email().max(200),
-        role: z.enum(ROLE_VALUES),
+        role: z.enum(INVITE_ROLE_VALUES),
         name: z.string().trim().max(160).optional().or(z.literal("")),
       })
       .parse(d),
