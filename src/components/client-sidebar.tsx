@@ -23,6 +23,7 @@ import { Logo, LogoIcon } from "@/components/Logo";
 import { ClientBrandStyles, useClientBrand } from "@/components/client-brand";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { getMyCapTables } from "@/lib/cap-table-billing.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import {
   DropdownMenu,
@@ -81,7 +82,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const navigation = getNavigation(session as never, activeId, pathname);
   const capFn = useServerFn(getMyCapTables);
-  const caps = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => capFn({ data: {} }), staleTime: 60_000 });
+  const caps = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => capFn({ data: { environment: getStripeEnvironment() } }), staleTime: 60_000 });
   const capLinks = ["/client/cap-table"];
   // Cap Table links only show once the client has an active (or free) cap table.
   const items = caps.data?.hasActive
