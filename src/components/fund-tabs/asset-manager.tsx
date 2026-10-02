@@ -80,12 +80,12 @@ export function AssetManager({ fundId, assets }: { fundId: string; assets: any[]
                 )}
                 {mk?.assetId === a.id && (
                   <div className="grid gap-2 rounded-md bg-muted/40 p-3 sm:grid-cols-4">
-                    <Input inputMode="decimal" placeholder="Value ($)" value={mk.value} onChange={(e) => setMk({ ...mk, value: e.target.value })} />
-                    <Input type="date" value={mk.date} onChange={(e) => setMk({ ...mk, date: e.target.value })} />
-                    <Select value={mk.method} onValueChange={(v) => setMk({ ...mk, method: v as any })}><SelectTrigger><SelectValue /></SelectTrigger>
+                    <Input inputMode="decimal" placeholder="Value ($)" value={mk!.value} onChange={(e) => setMk({ ...mk!, value: e.target.value })} />
+                    <Input type="date" value={mk!.date} onChange={(e) => setMk({ ...mk!, date: e.target.value })} />
+                    <Select value={mk!.method} onValueChange={(v) => setMk({ ...mk!, method: v as any })}><SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>{METHODS.map((m) => <SelectItem key={m} value={m} className="capitalize">{nice(m)}</SelectItem>)}</SelectContent></Select>
-                    <Input placeholder="Source / note" value={mk.note} onChange={(e) => setMk({ ...mk, note: e.target.value })} />
-                    <div className="flex gap-2 sm:col-span-4"><Button size="sm" disabled={!mk.value || markM.isPending} onClick={() => markM.mutate()}>Save value</Button><Button size="sm" variant="ghost" onClick={() => setMk(null)}>Cancel</Button></div>
+                    <Input placeholder="Source / note" value={mk!.note} onChange={(e) => setMk({ ...mk!, note: e.target.value })} />
+                    <div className="flex gap-2 sm:col-span-4"><Button size="sm" disabled={!mk!.value || markM.isPending} onClick={() => markM.mutate()}>Save value</Button><Button size="sm" variant="ghost" onClick={() => setMk(null)}>Cancel</Button></div>
                   </div>
                 )}
               </div>

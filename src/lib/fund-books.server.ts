@@ -180,7 +180,7 @@ async function bookFor(uid: string, fundId: string) {
   return String(nb.id);
 }
 
-export async function addAsset(uid: string, fundId: string, a: { issuerName: string; assetName: string; assetClass: AssetClass; instrument: string | null; acquisitionDate: string | null; costCents: number; statementLineId?: string | null }) {
+export async function addAsset(uid: string, fundId: string, a: { issuerName: string; assetName: string; assetClass: AssetClass; instrument: string | null; acquisitionDate: string | null; costCents: number; statementLineId?: string | null | undefined }) {
   await assertFund(uid, fundId);
   const d = await db();
   const book = await bookFor(uid, fundId);
