@@ -96,8 +96,9 @@ export const saveQuestionnaireFn = createServerFn({ method: "POST" })
 export const prepareSubscriptionDocumentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(onboardingInput.parse)
-  .handler(async ({ data, context }) =>
-    reconciled(data.onboardingId, context.userId, "prepareSubscriptionDocuments", (await engine()).prepareSubscriptionDocuments(context.userId, data.onboardingId)),
+  .handler(async ({ data, context }) => {
+    await (await import("@/lib/investor-extras.server")).assertFeesAccepted(context.userId, data.onboardingId);
+    return reconciled(data.onboardingId, context.userId, "prepareSubscriptionDocuments", (await engine()).prepareSubscriptionDocuments(context.userId, data.onboardingId)),
   );
 
 export const recordSubscriptionSignatureFn = createServerFn({ method: "POST" })

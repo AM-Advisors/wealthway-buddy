@@ -87,12 +87,12 @@ export async function feeStatus(userId: string, onboardingId: string): Promise<F
   if (!t) return { terms: null, accepted: null, sideLetters: [] };
   const [{ data: acc }, { data: sl }] = await Promise.all([
     d.from("investor_fee_acceptances").select("accepted_at, accepted_name").eq("onboarding_id", ob.id).eq("fee_terms_id", t.id).maybeSingle(),
-    d.from("side_letters").select("title").eq("onboarding_id", ob.id).limit(20),
+    d.from("side_letters").select("status, document_reference").eq("onboarding_id", ob.id).limit(20),
   ]);
   return {
     terms: { id: String(t.id), managementFeePct: t.management_fee_pct, basis: t.management_fee_basis, carryPct: t.carry_pct, hurdlePct: t.hurdle_pct, notes: t.notes ?? null },
     accepted: acc ? { at: String((acc as any).accepted_at), name: String((acc as any).accepted_name) } : null,
-    sideLetters: ((sl ?? []) as any[]).map((s) => String(s.title ?? "Side letter")),
+    sideLetters: ((sl ?? []) as any[]).map((s) => `Side letter${s.document_reference ? ` (${s.document_reference})` : ""} - ${String(s.status ?? "").replace(/_/g, " ")}`),
   };
 }
 
