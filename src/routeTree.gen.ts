@@ -88,6 +88,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
 import { Route as AuthenticatedAdminAccessRouteImport } from './routes/_authenticated/admin.access'
 import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authenticated/admin.activity'
+import { Route as AuthenticatedAdminAddUserRouteImport } from './routes/_authenticated/admin.add-user'
 import { Route as AuthenticatedAdminAgreementsRouteImport } from './routes/_authenticated/admin.agreements'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminBankAccountsRouteImport } from './routes/_authenticated/admin.bank-accounts'
@@ -738,6 +739,12 @@ const AuthenticatedAdminActivityRoute =
   AuthenticatedAdminActivityRouteImport.update({
     id: '/admin/activity',
     path: '/admin/activity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAddUserRoute =
+  AuthenticatedAdminAddUserRouteImport.update({
+    id: '/admin/add-user',
+    path: '/admin/add-user',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminAgreementsRoute =
@@ -2242,6 +2249,7 @@ export interface FileRoutesByFullPath {
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/add-user': typeof AuthenticatedAdminAddUserRoute
   '/admin/agreements': typeof AuthenticatedAdminAgreementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
@@ -2561,6 +2569,7 @@ export interface FileRoutesByTo {
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/add-user': typeof AuthenticatedAdminAddUserRoute
   '/admin/agreements': typeof AuthenticatedAdminAgreementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
@@ -2881,6 +2890,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
   '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/_authenticated/admin/add-user': typeof AuthenticatedAdminAddUserRoute
   '/_authenticated/admin/agreements': typeof AuthenticatedAdminAgreementsRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
@@ -3205,6 +3215,7 @@ export interface FileRouteTypes {
     | '/admin/$applicationId'
     | '/admin/access'
     | '/admin/activity'
+    | '/admin/add-user'
     | '/admin/agreements'
     | '/admin/audit'
     | '/admin/bank-accounts'
@@ -3524,6 +3535,7 @@ export interface FileRouteTypes {
     | '/admin/$applicationId'
     | '/admin/access'
     | '/admin/activity'
+    | '/admin/add-user'
     | '/admin/agreements'
     | '/admin/audit'
     | '/admin/bank-accounts'
@@ -3843,6 +3855,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
     | '/_authenticated/admin/activity'
+    | '/_authenticated/admin/add-user'
     | '/_authenticated/admin/agreements'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/bank-accounts'
@@ -4694,6 +4707,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/activity'
       fullPath: '/admin/activity'
       preLoaderRoute: typeof AuthenticatedAdminActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/add-user': {
+      id: '/_authenticated/admin/add-user'
+      path: '/admin/add-user'
+      fullPath: '/admin/add-user'
+      preLoaderRoute: typeof AuthenticatedAdminAddUserRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/agreements': {
@@ -6692,6 +6712,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
   AuthenticatedAdminActivityRoute: typeof AuthenticatedAdminActivityRoute
+  AuthenticatedAdminAddUserRoute: typeof AuthenticatedAdminAddUserRoute
   AuthenticatedAdminAgreementsRoute: typeof AuthenticatedAdminAgreementsRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminBankAccountsRoute: typeof AuthenticatedAdminBankAccountsRoute
@@ -6896,6 +6917,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
   AuthenticatedAdminActivityRoute: AuthenticatedAdminActivityRoute,
+  AuthenticatedAdminAddUserRoute: AuthenticatedAdminAddUserRoute,
   AuthenticatedAdminAgreementsRoute: AuthenticatedAdminAgreementsRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminBankAccountsRoute: AuthenticatedAdminBankAccountsRoute,
