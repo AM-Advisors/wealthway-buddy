@@ -127,7 +127,7 @@ describe("SEO head", () => {
 describe("index / noindex", () => {
   it("sign-in, token, application and fund offering pages are noindex", () => {
     for (const f of [
-      "auth.tsx", "auth.index.tsx", "auth.register.tsx", "auth.forgot.tsx", "client-login.tsx",
+      "auth.tsx", "auth.index.tsx", "auth.register.tsx", "auth.forgot.tsx", "client-login.tsx", "investor-login.tsx",
       "manager-login.tsx", "reset-password.tsx", "cap-claim.$token.tsx", "shares.$token.tsx",
       "_authenticated/route.tsx", "fund.$slug.tsx", "invest.$slug.tsx",
     ]) {
