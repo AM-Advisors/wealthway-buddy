@@ -92,6 +92,25 @@ export const getFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: row } = await (context.supabase as any).from("fund_payments").select("id, status, total_cents").eq("id", data.id).maybeSingle();
-    return (row ?? null) as { id: string; status: string; total_cents: number } | null;
+    const { data: row } = await (context.supabase as any).from("fund_payments").select("id, status, total_cents, environment, stripe_session_id").eq("id", data.id).maybeSingle();
+    if (!row) return null;
+    // If the confirmation hasn't arrived yet, ask the payment service directly (read-only check of this session).
+    if (row.status === "pending" && row.stripe_session_id) {
+      try {
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const s = await createStripeClient(row.environment).checkout.sessions.retrieve(row.stripe_session_id);
+        if (s.status === "complete" && s.payment_status !== "unpaid" && s.metadata?.["paymentId"] === row.id) {
+          const db = await admin();
+          const { data: upd } = await db.from("fund_payments").update({
+            status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+            stripe_payment_intent_id: typeof s.payment_intent === "string" ? s.payment_intent : s.payment_intent?.id ?? null,
+          }).eq("id", row.id).eq("status", "pending").select("id");
+          if (upd?.length) await db.from("fund_payment_events").insert({ payment_id: row.id, event_kind: "paid", detail: { session: s.id, via: "status_check" } });
+          row.status = "paid";
+        }
+      } catch (e) {
+        console.warn("fund payment status check failed", e);
+      }
+    }
+    return { id: row.id as string, status: row.status as string, total_cents: row.total_cents as number };
   });
