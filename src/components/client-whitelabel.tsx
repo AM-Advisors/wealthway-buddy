@@ -28,6 +28,7 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
   const save = useServerFn(saveClientBranding);
 
   const [logo, setLogo] = useState<string | null | undefined>(undefined);
+  const [displayName, setDisplayName] = useState("");
   const [headingFont, setHeadingFont] = useState<string | null>(null);
   const [bodyFont, setBodyFont] = useState<string | null>(null);
   const [primary, setPrimary] = useState<string>("");
@@ -36,6 +37,7 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
 
   useEffect(() => {
     setLogo(undefined);
+    setDisplayName(branding?.display_name ?? "");
     setHeadingFont(branding?.heading_font ?? null);
     setBodyFont(branding?.body_font ?? null);
     setPrimary(branding?.primary_color ?? "");
@@ -53,6 +55,7 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
     mutationFn: () =>
       save({ data: {
         clientId,
+        displayName: displayName.trim() || null,
         logoDataUrl: logo,
         headingFont, bodyFont,
         primaryColor: primary || null,
