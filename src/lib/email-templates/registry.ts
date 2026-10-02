@@ -21,6 +21,7 @@ import { template as investmentOnboarding } from './investment-onboarding'
 import { template as documentsSent } from './documents-sent'
 import { template as statementReady } from './statement-ready'
 import { template as crmCampaign } from './crm-campaign'
+import { template as paymentReceived } from './payment-received'
 
 
 
@@ -64,5 +65,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'documents-sent': documentsSent,
   'statement-ready': statementReady,
   'crm-campaign': crmCampaign,
+  'payment-received': paymentReceived,
+
 
 }

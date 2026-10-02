@@ -153,7 +153,38 @@ export const markFundPaymentReceived = createServerFn({ method: "POST" })
     }).eq("id", data.id).eq("status", "awaiting_payment").select("id");
     if (!upd?.length) throw new Error("This payment was already confirmed.");
     await db.from("fund_payment_events").insert({ payment_id: data.id, event_kind: "payment_received", actor_id: context.userId, detail: { note: data.note, method: p.payment_method, activated: !!p.used_for } });
-    return { ok: true };
+    // Receipt email to the person who started the payment. Never blocks the confirmation.
+    let receiptSent = false;
+    try {
+      const { data: full } = await (db as any).from("fund_payments").select("id, kind, total_cents, created_by, clients(name)").eq("id", data.id).maybeSingle();
+      if (full?.created_by) {
+        const { data: u } = await db.auth.admin.getUserById(full.created_by);
+        const email = u?.user?.email;
+        if (email) {
+          const { data: prof } = await (db as any).from("profiles").select("full_name").eq("id", full.created_by).maybeSingle();
+          const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+          const r = await sendTemplateEmail("payment-received", email, {
+            idempotencyKey: `payment-received-${full.id}`,
+            templateData: {
+              name: (prof as any)?.full_name || undefined,
+              clientName: (full as any).clients?.name || undefined,
+              reference: `HP-${String(full.id).replace(/-/g, "").slice(0, 8).toUpperCase()}`,
+              method: p.payment_method === "ach" ? "ACH" : "Wire",
+              amount: `$${(full.total_cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              receivedDate: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+              purpose: full.kind === "new_fund_request" ? "New fund request setup fee" : "Service request",
+              activated: !!p.used_for,
+            },
+          });
+          receiptSent = !!(r as any)?.sent;
+        }
+      }
+      await db.from("fund_payment_events").insert({ payment_id: data.id, event_kind: receiptSent ? "receipt_sent" : "receipt_not_sent", actor_id: context.userId, detail: {} });
+    } catch (e) {
+      console.error("payment receipt email failed", e);
+      await db.from("fund_payment_events").insert({ payment_id: data.id, event_kind: "receipt_failed", actor_id: context.userId, detail: { error: String((e as Error)?.message ?? e).slice(0, 300) } });
+    }
+    return { ok: true, receiptSent };
   });
 
 export const getFundPayment = createServerFn({ method: "POST" })

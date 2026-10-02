@@ -520,8 +520,12 @@ function PaymentsTab() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const receive = useMutation({
     mutationFn: (id: string) => mark({ data: { id, note: notes[id] ?? "" } }),
-    onSuccess: () => {
-      toast.success("Payment marked as received. The linked request is now active.");
+    onSuccess: (r: any) => {
+      toast.success(
+        r?.receiptSent
+          ? "Payment marked as received. The client has been emailed a receipt."
+          : "Payment marked as received. The receipt email could not be sent, so let the client know directly.",
+      );
       queryClient.invalidateQueries({ queryKey: ["offline-fund-payments"] });
     },
     onError: (e) => toast.error((e as Error).message),
