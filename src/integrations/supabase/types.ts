@@ -2715,6 +2715,45 @@ export type Database = {
           },
         ]
       }
+      bank_setup_packets: {
+        Row: {
+          bank: string
+          checklist: string
+          created_at: string
+          file_name: string
+          id: string
+          retired_at: string | null
+          retired_by: string | null
+          storage_path: string
+          title: string
+          uploaded_by: string
+        }
+        Insert: {
+          bank: string
+          checklist?: string
+          created_at?: string
+          file_name: string
+          id?: string
+          retired_at?: string | null
+          retired_by?: string | null
+          storage_path: string
+          title: string
+          uploaded_by: string
+        }
+        Update: {
+          bank?: string
+          checklist?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          retired_at?: string | null
+          retired_by?: string | null
+          storage_path?: string
+          title?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       bank_transactions: {
         Row: {
           amount_cents: number

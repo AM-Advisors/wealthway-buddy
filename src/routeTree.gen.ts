@@ -91,6 +91,7 @@ import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminAgreementsRouteImport } from './routes/_authenticated/admin.agreements'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminBankAccountsRouteImport } from './routes/_authenticated/admin.bank-accounts'
+import { Route as AuthenticatedAdminBankPacketsRouteImport } from './routes/_authenticated/admin.bank-packets'
 import { Route as AuthenticatedAdminCapTableRouteImport } from './routes/_authenticated/admin.cap-table'
 import { Route as AuthenticatedAdminCapTableBoardRouteImport } from './routes/_authenticated/admin.cap-table-board'
 import { Route as AuthenticatedAdminCapTableMigrationsRouteImport } from './routes/_authenticated/admin.cap-table-migrations'
@@ -754,6 +755,12 @@ const AuthenticatedAdminBankAccountsRoute =
   AuthenticatedAdminBankAccountsRouteImport.update({
     id: '/admin/bank-accounts',
     path: '/admin/bank-accounts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminBankPacketsRoute =
+  AuthenticatedAdminBankPacketsRouteImport.update({
+    id: '/admin/bank-packets',
+    path: '/admin/bank-packets',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminCapTableRoute =
@@ -2238,6 +2245,7 @@ export interface FileRoutesByFullPath {
   '/admin/agreements': typeof AuthenticatedAdminAgreementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
+  '/admin/bank-packets': typeof AuthenticatedAdminBankPacketsRoute
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/cap-table-migrations': typeof AuthenticatedAdminCapTableMigrationsRoute
@@ -2556,6 +2564,7 @@ export interface FileRoutesByTo {
   '/admin/agreements': typeof AuthenticatedAdminAgreementsRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
+  '/admin/bank-packets': typeof AuthenticatedAdminBankPacketsRoute
   '/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/admin/cap-table-migrations': typeof AuthenticatedAdminCapTableMigrationsRoute
@@ -2875,6 +2884,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/agreements': typeof AuthenticatedAdminAgreementsRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/bank-accounts': typeof AuthenticatedAdminBankAccountsRoute
+  '/_authenticated/admin/bank-packets': typeof AuthenticatedAdminBankPacketsRoute
   '/_authenticated/admin/cap-table': typeof AuthenticatedAdminCapTableRoute
   '/_authenticated/admin/cap-table-board': typeof AuthenticatedAdminCapTableBoardRoute
   '/_authenticated/admin/cap-table-migrations': typeof AuthenticatedAdminCapTableMigrationsRoute
@@ -3198,6 +3208,7 @@ export interface FileRouteTypes {
     | '/admin/agreements'
     | '/admin/audit'
     | '/admin/bank-accounts'
+    | '/admin/bank-packets'
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/cap-table-migrations'
@@ -3516,6 +3527,7 @@ export interface FileRouteTypes {
     | '/admin/agreements'
     | '/admin/audit'
     | '/admin/bank-accounts'
+    | '/admin/bank-packets'
     | '/admin/cap-table'
     | '/admin/cap-table-board'
     | '/admin/cap-table-migrations'
@@ -3834,6 +3846,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/agreements'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/bank-accounts'
+    | '/_authenticated/admin/bank-packets'
     | '/_authenticated/admin/cap-table'
     | '/_authenticated/admin/cap-table-board'
     | '/_authenticated/admin/cap-table-migrations'
@@ -4702,6 +4715,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/bank-accounts'
       fullPath: '/admin/bank-accounts'
       preLoaderRoute: typeof AuthenticatedAdminBankAccountsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/bank-packets': {
+      id: '/_authenticated/admin/bank-packets'
+      path: '/admin/bank-packets'
+      fullPath: '/admin/bank-packets'
+      preLoaderRoute: typeof AuthenticatedAdminBankPacketsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/cap-table': {
@@ -6675,6 +6695,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAgreementsRoute: typeof AuthenticatedAdminAgreementsRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminBankAccountsRoute: typeof AuthenticatedAdminBankAccountsRoute
+  AuthenticatedAdminBankPacketsRoute: typeof AuthenticatedAdminBankPacketsRoute
   AuthenticatedAdminCapTableRoute: typeof AuthenticatedAdminCapTableRoute
   AuthenticatedAdminCapTableBoardRoute: typeof AuthenticatedAdminCapTableBoardRoute
   AuthenticatedAdminCapTableMigrationsRoute: typeof AuthenticatedAdminCapTableMigrationsRoute
@@ -6878,6 +6899,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAgreementsRoute: AuthenticatedAdminAgreementsRoute,
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminBankAccountsRoute: AuthenticatedAdminBankAccountsRoute,
+  AuthenticatedAdminBankPacketsRoute: AuthenticatedAdminBankPacketsRoute,
   AuthenticatedAdminCapTableRoute: AuthenticatedAdminCapTableRoute,
   AuthenticatedAdminCapTableBoardRoute: AuthenticatedAdminCapTableBoardRoute,
   AuthenticatedAdminCapTableMigrationsRoute:

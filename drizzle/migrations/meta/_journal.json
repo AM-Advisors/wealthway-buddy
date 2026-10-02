@@ -736,6 +736,13 @@
       "when": 1790885970831,
       "tag": "0104_security_session_revocations",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1790898766338,
+      "tag": "0105_bank_setup_packets",
+      "breakpoints": true
     }
   ]
 }
