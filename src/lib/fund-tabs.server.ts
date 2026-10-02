@@ -75,6 +75,8 @@ export async function investorGrid(fundId: string) {
       wiring: CANONICAL_FUNDING_LABELS[funding],
       lastActivity: o.last_activity_at ?? o.updated_at ?? null,
       stage: o.stage as string,
+      applicationId: o.application_id ?? null,
+      investorUserId: o.investor_user_id ?? null,
     };
   });
 }

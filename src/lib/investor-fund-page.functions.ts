@@ -48,7 +48,7 @@ export const myFundK1sFn = createServerFn({ method: "POST" })
       )
       .eq("investor_user_id", context.userId)
       .eq("offering_id", data.offeringId)
-      .in("status", ["delivered", "amended"])
+      .in("status", ["delivered"])
       .order("tax_year", { ascending: false });
     if (error) throw new Error(error.message);
     return (rows ?? []) as any[];

@@ -13,6 +13,8 @@ import { getCrmWorkspace } from "@/lib/crm.functions";
 
 export const Route = createFileRoute("/_authenticated/manager/messages")({
   component: Messages,
+  validateSearch: (s: Record<string, unknown>): { open?: string } =>
+    typeof s.open === "string" && s.open ? { open: s.open } : {},
   head: () => ({
     meta: [
       { title: "Investor messages | Harmonious fund manager" },

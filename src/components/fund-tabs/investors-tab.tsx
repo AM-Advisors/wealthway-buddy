@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,16 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
         </SheetHeader>
         {q.isLoading ? <p className="mt-4 text-sm text-muted-foreground">Loading…</p> : d && (
           <div className="mt-4 space-y-5 text-sm">
+            {d.investorUserId ? (
+              <Button asChild size="sm" variant="outline">
+                <Link
+                  to="/manager/messages"
+                  search={{ open: d.applicationId ?? undefined }}
+                >
+                  Open private messages
+                </Link>
+              </Button>
+            ) : null}
             <dl className="grid grid-cols-2 gap-3">
               {[
                 ["Email", d.email], ["Phone", d.phone], ["Address", d.address], ["Citizenship", d.citizenship],
