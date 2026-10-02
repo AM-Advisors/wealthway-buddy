@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DOC_TEMPLATES, STARTER_NOTICE } from "@/lib/fund-doc-templates";
 import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxesFn, uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import { fileToBase64, fmtDate } from "./shared";
+import { StandardFormsCard } from "./standard-forms-card";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
 
@@ -80,6 +81,8 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
           )}
         </CardContent>
       </Card>
+
+      <StandardFormsCard fundId={fundId} onGenerated={refresh} />
 
       <Card>
         <CardHeader>

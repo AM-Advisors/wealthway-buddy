@@ -16225,6 +16225,7 @@ export type Database = {
           offering_id: string
           signature_boxes: Json
           size_bytes: number | null
+          standard_form_id: string | null
           status: string
           storage_path: string | null
           template_key: string | null
@@ -16243,6 +16244,7 @@ export type Database = {
           offering_id: string
           signature_boxes?: Json
           size_bytes?: number | null
+          standard_form_id?: string | null
           status?: string
           storage_path?: string | null
           template_key?: string | null
@@ -16261,6 +16263,7 @@ export type Database = {
           offering_id?: string
           signature_boxes?: Json
           size_bytes?: number | null
+          standard_form_id?: string | null
           status?: string
           storage_path?: string | null
           template_key?: string | null
@@ -16273,6 +16276,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_files_standard_form_id_fkey"
+            columns: ["standard_form_id"]
+            isOneToOne: false
+            referencedRelation: "harmonious_standard_forms"
             referencedColumns: ["id"]
           },
         ]
@@ -19336,6 +19346,36 @@ export type Database = {
           id?: string
           jurisdiction?: string | null
           name?: string
+        }
+        Relationships: []
+      }
+      harmonious_standard_forms: {
+        Row: {
+          body: string
+          created_at: string
+          form_key: string
+          id: string
+          note: string | null
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          form_key: string
+          id?: string
+          note?: string | null
+          uploaded_by: string
+          version: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          form_key?: string
+          id?: string
+          note?: string | null
+          uploaded_by?: string
+          version?: number
         }
         Relationships: []
       }
