@@ -27,11 +27,11 @@ function InvestorFundPage() {
   const { fundId } = Route.useParams();
   const load = useServerFn(getInvestorFundView);
   const q = useQuery({ queryKey: ["investor-fund", fundId], queryFn: () => load({ data: { offeringId: fundId } }), retry: false });
-  if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
+  if (q.isLoading) return <p className="p-4 text-sm text-muted-foreground md:p-6">Loading…</p>;
+  if (q.error) return <p className="p-4 text-sm text-destructive md:p-6">{(q.error as Error).message}</p>;
   const v = q.data!;
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">
       <div>
         <Link to="/my-funds" className="text-xs text-muted-foreground hover:underline">← My Funds</Link>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">{String(v.fund.name ?? "Fund")}</h1>
