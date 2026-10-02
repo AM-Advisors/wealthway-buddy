@@ -22,6 +22,7 @@ import { listMyMessages } from "@/lib/client-inbox.functions";
 import { recordPortalSignIn } from "@/lib/sign-in-log.functions";
 
 import { ClientIntakeGate } from "@/components/client-intake-gate";
+import { useClientBrand } from "@/components/client-brand";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
