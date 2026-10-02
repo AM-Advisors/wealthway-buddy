@@ -41,29 +41,38 @@ export async function buildQuote(db: any, args: { clientId: string; kind: "new_f
 
 const sig = (items: PayItem[]) => items.map((i) => `${i.key}:${i.cents}`).sort().join("|");
 
+/** Offline methods: the request can be sent, but nothing is activated until Harmonious confirms receipt. */
+export const OFFLINE_METHODS = ["wire", "ach"] as const;
+export type OfflineMethod = (typeof OFFLINE_METHODS)[number];
+
 /**
- * Called inside the submit handlers: the payment must be paid, unused, for this client and kind,
- * and match exactly what is being submitted now. Marks it used (once).
+ * Called inside the submit handlers: the payment must be unused, for this client and kind,
+ * and match exactly what is being submitted now. Card payments must be paid; wire/ACH may
+ * still be awaiting receipt - the submission is flagged so nothing activates until staff
+ * confirm the money arrived.
  */
 export async function verifyPayment(db: any, args: { paymentId: string | null | undefined; clientId: string; kind: string; expected: PayItem[]; usedFor: string | null; actorId: string }) {
   if (totalOf(args.expected) === 0) return null;
   if (!args.paymentId) throw new Error("Payment is required before this can be sent to Harmonious.");
   const { data: p } = await db.from("fund_payments").select("*").eq("id", args.paymentId).maybeSingle();
   if (!p || p.client_id !== args.clientId || p.kind !== args.kind) throw new Error("Payment not found.");
-  if (p.status !== "paid") throw new Error(p.status === "used" ? "This payment was already used." : "Payment hasn't been confirmed yet.");
+  const offline = OFFLINE_METHODS.includes(p.payment_method);
+  const awaiting = offline && p.status === "awaiting_payment";
+  if (p.status !== "paid" && !awaiting) throw new Error(p.status === "used" ? "This payment was already used." : "Payment hasn't been confirmed yet.");
   if (sig(p.items) !== sig(args.expected)) throw new Error("Your selected add-ons changed after payment. Please contact Harmonious.");
-  return p.id as string;
+  return { id: p.id as string, awaiting };
 }
 
-/** Marks a verified payment used once the submission has been created. */
+/** Marks a verified payment used once the submission has been created. Awaiting wire/ACH stays awaiting. */
 export async function markPaymentUsed(db: any, paymentId: string | null, usedFor: string | null, actorId: string) {
   if (!paymentId) return;
-  const p = { id: paymentId };
-  const args = { usedFor, actorId };
-  const { data: upd } = await db.from("fund_payments").update({ status: "used", used_at: new Date().toISOString(), used_for: args.usedFor, updated_at: new Date().toISOString() })
-    .eq("id", p.id).eq("status", "paid").select("id");
-  if (!upd?.length) { console.warn("fund payment already used", p.id); return null; }
-  await db.from("fund_payment_events").insert({ payment_id: p.id, event_kind: "used", actor_id: args.actorId, detail: { used_for: args.usedFor } });
-  return p.id as string;
+  const { data: row } = await db.from("fund_payments").select("id, status").eq("id", paymentId).maybeSingle();
+  if (!row || (row.status !== "paid" && row.status !== "awaiting_payment")) { console.warn("fund payment already used", paymentId); return null; }
+  const next = row.status === "awaiting_payment" ? "awaiting_payment" : "used";
+  const { data: upd } = await db.from("fund_payments").update({ status: next, used_at: new Date().toISOString(), used_for: usedFor, updated_at: new Date().toISOString() })
+    .eq("id", paymentId).eq("status", row.status).select("id");
+  if (!upd?.length) { console.warn("fund payment already used", paymentId); return null; }
+  await db.from("fund_payment_events").insert({ payment_id: paymentId, event_kind: "used", actor_id: actorId, detail: { used_for: usedFor, awaiting_receipt: next === "awaiting_payment" } });
+  return paymentId;
 }
 
