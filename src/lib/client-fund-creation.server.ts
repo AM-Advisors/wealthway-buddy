@@ -47,5 +47,17 @@ export async function createClientRequestedOffering(input: {
   if (eligibleSow) {
     await db.from("client_sows").update({ offering_id: offeringId }).eq("id", eligibleSow.id).is("offering_id", null);
   }
+
+  // The person requesting the fund joins its Team. Role, signatory and banking access wait for them to confirm.
+  try {
+    const { data: p } = await db.from("profiles").select("legal_name, email, phone").eq("user_id", input.actorId).maybeSingle();
+    await db.from("fund_team_members").insert({
+      offering_id: offeringId, user_id: input.actorId, added_as: "requester", created_by: input.actorId,
+      full_name: p?.legal_name || p?.email || "Fund requester", email: p?.email ?? null, phone: p?.phone ?? null,
+      team_role: "member", permissions: ["view", "edit", "documents", "investors"],
+    });
+  } catch (e) {
+    console.warn("requester team member not added", e);
+  }
   return { offeringId, sowId: eligibleSow ? String(eligibleSow.id) : null };
 }

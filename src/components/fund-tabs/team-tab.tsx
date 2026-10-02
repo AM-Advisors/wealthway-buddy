@@ -44,8 +44,20 @@ export function TeamTab({ fundId }: { fundId: string }) {
     </div>
   );
 
+  const mine = d.members.find((m: any) => m.user_id === d.me && !m.roles_confirmed_at);
   return (
     <div className="space-y-5">
+      {mine && (
+        <Card className="border-primary">
+          <CardHeader>
+            <CardTitle className="text-base">Confirm your role on this fund</CardTitle>
+            <CardDescription>
+              You were added to the Team because you requested this fund. Check your role and permissions: are you the GP or a manager, an authorized signatory, and do you need banking access?
+            </CardDescription>
+          </CardHeader>
+          <CardContent><Button size="sm" onClick={() => setEditing(mine)}>Review my role</Button></CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
           <div>
