@@ -1,4 +1,5 @@
 import { FundSignoffQueue } from "@/components/signoff-board";
+import { CapTableEditor } from "@/components/cap-table-editor";
 import { useMemo, useRef, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
@@ -822,6 +823,8 @@ export function OperationsFund({ fundId }: { fundId: string }) {
     <Shell title={fundName} description="Everything operations holds for this fund.">
       <h2 className="text-lg">Banking</h2>
       <OperationsBanking fundId={fundId} />
+      <h2 className="text-lg">Cap table</h2>
+      <CapTableEditor fundId={fundId} embedded />
       <h2 className="text-lg">EIN and Form SS-4</h2>
       <OperationsSs4 fundId={fundId} />
       <h2 className="text-lg">Tax documents</h2>
