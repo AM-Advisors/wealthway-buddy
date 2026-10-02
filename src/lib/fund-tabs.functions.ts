@@ -98,3 +98,37 @@ export const lastRemindersFn = createServerFn({ method: "POST" }).middleware([re
 export const sendInvestorRemindersFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(fund.extend({ onboardingIds: z.array(uuid).min(1).max(100) }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.sendReminders(context.userId, data.fundId, data.onboardingIds); });
+
+/** Fund EIN: only Harmonious staff and the fund's managers. The database RPC re-checks authority as the caller. */
+export const fundEinFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ reveal: z.boolean().default(false) }).parse)
+  .handler(async ({ data, context }) => {
+    const s = await srv(); const a = await s.assertFund(context.userId, data.fundId);
+    const d = await s.db();
+    if (!a.staff) {
+      const { data: mgr } = await d.from("fund_managers").select("id").eq("user_id", context.userId).eq("offering_id", data.fundId).maybeSingle();
+      const { data: tm } = await d.from("fund_team_members").select("id").eq("user_id", context.userId).eq("offering_id", data.fundId).in("team_role", ["gp", "manager"]).is("removed_at", null).maybeSingle();
+      if (!mgr && !tm) return { allowed: false as const };
+    }
+    const { data: row, error } = await (context.supabase as any).rpc("get_offering_entity_details", { p_offering_id: data.fundId }).maybeSingle();
+    if (error) return { allowed: false as const };
+    const r = (row ?? {}) as any;
+    const ein = String(r.ein ?? "").replace(/\D/g, "");
+    if (!ein) return { allowed: true as const, status: "not_recorded" as const };
+    if (!a.staff && r.ein_review_status !== "approved") return { allowed: true as const, status: "in_review" as const };
+    const fmt = `${ein.slice(0, 2)}-${ein.slice(2)}`;
+    return { allowed: true as const, status: "recorded" as const, ein: data.reveal ? fmt : `••-•••${ein.slice(-4)}` };
+  });
+
+/** Account tab: approved financial statements, financial reviews and NAV for this fund (read-only). */
+export const fundAccountFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+  .handler(async ({ data, context }) => {
+    const s = await srv(); await s.assertFund(context.userId, data.fundId);
+    const d = await s.db();
+    const [st, rv, nav] = await Promise.all([
+      d.from("financial_statement_packages").select("id, period_type, period_start, period_end, status, approved_at").eq("offering_id", data.fundId).order("period_end", { ascending: false }).limit(24),
+      d.from("financial_review_memos").select("id, title, period_start, period_end, status, decided_at").eq("offering_id", data.fundId).order("period_end", { ascending: false }).limit(24),
+      d.from("nav_versions").select("id, as_of_date, period_label, status, net_asset_value_cents, cash_cents, investments_fair_value_cents, receivables_cents, other_assets_cents, total_liabilities_cents, nav_per_unit_cents").eq("offering_id", data.fundId).is("superseded_by_id", null).in("status", ["approved", "published"]).order("as_of_date", { ascending: true }).limit(24),
+    ]);
+    return { statements: (st.data ?? []) as any[], reviews: (rv.data ?? []) as any[], nav: (nav.data ?? []) as any[] };
+  });
