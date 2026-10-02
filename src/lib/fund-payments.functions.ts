@@ -23,10 +23,8 @@ export async function resolveTarget(context: any, t: Target) {
   if (!clientId || !ids.includes(clientId)) throw new Error("You aren't linked to this organisation.");
   const { coreServicesFor } = await import("@/lib/client-portal-model");
   if (t.kind === "new_fund_request") {
-    const { autoServices } = await import("@/lib/fund-request-model");
-    const r = t.request as any;
-    const core = autoServices(r);
-    return { clientId, addOnKeys: ((r.service_keys ?? []) as string[]).filter((k) => !core.includes(k)), offeringId: null };
+    const { fundAddOnKeys } = await import("@/lib/fund-request-model");
+    return { clientId, addOnKeys: fundAddOnKeys(t.request as any), offeringId: null };
   }
   const core = coreServicesFor(t.answers["vehicle_structure"], t.answers["offering_exemption"], t.answers["jurisdiction"]);
   return { clientId, addOnKeys: t.serviceKeys.filter((k) => !core.includes(k)), offeringId: t.offeringId ?? null };

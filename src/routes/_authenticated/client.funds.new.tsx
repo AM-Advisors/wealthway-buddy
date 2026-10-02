@@ -27,7 +27,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -352,20 +352,46 @@ function NewFundRequest() {
               <div className="space-y-4">
                 {(["core", "addon"] as const).map((group) => {
                   const core = autoServices(r);
-                  const list = (catalogue.data?.services ?? []).filter((s: any) => (group === "core" ? core.includes(s.key) : !core.includes(s.key)));
+                  const list = (catalogue.data?.services ?? []).filter((s: any) =>
+                    !HIDDEN_FUND_SERVICE_KEYS.includes(s.key) && (group === "core" ? core.includes(s.key) : !core.includes(s.key)));
                   if (!list.length) return null;
                   return (
                     <div key={group} className="space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group === "core" ? "Included with your setup" : "Add-ons (à la carte)"}</p>
-                      {list.map((s: any) => (
-                        <label key={s.id} className="flex cursor-pointer items-start gap-3 rounded-md border p-3">
-                          <Checkbox checked={r.service_keys.includes(s.key)} onCheckedChange={() => set("service_keys", r.service_keys.includes(s.key) ? r.service_keys.filter((k) => k !== s.key) : [...r.service_keys, s.key])} />
-                          <span className="text-sm"><span className="font-medium">{s.name}</span><span className="block text-xs text-muted-foreground">{categoryLabel(s.category)}</span></span>
-                        </label>
-                      ))}
+                      {list.map((s: any) => {
+                        const bundle = SERVICE_BUNDLES[s.key];
+                        const checked = r.service_keys.includes(s.key) || (group === "core");
+                        return (
+                          <div key={s.id} className="rounded-md border p-3">
+                            <label className="flex cursor-pointer items-start gap-3">
+                              <Checkbox checked={checked} disabled={group === "core"} onCheckedChange={() => {
+                                const on = r.service_keys.includes(s.key);
+                                set("service_keys", on ? r.service_keys.filter((k) => k !== s.key) : [...r.service_keys, s.key]);
+                                if (s.key === "management_llc" && on) set("management_llc_path", "");
+                              }} />
+                              <span className="text-sm">
+                                <span className="font-medium">{bundle?.label ?? s.name}</span>
+                                <span className="block text-xs text-muted-foreground">{bundle ? `Includes ${bundle.includes.join(", ")}` : categoryLabel(s.category)}</span>
+                              </span>
+                            </label>
+                            {s.key === "management_llc" && r.service_keys.includes("management_llc") && (
+                              <div className="mt-3 space-y-2 pl-7">
+                                <p className="text-xs font-medium">What do you need for the Management / Master LLC?</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {([["setup", "Set up a new entity"], ["transfer", "Transfer an existing entity"]] as const).map(([v, l]) => (
+                                    <Button key={v} type="button" size="sm" variant={r.management_llc_path === v ? "default" : "outline"} onClick={() => set("management_llc_path", v)}>{l}</Button>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Harmonious starts the entity {r.management_llc_path === "transfer" ? "transfer" : "setup"} with you after the request is received.</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })}
+                <p className="text-xs text-muted-foreground">Deadline tracking is included with every fund.</p>
                 <p className="text-xs text-muted-foreground">Harmonious confirms the final services and price before anything is agreed.</p>
               </div>
             )}

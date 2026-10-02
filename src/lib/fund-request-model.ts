@@ -139,6 +139,8 @@ export type FundRequest = {
   managers: RequestPerson[];
   signatory: RequestPerson;
   service_keys: string[];
+  /** Set when Management / Master LLC support is chosen: start setup of a new entity or transfer an existing one. */
+  management_llc_path: "setup" | "transfer" | "";
   notes: string;
 };
 
@@ -153,7 +155,7 @@ export function emptyRequest(kind = ""): FundRequest {
     gp_commitment: "", fund_term: "", investment_period: "",
     classes: [{ name: "Class A", fee: "", carry: "", hurdle: "", minimum: "" }],
     documents_path: "", documents: [], banking_path: "", bank_name: "",
-    managers: [], signatory: { name: "", email: "", title: "" }, service_keys: [], notes: "",
+    managers: [], signatory: { name: "", email: "", title: "" }, service_keys: [], management_llc_path: "", notes: "",
   };
 }
 
@@ -180,6 +182,7 @@ export function missingFields(r: FundRequest): Partial<Record<RequestStepKey, st
     if (miss.length) add("entity", `SS-4: ${miss.map((f) => f.label.replace(/^[\dab]+\.\s*/, "")).join(", ")}`);
   }
   if (!r.offering_exemption) add("economics", "Offering exemption");
+  if ((r.service_keys ?? []).includes("management_llc") && !r.management_llc_path) add("services", "Management / Master LLC: set up a new entity or transfer an existing one");
   if (!r.signatory.name.trim() || !r.signatory.email.trim()) add("people", "Signatory name and email");
   return out;
 }
@@ -277,4 +280,35 @@ export function flatAnswers(r: FundRequest): Record<string, string> {
   return out;
 }
 
-export const autoServices = (r: FundRequest) => coreServicesFor(r.vehicle_structure, r.offering_exemption, r.jurisdiction);
+/** Bundled offerings: one choice covering several catalogue components. */
+export const SERVICE_BUNDLES: Record<string, { label: string; includes: string[] }> = {
+  investor_onboarding: {
+    label: "Investor Onboarding",
+    includes: ["KYC", "KYB", "AML screening", "Sanctions screening", "Beneficial-owner screening", "W-9 / W-8 collection", "Investor records", "Investor inquiries"],
+  },
+  tax_k1: {
+    label: "Tax",
+    includes: ["Federal partnership return", "State partnership return", "Schedule K-1 coordination", "Form 1042-S coordination"],
+  },
+};
+/** Catalogue keys never offered separately on a Fund request (bundled, included everywhere, or not offered). */
+export const HIDDEN_FUND_SERVICE_KEYS = [
+  "kyc", "kyb", "aml_screening", "sanctions_screening", "beneficial_owner_screening", "tax_doc_collection",
+  "investor_records", "investor_inquiries", "tax_1065", "tax_state", "tax_1042s",
+  "filing_tracking", "fund_management", "cap_table_free", "cap_table_starter", "cap_table_growth", "cap_table_scale", "cap_table_enterprise",
+];
+/** Included with every Fund (deadline tracking, capital accounts, statements, wire instructions). */
+export const ALWAYS_INCLUDED_FUND_SERVICES = ["filing_tracking", "capital_accounts", "capital_account_statements", "wire_instructions"];
+
+export const autoServices = (r: Pick<FundRequest, "kind" | "vehicle_structure" | "offering_exemption" | "jurisdiction">) => {
+  const core = coreServicesFor(r.vehicle_structure, r.offering_exemption, r.jurisdiction).filter((k) => k !== "investor_onboarding");
+  if (!r.vehicle_structure) return core;
+  // Investor Onboarding is included for SPVs and a la carte for every other fund.
+  if (r.kind === "spv") core.push("investor_onboarding");
+  return Array.from(new Set([...core, ...ALWAYS_INCLUDED_FUND_SERVICES]));
+};
+/** Paid add-ons on a Fund request: chosen keys minus included and non-offered ones. */
+export const fundAddOnKeys = (r: FundRequest) => {
+  const core = autoServices(r);
+  return Array.from(new Set((r.service_keys ?? []).filter((k) => !core.includes(k) && !HIDDEN_FUND_SERVICE_KEYS.includes(k))));
+};
