@@ -13,9 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { fileToBase64, fmtDate } from "@/components/fund-tabs/shared";
+import { uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import {
   acceptFeesFn, deleteOnboardingDocFn, feeStatusFn, fundUpdatesFn, listOnboardingUploadsFn, myInvestorUpdatesFn,
-  postFundUpdateFn, removeFundUpdateFn, uploadOnboardingDocFn,
+  postFundUpdateFn, removeFundUpdateFn, uploadOnboardingDocFn, updateAttachmentOptionsFn,
 } from "@/lib/investor-extras.functions";
 
 const KINDS = [
@@ -156,6 +157,12 @@ export function InvestorUpdatesCard() {
                   <p className="text-xs text-muted-foreground">{u.fundName} · {fmtDate(u.postedAt)}</p>
                   <p className="font-medium">{u.title}</p>
                   <p className="whitespace-pre-wrap text-sm text-muted-foreground">{u.body}</p>
+                  {u.file || u.asset ? (
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {u.file ? (u.file.url ? <a className="rounded-md border px-2 py-1 underline-offset-2 hover:underline" href={u.file.url} target="_blank" rel="noreferrer">Document: {u.file.name}</a> : <span className="rounded-md border px-2 py-1">Document: {u.file.name}</span>) : null}
+                  {u.asset ? <span className="rounded-md border px-2 py-1">Asset: {u.asset.name}</span> : null}
+                </div>
+              ) : null}
                 </li>
               ))}
             </ul>
@@ -188,9 +195,26 @@ export function FundUpdatesPanel({ fundId }: { fundId: string }) {
   const q = useQuery({ queryKey: key, queryFn: () => list({ data: { fundId } }) });
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const opts = useServerFn(updateAttachmentOptionsFn);
+  const upload = useServerFn(uploadFundFileFn);
+  const optKey = ["fund-update-attach", fundId];
+  const oq = useQuery({ queryKey: optKey, queryFn: () => opts({ data: { fundId } }) });
+  const [fileId, setFileId] = useState("none");
+  const [assetId, setAssetId] = useState("none");
+  const [uploading, setUploading] = useState(false);
+  const onUpload = async (f: File | undefined) => {
+    if (!f) return;
+    setUploading(true);
+    try {
+      const r = await upload({ data: { fundId, title: f.name, category: "investor_update", fileName: f.name, contentType: f.type, base64: await fileToBase64(f) } });
+      await qc.invalidateQueries({ queryKey: optKey });
+      setFileId(r.id);
+      toast.success("Document attached.");
+    } catch (e) { toast.error((e as Error).message); } finally { setUploading(false); }
+  };
   const send = useMutation({
-    mutationFn: () => post({ data: { fundId, title: title.trim(), body: body.trim() } }),
-    onSuccess: () => { toast.success("Update posted to investors."); setTitle(""); setBody(""); qc.invalidateQueries({ queryKey: key }); },
+    mutationFn: () => post({ data: { fundId, title: title.trim(), body: body.trim(), fileId: fileId === "none" ? null : fileId, assetId: assetId === "none" ? null : assetId } }),
+    onSuccess: () => { toast.success("Update posted to investors."); setTitle(""); setBody(""); setFileId("none"); setAssetId("none"); qc.invalidateQueries({ queryKey: key }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const rm = useMutation({ mutationFn: (id: string) => remove({ data: { fundId, id } }), onSuccess: () => qc.invalidateQueries({ queryKey: key }) });
@@ -204,6 +228,31 @@ export function FundUpdatesPanel({ fundId }: { fundId: string }) {
       <CardContent className="space-y-3">
         <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <Textarea placeholder="What's new with the investment?" value={body} onChange={(e) => setBody(e.target.value)} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Attach a document (optional)</Label>
+            <Select value={fileId} onValueChange={setFileId}>
+              <SelectTrigger><SelectValue placeholder="No document" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No document</SelectItem>
+                {(oq.data?.files ?? []).map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Input type="file" disabled={uploading} onChange={(e) => { void onUpload(e.target.files?.[0]); e.target.value = ""; }} />
+            <p className="text-xs text-muted-foreground">{uploading ? "Uploading…" : "Pick a fund document or upload a new one (20 MB max)."}</p>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Reference an asset (optional)</Label>
+            <Select value={assetId} onValueChange={setAssetId}>
+              <SelectTrigger><SelectValue placeholder="No asset" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No asset</SelectItem>
+                {(oq.data?.assets ?? []).map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Investors see the asset's name only — no cost or value.</p>
+          </div>
+        </div>
         <Button disabled={title.trim().length < 2 || body.trim().length < 2 || send.isPending} onClick={() => send.mutate()}>Post update</Button>
         <ul className="space-y-3">
           {(q.data ?? []).map((u) => (
@@ -211,6 +260,12 @@ export function FundUpdatesPanel({ fundId }: { fundId: string }) {
               <div className="flex items-start justify-between gap-2"><div><p className="font-medium">{u.title}</p><p className="text-xs text-muted-foreground">{fmtDate(u.postedAt)}</p></div>
                 <Button size="sm" variant="ghost" onClick={() => rm.mutate(u.id)}>Remove</Button></div>
               <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{u.body}</p>
+              {u.file || u.asset ? (
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {u.file ? (u.file.url ? <a className="rounded-md border px-2 py-1 underline-offset-2 hover:underline" href={u.file.url} target="_blank" rel="noreferrer">Document: {u.file.name}</a> : <span className="rounded-md border px-2 py-1">Document: {u.file.name}</span>) : null}
+                  {u.asset ? <span className="rounded-md border px-2 py-1">Asset: {u.asset.name}</span> : null}
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>

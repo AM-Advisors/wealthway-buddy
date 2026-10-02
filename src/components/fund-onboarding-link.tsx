@@ -44,7 +44,7 @@ export function FundOnboardingLinkCard({ fundId }: { fundId: string }) {
           </div>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">{d.status === "disabled" ? "This link is turned off. Investors who open it see that it isn't active." : "No onboarding link has been set up for this fund yet. Harmonious will set it up for you."}</p>
+        <p className="text-sm text-muted-foreground">{d.status === "disabled" ? "This link is turned off. Investors who open it see that it isn't active." : "No onboarding link has been set up for this fund yet. Press Create Link below to make one."}</p>
       )}
       <dl className="grid grid-cols-2 gap-4 border-t pt-4 text-sm sm:grid-cols-4">
         <div><dt className="text-xs uppercase tracking-wide text-muted-foreground">Created</dt><dd>{fmt(d.createdAt)}</dd></div>

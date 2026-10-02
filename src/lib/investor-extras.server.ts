@@ -114,7 +114,26 @@ export async function assertFeesAccepted(userId: string, onboardingId: string) {
   if (s.terms && !s.accepted) throw new Error("Please review and accept the fund's fees before signing.");
 }
 
-export type InvestorUpdate = { id: string; fundId: string; fundName: string; title: string; body: string; postedAt: string };
+export type UpdateAttachment = { file: { name: string; url: string | null } | null; asset: { name: string; assetClass: string | null } | null };
+export type InvestorUpdate = { id: string; fundId: string; fundName: string; title: string; body: string; postedAt: string } & UpdateAttachment;
+
+/** Resolve attached fund files (fresh signed URL) and assets (name only — no cost/valuation shared). */
+async function attachments(d: any, rows: any[]): Promise<Map<string, UpdateAttachment>> {
+  const fileIds = [...new Set(rows.map((r) => r.file_id).filter(Boolean))];
+  const assetIds = [...new Set(rows.map((r) => r.asset_id).filter(Boolean))];
+  const [{ data: files }, { data: assets }] = await Promise.all([
+    fileIds.length ? d.from("fund_files").select("id, title, file_name, storage_path, deleted_at").in("id", fileIds) : Promise.resolve({ data: [] }),
+    assetIds.length ? d.from("portfolio_assets").select("id, asset_name, issuer_name, asset_class").in("id", assetIds) : Promise.resolve({ data: [] }),
+  ]);
+  const fm = new Map<string, { name: string; url: string | null }>();
+  for (const f of (files ?? []) as any[]) {
+    if (f.deleted_at) continue;
+    const url = f.storage_path ? (await d.storage.from("manager-uploads").createSignedUrl(f.storage_path, 600)).data?.signedUrl ?? null : null;
+    fm.set(String(f.id), { name: String(f.title || f.file_name), url });
+  }
+  const am = new Map(((assets ?? []) as any[]).map((a) => [String(a.id), { name: String(a.asset_name || a.issuer_name || "Asset"), assetClass: a.asset_class ?? null }]));
+  return new Map(rows.map((r) => [String(r.id), { file: r.file_id ? fm.get(String(r.file_id)) ?? null : null, asset: r.asset_id ? am.get(String(r.asset_id)) ?? null : null }]));
+}
 export type InvestorFundLinks = { fundId: string; fundName: string; hasDealRoom: boolean };
 
 export async function myUpdates(userId: string): Promise<{ updates: InvestorUpdate[]; funds: InvestorFundLinks[] }> {
@@ -123,29 +142,36 @@ export async function myUpdates(userId: string): Promise<{ updates: InvestorUpda
   const ids = Array.from(new Set(((obs ?? []) as any[]).map((o) => String(o.offering_id))));
   if (!ids.length) return { updates: [], funds: [] };
   const [{ data: ups }, { data: funds }, { data: rooms }] = await Promise.all([
-    d.from("fund_investor_updates").select("id, offering_id, title, body, posted_at").in("offering_id", ids).is("removed_at", null).order("posted_at", { ascending: false }).limit(30),
+    d.from("fund_investor_updates").select("id, offering_id, title, body, posted_at, file_id, asset_id").in("offering_id", ids).is("removed_at", null).order("posted_at", { ascending: false }).limit(30),
     d.from("offerings").select("id, name").in("id", ids),
     d.from("diligence_rooms").select("offering_id").in("offering_id", ids),
   ]);
   const names = new Map(((funds ?? []) as any[]).map((f) => [String(f.id), String(f.name)]));
   const roomSet = new Set(((rooms ?? []) as any[]).map((r) => String(r.offering_id)));
+  const att = await attachments(d, (ups ?? []) as any[]);
   return {
-    updates: ((ups ?? []) as any[]).map((u) => ({ id: String(u.id), fundId: String(u.offering_id), fundName: names.get(String(u.offering_id)) ?? "Fund", title: String(u.title), body: String(u.body), postedAt: String(u.posted_at) })),
+    updates: ((ups ?? []) as any[]).map((u) => ({ ...att.get(String(u.id))!, id: String(u.id), fundId: String(u.offering_id), fundName: names.get(String(u.offering_id)) ?? "Fund", title: String(u.title), body: String(u.body), postedAt: String(u.posted_at) })),
     funds: ids.map((id) => ({ fundId: id, fundName: names.get(id) ?? "Fund", hasDealRoom: roomSet.has(id) })),
   };
 }
 
-export type FundUpdateRow = { id: string; title: string; body: string; postedAt: string };
+export type FundUpdateRow = { id: string; title: string; body: string; postedAt: string } & UpdateAttachment;
 
 export async function fundUpdates(userId: string, fundId: string): Promise<FundUpdateRow[]> {
   await assertFund(userId, fundId);
-  const { data } = await (await db()).from("fund_investor_updates").select("id, title, body, posted_at").eq("offering_id", fundId).is("removed_at", null).order("posted_at", { ascending: false });
-  return ((data ?? []) as any[]).map((u) => ({ id: String(u.id), title: String(u.title), body: String(u.body), postedAt: String(u.posted_at) }));
+  const d = await db();
+  const { data } = await d.from("fund_investor_updates").select("id, title, body, posted_at, file_id, asset_id").eq("offering_id", fundId).is("removed_at", null).order("posted_at", { ascending: false });
+  const att = await attachments(d, (data ?? []) as any[]);
+  return ((data ?? []) as any[]).map((u) => ({ ...att.get(String(u.id))!, id: String(u.id), title: String(u.title), body: String(u.body), postedAt: String(u.posted_at) }));
 }
 
-export async function postUpdate(userId: string, fundId: string, title: string, body: string) {
+export async function postUpdate(userId: string, fundId: string, title: string, body: string, fileId?: string | null, assetId?: string | null) {
   await assertFund(userId, fundId);
-  const { error } = await (await db()).from("fund_investor_updates").insert({ offering_id: fundId, title, body, posted_by: userId });
+  const d = await db();
+  // Attachments must belong to this same fund.
+  if (fileId) { const { data } = await d.from("fund_files").select("id").eq("id", fileId).eq("offering_id", fundId).is("deleted_at", null).maybeSingle(); if (!data) throw new Error("That document isn't part of this fund."); }
+  if (assetId) { const { data } = await d.from("portfolio_assets").select("id").eq("id", assetId).eq("offering_id", fundId).maybeSingle(); if (!data) throw new Error("That asset isn't part of this fund."); }
+  const { error } = await d.from("fund_investor_updates").insert({ offering_id: fundId, title, body, posted_by: userId, file_id: fileId ?? null, asset_id: assetId ?? null });
   if (error) throw new Error(error.message);
   return { ok: true };
 }
@@ -154,4 +180,18 @@ export async function removeUpdate(userId: string, fundId: string, id: string) {
   await assertFund(userId, fundId);
   await (await db()).from("fund_investor_updates").update({ removed_at: new Date().toISOString(), removed_by: userId }).eq("id", id).eq("offering_id", fundId);
   return { ok: true };
+}
+
+/** Fund documents and assets a manager may reference in an update. */
+export async function updateAttachmentOptions(userId: string, fundId: string) {
+  await assertFund(userId, fundId);
+  const d = await db();
+  const [{ data: files }, { data: assets }] = await Promise.all([
+    d.from("fund_files").select("id, title, file_name").eq("offering_id", fundId).is("deleted_at", null).not("storage_path", "is", null).order("created_at", { ascending: false }),
+    d.from("portfolio_assets").select("id, asset_name, issuer_name").eq("offering_id", fundId).order("acquisition_date", { ascending: false }),
+  ]);
+  return {
+    files: ((files ?? []) as any[]).map((f) => ({ id: String(f.id), name: String(f.title || f.file_name) })),
+    assets: ((assets ?? []) as any[]).map((a) => ({ id: String(a.id), name: String(a.asset_name || a.issuer_name || "Asset") })),
+  };
 }

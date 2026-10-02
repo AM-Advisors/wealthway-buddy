@@ -44,10 +44,15 @@ export const fundUpdatesFn = createServerFn({ method: "POST" })
 
 export const postFundUpdateFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: uuid, title: z.string().trim().min(2).max(200), body: z.string().trim().min(2).max(10000) }).parse)
-  .handler(async ({ data, context }): Promise<{ ok: boolean }> => (await x()).postUpdate(context.userId, data.fundId, data.title, data.body));
+  .inputValidator(z.object({ fundId: uuid, title: z.string().trim().min(2).max(200), body: z.string().trim().min(2).max(10000), fileId: uuid.nullish(), assetId: uuid.nullish() }).parse)
+  .handler(async ({ data, context }): Promise<{ ok: boolean }> => (await x()).postUpdate(context.userId, data.fundId, data.title, data.body, data.fileId, data.assetId));
 
 export const removeFundUpdateFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ fundId: uuid, id: uuid }).parse)
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => (await x()).removeUpdate(context.userId, data.fundId, data.id));
+
+export const updateAttachmentOptionsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ fundId: uuid }).parse)
+  .handler(async ({ data, context }) => (await x()).updateAttachmentOptions(context.userId, data.fundId));
