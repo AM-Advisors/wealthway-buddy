@@ -118,6 +118,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
                 <span className="text-xs text-muted-foreground lg:text-sm lg:text-foreground"><span className="lg:hidden">Next close </span>{fmt(f.targetClose)}</span>
                 <span className="text-right text-xs text-muted-foreground lg:text-left lg:text-sm lg:text-foreground">{f.owner?.name ?? "Unassigned"}</span>
                 <span className="col-span-2 flex items-center justify-end gap-2 lg:col-span-1">
+                  <Link to="/ops/fund-manager/$fundId" params={{ fundId: f.id }} search={{ who: undefined }} className="text-xs font-medium text-primary hover:underline">View Fund Manager</Link>
                   <ViewAsPicker offeringId={f.id} label="View as Fund Manager" />
                   <RowActions f={f} />
                 </span>

@@ -13,10 +13,11 @@ async function db() {
 
 export async function inboxActor(userId: string) {
   const d = await db();
-  const [{ data: roles }, { data: cu }, { data: fm }] = await Promise.all([
+  const [{ data: roles }, { data: cu }, { data: fm }, { data: prof }] = await Promise.all([
     d.from("user_roles").select("role").eq("user_id", userId),
     d.from("client_users").select("client_id").eq("user_id", userId),
     d.from("fund_managers").select("offering_id").eq("user_id", userId),
+    d.from("profiles").select("email").eq("user_id", userId).maybeSingle(),
   ]);
   const roleList = ((roles ?? []) as any[]).map((r) => String(r.role));
   const staff = staffProfile(roleList);
@@ -29,6 +30,7 @@ export async function inboxActor(userId: string) {
   const isAdmin = roleList.includes("admin") || roleList.includes("super_admin");
   return {
     userId,
+    email: ((prof as any)?.email as string | undefined)?.trim().toLowerCase() || null,
     clientIds: [...clientIds],
     ops: staff.operationsAccess,
     sales: staff.teams.includes("sales"),
@@ -38,9 +40,9 @@ export async function inboxActor(userId: string) {
 }
 export type InboxActor = Awaited<ReturnType<typeof inboxActor>>;
 
-export function canSeeThread(a: InboxActor, t: { client_id: string; channel: Channel; rep_user_id: string | null; created_by?: string | null }) {
-  // Client side: each person sees only the conversations they started.
-  if (a.clientIds.includes(t.client_id) && t.created_by === a.userId) return "client" as const;
+export function canSeeThread(a: InboxActor, t: { client_id: string; channel: Channel; rep_user_id: string | null; created_by?: string | null; addressed_email?: string | null }) {
+  // Client side: each person sees conversations they started or that Harmonious addressed to them.
+  if (a.clientIds.includes(t.client_id) && (t.created_by === a.userId || (!!a.email && t.addressed_email?.toLowerCase() === a.email))) return "client" as const;
   if (a.isAdmin) return "harmonious" as const;
   if (t.channel === "operations" && a.ops) return "harmonious" as const;
   if (t.channel === "sales" && a.sales) return "harmonious" as const;
@@ -67,6 +69,7 @@ export async function listThreads(a: InboxActor) {
   const d = await db();
   const ors: string[] = [];
   if (a.clientIds.length) ors.push(`and(created_by.eq.${a.userId},client_id.in.(${a.clientIds.join(",")}))`);
+  if (a.clientIds.length && a.email && /^[^,()"\s]+$/.test(a.email)) ors.push(`and(addressed_email.ilike.${a.email},client_id.in.(${a.clientIds.join(",")}))`);
   if (!a.isAdmin) {
     if (a.ops) ors.push("channel.eq.operations");
     if (a.sales) ors.push("channel.eq.sales");
