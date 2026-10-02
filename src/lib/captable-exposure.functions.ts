@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /**
  * Harmonious CapTable - Phase 7: SPV exposure claims and verification.

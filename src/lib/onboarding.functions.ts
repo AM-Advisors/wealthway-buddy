@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId, ensureActivePersona } from "@/lib/active-application";
 
 const investorType = z.enum(["individual", "joint", "entity", "trust", "ira"]);

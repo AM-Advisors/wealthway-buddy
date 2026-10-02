@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { isReconciledFunding } from "@/lib/funding-status";
 
 /** Reviewers are admins (all funds) and fund managers (their assigned funds). */

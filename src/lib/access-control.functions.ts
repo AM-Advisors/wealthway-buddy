@@ -4,7 +4,7 @@ import { authorize, formatDecision, isLive, PERMISSIONS, templateFor } from "@/l
 import { ATOMIC_PERMISSIONS, covers } from "@/lib/atomic-permissions";
 import { CLASSIFICATION_PROPOSALS, currentClassification } from "@/lib/account-classification";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { authzFactsFor, factsFor, historyFor, lastChange, loadBundle, nameMap, requireAccessViewer, status } from "@/lib/access-control.server";
 import {
   effectivePermissions,

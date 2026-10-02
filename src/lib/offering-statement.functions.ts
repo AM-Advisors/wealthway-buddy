@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const optionalMoney = z.number().int().min(0).max(1_000_000_000_000).nullable().default(null);
 const optionalBps = z.number().int().min(0).max(10000).nullable().default(null);

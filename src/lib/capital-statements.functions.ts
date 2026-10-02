@@ -4,7 +4,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 async function canManage(supabase: any, offeringId: string) {
   const { data } = await supabase.rpc("can_manage_diligence", { _offering_id: offeringId });

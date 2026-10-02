@@ -2,7 +2,7 @@ import { canonicalExecutionStatus } from "@/lib/document-execution-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { regTypeLabel } from "@/lib/reg-types";
 import { isReconciledFunding } from "@/lib/funding-status";
 

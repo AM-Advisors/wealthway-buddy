@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 export const MEMO_SECTIONS = [
   { key: "overview", label: "Overview", hint: "What the fund is, in a few plain sentences." },

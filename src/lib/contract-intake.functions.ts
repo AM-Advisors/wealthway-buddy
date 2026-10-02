@@ -8,7 +8,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { centsSchema, friendlyParse, PRICING_MODEL_VALUES, pricingNeedsAmount } from "@/lib/contract-coverage";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import {
   CLIENT_TYPES,
   CONTACT_DESIGNATIONS,

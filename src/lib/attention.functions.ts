@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import type { AttentionResult } from "@/lib/attention-model";
 import type { WorkspaceKind } from "@/lib/session-resolution";
 

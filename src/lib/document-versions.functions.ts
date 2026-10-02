@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { OFFERING_FILES_BUCKET } from "@/lib/offering-files.functions";
 import { TEMPLATE_PACKS } from "@/lib/document-templates.functions";
 import { recordDocumentVersion } from "@/lib/document-versions.server";

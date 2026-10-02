@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 
 /** Everything a client contact can see about their own engagement: the funds

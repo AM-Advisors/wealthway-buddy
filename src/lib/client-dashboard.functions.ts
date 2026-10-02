@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
 const CLASS_GROUPS: Record<string, string> = { common: "Common", preferred: "Preferred", safe: "SAFE", note: "SAFE", warrant: "Warrants", option: "Option Pool", rsu: "Option Pool" };

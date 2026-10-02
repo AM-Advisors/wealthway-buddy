@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { CONTRACT_ROLES } from "@/lib/contracts.functions";
 
 /** Admins and the fund's assigned managers may read the fund's bank statement. */

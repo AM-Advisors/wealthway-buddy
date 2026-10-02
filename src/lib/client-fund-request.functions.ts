@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import type { FundRequest } from "@/lib/fund-request-model";
 
 const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];

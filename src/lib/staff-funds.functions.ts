@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { staffProfile } from "@/lib/harmonious-staff";
 import { can, capabilitiesFor } from "@/lib/ops-capabilities";
 import { structureForFundType } from "@/lib/fund-setup-canonical";

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { TEAM_ROLES, canManageRole, clientFacingContacts, eligibleFor, teamFollowUp, type TeamRole } from "@/lib/harmonious-team";
 import { staffProfile } from "@/lib/harmonious-staff";
 

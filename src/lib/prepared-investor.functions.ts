@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import {
   type DocSnapshot, type FieldProvenance, affectedRequirements, allReviewed, assertConfirmable, fingerprint,
   investorReviewView, requirementDelta, isMaterial, isStale, mergeDocument, requiredMergeFields, reviewField,

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /** Only admins and the fund's assigned managers may touch a fund's bank feed. */
 async function assertFundAccess(supabase: any, userId: string, fundId: string) {

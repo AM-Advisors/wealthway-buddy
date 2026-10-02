@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { complianceTemplate } from "@/lib/compliance-templates";
 
 const STATUSES = ["not_started", "in_progress", "filed", "not_applicable"] as const;

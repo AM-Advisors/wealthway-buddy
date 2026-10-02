@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const money = (cents: number) =>
   `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;

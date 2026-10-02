@@ -5,7 +5,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;

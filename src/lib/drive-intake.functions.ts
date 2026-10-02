@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { DRIVE_CLASSIFICATIONS, DRIVE_ID_PATTERN, REPOSITORY_LABELS } from "@/lib/drive-policy";
 
 const repoSchema = z.enum(["fund", "investor", "test"]);

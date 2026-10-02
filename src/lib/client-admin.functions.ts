@@ -7,7 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { centsSchema, friendlyParse, resolveFundCoverage, resolveServiceCoverage, type CoverageSow } from "@/lib/contract-coverage";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import {
   EDITABLE_CLIENT_FIELDS,
   RELATIONSHIP_ROLE_VALUES,

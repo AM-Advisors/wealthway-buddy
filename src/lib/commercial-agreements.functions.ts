@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { CONTRACT_STRUCTURES, clientAgreementNotice } from "@/lib/commercial-agreement-model";
 
 /** Full commercial agreement status for Operations (Client 360 / Fund 360). */

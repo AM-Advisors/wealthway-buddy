@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { ADDRESS_KINDS, ADDRESS_STATE_DISPLAY, type AddressKind } from "@/lib/address-model";
 import { cleanAddress, isCompleteAddress } from "@/lib/address-validation";
 
