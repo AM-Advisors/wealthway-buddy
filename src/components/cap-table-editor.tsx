@@ -41,24 +41,13 @@ function share(value: number) {
   return `${value < 0.01 ? value.toFixed(4) : value.toFixed(2)}%`;
 }
 
-export function CapTableEditor({
-  backTo,
-  fundId: fixedFundId,
-  embedded = false,
-}: {
-  backTo?: "/admin" | "/manager";
-  /** When set, the fund picker is hidden and the editor is locked to this fund. */
-  fundId?: string;
-  /** Embedded inside another page: no page padding, heading or back button. */
-  embedded?: boolean;
-}) {
+export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
   const loadFunds = useServerFn(listCapTableFunds);
   const loadTable = useServerFn(getCapTableEditor);
   const save = useServerFn(saveCapPosition);
   const queryClient = useQueryClient();
 
-  const [pickedFundId, setFundId] = useState<string>(fixedFundId ?? "");
-  const fundId = fixedFundId ?? pickedFundId;
+  const [fundId, setFundId] = useState<string>("");
   const [editing, setEditing] = useState<CapTableEditorRow | null>(null);
   const [form, setForm] = useState({
     shares: "",
@@ -72,8 +61,8 @@ export function CapTableEditor({
   const funds = fundsQuery.data?.funds ?? [];
 
   useEffect(() => {
-    if (!fixedFundId && !fundId && funds.length > 0) setFundId(funds[0]!.id as string);
-  }, [funds, fundId, fixedFundId]);
+    if (!fundId && funds.length > 0) setFundId(funds[0]!.id as string);
+  }, [funds, fundId]);
 
   const tableQuery = useQuery({
     queryKey: ["cap-table-editor", fundId],
@@ -146,41 +135,35 @@ export function CapTableEditor({
   const raisedPct = target ? Math.min(100, ((totals?.committed_cents ?? 0) / target) * 100) : 0;
 
   return (
-    <div className={embedded ? "" : "container mx-auto max-w-6xl px-4 py-10"}>
-      {!embedded && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl">Cap table</h1>
-            <p className="text-muted-foreground">
-              Shares, committed capital and ownership for every investor in a fund.
-            </p>
-          </div>
-          {backTo ? (
-            <Button asChild variant="outline" size="sm">
-              <Link to={backTo}>{backTo === "/admin" ? "Back to admin" : "Back to panel"}</Link>
-            </Button>
-          ) : null}
+    <div className="container mx-auto max-w-6xl px-4 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl">Cap table</h1>
+          <p className="text-muted-foreground">
+            Shares, committed capital and ownership for every investor in a fund.
+          </p>
         </div>
-      )}
+        <Button asChild variant="outline" size="sm">
+          <Link to={backTo}>{backTo === "/admin" ? "Back to admin" : "Back to panel"}</Link>
+        </Button>
+      </div>
 
-      {!fixedFundId && (
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          {fundsQuery.isLoading ? <p className="text-sm text-muted-foreground">Loading funds…</p> : null}
-          {funds.map((f: any) => (
-            <Button
-              key={f.id}
-              size="sm"
-              variant={f.id === fundId ? "default" : "outline"}
-              onClick={() => setFundId(f.id)}
-            >
-              {f.name}
-            </Button>
-          ))}
-          {!fundsQuery.isLoading && funds.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No funds are assigned to you yet.</p>
-          ) : null}
-        </div>
-      )}
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        {fundsQuery.isLoading ? <p className="text-sm text-muted-foreground">Loading funds…</p> : null}
+        {funds.map((f: any) => (
+          <Button
+            key={f.id}
+            size="sm"
+            variant={f.id === fundId ? "default" : "outline"}
+            onClick={() => setFundId(f.id)}
+          >
+            {f.name}
+          </Button>
+        ))}
+        {!fundsQuery.isLoading && funds.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No funds are assigned to you yet.</p>
+        ) : null}
+      </div>
 
       {fundId ? (
         <Card className="mt-6">

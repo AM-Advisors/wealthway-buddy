@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
-import { CapTableEditor } from "@/components/cap-table-editor";
 import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
 import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
@@ -46,10 +45,6 @@ function FundSetupDetail() {
           <FundSetupCanonical offeringId={fundId} />
         </SetupRequirementsProvider>
       )}
-      <section className="space-y-3 border-t pt-6" aria-label="Cap table">
-        <h2 className="font-heading text-xl font-semibold">Cap table</h2>
-        <CapTableEditor fundId={fundId} embedded />
-      </section>
       {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="EIN, tax and sign-off">
         <h2 className="font-heading text-xl font-semibold">EIN and Form SS-4</h2>
         <OperationsSs4 fundId={fundId} />

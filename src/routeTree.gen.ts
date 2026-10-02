@@ -200,7 +200,6 @@ import { Route as AuthenticatedOpsAccessControlRouteImport } from './routes/_aut
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
 import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
-import { Route as AuthenticatedOpsCapTablesRouteImport } from './routes/_authenticated/ops.cap-tables'
 import { Route as AuthenticatedOpsCloseRequestsRouteImport } from './routes/_authenticated/ops.close-requests'
 import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authenticated/ops.compliance'
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
@@ -1407,12 +1406,6 @@ const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   path: '/ops/banking',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedOpsCapTablesRoute =
-  AuthenticatedOpsCapTablesRouteImport.update({
-    id: '/ops/cap-tables',
-    path: '/ops/cap-tables',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedOpsCloseRequestsRoute =
   AuthenticatedOpsCloseRequestsRouteImport.update({
     id: '/ops/close-requests',
@@ -2398,7 +2391,6 @@ export interface FileRoutesByFullPath {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
-  '/ops/cap-tables': typeof AuthenticatedOpsCapTablesRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -2721,7 +2713,6 @@ export interface FileRoutesByTo {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
-  '/ops/cap-tables': typeof AuthenticatedOpsCapTablesRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -3051,7 +3042,6 @@ export interface FileRoutesById {
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
-  '/_authenticated/ops/cap-tables': typeof AuthenticatedOpsCapTablesRoute
   '/_authenticated/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/_authenticated/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -3382,7 +3372,6 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/allocations'
     | '/ops/banking'
-    | '/ops/cap-tables'
     | '/ops/close-requests'
     | '/ops/compliance'
     | '/ops/distributions'
@@ -3705,7 +3694,6 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/allocations'
     | '/ops/banking'
-    | '/ops/cap-tables'
     | '/ops/close-requests'
     | '/ops/compliance'
     | '/ops/distributions'
@@ -4034,7 +4022,6 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/accounting'
     | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
-    | '/_authenticated/ops/cap-tables'
     | '/_authenticated/ops/close-requests'
     | '/_authenticated/ops/compliance'
     | '/_authenticated/ops/distributions'
@@ -5572,13 +5559,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsBankingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ops/cap-tables': {
-      id: '/_authenticated/ops/cap-tables'
-      path: '/ops/cap-tables'
-      fullPath: '/ops/cap-tables'
-      preLoaderRoute: typeof AuthenticatedOpsCapTablesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/ops/close-requests': {
       id: '/_authenticated/ops/close-requests'
       path: '/ops/close-requests'
@@ -6932,7 +6912,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
   AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
-  AuthenticatedOpsCapTablesRoute: typeof AuthenticatedOpsCapTablesRoute
   AuthenticatedOpsCloseRequestsRoute: typeof AuthenticatedOpsCloseRequestsRoute
   AuthenticatedOpsComplianceRoute: typeof AuthenticatedOpsComplianceRoute
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
@@ -7160,7 +7139,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
   AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
-  AuthenticatedOpsCapTablesRoute: AuthenticatedOpsCapTablesRoute,
   AuthenticatedOpsCloseRequestsRoute: AuthenticatedOpsCloseRequestsRoute,
   AuthenticatedOpsComplianceRoute: AuthenticatedOpsComplianceRoute,
   AuthenticatedOpsDistributionsRoute: AuthenticatedOpsDistributionsRoute,
