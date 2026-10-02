@@ -43,8 +43,12 @@ export function FundPaymentDialog({ open, onOpenChange, target, onPaid }: {
   open: boolean; onOpenChange: (v: boolean) => void; target: Target; onPaid: (paymentId: string) => void;
 }) {
   const start = useServerFn(startFundPayment);
+  const startOffline = useServerFn(startOfflineFundPayment);
   const status = useServerFn(getFundPayment);
+  const [method, setMethod] = useState<"card" | "wire" | "ach" | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [offline, setOffline] = useState<{ paymentId: string; reference: string; totalCents: number } | null>(null);
+  const [busy, setBusy] = useState(false);
   const paymentId = useRef<string | null>(null);
 
   const options = useMemo(() => ({
@@ -67,19 +71,59 @@ export function FundPaymentDialog({ open, onOpenChange, target, onPaid }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [open]);
 
+  const chooseOffline = async (m: "wire" | "ach") => {
+    setBusy(true);
+    const r = await startOffline({ data: { target, method: m } });
+    setBusy(false);
+    if ("error" in r) { toast.error(r.error); return; }
+    setOffline(r);
+  };
+
+  const close = (v: boolean) => { if (!v) { setMethod(null); setOffline(null); } onOpenChange(v); };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={close}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Payment</DialogTitle>
-          <DialogDescription>Your request is sent to Harmonious as soon as the payment is confirmed.</DialogDescription>
+          <DialogDescription>Choose how you'd like to pay. Your request is sent to Harmonious once you confirm.</DialogDescription>
         </DialogHeader>
-        {confirming ? (
+        {offline ? (
+          <div className="space-y-3 text-sm">
+            <div className="rounded-md border p-3 space-y-1">
+              <p className="font-medium">Reference: {offline.reference}</p>
+              <p className="text-muted-foreground">
+                Harmonious will email you the {offline.method === "wire" ? "wire" : "ACH"} instructions. Quote this reference
+                when you send {usd(offline.totalCents)}. Your request is sent now, but nothing is activated until
+                Harmonious confirms the payment has been received.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => onPaid(offline.paymentId)}>Send request</Button>
+              <Button variant="ghost" onClick={() => setOffline(null)}>Back</Button>
+            </div>
+          </div>
+        ) : confirming ? (
           <div className="flex items-center gap-2 py-8 text-sm"><Loader2 className="size-4 animate-spin" />Confirming payment...</div>
-        ) : open ? (
-          <EmbeddedCheckoutProvider stripe={getStripe()} options={options}><EmbeddedCheckout /></EmbeddedCheckoutProvider>
-        ) : null}
-        <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
+        ) : method === "card" && open ? (
+          <>
+            <EmbeddedCheckoutProvider stripe={getStripe()} options={options}><EmbeddedCheckout /></EmbeddedCheckoutProvider>
+            <Button variant="ghost" size="sm" onClick={() => setMethod(null)}>Back</Button>
+          </>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Button variant="outline" className="h-auto flex-col gap-1 py-4" onClick={() => setMethod("card")}>
+              <CreditCard className="size-5" />Card<span className="text-xs font-normal text-muted-foreground">Confirmed right away</span>
+            </Button>
+            <Button variant="outline" className="h-auto flex-col gap-1 py-4" disabled={busy} onClick={() => chooseOffline("wire")}>
+              <Landmark className="size-5" />Wire<span className="text-xs font-normal text-muted-foreground">Activates once received</span>
+            </Button>
+            <Button variant="outline" className="h-auto flex-col gap-1 py-4" disabled={busy} onClick={() => chooseOffline("ach")}>
+              <Building2 className="size-5" />ACH<span className="text-xs font-normal text-muted-foreground">Activates once received</span>
+            </Button>
+          </div>
+        )}
+        <Button variant="ghost" size="sm" onClick={() => close(false)}>Cancel</Button>
       </DialogContent>
     </Dialog>
   );
