@@ -764,6 +764,13 @@
       "when": 1790904115289,
       "tag": "0108_client_contacts_directory",
       "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1790911275425,
+      "tag": "0109_cap_table_subscriptions",
+      "breakpoints": true
     }
   ]
 }

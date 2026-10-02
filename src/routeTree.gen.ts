@@ -132,6 +132,7 @@ import { Route as AuthenticatedAdminSignoffRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminTimelineRouteImport } from './routes/_authenticated/admin.timeline'
 import { Route as AuthenticatedAdminWireRouteImport } from './routes/_authenticated/admin.wire'
 import { Route as AuthenticatedClientIndexRouteImport } from './routes/_authenticated/client.index'
+import { Route as AuthenticatedClientAddCapTableRouteImport } from './routes/_authenticated/client.add-cap-table'
 import { Route as AuthenticatedClientAgreementsRouteImport } from './routes/_authenticated/client.agreements'
 import { Route as AuthenticatedClientBankingRouteImport } from './routes/_authenticated/client.banking'
 import { Route as AuthenticatedClientCapTableRouteImport } from './routes/_authenticated/client.cap-table'
@@ -311,6 +312,7 @@ import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/publi
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
@@ -999,6 +1001,12 @@ const AuthenticatedClientIndexRoute =
   AuthenticatedClientIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientAddCapTableRoute =
+  AuthenticatedClientAddCapTableRouteImport.update({
+    id: '/add-cap-table',
+    path: '/add-cap-table',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedClientAgreementsRoute =
@@ -2054,6 +2062,12 @@ const ApiPublicPacketTokenRoute = ApiPublicPacketTokenRouteImport.update({
   path: '/api/public/packet/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
   id: '/api/public/security/revoke',
   path: '/api/public/security/revoke',
@@ -2306,6 +2320,7 @@ export interface FileRoutesByFullPath {
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/add-cap-table': typeof AuthenticatedClientAddCapTableRoute
   '/client/agreements': typeof AuthenticatedClientAgreementsRouteWithChildren
   '/client/banking': typeof AuthenticatedClientBankingRoute
   '/client/cap-table': typeof AuthenticatedClientCapTableRouteWithChildren
@@ -2476,6 +2491,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -2628,6 +2644,7 @@ export interface FileRoutesByTo {
   '/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/client/add-cap-table': typeof AuthenticatedClientAddCapTableRoute
   '/client/banking': typeof AuthenticatedClientBankingRoute
   '/client/home': typeof AuthenticatedClientHomeRoute
   '/client/inbox': typeof AuthenticatedClientInboxRoute
@@ -2794,6 +2811,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -2951,6 +2969,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/signoff': typeof AuthenticatedAdminSignoffRoute
   '/_authenticated/admin/timeline': typeof AuthenticatedAdminTimelineRoute
   '/_authenticated/admin/wire': typeof AuthenticatedAdminWireRoute
+  '/_authenticated/client/add-cap-table': typeof AuthenticatedClientAddCapTableRoute
   '/_authenticated/client/agreements': typeof AuthenticatedClientAgreementsRouteWithChildren
   '/_authenticated/client/banking': typeof AuthenticatedClientBankingRoute
   '/_authenticated/client/cap-table': typeof AuthenticatedClientCapTableRouteWithChildren
@@ -3121,6 +3140,7 @@ export interface FileRoutesById {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -3278,6 +3298,7 @@ export interface FileRouteTypes {
     | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/add-cap-table'
     | '/client/agreements'
     | '/client/banking'
     | '/client/cap-table'
@@ -3448,6 +3469,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/payments/webhook'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -3600,6 +3622,7 @@ export interface FileRouteTypes {
     | '/admin/signoff'
     | '/admin/timeline'
     | '/admin/wire'
+    | '/client/add-cap-table'
     | '/client/banking'
     | '/client/home'
     | '/client/inbox'
@@ -3766,6 +3789,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/payments/webhook'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -3922,6 +3946,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/signoff'
     | '/_authenticated/admin/timeline'
     | '/_authenticated/admin/wire'
+    | '/_authenticated/client/add-cap-table'
     | '/_authenticated/client/agreements'
     | '/_authenticated/client/banking'
     | '/_authenticated/client/cap-table'
@@ -4092,6 +4117,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/payments/webhook'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -4174,6 +4200,7 @@ export interface RootRouteChildren {
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSecurityRevokeRoute: typeof ApiPublicSecurityRevokeRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
@@ -5041,6 +5068,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/client/'
       preLoaderRoute: typeof AuthenticatedClientIndexRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/add-cap-table': {
+      id: '/_authenticated/client/add-cap-table'
+      path: '/add-cap-table'
+      fullPath: '/client/add-cap-table'
+      preLoaderRoute: typeof AuthenticatedClientAddCapTableRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/client/agreements': {
@@ -6296,6 +6330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPacketTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/security/revoke': {
       id: '/api/public/security/revoke'
       path: '/api/public/security/revoke'
@@ -6556,6 +6597,7 @@ const AuthenticatedClientFundsRouteWithChildren =
   )
 
 interface AuthenticatedClientRouteChildren {
+  AuthenticatedClientAddCapTableRoute: typeof AuthenticatedClientAddCapTableRoute
   AuthenticatedClientAgreementsRoute: typeof AuthenticatedClientAgreementsRouteWithChildren
   AuthenticatedClientBankingRoute: typeof AuthenticatedClientBankingRoute
   AuthenticatedClientCapTableRoute: typeof AuthenticatedClientCapTableRouteWithChildren
@@ -6575,6 +6617,7 @@ interface AuthenticatedClientRouteChildren {
 }
 
 const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
+  AuthenticatedClientAddCapTableRoute: AuthenticatedClientAddCapTableRoute,
   AuthenticatedClientAgreementsRoute:
     AuthenticatedClientAgreementsRouteWithChildren,
   AuthenticatedClientBankingRoute: AuthenticatedClientBankingRoute,
@@ -7228,6 +7271,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSecurityRevokeRoute: ApiPublicSecurityRevokeRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,

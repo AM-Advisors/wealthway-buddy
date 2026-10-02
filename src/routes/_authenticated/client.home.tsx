@@ -7,6 +7,7 @@ import { useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CapTablesCard } from "@/components/cap-table-billing";
 import { Progress } from "@/components/ui/progress";
 import { getClientHome } from "@/lib/client-fund-request.functions";
 
@@ -40,9 +41,11 @@ function ClientHome() {
       <div className="flex flex-wrap gap-2">
         <Button asChild size="sm"><Link to="/client/funds/new"><Plus className="mr-1 size-4" />Launch a new fund or SPV</Link></Button>
         <Button asChild size="sm" variant="outline"><Link to="/client/funds"><Briefcase className="mr-1 size-4" />Funds</Link></Button>
-        <Button asChild size="sm" variant="outline"><Link to="/client/cap-table"><PieChart className="mr-1 size-4" />Cap Table</Link></Button>
+        <Button asChild size="sm" variant="outline"><Link to="/client/add-cap-table"><PieChart className="mr-1 size-4" />Add a cap table</Link></Button>
         <Button asChild size="sm" variant="outline"><Link to="/client"><Settings className="mr-1 size-4" />Settings</Link></Button>
       </div>
+
+      <CapTablesCard />
 
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[
