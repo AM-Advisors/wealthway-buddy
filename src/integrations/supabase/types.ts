@@ -15382,6 +15382,80 @@ export type Database = {
           },
         ]
       }
+      fund_close_filings: {
+        Row: {
+          amount_cents: number
+          close_request_id: string
+          confirmation_number: string | null
+          fee_cents: number | null
+          fee_needs_review: boolean
+          filed_at: string | null
+          filed_by: string | null
+          filed_on: string | null
+          filing_type: string
+          id: string
+          investor_count: number
+          is_amendment: boolean
+          jurisdiction: string
+          note: string | null
+          offering_id: string
+          packet: Json
+          prepared_at: string
+          prepared_by: string
+          status: string
+        }
+        Insert: {
+          amount_cents?: number
+          close_request_id: string
+          confirmation_number?: string | null
+          fee_cents?: number | null
+          fee_needs_review?: boolean
+          filed_at?: string | null
+          filed_by?: string | null
+          filed_on?: string | null
+          filing_type: string
+          id?: string
+          investor_count?: number
+          is_amendment?: boolean
+          jurisdiction: string
+          note?: string | null
+          offering_id: string
+          packet?: Json
+          prepared_at?: string
+          prepared_by: string
+          status?: string
+        }
+        Update: {
+          amount_cents?: number
+          close_request_id?: string
+          confirmation_number?: string | null
+          fee_cents?: number | null
+          fee_needs_review?: boolean
+          filed_at?: string | null
+          filed_by?: string | null
+          filed_on?: string | null
+          filing_type?: string
+          id?: string
+          investor_count?: number
+          is_amendment?: boolean
+          jurisdiction?: string
+          note?: string | null
+          offering_id?: string
+          packet?: Json
+          prepared_at?: string
+          prepared_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_close_filings_close_request_id_fkey"
+            columns: ["close_request_id"]
+            isOneToOne: false
+            referencedRelation: "fund_close_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_close_request_events: {
         Row: {
           actor_id: string | null
@@ -15422,6 +15496,8 @@ export type Database = {
       }
       fund_close_requests: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           client_id: string | null
           created_at: string
           details: Json
@@ -15436,6 +15512,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           client_id?: string | null
           created_at?: string
           details?: Json
@@ -15450,6 +15528,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           client_id?: string | null
           created_at?: string
           details?: Json
