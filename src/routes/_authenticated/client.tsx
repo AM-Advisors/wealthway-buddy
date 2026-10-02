@@ -238,7 +238,7 @@ function ClientShell() {
         <div className="mt-6 flex flex-col gap-6 md:flex-row">
           <aside className="md:w-56 md:shrink-0">
             <p className="mb-2 hidden px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground md:block">
-              {client.name} settings
+              {brand?.display_name || client.name} settings
             </p>
             <nav
               aria-label="Client settings"
