@@ -300,6 +300,7 @@ import { Route as AuthenticatedOpsContractsCompareRouteImport } from './routes/_
 import { Route as AuthenticatedOpsContractsPermissionsRouteImport } from './routes/_authenticated/ops.contracts.permissions'
 import { Route as AuthenticatedOpsContractsSowTemplatesRouteImport } from './routes/_authenticated/ops.contracts.sow-templates'
 import { Route as AuthenticatedOpsContractsStandardRouteImport } from './routes/_authenticated/ops.contracts.standard'
+import { Route as AuthenticatedOpsFundManagerFundIdRouteImport } from './routes/_authenticated/ops.fund-manager.$fundId'
 import { Route as AuthenticatedOpsFundSetupIndexRouteImport } from './routes/_authenticated/ops.fund-setup.index'
 import { Route as AuthenticatedOpsFundSetupFundIdRouteImport } from './routes/_authenticated/ops.fund-setup.$fundId'
 import { Route as AuthenticatedOpsFundFundIdRouteImport } from './routes/_authenticated/ops.fund.$fundId'
@@ -1995,6 +1996,12 @@ const AuthenticatedOpsContractsStandardRoute =
     path: '/ops/contracts/standard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsFundManagerFundIdRoute =
+  AuthenticatedOpsFundManagerFundIdRouteImport.update({
+    id: '/ops/fund-manager/$fundId',
+    path: '/ops/fund-manager/$fundId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFundSetupIndexRoute =
   AuthenticatedOpsFundSetupIndexRouteImport.update({
     id: '/ops/fund-setup/',
@@ -2495,6 +2502,7 @@ export interface FileRoutesByFullPath {
   '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -2817,6 +2825,7 @@ export interface FileRoutesByTo {
   '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -3148,6 +3157,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/_authenticated/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/_authenticated/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/_authenticated/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/_authenticated/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -3479,6 +3489,7 @@ export interface FileRouteTypes {
     | '/ops/contracts/permissions'
     | '/ops/contracts/sow-templates'
     | '/ops/contracts/standard'
+    | '/ops/fund-manager/$fundId'
     | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -3801,6 +3812,7 @@ export interface FileRouteTypes {
     | '/ops/contracts/permissions'
     | '/ops/contracts/sow-templates'
     | '/ops/contracts/standard'
+    | '/ops/fund-manager/$fundId'
     | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -4131,6 +4143,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/contracts/permissions'
     | '/_authenticated/ops/contracts/sow-templates'
     | '/_authenticated/ops/contracts/standard'
+    | '/_authenticated/ops/fund-manager/$fundId'
     | '/_authenticated/ops/fund-setup/$fundId'
     | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
@@ -6271,6 +6284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsContractsStandardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/fund-manager/$fundId': {
+      id: '/_authenticated/ops/fund-manager/$fundId'
+      path: '/ops/fund-manager/$fundId'
+      fullPath: '/ops/fund-manager/$fundId'
+      preLoaderRoute: typeof AuthenticatedOpsFundManagerFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/fund-setup/': {
       id: '/_authenticated/ops/fund-setup/'
       path: '/ops/fund-setup'
@@ -6985,6 +7005,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsContractsPermissionsRoute: typeof AuthenticatedOpsContractsPermissionsRoute
   AuthenticatedOpsContractsSowTemplatesRoute: typeof AuthenticatedOpsContractsSowTemplatesRoute
   AuthenticatedOpsContractsStandardRoute: typeof AuthenticatedOpsContractsStandardRoute
+  AuthenticatedOpsFundManagerFundIdRoute: typeof AuthenticatedOpsFundManagerFundIdRoute
   AuthenticatedOpsFundSetupFundIdRoute: typeof AuthenticatedOpsFundSetupFundIdRoute
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
@@ -7233,6 +7254,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsContractsSowTemplatesRoute,
   AuthenticatedOpsContractsStandardRoute:
     AuthenticatedOpsContractsStandardRoute,
+  AuthenticatedOpsFundManagerFundIdRoute:
+    AuthenticatedOpsFundManagerFundIdRoute,
   AuthenticatedOpsFundSetupFundIdRoute: AuthenticatedOpsFundSetupFundIdRoute,
   AuthenticatedOpsFundFundIdRoute: AuthenticatedOpsFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
