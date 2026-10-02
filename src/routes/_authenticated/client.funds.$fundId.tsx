@@ -166,7 +166,7 @@ function WaitingItem({ fundId, step }: { fundId: string; step: Step }) {
   const [busy, setBusy] = useState(false);
   const inReview = step.status === "review";
   const submit = async () => {
-    if (answer.trim().length < 2) return toast.error("Add your answer or note first.");
+    if (answer.trim().length < 2) { toast.error("Add your answer or note first."); return; }
     setBusy(true);
     try {
       await save({ data: { taskId: step.id, status: "review", response: { answer: answer.trim() } } });
