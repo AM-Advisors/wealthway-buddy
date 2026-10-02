@@ -125,10 +125,21 @@ export const fundAccountFn = createServerFn({ method: "POST" }).middleware([requ
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId);
     const d = await s.db();
-    const [st, rv, nav] = await Promise.all([
+    const [st, rv, nav, rep] = await Promise.all([
       d.from("financial_statement_packages").select("id, period_type, period_start, period_end, status, approved_at").eq("offering_id", data.fundId).order("period_end", { ascending: false }).limit(24),
       d.from("financial_review_memos").select("id, title, period_start, period_end, status, decided_at").eq("offering_id", data.fundId).order("period_end", { ascending: false }).limit(24),
       d.from("nav_versions").select("id, as_of_date, period_label, status, net_asset_value_cents, cash_cents, investments_fair_value_cents, receivables_cents, other_assets_cents, total_liabilities_cents, nav_per_unit_cents").eq("offering_id", data.fundId).is("superseded_by_id", null).in("status", ["approved", "published"]).order("as_of_date", { ascending: true }).limit(24),
+      d.from("fund_report_drafts").select("id, period_start, period_end, inputs, computed").eq("offering_id", data.fundId).eq("kind", "nav").eq("status", "approved").order("period_end", { ascending: true }).limit(24),
     ]);
-    return { statements: (st.data ?? []) as any[], reviews: (rv.data ?? []) as any[], nav: (nav.data ?? []) as any[] };
+    // Approved platform NAV reports feed the chart too; Harmonious NAV records win for the same date.
+    const official = (nav.data ?? []) as any[];
+    const dates = new Set(official.map((r) => String(r.as_of_date)));
+    const fromReports = ((rep.data ?? []) as any[]).filter((r) => !dates.has(String(r.period_end))).map((r) => {
+      const i = r.inputs ?? {}; const c = r.computed ?? {};
+      return { id: r.id, as_of_date: r.period_end, period_label: null, status: "approved", net_asset_value_cents: c.navCents ?? 0,
+        cash_cents: i.cash ?? 0, investments_fair_value_cents: i.investments_fv ?? 0, receivables_cents: i.receivables ?? 0, other_assets_cents: i.other_assets ?? 0,
+        total_liabilities_cents: c.liabilitiesCents ?? i.liabilities ?? 0, nav_per_unit_cents: c.navPerUnitCents ?? null };
+    });
+    const merged = [...official, ...fromReports].sort((a, b) => String(a.as_of_date).localeCompare(String(b.as_of_date))).slice(-24);
+    return { statements: (st.data ?? []) as any[], reviews: (rv.data ?? []) as any[], nav: merged };
   });
