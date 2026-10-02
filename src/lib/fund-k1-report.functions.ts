@@ -47,7 +47,18 @@ export const submitK1FiguresFn = createServerFn({ method: "POST" }).middleware([
       paymentId = v?.id ?? null;
     }
     const { allocateK1 } = await import("@/lib/k1-report-model");
-    const computed = allocateK1(data.totals as any, await investorsOf(d, data.fundId));
+    // Shares follow money actually wired (tagged contributions) when the books have them; box 19 follows tagged distributions.
+    const books = await import("@/lib/fund-books.server"); const model = await import("@/lib/fund-books-model");
+    const entries = await books.bookEntries(data.fundId);
+    const basis = model.investorBasis(entries, data.taxYear); const dists = model.investorDistributions(entries, data.taxYear);
+    const inv = (await investorsOf(d, data.fundId)).map((i) => (basis.size ? { ...i, basisCents: basis.get(i.onboardingId) ?? 0 } : i));
+    const computed = allocateK1(data.totals as any, inv);
+    const distTotal = [...dists.values()].reduce((a, b) => a + b, 0);
+    if (dists.size && distTotal === Math.round(Number(data.totals.distributions ?? 0))) {
+      for (const l of computed.lines) { const v = dists.get(l.onboardingId) ?? 0; if (v) l.boxes["19"] = v; else delete l.boxes["19"]; }
+      computed.flags.push("Distributions (box 19) follow what each investor was actually paid.");
+    }
+    if (basis.size) computed.flags.push("Shares are based on each investor's wired contributions in the books.");
     const { data: row, error } = await d.from("fund_report_drafts").insert({
       offering_id: data.fundId, kind: "k1", period_start: start, period_end: end,
       inputs: { ...data.totals, taxYear: data.taxYear, notes: data.notes }, computed, payment_id: paymentId, submitted_by: context.userId,

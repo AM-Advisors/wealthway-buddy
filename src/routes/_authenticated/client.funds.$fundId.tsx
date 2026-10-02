@@ -30,6 +30,7 @@ import { nextDeadline } from "@/lib/fund-health";
 import { RegulatoryTab } from "@/components/fund-tabs/regulatory-tab";
 import { FeesSection } from "@/components/fund-tabs/team-tab";
 import { AccountTab } from "@/components/fund-tabs/account-tab";
+import { AssetManager } from "@/components/fund-tabs/asset-manager";
 import { CentsBarChart, CentsDonut } from "@/components/fund-tabs/charts";
 import { RequestHarmoniousButton } from "@/components/fund-tabs/request-harmonious";
 import { fundEinFn } from "@/lib/fund-tabs.functions";
@@ -259,6 +260,7 @@ function ClientFundPage() {
               )}
             </CardContent>
           </Card>
+          <AssetManager fundId={fundId} assets={td?.assets ?? []} />
         </TabsContent>
 
         <TabsContent value="closes">

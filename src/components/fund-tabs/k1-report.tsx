@@ -13,6 +13,7 @@ import { FundPaymentDialog, PaymentSummary, useFundPayment } from "@/components/
 import { K1_FIELDS, type K1Totals } from "@/lib/k1-report-model";
 import { decideK1ReportFn, fundK1ReportsFn, submitK1FiguresFn } from "@/lib/fund-k1-report.functions";
 import { toCents, usd } from "./shared";
+import { booksFiguresFn, k1ReadinessFn } from "@/lib/fund-books.functions";
 
 /** Year-end K-1 report: client enters fund totals, platform splits by investor, Harmonious approves into tax records. */
 export function K1Report({ fundId }: { fundId: string }) {
@@ -20,6 +21,19 @@ export function K1Report({ fundId }: { fundId: string }) {
   const load = useServerFn(fundK1ReportsFn);
   const submit = useServerFn(submitK1FiguresFn);
   const decide = useServerFn(decideK1ReportFn);
+  const books = useServerFn(booksFiguresFn);
+  const ready = useServerFn(k1ReadinessFn);
+  const rq = useQuery({ queryKey: ["k1-readiness", fundId], queryFn: () => ready({ data: { fundId } }) });
+  const fill = async () => {
+    try {
+      const y = Number(year);
+      const r = await books({ data: { fundId, start: `${y}-01-01`, end: `${y}-12-31`, taxYear: y } });
+      if (!r.entryCount) { toast.error("No books entries yet. Apply a bank statement or connect the bank first."); return; }
+      const v: Record<string, string> = {};
+      for (const [k, c] of Object.entries(r.k1 as Record<string, number>)) if (c) v[k] = (c / 100).toFixed(2);
+      setVals(v); toast.success("Filled from the books. Check each total before building.");
+    } catch (e) { toast.error((e as Error).message); }
+  };
   const key = ["fund-k1-reports", fundId];
   const q = useQuery({ queryKey: key, queryFn: () => load({ data: { fundId } }) });
   const [year, setYear] = useState(String(new Date().getUTCFullYear() - 1));
@@ -63,8 +77,17 @@ export function K1Report({ fundId }: { fundId: string }) {
               <Input inputMode="decimal" value={vals[f.key] ?? ""} onChange={(e) => setVals({ ...vals, [f.key]: e.target.value })} placeholder="0" /></div>
           ))}
         </div>
+        <Button size="sm" variant="outline" disabled={!validYear} onClick={() => void fill()}>Fill from books</Button>
         <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} placeholder="Notes for Harmonious (special allocations, state items)" />
-        <p className="text-xs text-muted-foreground">Amounts are split by each investor's funded amount (or commitment if nobody has funded yet).</p>
+        <p className="text-xs text-muted-foreground">Amounts are split by each investor's wired contributions in the books (or funded amount / commitment when none are tagged). Distributions follow what each investor was actually paid.</p>
+        {!!rq.data?.length && (
+          <div className="rounded-md border p-3 text-xs">
+            <p className="mb-2 text-sm font-medium">Investor details for K-1s</p>
+            <table className="w-full"><thead className="text-left text-muted-foreground"><tr><th className="py-1">Investor</th><th>Entity</th><th>Address</th><th>Tax ID</th><th>Ready?</th></tr></thead>
+              <tbody>{rq.data.map((i) => <tr key={i.onboardingId} className="border-t"><td className="py-1">{i.name}</td><td>{i.entity ?? "-"}</td><td className="max-w-48 truncate">{i.address ?? "-"}</td><td>{i.taxIdLast4 ? `••••${i.taxIdLast4}` : "-"}</td>
+                <td>{i.missing.length ? <span className="text-destructive">{i.missing.join(", ")}</span> : "Ready"}</td></tr>)}</tbody></table>
+          </div>
+        )}
         {!staff && quote.data && <PaymentSummary items={quote.data.items} total={total} />}
         <Button disabled={!filled || !validYear || send.isPending} onClick={() => (!staff && total > 0 ? setPayOpen(true) : send.mutate(undefined))}>
           {!staff && total > 0 ? "Pay and build K-1s" : "Build K-1s"}
