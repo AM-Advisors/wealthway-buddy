@@ -1,4 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Clock } from "lucide-react";
@@ -77,6 +82,8 @@ function ClientFundPage() {
         </CardContent>
       </Card>
 
+      <WaitingOnYou fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done)} />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Setup progress</CardTitle>
@@ -89,7 +96,7 @@ function ClientFundPage() {
               <div key={i} className="flex items-center gap-3 text-sm">
                 {s.done ? <CheckCircle2 className="size-4 text-primary" /> : <Clock className="size-4 text-muted-foreground" />}
                 <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
-                {!s.done && <Badge variant="outline" className="ml-auto">{s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
+                {!s.done && <Badge variant="outline" className="ml-auto">{s.status === "review" ? "Sent - Harmonious reviewing" : s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
               </div>
             ))}
           </div>
@@ -128,6 +135,63 @@ function ClientFundPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+type Step = { id: string; label: string; description: string | null; status: string; dueDate: string | null; answer: string };
+
+function WaitingOnYou({ fundId, steps }: { fundId: string; steps: Step[] }) {
+  if (steps.length === 0) return null;
+  const open = steps.filter((s) => s.status !== "review").length;
+  return (
+    <Card className="border-primary/40">
+      <CardHeader>
+        <CardTitle className="text-base">Waiting on you</CardTitle>
+        <CardDescription>
+          {open ? `${open} item${open === 1 ? "" : "s"} need your answer.` : "Everything is sent. Harmonious is reviewing."} Harmonious reviews each answer before the step is marked complete.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {steps.map((s) => <WaitingItem key={s.id} fundId={fundId} step={s} />)}
+      </CardContent>
+    </Card>
+  );
+}
+
+function WaitingItem({ fundId, step }: { fundId: string; step: Step }) {
+  const qc = useQueryClient();
+  const save = useServerFn(updateSetupTaskFn);
+  const [answer, setAnswer] = useState(step.answer);
+  const [busy, setBusy] = useState(false);
+  const inReview = step.status === "review";
+  const submit = async () => {
+    if (answer.trim().length < 2) return toast.error("Add your answer or note first.");
+    setBusy(true);
+    try {
+      await save({ data: { taskId: step.id, status: "review", response: { answer: answer.trim() } } });
+      toast.success("Sent to Harmonious for review.");
+      await qc.invalidateQueries({ queryKey: ["client-fund", fundId] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't send this item.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="rounded-md border p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium">{step.label}</p>
+          {step.description && <p className="text-xs text-muted-foreground">{step.description}</p>}
+          {step.dueDate && <p className="text-xs text-muted-foreground">Due {fmtDate(step.dueDate)}</p>}
+        </div>
+        <Badge variant={inReview ? "secondary" : "outline"}>{inReview ? "Sent - Harmonious reviewing" : "Waiting on you"}</Badge>
+      </div>
+      <Textarea className="mt-2" rows={2} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Your answer, details or a note for Harmonious" maxLength={4000} />
+      <div className="mt-2 flex justify-end">
+        <Button size="sm" onClick={submit} disabled={busy}>{busy ? "Sending…" : inReview ? "Update answer" : "Mark done and send"}</Button>
+      </div>
     </div>
   );
 }
