@@ -98,6 +98,11 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
       {active && (
         <fieldset disabled={!canEdit} className="space-y-4">
           <div className="space-y-1">
+            <Label>Display name</Label>
+            <Input className="max-w-sm" value={displayName} placeholder="Your company name" onChange={(e) => setDisplayName(e.target.value)} />
+            <p className="text-xs text-muted-foreground">Shown at the top of your portal. If you upload a logo, the logo replaces the name there.</p>
+          </div>
+          <div className="space-y-1">
             <Label>Logo</Label>
             <div className="flex items-center gap-3">
               {preview ? <img src={preview} alt="Logo preview" className="h-10 max-w-[160px] rounded border bg-muted object-contain p-1" /> : <span className="text-xs text-muted-foreground">Harmonious logo shown</span>}
