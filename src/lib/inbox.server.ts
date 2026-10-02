@@ -38,8 +38,9 @@ export async function inboxActor(userId: string) {
 }
 export type InboxActor = Awaited<ReturnType<typeof inboxActor>>;
 
-export function canSeeThread(a: InboxActor, t: { client_id: string; channel: Channel; rep_user_id: string | null }) {
-  if (a.clientIds.includes(t.client_id)) return "client" as const;
+export function canSeeThread(a: InboxActor, t: { client_id: string; channel: Channel; rep_user_id: string | null; created_by?: string | null }) {
+  // Client side: each person sees only the conversations they started.
+  if (a.clientIds.includes(t.client_id) && t.created_by === a.userId) return "client" as const;
   if (a.isAdmin) return "harmonious" as const;
   if (t.channel === "operations" && a.ops) return "harmonious" as const;
   if (t.channel === "sales" && a.sales) return "harmonious" as const;
@@ -65,7 +66,7 @@ export async function repsFor(clientIds: string[]) {
 export async function listThreads(a: InboxActor) {
   const d = await db();
   const ors: string[] = [];
-  if (a.clientIds.length) ors.push(`client_id.in.(${a.clientIds.join(",")})`);
+  if (a.clientIds.length) ors.push(`and(created_by.eq.${a.userId},client_id.in.(${a.clientIds.join(",")}))`);
   if (!a.isAdmin) {
     if (a.ops) ors.push("channel.eq.operations");
     if (a.sales) ors.push("channel.eq.sales");
