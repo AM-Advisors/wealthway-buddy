@@ -61,4 +61,14 @@ describe("Master LLC, EIN and SS-4", () => {
     expect(_needs({ ...r, series_home: "own" })).toBe(false);
     expect(_ss4({ ...r, ss4: { legal_name: "X", responsible_party_tin: "123" } })).not.toHaveProperty("responsible_party_tin");
   });
+  it("names a Harmonious series as 'a series of' the Master LLC", () => {
+    expect(_sln({ ...base(), series_home: "hcam_tx" })).toBe("Test, a series of HCAM TX");
+    expect(_sln({ ...base(), fund_name: "Acme I", series_home: "am_spv" })).toBe("Acme I, a series of AM SPV Fund Management");
+    expect(_sln({ ...base(), series_home: "own" })).toBe("");
+    expect(_sln({ ...base(), fund_name: "  ", series_home: "hcam_wy" })).toBe("");
+    expect(_sln({ ...base(), vehicle_structure: "LLC", series_home: "hcam_tx" })).toBe("");
+  });
+  it("labels the missing Master LLC answer", () => {
+    expect(_missing({ ...base(), series_home: "" }).entity!.join("|")).toMatch(/Master LLC/);
+  });
 });
