@@ -501,8 +501,85 @@ function ServicesAdmin() {
             onSaved={() => queryClient.invalidateQueries({ queryKey: ["intake-requests"] })}
           />
         </TabsContent>
+        <TabsContent value="payments" className="mt-4 space-y-3">
+          <PaymentsTab />
+        </TabsContent>
       </Tabs>
     </main>
+  );
+}
+
+const usd = (c: number) => `$${(c / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+
+/** Wire/ACH payments awaiting confirmation. Marking received is a manual reconciliation step - never automatic. */
+function PaymentsTab() {
+  const queryClient = useQueryClient();
+  const list = useServerFn(listOfflineFundPayments);
+  const mark = useServerFn(markFundPaymentReceived);
+  const payments = useQuery({ queryKey: ["offline-fund-payments"], queryFn: () => list({}) });
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const receive = useMutation({
+    mutationFn: (id: string) => mark({ data: { id, note: notes[id] ?? "" } }),
+    onSuccess: () => {
+      toast.success("Payment marked as received. The linked request is now active.");
+      queryClient.invalidateQueries({ queryKey: ["offline-fund-payments"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  if (payments.isLoading) return <Skeleton className="h-32 w-full" />;
+  const rows = payments.data ?? [];
+  if (!rows.length) return <p className="text-sm text-muted-foreground">No wire or ACH payments yet.</p>;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Client requests paid by wire or ACH stay inactive until you confirm the money arrived. Check the bank
+        account first - this is never automatic.
+      </p>
+      {rows.map((p) => (
+        <Card key={p.id}>
+          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
+            <div>
+              <CardTitle className="text-base">
+                {p.clientName} - {usd(p.totalCents)} by {p.method.toUpperCase()}
+              </CardTitle>
+              <CardDescription>
+                Reference {p.reference} · {p.kind === "new_fund_request" ? "New fund request" : "A la carte services"} ·{" "}
+                {new Date(p.createdAt).toLocaleDateString()}
+              </CardDescription>
+            </div>
+            <Badge variant={p.status === "awaiting_payment" ? "secondary" : "outline"}>
+              {p.status === "awaiting_payment" ? "Awaiting payment" : p.status === "used" ? "Received" : p.status}
+            </Badge>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <ul className="list-disc pl-5 text-muted-foreground">
+              {p.items.map((i) => (
+                <li key={i.key}>{i.name} - {usd(i.cents)}</li>
+              ))}
+            </ul>
+            {p.status === "awaiting_payment" && (
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Input
+                  className="max-w-xs"
+                  placeholder="Bank reference or note (required)"
+                  value={notes[p.id] ?? ""}
+                  onChange={(e) => setNotes((n) => ({ ...n, [p.id]: e.target.value }))}
+                />
+                <Button
+                  size="sm"
+                  disabled={receive.isPending || (notes[p.id] ?? "").trim().length < 3}
+                  onClick={() => receive.mutate(p.id)}
+                >
+                  Mark received
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }
 
