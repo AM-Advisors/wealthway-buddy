@@ -1,4 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import adminImage from "@/assets/site-fund-admin.jpg";
+import { OfferingSection } from "@/components/marketing/offering-section";
 import { marketingHead } from "@/lib/marketing/seo";
 
 import { Button } from "@/components/ui/button";
