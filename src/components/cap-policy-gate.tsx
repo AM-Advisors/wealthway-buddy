@@ -48,7 +48,7 @@ export function CapPolicyGate({ children }: { children: ReactNode }) {
     mutationFn: (payload: { documentIds: string[]; signerName: string }) =>
       accept({ data: payload }),
     onSuccess: async () => {
-      toast.success("Thank you — your acceptance is recorded.");
+      toast.success("Thank you - your acceptance is recorded.");
       await qc.invalidateQueries({ queryKey: ["cap-policy-status"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not record your acceptance."),

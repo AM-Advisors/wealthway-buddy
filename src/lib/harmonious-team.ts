@@ -1,5 +1,5 @@
 /**
- * Harmonious Team ownership (Phase 3.10A) — pure model.
+ * Harmonious Team ownership (Phase 3.10A) - pure model.
  * Client holds three assignments; Funds inherit unless they carry an explicit
  * override. Assignment is ownership/routing only and never grants access.
  */
@@ -79,6 +79,6 @@ export function clientFacingContacts(team: readonly EffectiveMember[]) {
 
 /**
  * Default Operations owner for an existing queue item: fund override, else
- * client assignment. Routing only — the readiness condition never changes.
+ * client assignment. Routing only - the readiness condition never changes.
  */
 export const defaultOperationsOwner = (team: readonly EffectiveMember[]) => team.find((m) => m.role === "operations")?.userId ?? null;

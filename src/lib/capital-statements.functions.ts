@@ -1,5 +1,5 @@
 // Capital account statements: what each investor holds in the fund at closing.
-// Harmonious produces these as a record of the fund's own books — they are not
+// Harmonious produces these as a record of the fund's own books - they are not
 // a valuation, audit, tax return or investment advice.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";

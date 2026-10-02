@@ -1,5 +1,5 @@
 /**
- * View As — pure rules shared by server and tests.
+ * View As - pure rules shared by server and tests.
  * View As is an authorization perspective, never an authentication: the staff
  * member stays signed in as themselves and every write is attributed to them.
  */

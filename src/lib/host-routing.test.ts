@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 /**
- * Stage 3.5 — the move to two addresses.
+ * Stage 3.5 - the move to two addresses.
  *
  * Two questions are asked here over and over. Does a page end up at the right
  * address, without ever bouncing in a circle? And does the address itself
@@ -242,7 +242,7 @@ describe("the workspace switcher points at operations without granting it", () =
 
 /**
  * The address is not a permission. The same request, from the same person, is
- * answered the same way whatever hostname it arrived on — so the tests below
+ * answered the same way whatever hostname it arrived on - so the tests below
  * exercise the real Operations gate rather than any routing rule.
  */
 const tables: Record<string, any[]> = {

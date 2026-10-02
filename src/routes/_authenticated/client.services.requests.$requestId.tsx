@@ -16,9 +16,9 @@ import { setupSchemaFor } from "@/lib/client-portal-model";
 export const Route = createFileRoute("/_authenticated/client/services/requests/$requestId")({
   head: () => ({
     meta: [
-      { title: "Your request — Harmonious" },
+      { title: "Your request - Harmonious" },
       { name: "description", content: "Track and manage a request you sent to Harmonious." },
-      { property: "og:title", content: "Your request — Harmonious" },
+      { property: "og:title", content: "Your request - Harmonious" },
       { property: "og:description", content: "Track and manage a request you sent to Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -99,7 +99,7 @@ function RequestDetail() {
                 <div key={s.label} className="flex items-center gap-3 text-sm">
                   {done ? <CheckCircle2 className="size-4 text-primary" /> : current ? <Clock className="size-4" /> : <Circle className="size-4 text-muted-foreground" />}
                   <span className={done ? "" : "text-muted-foreground"}>{s.label}</span>
-                  {current && <Badge variant="outline">{s.owner === "Harmonious" ? "Harmonious — pending" : "Waiting on you"}</Badge>}
+                  {current && <Badge variant="outline">{s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
                 </div>
               );
             })
@@ -113,7 +113,7 @@ function RequestDetail() {
           <CardDescription>
             {editable
               ? "You can update these until Harmonious starts scoping. Every change is kept on record."
-              : "Harmonious has started — send a message to change anything."}
+              : "Harmonious has started - send a message to change anything."}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
@@ -123,7 +123,7 @@ function RequestDetail() {
               {editable && k !== "investor_eligibility" ? (
                 <Input value={answers[k] ?? ""} onChange={(e) => setAnswers({ ...answers, [k]: e.target.value })} />
               ) : (
-                <p className="text-sm">{answers[k] || "—"}</p>
+                <p className="text-sm">{answers[k] || "-"}</p>
               )}
             </div>
           ))}
@@ -139,7 +139,7 @@ function RequestDetail() {
         <CardHeader><CardTitle className="text-base">Services requested</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {(r.requested_service_keys ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">None picked — Harmonious will suggest.</p>
+            <p className="text-sm text-muted-foreground">None picked - Harmonious will suggest.</p>
           ) : (
             (r.requested_service_keys as string[]).map((k) => <Badge key={k} variant="secondary">{k.replace(/_/g, " ")}</Badge>)
           )}

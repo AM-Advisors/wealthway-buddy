@@ -12,7 +12,7 @@ import {
 } from "@/lib/diligence.functions";
 
 function when(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
@@ -148,7 +148,7 @@ export function DiligenceRoomsPanel() {
 
                   {visitors.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No investor has opened this room yet — a reminder may help.
+                      No investor has opened this room yet - a reminder may help.
                     </p>
                   ) : (
                     <>
@@ -202,7 +202,7 @@ export function DiligenceRoomsPanel() {
                                         Email
                                       </a>
                                     ) : (
-                                      <span className="text-xs text-muted-foreground">—</span>
+                                      <span className="text-xs text-muted-foreground">-</span>
                                     )}
                                   </td>
                                 </tr>

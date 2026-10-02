@@ -6,12 +6,12 @@ import { OpsDashboard } from "@/components/ops-dashboard";
 export const Route = createFileRoute("/_authenticated/ops/")({
   head: () => ({
     meta: [
-      { title: "Operations — Harmonious" },
+      { title: "Operations - Harmonious" },
       {
         name: "description",
         content: "Fund banking requests, EINs and tax documents waiting on the operations team.",
       },
-      { property: "og:title", content: "Operations — Harmonious" },
+      { property: "og:title", content: "Operations - Harmonious" },
       {
         property: "og:description",
         content: "Review fund banking, EINs and tax paperwork before managers see it.",

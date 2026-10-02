@@ -8,13 +8,13 @@ import { ConfirmYourInformation } from "@/components/confirm-your-information";
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
   head: () => ({
     meta: [
-      { title: "Your investment — Harmonious" },
+      { title: "Your investment - Harmonious" },
       {
         name: "description",
         content:
           "Complete your investment: who is investing, how much, your checks, your subscription documents and funding.",
       },
-      { property: "og:title", content: "Your investment — Harmonious" },
+      { property: "og:title", content: "Your investment - Harmonious" },
       { property: "og:description", content: "Complete your subscription in the Harmonious portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -23,7 +23,7 @@ function Funds() {
               <span className="font-medium">{f.name}</span>
               <p className="mt-1 text-xs text-muted-foreground">
                 {f.client}
-                {f.regType ? ` — ${String(f.regType).toUpperCase()}` : ""}
+                {f.regType ? ` - ${String(f.regType).toUpperCase()}` : ""}
               </p>
             </li>
           ))}

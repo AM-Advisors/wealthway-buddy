@@ -1,7 +1,7 @@
 /**
  * Server side of the four Operations record pages (server-only module).
  *
- * Every function here composes records that already exist — clients, funds,
+ * Every function here composes records that already exist - clients, funds,
  * onboarding, positions, capital, accounting, tax, cap table, banking and the
  * audit trails. Nothing is stored, no balance is recalculated, no status is
  * invented. Each call re-checks the staff capability for the area it serves,

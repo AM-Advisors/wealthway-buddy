@@ -5,13 +5,13 @@ import { PortfolioValueBoard } from "@/components/portfolio-value-board";
 export const Route = createFileRoute("/_authenticated/admin/portfolio-value")({
   head: () => ({
     meta: [
-      { title: "Portfolio value — Harmonious" },
+      { title: "Portfolio value - Harmonious" },
       {
         name: "description",
         content:
           "Equity value per share for every fund, updating as commitments and received funds change.",
       },
-      { property: "og:title", content: "Portfolio value — Harmonious" },
+      { property: "og:title", content: "Portfolio value - Harmonious" },
       {
         property: "og:description",
         content: "Live fund equity value and value per share across the portfolio.",

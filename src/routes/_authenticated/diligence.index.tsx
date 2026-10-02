@@ -11,13 +11,13 @@ import { Progress } from "@/components/ui/progress";
 export const Route = createFileRoute("/_authenticated/diligence/")({
   head: () => ({
     meta: [
-      { title: "Due Diligence Rooms — Harmonious" },
+      { title: "Due Diligence Rooms - Harmonious" },
       {
         name: "description",
         content:
-          "Review fund due diligence materials — formation documents, financials, track record and team — in one secure Harmonious room per fund.",
+          "Review fund due diligence materials - formation documents, financials, track record and team - in one secure Harmonious room per fund.",
       },
-      { property: "og:title", content: "Due Diligence Rooms — Harmonious" },
+      { property: "og:title", content: "Due Diligence Rooms - Harmonious" },
       {
         property: "og:description",
         content: "Secure fund diligence materials and readiness for Harmonious investors.",

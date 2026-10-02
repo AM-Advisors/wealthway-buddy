@@ -12,9 +12,9 @@ import { getMyFunds } from "@/lib/my-funds.functions";
 export const Route = createFileRoute("/_authenticated/my-funds/")({
   head: () => ({
     meta: [
-      { title: "My Funds — Harmonious" },
+      { title: "My Funds - Harmonious" },
       { name: "description", content: "Every fund and SPV you manage or invest in, filtered by fund type." },
-      { property: "og:title", content: "My Funds — Harmonious" },
+      { property: "og:title", content: "My Funds - Harmonious" },
       { property: "og:description", content: "Funds and SPVs you manage or invest in." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

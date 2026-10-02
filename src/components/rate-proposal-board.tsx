@@ -27,13 +27,13 @@ import {
 import { getServiceRateSuggestion } from "@/lib/fund-fees.functions";
 
 function money(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
 const NEXT_STEP: Record<string, string> = {
   quoted: "Waiting on the client to approve and sign it.",
-  signed: "Approved by the client — switch it on from the queue below to make it billable.",
+  signed: "Approved by the client - switch it on from the queue below to make it billable.",
   activated: "Active and on the client's rates, so it can be invoiced.",
   declined: "Declined.",
   withdrawn: "Withdrawn.",
@@ -204,7 +204,7 @@ export function RateProposalBoard() {
               />
               {suggested?.cents != null && (
                 <p className="text-xs text-muted-foreground">
-                  On file: {money(suggested.cents)} — {suggested.label}{" "}
+                  On file: {money(suggested.cents)} - {suggested.label}{" "}
                   <button
                     type="button"
                     className="underline"

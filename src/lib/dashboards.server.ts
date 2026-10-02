@@ -1,5 +1,5 @@
 /**
- * Role dashboards — server aggregation. Every number is built here, from
+ * Role dashboards - server aggregation. Every number is built here, from
  * records the caller is authorized to see, using the shared definitions in
  * dashboard-metrics.ts. The browser receives aggregates, never raw evidence.
  */

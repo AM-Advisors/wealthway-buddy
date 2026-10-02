@@ -11,13 +11,13 @@ import { MEMO_SECTIONS, getMemoForInvestor } from "@/lib/offering-memo.functions
 export const Route = createFileRoute("/_authenticated/fund-memo")({
   head: () => ({
     meta: [
-      { title: "Offering Memo — Harmonious Investor Portal" },
+      { title: "Offering Memo - Harmonious Investor Portal" },
       {
         name: "description",
         content:
           "Read your fund's offering memo: the strategy, opportunity, terms, team and risks, alongside the legal documents.",
       },
-      { property: "og:title", content: "Offering Memo — Harmonious Investor Portal" },
+      { property: "og:title", content: "Offering Memo - Harmonious Investor Portal" },
       {
         property: "og:description",
         content: "The fund's own account of its strategy, terms, team and risks.",

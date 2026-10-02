@@ -155,7 +155,7 @@ export function DiligenceAssistant({ offeringId }: { offeringId: string }) {
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">
-                No passage was cited for this answer — please confirm it with the fund team in the
+                No passage was cited for this answer - please confirm it with the fund team in the
                 Questions tab.
               </p>
             )}
@@ -168,7 +168,7 @@ export function DiligenceAssistant({ offeringId }: { offeringId: string }) {
           <DialogHeader>
             <DialogTitle>{viewer?.title}</DialogTitle>
             <DialogDescription>
-              Confidential — for your evaluation only. Please do not redistribute.
+              Confidential - for your evaluation only. Please do not redistribute.
             </DialogDescription>
           </DialogHeader>
           {viewer?.src ? (

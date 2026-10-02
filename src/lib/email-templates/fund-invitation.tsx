@@ -51,7 +51,7 @@ function FundInvitation({
     : `You are invited to ${offeringName}`
   const lead = isManager
     ? `${invitedByName} has given you fund manager access to ${offeringName}. You can review investor progress, documents and funding status in the Harmonious manager portal.`
-    : `${invitedByName} has invited you to review and invest in ${offeringName}. Your secure investor portal is ready — identity verification, accreditation, fund documents and funding all happen in one place.`
+    : `${invitedByName} has invited you to review and invest in ${offeringName}. Your secure investor portal is ready - identity verification, accreditation, fund documents and funding all happen in one place.`
 
   return (
     <Html>
@@ -132,7 +132,7 @@ function FundInvitation({
           <Hr style={{ borderColor: '#e6ecf3', margin: '32px 0 16px' }} />
           <Text style={{ color: '#606060', fontSize: '12px', lineHeight: '18px' }}>
             Questions? Reply to this message or contact us at {contactEmail}. Harmonious will never
-            ask you to send funds to bank details received by email — always confirm wire
+            ask you to send funds to bank details received by email - always confirm wire
             instructions by phone.
           </Text>
           <OpenPixel url={pixelUrl} />

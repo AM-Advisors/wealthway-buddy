@@ -9,13 +9,13 @@ import { getSharesByToken } from "@/lib/cap-certificates.functions";
 export const Route = createFileRoute("/shares/$token")({
   head: () => ({
     meta: [
-      { title: "Your shareholding — Harmonious" },
+      { title: "Your shareholding - Harmonious" },
       {
         name: "description",
         content:
           "A private view of the shares and share certificates recorded in your company's register on Harmonious.",
       },
-      { property: "og:title", content: "Your shareholding — Harmonious" },
+      { property: "og:title", content: "Your shareholding - Harmonious" },
       {
         property: "og:description",
         content: "Shares, units and certificates recorded in your company's share register.",

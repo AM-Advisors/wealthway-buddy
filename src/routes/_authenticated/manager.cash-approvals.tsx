@@ -52,7 +52,7 @@ function CashApprovals() {
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
               <CardTitle className="text-base">
-                {money(item.amountCents)} — {item.counterparty ?? "Bank transaction"}
+                {money(item.amountCents)} - {item.counterparty ?? "Bank transaction"}
               </CardTitle>
               <p className="text-sm text-muted-foreground">
                 {item.postedOn} · {item.fundName}
@@ -99,12 +99,12 @@ function CashApprovals() {
 export const Route = createFileRoute("/_authenticated/manager/cash-approvals")({
   head: () => ({
     meta: [
-      { title: "Cash to confirm — Harmonious" },
+      { title: "Cash to confirm - Harmonious" },
       {
         name: "description",
         content: "Confirm the bank activity Harmonious has matched to your fund before it is booked.",
       },
-      { property: "og:title", content: "Cash to confirm — Harmonious" },
+      { property: "og:title", content: "Cash to confirm - Harmonious" },
       {
         property: "og:description",
         content: "Approve or send back matched bank activity for the funds you manage.",

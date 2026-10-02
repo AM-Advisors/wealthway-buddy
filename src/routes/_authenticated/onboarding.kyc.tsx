@@ -28,13 +28,13 @@ import { ID_SIDE_LABELS, isExpired, requiredSides } from "@/lib/government-id";
 export const Route = createFileRoute("/_authenticated/onboarding/kyc")({
   head: () => ({
     meta: [
-      { title: "Identity Verification (KYC) — Harmonious Investor Onboarding" },
+      { title: "Identity Verification (KYC) - Harmonious Investor Onboarding" },
       {
         name: "description",
         content:
           "Provide your legal identity, address and government ID details to complete KYC for your Harmonious fund subscription.",
       },
-      { property: "og:title", content: "Identity Verification (KYC) — Harmonious" },
+      { property: "og:title", content: "Identity Verification (KYC) - Harmonious" },
       {
         property: "og:description",
         content: "Step 1 of the Harmonious investor onboarding: know-your-customer identity details.",
@@ -181,7 +181,7 @@ function KycPage() {
           <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>
               Once a fund manager or the Harmonious team invites this email address to a fund, your
-              onboarding will appear here automatically — just sign in again.
+              onboarding will appear here automatically - just sign in again.
             </p>
             <p>
               Expecting an invitation? Contact us at{" "}
@@ -266,7 +266,7 @@ function KycPage() {
           <Card>
             <CardHeader>
               <CardTitle><h2 className="font-semibold leading-none tracking-tight">Residential address</h2></CardTitle>
-              <CardDescription>No P.O. boxes — a physical address is required.</CardDescription>
+              <CardDescription>No P.O. boxes - a physical address is required.</CardDescription>
             </CardHeader>
             <CardContent>
               <AddressInput

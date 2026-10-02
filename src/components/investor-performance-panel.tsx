@@ -7,17 +7,17 @@ import { getInvestorPerformance } from "@/lib/performance-reporting.functions";
 
 const money = (cents: number | null | undefined) =>
   cents === null || cents === undefined
-    ? "—"
+    ? "-"
     : `${Number(cents) < 0 ? "−" : ""}$${Math.abs(Number(cents) / 100).toLocaleString("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
 
 const pct = (bps: number | null | undefined) =>
-  bps === null || bps === undefined ? "—" : `${(Number(bps) / 100).toFixed(2)}%`;
+  bps === null || bps === undefined ? "-" : `${(Number(bps) / 100).toFixed(2)}%`;
 
 const times = (value: number | string | null | undefined) =>
-  value === null || value === undefined ? "—" : `${Number(value).toFixed(2)}×`;
+  value === null || value === undefined ? "-" : `${Number(value).toFixed(2)}×`;
 
 const label = (value: string) => String(value ?? "").replaceAll("_", " ");
 
@@ -45,7 +45,7 @@ export function InvestorPerformancePanel() {
         <h1 className="text-xl font-semibold">Performance</h1>
         <p className="text-sm text-muted-foreground">
           How each of your investments has performed. Figures shown under “Your investment” are
-          calculated from your own contributions, distributions and capital — they are not the same
+          calculated from your own contributions, distributions and capital - they are not the same
           as the fund-level figures shown alongside them.
         </p>
       </div>

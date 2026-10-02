@@ -17,7 +17,7 @@ function money(cents?: number | null) {
 }
 
 function preciseMoney(cents?: number | null) {
-  if (cents == null) return "—";
+  if (cents == null) return "-";
   return `$${(cents / 100).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -144,7 +144,7 @@ export function PortfolioValueBoard({ backTo }: { backTo: "/admin" | "/manager" 
                 <div className="rounded-lg border p-3">
                   <p className="text-muted-foreground text-xs">Shares issued</p>
                   <p className="text-lg font-semibold">
-                    {fund.shares ? fund.shares.toLocaleString("en-US") : "—"}
+                    {fund.shares ? fund.shares.toLocaleString("en-US") : "-"}
                   </p>
                 </div>
                 <div className="rounded-lg border p-3">
@@ -201,7 +201,7 @@ export function PortfolioValueBoard({ backTo }: { backTo: "/admin" | "/manager" 
                             </div>
                           </td>
                           <td className="py-2 pr-3">
-                            {h.shares == null ? "—" : h.shares.toLocaleString("en-US")}
+                            {h.shares == null ? "-" : h.shares.toLocaleString("en-US")}
                           </td>
                           <td className="py-2 pr-3">{share(h.ownership_pct)}</td>
                           <td className="py-2 pr-3">{money(h.committed_cents)}</td>

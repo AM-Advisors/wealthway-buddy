@@ -5,13 +5,13 @@ import { InvestorPerformancePanel } from "@/components/investor-performance-pane
 export const Route = createFileRoute("/_authenticated/investor-performance")({
   head: () => ({
     meta: [
-      { title: "Your performance — Harmonious" },
+      { title: "Your performance - Harmonious" },
       {
         name: "description",
         content:
           "How each of your investments has performed, calculated from your own contributions and distributions.",
       },
-      { property: "og:title", content: "Your performance — Harmonious" },
+      { property: "og:title", content: "Your performance - Harmonious" },
       {
         property: "og:description",
         content: "Your investment performance, shown separately from fund-level performance.",

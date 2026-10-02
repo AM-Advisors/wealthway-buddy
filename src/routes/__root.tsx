@@ -79,10 +79,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Harmonious — Investor Onboarding" },
+      { title: "Harmonious - Investor Onboarding" },
       { name: "description", content: "Harmonious investor onboarding portal." },
       { name: "author", content: "Harmonious" },
-      { property: "og:title", content: "Harmonious — Investor Onboarding" },
+      { property: "og:title", content: "Harmonious - Investor Onboarding" },
       { property: "og:description", content: "Harmonious investor onboarding portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

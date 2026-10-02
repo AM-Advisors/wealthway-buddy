@@ -21,13 +21,13 @@ import { WireRequestForm, WireRequestQueue } from "@/components/wire-requests";
 export const Route = createFileRoute("/_authenticated/admin/wire")({
   head: () => ({
     meta: [
-      { title: "Wire Instructions — Harmonious Admin" },
+      { title: "Wire Instructions - Harmonious Admin" },
       {
         name: "description",
         content:
           "Update each Harmonious fund's bank and wire details in one place; investors see the latest instructions in their portal immediately.",
       },
-      { property: "og:title", content: "Wire Instructions — Harmonious Admin" },
+      { property: "og:title", content: "Wire Instructions - Harmonious Admin" },
       {
         property: "og:description",
         content: "One panel for fund managers and admins to keep every fund's wire details current.",
@@ -83,7 +83,7 @@ function WireAdminPage() {
   const mutation = useMutation({
     mutationFn: (input: { offering_id: string } & Record<string, string>) => save({ data: input as any }),
     onSuccess: () => {
-      toast.success("Wire instructions updated — investors see them right away.");
+      toast.success("Wire instructions updated - investors see them right away.");
       queryClient.invalidateQueries({ queryKey: ["managed-wire"] });
       queryClient.invalidateQueries({ queryKey: ["offerings"] });
       setSavingId(null);
@@ -119,7 +119,7 @@ function WireAdminPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Wire instructions</h1>
         <p className="text-sm text-muted-foreground">
           Update the bank details for each fund you manage. Investors with an application see the new
-          details on their wire page immediately — you never need to edit a fund page.
+          details on their wire page immediately - you never need to edit a fund page.
         </p>
       </div>
 

@@ -5,13 +5,13 @@ import { RateProposalBoard } from "@/components/rate-proposal-board";
 export const Route = createFileRoute("/_authenticated/admin/rate-proposals")({
   head: () => ({
     meta: [
-      { title: "Rate proposals — Harmonious admin" },
+      { title: "Rate proposals - Harmonious admin" },
       {
         name: "description",
         content:
           "Propose a fee to a client, track their approval and switch the service on so it can be invoiced.",
       },
-      { property: "og:title", content: "Rate proposals — Harmonious admin" },
+      { property: "og:title", content: "Rate proposals - Harmonious admin" },
       {
         property: "og:description",
         content: "Send a written fee for a client's approval before any work is invoiced.",

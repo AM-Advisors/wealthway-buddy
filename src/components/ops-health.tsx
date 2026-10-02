@@ -26,7 +26,7 @@ function Days({ value, onChange }: { value: number; onChange: (n: number) => voi
   );
 }
 
-const when = (s: string | null | undefined) => (s ? new Date(s).toLocaleString() : "—");
+const when = (s: string | null | undefined) => (s ? new Date(s).toLocaleString() : "-");
 
 export function EmailHealth() {
   const [days, setDays] = useState(14);
@@ -52,7 +52,7 @@ export function EmailHealth() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left"><tr><th className="p-2">When</th><th className="p-2">Update</th><th className="p-2">Recipient</th><th className="p-2">Message</th></tr></thead>
             <tbody>{events.map((e) => (
-              <tr key={e.id} className="border-t"><td className="p-2 whitespace-nowrap">{when(e.at)}</td><td className="p-2">{e.type}</td><td className="p-2">{e.recipient}</td><td className="p-2 font-mono text-xs">{e.messageId ?? "—"}</td></tr>
+              <tr key={e.id} className="border-t"><td className="p-2 whitespace-nowrap">{when(e.at)}</td><td className="p-2">{e.type}</td><td className="p-2">{e.recipient}</td><td className="p-2 font-mono text-xs">{e.messageId ?? "-"}</td></tr>
             ))}</tbody>
           </table>
         </div>

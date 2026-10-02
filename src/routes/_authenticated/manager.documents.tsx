@@ -31,13 +31,13 @@ import {
 export const Route = createFileRoute("/_authenticated/manager/documents")({
   head: () => ({
     meta: [
-      { title: "Fund Documents — Harmonious Manager" },
+      { title: "Fund Documents - Harmonious Manager" },
       {
         name: "description",
         content:
           "Fund managers add, edit and order the offering documents investors read and sign for the funds they manage.",
       },
-      { property: "og:title", content: "Fund Documents — Harmonious Manager" },
+      { property: "og:title", content: "Fund Documents - Harmonious Manager" },
       {
         property: "og:description",
         content: "Manage the offering documents for your funds in one place.",

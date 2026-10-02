@@ -45,7 +45,7 @@ const orgSchema = z.object({
   jurisdiction: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
-/** Create a professional firm. Staff only — a firm is never self-serve. */
+/** Create a professional firm. Staff only - a firm is never self-serve. */
 export const createProfessionalOrganization = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => orgSchema.parse(data))

@@ -86,7 +86,7 @@ export async function renderPdf(spec: PdfDocSpec): Promise<Uint8Array> {
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const logo = await loadLogo(pdf);
 
-  pdf.setTitle(`${spec.title}${spec.subtitle ? ` — ${spec.subtitle}` : ""}`);
+  pdf.setTitle(`${spec.title}${spec.subtitle ? ` - ${spec.subtitle}` : ""}`);
   pdf.setAuthor(COMPANY.legalName);
   pdf.setProducer(COMPANY.name);
   pdf.setCreator(COMPANY.name);

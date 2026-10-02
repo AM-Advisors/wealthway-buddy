@@ -8,9 +8,9 @@ import { getManagerFunds } from "@/lib/manager.functions";
 export const Route = createFileRoute("/_authenticated/manager/funds")({
   head: () => ({
     meta: [
-      { title: "Funds — Harmonious" },
+      { title: "Funds - Harmonious" },
       { name: "description", content: "The funds you manage on Harmonious." },
-      { property: "og:title", content: "Funds — Harmonious" },
+      { property: "og:title", content: "Funds - Harmonious" },
       { property: "og:description", content: "The funds you manage on Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

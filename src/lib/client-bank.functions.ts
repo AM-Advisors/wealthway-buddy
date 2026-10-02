@@ -263,7 +263,7 @@ export const refreshClientBankMatches = createServerFn({ method: "POST" })
         matched > 0
           ? `${matched} payment${matched === 1 ? "" : "s"} matched to your invoices.`
           : added > 0
-            ? `${added} new deposit${added === 1 ? "" : "s"} found — nothing matched an invoice yet.`
+            ? `${added} new deposit${added === 1 ? "" : "s"} found - nothing matched an invoice yet.`
             : "No new deposits since the last check.",
     };
   });

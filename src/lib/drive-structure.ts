@@ -79,7 +79,7 @@ export class DriveConflictError extends Error {
 
 /**
  * Find the tagged folder, or create it. An untagged folder with the same name
- * is a conflict for review — never adopted, moved, renamed or deleted.
+ * is a conflict for review - never adopted, moved, renamed or deleted.
  */
 export async function ensureTaggedFolder(
   drive: DriveClient,

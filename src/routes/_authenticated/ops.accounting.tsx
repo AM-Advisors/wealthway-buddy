@@ -172,7 +172,7 @@ function AccountingOperations() {
               <CardHeader className="flex flex-row items-start justify-between gap-4">
                 <div>
                   <CardTitle className="text-base">
-                    {money(item.amountCents)} — {item.counterparty ?? "Bank transaction"}
+                    {money(item.amountCents)} - {item.counterparty ?? "Bank transaction"}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     {item.postedOn} · {item.fundName}
@@ -371,13 +371,13 @@ function AccountingOperations() {
 export const Route = createFileRoute("/_authenticated/ops/accounting")({
   head: () => ({
     meta: [
-      { title: "Accounting operations — Harmonious" },
+      { title: "Accounting operations - Harmonious" },
       {
         name: "description",
         content:
           "Review matched bank activity, clear exceptions and post approved journals to the fund ledger.",
       },
-      { property: "og:title", content: "Accounting operations — Harmonious" },
+      { property: "og:title", content: "Accounting operations - Harmonious" },
       {
         property: "og:description",
         content: "Bank cash, reconciliation review and ledger posting in one operations view.",

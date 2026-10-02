@@ -6,13 +6,13 @@ import { ManagerReviewMemos } from "@/components/statement-review-board";
 export const Route = createFileRoute("/_authenticated/manager/financials")({
   head: () => ({
     meta: [
-      { title: "Fund financials — Harmonious" },
+      { title: "Fund financials - Harmonious" },
       {
         name: "description",
         content:
           "Published financial statements, NAV packages and capital summaries for the funds you manage.",
       },
-      { property: "og:title", content: "Fund financials — Harmonious" },
+      { property: "og:title", content: "Fund financials - Harmonious" },
       {
         property: "og:description",
         content: "Review, acknowledge or challenge the financial statements published for your funds.",

@@ -68,7 +68,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         },
         related: related.filter((r) => r.firstName && r.lastName).map((r) => ({ ...r, email: r.email || null, ownershipPercent: r.ownershipPercent ? Number(r.ownershipPercent) : null })),
       } });
-      toast.success("Investor added — Incomplete, additional information required.");
+      toast.success("Investor added - Incomplete, additional information required.");
       qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] });
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();
@@ -106,7 +106,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
               </div>
             ))}
             {matches.some((m) => m.strength === "email") ? (
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={confirmedNew} onChange={(e) => { setConfirmedNew(e.target.checked); if (e.target.checked) setChosen(null); }} />Create New — this is a different person</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={confirmedNew} onChange={(e) => { setConfirmedNew(e.target.checked); if (e.target.checked) setChosen(null); }} />Create New - this is a different person</label>
             ) : null}
           </div>
         ) : null}
@@ -156,10 +156,10 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
             {section === "Eligibility" ? <p className="text-sm text-muted-foreground">Accreditation and eligibility are completed by the investor and reviewed by Harmonious. Readiness will show what remains after you save.</p> : null}
             {section === "Documents" ? <p className="text-sm text-muted-foreground">Subscription documents are prepared from this record once the investor continues onboarding. Upload supporting files from the investor record after saving.</p> : null}
             {section === "Review" ? <ul className="space-y-1 text-sm">
-              <li><span className="text-muted-foreground">Name:</span> {`${f['firstName'] ?? ""} ${f['lastName'] ?? ""}`.trim() || "—"}</li>
-              <li><span className="text-muted-foreground">Email:</span> {f['email'] || "—"}</li>
+              <li><span className="text-muted-foreground">Name:</span> {`${f['firstName'] ?? ""} ${f['lastName'] ?? ""}`.trim() || "-"}</li>
+              <li><span className="text-muted-foreground">Email:</span> {f['email'] || "-"}</li>
               <li><span className="text-muted-foreground">Investing as:</span> {PROFILE_TYPE_LABELS[type as keyof typeof PROFILE_TYPE_LABELS]} {f['entityName'] ? `· ${f['entityName']}` : ""}</li>
-              <li><span className="text-muted-foreground">Amount:</span> {f['amount'] ? `$${f['amount']}` : "—"}</li>
+              <li><span className="text-muted-foreground">Amount:</span> {f['amount'] ? `$${f['amount']}` : "-"}</li>
               <li><span className="text-muted-foreground">Related people:</span> {related.filter((r) => r.firstName).length}</li>
               <li className="text-xs text-muted-foreground">Recorded as entered by {isStaff ? "Harmonious" : "the Fund Manager"}. The investor will be asked to confirm it.</li>
             </ul> : null}

@@ -533,7 +533,7 @@ function ReconcilePanel({
       <div>
         <p className="text-sm font-medium">Authorised, issued and outstanding</p>
         <p className="text-sm text-muted-foreground">
-          We read what we can from your file. Correct any number to match your current provider —
+          We read what we can from your file. Correct any number to match your current provider -
           we show the difference so nothing goes across unnoticed.
         </p>
       </div>
@@ -653,14 +653,14 @@ function RowLine({
     <TableRow>
       <TableCell className="text-muted-foreground">{row.rowNumber}</TableCell>
       <TableCell>
-        <p className="font-medium">{mapped?.holderName ?? "—"}</p>
+        <p className="font-medium">{mapped?.holderName ?? "-"}</p>
         <p className="text-xs text-muted-foreground">{mapped?.holderEmail ?? mapped?.holderType}</p>
         {issues.length ? (
           <p className="text-xs text-destructive">{issues.join(" ")}</p>
         ) : null}
       </TableCell>
       <TableCell className="capitalize">
-        {String(mapped?.securityType ?? "—").replace(/_/g, " ")}
+        {String(mapped?.securityType ?? "-").replace(/_/g, " ")}
         {mapped?.securityClass ? (
           <span className="block text-xs text-muted-foreground">{mapped.securityClass}</span>
         ) : null}

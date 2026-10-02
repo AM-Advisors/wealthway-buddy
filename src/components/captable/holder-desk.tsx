@@ -282,7 +282,7 @@ function HolderCard({
                           ? fmtMoney(grant.exercisePrice, 4)
                           : grant.purchasePrice !== null
                             ? fmtMoney(grant.purchasePrice, 4)
-                            : "—"}
+                            : "-"}
                       </td>
                       <td className="py-2 pr-3">{fmtDate(grant.issueDate)}</td>
                       <td className="py-2">

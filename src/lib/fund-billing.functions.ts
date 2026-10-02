@@ -96,7 +96,7 @@ async function buildEvents(context: any, offeringId: string) {
       ref: `wire_fee:${a.id}`,
       kind: "wire_fee",
       kindLabel: "Wire fee",
-      label: `Wire fee — ${nameOf(a)}`,
+      label: `Wire fee - ${nameOf(a)}`,
       description: `Investor funding settled by ${String(a.funding_method ?? "wire")}`,
       occurredOn: String(a.updated_at ?? a.created_at ?? "").slice(0, 10),
       cents,
@@ -113,7 +113,7 @@ async function buildEvents(context: any, offeringId: string) {
       ref: `closing_cost:${c.id}`,
       kind: "closing_cost",
       kindLabel: "Closing cost",
-      label: `Closing cost — ${nameOf(app)}`,
+      label: `Closing cost - ${nameOf(app)}`,
       description: `Closing recorded ${c.closing_date ?? ""}`.trim(),
       occurredOn: String(c.closing_date ?? c.created_at ?? "").slice(0, 10),
       cents: fundClosing,
@@ -131,14 +131,14 @@ async function buildEvents(context: any, offeringId: string) {
       ref: `subscription:${c.id}`,
       kind: "subscription",
       kindLabel: "Subscription",
-      label: `Subscription — ${nameOf(app)}`,
+      label: `Subscription - ${nameOf(app)}`,
       description:
         sharePrice > 0
           ? `${units.toLocaleString()} units at $${(sharePrice / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} each` +
             (remainder > 0
               ? ` · $${(remainder / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} funded above whole units`
               : "")
-          : "Funded amount — no share price set for this fund",
+          : "Funded amount - no share price set for this fund",
       occurredOn: String(c.closing_date ?? c.created_at ?? "").slice(0, 10),
       cents: amount,
       custom: false,
@@ -345,7 +345,7 @@ export const billFundFees = createServerFn({ method: "POST" })
         period_start: periodStart,
         period_end: periodEnd,
         net_days: data.netDays,
-        note: data.note || `Fund fees — ${(offering as any).name}`,
+        note: data.note || `Fund fees - ${(offering as any).name}`,
         status: "draft",
         total_cents: total,
         created_by: who.userId,

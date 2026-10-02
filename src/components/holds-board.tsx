@@ -22,7 +22,7 @@ import { clearHold, HOLD_REASONS, HOLD_SCOPES, listHolds, placeHold } from "@/li
 const scopeLabel = (v: string) => HOLD_SCOPES.find((s) => s.value === v)?.label ?? v.replace(/_/g, " ");
 const reasonLabel = (v: string) => HOLD_REASONS.find((s) => s.value === v)?.label ?? v.replace(/_/g, " ");
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
 const ageInDays = (v: string | null | undefined) =>
   v ? Math.max(0, Math.floor((Date.now() - new Date(v).getTime()) / 86_400_000)) : 0;

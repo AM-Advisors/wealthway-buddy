@@ -8,9 +8,9 @@ export const Route = createFileRoute("/onboard/i/$onboardingId")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Your Investment Onboarding — Harmonious" },
+      { title: "Your Investment Onboarding - Harmonious" },
       { name: "description", content: "Verification, accreditation and documents for your investment." },
-      { property: "og:title", content: "Your Investment Onboarding — Harmonious" },
+      { property: "og:title", content: "Your Investment Onboarding - Harmonious" },
       { property: "og:description", content: "Secure investor onboarding by Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

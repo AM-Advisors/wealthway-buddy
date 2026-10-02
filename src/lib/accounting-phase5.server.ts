@@ -70,7 +70,7 @@ async function ensureBook(userId: string, offeringId: string) {
   const existing = await bookFor(offeringId);
   if (existing) return existing;
   const name = await fundName(offeringId);
-  const b = await openLedgerBook(userId, { name: `${name} — books`, offeringId });
+  const b = await openLedgerBook(userId, { name: `${name} - books`, offeringId });
   return { id: b.id, name: b.name, basis: b.basis };
 }
 
@@ -238,7 +238,7 @@ export async function setQboLink(userId: string, i: { offeringId: string; compan
   await staff(userId);
   await fundName(i.offeringId);
   if (i.status === "linked" && !i.companyName.trim()) fail("Name the QuickBooks company.");
-  const { error } = await db().from("qbo_company_links").insert({ offering_id: i.offeringId, company_name: i.companyName.trim() || "—", realm_id: i.realmId?.trim() || null, status: i.status, mode: "file", note: i.note ?? null, created_by: userId });
+  const { error } = await db().from("qbo_company_links").insert({ offering_id: i.offeringId, company_name: i.companyName.trim() || "-", realm_id: i.realmId?.trim() || null, status: i.status, mode: "file", note: i.note ?? null, created_by: userId });
   if (error) fail(error.message);
   return { ok: true };
 }
@@ -279,7 +279,7 @@ export async function importQboJournalFile(userId: string, i: { offeringId: stri
           const e = await draftJournalEntry(userId, {
             bookId: book.id,
             entryDate: t.date,
-            memo: `QuickBooks ${t.id}${t.memo ? ` — ${t.memo}` : ""}`,
+            memo: `QuickBooks ${t.id}${t.memo ? ` - ${t.memo}` : ""}`,
             source: "quickbooks",
             sourceTable: "qbo_inbound_items",
             lines: t.lines.map((l) => ({ accountId: maps.get(mapKey(l.account))!, debitCents: l.debitCents, creditCents: l.creditCents, memo: l.memo ?? null })),

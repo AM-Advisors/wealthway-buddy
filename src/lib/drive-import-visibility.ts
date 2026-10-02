@@ -1,6 +1,6 @@
 /**
  * Who may see a document imported from Google Drive inside the normal
- * Harmonious document experience. Pure rules — the server applies them to
+ * Harmonious document experience. Pure rules - the server applies them to
  * every list, search and open request. An import never widens access: the
  * rules below are the same (or narrower) than the equivalent native document.
  */
@@ -110,8 +110,8 @@ export function versionHistory<T extends Pick<ImportedDoc, "id" | "previous_vers
 }
 
 export const EXECUTION_PRESENTATION = {
-  historical_executed: "Historical Executed — Administrator Attestation",
-  box_verified: "Fully Executed — Box Verified",
+  historical_executed: "Historical Executed - Administrator Attestation",
+  box_verified: "Fully Executed - Box Verified",
   none: null,
 } as const;
 
@@ -121,7 +121,7 @@ export function executionLabel(evidence: string): string | null {
 }
 
 export function reviewLabel(state: string): string | null {
-  return state === "evidence_received_needs_review" ? "Evidence received — needs review" : null;
+  return state === "evidence_received_needs_review" ? "Evidence received - needs review" : null;
 }
 
 export type VisibleImport = {

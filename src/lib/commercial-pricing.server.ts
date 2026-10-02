@@ -31,7 +31,7 @@ export async function loadBaseline(clientId: string | null) {
 /**
  * Records the Fund's commercial snapshot. Creating/requesting the Fund is the
  * approval event; below-baseline prices open a Pricing Approval request.
- * Never throws into the caller's Fund creation path — see safeCreateSnapshot.
+ * Never throws into the caller's Fund creation path - see safeCreateSnapshot.
  */
 export async function createFundPricingSnapshot(args: {
   offeringId: string; clientId: string | null; actorId: string; source: string;

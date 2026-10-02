@@ -1,5 +1,5 @@
 /**
- * Harmonious service packages (Phase 3.10B) — pure rules.
+ * Harmonious service packages (Phase 3.10B) - pure rules.
  * Package → included components → included quantities → pricing rule → add-ons.
  * Prices always come from the canonical rate card passed in; nothing here is a
  * second price table. Commercial states never feed investor readiness.
@@ -204,7 +204,7 @@ export function priceConfig(c: ClientServiceConfig, rate: readonly RateItem[], c
   if (c.financialReporting) out.push(priced("financial_reporting", "Financial Reporting", rateFor(rate, RATE_KEYS.financial_reporting), Math.max(1, c.financialReporting.reports), "per report"));
   if (c.capTable) {
     const r = rateFor(rate, `cap_table_${c.capTable.tier}`, "annual");
-    const label = `Cap Table Management — ${c.capTable.tier[0]!.toUpperCase()}${c.capTable.tier.slice(1)}`;
+    const label = `Cap Table Management - ${c.capTable.tier[0]!.toUpperCase()}${c.capTable.tier.slice(1)}`;
     out.push(r && r.amountCents != null ? priced(`cap_table_${c.capTable.tier}`, label, r, 1, r.pricingModel === "annual" ? "per year" : "per month")
       : line({ key: `cap_table_${c.capTable.tier}`, label, status: "pricing_required", note: "Pricing Required" }));
   }
@@ -213,7 +213,7 @@ export function priceConfig(c: ClientServiceConfig, rate: readonly RateItem[], c
     const name = serviceLabel(a.serviceKey, catalogNames[a.serviceKey] ?? a.serviceKey);
     const ent = ADDITIONAL_QTY[a.serviceKey];
     if (ent) {
-      const l = priced(a.serviceKey, `${name} — Additional Quantity`, rateFor(rate, a.serviceKey), a.quantity, null);
+      const l = priced(a.serviceKey, `${name} - Additional Quantity`, rateFor(rate, a.serviceKey), a.quantity, null);
       out.push({ ...l, note: l.note ?? "Beyond the included quantity" });
     } else if (included.has(a.serviceKey)) {
       out.push(line({ key: a.serviceKey, label: name, status: "included", note: "Included in package" }));

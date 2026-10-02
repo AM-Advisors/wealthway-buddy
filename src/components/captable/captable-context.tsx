@@ -58,12 +58,12 @@ export function useCapTable() {
 }
 
 export function fmtNumber(value: number | null | undefined, digits = 0) {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
   return value.toLocaleString("en-US", { maximumFractionDigits: digits });
 }
 
 export function fmtMoney(value: number | null | undefined, digits = 2) {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
   return value.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -72,13 +72,13 @@ export function fmtMoney(value: number | null | undefined, digits = 2) {
 }
 
 export function fmtPercent(value: number | null | undefined) {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-";
   if (value === 0) return "0%";
   return `${value < 0.01 ? value.toFixed(4) : value.toFixed(2)}%`;
 }
 
 export function fmtDate(value: string | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });

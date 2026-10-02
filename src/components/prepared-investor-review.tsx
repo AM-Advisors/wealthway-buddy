@@ -9,10 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 
 const show = (k: string, v: unknown) =>
-  v == null || v === "" ? "—" : k.endsWith("_cents") ? `$${(Number(v) / 100).toLocaleString("en-US")}` : String(v).replace(/_/g, " ");
+  v == null || v === "" ? "-" : k.endsWith("_cents") ? `$${(Number(v) / 100).toLocaleString("en-US")}` : String(v).replace(/_/g, " ");
 const err = (e: any) => String(e?.message ?? e);
 
-/** "Confirm Your Information" — shown only when the investment was prepared for the investor. */
+/** "Confirm Your Information" - shown only when the investment was prepared for the investor. */
 export function ConfirmYourInformation({ onboardingId, onChanged }: { onboardingId: string; onChanged?: () => void }) {
   const qc = useQueryClient();
   const load = useServerFn(getMyPreparedInfo);
@@ -82,7 +82,7 @@ export function ConfirmYourInformation({ onboardingId, onChanged }: { onboarding
   );
 }
 
-/** Review Document — must happen before Continue to Sign. Reviewing is never a signature. */
+/** Review Document - must happen before Continue to Sign. Reviewing is never a signature. */
 export function ReviewPreparedDocuments({ onboardingId }: { onboardingId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(getMyDocumentsForReview);

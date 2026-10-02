@@ -200,7 +200,7 @@ export function SignatureBlockEditor({
   if (!meta.data?.hasFile) {
     return (
       <p className="text-sm text-muted-foreground">
-        Upload a PDF for this document first. Signature blocks can only be placed on a PDF —
+        Upload a PDF for this document first. Signature blocks can only be placed on a PDF -
         Word files are still accepted, and investors sign those with the standard signature page.
       </p>
     );

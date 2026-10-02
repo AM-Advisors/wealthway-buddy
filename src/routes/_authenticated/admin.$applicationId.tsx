@@ -5,13 +5,13 @@ import { ApplicationReview } from "@/components/application-review";
 export const Route = createFileRoute("/_authenticated/admin/$applicationId")({
   head: () => ({
     meta: [
-      { title: "Application Review — Harmonious Admin" },
+      { title: "Application Review - Harmonious Admin" },
       {
         name: "description",
         content:
           "Review one investor's KYC, AML, accreditation evidence, signed documents and funding, then approve, reject or email them.",
       },
-      { property: "og:title", content: "Application Review — Harmonious Admin" },
+      { property: "og:title", content: "Application Review - Harmonious Admin" },
       {
         property: "og:description",
         content: "Compliance detail view for a single investor application.",

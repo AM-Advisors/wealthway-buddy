@@ -1,5 +1,5 @@
 /**
- * onboard.harmonious.co — the lightweight investor onboarding presentation.
+ * onboard.harmonious.co - the lightweight investor onboarding presentation.
  *
  * Pure projection of the authoritative requirement results for ONE
  * investment into three investor-facing steps. Nothing here stores progress:

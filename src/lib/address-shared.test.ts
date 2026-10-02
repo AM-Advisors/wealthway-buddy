@@ -1,5 +1,5 @@
 /**
- * Shared address service — correctness and adversarial tests.
+ * Shared address service - correctness and adversarial tests.
  *
  * Google finding an address is convenience. Didit proof of address is
  * evidence. Harmonious decides. These tests hold those apart.

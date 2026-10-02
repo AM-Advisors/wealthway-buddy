@@ -7,13 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => ({
     meta: [
-      { title: "My clients — Harmonious staff desk" },
+      { title: "My clients - Harmonious staff desk" },
       {
         name: "description",
         content:
           "Each Harmonious team member sees only the clients they cover, with the service requests, fee proposals and compliance holds waiting on them.",
       },
-      { property: "og:title", content: "My clients — Harmonious staff desk" },
+      { property: "og:title", content: "My clients - Harmonious staff desk" },
       {
         property: "og:description",
         content: "The clients you cover and everything waiting on you, in one place.",
@@ -33,7 +33,7 @@ function StaffPortalPage() {
       <p className="mb-6 mt-2 text-sm text-muted-foreground">
         The clients you look after, and what is waiting on you: new service requests, fee proposals
         in play and open compliance holds. Harmonious provides administrative, technology and
-        recordkeeping support — decisions on scope stay with the statement of work.
+        recordkeeping support - decisions on scope stay with the statement of work.
       </p>
       <Tabs defaultValue="desk">
         <TabsList>

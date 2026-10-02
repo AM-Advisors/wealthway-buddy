@@ -97,7 +97,7 @@ describe("cross-fund authority", () => {
 import { missingRelatedRoles } from "@/lib/identity-model";
 import { determineOnboardingRequirements } from "@/lib/investor-onboarding-model";
 
-describe("requirements engine — profile-specific roles", () => {
+describe("requirements engine - profile-specific roles", () => {
   const offering = { accreditationRequired: false, kycRequired: true, kybRequired: true, amlRequired: true, taxDocumentRequired: false, subscriptionQuestionnaireRequired: false } as any;
   const run = (profileType: string, relatedPeople: any[]) =>
     determineOnboardingRequirements({ offering, person: { personId: "p", kycStatus: "verified", amlStatus: "clear" }, profile: { profileId: "x", profileType, kybStatus: "verified", entityAmlStatus: "clear", relatedPeople }, subscription: {}, nowIso: new Date().toISOString() })

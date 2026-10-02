@@ -38,7 +38,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
     setBusy(true);
     try {
       await decide({ data: { offeringId, onboardingId, documentId: d.documentId, decision, note: decision === "returned" ? note : null } });
-      toast.success(decision === "approved" ? "Approved — the investor can now sign." : "Returned to the investor with your note.");
+      toast.success(decision === "approved" ? "Approved - the investor can now sign." : "Returned to the investor with your note.");
       setReturning(false); setNote("");
       qc.invalidateQueries({ queryKey: ["doc-reviews", offeringId] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }

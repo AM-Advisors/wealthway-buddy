@@ -4,7 +4,7 @@ import { WIX_ARTICLE_SLUGS } from "./wix-url-map";
 /**
  * Classroom article model. Built to import the existing Wix articles verbatim:
  * the original slug, author, dates, images, alt text and SEO fields are kept.
- * Articles are imported as-is — never AI-rewritten.
+ * Articles are imported as-is - never AI-rewritten.
  */
 export interface ArticleImage {
   /** Absolute https URL (migrated asset). */
@@ -42,7 +42,7 @@ export interface Article {
 }
 
 /**
- * Imported articles. Empty until the Wix export is supplied — the import step
+ * Imported articles. Empty until the Wix export is supplied - the import step
  * appends records here (or a content table later) without changing routing.
  */
 export const ARTICLES: Article[] = [];
@@ -71,7 +71,7 @@ export function validateArticle(a: Article): string[] {
   return problems;
 }
 
-/** Wix articles not yet imported — the cutover blocker list for the Classroom. */
+/** Wix articles not yet imported - the cutover blocker list for the Classroom. */
 export function missingArticles(list: Article[] = ARTICLES): string[] {
   const have = new Set(list.map((a) => a.slug));
   return WIX_ARTICLE_SLUGS.filter((s) => !have.has(s));

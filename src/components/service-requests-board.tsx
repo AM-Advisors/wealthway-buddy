@@ -48,7 +48,7 @@ function stageTone(status: string): "default" | "secondary" | "outline" | "destr
 }
 
 function money(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -232,7 +232,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                   <p className="text-sm">
                     Proposed fee:{" "}
                     <span className="font-medium">
-                      Quoted per request — the amount depends on the services required
+                      Quoted per request - the amount depends on the services required
                     </span>
                     {r.effective_date ? ` · starts ${r.effective_date}` : ""}
                   </p>
@@ -243,7 +243,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                     {r.signer_title ? `, ${r.signer_title}` : ""} on{" "}
                     {r.client_approved_at
                       ? new Date(r.client_approved_at).toLocaleDateString("en-US")
-                      : "—"}
+                      : "-"}
                     .
                   </p>
                 ) : null}
@@ -321,7 +321,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
       {quoteDraft ? (
         <Card className="border-primary">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Propose a fee — {quoteDraft.serviceName}</CardTitle>
+            <CardTitle className="text-base">Propose a fee - {quoteDraft.serviceName}</CardTitle>
             <CardDescription>
               The client sees exactly this, signs it in writing, and only then can it be activated.
             </CardDescription>
@@ -333,7 +333,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
               ) : rateSuggestion.data?.cents != null ? (
                 <div className="flex flex-wrap items-center gap-3">
                   <span>
-                    On file: <strong>{money(rateSuggestion.data.cents)}</strong> —{" "}
+                    On file: <strong>{money(rateSuggestion.data.cents)}</strong> -{" "}
                     {rateSuggestion.data.source === "client_rate"
                       ? "this client's agreed rate"
                       : "the standard rate card"}{" "}
@@ -359,7 +359,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                 </div>
               ) : (
                 <span className="text-muted-foreground">
-                  No rate on file for this service — enter a fee and say why below.
+                  No rate on file for this service - enter a fee and say why below.
                 </span>
               )}
             </div>
@@ -491,7 +491,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
       {declineDraft ? (
         <Card className="border-destructive">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Decline — {declineDraft.serviceName}</CardTitle>
+            <CardTitle className="text-base">Decline - {declineDraft.serviceName}</CardTitle>
             <CardDescription>The client sees this reason.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -520,7 +520,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
       {activateDraft ? (
         <Card className="border-primary">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Activate — {activateDraft.serviceName}</CardTitle>
+            <CardTitle className="text-base">Activate - {activateDraft.serviceName}</CardTitle>
             <CardDescription>
               The client has signed. Attach the statement of work this amendment belongs to and pick
               the start date.

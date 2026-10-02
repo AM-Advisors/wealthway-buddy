@@ -34,7 +34,7 @@ type Row = {
 };
 
 function formatDate(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -243,8 +243,8 @@ export function SowApprovalsBoard() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Not ready for approval</CardTitle>
             <CardDescription>
-              These agreements are still waiting on a client signature — on the paperwork, in the
-              client portal, or both — so they cannot be approved yet.
+              These agreements are still waiting on a client signature - on the paperwork, in the
+              client portal, or both - so they cannot be approved yet.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

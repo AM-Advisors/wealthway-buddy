@@ -2,7 +2,7 @@
  * Server-side identity layer for Phase 2.
  *
  * One canonical person per human, a server-enforced onboarding state machine,
- * and one readiness decision — `canInvest(profile, offering)` — that resolves
+ * and one readiness decision - `canInvest(profile, offering)` - that resolves
  * every id against the stored row rather than trusting the browser.
  *
  * Nothing here weakens the existing admin / fund-manager / investor / staff

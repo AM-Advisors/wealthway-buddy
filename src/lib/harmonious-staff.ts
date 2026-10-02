@@ -1,5 +1,5 @@
 /**
- * Harmonious internal staff model (Phase 3.10) — a compatibility map only.
+ * Harmonious internal staff model (Phase 3.10) - a compatibility map only.
  * Legacy roles keep working unchanged; this translates them into
  * "Harmonious staff + team". Nothing here grants access by itself.
  */
@@ -27,7 +27,7 @@ export type StaffProfile = {
   teams: HarmoniousTeam[];
   /** Opens Operations screens (unchanged legacy rule; Sales does not). */
   operationsAccess: boolean;
-  /** Elevated authority — never implied by Operations. */
+  /** Elevated authority - never implied by Operations. */
   superUser: boolean;
   /** Sales access is commercial only: no investor, tax, KYC, bank or evidence data. */
   commercialOnly: boolean;

@@ -1,7 +1,7 @@
 /**
  * Version history for a fund's legal documents.
- * Every time a document's file changes — a template pack is applied, a manager
- * uploads a replacement, or an older version is restored — we append a row so
+ * Every time a document's file changes - a template pack is applied, a manager
+ * uploads a replacement, or an older version is restored - we append a row so
  * the earlier file stays downloadable.
  */
 

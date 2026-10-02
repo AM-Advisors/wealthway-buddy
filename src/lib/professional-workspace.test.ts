@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Phase 3A adversarial tests — read-only delegated access.
+ * Phase 3A adversarial tests - read-only delegated access.
  *
  * Every assertion here is about what a professional can reach, not what the UI
  * chooses to render: the workspace is built entirely from `canAct` decisions

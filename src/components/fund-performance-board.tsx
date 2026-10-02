@@ -29,12 +29,12 @@ function signedMoney(cents: number) {
 }
 
 function pct(value: number | null) {
-  if (value == null) return "—";
+  if (value == null) return "-";
   return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 function multiple(value: number | null) {
-  return value == null ? "—" : `${value.toFixed(2)}x`;
+  return value == null ? "-" : `${value.toFixed(2)}x`;
 }
 
 function monthLabel(period: string) {

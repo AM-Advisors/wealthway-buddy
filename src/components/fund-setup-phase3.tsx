@@ -170,7 +170,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
                 <div key={v.version} className="rounded-md bg-muted/40 p-2 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span>
-                      Version {v.version} · {v.bankName ?? "Bank"} · {v.accountName ?? "—"} · account {v.accountMasked || "—"}
+                      Version {v.version} · {v.bankName ?? "Bank"} · {v.accountName ?? "-"} · account {v.accountMasked || "-"}
                       {v.routingMasked ? ` · routing ${v.routingMasked}` : ""}
                       {v.hasWireDocument ? " · document attached" : ""}
                     </span>
@@ -220,7 +220,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
                   {field("bank_address", "Bank Address")}
                   {field("memo", "For Further Credit")}
                 </div>
-                <Button size="sm" disabled={busy || !f.account_number || !f.bank_name} onClick={() => run(() => save({ data: { offeringId, details: f } }).then(() => setF({ bank_name: "", bank_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" })), "Saved — pending verification")}>Save instructions</Button>
+                <Button size="sm" disabled={busy || !f.account_number || !f.bank_name} onClick={() => run(() => save({ data: { offeringId, details: f } }).then(() => setF({ bank_name: "", bank_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" })), "Saved - pending verification")}>Save instructions</Button>
               </div>
             )}
           </>
@@ -336,7 +336,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
                     </div>
                   ))}
                   <div className="space-y-1">
-                    <Label htmlFor="ss4-tin" className="text-xs">Responsible party SSN / ITIN {e.hasResponsiblePartyTin ? "(on file — enter only to replace)" : ""}</Label>
+                    <Label htmlFor="ss4-tin" className="text-xs">Responsible party SSN / ITIN {e.hasResponsiblePartyTin ? "(on file - enter only to replace)" : ""}</Label>
                     <Input id="ss4-tin" type="password" autoComplete="off" value={tin} onChange={(v) => setTin(v.target.value)} />
                   </div>
                 </div>
@@ -383,7 +383,7 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
           <OwnerTag owner={d.admin.section.owner} />
         </div>
         <p className="text-sm text-muted-foreground">
-          Offering exemption: {d.admin.regType ?? "not chosen yet (set in Offering)"}. Services are only included when confirmed here — nothing is assumed purchased.
+          Offering exemption: {d.admin.regType ?? "not chosen yet (set in Offering)"}. Services are only included when confirmed here - nothing is assumed purchased.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -493,7 +493,7 @@ function ReviewCard({ d }: { d: D }) {
           <div>
             <p className="text-sm font-medium">Setup Activity</p>
             <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-              {d.activity.map((a, i) => <li key={i}>{new Date(a.at).toLocaleString()} — {a.summary}</li>)}
+              {d.activity.map((a, i) => <li key={i}>{new Date(a.at).toLocaleString()} - {a.summary}</li>)}
             </ul>
           </div>
         )}

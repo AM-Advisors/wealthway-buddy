@@ -35,9 +35,9 @@ export const Route = createFileRoute("/_authenticated/client/funds/new")({
   validateSearch: (s) => z.object({ draft: z.string().uuid().optional() }).parse(s),
   head: () => ({
     meta: [
-      { title: "Launch a new fund or SPV — Harmonious" },
+      { title: "Launch a new fund or SPV - Harmonious" },
       { name: "description", content: "Tell Harmonious everything needed to set up your new fund or SPV." },
-      { property: "og:title", content: "Launch a new fund or SPV — Harmonious" },
+      { property: "og:title", content: "Launch a new fund or SPV - Harmonious" },
       { property: "og:description", content: "A guided form that follows Harmonious Fund Setup." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -201,12 +201,12 @@ function NewFundRequest() {
                       ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Series LLC home)" />
                       : <Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} />}
                   </F>
-                  <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No — Harmonious to form" }]} /></F>
+                  <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No - Harmonious to form" }]} /></F>
                   {r.already_formed === "yes" && <F label="Date formed"><DatePick value={r.date_formed} onChange={(v) => set("date_formed", v)} /></F>}
                   {r.already_formed === "no" && <F label="Who will obtain the EIN? *"><Pick value={r.ein_obtained_by} onChange={(v) => set("ein_obtained_by", v as any)} options={[{ value: "harmonious", label: "Harmonious" }, { value: "client", label: "We will" }]} /></F>}
                   {r.already_formed === "yes" && <F label="Has an EIN? *"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} /></F>}
                 </Grid>
-                <p className="text-xs text-muted-foreground">Don't type the EIN here — upload the IRS letter instead.</p>
+                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.</p>
                 {isSeries(r) && (r.series_home === "own" || r.series_home === "new") && (
                   <div className="space-y-3 rounded-md border p-3">
                     <p className="text-sm font-medium">{r.series_home === "own" ? "Your existing Series LLC" : "New Series LLC to set up"}</p>
@@ -228,8 +228,8 @@ function NewFundRequest() {
                 )}
                 {needsSs4(r) && (
                   <div className="space-y-3 rounded-md border p-3">
-                    <p className="text-sm font-medium">IRS Form SS-4 — EIN application</p>
-                    <p className="text-xs text-muted-foreground">Harmonious reviews this before anything is submitted to the IRS. Don't enter a Social Security number here — we'll collect it securely.</p>
+                    <p className="text-sm font-medium">IRS Form SS-4 - EIN application</p>
+                    <p className="text-xs text-muted-foreground">Harmonious reviews this before anything is submitted to the IRS. Don't enter a Social Security number here - we'll collect it securely.</p>
                     <Grid>
                       {SS4_FIELDS.filter((f) => !f.long).map((f) => (
                         <F key={f.key} label={`${f.label}${f.required ? " *" : ""}`}><Input value={r.ss4?.[f.key] ?? ""} onChange={(e) => set("ss4", { ...r.ss4, [f.key]: e.target.value })} /></F>
@@ -252,7 +252,7 @@ function NewFundRequest() {
                     <div className="mt-2 rounded-md border bg-muted p-3 text-xs">
                       <p className="font-medium">Who can invest</p>
                       <p className="mt-1 text-muted-foreground">{eligibilityFor(r.offering_exemption)}</p>
-                      <p className="mt-1 text-muted-foreground">General guidance — counsel confirms.</p>
+                      <p className="mt-1 text-muted-foreground">General guidance - counsel confirms.</p>
                     </div>
                   )}
                 </F>
@@ -301,7 +301,7 @@ function NewFundRequest() {
                   <Pick value={r.banking_path} onChange={(v) => set("banking_path", v as any)} options={[{ value: "harmonious", label: "Harmonious to coordinate bank setup" }, { value: "client", label: "We'll use our own bank" }]} />
                 </F>
                 {r.banking_path === "client" && <F label="Bank name"><Input value={r.bank_name} onChange={(e) => set("bank_name", e.target.value)} /></F>}
-                <p className="text-xs text-muted-foreground sm:col-span-2">Don't enter account or wire numbers here — Harmonious collects and verifies them separately.</p>
+                <p className="text-xs text-muted-foreground sm:col-span-2">Don't enter account or wire numbers here - Harmonious collects and verifies them separately.</p>
               </Grid>
             )}
 
@@ -325,7 +325,7 @@ function NewFundRequest() {
                     </div>
                   ))}
                   <Button size="sm" variant="outline" onClick={() => set("managers", [...r.managers, { name: "", email: "", title: "" }])}><Plus className="mr-1 size-4" />Add fund manager</Button>
-                  <p className="text-xs text-muted-foreground">Nobody is invited yet — Harmonious confirms access during setup.</p>
+                  <p className="text-xs text-muted-foreground">Nobody is invited yet - Harmonious confirms access during setup.</p>
                 </div>
               </div>
             )}

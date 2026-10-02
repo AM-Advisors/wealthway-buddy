@@ -26,13 +26,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/manager/onboarding")({
   head: () => ({
     meta: [
-      { title: "My Onboarding Documents — Harmonious Fund Managers" },
+      { title: "My Onboarding Documents - Harmonious Fund Managers" },
       {
         name: "description",
         content:
           "Fund managers submit their own onboarding paperwork and follow each document through review to approval.",
       },
-      { property: "og:title", content: "My Onboarding Documents — Harmonious Fund Managers" },
+      { property: "og:title", content: "My Onboarding Documents - Harmonious Fund Managers" },
       {
         property: "og:description",
         content: "Submit manager onboarding paperwork and track its review status.",
@@ -299,7 +299,7 @@ function ManagerOnboardingPage() {
                       {d.box_uploaded_at
                         ? `Filed to the shared folder on ${new Date(d.box_uploaded_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`
                         : d.box_error
-                          ? `Not filed yet — ${d.box_error}`
+                          ? `Not filed yet - ${d.box_error}`
                           : "Not filed to the shared folder yet"}
                     </p>
                   )}

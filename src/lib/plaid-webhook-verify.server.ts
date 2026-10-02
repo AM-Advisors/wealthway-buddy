@@ -107,7 +107,7 @@ async function verifySignature(jwk: PlaidJwk, signingInput: string, signature: U
 
 /**
  * Validates the `Plaid-Verification` JWT against the raw request body.
- * `rawBody` must be the untouched bytes as delivered — re-serialising parsed
+ * `rawBody` must be the untouched bytes as delivered - re-serialising parsed
  * JSON changes the hash and (correctly) fails verification.
  */
 export async function verifyPlaidWebhook(

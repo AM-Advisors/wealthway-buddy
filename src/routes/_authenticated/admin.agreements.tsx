@@ -27,13 +27,13 @@ import { getSowWorkspace } from "@/lib/agreements.functions";
 export const Route = createFileRoute("/_authenticated/admin/agreements")({
   head: () => ({
     meta: [
-      { title: "Agreements & SOW — Harmonious admin" },
+      { title: "Agreements & SOW - Harmonious admin" },
       {
         name: "description",
         content:
           "Price, negotiate and countersign every client statement of work, and issue amendments against executed agreements.",
       },
-      { property: "og:title", content: "Agreements & SOW — Harmonious admin" },
+      { property: "og:title", content: "Agreements & SOW - Harmonious admin" },
       {
         property: "og:description",
         content: "Client contracting queue: pricing, change requests, signatures and amendments.",
@@ -143,7 +143,7 @@ function AdminAgreementsPage() {
             <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
               <div>
                 <p className="text-sm font-medium">
-                  {c.clientName} — {c.sectionTitle}
+                  {c.clientName} - {c.sectionTitle}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {c.status} · raised {new Date(c.createdAt).toLocaleDateString("en-US")}
@@ -166,7 +166,7 @@ function AdminAgreementsPage() {
             <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3">
               <div>
                 <p className="text-sm font-medium">
-                  {r.fundName} — {r.clientName}
+                  {r.fundName} - {r.clientName}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {r.status} · {new Date(r.createdAt).toLocaleDateString("en-US")}
@@ -383,7 +383,7 @@ function AgreementDetail({
               return (
                 <div key={c.id} className="space-y-2 rounded-md border p-3 text-sm">
                   <p className="font-medium">
-                    {c.sectionTitle} — {c.status}
+                    {c.sectionTitle} - {c.status}
                   </p>
                   <p className="text-xs text-muted-foreground">Client asked for:</p>
                   <p className="whitespace-pre-line">{c.requestedText}</p>

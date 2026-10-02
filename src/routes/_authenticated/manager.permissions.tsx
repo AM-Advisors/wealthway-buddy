@@ -5,13 +5,13 @@ import { DocumentPermissionsBoard } from "@/components/document-permissions-boar
 export const Route = createFileRoute("/_authenticated/manager/permissions")({
   head: () => ({
     meta: [
-      { title: "Document Permissions — Harmonious Manager" },
+      { title: "Document Permissions - Harmonious Manager" },
       {
         name: "description",
         content:
           "Choose which diligence room documents each investor can open, and who may see the cap table.",
       },
-      { property: "og:title", content: "Document Permissions — Harmonious Manager" },
+      { property: "og:title", content: "Document Permissions - Harmonious Manager" },
       {
         property: "og:description",
         content: "Per-investor document access for each Harmonious fund's diligence room.",

@@ -271,7 +271,7 @@ export function SowEditor({
                 id="sow-title"
                 value={draft.title}
                 onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                placeholder="SPV Statement of Work — Growth Fund II"
+                placeholder="SPV Statement of Work - Growth Fund II"
               />
             </div>
             <div>

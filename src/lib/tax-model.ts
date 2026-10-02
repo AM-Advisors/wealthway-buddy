@@ -680,7 +680,7 @@ export type WithholdingRow = {
 
 /**
  * 1042-S records are built from the underlying withholding transactions,
- * grouped by recipient profile + income code + chapter — never from a plain
+ * grouped by recipient profile + income code + chapter - never from a plain
  * annual distribution total.
  */
 export function build1042sRecords(rows: WithholdingRow[]) {
@@ -808,7 +808,7 @@ export type Determination = {
 
 /**
  * Identify a potential reporting obligation. Where required information is
- * missing, this returns `needs_review` and refuses to decide — the question
+ * missing, this returns `needs_review` and refuses to decide - the question
  * goes to Tax Operations, not to a default.
  */
 export function determine1099(input: DeterminationInput): Determination {

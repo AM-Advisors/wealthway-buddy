@@ -20,12 +20,12 @@ function Included({ pkg }: { pkg: string }) {
   return (
     <div className="text-xs">
       <button type="button" className="text-primary underline" onClick={() => setOpen(!open)}>{open ? "Hide what's included" : "View what's included"}</button>
-      {open && <ul className="mt-1 grid list-disc gap-0.5 pl-5 text-muted-foreground sm:grid-cols-2">{PACKAGES[pkg]!.includedText.map((t) => <li key={t}>{t} — Included</li>)}</ul>}
+      {open && <ul className="mt-1 grid list-disc gap-0.5 pl-5 text-muted-foreground sm:grid-cols-2">{PACKAGES[pkg]!.includedText.map((t) => <li key={t}>{t} - Included</li>)}</ul>}
     </div>
   );
 }
 
-/** Client-level Expected Services. Intent only — not a Fund SOW and never a blocker. */
+/** Client-level Expected Services. Intent only - not a Fund SOW and never a blocker. */
 export function ExpectedServicesEditor({ clientId, onSaved }: { clientId: string; onSaved?: () => void }) {
   const load = useServerFn(getClientServiceSetup);
   const save = useServerFn(saveClientServiceConfig);
@@ -74,7 +74,7 @@ export function ExpectedServicesEditor({ clientId, onSaved }: { clientId: string
           <div className="space-y-2 rounded-md border p-3">
             {(["standard", "series"] as const).map((s) => (
               <div key={s}>
-                <label className="flex items-center gap-2 text-sm"><input type="radio" checked={c.spv!.structure === s} onChange={() => up({ spv: { ...c.spv!, structure: s } })} />{PACKAGES[s === "series" ? "spv_series" : "spv_standard"]!.label} <span className="text-xs text-muted-foreground">— raise-based pricing</span></label>
+                <label className="flex items-center gap-2 text-sm"><input type="radio" checked={c.spv!.structure === s} onChange={() => up({ spv: { ...c.spv!, structure: s } })} />{PACKAGES[s === "series" ? "spv_series" : "spv_standard"]!.label} <span className="text-xs text-muted-foreground">- raise-based pricing</span></label>
                 <div className="pl-6"><Included pkg={s === "series" ? "spv_series" : "spv_standard"} /></div>
               </div>
             ))}
@@ -91,18 +91,18 @@ export function ExpectedServicesEditor({ clientId, onSaved }: { clientId: string
               <div className="space-y-1"><Label className="text-xs">Formation state (optional)</Label>
                 <Input value={c.spv.formationState ?? ""} placeholder="e.g. Delaware, Texas" onChange={(e) => up({ spv: { ...c.spv!, formationState: e.target.value || null } })} /></div>
             </div>
-            <p className="text-xs text-muted-foreground">Investor Onboarding — Included with SPV.</p>
+            <p className="text-xs text-muted-foreground">Investor Onboarding - Included with SPV.</p>
           </div>
         )}
       </section>
 
       <section className="space-y-2">
         <h3 className="font-medium">Fund</h3>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!c.fund?.management} onChange={(e) => up({ fund: e.target.checked ? { management: true } : null })} />Fund Management — $2,500/year</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!c.fund?.management} onChange={(e) => up({ fund: e.target.checked ? { management: true } : null })} />Fund Management - $2,500/year</label>
         {c.fund?.management && (
           <div className="space-y-2 pl-6">
             <Included pkg="fund_management" />
-            <div className="max-w-xs space-y-1"><Label className="text-xs">State Formation — state (optional)</Label>
+            <div className="max-w-xs space-y-1"><Label className="text-xs">State Formation - state (optional)</Label>
               <Input value={c.fund.formationState ?? ""} placeholder="e.g. Delaware, Wyoming" onChange={(e) => up({ fund: { ...c.fund!, formationState: e.target.value || null } })} /></div>
           </div>
         )}
@@ -122,22 +122,22 @@ export function ExpectedServicesEditor({ clientId, onSaved }: { clientId: string
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!c.investorOnboarding} onChange={(e) => up({ investorOnboarding: e.target.checked ? { billing: null } : null })} />Investor Onboarding</label>
         {c.investorOnboarding && (
           <div className="space-y-1 pl-6 text-sm">
-            {c.spv ? <p className="text-xs text-muted-foreground">Included with SPV — no extra charge.</p> : (
+            {c.spv ? <p className="text-xs text-muted-foreground">Included with SPV - no extra charge.</p> : (
               <div className="flex gap-4">
-                <label className="flex items-center gap-1"><input type="radio" checked={c.investorOnboarding.billing === "annual"} onChange={() => up({ investorOnboarding: { billing: "annual" } })} />Annual — $2,500/year</label>
-                <label className="flex items-center gap-1"><input type="radio" checked={c.investorOnboarding.billing === "per_investor"} onChange={() => up({ investorOnboarding: { billing: "per_investor" } })} />Per investor — $50</label>
+                <label className="flex items-center gap-1"><input type="radio" checked={c.investorOnboarding.billing === "annual"} onChange={() => up({ investorOnboarding: { billing: "annual" } })} />Annual - $2,500/year</label>
+                <label className="flex items-center gap-1"><input type="radio" checked={c.investorOnboarding.billing === "per_investor"} onChange={() => up({ investorOnboarding: { billing: "per_investor" } })} />Per investor - $50</label>
               </div>
             )}
             <Included pkg="investor_onboarding" />
           </div>
         )}
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={!!c.taxes} onChange={(e) => up({ taxes: e.target.checked ? { sets: 1 } : null })} />Taxes — $2,500 per set</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={!!c.taxes} onChange={(e) => up({ taxes: e.target.checked ? { sets: 1 } : null })} />Taxes - $2,500 per set</label>
           {c.taxes && <><span className="text-xs">Number of sets</span><Input className="h-8 w-20" type="number" min={1} value={c.taxes.sets} onChange={(e) => up({ taxes: { sets: Math.max(1, Math.floor(Number(e.target.value) || 1)) } })} /></>}
         </div>
         {c.taxes && <div className="pl-6"><Included pkg="taxes" /></div>}
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={!!c.financialReporting} onChange={(e) => up({ financialReporting: e.target.checked ? { reports: 1 } : null })} />Financial Reporting — $2,500 per report</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={!!c.financialReporting} onChange={(e) => up({ financialReporting: e.target.checked ? { reports: 1 } : null })} />Financial Reporting - $2,500 per report</label>
           {c.financialReporting && <><span className="text-xs">Number of reports</span><Input className="h-8 w-20" type="number" min={1} value={c.financialReporting.reports} onChange={(e) => up({ financialReporting: { reports: Math.max(1, Math.floor(Number(e.target.value) || 1)) } })} /></>}
         </div>
         {c.financialReporting && <div className="pl-6"><Included pkg="financial_reporting" /></div>}
@@ -167,7 +167,7 @@ export function ExpectedServicesEditor({ clientId, onSaved }: { clientId: string
 
       <section className="rounded-md bg-muted/50 p-3 text-sm">
         <p className="font-medium">Expected Services summary</p>
-        {lines.length === 0 ? <p className="text-xs text-muted-foreground">Nothing selected yet — that's fine, the client can still be created.</p> : (
+        {lines.length === 0 ? <p className="text-xs text-muted-foreground">Nothing selected yet - that's fine, the client can still be created.</p> : (
           <ul className="mt-1 space-y-0.5">{summarize(lines).map((s) => <li key={s}>{s}</li>)}</ul>
         )}
         {lines.some((l) => l.status === "priced") && <p className="mt-1 text-xs text-muted-foreground">Priced items total {money(lines.reduce((t, l) => t + (l.totalCents ?? 0), 0))} before raise-based and per-investor charges.</p>}

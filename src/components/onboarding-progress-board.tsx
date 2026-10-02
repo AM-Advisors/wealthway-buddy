@@ -22,7 +22,7 @@ const money = (cents: number) =>
   (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 const when = (value: string | null) =>
-  value ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  value ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
 
 /** Every client's onboarding, stage by stage, with the quiet ones flagged. */
 export function OnboardingProgressBoard() {
@@ -212,7 +212,7 @@ export function OnboardingProgressBoard() {
               {(row.contacts ?? []).length > 0 ? (
                 <div className="mt-4 space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Contacts — sign-ins and document sign-off
+                    Contacts - sign-ins and document sign-off
                   </p>
                   {(row.contacts as any[]).map((contact) => (
                     <div

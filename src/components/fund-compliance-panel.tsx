@@ -45,7 +45,7 @@ function money(cents: number) {
 }
 
 function when(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" });
 }
 
@@ -103,7 +103,7 @@ export function FundCompliancePanel({ offeringId }: { offeringId: string }) {
             Identity, anti-money-laundering and accredited-investor status for everyone in this
             fund, with the evidence they provided.
             {regType === "506c"
-              ? " This fund is a 506(c) offering, so every investor needs verified evidence — a signed statement alone is not enough."
+              ? " This fund is a 506(c) offering, so every investor needs verified evidence - a signed statement alone is not enough."
               : ""}
           </CardDescription>
         </CardHeader>

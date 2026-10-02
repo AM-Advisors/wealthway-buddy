@@ -82,10 +82,10 @@ export function FundAssets({ fundId }: { fundId: string }) {
                 <tr key={a.id}>
                   <td className="px-2 py-3 font-medium">{a.asset_name}</td><td className="px-2 py-3">{a.issuer_name}</td>
                   <td className="px-2 py-3">{ASSET_CLASS_LABELS[a.asset_class as PortfolioAssetClass] ?? a.asset_class}</td>
-                  <td className="px-2 py-3">{a.instrument ?? "—"}</td><td className="px-2 py-3">{a.acquisition_date ?? "—"}</td>
-                  <td className="px-2 py-3">{a.quantity ?? "—"}</td><td className="px-2 py-3">{a.ownership_pct == null ? "—" : `${a.ownership_pct}%`}</td>
-                  <td className="px-2 py-3">{a.cost_basis_cents == null ? "—" : money(a.cost_basis_cents)}</td>
-                  <td className="px-2 py-3">{v?.valuationId ? money(v.valueCents) : "Not valued"}</td><td className="px-2 py-3">{v?.effectiveDate ?? "—"}</td>
+                  <td className="px-2 py-3">{a.instrument ?? "-"}</td><td className="px-2 py-3">{a.acquisition_date ?? "-"}</td>
+                  <td className="px-2 py-3">{a.quantity ?? "-"}</td><td className="px-2 py-3">{a.ownership_pct == null ? "-" : `${a.ownership_pct}%`}</td>
+                  <td className="px-2 py-3">{a.cost_basis_cents == null ? "-" : money(a.cost_basis_cents)}</td>
+                  <td className="px-2 py-3">{v?.valuationId ? money(v.valueCents) : "Not valued"}</td><td className="px-2 py-3">{v?.effectiveDate ?? "-"}</td>
                   <td className="px-2 py-3"><Badge variant="secondary">{prettyStatus(a.status)}</Badge></td>
                   <td className="px-2 py-3"><Button size="sm" variant="ghost" asChild><Link to="/manager/valuations">Valuations & evidence</Link></Button></td>
                 </tr>); })}
@@ -108,7 +108,7 @@ export function FundAssets({ fundId }: { fundId: string }) {
             {field("ownershipPct", "Ownership %", "number")}{field("cost", "Cost basis (USD)", "number")}
           </div>
           <div className="space-y-1"><Label htmlFor="a-note">Notes</Label><Textarea id="a-note" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></div>
-          <p className="text-xs text-muted-foreground">This records the position only. It doesn't post accounting or set a value — valuations go through review.</p>
+          <p className="text-xs text-muted-foreground">This records the position only. It doesn't post accounting or set a value - valuations go through review.</p>
           <Button disabled={busy || !f.issuerName.trim() || !f.assetName.trim()} onClick={submit}>{busy ? "Saving…" : "Add asset"}</Button>
         </DialogContent>
       </Dialog>

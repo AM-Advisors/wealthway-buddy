@@ -5,12 +5,12 @@ import { FundPerformanceBoard } from "@/components/fund-performance-board";
 export const Route = createFileRoute("/_authenticated/admin/performance")({
   head: () => ({
     meta: [
-      { title: "Performance — Harmonious admin" },
+      { title: "Performance - Harmonious admin" },
       {
         name: "description",
         content: "Return, IRR and cash flow over time for every fund on the platform.",
       },
-      { property: "og:title", content: "Performance — Harmonious admin" },
+      { property: "og:title", content: "Performance - Harmonious admin" },
       {
         property: "og:description",
         content: "Fund-by-fund return, IRR and cash flow, updating with every wire.",

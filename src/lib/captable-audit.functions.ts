@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
- * Harmonious CapTable — Phase 6: compliance and audit history.
+ * Harmonious CapTable - Phase 6: compliance and audit history.
  *
  * The audit trail is read only. Every change already writes a dated event with
  * the actor, the entity it touched and the before/after state; nothing here
@@ -13,7 +13,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * an auditor one continuous record.
  */
 
-/** A short, readable before/after line for the trail — the raw state stays in the database. */
+/** A short, readable before/after line for the trail - the raw state stays in the database. */
 function describeChange(previous: unknown, next: unknown) {
   const before = (previous ?? null) as Record<string, unknown> | null;
   const after = (next ?? null) as Record<string, unknown> | null;
@@ -26,7 +26,7 @@ function describeChange(previous: unknown, next: unknown) {
     if (JSON.stringify(from ?? null) === JSON.stringify(to ?? null)) continue;
     const label = key.replace(/_/g, " ");
     const fromText = from === undefined || from === null ? "" : String(JSON.stringify(from)).slice(0, 60);
-    const toText = to === undefined || to === null ? "—" : String(JSON.stringify(to)).slice(0, 60);
+    const toText = to === undefined || to === null ? "-" : String(JSON.stringify(to)).slice(0, 60);
     parts.push(fromText ? `${label}: ${fromText} → ${toText}` : `${label}: ${toText}`);
   }
   return parts.length ? parts.slice(0, 6).join(" · ").replace(/"/g, "") : null;

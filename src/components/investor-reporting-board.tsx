@@ -78,7 +78,7 @@ function PackageDetail({ packageId }: { packageId: string }) {
         {Object.entries(manifest).map(([key, value]) => (
           <div key={key} className="rounded-md border border-border/60 p-2">
             <p className="text-xs text-muted-foreground">{label(key)}</p>
-            <p className="truncate text-sm">{value === null ? "—" : String(value)}</p>
+            <p className="truncate text-sm">{value === null ? "-" : String(value)}</p>
           </div>
         ))}
       </div>
@@ -301,7 +301,7 @@ export function InvestorReportingBoard({ role }: { role: "harmonious" | "manager
               <CardHeader>
                 <CardTitle className="text-base">Delivery</CardTitle>
                 <CardDescription>
-                  Portal access is authoritative — an email is never proof the investor read it.
+                  Portal access is authoritative - an email is never proof the investor read it.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">

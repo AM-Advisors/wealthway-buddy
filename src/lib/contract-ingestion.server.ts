@@ -111,8 +111,8 @@ export async function extractTerms(pages: string[]): Promise<{ terms: Normalized
       tool_choice: { type: "function", function: { name: "report_terms" } },
     }),
   });
-  if (res.status === 429) throw new Error("Contract reading is busy — try again in a minute.");
-  if (res.status === 402) throw new Error("AI credits are exhausted — add credits to read contracts.");
+  if (res.status === 429) throw new Error("Contract reading is busy - try again in a minute.");
+  if (res.status === 402) throw new Error("AI credits are exhausted - add credits to read contracts.");
   if (!res.ok) throw new Error(`Contract reading failed (${res.status}).`);
   const json: any = await res.json();
   const args = json?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;

@@ -420,7 +420,7 @@ export const requestServiceChange = createServerFn({ method: "POST" })
         change_no: changeNo,
         document_type: data.changeType === "commercial_change" ? "amendment" : "change_order",
         change_type: data.changeType,
-        title: `${titles[data.changeType]} #${changeNo} — ${g.title}`,
+        title: `${titles[data.changeType]} #${changeNo} - ${g.title}`,
         client_reason: data.reason.trim(),
         status: "requested",
         effective_date: blank(data.effectiveDate),

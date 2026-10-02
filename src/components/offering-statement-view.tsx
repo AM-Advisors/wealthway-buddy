@@ -95,7 +95,7 @@ export function OfferingStatementView({
           <CardDescription>
             {s.published_at
               ? `Published ${new Date(s.published_at).toLocaleDateString()}`
-              : "Draft — not visible to investors yet"}
+              : "Draft - not visible to investors yet"}
           </CardDescription>
         </div>
         {s.is_published ? null : <Badge variant="secondary">Draft</Badge>}

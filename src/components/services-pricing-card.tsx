@@ -8,7 +8,7 @@ import { COMMERCIAL_STATUS_LABEL } from "@/lib/commercial-pricing";
 const money = (c: number) => `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const BASIS: Record<string, string> = { one_time: "one-time", annual: "per year", recurring: "recurring", transaction: "per transaction", per_request: "quoted per request" };
 
-/** Fund Services & Pricing. Informational only — never a gate. */
+/** Fund Services & Pricing. Informational only - never a gate. */
 export function ServicesPricingCard({ fundId }: { fundId: string }) {
   const load = useServerFn(getFundServicesPricing);
   const q = useQuery({ queryKey: ["fund-services-pricing", fundId], queryFn: () => load({ data: { offeringId: fundId } }), retry: false });

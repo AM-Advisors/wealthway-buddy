@@ -7,13 +7,13 @@ import { ServiceRequestsBoard } from "@/components/service-requests-board";
 export const Route = createFileRoute("/_authenticated/admin/contracts/")({
   head: () => ({
     meta: [
-      { title: "Clients and scope — Harmonious admin" },
+      { title: "Clients and scope - Harmonious admin" },
       {
         name: "description",
         content:
           "Every Harmonious client, their master agreement, statements of work and the services included in each engagement.",
       },
-      { property: "og:title", content: "Clients and scope — Harmonious admin" },
+      { property: "og:title", content: "Clients and scope - Harmonious admin" },
       {
         property: "og:description",
         content: "Client agreements, statements of work and service scope in one place.",

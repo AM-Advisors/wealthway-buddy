@@ -6,7 +6,7 @@ import { FUND_REQUEST_KINDS, milestones, requestLifecycle } from "@/lib/self-ser
 
 /**
  * Fund-manager self-service requests. A request is a fund_requests row with
- * status "submitted" — it never creates an offering, fund, SOW, entity or any
+ * status "submitted" - it never creates an offering, fund, SOW, entity or any
  * regulatory configuration. Harmonious turns it into a fund setup.
  */
 

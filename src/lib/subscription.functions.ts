@@ -33,7 +33,7 @@ async function loadApplication(supabase: any, userId: string) {
   return data ?? null;
 }
 
-/** Once money is moving the commitment is locked — changes go through the fund team. */
+/** Once money is moving the commitment is locked - changes go through the fund team. */
 function isLocked(app: { funding_status?: string | null }, payment: { status?: string } | null) {
   const fundingLocked = ["processing", "settled"].includes(String(app.funding_status ?? ""));
   const paymentLocked = ["processing", "settled"].includes(String(payment?.status ?? ""));

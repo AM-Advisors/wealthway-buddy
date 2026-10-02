@@ -96,7 +96,7 @@ function ShareholderInvitation({
           </Section>
 
           <Text style={body}>
-            This one-time link lets you set your own password — we never send passwords by email.
+            This one-time link lets you set your own password - we never send passwords by email.
             After that, sign in any time at <Link href={signInUrl}>{signInUrl}</Link>.
           </Text>
 

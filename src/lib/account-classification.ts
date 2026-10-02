@@ -1,7 +1,7 @@
 /**
  * Account classification (Stage 2.8). Pure rules; the server records
  * classifications append-only and the database re-checks privileged inserts.
- * Classification is always explicit — never inferred from an email prefix.
+ * Classification is always explicit - never inferred from an email prefix.
  */
 export const ACCOUNT_CLASSIFICATIONS = ["individual", "shared_inbox", "service_account", "integration_account"] as const;
 export type AccountClassification = (typeof ACCOUNT_CLASSIFICATIONS)[number];

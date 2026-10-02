@@ -30,13 +30,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/manager/diligence")({
   head: () => ({
     meta: [
-      { title: "Diligence Room Manager — Harmonious" },
+      { title: "Diligence Room Manager - Harmonious" },
       {
         name: "description",
         content:
           "Open a diligence room for each fund you manage, upload materials and sort them into the categories investors expect.",
       },
-      { property: "og:title", content: "Diligence Room Manager — Harmonious" },
+      { property: "og:title", content: "Diligence Room Manager - Harmonious" },
       {
         property: "og:description",
         content: "Upload and categorize fund diligence materials for Harmonious investors.",
@@ -135,7 +135,7 @@ function ManagerDiligencePage() {
 }
 
 function when(value: string | null) {
-  return value ? new Date(value).toLocaleString() : "—";
+  return value ? new Date(value).toLocaleString() : "-";
 }
 
 function RoomTraffic() {
@@ -231,7 +231,7 @@ function FundPanel({ fund }: { fund: any }) {
       setLastSync({ at: res.syncedAt, added: res.added, checked: res.checked });
       toast.success(
         res.added > 0
-          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in — your managers have been notified`
+          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in - your managers have been notified`
           : "Everything in the folder is already listed",
       );
       queryClient.invalidateQueries({ queryKey: ["managed-diligence-rooms"] });
@@ -374,7 +374,7 @@ function FundPanel({ fund }: { fund: any }) {
           <Progress value={fund.readiness.score} />
           <p className="text-xs text-muted-foreground">
             {lastSync
-              ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} — ${lastSync.checked} file${
+              ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} - ${lastSync.checked} file${
                   lastSync.checked === 1 ? "" : "s"
                 } there, ${lastSync.added} newly added.`
               : "Drop files straight into the Box folder, then hit Sync from Box to list them here."}

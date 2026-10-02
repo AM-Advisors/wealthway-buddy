@@ -59,7 +59,7 @@ export function DriveExceptions() {
               </div>
               <p className="text-xs text-muted-foreground">{r.detail}</p>
               <p className="text-xs text-muted-foreground">
-                Last: {r.last_action ?? "—"} · {when(r.updated_at)} · {r.attempts} attempt{r.attempts === 1 ? "" : "s"}
+                Last: {r.last_action ?? "-"} · {when(r.updated_at)} · {r.attempts} attempt{r.attempts === 1 ? "" : "s"}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

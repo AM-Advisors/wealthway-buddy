@@ -198,7 +198,7 @@ async function collectLines(
       source: "rate" as const,
       service_key: p.service_key,
       label: p.label ?? p.service_key,
-      description: p.pricing_model ? `Contracted rate — ${p.pricing_model}` : "Contracted rate",
+      description: p.pricing_model ? `Contracted rate - ${p.pricing_model}` : "Contracted rate",
       quantity: 1,
       unit_cents: Number(p.contracted_cents ?? p.standard_cents ?? 0),
       amount_cents: Number(p.contracted_cents ?? p.standard_cents ?? 0),
@@ -888,7 +888,7 @@ export const raiseInvoiceWire = createServerFn({ method: "POST" })
   });
 
 /** A client contact records that they have sent payment for an approved invoice.
- *  This is their confirmation of the transfer — Harmonious still checks the money
+ *  This is their confirmation of the transfer - Harmonious still checks the money
  *  has arrived before the invoice is marked paid. Guarded in the database. */
 export const declareInvoicePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

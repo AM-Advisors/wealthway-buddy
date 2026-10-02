@@ -5,13 +5,13 @@ import { ClientInbox } from "@/components/client-inbox";
 export const Route = createFileRoute("/_authenticated/client/inbox")({
   head: () => ({
     meta: [
-      { title: "Inbox — Harmonious Client Portal" },
+      { title: "Inbox - Harmonious Client Portal" },
       {
         name: "description",
         content:
-          "Every notice Harmonious sends you — invoices, payment reminders and decisions — readable inside your client portal.",
+          "Every notice Harmonious sends you - invoices, payment reminders and decisions - readable inside your client portal.",
       },
-      { property: "og:title", content: "Inbox — Harmonious Client Portal" },
+      { property: "og:title", content: "Inbox - Harmonious Client Portal" },
       {
         property: "og:description",
         content: "Invoices, reminders and notices from Harmonious in your portal inbox.",

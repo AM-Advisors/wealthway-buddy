@@ -8,7 +8,7 @@ import { kycSchema } from "@/lib/onboarding.functions";
 /**
  * The investor's own KYC application, taken inside the fund's investor room:
  * who they are, a government ID, a proof of address and how they qualify as an
- * accredited investor. Everything lands in review — a fund administrator or an
+ * accredited investor. Everything lands in review - a fund administrator or an
  * assigned manager has to approve it before the wire step opens.
  */
 
@@ -307,7 +307,7 @@ export const saveRoomAccreditation = createServerFn({ method: "POST" })
 
 /**
  * Hands the whole application to the fund team. Everything moves to "in
- * review" — nothing is auto-approved, so the wire step stays shut until a
+ * review" - nothing is auto-approved, so the wire step stays shut until a
  * reviewer says yes.
  */
 export const submitRoomApplication = createServerFn({ method: "POST" })

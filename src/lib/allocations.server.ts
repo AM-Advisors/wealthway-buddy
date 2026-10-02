@@ -342,7 +342,7 @@ export async function ensurePositions(userId: string, offeringId: string) {
   return listPositions(userId, offeringId);
 }
 
-/** Settled payments become contributions exactly once — the dedupe key sees to it. */
+/** Settled payments become contributions exactly once - the dedupe key sees to it. */
 async function syncContributions(userId: string, offeringId: string) {
   const { data: positions } = await db()
     .from("investor_positions")
@@ -677,7 +677,7 @@ export async function calculateAllocations(
   const positionIds = positions.map((p) => String(p.id));
   const eventsByPosition = await commitmentEventsFor(positionIds);
 
-  // Prior finalized capital accounts provide beginning capital — never today's numbers.
+  // Prior finalized capital accounts provide beginning capital - never today's numbers.
   const { data: priorAccounts } = await db()
     .from("capital_accounts")
     .select("position_id, period_end, ending_capital_cents, finalized_at")

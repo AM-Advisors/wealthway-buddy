@@ -1,5 +1,5 @@
 /**
- * Client intake + contract ingestion — pure rules (browser-safe, no I/O).
+ * Client intake + contract ingestion - pure rules (browser-safe, no I/O).
  *
  * Source-of-truth model:
  *   Signed contract            = the legal source document (stored unchanged, fingerprinted).
@@ -131,7 +131,7 @@ export type NormalizedTerm = ExtractedTerm & {
 /**
  * Turns whatever the model returned into the full catalog. Unknown keys are dropped,
  * missing keys become "not_found" with no value, empty values are never kept as found,
- * and every term — however confident — starts as "needs_review".
+ * and every term - however confident - starts as "needs_review".
  */
 export function normalizeExtraction(raw: unknown): NormalizedTerm[] {
   const list = Array.isArray((raw as any)?.terms) ? ((raw as any).terms as any[]) : [];
@@ -293,7 +293,7 @@ export function planPricingApplication(
       });
     }
   }
-  // one source term may only map to one row (DB unique) — keep first offering if a doc covers several
+  // one source term may only map to one row (DB unique) - keep first offering if a doc covers several
   const seen = new Set<string>();
   return {
     rows: rows.filter((r) => (seen.has(r.source_term_id) ? false : (seen.add(r.source_term_id), true))),
@@ -362,7 +362,7 @@ export function noticeDeadline(expiration: string | null, noticeDays: number | n
 
 export type ContractAlert = { kind: "awaiting_review" | "manual_review" | "missing_execution" | "expiring" | "notice_deadline" | "amendment_review" | "precedence"; title: string };
 
-/** Derived (never stored) alerts, one per kind per document — so tasks never duplicate. */
+/** Derived (never stored) alerts, one per kind per document - so tasks never duplicate. */
 export function contractAlerts(
   doc: DocRow & { expiration_date: string | null; notice_days: number | null; title: string },
   today: string,

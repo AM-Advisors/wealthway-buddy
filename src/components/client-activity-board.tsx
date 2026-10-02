@@ -164,7 +164,7 @@ export function ClientActivityBoard() {
           <CardTitle className="text-lg">Portal activity</CardTitle>
           <CardDescription>
             Newest first. Times are shown in your own time zone. This is a record of what clients
-            did themselves — Harmonious decisions stay in the audit log.
+            did themselves - Harmonious decisions stay in the audit log.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

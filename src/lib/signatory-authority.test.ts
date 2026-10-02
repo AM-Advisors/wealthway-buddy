@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Phase 3C adversarial tests — delegated signing.
+ * Phase 3C adversarial tests - delegated signing.
  *
  * Each case asks the same question: with the screen out of the picture, what
  * will the server actually allow? Signing must fail closed unless every single
@@ -201,7 +201,7 @@ import {
   verifySigningStepUp,
 } from "@/lib/signatory-authority.server";
 
-/** The code is never stored in readable form — it is captured off the wire. */
+/** The code is never stored in readable form - it is captured off the wire. */
 const delivered: { userId: string; code: string }[] = [];
 __setStepUpDelivery(async ({ userId, code }) => {
   delivered.push({ userId, code });

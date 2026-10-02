@@ -14,7 +14,7 @@ export type TaxMode = "professional" | "staff";
 export type ProTaxKind = "1065" | "1042" | "1099";
 
 export function money(c: number | null | undefined) {
-  if (c == null) return "—";
+  if (c == null) return "-";
   return (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 export const statusLabel = (s: string) => s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
@@ -92,7 +92,7 @@ export function TaxFormReview({ kind, id, mode = "professional" }: { kind: ProTa
     setBusy(true);
     try {
       await act({ data: { kind, id, action: action as any, note: note.trim() || undefined } });
-      toast.success(`${ACTION_LABEL[action]} — recorded`);
+      toast.success(`${ACTION_LABEL[action]} - recorded`);
       setNote("");
       await Promise.all([qc.invalidateQueries({ queryKey: [mode === "staff" ? "staff-tax" : "professional-tax"] }), history.refetch()]);
     } catch (e: any) {
@@ -137,7 +137,7 @@ export function TaxFormReview({ kind, id, mode = "professional" }: { kind: ProTa
         <h2 className="font-heading text-lg font-semibold">Prepare and review</h2>
         {r.actions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            {r.status === "approved" ? "Approved. Harmonious handles filing and delivery — nothing is filed from here." : "No step is available to you at this stage."}
+            {r.status === "approved" ? "Approved. Harmonious handles filing and delivery - nothing is filed from here." : "No step is available to you at this stage."}
           </p>
         ) : (
           <>
@@ -163,7 +163,7 @@ export function TaxFormReview({ kind, id, mode = "professional" }: { kind: ProTa
                 <span className="font-medium">{statusLabel(e.event)}</span>
                 {e.from && e.to && <span className="text-muted-foreground"> · {statusLabel(e.from)} → {statusLabel(e.to)}</span>}
                 <span className="text-muted-foreground"> · {new Date(e.at).toLocaleString()}</span>
-                {e.note && <span> — {e.note}</span>}
+                {e.note && <span> - {e.note}</span>}
               </li>
             ))}
           </ul>

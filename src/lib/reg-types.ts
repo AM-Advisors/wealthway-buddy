@@ -2,19 +2,19 @@ export const REG_TYPES = [
   {
     value: "506b",
     short: "Reg D 506(b)",
-    label: "Reg D 506(b) — private, no general solicitation",
+    label: "Reg D 506(b) - private, no general solicitation",
     description: "Private placement. No advertising; investors self-certify accreditation.",
   },
   {
     value: "506c",
     short: "Reg D 506(c)",
-    label: "Reg D 506(c) — publicly marketed",
+    label: "Reg D 506(c) - publicly marketed",
     description: "You may advertise, but every investor's accreditation must be verified.",
   },
   {
     value: "regcf",
     short: "Reg CF",
-    label: "Reg CF — crowdfunding",
+    label: "Reg CF - crowdfunding",
     description: "Regulation Crowdfunding offering filed on Form C through a funding portal.",
   },
   {

@@ -41,13 +41,13 @@ import { saveOfferingDocument } from "@/lib/offerings.functions";
 export const Route = createFileRoute("/_authenticated/admin/fund/$fundId")({
   head: () => ({
     meta: [
-      { title: "Fund Overview — Harmonious Admin" },
+      { title: "Fund Overview - Harmonious Admin" },
       {
         name: "description",
         content:
           "One Harmonious fund at a glance: its description, offering documents and wire or ACH funding details.",
       },
-      { property: "og:title", content: "Fund Overview — Harmonious Admin" },
+      { property: "og:title", content: "Fund Overview - Harmonious Admin" },
       {
         property: "og:description",
         content: "Fund description, subscription documents and funding instructions in one place.",

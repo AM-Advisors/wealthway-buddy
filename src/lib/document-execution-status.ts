@@ -33,7 +33,7 @@ export const CANONICAL_EXECUTION_LABELS: Record<CanonicalExecutionStatus, string
   ready_to_sign: "Ready to Sign",
   sent: "Sent / Signing Started",
   partially_signed: "Partially Signed",
-  awaiting_countersignature: "Investor Signed — Countersignature Required",
+  awaiting_countersignature: "Investor Signed - Countersignature Required",
   fully_executed: "Fully Executed",
   needs_review: "Needs Review",
   declined: "Declined",

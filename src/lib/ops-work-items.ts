@@ -3,14 +3,14 @@
  * Harmonious team.
  *
  * This file holds no state and stores nothing. A work item is a *reading* of a
- * workflow record that already exists — an onboarding stuck in review, a
+ * workflow record that already exists - an onboarding stuck in review, a
  * capital call waiting for approval, a bank line nobody has matched. When the
  * underlying record moves, the item disappears on the next read, because there
  * is no second status anywhere to keep in step.
  *
  * Three rules hold throughout:
  *  - a queue item never carries restricted detail (bank numbers, identity
- *    documents, tax identifiers) — only enough to decide whether to open it;
+ *    documents, tax identifiers) - only enough to decide whether to open it;
  *  - the capability needed to act is part of the item, and the server drops
  *    items the reader may not see before they ever leave the database;
  *  - priority, due dates and assignment are only ever read from an
@@ -109,7 +109,7 @@ export function daysUntil(dueDate: string | null | undefined, now: Date): number
 
 /**
  * Priority is decided here, on the server, from conditions we can point at.
- * With nothing authoritative to go on the answer is "normal" — a neutral
+ * With nothing authoritative to go on the answer is "normal" - a neutral
  * position in the list rather than a guess.
  */
 export function priorityFor(

@@ -40,7 +40,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-const fmt = (d: string | null | undefined) => (d ? new Date(d).toLocaleString() : "—");
+const fmt = (d: string | null | undefined) => (d ? new Date(d).toLocaleString() : "-");
 const FILTERS = [
   { id: "all", label: "All" },
   { id: "harmonious", label: "Harmonious Team" },
@@ -135,9 +135,9 @@ function PeopleTab() {
                 <TableCell className="font-mono text-xs">{p.userId.slice(0, 8)}…</TableCell>
                 <TableCell>{p.types.map((t) => USER_TYPE_LABEL[t]).join(", ")}</TableCell>
                 <TableCell className="text-xs">{p.accountType ? CLASSIFICATION_LABEL[p.accountType as AccountClassification] : "Not classified"}</TableCell>
-                <TableCell>{p.organizations.join(", ") || "—"}</TableCell>
-                <TableCell>{p.roles.join(", ") || "—"}</TableCell>
-                <TableCell className="text-xs">{p.scopes.join("; ") || "—"}{p.scopeCount > p.scopes.length ? ` +${p.scopeCount - p.scopes.length}` : ""}</TableCell>
+                <TableCell>{p.organizations.join(", ") || "-"}</TableCell>
+                <TableCell>{p.roles.join(", ") || "-"}</TableCell>
+                <TableCell className="text-xs">{p.scopes.join("; ") || "-"}{p.scopeCount > p.scopes.length ? ` +${p.scopeCount - p.scopes.length}` : ""}</TableCell>
                 <TableCell className="text-xs">{p.sensitive.join(", ") || "None"}</TableCell>
                 <TableCell><Badge variant={p.status === "active" ? "secondary" : "destructive"}>{p.status === "active" ? "Active" : "Suspended"}</Badge></TableCell>
                 <TableCell className="text-xs">{fmt(p.lastSignIn)}</TableCell>
@@ -177,12 +177,12 @@ function AccessProfile({ userId }: { userId: string }) {
       </Section>
       <Section n={2} title="Relationships">
         <List items={[
-          ...f.managedFunds.map((x) => `Fund Manager — ${x.name}`),
-          ...f.investorFunds.map((x) => `Investor access — ${x.name}`),
-          ...f.investmentProfiles.map((x) => `Investment profile — ${x.label}${x.status ? ` (${x.status})` : ""}`),
-          ...f.clientMemberships.map((x) => `Client user — ${x.name} (${x.role ?? "member"}${x.canApprove ? ", approver" : ""})`),
-          ...f.companies.map((x) => `Company — ${x.name}`),
-          ...f.professionalMemberships.map((x) => `Professional — ${x.orgName} (${x.status})`),
+          ...f.managedFunds.map((x) => `Fund Manager - ${x.name}`),
+          ...f.investorFunds.map((x) => `Investor access - ${x.name}`),
+          ...f.investmentProfiles.map((x) => `Investment profile - ${x.label}${x.status ? ` (${x.status})` : ""}`),
+          ...f.clientMemberships.map((x) => `Client user - ${x.name} (${x.role ?? "member"}${x.canApprove ? ", approver" : ""})`),
+          ...f.companies.map((x) => `Company - ${x.name}`),
+          ...f.professionalMemberships.map((x) => `Professional - ${x.orgName} (${x.status})`),
         ]} />
       </Section>
       <Section n={3} title="Assigned roles">
@@ -195,20 +195,20 @@ function AccessProfile({ userId }: { userId: string }) {
         ) : null}
       </Section>
       <Section n={4} title="Resource scopes">
-        <List items={[...new Set(perms.map((p) => (p.scope.type === "global" ? "Global — all resources" : `${p.scope.type.replace(/_/g, " ")}: ${p.scope.label}`)))]} />
+        <List items={[...new Set(perms.map((p) => (p.scope.type === "global" ? "Global - all resources" : `${p.scope.type.replace(/_/g, " ")}: ${p.scope.label}`)))]} />
       </Section>
       <Section n={5} title="Effective permissions (canonical resolver)">
         <PersonMatrix canonical={data.canonical as any} />
         <details className="mt-2 text-xs"><summary className="cursor-pointer">Show each permission and where it comes from</summary>
-          <ul className="mt-1 space-y-0.5">{(data.canonical as any).matrix.map((m: any) => <li key={m.permission}>{m.permission} — <span className="text-muted-foreground">{m.global ? `allowed everywhere · ${m.sources.join(", ")}` : m.scoped.length ? m.scoped.map((x: any) => `${x.source} (${x.scope})`).join("; ") : "not allowed"}</span></li>)}</ul>
+          <ul className="mt-1 space-y-0.5">{(data.canonical as any).matrix.map((m: any) => <li key={m.permission}>{m.permission} - <span className="text-muted-foreground">{m.global ? `allowed everywhere · ${m.sources.join(", ")}` : m.scoped.length ? m.scoped.map((x: any) => `${x.source} (${x.scope})`).join("; ") : "not allowed"}</span></li>)}</ul>
         </details>
       </Section>
-      <Section n={6} title="Direct grants"><List items={direct.map((p) => `${p.area} · ${p.action} — ${p.via}`)} /></Section>
+      <Section n={6} title="Direct grants"><List items={direct.map((p) => `${p.area} · ${p.action} - ${p.via}`)} /></Section>
       <Section n={7} title="Direct denies">
         <p className="text-xs text-muted-foreground">None. Explicit denies aren't stored yet; when added they will override every grant.</p>
       </Section>
       <Section n={8} title="Delegations & authority">
-        <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} — ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
+        <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} - ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
       </Section>
       <Section n={9} title="Access history"><HistoryTable rows={data.history} /></Section>
       <Section n={10} title="Manage access"><ManageAccessPanel userId={userId} canonical={data.canonical as any} platformRoles={data.facts.roles} /></Section>
@@ -224,7 +224,7 @@ function RolesTab() {
       <div className="md:col-span-2"><RoleAdmin /></div>
       <Card><CardHeader><CardTitle className="text-base">Harmonious platform roles</CardTitle></CardHeader>
         <CardContent className="space-y-1 text-sm">
-          {OPS_STAFF_ROLES.map((r) => <p key={r}><span className="font-medium">{r}</span>{r === "super_admin" ? " — highest; assigned to an exact user ID, never by email domain" : ""}</p>)}
+          {OPS_STAFF_ROLES.map((r) => <p key={r}><span className="font-medium">{r}</span>{r === "super_admin" ? " - highest; assigned to an exact user ID, never by email domain" : ""}</p>)}
         </CardContent></Card>
       <Card><CardHeader><CardTitle className="text-base">Staff capability roles</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
@@ -234,10 +234,10 @@ function RolesTab() {
         </CardContent></Card>
       <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Relationship roles (always scoped)</CardTitle></CardHeader>
         <CardContent className="space-y-1 text-sm">
-          <p><span className="font-medium">Fund Manager</span> — exact managed funds only.</p>
-          <p><span className="font-medium">Investor</span> — own investment profiles and investments only.</p>
-          <p><span className="font-medium">Client / company user</span> — their client, company and linked funds only.</p>
-          <p><span className="font-medium">Professional / delegate</span> — only with a live, accepted, unexpired delegation that passes the acting-authority check.</p>
+          <p><span className="font-medium">Fund Manager</span> - exact managed funds only.</p>
+          <p><span className="font-medium">Investor</span> - own investment profiles and investments only.</p>
+          <p><span className="font-medium">Client / company user</span> - their client, company and linked funds only.</p>
+          <p><span className="font-medium">Professional / delegate</span> - only with a live, accepted, unexpired delegation that passes the acting-authority check.</p>
         </CardContent></Card>
     </div>
   );
@@ -333,7 +333,7 @@ function HistoryTable({ rows }: { rows: { at: string; actor: string; target: str
         <TableHeader><TableRow><TableHead>When</TableHead><TableHead>Actor</TableHead><TableHead>Person</TableHead><TableHead>Change</TableHead><TableHead>Scope</TableHead><TableHead>Reason</TableHead></TableRow></TableHeader>
         <TableBody>
           {rows.map((r, i) => (
-            <TableRow key={i}><TableCell className="text-xs">{fmt(r.at)}</TableCell><TableCell>{r.actor}</TableCell><TableCell>{r.target}</TableCell><TableCell>{r.change}</TableCell><TableCell className="text-xs">{r.scope}</TableCell><TableCell className="text-xs">{r.reason ?? "—"}</TableCell></TableRow>
+            <TableRow key={i}><TableCell className="text-xs">{fmt(r.at)}</TableCell><TableCell>{r.actor}</TableCell><TableCell>{r.target}</TableCell><TableCell>{r.change}</TableCell><TableCell className="text-xs">{r.scope}</TableCell><TableCell className="text-xs">{r.reason ?? "-"}</TableCell></TableRow>
           ))}
         </TableBody>
       </Table>
@@ -366,7 +366,7 @@ function ClassificationPanel({ userId, current, proposal }: { userId: string; cu
   return (
     <div className="mt-2 space-y-2 rounded-md border p-2 text-xs">
       <p className="font-medium">Account classification</p>
-      <p className="text-muted-foreground">Recorded explicitly and audited — never inferred from the email address. Privileged Harmonious roles require Individual; Shared Inbox and Integration accounts can never hold them.</p>
+      <p className="text-muted-foreground">Recorded explicitly and audited - never inferred from the email address. Privileged Harmonious roles require Individual; Shared Inbox and Integration accounts can never hold them.</p>
       {proposal && !current ? <p className="rounded bg-muted p-1">Proposal awaiting confirmation: <span className="font-medium">{CLASSIFICATION_LABEL[proposal.classification]}</span>. {proposal.note}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
         <select className="h-8 rounded-md border bg-background px-2" value={choice} onChange={(e) => { setChoice(e.target.value as AccountClassification); setConfirming(false); }}>

@@ -187,7 +187,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     onSuccess: (_r, vars) => {
       setWireNotes((prev) => ({ ...prev, [vars.confirmationId]: "" }));
       toast.success(
-        vars.outcome === "approved" ? "Wire approved — subscription funded" : "Wire confirmation rejected",
+        vars.outcome === "approved" ? "Wire approved - subscription funded" : "Wire confirmation rejected",
       );
       invalidate();
     },
@@ -384,7 +384,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
               <Row label="AML provider" value={(d?.aml as any)?.provider} />
               <Row
                 label="Watchlist hits"
-                value={(d?.aml as any)?.matches?.flagged ? "Flagged — manual review" : "No hits"}
+                value={(d?.aml as any)?.matches?.flagged ? "Flagged - manual review" : "No hits"}
               />
             </div>
             <DecisionBar
@@ -405,7 +405,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             <CardTitle className="text-base">Accreditation review</CardTitle>
             <CardDescription>
               {accreditation
-                ? `Reg D ${accreditation.reg_type} · method: ${String(accreditation.method ?? "—").replace(/_/g, " ")}`
+                ? `Reg D ${accreditation.reg_type} · method: ${String(accreditation.method ?? "-").replace(/_/g, " ")}`
                 : "The investor has not submitted accreditation yet."}
             </CardDescription>
           </CardHeader>
@@ -416,11 +416,11 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                   <Row label="Attested by" value={accreditation.attested_signature} />
                   <Row
                     label="Attested at"
-                    value={accreditation.attested_at ? new Date(accreditation.attested_at).toLocaleString() : "—"}
+                    value={accreditation.attested_at ? new Date(accreditation.attested_at).toLocaleString() : "-"}
                   />
                   <Row
                     label="Verification expires"
-                    value={accreditation.expires_at ? new Date(accreditation.expires_at).toLocaleDateString() : "—"}
+                    value={accreditation.expires_at ? new Date(accreditation.expires_at).toLocaleDateString() : "-"}
                   />
                   <Row label="Pre-existing relationship" value={accreditation.pre_existing_relationship} />
                 </div>
@@ -726,7 +726,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                       <p className="border-t pt-3 text-muted-foreground">
                         {prettyStatus(w.status)}
                         {w.reviewed_at ? ` ${new Date(w.reviewed_at).toLocaleString()}` : ""}
-                        {w.review_notes ? ` — ${w.review_notes}` : ""}
+                        {w.review_notes ? ` - ${w.review_notes}` : ""}
                       </p>
                     )}
                   </div>
@@ -787,7 +787,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                 onClick={() => {
                   setSubject("More information needed for your Harmonious subscription");
                   setMessage(
-                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nWhile reviewing your subscription we need additional information before we can complete your accreditation review:\n\n- \n\nPlease upload the documents in your investor portal at your earliest convenience.\n\nKind regards,\nHarmonious — Investor Relations`,
+                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nWhile reviewing your subscription we need additional information before we can complete your accreditation review:\n\n- \n\nPlease upload the documents in your investor portal at your earliest convenience.\n\nKind regards,\nHarmonious - Investor Relations`,
                   );
                 }}
               >
@@ -799,7 +799,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                 onClick={() => {
                   setSubject("Your Harmonious subscription has been approved");
                   setMessage(
-                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nYour accreditation and subscription documents have been approved. You may now complete funding by wire or ACH from your investor portal.\n\nKind regards,\nHarmonious — Investor Relations`,
+                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nYour accreditation and subscription documents have been approved. You may now complete funding by wire or ACH from your investor portal.\n\nKind regards,\nHarmonious - Investor Relations`,
                   );
                 }}
               >
@@ -811,7 +811,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                 onClick={() => {
                   setSubject("Update on your Harmonious subscription");
                   setMessage(
-                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nAfter reviewing your application we are unable to accept your subscription at this time.\n\nReason:\n\nPlease reply to this message if you would like to discuss.\n\nKind regards,\nHarmonious — Investor Relations`,
+                    `Hello ${d?.profile?.legal_name ?? "there"},\n\nAfter reviewing your application we are unable to accept your subscription at this time.\n\nReason:\n\nPlease reply to this message if you would like to discuss.\n\nKind regards,\nHarmonious - Investor Relations`,
                   );
                 }}
               >
@@ -1228,7 +1228,7 @@ function Row({ label, value }: { label: string; value?: string | null | undefine
   return (
     <div className="flex gap-2">
       <span className="text-muted-foreground">{label}:</span>
-      <span className="break-words">{value || "—"}</span>
+      <span className="break-words">{value || "-"}</span>
     </div>
   );
 }

@@ -5,13 +5,13 @@ import { FinancialReportingBoard } from "@/components/financial-reporting-board"
 export const Route = createFileRoute("/_authenticated/ops/financials")({
   head: () => ({
     meta: [
-      { title: "Financial reporting — Harmonious" },
+      { title: "Financial reporting - Harmonious" },
       {
         name: "description",
         content:
           "Prepare, review, approve and publish fund financial statements from the posted ledger, approved valuations and finalized investor capital.",
       },
-      { property: "og:title", content: "Financial reporting — Harmonious" },
+      { property: "og:title", content: "Financial reporting - Harmonious" },
       {
         property: "og:description",
         content:

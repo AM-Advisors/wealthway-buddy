@@ -9,7 +9,7 @@ const f = (roles: string[], extra: Partial<OpsFacts> = {}): OpsFacts => ({ authe
 const cat = (roles: string[], extra: Partial<OpsFacts> = {}) =>
   shadowRecordFor({ endpoint: "e", actorUserId: U, legacyAllowed: legacyOperations(roles) && !extra.suspended, canonical: canonicalOperationsEntry(f(roles, extra)) }).category;
 
-describe("Stage 3A.1 Operations shadow — identities", () => {
+describe("Stage 3A.1 Operations shadow - identities", () => {
   const cases: [string, string[], string][] = [
     ["Super Administrator (with admin)", ["super_admin", "admin"], "allow_allow"],
     ["Operations Administrator", ["admin"], "allow_allow"],

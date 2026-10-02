@@ -114,7 +114,7 @@ export async function sendDocumentsToInvestors(userId: string, input: { offering
     })));
     if (error) throw new Error(error.message);
     await db().from("offering_document_events").insert(mine.map((d) => ({ offering_id: input.offeringId, offering_document_id: d.id, version: d.active_version, event: "sent_to_investor", actor_user_id: userId, detail: { onboardingId: inv.onboardingId, emailed } })));
-    results.push({ onboardingId: inv.onboardingId, name, documents: mine.length, emailed, skipped: email ? undefined : "No email on file — visible in their portal once they sign in." });
+    results.push({ onboardingId: inv.onboardingId, name, documents: mine.length, emailed, skipped: email ? undefined : "No email on file - visible in their portal once they sign in." });
   }
   return { results };
 }

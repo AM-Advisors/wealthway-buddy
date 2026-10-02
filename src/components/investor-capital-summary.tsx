@@ -10,16 +10,16 @@ import { getMyCapitalSummary } from "@/lib/investor-capital.functions";
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const pct = (value: number | null) =>
-  value === null ? "—" : `${value.toLocaleString("en-US", { maximumFractionDigits: 4 })}%`;
+  value === null ? "-" : `${value.toLocaleString("en-US", { maximumFractionDigits: 4 })}%`;
 
 const units = (value: number | null) =>
-  value === null ? "—" : value.toLocaleString("en-US", { maximumFractionDigits: 4 });
+  value === null ? "-" : value.toLocaleString("en-US", { maximumFractionDigits: 4 });
 
 const day = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—";
+  value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "-";
 
 function Figure({ label, value, hint }: { label: string; value: string; hint?: string | undefined }) {
   return (

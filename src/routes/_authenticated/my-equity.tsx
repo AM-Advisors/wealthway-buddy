@@ -5,13 +5,13 @@ import { MyEquityView } from "@/components/captable/my-equity-view";
 export const Route = createFileRoute("/_authenticated/my-equity")({
   head: () => ({
     meta: [
-      { title: "My equity — Harmonious CapTable" },
+      { title: "My equity - Harmonious CapTable" },
       {
         name: "description",
         content:
           "See your own shares and options, track vesting, accept your grants and request an exercise.",
       },
-      { property: "og:title", content: "My equity — Harmonious CapTable" },
+      { property: "og:title", content: "My equity - Harmonious CapTable" },
       {
         property: "og:description",
         content: "Your own equity: grants, vesting, documents and requests, in one private view.",

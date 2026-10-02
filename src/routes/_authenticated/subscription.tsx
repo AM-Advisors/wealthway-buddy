@@ -17,13 +17,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 export const Route = createFileRoute("/_authenticated/subscription")({
   head: () => ({
     meta: [
-      { title: "Confirm Your Commitment — Harmonious Investor Portal" },
+      { title: "Confirm Your Commitment - Harmonious Investor Portal" },
       {
         name: "description",
         content:
           "Confirm the amount you are subscribing for, how the investment is titled, and whether you will fund by wire or ACH.",
       },
-      { property: "og:title", content: "Confirm Your Commitment — Harmonious Investor Portal" },
+      { property: "og:title", content: "Confirm Your Commitment - Harmonious Investor Portal" },
       {
         property: "og:description",
         content: "Confirm your subscription amount and payment method before funding.",
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/subscription")({
 });
 
 function money(cents?: number | null) {
-  if (!cents) return "—";
+  if (!cents) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -147,7 +147,7 @@ function SubscriptionPage() {
           <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
               <p className="text-muted-foreground">Titled as</p>
-              <p className="font-medium">{sub.ownership_title ?? "—"}</p>
+              <p className="font-medium">{sub.ownership_title ?? "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Paying by</p>

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Adversarial tests for Fund Administration Phase B — investor onboarding.
+ * Adversarial tests for Fund Administration Phase B - investor onboarding.
  *
  * Every id below arrives "from the browser". The server must re-read the
  * record, resolve authority from authoritative records, keep one investor out
@@ -225,7 +225,7 @@ describe("fund manager limits", () => {
     await expect(server.managerOnboardingBoard(MANAGER_B, FUND_A)).rejects.toThrow(/Forbidden/);
   });
 
-  it("gives the managing manager progress only — never compliance material", async () => {
+  it("gives the managing manager progress only - never compliance material", async () => {
     const detail = await server.onboardingDetail(MANAGER_A, OB1);
     expect(detail.executedSnapshot ?? null).toBeNull();
     expect(detail.questionnaireResponses).toEqual({});

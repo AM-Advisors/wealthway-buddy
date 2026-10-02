@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buildSowSections, HARMONIOUS_LEGAL_NAME, MSA_SECTIONS } from "@/lib/agreement-templates";
 
 /**
- * Agreements & SOW — the contracting workspace.
+ * Agreements & SOW - the contracting workspace.
  *
  * Clients review their master agreement, request a new fund or SPV, review the
  * statement of work that comes back section by section, ask for changes, then
@@ -326,7 +326,7 @@ export const getMsaWorkspace = createServerFn({ method: "GET" })
         : null,
       history: priorVersions.map((h) => ({
         id: h.id as string,
-        version: h.msa_versions?.version ?? "—",
+        version: h.msa_versions?.version ?? "-",
         executedAt: h.executed_at as string,
       })),
       signatures: ((signatures ?? []) as any[]).map((s) => ({
@@ -508,7 +508,7 @@ export const requestNewFund = createServerFn({ method: "POST" })
       .from("client_sows")
       .insert({
         client_id: data.clientId,
-        title: `Statement of Work — ${data.fundName}`,
+        title: `Statement of Work - ${data.fundName}`,
         sow_type: "spv",
         status: "draft",
         stage: "in_review",
@@ -692,7 +692,7 @@ export const getSowWorkspace = createServerFn({ method: "GET" })
       sow: {
         id: (sow as any).id as string,
         clientId: (sow as any).client_id as string,
-        clientName: ((client as any)?.legal_name || (client as any)?.name || "—") as string,
+        clientName: ((client as any)?.legal_name || (client as any)?.name || "-") as string,
         title: (sow as any).title as string,
         stage: ((sow as any).stage as string) ?? "draft",
         status: (sow as any).status as string,

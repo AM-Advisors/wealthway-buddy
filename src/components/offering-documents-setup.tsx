@@ -86,7 +86,7 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
             <DocumentRow key={c} doc={doc} data={d} offeringId={offeringId} onChanged={refresh} />
           ) : (
             <div key={c} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed p-3">
-              <span className="text-sm">{DOCUMENT_CATEGORY_LABELS[c]} <span className="text-muted-foreground">— not added</span></span>
+              <span className="text-sm">{DOCUMENT_CATEGORY_LABELS[c]} <span className="text-muted-foreground">- not added</span></span>
               {d.canEdit && <Button size="sm" variant="outline" onClick={() => add(c)}>Add</Button>}
             </div>
           );
@@ -149,7 +149,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         await setUsage({ data: { documentId: doc.id, usage: "signature", applicability: { profileTypes: [], classKeys: [] } } });
       }
       setOpen(true);
-    }, "Document uploaded — now add the signature blocks, then approve");
+    }, "Document uploaded - now add the signature blocks, then approve");
   };
 
   const startActivate = async (version: number) => {
@@ -172,7 +172,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         <div>
           <p className="text-sm font-medium">{doc.title}</p>
           <p className="text-xs text-muted-foreground">
-            {active ? `Fund template v${active.version} (in use)` : latest ? "Draft — not in use yet" : "Needs setup"}
+            {active ? `Fund template v${active.version} (in use)` : latest ? "Draft - not in use yet" : "Needs setup"}
             {" · "}{doc.usage ? DOCUMENT_USAGE_LABELS[doc.usage] : "Usage not chosen"}
             {" · "}{appliesTo}
           </p>
@@ -202,7 +202,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
               <span>{new Date(r.requestedAt).toLocaleDateString()} · {r.fileName} · {ROLLOUT_LABELS[r.scope]}{r.note ? ` · "${r.note}"` : ""} · <span className="capitalize">{r.status}</span>{r.decisionNote ? ` (${r.decisionNote})` : ""}</span>
               {data.canEdit && r.status === "pending" && (r.mine ? <span className="text-muted-foreground">Another team member must decide</span> : (
                 <span className="flex gap-1">
-                  <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => decide({ data: { id: r.id, decision: "accept" } }), "Added as a new version — review, set signature blocks and approve").then(() => setOpen(true))}>Accept as new version</Button>
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => decide({ data: { id: r.id, decision: "accept" } }), "Added as a new version - review, set signature blocks and approve").then(() => setOpen(true))}>Accept as new version</Button>
                   <Button size="sm" variant="ghost" disabled={busy} onClick={() => { const note = window.prompt("Reason for declining"); if (note) void run(() => decide({ data: { id: r.id, decision: "decline", note } }), "Request declined"); }}>Decline</Button>
                 </span>
               ))}
@@ -370,7 +370,7 @@ function SigningEditor({ doc, version, data, onChanged }: { doc: Doc; version: D
     <div className="mt-2 space-y-2 border-t pt-2">
       <p className="text-xs font-medium">
         Signing setup for Version {version.version}
-        {version.signingStatus === "needs_review" && <span className="text-destructive"> — Signing Setup Needs Review</span>}
+        {version.signingStatus === "needs_review" && <span className="text-destructive"> - Signing Setup Needs Review</span>}
       </p>
       {data.canEdit && signers.length === 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2">

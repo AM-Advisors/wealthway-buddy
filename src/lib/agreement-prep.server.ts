@@ -6,7 +6,7 @@
  * the ceremony and the completion; nothing here can mark anything signed.
  *
  * Authorization is always resolved from the real fund/company relationship of
- * the signed-in person — never from an email address, a hostname or the menu.
+ * the signed-in person - never from an email address, a hostname or the menu.
  */
 
 import {
@@ -168,7 +168,7 @@ export interface SaveTemplateInput {
 
 /**
  * Saves a field layout as a new template version. A published version is never
- * edited in place — outstanding requests stay on the version they were sent
+ * edited in place - outstanding requests stay on the version they were sent
  * with, and the next version only affects requests sent afterwards.
  */
 export async function saveTemplateVersion(
@@ -300,7 +300,7 @@ async function ensureSourceFile(
   }
 
   const safeTitle = String(doc.title ?? "Fund document").replace(/[^\w\- ]+/g, "").trim();
-  const fileName = `${safeTitle || "Fund document"} — ${investorLabel} — ${applicationId.slice(0, 8)}.pdf`;
+  const fileName = `${safeTitle || "Fund document"} - ${investorLabel} - ${applicationId.slice(0, 8)}.pdf`;
   const fileId = await uploadFile(fileName, bytes);
   const versionId = await fileVersionId(fileId).catch(() => null);
   return { fileId, versionId };
@@ -309,7 +309,7 @@ async function ensureSourceFile(
 /**
  * Sends a prepared agreement through Box Sign.
  *
- * Authorization is rechecked here at send time — the preparation screen is not
+ * Authorization is rechecked here at send time - the preparation screen is not
  * trusted for anything. Every signer, capacity and field placement is written
  * down as sent, and the exact Box file version is locked to the request.
  */
@@ -420,7 +420,7 @@ export async function sendPreparedAgreement(
 
   const detail = await createMultiSignerRequest({
     fileId,
-    documentName: `${offering?.name ?? "Harmonious"} — ${doc.title}`,
+    documentName: `${offering?.name ?? "Harmonious"} - ${doc.title}`,
     message:
       input.message ??
       `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,

@@ -67,7 +67,7 @@ const expected: Record<string, Record<string, string>> = {
   },
 };
 
-describe("Stage 4 — W-8 field mapping", () => {
+describe("Stage 4 - W-8 field mapping", () => {
   for (const [form, fields] of Object.entries(expected)) {
     it(`${form}: values map to the verified official field names`, () => {
       const { text } = irsFieldValues(form, fill);
@@ -107,7 +107,7 @@ describe("Stage 4 — W-8 field mapping", () => {
   }
 });
 
-describe("Stage 4 — Needs Information instead of guessing", () => {
+describe("Stage 4 - Needs Information instead of guessing", () => {
   it("W-8BEN-E, W-8IMY and W-8EXP stop when chapter 3/4 status is not collected", () => {
     for (const f of ["w8bene", "w8imy", "w8exp"]) {
       expect(missingTaxFormFacts(f, fill)).toEqual(expect.arrayContaining(["Chapter 4 (FATCA) status"]));
@@ -133,7 +133,7 @@ const entry = (p: Partial<PolicyEntry>): PolicyEntry => ({
   status: "approved", approved_by: "u2", ...p,
 });
 
-describe("Stage 4 — compliance policy", () => {
+describe("Stage 4 - compliance policy", () => {
   it("no approved policy means no country and no amount trigger", () => {
     const p = resolveAmlPolicy([], "f1", "2026-09-24");
     expect(p.highRiskCountries).toEqual([]);
@@ -156,7 +156,7 @@ describe("Stage 4 — compliance policy", () => {
   });
 });
 
-describe("Stage 4 — legal wording", () => {
+describe("Stage 4 - legal wording", () => {
   const w = (p: any) => ({ id: "x", requirement_key: "k", title: "t", wording: "w", version: 1, effective_date: "2026-01-01", status: "approved", approved_by: "u", ...p });
   it("only approved, effective versions are shown; latest version wins", () => {
     const m = approvedWording([w({ version: 1 }), w({ version: 2, id: "v2" }), w({ version: 3, status: "draft" }), w({ version: 4, status: "retired" })], "2026-09-24");
@@ -167,7 +167,7 @@ describe("Stage 4 — legal wording", () => {
   });
 });
 
-describe("Stage 4 — production preflight", () => {
+describe("Stage 4 - production preflight", () => {
   const base: PreflightInput = {
     badActorApplies: false, certificationKeys: [], representationEligibilityKeys: [], approvedWordingKeys: new Set(),
     taxRequired: true, taxRouting: { status: "determined", formType: "w9" }, taxFormMissingFacts: [],

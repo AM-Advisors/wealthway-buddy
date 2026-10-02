@@ -17,7 +17,7 @@ export type RelatedPersonInput = {
 
 /**
  * Candidate discovery goes through the canonical Person Resolution Service.
- * For related persons every non-"no match" outcome — even an exact one — opens
+ * For related persons every non-"no match" outcome - even an exact one - opens
  * review: matching a Person never grants authority or reuses them silently.
  */
 async function findCandidates(input: { email?: string | null; firstName: string; lastName: string }) {

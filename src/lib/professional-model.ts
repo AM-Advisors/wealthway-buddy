@@ -28,7 +28,7 @@ export const SENSITIVE_CAPABILITIES: DelegationCapability[] = [
   "view_wire_instructions",
 ];
 
-/** Phase 3B — preparing and assisting. Never deciding, signing or paying. */
+/** Phase 3B - preparing and assisting. Never deciding, signing or paying. */
 export const PHASE_3B_CAPABILITIES: DelegationCapability[] = [
   "edit_profile_info",
   "prepare_investment",

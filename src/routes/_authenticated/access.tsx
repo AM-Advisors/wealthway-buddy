@@ -25,8 +25,8 @@ function ClientAccessManager() {
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["access-grants"] });
-    // Any delegated data the professional's browser cached is irrelevant —
-    // the server re-checks — but clear our own view of it too.
+    // Any delegated data the professional's browser cached is irrelevant -
+    // the server re-checks - but clear our own view of it too.
     qc.removeQueries({ queryKey: ["delegated-client"] });
     qc.removeQueries({ queryKey: ["professional-overview"] });
   };
@@ -78,8 +78,8 @@ function ClientAccessManager() {
                 <div>
                   <p className="font-medium">{g.professionalName}</p>
                   <p className="text-muted-foreground">
-                    {g.firm ? `${g.firm} — ` : ""}
-                    {SCOPE_LABELS[g.scopeType] ?? g.scopeType} —{" "}
+                    {g.firm ? `${g.firm} - ` : ""}
+                    {SCOPE_LABELS[g.scopeType] ?? g.scopeType} -{" "}
                     {AUTHORITY_LABELS[g.authorityLevel] ?? g.authorityLevel}
                   </p>
                 </div>
@@ -93,7 +93,7 @@ function ClientAccessManager() {
               <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-4">
                 <div>
                   <dt className="text-muted-foreground">Effective</dt>
-                  <dd>{g.effectiveAt ? new Date(g.effectiveAt).toLocaleDateString() : "—"}</dd>
+                  <dd>{g.effectiveAt ? new Date(g.effectiveAt).toLocaleDateString() : "-"}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Expires</dt>
@@ -101,7 +101,7 @@ function ClientAccessManager() {
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Last activity</dt>
-                  <dd>{g.lastActivityAt ? new Date(g.lastActivityAt).toLocaleString() : "—"}</dd>
+                  <dd>{g.lastActivityAt ? new Date(g.lastActivityAt).toLocaleString() : "-"}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Authorisation document</dt>
@@ -156,13 +156,13 @@ function ClientAccessManager() {
 export const Route = createFileRoute("/_authenticated/access")({
   head: () => ({
     meta: [
-      { title: "Who can see my information — Harmonious" },
+      { title: "Who can see my information - Harmonious" },
       {
         name: "description",
         content:
           "Grant, review, suspend or revoke the access your adviser, lawyer or accountant has to your Harmonious information.",
       },
-      { property: "og:title", content: "Who can see my information — Harmonious" },
+      { property: "og:title", content: "Who can see my information - Harmonious" },
       {
         property: "og:description",
         content: "Full control over professional access to your profiles, investments and documents.",

@@ -142,7 +142,7 @@ export function FundTimelineEditor({ offeringId }: { offeringId?: string }) {
         <CardHeader>
           <CardTitle>{draft.id ? "Edit a date" : "Add a date"}</CardTitle>
           <CardDescription>
-            Closing, wire deadline, fund launch, capital calls — anything investors should plan
+            Closing, wire deadline, fund launch, capital calls - anything investors should plan
             around.
           </CardDescription>
         </CardHeader>

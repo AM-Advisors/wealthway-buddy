@@ -543,7 +543,7 @@ async function enabled(offeringId: string) {
   return Boolean(data?.drive_sync_enabled);
 }
 
-/** Hook: fund launched. Never throws — the launch itself stands. */
+/** Hook: fund launched. Never throws - the launch itself stands. */
 export async function onFundLaunched(offeringId: string, userId: string | null) {
   try {
     if (await enabled(offeringId)) await ensureFundStructure(offeringId, { userId, actor: "fund_launch" });

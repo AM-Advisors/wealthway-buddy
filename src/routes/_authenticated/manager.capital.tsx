@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/manager/capital")({
   head: () => ({
     meta: [
-      { title: "Capital — Harmonious" },
+      { title: "Capital - Harmonious" },
       {
         name: "description",
         content: "Investor capital, cash to confirm and distributions for the funds you manage.",
       },
-      { property: "og:title", content: "Capital — Harmonious" },
+      { property: "og:title", content: "Capital - Harmonious" },
       {
         property: "og:description",
         content: "Investor capital, cash to confirm and distributions for the funds you manage.",
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/manager/capital")({
 /**
  * Capital brings the existing capital surfaces together in one place instead of
  * adding more items to the menu. Every section is the page that already owns
- * that work — nothing about the underlying records changes.
+ * that work - nothing about the underlying records changes.
  */
 const SECTIONS = [
   {

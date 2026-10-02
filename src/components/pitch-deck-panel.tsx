@@ -367,7 +367,7 @@ export function PitchDeckPanel({ offeringId }: { offeringId: string }) {
                   onChange={onSlideFiles}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Up to 10 MB each. Select several at once — they are added in the order you pick them.
+                  Up to 10 MB each. Select several at once - they are added in the order you pick them.
                 </p>
               </div>
               <div className="space-y-2 rounded-md border p-4">

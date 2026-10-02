@@ -51,7 +51,7 @@ export function FundServicesCard({ offeringId, onChanged }: { offeringId: string
       <CardHeader>
         <CardTitle className="text-base">Operations services</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Harmonious completes formation, the EIN application and the BOI report for this Fund. This is where the team records progress and evidence — nothing is filed from here.
+          Harmonious completes formation, the EIN application and the BOI report for this Fund. This is where the team records progress and evidence - nothing is filed from here.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

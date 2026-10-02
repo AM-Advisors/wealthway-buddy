@@ -13,9 +13,9 @@ import { SIGNING_STAGE_LABELS } from "@/lib/fund-onboarding-model";
 export const Route = createFileRoute("/_authenticated/manager/countersign/$signerId")({
   head: () => ({
     meta: [
-      { title: "Review & countersign — Harmonious" },
+      { title: "Review & countersign - Harmonious" },
       { name: "description", content: "Countersign an investor's fund document after they have signed." },
-      { property: "og:title", content: "Review & countersign — Harmonious" },
+      { property: "og:title", content: "Review & countersign - Harmonious" },
       { property: "og:description", content: "Countersign a fund document as the authorized fund signatory." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

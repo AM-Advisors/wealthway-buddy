@@ -16,13 +16,13 @@ export const Route = createFileRoute("/auth/")({
   head: () => ({
     meta: [
         { name: "robots", content: "noindex, nofollow" },
-      { title: "Sign In — Harmonious" },
+      { title: "Sign In - Harmonious" },
       {
         name: "description",
         content:
           "Sign in to Harmonious to track your application, review fund documents, manage your funds and complete your subscription.",
       },
-      { property: "og:title", content: "Sign In — Harmonious" },
+      { property: "og:title", content: "Sign In - Harmonious" },
       { property: "og:description", content: "Access the Harmonious portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -74,7 +74,7 @@ function SignInPage() {
   async function signInWithGoogle() {
     setBusy(true);
     // The page they originally asked for travels with them and is re-checked
-    // by the server resolver on return — it never grants anything by itself.
+    // by the server resolver on return - it never grants anything by itself.
     const intended =
       typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
     const errorMessage = await startGoogleOAuth("/auth", intended);

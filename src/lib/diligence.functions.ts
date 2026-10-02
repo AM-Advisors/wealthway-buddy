@@ -263,7 +263,7 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
     const { ensureSubfolder, isBoxConfigured } = await import("@/lib/box.server");
     if (!isBoxConfigured()) throw new Error("Box is not connected yet.");
     const folderId = await ensureSubfolder(
-      `Diligence — ${offering?.name ?? data.offering_id}`.slice(0, 240),
+      `Diligence - ${offering?.name ?? data.offering_id}`.slice(0, 240),
     );
 
     const entityType = normalizeEntityType(data.entity_type);
@@ -829,7 +829,7 @@ export const updateDiligenceNda = createServerFn({ method: "POST" })
       room.id,
       "nda_updated",
       data.bump_version
-        ? `Confidentiality agreement updated — investors must accept again (v${nextVersion})`
+        ? `Confidentiality agreement updated - investors must accept again (v${nextVersion})`
         : "Confidentiality agreement settings updated",
       { nda_required: data.nda_required, nda_version: nextVersion },
     );
@@ -1180,7 +1180,7 @@ export const updateDiligenceQuestion = createServerFn({ method: "POST" })
       question.offering_id,
       question.room_id,
       "question_updated",
-      `Updated “${question.subject}”${data.is_published === true ? " — shared with all investors" : ""}`,
+      `Updated “${question.subject}”${data.is_published === true ? " - shared with all investors" : ""}`,
       patch,
     );
     return { ok: true };
@@ -1794,7 +1794,7 @@ export const startOnboardingFromRoom = createServerFn({ method: "POST" })
   });
 
 /* ------------------------------------------------------------------ */
-/* Cap table — kept live in the platform, no spreadsheet upload needed */
+/* Cap table - kept live in the platform, no spreadsheet upload needed */
 /* ------------------------------------------------------------------ */
 
 export type CapTableRow = {

@@ -37,7 +37,7 @@ describe("Drive permission safety gate", () => {
   it("broad shared-drive membership withholds restricted investor documents", () => {
     const d = destinationDecision("investor_restricted", { limitedAccess: false, principals: SHARED_MEMBERS });
     expect(d.allowed).toBe(false);
-    expect((d as any).reason).toMatch(/Drive filing withheld — destination permissions too broad/);
+    expect((d as any).reason).toMatch(/Drive filing withheld - destination permissions too broad/);
   });
 
   it("a limited-access folder still withholds when sales@ is not approved", () => {

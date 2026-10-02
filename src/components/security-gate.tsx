@@ -336,7 +336,7 @@ export function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () =
       <CardHeader>
         <CardTitle className="font-heading">Save your recovery codes</CardTitle>
         <CardDescription>
-          Each code works once if you lose your passkey or phone. They won't be shown again — store them somewhere safe.
+          Each code works once if you lose your passkey or phone. They won't be shown again - store them somewhere safe.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

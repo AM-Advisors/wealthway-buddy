@@ -1,5 +1,5 @@
 /**
- * RBAC Stage 2.6 — atomic Client and Fund permissions (canonical vocabulary only).
+ * RBAC Stage 2.6 - atomic Client and Fund permissions (canonical vocabulary only).
  *
  * Summary matrix actions (view/edit/…) stay as they are; each Clients/Funds
  * cell expands into atomic permissions. Broad permissions imply only
@@ -30,10 +30,10 @@ export const ATOMIC_PERMISSIONS: AtomicDef[] = [
   C("restore", "Restore client", "edit", true),
   C("delete_draft", "Delete unused draft", "edit", true),
   C("export", "Export", "export"),
-  C("contacts.view", "Contacts — view", "view"),
-  C("contacts.add", "Contacts — add"),
-  C("contacts.edit", "Contacts — edit"),
-  C("contacts.remove", "Contacts — remove"),
+  C("contacts.view", "Contacts - view", "view"),
+  C("contacts.add", "Contacts - add"),
+  C("contacts.edit", "Contacts - edit"),
+  C("contacts.remove", "Contacts - remove"),
   Fd("view", "View fund", "view"),
   Fd("create", "Create fund"),
   Fd("edit_profile", "Edit profile"),
@@ -52,30 +52,30 @@ export const ATOMIC_PERMISSIONS: AtomicDef[] = [
   Fd("reopen", "Reopen", "edit", true),
   Fd("delete_draft", "Delete unused draft", "edit", true),
   Fd("export", "Export", "export"),
-  Fd("investors.view", "Investors — view", "view"),
-  Fd("investors.add", "Investors — add"),
-  Fd("investors.edit", "Investors — edit"),
-  Fd("investors.remove", "Investors — remove"),
-  Fd("investors.invite", "Investors — invite"),
-  Fd("team.view", "Team — view", "view"),
-  Fd("team.add", "Team — add"),
-  Fd("team.edit", "Team — edit"),
-  Fd("team.remove", "Team — remove"),
-  Fd("team.manage_access", "Team — manage access", "manage_access"),
-  // Stage 2.7 — Compliance & Controls (Harmonious internal only; never implied by client/fund permissions).
+  Fd("investors.view", "Investors - view", "view"),
+  Fd("investors.add", "Investors - add"),
+  Fd("investors.edit", "Investors - edit"),
+  Fd("investors.remove", "Investors - remove"),
+  Fd("investors.invite", "Investors - invite"),
+  Fd("team.view", "Team - view", "view"),
+  Fd("team.add", "Team - add"),
+  Fd("team.edit", "Team - edit"),
+  Fd("team.remove", "Team - remove"),
+  Fd("team.manage_access", "Team - manage access", "manage_access"),
+  // Stage 2.7 - Compliance & Controls (Harmonious internal only; never implied by client/fund permissions).
   ...([
-    ["controls.view", "Controls — view", "view"], ["controls.edit", "Controls — edit", "edit"], ["controls.review", "Controls — review", "review"],
-    ["controls.approve", "Controls — approve", "approve"], ["evidence.view", "Evidence — view", "view"], ["evidence.collect", "Evidence — collect", "edit"],
-    ["evidence.review", "Evidence — review", "review"], ["access_reviews.manage", "Access reviews — manage", "edit"],
-    ["privacy.view", "Privacy — view", "view"], ["privacy.manage", "Privacy — manage", "edit"], ["vendors.view", "Vendors — view", "view"],
-    ["vendors.manage", "Vendors — manage", "edit"], ["risks.view", "Risks — view", "view"], ["risks.manage", "Risks — manage", "edit"],
-    ["incidents.view", "Incidents — view", "view"], ["incidents.manage", "Incidents — manage", "edit"],
-    // Phase 7 — contacts, deals and campaigns (Super Administrator assigns; never implied).
-    ["crm.view_all", "Contacts & deals — see everyone's", "view"], ["crm.assign", "Contacts & deals — reassign owner", "edit"],
-    ["campaigns.approve", "Campaigns — approve", "approve"],
-    // Phase 7 — contacts, deals and campaigns (Super Administrator assigns; never implied).
-    ["crm.view_all", "Contacts & deals — see everyone's", "view"], ["crm.assign", "Contacts & deals — reassign owner", "edit"],
-    ["campaigns.approve", "Campaigns — approve", "approve"],
+    ["controls.view", "Controls - view", "view"], ["controls.edit", "Controls - edit", "edit"], ["controls.review", "Controls - review", "review"],
+    ["controls.approve", "Controls - approve", "approve"], ["evidence.view", "Evidence - view", "view"], ["evidence.collect", "Evidence - collect", "edit"],
+    ["evidence.review", "Evidence - review", "review"], ["access_reviews.manage", "Access reviews - manage", "edit"],
+    ["privacy.view", "Privacy - view", "view"], ["privacy.manage", "Privacy - manage", "edit"], ["vendors.view", "Vendors - view", "view"],
+    ["vendors.manage", "Vendors - manage", "edit"], ["risks.view", "Risks - view", "view"], ["risks.manage", "Risks - manage", "edit"],
+    ["incidents.view", "Incidents - view", "view"], ["incidents.manage", "Incidents - manage", "edit"],
+    // Phase 7 - contacts, deals and campaigns (Super Administrator assigns; never implied).
+    ["crm.view_all", "Contacts & deals - see everyone's", "view"], ["crm.assign", "Contacts & deals - reassign owner", "edit"],
+    ["campaigns.approve", "Campaigns - approve", "approve"],
+    // Phase 7 - contacts, deals and campaigns (Super Administrator assigns; never implied).
+    ["crm.view_all", "Contacts & deals - see everyone's", "view"], ["crm.assign", "Contacts & deals - reassign owner", "edit"],
+    ["campaigns.approve", "Campaigns - approve", "approve"],
   ] as const).map(([k, label, summary]): AtomicDef => ({ key: `administration.${k}`, label, area: "administration", summary })),
 ];
 export const ATOMIC_KEYS = ATOMIC_PERMISSIONS.map((a) => a.key);
@@ -171,14 +171,14 @@ function blockers(d: Record<string, unknown>): string[] {
 
 /** null = unused draft, eligible for delete_draft. Otherwise archive instead. */
 export function clientDeleteDraftProblem(d: ClientDependencies): string | null {
-  if (d.status !== "draft") return "Only an unused draft client can be permanently deleted — archive it instead.";
+  if (d.status !== "draft") return "Only an unused draft client can be permanently deleted - archive it instead.";
   const b = blockers(d);
-  return b.length ? `Has ${b.join(", ")} — archive it instead.` : null;
+  return b.length ? `Has ${b.join(", ")} - archive it instead.` : null;
 }
 export function fundDeleteDraftProblem(d: FundDependencies): string | null {
-  if (d.stage !== "draft") return "Only an unused draft fund can be permanently deleted — use lifecycle controls instead.";
+  if (d.stage !== "draft") return "Only an unused draft fund can be permanently deleted - use lifecycle controls instead.";
   const b = blockers(d);
-  return b.length ? `Has ${b.join(", ")} — use lifecycle controls instead.` : null;
+  return b.length ? `Has ${b.join(", ")} - use lifecycle controls instead.` : null;
 }
 
 // ---------------------------------------------------------------- audit vocabulary

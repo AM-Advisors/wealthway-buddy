@@ -18,7 +18,7 @@ export const FORMATION_GUIDES: Record<string, FormationGuide> = {
     ],
   },
   Wyoming: {
-    office: "Wyoming Secretary of State — Business Division",
+    office: "Wyoming Secretary of State - Business Division",
     url: "https://sos.wyo.gov/Business/Default.aspx",
     filings: [
       { entity: "LLC", form: "Articles of Organization (LLC)", fee: "$100" },
@@ -28,32 +28,32 @@ export const FORMATION_GUIDES: Record<string, FormationGuide> = {
     ],
   },
   Nevada: {
-    office: "Nevada Secretary of State — SilverFlume",
+    office: "Nevada Secretary of State - SilverFlume",
     url: "https://www.nvsilverflume.gov/",
     filings: [
       { entity: "LLC", form: "Articles of Organization (LLC) + Initial List + Business License", fee: "$75 + list/license fees" },
       { entity: "Series LLC", form: "Articles of Organization (Series LLC)", fee: "$75 + list/license fees" },
       { entity: "LP", form: "Certificate of Limited Partnership", fee: "$75 + list/license fees" },
-      { entity: "GP", form: "No state formation filing required", fee: "—" },
+      { entity: "GP", form: "No state formation filing required", fee: "-" },
     ],
   },
   Texas: {
-    office: "Texas Secretary of State — SOSDirect",
+    office: "Texas Secretary of State - SOSDirect",
     url: "https://www.sos.state.tx.us/corp/forms_boc.shtml",
     filings: [
-      { entity: "LLC", form: "Form 205 — Certificate of Formation (LLC)", fee: "$300" },
-      { entity: "Series LLC", form: "Form 205 — Certificate of Formation (LLC) with series provisions", fee: "$300" },
-      { entity: "LP", form: "Form 207 — Certificate of Formation (LP)", fee: "$750" },
-      { entity: "GP", form: "No state formation filing required (assumed name may apply)", fee: "—" },
+      { entity: "LLC", form: "Form 205 - Certificate of Formation (LLC)", fee: "$300" },
+      { entity: "Series LLC", form: "Form 205 - Certificate of Formation (LLC) with series provisions", fee: "$300" },
+      { entity: "LP", form: "Form 207 - Certificate of Formation (LP)", fee: "$750" },
+      { entity: "GP", form: "No state formation filing required (assumed name may apply)", fee: "-" },
     ],
   },
   "New York": {
-    office: "New York Department of State — Division of Corporations",
+    office: "New York Department of State - Division of Corporations",
     url: "https://dos.ny.gov/forms-and-fees-division-corporations",
     filings: [
-      { entity: "LLC", form: "Articles of Organization (LLC) — publication required", fee: "$200 + publication" },
-      { entity: "Series LLC", form: "New York does not form series LLCs — choose another state", fee: "—" },
-      { entity: "LP", form: "Certificate of Limited Partnership — publication required", fee: "$200 + publication" },
+      { entity: "LLC", form: "Articles of Organization (LLC) - publication required", fee: "$200 + publication" },
+      { entity: "Series LLC", form: "New York does not form series LLCs - choose another state", fee: "-" },
+      { entity: "LP", form: "Certificate of Limited Partnership - publication required", fee: "$200 + publication" },
       { entity: "GP", form: "Certificate of Assumed Name if not using partners' names", fee: "Varies" },
     ],
   },

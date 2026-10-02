@@ -60,7 +60,7 @@ export const resolveAddressSuggestion = createServerFn({ method: "POST" })
 /**
  * Runs the selected address through the validation provider so the person can
  * see the outcome before saving. Nothing is stored and the browser cannot
- * assert the result — saving re-validates on the server.
+ * assert the result - saving re-validates on the server.
  */
 export const previewAddressValidation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -100,7 +100,7 @@ export const reconcileAddresses = createServerFn({ method: "POST" })
  * Records the signed-in person's address.
  *
  * Selecting a suggestion is convenience, never proof of residence, and the
- * browser can only ever assert the address text — the state, the provider
+ * browser can only ever assert the address text - the state, the provider
  * verdict and the provenance are all decided on the server.
  */
 export const saveResidentialAddress = createServerFn({ method: "POST" })

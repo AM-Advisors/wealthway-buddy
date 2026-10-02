@@ -48,7 +48,7 @@ function num(value: string): number | null {
 }
 
 function fmt(value: number | null | undefined, suffix = "") {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "-";
   return `${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}${suffix}`;
 }
 
@@ -123,7 +123,7 @@ export function CapTableSection({ offeringId }: { offeringId: string }) {
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           {canManage
-            ? "No holders entered yet. Add them below and investors will see the live cap table here — no spreadsheet needed."
+            ? "No holders entered yet. Add them below and investors will see the live cap table here - no spreadsheet needed."
             : "The cap table has not been published yet."}
         </p>
       ) : (

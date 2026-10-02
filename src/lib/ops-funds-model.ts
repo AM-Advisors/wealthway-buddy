@@ -1,6 +1,6 @@
 import { isReconciledFunding } from "@/lib/funding-status";
 /**
- * Operations Funds dashboard — pure aggregation over canonical readiness
+ * Operations Funds dashboard - pure aggregation over canonical readiness
  * results and open work items. No manually maintained attention fields.
  */
 export type FundOnboardingFact = {

@@ -14,9 +14,9 @@ import {
 
 export const Route = createFileRoute("/_authenticated/ops/formation-reference")({
   head: () => ({ meta: [
-    { title: "Formation reference data — Harmonious Operations" },
+    { title: "Formation reference data - Harmonious Operations" },
     { name: "description", content: "Formation providers, state fees and formation packages used in Fund Setup." },
-    { property: "og:title", content: "Formation reference data — Harmonious Operations" },
+    { property: "og:title", content: "Formation reference data - Harmonious Operations" },
     { property: "og:description", content: "Formation providers, state fees and formation packages used in Fund Setup." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" },
   ] }),
@@ -75,12 +75,12 @@ function Providers({ d, onChanged }: { d: any; onChanged: () => void }) {
 function Prices({ d, onChanged }: { d: any; onChanged: () => void }) {
   const { busy, run } = useRun(useServerFn(addFormationPriceFn), onChanged);
   const [f, setF] = useState({ providerId: "", jurisdiction: "", entityType: "", stateFee: "", expediteFee: "", providerFee: "", verified: false });
-  const pname = (id: string) => d.providers.find((p: any) => p.id === id)?.name ?? "—";
+  const pname = (id: string) => d.providers.find((p: any) => p.id === id)?.name ?? "-";
   return (
     <Card><CardHeader><CardTitle className="text-base">State and provider fees</CardTitle><CardDescription>Each entry is kept; add a new one when a fee changes. Harmonious's own fee comes from the rate card.</CardDescription></CardHeader>
       <CardContent className="space-y-3">
         <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">State</th><th>Type</th><th>Provider</th><th>State fee</th><th>Expedite</th><th>Provider fee</th><th>Since</th><th></th></tr></thead>
-          <tbody>{d.prices.map((p: any) => <tr key={p.id} className="border-t"><td className="py-1.5">{p.jurisdiction}</td><td>{p.entity_type ?? "Any"}</td><td>{p.provider_id ? pname(p.provider_id) : "—"}</td><td>{usd(p.state_fee)}</td><td>{usd(p.expedite_fee)}</td><td>{usd(p.provider_fee)}</td><td>{p.effective_from}</td><td>{p.verified ? <Badge variant="secondary">Verified</Badge> : <Badge variant="outline">Unverified</Badge>}</td></tr>)}
+          <tbody>{d.prices.map((p: any) => <tr key={p.id} className="border-t"><td className="py-1.5">{p.jurisdiction}</td><td>{p.entity_type ?? "Any"}</td><td>{p.provider_id ? pname(p.provider_id) : "-"}</td><td>{usd(p.state_fee)}</td><td>{usd(p.expedite_fee)}</td><td>{usd(p.provider_fee)}</td><td>{p.effective_from}</td><td>{p.verified ? <Badge variant="secondary">Verified</Badge> : <Badge variant="outline">Unverified</Badge>}</td></tr>)}
             {d.prices.length === 0 && <tr><td colSpan={8} className="py-2 text-muted-foreground">None yet.</td></tr>}</tbody></table></div>
         <div className="grid gap-2 sm:grid-cols-4 sm:items-end">
           <div><Label className="text-xs">State (e.g. DE)</Label><Input value={f.jurisdiction} onChange={(e) => setF({ ...f, jurisdiction: e.target.value })} /></div>
@@ -104,7 +104,7 @@ function Bundles({ d, onChanged }: { d: any; onChanged: () => void }) {
     <Card><CardHeader><CardTitle className="text-base">Formation packages</CardTitle><CardDescription>What a formation includes. Prices still come from the rate card and Client Expected Services.</CardDescription></CardHeader>
       <CardContent className="space-y-3">
         <ul className="divide-y text-sm">{d.bundles.map((b: any) => (
-          <li key={b.id} className="flex items-center justify-between py-2"><span>{b.name} <span className="text-xs text-muted-foreground">— {inc(b)}</span></span>
+          <li key={b.id} className="flex items-center justify-between py-2"><span>{b.name} <span className="text-xs text-muted-foreground">- {inc(b)}</span></span>
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => run({ id: b.id, name: b.name, description: b.description, servicePackageKey: b.service_package_key, ra: b.includes_registered_agent, ein: b.includes_ein, oa: b.includes_operating_agreement, expedite: b.includes_expedite, active: !b.active })}>{b.active ? "Deactivate" : "Reactivate"}</Button></li>
         ))}{d.bundles.length === 0 && <li className="py-2 text-muted-foreground">None yet.</li>}</ul>
         <div className="grid gap-2 sm:grid-cols-2"><div><Label className="text-xs">Name</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div><div><Label className="text-xs">Description</Label><Input value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div></div>

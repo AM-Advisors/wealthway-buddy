@@ -58,7 +58,7 @@ function StatementQueue() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["statement-review"] });
   const decideM = useMutation({
     mutationFn: (v: { statementId: string; decision: "approved" | "returned"; note?: string }) => decide({ data: v }),
-    onSuccess: (_r, v) => { toast.success(v.decision === "approved" ? "Statement approved — the investor can now see it." : "Statement returned."); setReturning(null); setNote(""); refresh(); },
+    onSuccess: (_r, v) => { toast.success(v.decision === "approved" ? "Statement approved - the investor can now see it." : "Statement returned."); setReturning(null); setNote(""); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const notifyM = useMutation({
@@ -95,7 +95,7 @@ function StatementQueue() {
                       <Badge variant={STATUS[s.status]?.variant ?? "outline"}>{STATUS[s.status]?.label ?? s.status}</Badge>
                       <Button size="sm" variant="ghost" onClick={() => void openStatement({ ...s, statement_date: s.statementDate, snapshot: s.snapshot })}>View</Button>
                       {s.status === "draft" ? (
-                        s.producedByMe ? <span className="text-xs text-muted-foreground">You produced this — another person must review</span> : (
+                        s.producedByMe ? <span className="text-xs text-muted-foreground">You produced this - another person must review</span> : (
                           <>
                             <Button size="sm" disabled={decideM.isPending} onClick={() => decideM.mutate({ statementId: s.id, decision: "approved" })}>Approve</Button>
                             <Button size="sm" variant="outline" onClick={() => { setReturning(s.id); setNote(""); }}>Return</Button>
@@ -171,7 +171,7 @@ function ReviewMemos() {
               {m.status === "draft" ? (
                 <>
                   <Button size="sm" variant="outline" onClick={() => setEditing(m)}>Edit</Button>
-                  {m.preparedByMe ? <span className="self-center text-xs text-muted-foreground">You prepared this — another person must approve</span> : (
+                  {m.preparedByMe ? <span className="self-center text-xs text-muted-foreground">You prepared this - another person must approve</span> : (
                     <>
                       <Button size="sm" disabled={decideM.isPending} onClick={() => decideM.mutate({ id: m.id, decision: "approved" })}>Approve</Button>
                       <Button size="sm" variant="outline" onClick={() => { setReturning(m.id); setNote(""); }}>Return</Button>
@@ -213,10 +213,10 @@ function MemoEditor({ funds, initial, onDone }: { funds: { id: string; name: str
   const reports = fq.data?.reports ?? [];
   const m = useMutation({
     mutationFn: () => save({ data: {
-      id: initial.id, offeringId, periodStart, periodEnd, title: title || `Financial review — ${periodEnd}`, summary,
+      id: initial.id, offeringId, periodStart, periodEnd, title: title || `Financial review - ${periodEnd}`, summary,
       findings: findings.filter((f) => f.area.trim() && f.observation.trim()), reportIds: reports.map((r) => r.id),
     } }),
-    onSuccess: () => { toast.success("Draft saved — ready for a second person to approve."); onDone(); },
+    onSuccess: () => { toast.success("Draft saved - ready for a second person to approve."); onDone(); },
     onError: (e) => toast.error(errMsg(e)),
   });
 

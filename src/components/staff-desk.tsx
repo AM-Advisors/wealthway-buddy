@@ -135,7 +135,7 @@ export function StaffDesk() {
             <CardTitle className="text-base">No clients assigned to you yet</CardTitle>
             <CardDescription>
               Ask an administrator to add you to the clients you look after. Until then this desk
-              stays empty — you only ever see the clients you cover.
+              stays empty - you only ever see the clients you cover.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -235,7 +235,7 @@ export function StaffDesk() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <CardTitle className="text-base">{serviceLabel(r.service_key)}</CardTitle>
                       <Badge variant="secondary">
-                        {r.status === "quoted" ? "Waiting on the client" : "Signed — activate it"}
+                        {r.status === "quoted" ? "Waiting on the client" : "Signed - activate it"}
                       </Badge>
                     </div>
                     <CardDescription>
@@ -335,7 +335,7 @@ export function StaffDesk() {
                     <CardHeader className="pb-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="text-base">
-                          {i.number ?? "Draft invoice"} · {money(i.total_cents) ?? "—"}
+                          {i.number ?? "Draft invoice"} · {money(i.total_cents) ?? "-"}
                         </CardTitle>
                         <Badge variant={i.due_date && i.due_date < new Date().toISOString().slice(0, 10) ? "destructive" : "secondary"}>
                           {String(i.status).replace(/_/g, " ")}
@@ -372,7 +372,7 @@ export function StaffDesk() {
                     <CardHeader className="pb-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="text-base">
-                          {p.number ?? "Invoice"} · {money(p.total_cents) ?? "—"}
+                          {p.number ?? "Invoice"} · {money(p.total_cents) ?? "-"}
                         </CardTitle>
                         <Badge variant="outline">Awaiting matching</Badge>
                       </div>
@@ -475,7 +475,7 @@ export function ClientCoverageBoard() {
               <CardTitle className="text-base">{c.name}</CardTitle>
               <CardDescription>
                 {c.assignees.length === 0
-                  ? "Nobody assigned — this client shows on no one's desk."
+                  ? "Nobody assigned - this client shows on no one's desk."
                   : `${c.assignees.length} teammate${c.assignees.length === 1 ? "" : "s"} covering`}
               </CardDescription>
             </CardHeader>

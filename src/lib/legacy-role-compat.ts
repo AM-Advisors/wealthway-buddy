@@ -1,5 +1,5 @@
 /**
- * RBAC Stage 2.5 — legacy client role compatibility (pure, dry-run only).
+ * RBAC Stage 2.5 - legacy client role compatibility (pure, dry-run only).
  *
  * The effective behaviour of client_gp / client_readonly today comes from the
  * per-client client_users.client_role value, read by these code paths:
@@ -22,8 +22,8 @@ export const PROPOSED_TEMPLATE: Record<keyof typeof LEGACY_CLIENT_ACTIONS, strin
 };
 
 export const ORPHAN_READONLY = "Legacy client_readonly role has no resolvable client scope.";
-export const MANUAL_REVIEW = "MANUAL REVIEW — DO NOT MIGRATE";
-export const SAFE_WHEN_APPROVED = "Equivalent — eligible (not migrated in this stage)";
+export const MANUAL_REVIEW = "MANUAL REVIEW - DO NOT MIGRATE";
+export const SAFE_WHEN_APPROVED = "Equivalent - eligible (not migrated in this stage)";
 
 export type DryRunRow = {
   userId: string;

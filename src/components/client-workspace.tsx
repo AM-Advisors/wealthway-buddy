@@ -126,7 +126,7 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
       try {
         window.sessionStorage.setItem(ACTIVE_KEY, workspaceId);
       } catch {
-        /* storage unavailable — the switch still works for this visit */
+        /* storage unavailable - the switch still works for this visit */
       }
       setActiveId(workspaceId);
       // Nothing from the previous workspace should linger.

@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/capital")({
   head: () => ({
     meta: [
-      { title: "Capital summary — Harmonious" },
+      { title: "Capital summary - Harmonious" },
       {
         name: "description",
         content:
           "Your commitment, capital contributed, units and distributions for every Harmonious fund you are invested in.",
       },
-      { property: "og:title", content: "Capital summary — Harmonious" },
+      { property: "og:title", content: "Capital summary - Harmonious" },
       {
         property: "og:description",
         content: "Commitment, contributions, units, distributions and capital account statements.",

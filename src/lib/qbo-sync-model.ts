@@ -1,6 +1,6 @@
 /**
  * QuickBooks exchange rules. Pure: parsing, mapping, de-duplication, export
- * and drift. QuickBooks never writes our ledger directly — inbound items only
+ * and drift. QuickBooks never writes our ledger directly - inbound items only
  * become draft entries that still need second-person approval.
  */
 

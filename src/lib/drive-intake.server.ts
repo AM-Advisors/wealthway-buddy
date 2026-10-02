@@ -26,7 +26,7 @@ export async function logIntake(userId: string | null, event: string, outcome: s
     document_id: document_id ?? null,
     offering_id: offering_id ?? null,
     investment_profile_id: investment_profile_id ?? null,
-    // Names/ids only — never document contents.
+    // Names/ids only - never document contents.
     detail: rest,
   });
 }

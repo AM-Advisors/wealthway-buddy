@@ -37,7 +37,7 @@ import {
 } from "@/lib/accounting-phase5.functions";
 
 const money = (c: number | null | undefined) =>
-  c == null ? "—" : `${c < 0 ? "−" : ""}$${Math.abs(c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  c == null ? "-" : `${c < 0 ? "−" : ""}$${Math.abs(c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const toCentsInput = (s: string) => Math.round(Number(s.replace(/[$,\s]/g, "") || "0") * 100);
 const today = () => new Date().toISOString().slice(0, 10);
 const errMsg = (e: unknown) => (e as Error)?.message ?? "Something went wrong.";
@@ -123,10 +123,10 @@ export function GeneralLedgerPanel() {
               {d.entries.length === 0 ? <p className="text-sm text-muted-foreground">No entries yet.</p> : d.entries.map((e) => (
                 <div key={e.id} className="rounded-md border border-border p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div><span className="font-medium">#{e.entryNo}</span> · {e.date} · {e.memo ?? "—"}</div>
+                    <div><span className="font-medium">#{e.entryNo}</span> · {e.date} · {e.memo ?? "-"}</div>
                     <div className="flex items-center gap-2"><Badge variant="outline">{JOURNAL_SOURCE_LABELS[e.source] ?? e.source}</Badge><Badge variant={STATUS_TONE[e.status] ?? "outline"}>{e.status === "posted" ? "Recorded" : e.status}</Badge><span className="font-medium">{money(e.totalCents)}</span></div>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">Prepared by {e.preparedBy ?? "—"}{e.approvedBy ? ` · approved by ${e.approvedBy}` : ""}{e.postedBy ? ` · recorded by ${e.postedBy}` : ""}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Prepared by {e.preparedBy ?? "-"}{e.approvedBy ? ` · approved by ${e.approvedBy}` : ""}{e.postedBy ? ` · recorded by ${e.postedBy}` : ""}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {e.status === "draft" && <Button size="sm" variant="outline" onClick={() => adv.mutate({ entryId: e.id, to: "reviewed" })}>Mark reviewed</Button>}
                     {e.status === "reviewed" && <Button size="sm" variant="outline" onClick={() => adv.mutate({ entryId: e.id, to: "approved" })}>Approve</Button>}
@@ -267,7 +267,7 @@ export function QuickBooksPanel() {
               <label className="flex flex-wrap items-center gap-2">Journal export (CSV)<Input type="file" accept=".csv,text/csv" className="max-w-xs" disabled={impM.isPending} onChange={(e) => { const f = e.target.files?.[0]; if (f) impM.mutate(f); e.target.value = ""; }} /></label>
               {d.inbound.length === 0 ? <p className="text-muted-foreground">Nothing brought in yet.</p> : (
                 <table className="w-full text-xs"><thead className="text-left text-muted-foreground"><tr><th>QuickBooks no.</th><th>Date</th><th>Memo</th><th className="text-right">Amount</th><th>Result</th></tr></thead>
-                  <tbody>{d.inbound.map((r: any) => <tr key={r.id} className="border-t border-border"><td className="py-1">{r.qbo_txn_id}</td><td>{r.txn_date ?? "—"}</td><td>{r.memo ?? "—"}</td><td className="text-right">{money(r.total_cents)}</td><td title={r.detail ?? ""}>{INBOUND_LABEL[r.outcome] ?? r.outcome}{r.detail && r.outcome !== "drafted" ? ` — ${r.detail}` : ""}</td></tr>)}</tbody>
+                  <tbody>{d.inbound.map((r: any) => <tr key={r.id} className="border-t border-border"><td className="py-1">{r.qbo_txn_id}</td><td>{r.txn_date ?? "-"}</td><td>{r.memo ?? "-"}</td><td className="text-right">{money(r.total_cents)}</td><td title={r.detail ?? ""}>{INBOUND_LABEL[r.outcome] ?? r.outcome}{r.detail && r.outcome !== "drafted" ? ` - ${r.detail}` : ""}</td></tr>)}</tbody>
                 </table>
               )}
             </CardContent>
@@ -280,7 +280,7 @@ export function QuickBooksPanel() {
                 <>
                   <div className="max-h-56 space-y-1 overflow-auto">
                     {d.sendable.map((e: any) => (
-                      <label key={e.id} className="flex items-center gap-2"><input type="checkbox" checked={picked.includes(e.id)} onChange={(x) => setPicked(x.target.checked ? [...picked, e.id] : picked.filter((p) => p !== e.id))} />#{e.entry_no} · {e.entry_date} · {e.memo ?? "—"}</label>
+                      <label key={e.id} className="flex items-center gap-2"><input type="checkbox" checked={picked.includes(e.id)} onChange={(x) => setPicked(x.target.checked ? [...picked, e.id] : picked.filter((p) => p !== e.id))} />#{e.entry_no} · {e.entry_date} · {e.memo ?? "-"}</label>
                     ))}
                   </div>
                   <Button size="sm" disabled={!picked.length || batchM.isPending} onClick={() => batchM.mutate(undefined, { onSuccess: () => setPicked([]) })}>Queue {picked.length || ""} for approval</Button>
@@ -289,8 +289,8 @@ export function QuickBooksPanel() {
               {d.batches.map((b) => (
                 <div key={b.id} className="rounded-md border border-border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span>{b.entryIds.length} entr{b.entryIds.length === 1 ? "y" : "ies"} · queued by {b.createdBy ?? "—"} · {new Date(b.createdAt).toLocaleDateString()}</span>
-                    {b.decision ? <Badge variant={b.decision.decision === "approved" ? "secondary" : "outline"}>{b.decision.decision === "approved" ? `Approved by ${b.decision.by ?? "—"}` : `Declined: ${b.decision.reason ?? ""}`}</Badge> : <Badge variant="outline">Waiting for approval</Badge>}
+                    <span>{b.entryIds.length} entr{b.entryIds.length === 1 ? "y" : "ies"} · queued by {b.createdBy ?? "-"} · {new Date(b.createdAt).toLocaleDateString()}</span>
+                    {b.decision ? <Badge variant={b.decision.decision === "approved" ? "secondary" : "outline"}>{b.decision.decision === "approved" ? `Approved by ${b.decision.by ?? "-"}` : `Declined: ${b.decision.reason ?? ""}`}</Badge> : <Badge variant="outline">Waiting for approval</Badge>}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {!b.decision && !b.mine && <><Button size="sm" onClick={() => decideM.mutate({ batchId: b.id, decision: "approved" })}>Approve & download</Button><Button size="sm" variant="ghost" onClick={() => { const r = window.prompt("Why decline this batch?"); if (r?.trim()) decideM.mutate({ batchId: b.id, decision: "declined", reason: r }); }}>Decline…</Button></>}
@@ -305,7 +305,7 @@ export function QuickBooksPanel() {
                         return (
                           <div key={id} className="flex flex-wrap items-center gap-2 text-xs">
                             <span className="font-mono">{id.slice(0, 8)}</span>
-                            <Badge variant="outline">{latest ? ({ exported: "In file", sent: "Imported into QuickBooks", failed: "Import failed", already_in_qbo: "Already in QuickBooks" } as Record<string, string>)[latest.outcome] : "—"}</Badge>
+                            <Badge variant="outline">{latest ? ({ exported: "In file", sent: "Imported into QuickBooks", failed: "Import failed", already_in_qbo: "Already in QuickBooks" } as Record<string, string>)[latest.outcome] : "-"}</Badge>
                             {!done && <><Button size="sm" variant="ghost" onClick={() => resultM.mutate({ batchId: b.id, entryId: id, outcome: "sent" })}>Mark imported</Button><Button size="sm" variant="ghost" onClick={() => { const r = window.prompt("What failed?"); if (r?.trim()) resultM.mutate({ batchId: b.id, entryId: id, outcome: "failed", detail: r }); }}>Mark failed…</Button></>}
                           </div>
                         );
@@ -384,7 +384,7 @@ export function BankAlertsPanel() {
                 {a.kind === "balance_mismatch" ? ` · bank ${money(a.detail.bankCents)} vs ledger ${money(a.detail.ledgerCents)} on ${a.detail.asOf}` : ""}
                 {a.assigneeName ? ` · assigned to ${a.assigneeName}` : ""}
               </p>
-              {a.events.length > 0 && <ul className="mt-1 text-xs text-muted-foreground">{a.events.map((e: any, i: number) => <li key={i}>{new Date(e.created_at).toLocaleString()} — {e.action} by {e.actor ?? "—"}{e.note ? `: ${e.note}` : ""}</li>)}</ul>}
+              {a.events.length > 0 && <ul className="mt-1 text-xs text-muted-foreground">{a.events.map((e: any, i: number) => <li key={i}>{new Date(e.created_at).toLocaleString()} - {e.action} by {e.actor ?? "-"}{e.note ? `: ${e.note}` : ""}</li>)}</ul>}
               <div className="mt-2 flex flex-wrap gap-2">
                 {a.state === "open" && <Button size="sm" variant="outline" onClick={() => actM.mutate({ alertId: a.id, action: "acknowledged" })}>Acknowledge</Button>}
                 {a.state !== "resolved" && <Button size="sm" variant="outline" onClick={() => actM.mutate({ alertId: a.id, action: "assigned" })}>Assign to me</Button>}
@@ -416,7 +416,7 @@ function SheetBody({ kind, snapshot }: { kind: string; snapshot: any }) {
   }
   return (
     <ul className="space-y-1 text-xs">
-      {(snapshot.items ?? []).map((i: any) => <li key={i.key} className="flex items-center gap-2"><Badge variant={i.ok ? "secondary" : "destructive"}>{i.ok ? "Done" : "Open"}</Badge>{i.label} — <span className="text-muted-foreground">{i.detail}</span></li>)}
+      {(snapshot.items ?? []).map((i: any) => <li key={i.key} className="flex items-center gap-2"><Badge variant={i.ok ? "secondary" : "destructive"}>{i.ok ? "Done" : "Open"}</Badge>{i.label} - <span className="text-muted-foreground">{i.detail}</span></li>)}
     </ul>
   );
 }
@@ -474,9 +474,9 @@ export function CloseSheetsPanel() {
                 <CardHeader>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle className="text-base">{s.kind === "investor_closing" ? `Investor closing ${s.key}` : `Month-end ${s.key}`} · version {v.version}</CardTitle>
-                    {v.decision ? <Badge variant={v.decision.decision === "approved" ? "secondary" : "outline"}>{v.decision.decision === "approved" ? `Approved by ${v.decision.by ?? "—"}` : `Returned: ${v.decision.reason ?? ""}`}</Badge> : <Badge variant="outline">Waiting for sign-off</Badge>}
+                    {v.decision ? <Badge variant={v.decision.decision === "approved" ? "secondary" : "outline"}>{v.decision.decision === "approved" ? `Approved by ${v.decision.by ?? "-"}` : `Returned: ${v.decision.reason ?? ""}`}</Badge> : <Badge variant="outline">Waiting for sign-off</Badge>}
                   </div>
-                  <p className="text-xs text-muted-foreground">Prepared by {v.preparedByName ?? "—"} on {new Date(v.createdAt).toLocaleDateString()}{v.approvalDeadline ? ` · approve by ${v.approvalDeadline}` : ""}</p>
+                  <p className="text-xs text-muted-foreground">Prepared by {v.preparedByName ?? "-"} on {new Date(v.createdAt).toLocaleDateString()}{v.approvalDeadline ? ` · approve by ${v.approvalDeadline}` : ""}</p>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <SheetBody kind={s.kind} snapshot={v.snapshot} />

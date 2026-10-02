@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/manager/offering-statement")({
   head: () => ({
     meta: [
-      { title: "Offering Statement — Harmonious Fund Manager" },
+      { title: "Offering Statement - Harmonious Fund Manager" },
       {
         name: "description",
         content:
-          "Enter your fund's offering terms — fees, minimums, closings and distributions — and publish them to the due diligence room.",
+          "Enter your fund's offering terms - fees, minimums, closings and distributions - and publish them to the due diligence room.",
       },
-      { property: "og:title", content: "Offering Statement — Harmonious Fund Manager" },
+      { property: "og:title", content: "Offering Statement - Harmonious Fund Manager" },
       {
         property: "og:description",
         content: "Enter and publish your fund's offering terms for investors.",

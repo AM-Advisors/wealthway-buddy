@@ -6,12 +6,12 @@ import { OfferingMemoEditor } from "@/components/offering-memo-editor";
 export const Route = createFileRoute("/_authenticated/admin/memo")({
   head: () => ({
     meta: [
-      { title: "Offering Memos — Harmonious Admin" },
+      { title: "Offering Memos - Harmonious Admin" },
       {
         name: "description",
         content: "Write and publish the offering memo investors read for each Harmonious fund.",
       },
-      { property: "og:title", content: "Offering Memos — Harmonious Admin" },
+      { property: "og:title", content: "Offering Memos - Harmonious Admin" },
       {
         property: "og:description",
         content: "Edit each fund's offering memo and choose when investors can read it.",

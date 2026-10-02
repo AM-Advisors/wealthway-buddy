@@ -48,15 +48,15 @@ export function GovernmentIdReview({ investorUserId }: { investorUserId: string 
             <div key={item.applicationId} className="rounded-md border p-4 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-medium">{item.fund}</p>
-                <Badge variant="secondary" className="capitalize">Review: {String(item.reviewStatus ?? "—").replace("_", " ")}</Badge>
+                <Badge variant="secondary" className="capitalize">Review: {String(item.reviewStatus ?? "-").replace("_", " ")}</Badge>
               </div>
               <dl className="mt-3 grid gap-2 sm:grid-cols-3">
-                <Row k="Document type" v={item.documentType ? TYPE_LABEL[item.documentType] ?? item.documentType : "—"} />
-                <Row k="Issuing country" v={item.issuingCountry ?? "—"} />
-                <Row k="Expiration" v={item.expiration ?? "—"} />
+                <Row k="Document type" v={item.documentType ? TYPE_LABEL[item.documentType] ?? item.documentType : "-"} />
+                <Row k="Issuing country" v={item.issuingCountry ?? "-"} />
+                <Row k="Expiration" v={item.expiration ?? "-"} />
                 <Row k="Document number" v={maskDocumentNumber(item.last4)} />
                 <Row k="ID uploaded" v={active.length ? "Yes" : item.providedByVerification ? "Provided through verification" : "No"} />
-                <Row k="Verification" v={`${item.provider ?? "—"} · ${item.providerStatus ?? "—"}`} />
+                <Row k="Verification" v={`${item.provider ?? "-"} · ${item.providerStatus ?? "-"}`} />
               </dl>
               {active.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">

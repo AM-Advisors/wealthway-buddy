@@ -82,7 +82,7 @@ export function DriveStatusCard({ offeringId }: { offeringId: string }) {
           status={inv?.status ?? "not_connected"}
           note={
             inv?.status === "permission_review"
-              ? "Investor Drive filing unavailable — repository permissions require review."
+              ? "Investor Drive filing unavailable - repository permissions require review."
               : inv?.error ?? (inv?.status === "connected" ? `${inv.folders} investor folder${inv.folders === 1 ? "" : "s"}. Executed documents file automatically.` : "Kept in a separate restricted drive. Not set up yet.")
           }
           url={inv?.url ?? null}

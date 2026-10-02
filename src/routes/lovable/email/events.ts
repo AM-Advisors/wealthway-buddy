@@ -34,7 +34,7 @@ async function alertAdmins(eventType: string, recipient: string, subjectLine: st
         if (row.email) emails.add(row.email.toLowerCase())
       }
     }
-    // Never alert the address that just failed — that send is suppressed anyway.
+    // Never alert the address that just failed - that send is suppressed anyway.
     emails.delete(recipient.toLowerCase())
     if (emails.size === 0) return
 

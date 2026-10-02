@@ -18,7 +18,7 @@ import { deleteClientPrice, PRICING_MODELS, saveClientPrice } from "@/lib/contra
 
 const money = (cents: number | null | undefined) =>
   cents === null || cents === undefined
-    ? "—"
+    ? "-"
     : (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 const toCents = (value: string) => (value.trim() === "" ? null : Math.round(Number(value) * 100));
@@ -155,7 +155,7 @@ export function ClientPricingBoard({
                       ? `Bills the service: ${
                           catalog.find((s: any) => s.key === row.service_key)?.name ?? row.service_key
                         }`
-                      : "Not linked to a service — it won't appear on a prepared invoice."}
+                      : "Not linked to a service - it won't appear on a prepared invoice."}
                   </p>
                   {row.discount_note ? (
                     <p className="text-xs text-muted-foreground">{row.discount_note}</p>

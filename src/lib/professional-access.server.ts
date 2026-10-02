@@ -1,5 +1,5 @@
 /**
- * Phase 3A — read-only delegated access for professionals.
+ * Phase 3A - read-only delegated access for professionals.
  *
  * Everything a professional can see is assembled here, and every single item is
  * cleared by the centralized `canAct(actor, capability, resource)` decision
@@ -469,7 +469,7 @@ export async function buildDelegatedClientView(
   // ---- tasks: outstanding items the professional can see ----------------
   for (const app of view.investments) {
     if (app.fundingStatus && app.fundingStatus !== "settled") {
-      view.tasks.push({ label: `Funding outstanding — ${app.fundName}`, investmentId: app.id });
+      view.tasks.push({ label: `Funding outstanding - ${app.fundName}`, investmentId: app.id });
     }
   }
   if (view.compliance && view.compliance.identity !== "Verified") {

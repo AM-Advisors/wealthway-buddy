@@ -11,7 +11,7 @@
  * Controls preserved:
  *  - investor tax allocations must reconcile to the partnership totals exactly;
  *  - K-1s come only from a finalized allocation run, never from a draft;
- *  - a final form is never rewritten — corrections supersede it;
+ *  - a final form is never rewritten - corrections supersede it;
  *  - the preparer of a return can never approve it;
  *  - missing or expired W-8 documentation routes to review at the statutory
  *    rate, never to a favourable assumption;

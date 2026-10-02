@@ -7,9 +7,9 @@ import { VIEW_AS_COPY } from "@/lib/view-as";
 export const Route = createFileRoute("/_authenticated/view-as")({
   head: () => ({
     meta: [
-      { title: "Client View — Harmonious" },
+      { title: "Client View - Harmonious" },
       { name: "description", content: "Read-only view of exactly what an investor or fund manager sees." },
-      { property: "og:title", content: "Client View — Harmonious" },
+      { property: "og:title", content: "Client View - Harmonious" },
       { property: "og:description", content: "Read-only view of exactly what an investor or fund manager sees." },
       { name: "robots", content: "noindex" },
     ],

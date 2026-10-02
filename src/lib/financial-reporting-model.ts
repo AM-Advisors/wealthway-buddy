@@ -3,7 +3,7 @@
  *
  * Statements are *presentations* of records that already exist: posted ledger
  * lines, approved valuations, finalized allocations. Nothing in this module
- * invents a figure — it maps, totals, compares and checks. Every rule here is
+ * invents a figure - it maps, totals, compares and checks. Every rule here is
  * testable without a database, and the server engine is the only caller that
  * may persist what these functions produce.
  */
@@ -126,16 +126,16 @@ export const DEFAULT_MAPPING_LINES: MappingLine[] = [
   { statement: "balance_sheet", section: "capital", key: "contributions", label: "Capital contributions", order: 220, match: { subtypes: ["contribution"] } },
   { statement: "balance_sheet", section: "capital", key: "distributions", label: "Distributions", order: 230, sign: -1, match: { subtypes: ["distribution"] } },
   { statement: "balance_sheet", section: "capital", key: "other_equity", label: "Other capital", order: 290, match: { types: ["equity"] } },
-  // Operations — income
+  // Operations - income
   { statement: "income_statement", section: "income", key: "interest_income", label: "Interest income", order: 10, match: { subtypes: ["interest"] } },
   { statement: "income_statement", section: "income", key: "dividend_income", label: "Dividend income", order: 20, match: { subtypes: ["dividend"] } },
   { statement: "income_statement", section: "income", key: "other_income", label: "Other investment income", order: 30, match: { subtypes: ["investment_income"] } },
-  // Operations — expenses
+  // Operations - expenses
   { statement: "income_statement", section: "expenses", key: "management_fees", label: "Management fees", order: 110, match: { subtypes: ["management_fee"] } },
   { statement: "income_statement", section: "expenses", key: "organizational_expenses", label: "Organisational expenses", order: 120, match: { subtypes: ["organizational_expense"] } },
   { statement: "income_statement", section: "expenses", key: "tax_expense", label: "Taxes", order: 130, match: { subtypes: ["tax_adjustment", "withholding"] } },
   { statement: "income_statement", section: "expenses", key: "other_expenses", label: "Other operating expenses", order: 190, match: { types: ["expense"] } },
-  // Operations — gains
+  // Operations - gains
   { statement: "income_statement", section: "gains", key: "realized_gain", label: "Net realised gain / loss", order: 210, match: { subtypes: ["realized_gain"] } },
   { statement: "income_statement", section: "gains", key: "unrealized_gain", label: "Net change in unrealised appreciation", order: 220, match: { subtypes: ["unrealized_gain"] } },
 ];
@@ -175,7 +175,7 @@ export function mapAccount(
   return byType ?? null;
 }
 
-/** Accounts a mapping cannot place — a blocking reporting exception. */
+/** Accounts a mapping cannot place - a blocking reporting exception. */
 export function unmappedAccounts(
   accounts: AccountRef[],
   mapping: StatementMapping,
@@ -369,7 +369,7 @@ export type IncomeStatement = {
   netIncreaseCents: number;
 };
 
-/** Operations from period activity only — never cumulative balances. */
+/** Operations from period activity only - never cumulative balances. */
 export function incomeStatement(
   periodStart: string,
   periodEnd: string,

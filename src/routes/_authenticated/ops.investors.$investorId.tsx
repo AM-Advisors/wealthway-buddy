@@ -9,9 +9,9 @@ export const Route = createFileRoute("/_authenticated/ops/investors/$investorId"
   }),
   head: () => ({
     meta: [
-      { title: "Investor 360 — Harmonious operations" },
+      { title: "Investor 360 - Harmonious operations" },
       { name: "description", content: "One investor relationship: profiles, investments, capital, tax, documents and identity checks." },
-      { property: "og:title", content: "Investor 360 — Harmonious operations" },
+      { property: "og:title", content: "Investor 360 - Harmonious operations" },
       { property: "og:description", content: "One investor relationship: profiles, investments, capital, tax, documents and identity checks." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

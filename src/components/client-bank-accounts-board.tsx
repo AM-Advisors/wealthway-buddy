@@ -208,7 +208,7 @@ export function ClientBankAccountsBoard() {
                   <div className="min-w-0 space-y-1 text-sm">
                     <p className="font-medium break-words">
                       {account.institutionName}
-                      {account.label ? ` — ${account.label}` : ""}
+                      {account.label ? ` - ${account.label}` : ""}
                       {account.isPrimary ? (
                         <Badge className="ml-2" variant="secondary">
                           Main

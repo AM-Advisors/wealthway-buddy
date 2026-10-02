@@ -5,12 +5,12 @@ import { InvestorOnboardingManagerBoard } from "@/components/investor-onboarding
 export const Route = createFileRoute("/_authenticated/manager/investor-onboarding")({
   head: () => ({
     meta: [
-      { title: "Investors joining your funds — Harmonious" },
+      { title: "Investors joining your funds - Harmonious" },
       {
         name: "description",
         content: "Track how far each investor has got in joining the funds you manage.",
       },
-      { property: "og:title", content: "Investors joining your funds — Harmonious" },
+      { property: "og:title", content: "Investors joining your funds - Harmonious" },
       { property: "og:description", content: "Manager view of investor onboarding progress." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

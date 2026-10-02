@@ -22,7 +22,7 @@ function ClientActivity({ delegationId, label }: { delegationId: string; label: 
         <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
           {events.map((e: any, i: number) => (
             <li key={i}>
-              {new Date(e.created_at).toLocaleString()} — {String(e.action).replace(/_/g, " ")}
+              {new Date(e.created_at).toLocaleString()} - {String(e.action).replace(/_/g, " ")}
               {e.detail ? ` (${e.detail})` : ""}
             </li>
           ))}

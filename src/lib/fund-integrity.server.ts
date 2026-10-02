@@ -33,7 +33,7 @@ async function isSuperAdmin(context: any): Promise<boolean> {
 
 async function audit(offeringId: string | null, itemId: string | null, event: string, actorId: string | null, detail: Record<string, unknown> = {}) {
   const db = await admin();
-  // Categories and ids only — never names, paths, identifiers or document contents.
+  // Categories and ids only - never names, paths, identifiers or document contents.
   await db.from("fund_record_sync_events").insert({ offering_id: offeringId, item_id: itemId, event, detail, actor_id: actorId });
 }
 
@@ -86,7 +86,7 @@ async function fundDuplicateItems(runId: string | null, actorId: string | null) 
     const ids = list.map((f) => f.id).sort();
     const key = `fund-dup:${ids.join(":")}`;
     keys.push(key);
-    await upsertItem({ offeringId: ids[0]!, key, category: "fund_duplicate", confidence: "duplicate", title: `Fund Duplicate Review — ${list[0]!.name}`, detail: { fundIds: ids, nameKey: k }, runId, actorId });
+    await upsertItem({ offeringId: ids[0]!, key, category: "fund_duplicate", confidence: "duplicate", title: `Fund Duplicate Review - ${list[0]!.name}`, detail: { fundIds: ids, nameKey: k }, runId, actorId });
   }
   return keys.length;
 }
@@ -117,7 +117,7 @@ async function upsertItem(i: ItemInput): Promise<{ id: string; created: boolean 
     : { ...base, item_key: i.key, status: "open" };
   const { data, error } = await db.from("fund_record_sync_items").insert(row).select("id").single();
   if (error) {
-    // A concurrent run inserted the same key first — converge on it.
+    // A concurrent run inserted the same key first - converge on it.
     const { data: again } = await db.from("fund_record_sync_items").select("id").eq("item_key", i.key).maybeSingle();
     if (again) return { id: again.id, created: false };
     throw new Error(error.message);
@@ -234,21 +234,21 @@ export async function runInvestorRecordsSync(context: any, offeringId: string) {
     if (c.category === "matched" && c.confidence === "exact") {
       profileFolders.set(c.profileId ?? "", [...(profileFolders.get(c.profileId ?? "") ?? []), f.id]);
       const inv = investments.find((i) => i.onboardingId === c.onboardingId)!;
-      await upsertItem({ offeringId, key: syncItemKey(offeringId, "matched", ref), category: "matched", confidence: "exact", title: `Matched — ${f.name}`, detail, sourceRef: f.id, onboardingId: c.onboardingId, profileId: c.profileId, personId: inv.personId, runId, actorId, resolvedAsMatch: true });
-      // Entity/display-name drift becomes a Suggested Update — never an overwrite.
+      await upsertItem({ offeringId, key: syncItemKey(offeringId, "matched", ref), category: "matched", confidence: "exact", title: `Matched - ${f.name}`, detail, sourceRef: f.id, onboardingId: c.onboardingId, profileId: c.profileId, personId: inv.personId, runId, actorId, resolvedAsMatch: true });
+      // Entity/display-name drift becomes a Suggested Update - never an overwrite.
       if (inv.profileName && normalizeFundName(displayName) && normalizeFundName(displayName) !== normalizeFundName(inv.profileName)) {
-        await upsertItem({ offeringId, key: syncItemKey(offeringId, "suggested_update", `${ref}:name`), category: "suggested_update", confidence: "exact", title: `Suggested Update — folder name differs from the investing profile`, detail: { ...detail, field: "legal_name", protected: syncProtected(inv.stage) }, sourceRef: f.id, onboardingId: inv.onboardingId, profileId: inv.profileId, runId, actorId });
+        await upsertItem({ offeringId, key: syncItemKey(offeringId, "suggested_update", `${ref}:name`), category: "suggested_update", confidence: "exact", title: `Suggested Update - folder name differs from the investing profile`, detail: { ...detail, field: "legal_name", protected: syncProtected(inv.stage) }, sourceRef: f.id, onboardingId: inv.onboardingId, profileId: inv.profileId, runId, actorId });
       }
     } else if (c.category === "matched" || c.category === "conflict") {
-      await upsertItem({ offeringId, key: syncItemKey(offeringId, c.category === "conflict" ? "conflict" : "unmatched_folder", ref), category: c.category === "conflict" ? "conflict" : "unmatched_folder", confidence: c.category === "conflict" ? "conflict" : "likely", title: `${c.category === "conflict" ? "Conflict" : "Likely Match — Review Required"} — ${f.name}`, detail: { ...detail, candidateOnboardingIds: c.onboardingIds }, sourceRef: f.id, onboardingId: c.onboardingIds.length === 1 ? c.onboardingIds[0]! : null, runId, actorId });
+      await upsertItem({ offeringId, key: syncItemKey(offeringId, c.category === "conflict" ? "conflict" : "unmatched_folder", ref), category: c.category === "conflict" ? "conflict" : "unmatched_folder", confidence: c.category === "conflict" ? "conflict" : "likely", title: `${c.category === "conflict" ? "Conflict" : "Likely Match - Review Required"} - ${f.name}`, detail: { ...detail, candidateOnboardingIds: c.onboardingIds }, sourceRef: f.id, onboardingId: c.onboardingIds.length === 1 ? c.onboardingIds[0]! : null, runId, actorId });
     } else if (c.category === "removed_investor") {
-      await upsertItem({ offeringId, key: syncItemKey(offeringId, "removed_investor", ref), category: "removed_investor", confidence: "none", title: `Folder for a removed investor — ${f.name}`, detail, sourceRef: f.id, onboardingId: c.onboardingId, runId, actorId });
+      await upsertItem({ offeringId, key: syncItemKey(offeringId, "removed_investor", ref), category: "removed_investor", confidence: "none", title: `Folder for a removed investor - ${f.name}`, detail, sourceRef: f.id, onboardingId: c.onboardingId, runId, actorId });
     } else if (c.category === "existing_person_missing_investment") {
-      await upsertItem({ offeringId, key: syncItemKey(offeringId, "existing_person_missing_investment", ref), category: "existing_person_missing_investment", confidence: "likely", title: `Existing Investor — Add to This Fund? — ${f.name}`, detail, sourceRef: f.id, personId: c.personIds[0]!, runId, actorId });
+      await upsertItem({ offeringId, key: syncItemKey(offeringId, "existing_person_missing_investment", ref), category: "existing_person_missing_investment", confidence: "likely", title: `Existing Investor - Add to This Fund? - ${f.name}`, detail, sourceRef: f.id, personId: c.personIds[0]!, runId, actorId });
     } else if (c.category === "duplicate_candidate") {
-      await upsertItem({ offeringId, key: syncItemKey(offeringId, "duplicate_candidate", ref), category: "duplicate_candidate", confidence: "duplicate", title: `Duplicate Candidate — ${f.name}`, detail: { ...detail, candidatePersonCount: c.personIds.length }, sourceRef: f.id, runId, actorId });
+      await upsertItem({ offeringId, key: syncItemKey(offeringId, "duplicate_candidate", ref), category: "duplicate_candidate", confidence: "duplicate", title: `Duplicate Candidate - ${f.name}`, detail: { ...detail, candidatePersonCount: c.personIds.length }, sourceRef: f.id, runId, actorId });
     } else {
-      await upsertItem({ offeringId, key: syncItemKey(offeringId, "new_investor_candidate", ref), category: "new_investor_candidate", confidence: "none", title: `No Match — ${f.name}`, detail, sourceRef: f.id, runId, actorId });
+      await upsertItem({ offeringId, key: syncItemKey(offeringId, "new_investor_candidate", ref), category: "new_investor_candidate", confidence: "none", title: `No Match - ${f.name}`, detail, sourceRef: f.id, runId, actorId });
     }
 
     // Documents inside the folder: never imported by sync, never "signed" because a PDF exists.
@@ -259,7 +259,7 @@ export async function runInvestorRecordsSync(context: any, offeringId: string) {
       if (isBlockedFromInvestorDrive(file.name)) {
         await upsertItem({ offeringId, key: syncItemKey(offeringId, "restricted_document", `file:${file.id}`), category: "restricted_document", confidence: null, title: "Restricted Document Review Required", detail: { folderId: f.id, fileId: file.id }, sourceRef: file.id, runId, actorId });
       } else if (!known.has(file.id)) {
-        await upsertItem({ offeringId, key: syncItemKey(offeringId, "historical_document", `file:${file.id}`), category: "historical_document", confidence: null, title: `Historical / Imported — ${file.name.slice(0, 120)}`, detail: { folderId: f.id, fileId: file.id, executionEvidence: "none" }, sourceRef: file.id, runId, actorId });
+        await upsertItem({ offeringId, key: syncItemKey(offeringId, "historical_document", `file:${file.id}`), category: "historical_document", confidence: null, title: `Historical / Imported - ${file.name.slice(0, 120)}`, detail: { folderId: f.id, fileId: file.id, executionEvidence: "none" }, sourceRef: file.id, runId, actorId });
       }
     }
   }
@@ -275,7 +275,7 @@ export async function runInvestorRecordsSync(context: any, offeringId: string) {
   const mappedProfiles = new Set(((mappings ?? []) as any[]).filter((m) => m.folder_id && m.status !== "archived").map((m) => m.investment_profile_id));
   for (const inv of investments) {
     if (inv.removed || !inv.profileId || mappedProfiles.has(inv.profileId)) continue;
-    await upsertItem({ offeringId, key: syncItemKey(offeringId, "missing_folder", `profile:${inv.profileId}`), category: "missing_folder", confidence: null, title: `Investor Records Folder Missing — ${inv.profileName ?? "Investor"}`, detail: {}, onboardingId: inv.onboardingId, profileId: inv.profileId, personId: inv.personId, runId, actorId });
+    await upsertItem({ offeringId, key: syncItemKey(offeringId, "missing_folder", `profile:${inv.profileId}`), category: "missing_folder", confidence: null, title: `Investor Records Folder Missing - ${inv.profileName ?? "Investor"}`, detail: {}, onboardingId: inv.onboardingId, profileId: inv.profileId, personId: inv.personId, runId, actorId });
   }
 
   // Duplicate Funds on the platform whose name normalizes like this one.
@@ -283,7 +283,7 @@ export async function runInvestorRecordsSync(context: any, offeringId: string) {
   const twins = funds.filter((f) => f.id !== offeringId && (normalizeFundName(f.name) === normalizeFundName(fund.name) || (looseFundKey(fund.name).length >= 4 && looseFundKey(f.name) === looseFundKey(fund.name))));
   if (twins.length) {
     const ids = [offeringId, ...twins.map((t) => t.id)].sort();
-    await upsertItem({ offeringId, key: `fund-dup:${ids.join(":")}`, category: "fund_duplicate", confidence: "duplicate", title: `Fund Duplicate Review — ${fund.name}`, detail: { fundIds: ids }, runId, actorId });
+    await upsertItem({ offeringId, key: `fund-dup:${ids.join(":")}`, category: "fund_duplicate", confidence: "duplicate", title: `Fund Duplicate Review - ${fund.name}`, detail: { fundIds: ids }, runId, actorId });
   }
 
   const status = await syncStatus(context, offeringId, true);

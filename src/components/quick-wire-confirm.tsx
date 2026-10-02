@@ -57,7 +57,7 @@ export function QuickWireConfirm({
           confirm_accurate: true,
         },
       });
-      toast.success("Wire confirmed — we'll review it and update your status.");
+      toast.success("Wire confirmed - we'll review it and update your status.");
       await queryClient.invalidateQueries({ queryKey: ["funding"] });
       await queryClient.invalidateQueries({ queryKey: ["portal"] });
     } catch (e) {

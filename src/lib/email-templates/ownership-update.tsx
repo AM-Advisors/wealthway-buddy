@@ -65,7 +65,7 @@ function OwnershipUpdate({
     <Html>
       <Head />
       <Preview>
-        Your position in {offeringName} has been updated{ownershipPct ? ` — now ${ownershipPct}` : ''}
+        Your position in {offeringName} has been updated{ownershipPct ? ` - now ${ownershipPct}` : ''}
       </Preview>
       <Body
         style={{
@@ -110,7 +110,7 @@ function OwnershipUpdate({
                 margin: '0 0 2px',
               }}
             >
-              {ownershipPct ?? '—'}
+              {ownershipPct ?? '-'}
             </Text>
             <Text style={{ color: muted, fontSize: '12px', margin: '0 0 12px' }}>
               Your ownership of the fund

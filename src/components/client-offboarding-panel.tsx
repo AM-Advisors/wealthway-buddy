@@ -69,17 +69,17 @@ export function ClientOffboardingPanel() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <p className="text-xs text-muted-foreground">Notice received</p>
-            <p className="font-medium">{c.noticeReceivedOn ?? "—"}</p>
+            <p className="font-medium">{c.noticeReceivedOn ?? "-"}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Services end</p>
-            <p className="font-medium">{c.effectiveEndDate ?? "—"}</p>
+            <p className="font-medium">{c.effectiveEndDate ?? "-"}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Days remaining</p>
             <p className="font-medium">
               {c.status === "closed" || c.daysRemaining === null
-                ? "—"
+                ? "-"
                 : c.daysRemaining >= 0
                   ? c.daysRemaining
                   : "Period ended"}

@@ -4,14 +4,14 @@ import { ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { seoLinks, seoMeta, seoScripts } from "@/lib/seo";
 
-const TITLE = "Resources — Guides for founders and fund managers";
+const TITLE = "Resources - Guides for founders and fund managers";
 const DESCRIPTION =
-  "Practical guides on entity formation, EINs, Reg D exemptions, and private capital software — from the Harmonious team.";
+  "Practical guides on entity formation, EINs, Reg D exemptions, and private capital software - from the Harmonious team.";
 
 export const Route = createFileRoute("/resources/")({
   head: () => ({
     meta: [
-      { title: `${TITLE} — Harmonious` },
+      { title: `${TITLE} - Harmonious` },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
@@ -43,7 +43,7 @@ const GUIDES = [
     audience: "For buyers",
     title: "Private Equity Software Buyer's Guide",
     blurb:
-      "Compare deal management, fund accounting, LP portals, cap table, and reporting — and how to score a unified platform.",
+      "Compare deal management, fund accounting, LP portals, cap table, and reporting - and how to score a unified platform.",
     to: "/resources/pe-software-buyers-guide" as const,
   },
 ];

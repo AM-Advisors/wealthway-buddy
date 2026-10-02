@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getHarmoniousTeam, getMyHarmoniousContacts, setClientTeamMember, setFundTeamOverride } from "@/lib/harmonious-team.functions";
 import { TEAM_ROLE_LABEL, TEAM_SOURCE_LABEL, type TeamRole, type TeamSource } from "@/lib/harmonious-team";
 
-/** Internal Harmonious Team for a Client or Fund. Ownership only — never a gate. */
+/** Internal Harmonious Team for a Client or Fund. Ownership only - never a gate. */
 export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string; offeringId?: string }) {
   const load = useServerFn(getHarmoniousTeam);
   const setClient = useServerFn(setClientTeamMember);

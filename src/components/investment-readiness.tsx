@@ -14,8 +14,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { cn } from "@/lib/utils";
 import { ACTIVE, blockersOf, bucketOf, closeHeadline, isAging, plainStatus, toggleStage, waitingLabel, type Bucket, type Viewer } from "@/lib/readiness-presentation";
 
-const money = (c: number | null | undefined) => (c ? `$${(c / 100).toLocaleString("en-US")}` : "—");
-const ownerText = (o: string | null | undefined) => (o ? OWNER_LABELS[o as keyof typeof OWNER_LABELS] : "—");
+const money = (c: number | null | undefined) => (c ? `$${(c / 100).toLocaleString("en-US")}` : "-");
+const ownerText = (o: string | null | undefined) => (o ? OWNER_LABELS[o as keyof typeof OWNER_LABELS] : "-");
 
 function tone(s: ReadinessStatus) {
   if (s === "complete") return "text-muted-foreground";
@@ -25,7 +25,7 @@ function tone(s: ReadinessStatus) {
 }
 
 function ago(iso: string | null | undefined) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
   if (m < 60) return `${m}m ago`;
   if (m < 1440) return `${Math.round(m / 60)}h ago`;
@@ -168,7 +168,7 @@ function AuditDetails({ r }: { r: any }) {
             <thead><tr className="text-left"><th className="py-1 font-medium">Item</th><th className="font-medium">Source</th><th className="font-medium">Status</th></tr></thead>
             <tbody>
               {r.items.map((i: any) => (
-                <tr key={i.key} className="border-t align-top"><td className="py-1 pr-2">{i.label}{i.reason ? ` — ${i.reason}` : ""}</td><td className="pr-2">{i.source ?? "—"}</td><td>{i.status}</td></tr>
+                <tr key={i.key} className="border-t align-top"><td className="py-1 pr-2">{i.label}{i.reason ? ` - ${i.reason}` : ""}</td><td className="pr-2">{i.source ?? "-"}</td><td>{i.status}</td></tr>
               ))}
             </tbody>
           </table>

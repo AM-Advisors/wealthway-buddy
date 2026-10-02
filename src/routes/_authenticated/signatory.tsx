@@ -51,7 +51,7 @@ function SignatoryAuthority() {
         <h1 className="text-3xl">Signing authority</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Who may sign on your behalf, for which of your entities, and for which documents. Nobody can
-          move money, change bank details or approve a payment through this — ever.
+          move money, change bank details or approve a payment through this - ever.
         </p>
       </header>
 
@@ -112,7 +112,7 @@ function SignatoryAuthority() {
                   <div>
                     <dt className="text-xs text-muted-foreground">Dates</dt>
                     <dd>
-                      {g.effectiveAt ? new Date(g.effectiveAt).toLocaleDateString() : "—"} –{" "}
+                      {g.effectiveAt ? new Date(g.effectiveAt).toLocaleDateString() : "-"} –{" "}
                       {g.expiresAt ? new Date(g.expiresAt).toLocaleDateString() : "no end date"}
                     </dd>
                   </div>
@@ -190,13 +190,13 @@ function SignatoryAuthority() {
 export const Route = createFileRoute("/_authenticated/signatory")({
   head: () => ({
     meta: [
-      { title: "Signing authority — Harmonious" },
+      { title: "Signing authority - Harmonious" },
       {
         name: "description",
         content:
           "See who may sign on your behalf, for which entities and documents, and withdraw that authority at any time.",
       },
-      { property: "og:title", content: "Signing authority — Harmonious" },
+      { property: "og:title", content: "Signing authority - Harmonious" },
       {
         property: "og:description",
         content: "Control who can sign documents on your behalf at Harmonious.",

@@ -157,7 +157,7 @@ export const getProviderPortal = createServerFn({ method: "GET" })
   });
 
 /** A provider sends Harmonious a cost they have incurred. It is a request to
- *  record the cost — nothing is billed to a client until Harmonious accepts it. */
+ *  record the cost - nothing is billed to a client until Harmonious accepts it. */
 export const submitProviderExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>

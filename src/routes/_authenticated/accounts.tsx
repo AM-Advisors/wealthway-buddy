@@ -31,13 +31,13 @@ import {
 export const Route = createFileRoute("/_authenticated/accounts")({
   head: () => ({
     meta: [
-      { title: "Your Investing Accounts — Harmonious" },
+      { title: "Your Investing Accounts - Harmonious" },
       {
         name: "description",
         content:
-          "Set up and switch between your investing accounts — individual, LLC, trust, IRA or joint — and see the funds each one is applying to.",
+          "Set up and switch between your investing accounts - individual, LLC, trust, IRA or joint - and see the funds each one is applying to.",
       },
-      { property: "og:title", content: "Your Investing Accounts — Harmonious" },
+      { property: "og:title", content: "Your Investing Accounts - Harmonious" },
       {
         property: "og:description",
         content: "Manage individual, entity, trust and retirement accounts in one place.",
@@ -70,7 +70,7 @@ const EMPTY: FormState = {
 };
 
 function money(cents: number | null | undefined) {
-  if (!cents && cents !== 0) return "—";
+  if (!cents && cents !== 0) return "-";
   return `$${Math.round(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -215,8 +215,8 @@ function AccountsPage() {
                       <div>
                         <p className="font-medium">{application.offering_name}</p>
                         <p className="text-muted-foreground">
-                          Step: {application.current_step ?? "—"} · Status: {application.status} ·
-                          Funding: {application.funding_status ?? "—"}
+                          Step: {application.current_step ?? "-"} · Status: {application.status} ·
+                          Funding: {application.funding_status ?? "-"}
                         </p>
                       </div>
                       <span className="font-medium">{money(application.commitment_cents)}</span>

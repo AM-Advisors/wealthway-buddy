@@ -11,7 +11,7 @@ export const leadSchema = z.object({
   company: z.string().trim().min(1, "Please enter your company").max(160),
   intent: z.enum(LEAD_INTENTS.map((i) => i.value) as [string, ...string[]]),
   message: opt(2000),
-  /** Honeypot — real visitors never fill this. */
+  /** Honeypot - real visitors never fill this. */
   website: z.string().max(0).optional(),
   attribution: z
     .object({
@@ -49,7 +49,7 @@ export function toSalesforceLead(lead: z.output<typeof leadSchema>) {
 }
 
 /**
- * Public lead submission. Stores the lead only — it never creates an account,
+ * Public lead submission. Stores the lead only - it never creates an account,
  * membership, role, fund, company or any other application record.
  */
 export const submitLead = createServerFn({ method: "POST" })

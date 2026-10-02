@@ -82,7 +82,7 @@ export function FundSetupChecklist({
           <h3 className="font-medium">Formation documents</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {([["Formation document", evidence.formation], ["Certificate of formation", evidence.certificate], ["IRS EIN letter", evidence.einLetter]] as const).map(([l, ok]) => (
-              <li key={l} className="flex items-start gap-2">{icon(ok)}<div><p>{l}{ok ? " — recorded" : ""}</p>{!ok && <GoTo k="entity_formation" canNavigate={canNavigate} />}</div></li>
+              <li key={l} className="flex items-start gap-2">{icon(ok)}<div><p>{l}{ok ? " - recorded" : ""}</p>{!ok && <GoTo k="entity_formation" canNavigate={canNavigate} />}</div></li>
             ))}
           </ul>
         </div>
@@ -164,7 +164,7 @@ export function RequiredHere({ section }: { section: string }) {
         <span className="text-xs text-muted-foreground">{left === 0 ? "All complete" : `${left} to complete`}</span>
       </div>
       <ul className="mt-2 space-y-1.5 text-sm">
-        {ev.map(([l, ok]) => <li key={l} className="flex items-start gap-2">{icon(ok)}<span>{l}{ok ? " — recorded" : " — upload below"}</span></li>)}
+        {ev.map(([l, ok]) => <li key={l} className="flex items-start gap-2">{icon(ok)}<span>{l}{ok ? " - recorded" : " - upload below"}</span></li>)}
         {conds.map((c) => <li key={c.id} className="flex items-start gap-2">{icon(c.satisfied)}<span>{c.label} <span className="text-xs text-muted-foreground">(launch condition)</span></span></li>)}
         {tasks.map((t) => (
           <li key={t.id} className="flex flex-wrap items-center justify-between gap-2">
@@ -237,7 +237,7 @@ export function LaunchRequirements() {
             {r.approvals.map((a) => (
               <li key={a.id}>
                 <span className="font-medium">{a.decision === "approved" ? "Approved" : "Declined"}</span> by {a.decidedBy} on {new Date(a.decidedAt).toLocaleString()}
-                {a.reason && <span className="text-muted-foreground"> — {a.reason}</span>}
+                {a.reason && <span className="text-muted-foreground"> - {a.reason}</span>}
                 {a.unmet > 0 && <span className="text-xs text-muted-foreground"> ({a.unmet} conditions open at the time)</span>}
               </li>
             ))}

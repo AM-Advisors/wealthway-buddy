@@ -249,7 +249,7 @@ export const signClientSow = createServerFn({ method: "POST" })
 /** Sends the client welcome email the first time a contact opens the portal
  *  after signing up. Once per person per client: a matching audit event means
  *  the email already went out, and the idempotency key dedupes any retries of
- *  the same send. Never throws — a failed email must not break the portal. */
+ *  the same send. Never throws - a failed email must not break the portal. */
 export const maybeSendClientWelcome = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

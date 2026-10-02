@@ -17,13 +17,13 @@ import { Switch } from "@/components/ui/switch";
 export const Route = createFileRoute("/_authenticated/manager/profile")({
   head: () => ({
     meta: [
-      { title: "Your Manager Profile — Harmonious" },
+      { title: "Your Manager Profile - Harmonious" },
       {
         name: "description",
         content:
           "Update your contact details as a Harmonious fund manager and see every fund you are assigned to.",
       },
-      { property: "og:title", content: "Your Manager Profile — Harmonious" },
+      { property: "og:title", content: "Your Manager Profile - Harmonious" },
       {
         property: "og:description",
         content: "Keep your manager details current and review your assigned funds.",
@@ -151,7 +151,7 @@ function ManagerProfilePage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Your profile</h1>
           <p className="text-sm text-muted-foreground">
-            Keep your details current — investors and the Harmonious team see this contact
+            Keep your details current - investors and the Harmonious team see this contact
             information.
           </p>
         </div>

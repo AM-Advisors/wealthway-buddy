@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeVesting } from "@/lib/vesting";
 
 /**
- * Harmonious CapTable — ownership records.
+ * Harmonious CapTable - ownership records.
  *
  * The ledger is event based: every issuance, grant, exercise, cancellation,
  * conversion, transfer and adjustment is a dated transaction, and the current

@@ -1,6 +1,6 @@
 import { canonicalExecutionStatus, type CanonicalExecutionStatus } from "@/lib/document-execution-status";
 /**
- * Offering Documents — pure rules (no I/O).
+ * Offering Documents - pure rules (no I/O).
  *
  * The uploaded file is the authoritative document; Harmonious only manages its
  * type, version, approval, usage, applicability and signing configuration.
@@ -68,7 +68,7 @@ export type VersionState =
   | "ready_for_use"
   | "superseded";
 export const VERSION_STATE_LABELS: Record<VersionState, string> = {
-  uploaded_review_required: "Uploaded — Review Required",
+  uploaded_review_required: "Uploaded - Review Required",
   approved_for_use: "Approved for Use",
   signing_setup_required: "Signing Setup Required",
   signing_setup_needs_review: "Signing Setup Needs Review",
@@ -90,7 +90,7 @@ export function versionState(input: {
   return "signing_setup_required";
 }
 
-/** A new version never inherits "confirmed" signing setup — it must be reviewed. */
+/** A new version never inherits "confirmed" signing setup - it must be reviewed. */
 export function signingStatusForNewVersion(previous: SigningConfig | null | undefined): SigningConfigStatus {
   return previous && previous.signers.length ? "needs_review" : "not_configured";
 }
@@ -192,7 +192,7 @@ export function investorDocumentAction(input: { usage: DocumentUsage | null; leg
   if (usage === "reference") return "Review";
   if (usage === "acknowledgment") return input.acknowledged ? "Completed" : "Acknowledge";
   if (input.execution === "fully_executed") return "Completed";
-  if (input.execution === "awaiting_countersignature") return "Signed — awaiting fund signature";
+  if (input.execution === "awaiting_countersignature") return "Signed - awaiting fund signature";
   if (input.execution === "partially_signed" || input.execution === "sent") return "Continue Signing";
   return "Review & Sign";
 }
@@ -204,7 +204,7 @@ export type SetupDoc = {
   latestState: VersionState | null;
 };
 
-/** Fund Setup status — never depends on investors having executed anything. */
+/** Fund Setup status - never depends on investors having executed anything. */
 export function offeringDocumentsSetupStatus(docs: SetupDoc[]): { status: "not_started" | "in_progress" | "complete"; next: string | null } {
   const configured = docs.filter((d) => d.category);
   if (!configured.length) return { status: "not_started", next: "Upload the offering documents" };

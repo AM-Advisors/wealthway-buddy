@@ -77,5 +77,5 @@ export function diffRecords(
 export function summarizeChanges(eventType: OfferingAuditEventType, changes: AuditChange[]): string {
   const labels = changes.map((c) => FIELD_LABELS[c.field] ?? c.field);
   if (labels.length === 0) return EVENT_LABELS[eventType];
-  return `${EVENT_LABELS[eventType]} — ${labels.join(", ")}`;
+  return `${EVENT_LABELS[eventType]} - ${labels.join(", ")}`;
 }

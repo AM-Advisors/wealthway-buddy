@@ -5,13 +5,13 @@ import { UnpaidInvoicesBoard } from "@/components/unpaid-invoices-board";
 export const Route = createFileRoute("/_authenticated/admin/invoices")({
   head: () => ({
     meta: [
-      { title: "Unpaid invoices — Harmonious" },
+      { title: "Unpaid invoices - Harmonious" },
       {
         name: "description",
         content:
           "Every client invoice still awaiting payment, with the amount, due date and the portal link the client uses to pay.",
       },
-      { property: "og:title", content: "Unpaid invoices — Harmonious" },
+      { property: "og:title", content: "Unpaid invoices - Harmonious" },
       {
         property: "og:description",
         content: "Outstanding client invoices by client, with amounts, due dates and portal links.",

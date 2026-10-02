@@ -35,7 +35,7 @@ const CATEGORIES = [
 ] as const;
 
 function when(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleString();
 }
 

@@ -7,7 +7,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  *
  *  An administrator invites the contact; the first time a main contact signs in
  *  they tell Harmonious about their fund, and that creates the fund record.
- *  Harmonious records and administers — the fund stays closed to investors until
+ *  Harmonious records and administers - the fund stays closed to investors until
  *  a signed and approved statement of work covers it. */
 
 /** Contacts who must complete the intake. View-only contacts go straight in. */
@@ -42,8 +42,8 @@ export const FUND_TYPES = [
   "Other",
 ] as const;
 export const REG_TYPES = [
-  { value: "506b", label: "Reg D 506(b) — private, no general solicitation" },
-  { value: "506c", label: "Reg D 506(c) — verified accredited investors only" },
+  { value: "506b", label: "Reg D 506(b) - private, no general solicitation" },
+  { value: "506c", label: "Reg D 506(c) - verified accredited investors only" },
   { value: "regcf", label: "Reg CF" },
   { value: "rega", label: "Reg A" },
   { value: "regaplus", label: "Reg A+" },

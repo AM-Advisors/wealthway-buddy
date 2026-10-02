@@ -11,7 +11,7 @@ const fnBody = (file: string, name: string) => {
 const INV = "src/lib/invitations.functions.ts";
 const DRV = "src/lib/investor-drive.functions.ts";
 
-describe("Fund Team — server authorization", () => {
+describe("Fund Team - server authorization", () => {
   it("view is fund-scoped", () => expect(fnBody(INV, "getFundTeam")).toMatch(/assertFundAllowed\(ctx, data\.fundId\)/));
   for (const n of ["searchFundTeamCandidates", "addFundTeamMember", "removeFundTeamMember"]) {
     it(`${n}: exact fund + Harmonious staff only (managers cannot grant authority)`, () => {
@@ -44,9 +44,9 @@ describe("Client People", () => {
       new Map([["f1", "Fund One"], ["f2", "Fund Two"]]),
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.relationships.map((r) => r.label)).toEqual(["Investor — Fund One", "Fund manager — Fund Two"]);
+    expect(rows[0]!.relationships.map((r) => r.label)).toEqual(["Investor - Fund One", "Fund manager - Fund Two"]);
   });
-  it("derives only from real records — never email/domain; exposes no private evidence", () => {
+  it("derives only from real records - never email/domain; exposes no private evidence", () => {
     const s = src("src/lib/client-admin.functions.ts");
     const a = s.indexOf("async function clientRelationshipPeople"); const body = s.slice(a, s.indexOf("const personInput", a));
     expect(body).toMatch(/investor_applications/);
@@ -65,7 +65,7 @@ describe("Add Fund from Client", () => {
   });
 });
 
-describe("Investor Google Drive connection — rules", () => {
+describe("Investor Google Drive connection - rules", () => {
   const root = { driveId: "DRIVE_RESTRICTED", rootId: "ROOT_RESTRICTED" };
   const folder = (o: Partial<any> = {}) => ({ id: "F1", mimeType: "application/vnd.google-apps.folder", driveId: root.driveId, ancestors: ["X", root.rootId], ...o });
   it("approved repository only; arbitrary drive and outside-root rejected; fail closed without config", () => {
@@ -81,7 +81,7 @@ describe("Investor Google Drive connection — rules", () => {
       expect(isBlockedFromInvestorDrive(n)).toBe(true);
     }
     expect(isBlockedFromInvestorDrive("Executed Subscription Agreement.pdf")).toBe(false);
-    expect(BLOCKED_MESSAGE).toBe("Blocked — this document type cannot be imported from Google Drive.");
+    expect(BLOCKED_MESSAGE).toBe("Blocked - this document type cannot be imported from Google Drive.");
     expect(src(DRV)).not.toMatch(/override/i);
   });
   const ctx = { offeringId: "o1", profileId: "p1" };
@@ -96,7 +96,7 @@ describe("Investor Google Drive connection — rules", () => {
     expect(fileStatus(file, [prior({ investment_profile_id: "p2" })], ctx)).toBe("other_context");
     expect(fileStatus(file, [prior({ offering_id: "o2" })], ctx)).toBe("other_context");
   });
-  it("Drive deletion only reports missing — Harmonious copy kept", () => {
+  it("Drive deletion only reports missing - Harmonious copy kept", () => {
     expect(missingFromDrive([], [prior()], ctx)).toEqual(["h1"]);
     expect(src(DRV)).not.toMatch(/drive_imported_documents"\)\.delete|\.delete\(\)/);
   });
@@ -107,7 +107,7 @@ describe("Investor Google Drive connection — rules", () => {
   });
 });
 
-describe("Investor Google Drive connection — server", () => {
+describe("Investor Google Drive connection - server", () => {
   const s = src(DRV);
   it("every action is Super-Administrator gated; mutations re-run the repository safety check", () => {
     for (const n of ["getInvestorDriveIntake", "searchInvestorFolders", "connectInvestorFolder", "disconnectInvestorFolder", "checkInvestorFolder", "importInvestorDriveFiles"]) {

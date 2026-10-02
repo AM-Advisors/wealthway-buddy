@@ -1,5 +1,5 @@
 /**
- * Fund Investor Onboarding Link — server. Tokens are opaque, validated here,
+ * Fund Investor Onboarding Link - server. Tokens are opaque, validated here,
  * and map to exactly one Offering. Starting onboarding reuses startOnboarding
  * (same Person → Investment Profile → Investment model, idempotent).
  */

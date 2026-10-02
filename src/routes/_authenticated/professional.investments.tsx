@@ -8,7 +8,7 @@ import {
 } from "@/components/professional-workspace";
 
 const money = (cents: number | null) =>
-  cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 function Investments() {
   const { data, isPending } = useProfessionalOverview();
@@ -31,7 +31,7 @@ function Investments() {
                 <span>{money(a.commitmentCents)}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {a.client} — {String(a.status).replace(/_/g, " ")} — funding{" "}
+                {a.client} - {String(a.status).replace(/_/g, " ")} - funding{" "}
                 {String(a.fundingStatus).replace(/_/g, " ")}
               </p>
             </li>

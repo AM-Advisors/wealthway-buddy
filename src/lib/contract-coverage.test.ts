@@ -28,7 +28,7 @@ describe("related document selection", () => {
   it("lists current client documents with useful labels and excludes itself", () => {
     const r = relatedDocumentOptions(amd, [amd, msa, sow, msaOld], "amends");
     expect(r.options.map((o) => o.id)).toEqual(["msa", "sow"]);
-    expect(r.options[0]!.label).toBe("Master Service Agreement — Effective Sep 1, 2026 — Active");
+    expect(r.options[0]!.label).toBe("Master Service Agreement - Effective Sep 1, 2026 - Active");
   });
   it("preselects the single obvious agreement", () => {
     expect(relatedDocumentOptions(amd, [msa, sow], "amends").defaultId).toBe("msa");

@@ -123,7 +123,7 @@ export async function createInvestor(userId: string, input: {
   const source: EntrySource = input.source ?? sourceFor(actor);
   const changes: Change[] = [];
 
-  // 1. Person — reuse when chosen; otherwise search first and never silently merge.
+  // 1. Person - reuse when chosen; otherwise search first and never silently merge.
   let person: any;
   if (input.personId) {
     const { data } = await db().from("persons").select("*").eq("id", input.personId).maybeSingle();
@@ -147,7 +147,7 @@ export async function createInvestor(userId: string, input: {
     changes.push(...Object.entries(row).map(([f, v]) => ({ offeringId: input.offeringId, onboardingId: null, table: "persons", id: person.id, field: f, from: null, to: v, source, actor: actor.userId })));
   }
 
-  // 2. Investment Profile — a Person may hold many; reuse only one that is theirs.
+  // 2. Investment Profile - a Person may hold many; reuse only one that is theirs.
   if (!isProfileType(input.profile.type) && !input.profileId) fail("Choose how they are investing.");
   let profileId = input.profileId ?? null;
   if (profileId) {
@@ -167,7 +167,7 @@ export async function createInvestor(userId: string, input: {
     changes.push({ offeringId: input.offeringId, onboardingId: null, table: "investment_profiles", id: pr.id, field: "profile_type", from: null, to: type, source, actor: actor.userId });
   }
 
-  // 3. Investment — converge onto any open record instead of duplicating.
+  // 3. Investment - converge onto any open record instead of duplicating.
   const { data: dupe } = await db().from("investor_onboardings").select("id").eq("offering_id", input.offeringId).eq("investment_profile_id", profileId)
     .is("removed_at", null).not("stage", "in", TERMINAL).limit(1);
   if ((dupe ?? []).length) fail("This investing profile is already in this Fund.");

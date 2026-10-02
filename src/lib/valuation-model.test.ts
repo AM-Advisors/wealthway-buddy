@@ -210,7 +210,7 @@ describe("realizations", () => {
     expect(result.remainingQuantity).toBe(75);
     expect(result.remainingCostBasisCents).toBe(750_000);
     expect(result.isFullDisposition).toBe(false);
-    // The remaining 75 units keep their own unrealised mark — realisation
+    // The remaining 75 units keep their own unrealised mark - realisation
     // never sets the asset's fair value to zero.
     expect(unrealizedJournal(750_000, 900_000, policy)?.lines[0]?.debitCents).toBe(150_000);
   });

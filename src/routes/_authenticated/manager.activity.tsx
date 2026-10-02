@@ -18,13 +18,13 @@ import { listReviewerActivity } from "@/lib/reviewer-activity.functions";
 export const Route = createFileRoute("/_authenticated/manager/activity")({
   head: () => ({
     meta: [
-      { title: "Reviewer Activity — Harmonious Manager" },
+      { title: "Reviewer Activity - Harmonious Manager" },
       {
         name: "description",
         content:
           "See which reviewer approved, delayed or declined each investor application, wire confirmation and payment, with timestamps.",
       },
-      { property: "og:title", content: "Reviewer Activity — Harmonious Manager" },
+      { property: "og:title", content: "Reviewer Activity - Harmonious Manager" },
       {
         property: "og:description",
         content: "A timestamped record of every reviewer decision on the review board.",
@@ -215,7 +215,7 @@ function ReviewerActivityPage() {
                 </div>
                 <p className="mt-1 text-sm">{e.summary}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {[e.investorName, e.fundName].filter(Boolean).join(" · ") || "—"}
+                  {[e.investorName, e.fundName].filter(Boolean).join(" · ") || "-"}
                 </p>
                 {e.note ? (
                   <p className="mt-1 text-xs text-muted-foreground">Note: {e.note}</p>

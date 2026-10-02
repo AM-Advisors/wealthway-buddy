@@ -6,13 +6,13 @@ export const Route = createFileRoute("/_authenticated/admin/fund-migration/$fund
   component: FundMigrationPage,
   head: () => ({
     meta: [
-      { title: "Fund transfer — Harmonious" },
+      { title: "Fund transfer - Harmonious" },
       {
         name: "description",
         content:
           "Bring an existing fund's investor records onto Harmonious and track each step of the handover.",
       },
-      { property: "og:title", content: "Fund transfer — Harmonious" },
+      { property: "og:title", content: "Fund transfer - Harmonious" },
       {
         property: "og:description",
         content: "Move investor records onto Harmonious with a tracked handover checklist.",

@@ -6,7 +6,7 @@ import { isGrantLive } from "@/lib/fund-team-access";
 
 /**
  * Assistant drafts. Assistants prepare; only a Fund Manager of that Fund
- * reviews. Nothing here sends email, invites anyone or sends documents — the
+ * reviews. Nothing here sends email, invites anyone or sends documents - the
  * manager uses the draft in the existing explicit-send flows and marks it used.
  */
 

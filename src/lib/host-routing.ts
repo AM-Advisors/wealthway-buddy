@@ -145,7 +145,7 @@ export type CanonicalRedirect = { location: string; status: 302 };
 /**
  * Where a request should go instead, or nothing when it is already in the right
  * place. Temporary (302) on purpose while the new address is being proven in
- * production — nothing here is cached permanently by a browser.
+ * production - nothing here is cached permanently by a browser.
  */
 export function canonicalRedirect(
   input: { url: string },

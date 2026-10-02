@@ -53,7 +53,7 @@ function InvoiceReminder({
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
-        Invoice {invoiceNumber} — {amount} {timing}
+        Invoice {invoiceNumber} - {amount} {timing}
       </Preview>
       <Body
         style={{
@@ -110,7 +110,7 @@ function InvoiceReminder({
             <Row>
               <Column>
                 <Text style={label}>Payment due</Text>
-                <Text style={{ ...value, margin: 0 }}>{dueDate || '—'}</Text>
+                <Text style={{ ...value, margin: 0 }}>{dueDate || '-'}</Text>
               </Column>
               <Column>
                 <Text style={label}>Status</Text>
@@ -163,7 +163,7 @@ function InvoiceReminder({
 export const template = {
   component: InvoiceReminder,
   subject: (data: Record<string, any>) =>
-    `Reminder: invoice ${data?.['invoiceNumber'] ?? ''} — ${data?.['amount'] ?? ''} ${
+    `Reminder: invoice ${data?.['invoiceNumber'] ?? ''} - ${data?.['amount'] ?? ''} ${
       data?.['timing'] ?? 'due soon'
     }`.trim(),
   displayName: 'Invoice reminder',

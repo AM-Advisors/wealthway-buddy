@@ -7,7 +7,7 @@ import { z } from "zod";
  *
  * The caller proves themselves with a one-time token; nothing here is readable
  * or writable without a live, unexpired, unused link. No register data is ever
- * returned — only the company name so the claimant knows where they are.
+ * returned - only the company name so the claimant knows where they are.
  */
 
 function hashToken(token: string) {

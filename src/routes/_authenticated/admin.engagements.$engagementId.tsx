@@ -30,13 +30,13 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/engagements/$engagementId")({
   head: () => ({
     meta: [
-      { title: "Engagement — Harmonious admin" },
+      { title: "Engagement - Harmonious admin" },
       {
         name: "description",
         content:
           "One engagement: the services in scope, commercial terms, service order, changes, signatures and delivery status.",
       },
-      { property: "og:title", content: "Engagement — Harmonious admin" },
+      { property: "og:title", content: "Engagement - Harmonious admin" },
       {
         property: "og:description",
         content: "Services, commercial terms, order, changes, signatures and delivery.",
@@ -51,7 +51,7 @@ export const Route = createFileRoute("/_authenticated/admin/engagements/$engagem
 
 const money = (cents: number) =>
   `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const date = (v: string | null) => (v ? new Date(v).toLocaleDateString("en-US") : "—");
+const date = (v: string | null) => (v ? new Date(v).toLocaleDateString("en-US") : "-");
 
 function EngagementPage() {
   const { engagementId } = Route.useParams();
@@ -185,7 +185,7 @@ function EngagementPage() {
                     <p className="flex justify-between">
                       <span>
                         Discount
-                        {g.discountReason ? ` — ${g.discountReason}` : ""}
+                        {g.discountReason ? ` - ${g.discountReason}` : ""}
                       </span>
                       <span>-{money(data.pricing.discountCents)}</span>
                     </p>
@@ -270,7 +270,7 @@ function EngagementPage() {
           {data.changes.map((c) => (
             <div key={c.id} className="rounded-md border p-3 text-sm">
               <p className="font-medium">
-                {c.sectionTitle} — {c.status}
+                {c.sectionTitle} - {c.status}
               </p>
               <p className="whitespace-pre-line">{c.requestedText}</p>
               {c.reason && <p className="text-xs text-muted-foreground">Why: {c.reason}</p>}

@@ -19,13 +19,13 @@ import { listAdminActivity } from "@/lib/admin-activity.functions";
 export const Route = createFileRoute("/_authenticated/admin/activity")({
   head: () => ({
     meta: [
-      { title: "Activity Log — Harmonious Admin" },
+      { title: "Activity Log - Harmonious Admin" },
       {
         name: "description",
         content:
           "A timestamped record of every action across Harmonious: funds created, people invited, documents uploaded, diligence rooms opened and reviewer decisions.",
       },
-      { property: "og:title", content: "Activity Log — Harmonious Admin" },
+      { property: "og:title", content: "Activity Log - Harmonious Admin" },
       {
         property: "og:description",
         content: "Every action across funds, invitations, documents and diligence rooms, with timestamps.",

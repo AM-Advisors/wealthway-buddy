@@ -5,13 +5,13 @@ import { OffboardingCase } from "@/components/offboarding-case";
 export const Route = createFileRoute("/_authenticated/admin/offboarding/$caseId")({
   head: () => ({
     meta: [
-      { title: "Termination and offboarding — Harmonious" },
+      { title: "Termination and offboarding - Harmonious" },
       {
         name: "description",
         content:
           "Run a client wind-down: notice date, notice period, final amounts, data export delivery and retained records.",
       },
-      { property: "og:title", content: "Termination and offboarding — Harmonious" },
+      { property: "og:title", content: "Termination and offboarding - Harmonious" },
       {
         property: "og:description",
         content: "Notice, settlement, data export and retained records for one client engagement.",

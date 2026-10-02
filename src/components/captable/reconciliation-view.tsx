@@ -114,7 +114,7 @@ function ReconciliationBody() {
         <h3 className="text-lg font-semibold tracking-tight">Reconciliation</h3>
         <p className="text-sm text-muted-foreground">
           Every share class in a file you have uploaded, side by side: authorised, issued,
-          outstanding and fully diluted. Flag anything that does not look right — a batch cannot be
+          outstanding and fully diluted. Flag anything that does not look right - a batch cannot be
           recorded while a flag is still open.
         </p>
       </div>
@@ -227,7 +227,7 @@ function BatchReconciliation({
                       ) : null}
                     </TableCell>
                     <TableCell className="text-right">
-                      {row.authorized ? fmtNumber(row.authorized) : "—"}
+                      {row.authorized ? fmtNumber(row.authorized) : "-"}
                     </TableCell>
                     <TableCell className="text-right">{fmtNumber(row.issued)}</TableCell>
                     <TableCell className="text-right">{fmtNumber(row.outstanding)}</TableCell>

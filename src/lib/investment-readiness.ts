@@ -1,5 +1,5 @@
 /**
- * Investment Readiness — one canonical checklist per Investment (investor_onboardings row),
+ * Investment Readiness - one canonical checklist per Investment (investor_onboardings row),
  * projected from the existing requirement engine (determineOnboardingRequirements),
  * funding derivation and closing gate. Pure; never decides compliance, never stores facts.
  * Fund, Investor and Operations views are role-filtered projections of the same result.
@@ -82,7 +82,7 @@ export const REQUIREMENT_STAGE: Record<RequirementKey, ReadinessStage> = {
   funding: "funding",
 };
 
-/** Source system per requirement — for audit and staff display. */
+/** Source system per requirement - for audit and staff display. */
 export const REQUIREMENT_SOURCE: Record<string, string> = {
   account: "accounts",
   investment_profile: "investment_profiles",
@@ -116,7 +116,7 @@ const SAFE_LABEL: Record<ReadinessStage, Partial<Record<ReadinessStatus, string>
   investment_profile: { complete: "Profile complete" },
   identity: { complete: "Identity complete", under_review: "Verification pending", needs_harmonious: "Verification pending", needs_investor: "Verification pending" },
   eligibility: { complete: "Eligibility complete", needs_investor: "Accreditation incomplete", under_review: "Harmonious review" },
-  tax: { complete: "Tax — Complete", needs_investor: "Tax information required", under_review: "Tax information required" },
+  tax: { complete: "Tax - Complete", needs_investor: "Tax information required", under_review: "Tax information required" },
   subscription: { complete: "Documents executed", needs_investor: "Documents awaiting signature", needs_harmonious: "Documents being prepared" },
   funding: { complete: "Funded", needs_investor: "Funding pending", needs_harmonious: "Funding pending", under_review: "Funding pending" },
   close_readiness: { complete: "Ready to close", needs_harmonious: "Harmonious review", blocked: "Harmonious review" },
@@ -389,7 +389,7 @@ export function readinessView(r: ReadinessResult, viewer: ReadinessViewer) {
   };
 }
 
-/** Transitions between two computed results — the basis for audit events. */
+/** Transitions between two computed results - the basis for audit events. */
 export function readinessTransitions(prev: Record<string, string>, next: ReadinessResult) {
   return next.items
     .filter((i) => prev[i.key] !== i.status)

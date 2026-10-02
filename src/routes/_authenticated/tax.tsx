@@ -8,9 +8,9 @@ import { getInvestorTaxDocuments } from "@/lib/tax.functions";
 export const Route = createFileRoute("/_authenticated/tax")({
   head: () => ({
     meta: [
-      { title: "Tax documents — Harmonious" },
+      { title: "Tax documents - Harmonious" },
       { name: "description", content: "Your tax documents for each investment profile." },
-      { property: "og:title", content: "Tax documents — Harmonious" },
+      { property: "og:title", content: "Tax documents - Harmonious" },
       { property: "og:description", content: "Your tax documents for each investment profile." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

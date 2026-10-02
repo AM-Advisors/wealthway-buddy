@@ -10,7 +10,7 @@
  * Controls preserved here:
  *  - nothing trusts a fund, run or period id from the caller;
  *  - preparer ≠ reviewer ≠ approver, and Harmonious alone publishes;
- *  - a published performance report is never edited — corrections supersede;
+ *  - a published performance report is never edited - corrections supersede;
  *  - investor performance uses that investor's own capital and cash flows;
  *  - a later NAV or valuation can never contaminate an earlier period.
  */
@@ -424,7 +424,7 @@ export interface PerformanceCalculation {
 }
 
 /**
- * Calculate — but do not persist — fund and investor performance for a period.
+ * Calculate - but do not persist - fund and investor performance for a period.
  * Every figure comes from an approved NAV, a finalized allocation run or the
  * immutable commitment ledger.
  */

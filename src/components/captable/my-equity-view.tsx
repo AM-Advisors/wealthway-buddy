@@ -383,7 +383,7 @@ function GrantCard({
               <Stat label="Next vest" value={vesting.nextVestDate ? fmtDate(vesting.nextVestDate) : "Fully vested"} />
               <Stat
                 label="Fully vested"
-                value={vesting.fullyVestedDate ? fmtDate(vesting.fullyVestedDate) : "—"}
+                value={vesting.fullyVestedDate ? fmtDate(vesting.fullyVestedDate) : "-"}
               />
             </div>
             <p className="text-xs text-muted-foreground">

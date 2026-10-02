@@ -30,13 +30,13 @@ import { format, parseISO } from "date-fns";
 export const Route = createFileRoute("/_authenticated/client/services/request")({
   head: () => ({
     meta: [
-      { title: "What would you like to do? — Harmonious" },
+      { title: "What would you like to do? - Harmonious" },
       {
         name: "description",
         content:
-          "Tell Harmonious what you need — launch a fund or SPV, add a service, add an entity, move across, file something or get transaction support.",
+          "Tell Harmonious what you need - launch a fund or SPV, add a service, add an entity, move across, file something or get transaction support.",
       },
-      { property: "og:title", content: "What would you like to do? — Harmonious" },
+      { property: "og:title", content: "What would you like to do? - Harmonious" },
       {
         property: "og:description",
         content: "Tell Harmonious what you need and we'll scope the right services.",
@@ -83,7 +83,7 @@ function RequestRouter() {
         },
       }),
     onSuccess: () => {
-      toast.success("Thanks — we'll come back with the services, cost and timing.");
+      toast.success("Thanks - we'll come back with the services, cost and timing.");
       void navigate({ to: "/client/services" });
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not send the request."),
@@ -229,7 +229,7 @@ function RequestRouter() {
         <CardHeader>
           <CardTitle className="text-base">Services you might need</CardTitle>
           <CardDescription>
-            Tick anything that looks right — we'll confirm the final list and price before anything
+            Tick anything that looks right - we'll confirm the final list and price before anything
             is agreed.
           </CardDescription>
         </CardHeader>
@@ -292,7 +292,7 @@ function FieldInput({ field, value, onChange }: { field: any; value: string; onC
           <div className="rounded-md border bg-muted p-3 text-xs">
             <p className="font-medium">Who can invest</p>
             <p className="mt-1 text-muted-foreground">{eligibilityFor(value)}</p>
-            <p className="mt-1 text-muted-foreground">General guidance — counsel confirms.</p>
+            <p className="mt-1 text-muted-foreground">General guidance - counsel confirms.</p>
           </div>
         )}
       </div>

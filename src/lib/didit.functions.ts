@@ -12,7 +12,7 @@ import {
 /**
  * Creates (or resumes) the investor's Didit verification session. The provider
  * key stays on the server, the session is correlated by an opaque Harmonious
- * reference, and results arrive on /api/public/webhooks/didit — with
+ * reference, and results arrive on /api/public/webhooks/didit - with
  * reconciliation as the backstop when a webhook is missed.
  */
 export const startIdentityCheck = createServerFn({ method: "POST" })

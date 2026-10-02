@@ -22,9 +22,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/_authenticated/manager/")({
   head: () => ({
     meta: [
-      { title: "Your Funds — Harmonious" },
+      { title: "Your Funds - Harmonious" },
       { name: "description", content: "Portfolio status, capital, investor activity, approvals, and exceptions across the funds you manage." },
-      { property: "og:title", content: "Your Funds — Harmonious" },
+      { property: "og:title", content: "Your Funds - Harmonious" },
       { property: "og:description", content: "Portfolio status, capital, investor activity, approvals, and exceptions across managed funds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -124,7 +124,7 @@ function ManagerPortfolio() {
             </Card>
           );
         })}
-        {funds.length === 0 ? <p className="text-sm text-muted-foreground">{all.length ? "No funds match these filters." : "No funds yet — request your first fund or SPV above."}</p> : null}
+        {funds.length === 0 ? <p className="text-sm text-muted-foreground">{all.length ? "No funds match these filters." : "No funds yet - request your first fund or SPV above."}</p> : null}
       </div>
 
       <div className="mt-8"><AttentionCenter workspace="fund_manager" /></div>

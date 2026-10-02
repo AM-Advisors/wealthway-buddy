@@ -88,7 +88,7 @@ export const REQUEST_INTENTS = [
   {
     value: "add_entity",
     label: "Add Another Entity",
-    blurb: "Any other entity — a holding company, blocker, trust or other vehicle.",
+    blurb: "Any other entity - a holding company, blocker, trust or other vehicle.",
     suggests: ["registered_agent"],
     questions: [
       { key: "entity_name", label: "What is the entity's legal name?" },
@@ -433,7 +433,7 @@ export const updateIntakeAnswers = createServerFn({ method: "POST" })
     if (!row) throw new Error("Request not found.");
     const mine = await myClientIds(context);
     if (!mine.includes(String((row as any).client_id))) throw new Error("Forbidden.");
-    if ((row as any).status !== "submitted") throw new Error("Harmonious has started on this request — send a message to change it.");
+    if ((row as any).status !== "submitted") throw new Error("Harmonious has started on this request - send a message to change it.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("client_intake_requests")

@@ -368,7 +368,7 @@ export const inviteClientContact = createServerFn({ method: "POST" })
   });
 
 /** Sends (or re-sends) the branded welcome email with a one-time password link,
- *  and records the outcome on the invitation. Never throws — a failed email
+ *  and records the outcome on the invitation. Never throws - a failed email
  *  must not undo the access that was just granted. */
 async function sendClientWelcome(input: {
   supabaseAdmin: any;

@@ -67,7 +67,7 @@ const tables: Record<string, any[]> = {
     { user_id: MANAGER_B, role: "fund_manager" },
     { user_id: STAFF, role: "admin" },
     { user_id: STAFF_TWO, role: "admin" },
-    // The service process holds no role at all — it is never an actor.
+    // The service process holds no role at all - it is never an actor.
   ],
   fund_managers: [
     { user_id: MANAGER_A, offering_id: FUND_A },

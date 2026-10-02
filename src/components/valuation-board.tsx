@@ -198,7 +198,7 @@ export function ValuationBoard({ role }: { role: "harmonious" | "manager" }) {
               <CardHeader className="gap-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base">
-                    {row.issuerName} — {row.assetName}
+                    {row.issuerName} - {row.assetName}
                   </CardTitle>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge className={STATUS_TONE[row.status] ?? ""}>{row.status}</Badge>
@@ -335,7 +335,7 @@ export function ValuationBoard({ role }: { role: "harmonious" | "manager" }) {
               <CardHeader className="gap-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base">
-                    {asset.issuer_name} — {asset.asset_name}
+                    {asset.issuer_name} - {asset.asset_name}
                   </CardTitle>
                   <Badge variant="outline">
                     {ASSET_CLASS_LABELS[asset.asset_class as keyof typeof ASSET_CLASS_LABELS] ??
@@ -444,7 +444,7 @@ export function ValuationBoard({ role }: { role: "harmonious" | "manager" }) {
             <Card key={item.assetId}>
               <CardHeader className="gap-1">
                 <CardTitle className="text-base">
-                  {item.issuerName} — {item.assetName}
+                  {item.issuerName} - {item.assetName}
                 </CardTitle>
                 <CardDescription>
                   {item.lastValuationDate

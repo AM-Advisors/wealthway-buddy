@@ -4,7 +4,7 @@
  *
  * This file contains no database or network access on purpose: the server
  * gathers the authoritative facts, these rules interpret them, and the browser
- * never decides anything. Signing in establishes identity only — never
+ * never decides anything. Signing in establishes identity only - never
  * privilege.
  */
 
@@ -49,7 +49,7 @@ export type Workspace = {
   surface: "client" | "ops";
 };
 
-/** Harmonious staff authority is never inferred — only explicit active records count. */
+/** Harmonious staff authority is never inferred - only explicit active records count. */
 export function hasOperationsAccess(facts: RelationshipFacts): boolean {
   return facts.staff.active && facts.staff.roles.length > 0;
 }
@@ -177,8 +177,8 @@ export function resolveDestination(
   facts: RelationshipFacts,
   intended?: string | null,
 ): { path: string; reason: "intended" | "requirement" | "workspace" | "onboarding" | "denied" } {
-  // Anything that could leave Harmonious — an absolute address, a
-  // protocol-relative path, a backslash trick, an encoded scheme — is discarded
+  // Anything that could leave Harmonious - an absolute address, a
+  // protocol-relative path, a backslash trick, an encoded scheme - is discarded
   // here rather than trusted because it arrived in a link.
   const cleaned = intended ? safeInternalPath(intended, "") : "";
   // Retired legacy homes (old bookmarks, old email links) are never a
@@ -216,7 +216,7 @@ export function setupProgress(
   return { completed, outstanding, percent, next: outstanding[0] ?? null };
 }
 
-/** An empty fact set — the safe default when nothing is known about a person. */
+/** An empty fact set - the safe default when nothing is known about a person. */
 export function emptyFacts(): RelationshipFacts {
   return {
     staff: { active: false, roles: [] },

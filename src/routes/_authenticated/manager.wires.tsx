@@ -21,13 +21,13 @@ import { decideWireAsReviewer, getWireConfirmationBoard } from "@/lib/manager.fu
 export const Route = createFileRoute("/_authenticated/manager/wires")({
   head: () => ({
     meta: [
-      { title: "Wire Review Board — Harmonious Manager" },
+      { title: "Wire Review Board - Harmonious Manager" },
       {
         name: "description",
         content:
           "Every wire confirmation your investors submit, with one-click approve or send back and the current funding status.",
       },
-      { property: "og:title", content: "Wire Review Board — Harmonious Manager" },
+      { property: "og:title", content: "Wire Review Board - Harmonious Manager" },
       {
         property: "og:description",
         content: "Approve or send back investor wire confirmations in one place.",
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/manager/wires")({
 });
 
 function money(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return (Number(cents) / 100).toLocaleString(undefined, {
     style: "currency",
     currency: "USD",
@@ -49,12 +49,12 @@ function money(cents: number | null | undefined) {
 }
 
 function when(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
 function day(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleDateString(undefined, { dateStyle: "medium" });
 }
 
@@ -109,7 +109,7 @@ function ManagerWireBoardPage() {
     onSuccess: (_result, input) => {
       toast.success(
         input.outcome === "approved"
-          ? "Approved — the investor's funding is marked received."
+          ? "Approved - the investor's funding is marked received."
           : "Sent back to the investor with your note.",
       );
       setNotes((prev) => ({ ...prev, [input.confirmationId]: "" }));
@@ -233,7 +233,7 @@ function ManagerWireBoardPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <CardTitle className="text-base">
-                        {row.investorName} — {money(row.amountCents)}
+                        {row.investorName} - {money(row.amountCents)}
                       </CardTitle>
                       <CardDescription>
                         {row.fundName}
@@ -261,7 +261,7 @@ function ManagerWireBoardPage() {
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Reference</p>
-                      <p>{row.bankReference || row.referenceCode || "—"}</p>
+                      <p>{row.bankReference || row.referenceCode || "-"}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Committed</p>
@@ -277,14 +277,14 @@ function ManagerWireBoardPage() {
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Method</p>
-                      <p className="uppercase">{row.method ?? "—"}</p>
+                      <p className="uppercase">{row.method ?? "-"}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Decided</p>
                       <p>
                         {row.reviewedAt
                           ? `${when(row.reviewedAt)}${row.reviewedBy ? ` · ${row.reviewedBy}` : ""}`
-                          : "—"}
+                          : "-"}
                       </p>
                     </div>
                   </div>
@@ -326,7 +326,7 @@ function ManagerWireBoardPage() {
                             });
                           }}
                         >
-                          Approve — funds received
+                          Approve - funds received
                         </Button>
                         <Button
                           size="sm"

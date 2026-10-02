@@ -1,4 +1,4 @@
-/** Builds the invoice a client downloads or views — a real PDF, rendered in the
+/** Builds the invoice a client downloads or views - a real PDF, rendered in the
  *  browser so it needs no server round-trip. */
 
 import { COMPANY } from "@/lib/company-details";
@@ -7,7 +7,7 @@ import { downloadPdfDoc, openPdfDoc, type PdfDocSpec } from "@/lib/pdf-render";
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const STATUS: Record<string, string> = {
   issued: "Awaiting payment",
@@ -57,15 +57,15 @@ export function invoicePdfSpec(invoice: any): PdfDocSpec {
       { label: "Billed to", value: String(invoice?.client_name ?? "Your organisation") },
       {
         label: "Period",
-        value: `${invoice?.period_start ?? "—"} to ${invoice?.period_end ?? "—"}`,
+        value: `${invoice?.period_start ?? "-"} to ${invoice?.period_end ?? "-"}`,
       },
-      { label: "Issued", value: String(invoice?.issue_date ?? "—") },
+      { label: "Issued", value: String(invoice?.issue_date ?? "-") },
       { label: "Due", value: String(invoice?.due_date ?? "On receipt") },
     ],
     sections: [
       {
         heading: "Items",
-        rows: rows.length ? rows : [{ label: "No items", value: "—" }],
+        rows: rows.length ? rows : [{ label: "No items", value: "-" }],
       },
     ],
     notes,

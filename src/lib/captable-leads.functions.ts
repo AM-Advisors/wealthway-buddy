@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 /** Requests from founders who want to move their cap table to Harmonious.
  *
  *  These arrive from the public website form. Harmonious records the request
- *  and its own team decides who to invite into the portal — creating the
+ *  and its own team decides who to invite into the portal - creating the
  *  account is still a Harmonious action, never a self-serve one. */
 
 export const LEAD_PROVIDERS = [
@@ -200,7 +200,7 @@ export const getPublicCapPlans = createServerFn({ method: "GET" }).handler(async
 
   return ((data ?? []) as any[]).map((row) => ({
     key: String(row.key),
-    name: String(row.name).replace(/^Cap table management — /, ""),
+    name: String(row.name).replace(/^Cap table management - /, ""),
     description: String(row.description ?? ""),
   }));
 });

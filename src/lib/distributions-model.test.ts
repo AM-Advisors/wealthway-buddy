@@ -162,7 +162,7 @@ describe("withholding", () => {
     { type: "backup", rateBps: 2400, reason: "Backup" },
   ];
 
-  it("is never inferred from citizenship alone — the tax documentation decides", () => {
+  it("is never inferred from citizenship alone - the tax documentation decides", () => {
     const undetermined = calculateWithholding({
       grossCents: 100_000,
       distributionType: "ordinary",
@@ -420,7 +420,7 @@ describe("payment destinations", () => {
     expect(affected).toEqual(["pending"]);
   });
 
-  it("an approved destination is immutable — it is superseded, not edited", () => {
+  it("an approved destination is immutable - it is superseded, not edited", () => {
     expect(paymentInstructionTransitionError("approved", "draft")).toBeTruthy();
     expect(paymentInstructionTransitionError("approved", "superseded")).toBeNull();
   });

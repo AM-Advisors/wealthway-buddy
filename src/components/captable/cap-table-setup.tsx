@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 /**
  * Company → Cap Table when no cap table exists yet. Creates the company record
  * for the founder's own company only (the server/database refuse any other
- * company). No ownership is created here — that comes from issued securities.
+ * company). No ownership is created here - that comes from issued securities.
  */
 export function CapTableSetup() {
   const portal = useOptionalClientPortal();
@@ -78,7 +78,7 @@ export function CapTableSetup() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Step 1 of 5 — Confirm your company</CardTitle>
+        <CardTitle className="text-lg">Step 1 of 5 - Confirm your company</CardTitle>
         <CardDescription>Then: share classes → stakeholders → securities → review ownership.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">

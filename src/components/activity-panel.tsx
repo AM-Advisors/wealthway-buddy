@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { listContractAudit } from "@/lib/contracts.functions";
 
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
 const short = (value: unknown) => {
   if (value === null || value === undefined) return null;

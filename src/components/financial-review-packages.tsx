@@ -101,7 +101,7 @@ function History({ id }: { id: string }) {
     <ul className="space-y-1 text-xs">
       {(q.data?.events ?? []).map((e, i) => (
         <li key={i}>
-          <span className="font-medium">{ACTION_LABEL[e.action] ?? e.action}</span> — {e.who},{" "}
+          <span className="font-medium">{ACTION_LABEL[e.action] ?? e.action}</span> - {e.who},{" "}
           {new Date(e.at).toLocaleString()}
           {e.note ? <span className="text-muted-foreground"> · “{e.note}”</span> : null}
         </li>
@@ -221,7 +221,7 @@ function PackageCard({ p, mode, funds }: { p: any; mode: Mode; funds: { id: stri
         )}
         {canReview && (
           <>
-            <button type="button" className={primary} disabled={m.isPending} onClick={() => m.mutate("review_pass")}>Reviewed — send to fund manager</button>
+            <button type="button" className={primary} disabled={m.isPending} onClick={() => m.mutate("review_pass")}>Reviewed - send to fund manager</button>
             <button type="button" className={btn} disabled={m.isPending} onClick={() => m.mutate("return")}>Return</button>
           </>
         )}

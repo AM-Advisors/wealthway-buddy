@@ -1,5 +1,5 @@
 /**
- * Fund Administration Phase D — server-only distribution, withholding and
+ * Fund Administration Phase D - server-only distribution, withholding and
  * outbound payment engine.
  *
  * This layer owns NO money truth of its own. It reads and writes through the
@@ -673,7 +673,7 @@ async function commitmentStateFor(positionIds: string[]) {
   return map;
 }
 
-/** Latest finalized capital account per position — authoritative, not recomputed. */
+/** Latest finalized capital account per position - authoritative, not recomputed. */
 async function capitalAccountsFor(offeringId: string) {
   const { data } = await db()
     .from("capital_accounts")
@@ -747,7 +747,7 @@ export const DEFAULT_WITHHOLDING_RULES: WithholdingRule[] = [
 
 /**
  * Propose a distribution. Investor amounts are derived from the fund's
- * approved economics — nobody types them in.
+ * approved economics - nobody types them in.
  */
 export async function proposeDistribution(
   userId: string,
@@ -1038,7 +1038,7 @@ function evidenceFrom(status: string | null | undefined): EvidenceState {
 /**
  * Reads the authoritative identity, AML, sanctions and tax records for one
  * line. Anything that has no authoritative record comes back "unknown", which
- * the gate turns into REVIEW_REQUIRED — never an assumed pass.
+ * the gate turns into REVIEW_REQUIRED - never an assumed pass.
  */
 async function identityEvidenceForLine(line: any, batch: any) {
   const out = { kyc: "unknown" as EvidenceState, aml: "unknown" as EvidenceState, sanctions: "unknown" as EvidenceState, taxDocument: "missing" as EvidenceState };
@@ -2248,7 +2248,7 @@ export async function postDistributionPayment(userId: string, paymentId: string)
     .from("distribution_payments")
     .update({ posted_at: nowIso(), posted_by: actor.userId, commitment_event_id: commitmentEventId })
     .eq("id", payment.id);
-  // Settlement: only now — bank transaction, approved reconciliation, posted journal.
+  // Settlement: only now - bank transaction, approved reconciliation, posted journal.
   // The database refuses settled_at unless the journal is actually posted.
   await db().from("distribution_payments").update({ settled_at: nowIso() }).eq("id", payment.id);
   // Compatibility read projection consumed by capital statements and reports.

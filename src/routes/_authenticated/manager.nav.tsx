@@ -5,12 +5,12 @@ import { NavBoard } from "@/components/nav-board";
 export const Route = createFileRoute("/_authenticated/manager/nav")({
   head: () => ({
     meta: [
-      { title: "Fund NAV — Harmonious" },
+      { title: "Fund NAV - Harmonious" },
       {
         name: "description",
         content: "Net asset value for the funds you manage, with the movement and holdings behind it.",
       },
-      { property: "og:title", content: "Fund NAV — Harmonious" },
+      { property: "og:title", content: "Fund NAV - Harmonious" },
       {
         property: "og:description",
         content: "Review, acknowledge or challenge the net asset value of your funds.",

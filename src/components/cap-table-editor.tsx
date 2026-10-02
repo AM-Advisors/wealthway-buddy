@@ -230,7 +230,7 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
                         </td>
                         <td className="py-2 pr-3">{row.share_class}</td>
                         <td className="py-2 pr-3">
-                          {row.shares == null ? "—" : row.shares.toLocaleString("en-US")}
+                          {row.shares == null ? "-" : row.shares.toLocaleString("en-US")}
                         </td>
                         <td className="py-2 pr-3">{money(row.commitment_cents)}</td>
                         <td className="py-2 pr-3">{money(row.funded_cents)}</td>
@@ -254,7 +254,7 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
                         <td className="py-2 pr-3">Total</td>
                         <td className="py-2 pr-3" />
                         <td className="py-2 pr-3">
-                          {totals?.shares ? totals.shares.toLocaleString("en-US") : "—"}
+                          {totals?.shares ? totals.shares.toLocaleString("en-US") : "-"}
                         </td>
                         <td className="py-2 pr-3">{money(totals?.committed_cents)}</td>
                         <td className="py-2 pr-3">{money(totals?.funded_cents)}</td>
@@ -348,7 +348,7 @@ export function CapTableEditor({ backTo }: { backTo: "/admin" | "/manager" }) {
 }
 
 function displayValue(field: string, value: string | null) {
-  if (value == null || value === "") return "—";
+  if (value == null || value === "") return "-";
   if (field === "commitment_cents") return money(Number(value));
   if (field === "ownership_pct_override") return `${value}%`;
   if (field === "shares") return Number(value).toLocaleString("en-US");

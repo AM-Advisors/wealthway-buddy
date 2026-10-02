@@ -33,7 +33,7 @@ export const STAGE3A_CANDIDATES: PilotPath[] = [
     area: "Navigation",
     file: "src/lib/navigation.ts",
     endpoint: "workspaceLabel / route map (client-side)",
-    legacy: "None — maps URLs to workspace labels only",
+    legacy: "None - maps URLs to workspace labels only",
     canonical: null,
     reclassified: "No authorization decision exists here; nothing to shadow. Route access is enforced by the server resolver (protected/specialized).",
   },
@@ -43,7 +43,7 @@ export const STAGE3A_CANDIDATES: PilotPath[] = [
     endpoint: "getMyDesk",
     legacy: "requireStaff(), then client_assignments filter; showAll only for admin",
     canonical: "clients.view (scoped)",
-    reclassified: "Returns client records filtered by staff assignment, and admins can list all clients — client-specific authority. Moved to resource-aware.",
+    reclassified: "Returns client records filtered by staff assignment, and admins can list all clients - client-specific authority. Moved to resource-aware.",
   },
 ];
 
@@ -54,7 +54,7 @@ export const STAGE3A1_PATHS: (PilotPath & { semanticsClear: boolean; note: strin
     file: "src/lib/operations.functions.ts",
     endpoint: "operations.functions.ts::getOperationsAccess",
     legacy: "admin OR operations platform role",
-    canonical: "operations.entry — active, not suspended, holds any Harmonious staff role (platform role or live global assignment)",
+    canonical: "operations.entry - active, not suspended, holds any Harmonious staff role (platform role or live global assignment)",
     semanticsClear: true,
     note: "Canonical admits the other eight staff roles (legal, compliance, fund administration, tax, finance, client success, executive, super_admin alone); legacy refuses them. Mismatch by design until resolved.",
   },

@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Records that a signed-in user reached the portal. Called once per browser
- *  session from the portal layout so Google sign-ins are logged too — the
+ *  session from the portal layout so Google sign-ins are logged too - the
  *  password form already logs its own attempts. Duplicate entries inside a
  *  short window are skipped so a password sign-in isn't counted twice. */
 export const recordPortalSignIn = createServerFn({ method: "POST" })

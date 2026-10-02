@@ -57,7 +57,7 @@ const money = (cents: number | null | undefined) =>
 /**
  * Everything the client side of the portal has done: fund setup details,
  * documents signed, invoices approved or queried, payments declared and
- * service requests raised. Read-only — this is a record, not a control.
+ * service requests raised. Read-only - this is a record, not a control.
  */
 export const getClientPortalActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -200,7 +200,7 @@ export const getClientPortalActivity = createServerFn({ method: "GET" })
         ? (policyTitle.get(String(row.document_id)) ?? String(row.kind ?? "Policy"))
         : String(row.kind ?? "Policy");
       push(row.accepted_at, cid, "Document signing", `Sign-off accepted: ${title}`, {
-        detail: `Version ${row.version ?? "—"}${row.signer_name ? `, typed name ${row.signer_name}` : ""}.`,
+        detail: `Version ${row.version ?? "-"}${row.signer_name ? `, typed name ${row.signer_name}` : ""}.`,
         person: personName.get(String(row.user_id)) ?? null,
       });
     }

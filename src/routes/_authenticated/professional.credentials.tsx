@@ -138,7 +138,7 @@ function MyCredentials() {
                   {CREDENTIAL_LABELS[c.credential_type as CredentialType] ?? c.credential_type}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {[c.jurisdiction, c.credential_number].filter(Boolean).join(" · ") || "—"}
+                  {[c.jurisdiction, c.credential_number].filter(Boolean).join(" · ") || "-"}
                   {c.expires_at ? ` · expires ${new Date(c.expires_at).toLocaleDateString()}` : ""}
                 </p>
               </div>
@@ -154,12 +154,12 @@ function MyCredentials() {
 export const Route = createFileRoute("/_authenticated/professional/credentials")({
   head: () => ({
     meta: [
-      { title: "My credentials — Harmonious" },
+      { title: "My credentials - Harmonious" },
       {
         name: "description",
         content: "Record and verify your professional licence, bar admission or registration.",
       },
-      { property: "og:title", content: "My credentials — Harmonious" },
+      { property: "og:title", content: "My credentials - Harmonious" },
       { property: "og:description", content: "Professional credentials held with Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

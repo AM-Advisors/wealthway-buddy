@@ -1,8 +1,8 @@
 /**
- * Phase 3B — assisted professional actions.
+ * Phase 3B - assisted professional actions.
  *
  * A professional prepares; the client decides. Nothing written here changes an
- * authoritative record until the principal — signed in as themselves — approves
+ * authoritative record until the principal - signed in as themselves - approves
  * it, and even then only allowlisted fields move.
  *
  * Every entry point resolves the chain server-side:
@@ -95,7 +95,7 @@ async function currentState(
 
 /**
  * Where an approved draft lands. Kinds that are not listed never write to an
- * authoritative record at all — they stay as prepared material the client
+ * authoritative record at all - they stay as prepared material the client
  * carries into their own workflow.
  */
 const APPLY_TABLE: Partial<Record<AssistedDraftType, { table: string }>> = {
@@ -392,7 +392,7 @@ async function decorate(rows: any[]) {
 export type ReviewDecision = "approve" | "reject" | "request_changes";
 
 /**
- * The client's own decision. Only the principal can make it — a professional
+ * The client's own decision. Only the principal can make it - a professional
  * can never approve what they prepared, and approval records the client as the
  * approver, never the preparer.
  */
@@ -467,7 +467,7 @@ export async function reviewDraft(
 }
 
 /**
- * Applies an approved draft — allowlisted fields only, re-checked at the moment
+ * Applies an approved draft - allowlisted fields only, re-checked at the moment
  * of writing. Kinds with no authoritative destination (identity/entity support,
  * accreditation, prepared investments, questionnaires) write nothing: they feed
  * the client's own workflow, where the attestation happens.

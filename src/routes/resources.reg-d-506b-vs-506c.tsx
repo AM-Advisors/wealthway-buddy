@@ -14,7 +14,7 @@ const URL = `https://www.harmonious.co${PATH}`;
 export const Route = createFileRoute("/resources/reg-d-506b-vs-506c")({
   head: () => ({
     meta: [
-      { title: `${TITLE} — Harmonious` },
+      { title: `${TITLE} - Harmonious` },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
@@ -66,7 +66,7 @@ const COMPARISON: { dimension: string; b: string; c: string }[] = [
   {
     dimension: "General solicitation & advertising",
     b: "Not permitted. You may only offer to people with a pre-existing, substantive relationship.",
-    c: "Permitted. You can market the offering publicly — website, email, social, demo days, press.",
+    c: "Permitted. You can market the offering publicly - website, email, social, demo days, press.",
   },
   {
     dimension: "Who can invest",
@@ -75,7 +75,7 @@ const COMPARISON: { dimension: string; b: string; c: string }[] = [
   },
   {
     dimension: "Accreditation standard",
-    b: "Reasonable belief — self-certification by the investor is generally accepted.",
+    b: "Reasonable belief - self-certification by the investor is generally accepted.",
     c: "Issuer must take reasonable steps to verify: income, net worth, or a third-party letter.",
   },
   {
@@ -101,7 +101,7 @@ const COMPARISON: { dimension: string; b: string; c: string }[] = [
 ];
 
 const CHOOSE_B = [
-  "Your raise comes from an existing network — prior LPs, angels, colleagues, friends of the GP.",
+  "Your raise comes from an existing network - prior LPs, angels, colleagues, friends of the GP.",
   "You want the option to include a small number of sophisticated non-accredited investors.",
   "You would rather avoid collecting tax returns, bank statements, or verification letters.",
 ];
@@ -113,7 +113,7 @@ const CHOOSE_C = [
 ];
 
 const STEPS = [
-  "Form the issuing entity and get the EIN — Form D requires both before you can file.",
+  "Form the issuing entity and get the EIN - Form D requires both before you can file.",
   "Pick the exemption and lock the offering terms in the subscription documents and PPM.",
   "Onboard investors: KYC/AML, accreditation (self-certified for 506(b), verified for 506(c)), and e-signature.",
   "File Form D on EDGAR within 15 days of the first sale, then file amendments annually while the offering is open.",
@@ -226,7 +226,7 @@ function RegDComparisonPage() {
             >
               17 CFR § 230.506
             </a>
-            . This page is general information, not legal advice — confirm the specifics of your
+            . This page is general information, not legal advice - confirm the specifics of your
             offering with securities counsel.
           </p>
         </section>

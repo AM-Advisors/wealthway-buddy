@@ -10,8 +10,8 @@ function purge(store: Storage) {
 }
 
 /**
- * Forgets every record the browser was holding on to — the active workspace,
- * the chosen company, anything else this application stored — leaving only
+ * Forgets every record the browser was holding on to - the active workspace,
+ * the chosen company, anything else this application stored - leaving only
  * cosmetic layout state. Used when switching workspace and when signing out.
  */
 export function clearStoredClientContext() {
@@ -20,7 +20,7 @@ export function clearStoredClientContext() {
     try {
       purge(store);
     } catch {
-      /* storage unavailable — nothing was remembered in the first place */
+      /* storage unavailable - nothing was remembered in the first place */
     }
   }
 }

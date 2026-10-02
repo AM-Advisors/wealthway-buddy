@@ -92,12 +92,12 @@ function AuthorizedSignatures() {
 export const Route = createFileRoute("/_authenticated/professional/signatures")({
   head: () => ({
     meta: [
-      { title: "Authorised signatures — Harmonious" },
+      { title: "Authorised signatures - Harmonious" },
       {
         name: "description",
         content: "Every document you signed on a client's behalf, and authority that expires soon.",
       },
-      { property: "og:title", content: "Authorised signatures — Harmonious" },
+      { property: "og:title", content: "Authorised signatures - Harmonious" },
       { property: "og:description", content: "Delegated signature history and expiring authority." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

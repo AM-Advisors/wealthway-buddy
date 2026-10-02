@@ -89,7 +89,7 @@ export function SendFundDocuments({ offeringId }: { offeringId: string }) {
                           <Badge variant="outline">{i.signedIn ? "Signed in" : "Not signed in yet"}</Badge>
                           {!i.hasEmail ? <Badge variant="outline" className="ml-1">No email</Badge> : null}
                           <span className="block text-muted-foreground">
-                            {last ? `Last sent ${new Date(last.sentAt).toLocaleDateString()} — ${docTitle.get(last.documentId) ?? "document"} v${last.version}` : "Nothing sent yet"}
+                            {last ? `Last sent ${new Date(last.sentAt).toLocaleDateString()} - ${docTitle.get(last.documentId) ?? "document"} v${last.version}` : "Nothing sent yet"}
                           </span>
                         </span>
                       </label>

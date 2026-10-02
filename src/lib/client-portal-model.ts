@@ -1,5 +1,5 @@
 /**
- * Client portal information architecture — pure rules, no I/O.
+ * Client portal information architecture - pure rules, no I/O.
  *
  * Platform sign-offs vs documents, Fund vs SPV setup schemas, request groups,
  * My Funds projection/filters, the investor-safe Fund view and workspace
@@ -386,7 +386,7 @@ export function investorFundView(input: {
 
 export type WorkspaceCategory = "company" | "funds" | "investments";
 
-/** Categories come from relationships only — never email or a broad role. */
+/** Categories come from relationships only - never email or a broad role. */
 export function workspaceCategories(f: { companyIds: readonly string[]; clientIds: readonly string[]; managedFundIds: readonly string[]; investmentCount: number; investmentProfileIds: readonly string[] }) {
   const out: WorkspaceCategory[] = [];
   if (f.companyIds.length || f.clientIds.length) out.push("company");

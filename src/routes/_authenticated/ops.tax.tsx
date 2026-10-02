@@ -7,9 +7,9 @@ import { Form1065DetailPanel, K1HistoryPanel, FormPfPanel, IrsRecordsPanel } fro
 export const Route = createFileRoute("/_authenticated/ops/tax")({
   head: () => ({
     meta: [
-      { title: "Tax workspace — Harmonious Operations" },
+      { title: "Tax workspace - Harmonious Operations" },
       { name: "description", content: "Prepared returns, 1065s, 1042-Ss and 1099s across every Fund, with prepare and review." },
-      { property: "og:title", content: "Tax workspace — Harmonious Operations" },
+      { property: "og:title", content: "Tax workspace - Harmonious Operations" },
       { property: "og:description", content: "Prepare and review Fund tax returns and forms." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

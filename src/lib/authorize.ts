@@ -90,7 +90,7 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
   { key: "client_operator", label: "Client Operator", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "edit"]), ...p("documents", ["view", "edit"]), ...p("tasks", ["view", "edit"])] },
   { key: "client_approver", label: "Client Approver", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "approve"]), ...p("documents", ["view"])] },
   { key: "client_viewer", label: "Client Viewer", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view"]), ...p("companies", ["view"]), ...p("documents", ["view"])] },
-  // Mirrors today's client_gp behaviour exactly — no user/RBAC management, money or sensitive access.
+  // Mirrors today's client_gp behaviour exactly - no user/RBAC management, money or sensitive access.
   { key: "client_principal", label: "Client Principal / GP", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "prepare"]), ...p("companies", ["view", "edit", "approve"]), ...p("documents", ["view"])] },
   // Fund (scoped to one fund)
   { key: "fund_manager_admin", label: "Fund Manager Administrator", category: "fund", scopeTypes: ["fund"], permissions: [...p("funds", ["view", "edit", "prepare", "manage_access"]), ...p("investors", ["view", "prepare", "manage_access"]), ...p("documents", ["view", "edit"]), ...p("capital", ["view"]), ...p("reports", ["view"])] },
@@ -145,7 +145,7 @@ export type Resource = {
   type: ScopeType;
   id: string | null;
   label?: string;
-  /** Owning records, e.g. a fund's client — a client-scoped grant covers them. */
+  /** Owning records, e.g. a fund's client - a client-scoped grant covers them. */
   ancestors?: { type: ScopeType; id: string }[];
 };
 
@@ -157,7 +157,7 @@ export type Decision = {
   sources: string[];
   reason: string;
   protectedConditions: string[];
-  /** Canonical resolver only — no production endpoint consults it yet. */
+  /** Canonical resolver only - no production endpoint consults it yet. */
   enforcement: "canonical_resolver_only";
 };
 
@@ -169,7 +169,7 @@ export function isLive(r: { effective_at: string; expires_at: string | null; rev
 }
 
 const asScope = (r: { scope_type: ScopeType; scope_id: string | null }) => ({ type: r.scope_type, id: r.scope_id });
-/** A non-global scope without an id is invalid and never matches — null is never "global". */
+/** A non-global scope without an id is invalid and never matches - null is never "global". */
 export function scopeCovers(scope: { type: ScopeType; id: string | null }, res: Resource): boolean {
   if (scope.type === "global") return scope.id === null;
   if (!scope.id) return false;
@@ -213,7 +213,7 @@ export function authorize(
 
   if (!f.authenticated) return deny("Not signed in");
   if (f.suspended) return deny("Account is suspended");
-  if (isProtected(permission)) return deny("Protected permission — granted only through its dedicated control, never by role or grant", ["dedicated_control"]);
+  if (isProtected(permission)) return deny("Protected permission - granted only through its dedicated control, never by role or grant", ["dedicated_control"]);
   if (!isPermission(permission)) return deny("Unknown permission");
 
   // Explicit deny wins over everything ordinary.
@@ -264,8 +264,8 @@ export function authorize(
 
 export function formatDecision(d: Decision): string {
   return d.allowed
-    ? `ALLOW — ${d.permission} — ${d.resource} — source: ${d.sources.join(", ")} — scope: ${d.scope}`
-    : `DENY — ${d.permission} — ${d.reason}`;
+    ? `ALLOW - ${d.permission} - ${d.resource} - source: ${d.sources.join(", ")} - scope: ${d.scope}`
+    : `DENY - ${d.permission} - ${d.reason}`;
 }
 
 // ---------------------------------------------------------------- escalation
@@ -326,7 +326,7 @@ export function accessChangeProblem(actor: AuthzFacts, change: AccessChange, res
   if (templateFor(change.kind === "assign_role" || change.kind === "revoke_role" ? change.roleKey : "")?.category === "harmonious") {
     return "Only Harmonious access administrators can assign Harmonious roles.";
   }
-  for (const perm of needed) if (!authorize(actor, perm, res).allowed) return `You can't grant ${perm} — it exceeds your own access.`;
+  for (const perm of needed) if (!authorize(actor, perm, res).allowed) return `You can't grant ${perm} - it exceeds your own access.`;
   return null;
 }
 

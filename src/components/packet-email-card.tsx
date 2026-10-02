@@ -79,14 +79,14 @@ export function PacketEmailCard({ fundId }: { fundId: string }) {
               <option value="">Choose someone…</option>
               {recipients.map((r) => (
                 <option key={r.userId} value={r.email}>
-                  {r.name} — {r.email}
+                  {r.name} - {r.email}
                 </option>
               ))}
               <option value="__other">Someone else…</option>
             </select>
           ) : (
             <p className="text-muted-foreground text-sm">
-              No investors are linked to this fund yet — type an address below.
+              No investors are linked to this fund yet - type an address below.
             </p>
           )}
         </div>

@@ -40,7 +40,7 @@ function BankSetupRequest({
   ]
   if (legalEntityName) rows.push({ label: 'Legal entity', value: legalEntityName })
   if (entityType || stateFormed)
-    rows.push({ label: 'Entity', value: [entityType, stateFormed && `formed in ${stateFormed}`].filter(Boolean).join(' — ') })
+    rows.push({ label: 'Entity', value: [entityType, stateFormed && `formed in ${stateFormed}`].filter(Boolean).join(' - ') })
   rows.push({ label: 'Requested by', value: requestedByEmail ? `${requestedBy} (${requestedByEmail})` : requestedBy })
   if (note) rows.push({ label: 'Note', value: note })
 
@@ -100,7 +100,7 @@ function BankSetupRequest({
 export const template = {
   component: BankSetupRequest,
   subject: (data: Record<string, any>) =>
-    `Bank account request — ${data['fundName'] ?? 'a fund'} (${data['bankName'] ?? 'bank'})`,
+    `Bank account request - ${data['fundName'] ?? 'a fund'} (${data['bankName'] ?? 'bank'})`,
   displayName: 'Bank account setup request',
   previewData: {
     fundName: 'Harmonious Growth Fund II',

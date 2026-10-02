@@ -11,7 +11,7 @@
  *  - preparer ≠ approver, reviewer ≠ publisher, and no automated actor approves;
  *  - integrity failures (unbalanced ledger, unreconciled bridge, future
  *    valuations) can never be overridden;
- *  - a published NAV is never edited — revisions are new versions.
+ *  - a published NAV is never edited - revisions are new versions.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { reviewerScope, assertScopeAllows, type ReviewerScope } from "@/lib/reviewer-authz.server";

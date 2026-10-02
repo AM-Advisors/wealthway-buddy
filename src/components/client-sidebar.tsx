@@ -69,7 +69,7 @@ const ICONS: Record<string, typeof Home> = {
 /**
  * The menu for the client application. Every item comes from the workspace the
  * person is actually in, so nobody sees a destination that belongs to someone
- * else's relationship — and Harmonious-only sections never appear here.
+ * else's relationship - and Harmonious-only sections never appear here.
  */
 export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { state } = useSidebar();

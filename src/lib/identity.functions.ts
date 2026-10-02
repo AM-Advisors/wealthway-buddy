@@ -205,7 +205,7 @@ const relationshipSchema = z.object({
 
 /**
  * Attaches a person to a profile the caller owns. The person's own identity
- * verification always starts from scratch — nobody can be marked verified here.
+ * verification always starts from scratch - nobody can be marked verified here.
  */
 export const addProfileRelationship = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -287,7 +287,7 @@ export const submitEntityVerification = createServerFn({ method: "POST" })
       trust_type: blank(data.trust_type),
       trust_date: blank(data.trust_date),
       ...(taxId ? { tax_id_reference: taxId, tax_id_last4: taxId.slice(-4) } : {}),
-      // Submitted for review — never approved from the browser.
+      // Submitted for review - never approved from the browser.
       kyb_status: "review" as const,
       submitted_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

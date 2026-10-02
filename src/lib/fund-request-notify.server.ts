@@ -25,10 +25,10 @@ export async function postSlackNotice(n: Notice) {
       blocks: [
         { type: "section", text: { type: "mrkdwn", text } },
         { type: "section", fields: [
-          { type: "mrkdwn", text: `*Structure*\n${n.vehicle || "—"}` },
-          { type: "mrkdwn", text: `*Jurisdiction*\n${n.jurisdiction || "—"}` },
-          { type: "mrkdwn", text: `*Target raise*\n${n.targetRaise || "—"}` },
-          { type: "mrkdwn", text: `*Expected close*\n${n.expectedClose || "—"}` },
+          { type: "mrkdwn", text: `*Structure*\n${n.vehicle || "-"}` },
+          { type: "mrkdwn", text: `*Jurisdiction*\n${n.jurisdiction || "-"}` },
+          { type: "mrkdwn", text: `*Target raise*\n${n.targetRaise || "-"}` },
+          { type: "mrkdwn", text: `*Expected close*\n${n.expectedClose || "-"}` },
         ] },
         { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Open in Harmonious" }, url: n.opsUrl }] },
       ],
@@ -55,12 +55,12 @@ export async function createSalesforceOpportunity(n: Notice) {
     method: "POST",
     headers: headers(key),
     body: JSON.stringify({
-      Name: `${n.clientName} — ${n.fundName} (${n.isSpv ? "SPV" : "Fund"} setup)`.slice(0, 120),
+      Name: `${n.clientName} - ${n.fundName} (${n.isSpv ? "SPV" : "Fund"} setup)`.slice(0, 120),
       StageName: "Prospecting",
       CloseDate: close,
       ...(accountId ? { AccountId: accountId } : {}),
       ...(amount ? { Amount: amount } : {}),
-      Description: `Client portal new ${n.isSpv ? "SPV" : "fund"} request ${n.requestId}. Structure: ${n.vehicle || "—"}; jurisdiction: ${n.jurisdiction || "—"}. ${n.opsUrl}`,
+      Description: `Client portal new ${n.isSpv ? "SPV" : "fund"} request ${n.requestId}. Structure: ${n.vehicle || "-"}; jurisdiction: ${n.jurisdiction || "-"}. ${n.opsUrl}`,
     }),
   });
   if (!res.ok) { console.error(`Salesforce opportunity failed [${res.status}]: ${await res.text()}`); return { ok: false }; }

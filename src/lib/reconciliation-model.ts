@@ -3,7 +3,7 @@
  *
  * Pure functions: given a bank transaction and the platform records that could
  * explain it, they propose a transaction type, a confidence, the reasons behind
- * it and any conflicts. They never decide anything on their own — confidence is
+ * it and any conflicts. They never decide anything on their own - confidence is
  * evidence, not approval, and no proposal is invented merely to make a
  * transaction reconcile.
  */

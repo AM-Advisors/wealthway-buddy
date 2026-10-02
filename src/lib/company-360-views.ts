@@ -112,7 +112,7 @@ export function stakeholderDocuments(id: string, docs: WsDoc[], txs: { id: strin
 
 /* ---------------------------------------------------------------- activity */
 export type WsEvent = { id: string; action: string; entityType: string | null; entityId: string | null; reason: string | null; occurredAt: string };
-/** Events about this stakeholder, their transactions, securities or documents — never unrelated company activity. */
+/** Events about this stakeholder, their transactions, securities or documents - never unrelated company activity. */
 export function stakeholderActivity(id: string, events: WsEvent[], txIds: string[], docIds: string[], secIds: string[]) {
   const ids = new Set([id, ...txIds, ...docIds, ...secIds]);
   return events.filter((e) => e.entityId && ids.has(e.entityId)).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));

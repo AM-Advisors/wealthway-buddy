@@ -10,7 +10,7 @@ export const Route = createFileRoute("/pricing")({
   head: () =>
     marketingHead({
       path: "/pricing",
-      title: "Pricing — SPVs, Fund Administration & Cap Tables | Harmonious",
+      title: "Pricing - SPVs, Fund Administration & Cap Tables | Harmonious",
       description: "Pricing for Harmonious SPV administration, fund administration, cap table management and additional services.",
       // Kept out of search until approved prices are published.
       noindex: !hasPublishedPricing(),

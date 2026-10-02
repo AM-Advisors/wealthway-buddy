@@ -2,7 +2,7 @@
  * The shared Harmonious address field.
  *
  * Search first, structured fields always visible, unit kept separate, and a
- * manual path that is never blocked — if the lookup provider is unavailable or
+ * manual path that is never blocked - if the lookup provider is unavailable or
  * cannot find the address, the user still gets through and the address is
  * marked for validation later.
  */
@@ -197,12 +197,12 @@ export function AddressInput({
       {status ? (
         <p className="text-xs text-muted-foreground" data-testid={`${idPrefix}-status`}>
           {status.label}
-          {status.detail ? ` — ${status.detail}` : ""}
+          {status.detail ? ` - ${status.detail}` : ""}
         </p>
       ) : null}
       {manual && value.entryMethod === "manual" && value.line1 ? (
         <p className="text-xs text-muted-foreground">
-          Address validation pending — we&apos;ll check this address and follow up if anything is needed.
+          Address validation pending - we&apos;ll check this address and follow up if anything is needed.
         </p>
       ) : null}
 
@@ -235,7 +235,7 @@ export function AddressInput({
           ) : null}
           {!lookupAvailable ? (
             <p className="text-xs text-muted-foreground">
-              Address search is unavailable right now — you can enter your address below.
+              Address search is unavailable right now - you can enter your address below.
             </p>
           ) : null}
           <Button

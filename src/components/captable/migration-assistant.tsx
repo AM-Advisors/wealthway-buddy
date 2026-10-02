@@ -1,6 +1,6 @@
 /**
- * The migration assistant. A specialist walks through three steps — who the
- * client is, which files we were sent, then a read-back of everything found —
+ * The migration assistant. A specialist walks through three steps - who the
+ * client is, which files we were sent, then a read-back of everything found -
  * and drops in several exports at once: shareholders, grants, rounds and a list
  * of documents. Each file is read in the browser, sorted by what it looks like,
  * and can be re-labelled by hand before anything is sent.
@@ -181,8 +181,8 @@ export function MigrationAssistant({ onStarted }: { onStarted: (caseId: string) 
       <CardHeader>
         <CardTitle className="text-base">Migration assistant</CardTitle>
         <CardDescription>
-          Bring in the client's own Carta, Pulley, AngelList or spreadsheet exports — shareholders,
-          grants, rounds and their document list — in one pass. Each file is sorted for you and can
+          Bring in the client's own Carta, Pulley, AngelList or spreadsheet exports - shareholders,
+          grants, rounds and their document list - in one pass. Each file is sorted for you and can
           be re-labelled before it is sent. The founder still approves everything before it is
           recorded.
         </CardDescription>
@@ -230,7 +230,7 @@ export function MigrationAssistant({ onStarted }: { onStarted: (caseId: string) 
                     {list.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
-                        {item.client ? ` — ${item.client}` : ""}
+                        {item.client ? ` - ${item.client}` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -306,7 +306,7 @@ export function MigrationAssistant({ onStarted }: { onStarted: (caseId: string) 
               <p className="text-sm font-medium">Add the client's export files</p>
               <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
                 CSV or Excel, up to 5,000 lines each and eight files in total. We sort each one into
-                shareholders, grants, rounds or documents — change any of them below if we got it
+                shareholders, grants, rounds or documents - change any of them below if we got it
                 wrong.
               </p>
               <Button
@@ -380,7 +380,7 @@ export function MigrationAssistant({ onStarted }: { onStarted: (caseId: string) 
             </div>
             {files.length && !importable.length ? (
               <p className="text-xs text-muted-foreground">
-                Add a shareholders, grants or rounds file too — a document list on its own has
+                Add a shareholders, grants or rounds file too - a document list on its own has
                 nothing to reconcile.
               </p>
             ) : null}

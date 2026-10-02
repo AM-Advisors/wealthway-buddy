@@ -1,5 +1,5 @@
 /**
- * Fund Administration Phase D — pure distribution, withholding and outbound
+ * Fund Administration Phase D - pure distribution, withholding and outbound
  * payment rules.
  *
  * No database access, no authorization lookups, no side effects. This module
@@ -333,7 +333,7 @@ export type WithholdingLine = {
 };
 
 export type TaxFacts = {
-  /** From the investor's tax profile — never inferred from citizenship alone. */
+  /** From the investor's tax profile - never inferred from citizenship alone. */
   documentationForm: string | null;
   isForeignPerson: boolean | null;
   backupWithholdingFlag: boolean;
@@ -682,7 +682,7 @@ export function maskTail(value: string | null | undefined): string | null {
   return raw.length <= 4 ? `••••${raw}` : `••••${raw.slice(-4)}`;
 }
 
-/** Stable fingerprint of the paying destination — used to detect any change. */
+/** Stable fingerprint of the paying destination - used to detect any change. */
 export function destinationFingerprint(d: DestinationFields): string {
   const parts = [
     d.method,
@@ -1433,7 +1433,7 @@ export function complianceGateBlockers(f: ComplianceGateFacts): GateBlocker[] {
   const out: GateBlocker[] = [];
   const evaluate = (code: string, label: string, s: EvidenceState) => {
     if (s === "clear") return;
-    if (s === "unknown" || s === "missing") out.push({ code: "REVIEW_REQUIRED", reason: `${label}: no authoritative record — review required.` });
+    if (s === "unknown" || s === "missing") out.push({ code: "REVIEW_REQUIRED", reason: `${label}: no authoritative record - review required.` });
     else if (s === "expired") out.push({ code: `${code}_EXPIRED`, reason: `${label} has expired.` });
     else out.push({ code: `${code}_BLOCKED`, reason: `${label} is not cleared.` });
   };
@@ -1447,7 +1447,7 @@ export function complianceGateBlockers(f: ComplianceGateFacts): GateBlocker[] {
     out.push({ code: "ACCOUNTING_EXCEPTION", reason: "An unresolved material accounting exception is open for this fund." });
   }
   if (f.availableCashCents === null) {
-    out.push({ code: "REVIEW_REQUIRED", reason: "Available fund cash has no authoritative figure — review required." });
+    out.push({ code: "REVIEW_REQUIRED", reason: "Available fund cash has no authoritative figure - review required." });
   } else if (f.availableCashCents < f.netPaymentCents) {
     out.push({ code: "INSUFFICIENT_CASH", reason: "The fund does not have confirmed cash for this payment." });
   }

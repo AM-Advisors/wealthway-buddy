@@ -7,9 +7,9 @@ import { ManagerDraftReview } from "@/components/fund-team-drafts";
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/team")({
   head: () => ({
     meta: [
-      { title: "Fund team — Harmonious" },
+      { title: "Fund team - Harmonious" },
       { name: "description", content: "Harmonious staff, fund managers and delegated professionals with access to this fund." },
-      { property: "og:title", content: "Fund team — Harmonious" },
+      { property: "og:title", content: "Fund team - Harmonious" },
       { property: "og:description", content: "Who has operational access to this fund, and why." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

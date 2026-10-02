@@ -42,8 +42,8 @@ export function HolderSharesView({ position }: { position: any }) {
                     <tr key={h.id} className="border-b last:border-0">
                       <td className="py-2 pr-3">{h.share_class || h.security_type}</td>
                       <td className="py-2 pr-3">{num(h.quantity)}</td>
-                      <td className="py-2 pr-3">{h.issued_on ?? "—"}</td>
-                      <td className="py-2 pr-3">{h.certificate_no ?? "—"}</td>
+                      <td className="py-2 pr-3">{h.issued_on ?? "-"}</td>
+                      <td className="py-2 pr-3">{h.certificate_no ?? "-"}</td>
                       <td className="py-2">{h.status}</td>
                     </tr>
                   ))}

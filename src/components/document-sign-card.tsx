@@ -50,7 +50,7 @@ function formatWhen(value: string | null) {
 
 /**
  * The document card an investor sees. Signing happens inside Box's own
- * ceremony in a large pop-out; we never mark anything signed ourselves —
+ * ceremony in a large pop-out; we never mark anything signed ourselves -
  * closing the window just asks Box what actually happened.
  */
 export function DocumentSignCard({
@@ -225,7 +225,7 @@ export function DocumentSignCard({
           <div className="min-h-0 flex-1 bg-muted/30">
             {url ? (
               <iframe
-                title={`${title} — review and sign`}
+                title={`${title} - review and sign`}
                 src={url}
                 className="h-full w-full border-0"
                 allow="clipboard-write; fullscreen"

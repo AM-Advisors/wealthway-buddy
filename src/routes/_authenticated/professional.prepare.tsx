@@ -113,7 +113,7 @@ function PreparePage() {
                   <SelectContent>
                     {clients.map((c: any) => (
                       <SelectItem key={c.delegationId} value={c.delegationId}>
-                        {c.principalName} — {c.scopeLabel}
+                        {c.principalName} - {c.scopeLabel}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -219,7 +219,7 @@ function PreparePage() {
               <li key={item.id} className="rounded-md border border-border p-3">
                 <p className="font-medium">{item.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {DRAFT_STATUS_LABELS[item.status] ?? item.status} —{" "}
+                  {DRAFT_STATUS_LABELS[item.status] ?? item.status} -{" "}
                   {new Date(item.createdAt).toLocaleDateString()}
                 </p>
               </li>
@@ -234,13 +234,13 @@ function PreparePage() {
 export const Route = createFileRoute("/_authenticated/professional/prepare")({
   head: () => ({
     meta: [
-      { title: "Prepare for a client — Harmonious" },
+      { title: "Prepare for a client - Harmonious" },
       {
         name: "description",
         content:
           "Prepare contact details, entity and ownership information, accreditation evidence and investments for a client to review and approve.",
       },
-      { property: "og:title", content: "Prepare for a client — Harmonious" },
+      { property: "og:title", content: "Prepare for a client - Harmonious" },
       {
         property: "og:description",
         content: "Professional preparation that always waits for the client's own approval.",

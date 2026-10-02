@@ -54,12 +54,12 @@ const TAB_FN = {
 } as const;
 
 function money(cents?: number | null) {
-  if (cents === null || cents === undefined) return "—";
+  if (cents === null || cents === undefined) return "-";
   return (Number(cents) / 100).toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
 function when(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
 }
@@ -72,11 +72,11 @@ function humanise(key: string) {
 }
 
 function cell(key: string, value: unknown) {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "-";
   if (/cents$/i.test(key) || /Cents$/.test(key)) return money(Number(value));
   if (/(_at|_on|date|At|Date)$/.test(key)) return when(String(value));
   if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (typeof value === "object") return "—";
+  if (typeof value === "object") return "-";
   return String(value);
 }
 
@@ -147,7 +147,7 @@ function linkedCell(row: any, key: string) {
         : key === "person" && row.investorUserId
           ? recordPath("investor", row.investorUserId)
           : null;
-  if (!link || text === "—") return text;
+  if (!link || text === "-") return text;
   return (
     <Link to={link as any} className="text-primary underline-offset-2 hover:underline">
       {text}
@@ -171,8 +171,8 @@ function Summary({ items }: { items: { label: string; value: string }[] }) {
 function summaryFor(type: OpsRecordType, record: any): { label: string; value: string }[] {
   if (type === "client") {
     return [
-      { label: "Status", value: record.status ?? "—" },
-      { label: "Primary contact", value: record.contact ?? "—" },
+      { label: "Status", value: record.status ?? "-" },
+      { label: "Primary contact", value: record.contact ?? "-" },
       { label: "Entities", value: String(record.entityCount) },
       { label: "Funds & SPVs", value: String(record.fundCount) },
       { label: "Companies", value: String(record.companyCount) },
@@ -181,19 +181,19 @@ function summaryFor(type: OpsRecordType, record: any): { label: string; value: s
   }
   if (type === "fund") {
     return [
-      { label: "Stage", value: record.stage ?? record.status ?? "—" },
-      { label: "Launch", value: record.launchState ?? "—" },
-      { label: "Regulation", value: record.regType ?? "—" },
-      { label: "Strategy", value: record.strategy ?? record.fundType ?? "—" },
+      { label: "Stage", value: record.stage ?? record.status ?? "-" },
+      { label: "Launch", value: record.launchState ?? "-" },
+      { label: "Regulation", value: record.regType ?? "-" },
+      { label: "Strategy", value: record.strategy ?? record.fundType ?? "-" },
       { label: "Accepted commitments", value: money(record.acceptedCents) },
       { label: "Funded capital", value: money(record.fundedCents) },
       { label: "Investors", value: String(record.investorCount) },
-      { label: "Domicile", value: record.domicile ?? "—" },
+      { label: "Domicile", value: record.domicile ?? "-" },
     ];
   }
   if (type === "investor") {
     return [
-      { label: "Investor type", value: record.investorType ?? "—" },
+      { label: "Investor type", value: record.investorType ?? "-" },
       { label: "Investment profiles", value: String(record.profileCount) },
       { label: "Active investments", value: String(record.investmentCount) },
       { label: "Accepted", value: money(record.acceptedCents) },
@@ -202,10 +202,10 @@ function summaryFor(type: OpsRecordType, record: any): { label: string; value: s
     ];
   }
   return [
-    { label: "Entity type", value: record.entityType ?? "—" },
-    { label: "Jurisdiction", value: record.jurisdiction ?? "—" },
+    { label: "Entity type", value: record.entityType ?? "-" },
+    { label: "Jurisdiction", value: record.jurisdiction ?? "-" },
     { label: "Incorporated", value: when(record.incorporated) },
-    { label: "Authorized shares", value: record.authorizedShares?.toLocaleString?.() ?? "—" },
+    { label: "Authorized shares", value: record.authorizedShares?.toLocaleString?.() ?? "-" },
     { label: "Stakeholders", value: String(record.stakeholderCount) },
     { label: "Outstanding securities", value: Number(record.outstandingQuantity ?? 0).toLocaleString() },
   ];
@@ -433,7 +433,7 @@ export function OpsRecordList({ type }: { type: OpsRecordType }) {
           <Card key={item.id}>
             <CardHeader>
               <CardTitle className="text-base">{item.title}</CardTitle>
-              <CardDescription>{item.subtitle ?? "—"}</CardDescription>
+              <CardDescription>{item.subtitle ?? "-"}</CardDescription>
             </CardHeader>
             <CardContent className="flex items-center justify-between">
               {item.status ? <Badge variant="secondary">{item.status}</Badge> : <span />}

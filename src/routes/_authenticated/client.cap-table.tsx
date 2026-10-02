@@ -12,7 +12,7 @@ import { DemoBadge } from "@/components/captable/captable-states";
 export const Route = createFileRoute("/_authenticated/client/cap-table")({
   head: () => ({
     meta: [
-      { title: "Harmonious CapTable — Know exactly who owns your company" },
+      { title: "Harmonious CapTable - Know exactly who owns your company" },
       {
         name: "description",
         content:

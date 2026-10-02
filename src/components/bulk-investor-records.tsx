@@ -50,7 +50,7 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
           <div className="divide-y rounded-md border">
             {p.rows.map((r) => (
               <div key={r.index} className="space-y-1 p-2 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">Row {r.index + 1}: {r.name || "—"} <span className="font-normal text-muted-foreground">{r.email} {r.amount ? `· $${r.amount}` : ""}</span></span><Badge variant={tone[r.cls as BulkClass]}>{BULK_CLASS_LABELS[r.cls as BulkClass]}</Badge></div>
+                <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">Row {r.index + 1}: {r.name || "-"} <span className="font-normal text-muted-foreground">{r.email} {r.amount ? `· $${r.amount}` : ""}</span></span><Badge variant={tone[r.cls as BulkClass]}>{BULK_CLASS_LABELS[r.cls as BulkClass]}</Badge></div>
                 {r.errors.map((e) => <p key={e} className="text-xs text-destructive">{e}</p>)}
                 {r.conflicts.map((c) => {
                   const key = `${r.index}:${c.field}`; const v = decisions[key] ?? "later";

@@ -7,7 +7,7 @@
  * Authority comes only from canAct (live delegation + explicit capability +
  * scope). Preparing never implies approving; the approver must be a different
  * person from anyone who prepared or submitted the record. Nothing here files,
- * transmits, delivers, pays or moves money — those stay with Harmonious.
+ * transmits, delivers, pays or moves money - those stay with Harmonious.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { canAct } from "@/lib/delegated-access.server";
@@ -178,7 +178,7 @@ async function buildWorkspace(userId: string, funds: FundCaps[], individualScope
       fundName: fundName.get(r.offering_id) ?? "Fund",
       taxYear: r.tax_year as number,
       status: r.status as string,
-      label: `Income code ${r.income_code ?? "—"} · Chapter ${r.chapter ?? "—"}${r.country ? ` · ${r.country}` : ""}`,
+      label: `Income code ${r.income_code ?? "-"} · Chapter ${r.chapter ?? "-"}${r.country ? ` · ${r.country}` : ""}`,
       grossCents: (r.gross_income_cents as number) ?? null,
       withheldCents: (r.withheld_cents as number) ?? null,
     })),

@@ -47,7 +47,7 @@ function InvestorWelcome({
     <Html>
       <Head />
       <Preview>
-        Your {offeringName} application is approved — here is your due diligence room and what
+        Your {offeringName} application is approved - here is your due diligence room and what
         happens next.
       </Preview>
       <Body
@@ -165,7 +165,7 @@ function InvestorWelcome({
           <Hr style={{ borderColor: '#e6ecf3', margin: '32px 0 16px' }} />
           <Text style={{ color: '#606060', fontSize: '12px', lineHeight: '18px' }}>
             Questions? Reply to this message or contact us at {contactEmail}. Harmonious will never
-            ask you to send funds to bank details received by email — always confirm wire
+            ask you to send funds to bank details received by email - always confirm wire
             instructions by phone.
           </Text>
         </Container>
@@ -177,7 +177,7 @@ function InvestorWelcome({
 export const template = {
   component: InvestorWelcome,
   subject: (data: Record<string, any>) =>
-    `Welcome to ${data['offeringName'] || 'Harmonious'} — your next steps`,
+    `Welcome to ${data['offeringName'] || 'Harmonious'} - your next steps`,
   displayName: 'Investor welcome after onboarding',
   previewData: {
     investorName: 'Jane Doe',

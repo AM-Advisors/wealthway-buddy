@@ -5,13 +5,13 @@ import { AllocationBoard } from "@/components/allocation-board";
 export const Route = createFileRoute("/_authenticated/ops/allocations")({
   head: () => ({
     meta: [
-      { title: "Investor allocations — Harmonious" },
+      { title: "Investor allocations - Harmonious" },
       {
         name: "description",
         content:
           "Share fund net assets out to investor capital accounts, reconcile them to the fund and issue capital account statements.",
       },
-      { property: "og:title", content: "Investor allocations — Harmonious" },
+      { property: "og:title", content: "Investor allocations - Harmonious" },
       {
         property: "og:description",
         content: "Allocations, capital accounts and investor statements for each period.",

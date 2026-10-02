@@ -15,7 +15,7 @@ function Tasks() {
   return (
     <WorkspaceSection
       title="Tasks"
-      description="What is outstanding for your clients. Viewing only — the client still acts."
+      description="What is outstanding for your clients. Viewing only - the client still acts."
     >
       {rows.length === 0 ? (
         <Empty>Nothing outstanding.</Empty>
@@ -23,7 +23,7 @@ function Tasks() {
         <ul className="space-y-1 text-sm">
           {rows.map((t: any, i: number) => (
             <li key={i}>
-              {t.client} — {t.label}
+              {t.client} - {t.label}
             </li>
           ))}
         </ul>

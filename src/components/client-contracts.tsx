@@ -16,9 +16,9 @@ import { ContractFamilyPanel } from "@/components/contract-family";
 
 export const REVIEW_LABEL: Record<string, string> = {
   uploaded: "Uploaded",
-  awaiting_review: "Contract uploaded — terms awaiting review",
+  awaiting_review: "Contract uploaded - terms awaiting review",
   manual_review_required: "Document requires manual review",
-  extraction_failed: "Reading failed — manual review",
+  extraction_failed: "Reading failed - manual review",
   approved: "Approved",
   superseded: "Superseded",
 };
@@ -29,7 +29,7 @@ export const EXEC_LABEL: Record<string, string> = {
 };
 const typeLabel = (v: string) => GOVERNING_DOC_TYPES.find((d) => d.value === v)?.label ?? v;
 const money = (c: number | null | undefined) =>
-  c == null ? "—" : `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  c == null ? "-" : `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -80,7 +80,7 @@ export function UploadContractForm({
         },
       });
       toast.success(
-        res.duplicate ? "This exact file was already uploaded — opening it." : "Uploaded. Terms are ready for review.",
+        res.duplicate ? "This exact file was already uploaded - opening it." : "Uploaded. Terms are ready for review.",
       );
       onDone?.(res.documentId);
     } catch (e) {
@@ -156,7 +156,7 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
             <CardTitle className="text-base">Current agreement</CardTitle>
             <CardDescription>
               {current
-                ? `${current.title} · effective ${current.effective_date ?? "—"}${current.expiration_date ? ` · expires ${current.expiration_date}` : ""}${current.notice_days != null ? ` · ${current.notice_days}-day notice` : ""}${deadline ? ` · notice deadline ${deadline}` : ""}`
+                ? `${current.title} · effective ${current.effective_date ?? "-"}${current.expiration_date ? ` · expires ${current.expiration_date}` : ""}${current.notice_days != null ? ` · ${current.notice_days}-day notice` : ""}${deadline ? ` · notice deadline ${deadline}` : ""}`
                 : "No approved master agreement yet."}
             </CardDescription>
           </div>
@@ -214,7 +214,7 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
                   </div>
                 </div>
                 <CardDescription>
-                  Effective {doc.effective_date ?? "—"} · applies to{" "}
+                  Effective {doc.effective_date ?? "-"} · applies to{" "}
                   {doc.applies_to_offering_ids.length
                     ? doc.applies_to_offering_ids.map(fundName).join(", ")
                     : "the whole client"}
@@ -309,7 +309,7 @@ export function ClientContractsPanel({ clientId }: { clientId: string }) {
                   <span>
                     {money(p.contracted_cents)}{" "}
                     <span className="text-muted-foreground">
-                      (standard {money(p.standard_cents)}) · from {p.effective_date ?? "—"}
+                      (standard {money(p.standard_cents)}) · from {p.effective_date ?? "-"}
                     </span>
                   </span>
                 </li>
@@ -331,7 +331,7 @@ export function ClientContactsPanel({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Contact designations are for reference only — they never give anyone access or signing authority in Harmonious.
+        Contact designations are for reference only - they never give anyone access or signing authority in Harmonious.
       </p>
       {d.contacts.length === 0 ? <p className="text-sm text-muted-foreground">No contacts recorded.</p> : null}
       <div className="grid gap-3 sm:grid-cols-2">
@@ -339,7 +339,7 @@ export function ClientContactsPanel({ clientId }: { clientId: string }) {
           <Card key={c.id}>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">{c.full_name}</CardTitle>
-              <CardDescription>{[c.title, c.email, c.phone].filter(Boolean).join(" · ") || "—"}</CardDescription>
+              <CardDescription>{[c.title, c.email, c.phone].filter(Boolean).join(" · ") || "-"}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-1">
               {(c.designations ?? []).map((x: string) => (

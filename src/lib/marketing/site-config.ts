@@ -10,7 +10,7 @@
 /** Future canonical marketing origin. Every marketing canonical/og:url uses it. */
 export const MARKETING_ORIGIN = "https://www.harmonious.co";
 
-/** Hosts that serve the application — never treated as marketing sites. */
+/** Hosts that serve the application - never treated as marketing sites. */
 export const APPLICATION_HOSTS = [
   "app.harmonious.co",
   "portal.harmonious.co",
@@ -34,7 +34,7 @@ export const ORGANIZATION = {
 
 /**
  * `live` items render. `planned` items stay hidden until a real, reviewed page
- * exists — the menu never links to thin placeholder pages.
+ * exists - the menu never links to thin placeholder pages.
  */
 export type NavStatus = "live" | "planned";
 export interface NavItem {
@@ -140,7 +140,7 @@ export const MARKETING_NAV: NavGroup[] = [
   },
 ];
 
-/** Resource categories — used by the Classroom hub and article model. */
+/** Resource categories - used by the Classroom hub and article model. */
 export const RESOURCE_CATEGORIES = [
   { slug: "spvs", label: "SPVs", pillar: "/spvs" },
   { slug: "fund-administration", label: "Fund Administration", pillar: "/fund-administration" },
@@ -207,7 +207,7 @@ export const CTA_DESTINATION = "/contactus" as const;
 export interface PublicMetric {
   label: string;
   value: string;
-  /** Who approved it and when — required before a metric is published. */
+  /** Who approved it and when - required before a metric is published. */
   approvedBy: string;
   approvedOn: string;
 }
@@ -230,7 +230,7 @@ export interface Disclosure {
 
 /**
  * Centrally managed disclosure text. These two statements are the wording the
- * public site already displays today — carried over verbatim, not new language.
+ * public site already displays today - carried over verbatim, not new language.
  * Final regulatory wording is to be supplied/approved by Harmonious.
  */
 export const DISCLOSURES: Record<"offering" | "status", Disclosure> = {
@@ -290,7 +290,7 @@ export function hasPublishedPricing(sections: PricingSection[] = PRICING): boole
 }
 
 // ---------------------------------------------------------------------------
-// Comparison pages (architecture only — none published)
+// Comparison pages (architecture only - none published)
 // ---------------------------------------------------------------------------
 
 export interface ComparisonPage {

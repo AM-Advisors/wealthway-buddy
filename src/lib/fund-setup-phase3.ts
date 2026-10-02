@@ -1,5 +1,5 @@
 /**
- * Fund Setup Phase 3 — pure rules for Banking, EIN / SS-4, Administration &
+ * Fund Setup Phase 3 - pure rules for Banking, EIN / SS-4, Administration &
  * Regulatory, class changes and the Review "Ready for" summary. No I/O.
  */
 
@@ -212,7 +212,7 @@ export type ServiceChoice = "included" | "not_included";
 export type FilingResponsibility = "not_applicable" | "required" | "harmonious" | "client_counsel";
 export const FILING_RESPONSIBILITY_LABELS: Record<FilingResponsibility, string> = {
   not_applicable: "Not Applicable",
-  required: "Required — responsibility not yet assigned",
+  required: "Required - responsibility not yet assigned",
   harmonious: "To Be Handled by Harmonious",
   client_counsel: "Client / Legal Counsel Handling",
 };
@@ -256,7 +256,7 @@ export type ReadyFacts = {
   bankingNotRequired: boolean;
 };
 
-/** Separate operational states — never one giant "setup complete" gate. */
+/** Separate operational states - never one giant "setup complete" gate. */
 export function readyFor(f: ReadyFacts) {
   const inviteMissing = [
     !f.legalName && "Legal Name",

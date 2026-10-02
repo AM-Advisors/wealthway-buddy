@@ -11,9 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/manager/fund-setup/$requestId")({
   head: () => ({
     meta: [
-      { title: "Fund setup — Harmonious" },
+      { title: "Fund setup - Harmonious" },
       { name: "description", content: "Track each milestone while Harmonious sets up your fund or SPV." },
-      { property: "og:title", content: "Fund setup — Harmonious" },
+      { property: "og:title", content: "Fund setup - Harmonious" },
       { property: "og:description", content: "Track each milestone while Harmonious sets up your fund or SPV." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

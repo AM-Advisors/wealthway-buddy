@@ -8,7 +8,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  *  Before a founder records any shares we ask them to confirm the company
  *  itself: legal name, how and where it was formed, how many shares the company
  *  is authorised to issue, and who signs certificates. Harmonious records what
- *  the company tells us — we do not verify or advise on it. */
+ *  the company tells us - we do not verify or advise on it. */
 
 export const CAP_ENTITY_TYPES = [
   "Corporation",

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const money = (cents: number | null | undefined) =>
-  cents == null ? "—" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 const INVESTOR_TYPES = [
   ["unknown", "Not sure yet"],
@@ -54,7 +54,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
         },
       }),
     onSuccess: (r: any) => {
-      toast.success(r.emailSent ? "Invitation sent." : "Invitation created. The email could not be sent — use Resend.");
+      toast.success(r.emailSent ? "Invitation sent." : "Invitation created. The email could not be sent - use Resend.");
       setLink(null);
       window.sessionStorage.removeItem(`harmonious.invite-draft.${fundId}`);
       setEmail("");
@@ -114,7 +114,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
   );
 }
 
-/** Progress only — no identity evidence, tax numbers, provider results or bank details. */
+/** Progress only - no identity evidence, tax numbers, provider results or bank details. */
 export function FundInvestorProgress({ fundId }: { fundId: string }) {
   const load = useServerFn(managerOnboardingBoardFn);
   const { data, isLoading } = useQuery({

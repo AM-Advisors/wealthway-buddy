@@ -126,7 +126,7 @@ export function ClientBankLinking() {
           <CardTitle className="text-base">Bank accounts</CardTitle>
           <CardDescription>
             Link the account your fund pays from and the wires or ACH payments you send are matched
-            to your invoices automatically — you no longer wait for someone at Harmonious to record
+            to your invoices automatically - you no longer wait for someone at Harmonious to record
             them by hand. Harmonious never moves money from a linked account; it only reads the
             deposits so payments can be recognised.
           </CardDescription>
@@ -136,7 +136,7 @@ export function ClientBankLinking() {
           <CardContent>
             <p className="text-sm text-muted-foreground">
               Bank linking isn't switched on for this portal yet. Your Harmonious contact can enable
-              it — until then, keep reporting each payment on the invoice and we will match it.
+              it - until then, keep reporting each payment on the invoice and we will match it.
             </p>
           </CardContent>
         )}
@@ -162,7 +162,7 @@ export function ClientBankLinking() {
                 <CardDescription>
                   {fund.linked
                     ? `${fund.institution ?? "Bank"}${fund.mask ? ` ••••${fund.mask}` : ""}${
-                        fund.lastSyncedAt ? ` — last checked ${when(fund.lastSyncedAt)}` : ""
+                        fund.lastSyncedAt ? ` - last checked ${when(fund.lastSyncedAt)}` : ""
                       }`
                     : "No bank account linked. Payments are matched by Harmonious by hand."}
                 </CardDescription>

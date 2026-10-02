@@ -18,13 +18,13 @@ import { ImportedDocumentsList } from "@/components/imported-documents-list";
 export const Route = createFileRoute("/_authenticated/vault")({
   head: () => ({
     meta: [
-      { title: "Document Vault — Harmonious" },
+      { title: "Document Vault - Harmonious" },
       {
         name: "description",
         content:
           "Every document on your Harmonious record: what you signed, what you sent us, your statements, agreements and invoices.",
       },
-      { property: "og:title", content: "Document Vault — Harmonious" },
+      { property: "og:title", content: "Document Vault - Harmonious" },
       {
         property: "og:description",
         content: "One place for everything you have signed, sent or received through Harmonious.",
@@ -48,7 +48,7 @@ const KINDS: { value: string; label: string }[] = [
 ];
 
 function when(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" });
 }
 
@@ -101,7 +101,7 @@ function VaultPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <h1 className="text-3xl">Document vault</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Everything on your record with Harmonious — what you signed, what we issued to you, what you
+        Everything on your record with Harmonious - what you signed, what we issued to you, what you
         sent us, and your statements, agreements and invoices.
       </p>
 

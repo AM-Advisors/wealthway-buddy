@@ -33,13 +33,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/provider")({
   head: () => ({
     meta: [
-      { title: "Provider Portal — Harmonious" },
+      { title: "Provider Portal - Harmonious" },
       {
         name: "description",
         content:
           "Submit your costs and documents to Harmonious and follow where each one stands, from sent to accepted.",
       },
-      { property: "og:title", content: "Provider Portal — Harmonious" },
+      { property: "og:title", content: "Provider Portal - Harmonious" },
       {
         property: "og:description",
         content: "Send costs and documents to Harmonious and track their status.",
@@ -55,9 +55,9 @@ const money = (cents: number, currency = "USD") =>
   (Number(cents) / 100).toLocaleString("en-US", { style: "currency", currency });
 
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
-const day = (v: string | null | undefined) => (v ? new Date(v).toLocaleDateString("en-US") : "—");
+const day = (v: string | null | undefined) => (v ? new Date(v).toLocaleDateString("en-US") : "-");
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Waiting for review",
@@ -210,7 +210,7 @@ function ProviderPortal() {
             <CardTitle className="text-base">No provider account linked yet</CardTitle>
             <CardDescription>
               This portal is for third parties Harmonious works with. Your sign-in isn't linked to a
-              provider yet — ask your Harmonious contact to add your work email.
+              provider yet - ask your Harmonious contact to add your work email.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -284,7 +284,7 @@ function ProviderPortal() {
               <CardTitle className="text-base">Submit a cost</CardTitle>
               <CardDescription>
                 Attach the invoice if you have one. Harmonious decides which client the cost belongs
-                to — you don't need to tell us.
+                to - you don't need to tell us.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">

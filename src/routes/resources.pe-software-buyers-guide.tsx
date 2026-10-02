@@ -1,9 +1,9 @@
 import { seoLinks, seoMeta } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-const TITLE = "Private Equity Software Buyer's Guide (2026) — Harmonious";
+const TITLE = "Private Equity Software Buyer's Guide (2026) - Harmonious";
 const DESCRIPTION =
-  "Compare private equity software categories — deal management, fund accounting, LP portals, cap table, reporting — and how to evaluate a unified platform.";
+  "Compare private equity software categories - deal management, fund accounting, LP portals, cap table, reporting - and how to evaluate a unified platform.";
 const URL = "https://www.harmonious.co/resources/pe-software-buyers-guide";
 
 export const Route = createFileRoute("/resources/pe-software-buyers-guide")({
@@ -91,7 +91,7 @@ const categories: Category[] = [
       "Branded statements and capital account rollforwards generated from the ledger",
       "Notification, acknowledgement, and access audit logging",
     ],
-    watchOut: "Portals that are only a file share — LPs still email IR for numbers.",
+    watchOut: "Portals that are only a file share - LPs still email IR for numbers.",
   },
   {
     name: "Cap table & equity management",
@@ -160,7 +160,7 @@ const stackComparison = [
 
 const shortlistSteps = [
   "Write down the five reports you produce most often and who signs off on each.",
-  "Map every place a number is re-keyed today — those are your reconciliation costs.",
+  "Map every place a number is re-keyed today - those are your reconciliation costs.",
   "Score vendors on the categories above, weighting the ones that touch LP-facing output.",
   "Ask each vendor to run your own last quarter-end through their system, not a demo dataset.",
   "Confirm access controls, audit export, and data-exit terms before pricing.",
@@ -174,11 +174,11 @@ const faqs = [
   },
   {
     q: "Do I need separate deal management and fund accounting tools?",
-    a: "Not necessarily. Separate tools are common because the categories matured independently, but the cost shows up in reconciliation — the same investment exists in the CRM, the ledger, and the LP portal. A unified platform removes that reconciliation step by keeping one record of the investment.",
+    a: "Not necessarily. Separate tools are common because the categories matured independently, but the cost shows up in reconciliation - the same investment exists in the CRM, the ledger, and the LP portal. A unified platform removes that reconciliation step by keeping one record of the investment.",
   },
   {
     q: "How much does private equity software cost?",
-    a: "Pricing is usually per fund, per entity, or per assets under administration, and most vendors quote annually. When you compare quotes, add the internal hours spent moving data between systems — for fragmented stacks that internal cost is frequently larger than the license fees.",
+    a: "Pricing is usually per fund, per entity, or per assets under administration, and most vendors quote annually. When you compare quotes, add the internal hours spent moving data between systems - for fragmented stacks that internal cost is frequently larger than the license fees.",
   },
   {
     q: "What should an LP portal include?",
@@ -196,8 +196,8 @@ function BuyersGuidePage() {
         Private Equity Software Buyer's Guide
       </h1>
       <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-        A practical comparison of the software categories private capital firms buy — deal
-        management, fund accounting, LP portals, cap table, portfolio monitoring, and compliance —
+        A practical comparison of the software categories private capital firms buy - deal
+        management, fund accounting, LP portals, cap table, portfolio monitoring, and compliance -
         plus how to judge a unified platform against the fragmented legacy stack most firms inherit.
       </p>
 

@@ -2,10 +2,10 @@
  * Unified access read model (Stage 1).
  *
  * This module does NOT authorize anything. It projects the authorization facts
- * that already exist — platform roles (user_roles → ops-capabilities), staff
+ * that already exist - platform roles (user_roles → ops-capabilities), staff
  * capability roles/grants (contract-coverage), fund-scoped fund_managers,
  * investor_fund_access, investment_profiles, client_users, professional
- * memberships and delegations — into one explainable view. Every enforcement
+ * memberships and delegations - into one explainable view. Every enforcement
  * path keeps using its own server-side check.
  */
 import { capabilitiesFor, hasOperationsEntry, OPS_AREAS, type OpsArea } from "@/lib/ops-capabilities";
@@ -119,7 +119,7 @@ export const SUPER_ADMIN_LIMITS = [
   "Immutable audit records",
   "Executed-document immutability",
   "Posted-ledger correction rules (reversals only)",
-  "Maker/checker — no self-approval",
+  "Maker/checker - no self-approval",
   "Dual-control money movement",
   "Dedicated sensitive-tax access (full TIN requires the Tax role)",
   "Provider-verification integrity (KYC/AML/Box results cannot be overridden)",
@@ -197,7 +197,7 @@ export function effectivePermissions(f: Facts, now = Date.now()): Permission[] {
     }
   }
 
-  // 3. Relationships — always resource-scoped, never global.
+  // 3. Relationships - always resource-scoped, never global.
   for (const fund of f.managedFunds) {
     const scope: Scope = { type: "fund", id: fund.id, label: fund.name };
     for (const [area, action] of [["funds", "view"], ["funds", "prepare"], ["investors", "view"], ["investors", "prepare"], ["documents", "view"], ["capital", "view"], ["reports", "view"]] as const) {
@@ -223,7 +223,7 @@ export function effectivePermissions(f: Facts, now = Date.now()): Permission[] {
     push({ area: "companies", action: "view", scope: { type: "company", id: co.id, label: co.name }, source: "relationship", via: "Company relationship" });
   }
 
-  // 4. Delegations — only live, accepted, unexpired, unrevoked authority.
+  // 4. Delegations - only live, accepted, unexpired, unrevoked authority.
   for (const d of f.delegations) {
     if (d.direction !== "acting_for" || !activeDelegation(d, now)) continue;
     const scope = delegationScope(d);

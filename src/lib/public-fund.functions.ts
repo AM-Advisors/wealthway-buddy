@@ -4,7 +4,7 @@
  * Everything here is readable by anyone, so each read is gated on the fund's
  * "show publicly" switch and only curated fields are returned. Visitors can
  * see the pitch deck and the cap table, and the offering documents are listed
- * by name only — opening them requires requesting access to the room.
+ * by name only - opening them requires requesting access to the room.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";

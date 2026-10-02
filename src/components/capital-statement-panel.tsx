@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 export async function openStatement(statement: any) {
   const opened = await openPdfDoc(capitalStatementPdfSpec(statement));
@@ -25,7 +25,7 @@ export async function downloadStatement(statement: any) {
   await downloadPdfDoc(capitalStatementPdfSpec(statement));
 }
 
-/** Statement history for one investor, with a view, download and — for staff —
+/** Statement history for one investor, with a view, download and - for staff -
  *  a way to produce a fresh one after the fund's records change. */
 export function CapitalStatementPanel({
   applicationId,

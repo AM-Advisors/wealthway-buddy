@@ -12,7 +12,7 @@ const STATUS: Record<string, string> = {
   active: "Active",
   revoked: "Removed",
   expired: "Expired",
-  needs_review: "Paused — granting manager left",
+  needs_review: "Paused - granting manager left",
 };
 
 export function FundTeamAccessBox({ fundId }: { fundId: string }) {
@@ -114,7 +114,7 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
         </ul>
       )}
       <p className="text-xs text-muted-foreground">
-        No email is sent automatically — let them know to sign in with that email, then open Shared funds.
+        No email is sent automatically - let them know to sign in with that email, then open Shared funds.
       </p>
     </section>
   );

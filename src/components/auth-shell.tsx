@@ -8,7 +8,7 @@ import { Logo } from "@/components/Logo";
 export function AuthShell({
   children,
   heading = "The private place for your fund.",
-  blurb = "Verify your identity, review the documents, sign and fund — all in one confidential workspace. Your progress is saved as you go.",
+  blurb = "Verify your identity, review the documents, sign and fund - all in one confidential workspace. Your progress is saved as you go.",
   points = [
     "Bank-grade encryption on every document",
     "Access limited to you and your fund's team",
@@ -50,7 +50,7 @@ export function AuthShell({
         <footer className="border-t px-4 py-5 text-xs text-muted-foreground">
           <p className="mx-auto max-w-md">
             © {new Date().getFullYear()} Harmonious. Administration, technology, onboarding,
-            reporting, payment facilitation and recordkeeping support — not an investment adviser,
+            reporting, payment facilitation and recordkeeping support - not an investment adviser,
             broker-dealer, custodian or legal counsel.
           </p>
         </footer>

@@ -28,7 +28,7 @@ import {
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -478,7 +478,7 @@ export function ExpensesBoard() {
                     <SelectItem value="none">Not linked</SelectItem>
                     {rateLines.map((i) => (
                       <SelectItem key={i.id} value={i.id}>
-                        {i.label} — {money(i.amount_cents)}
+                        {i.label} - {money(i.amount_cents)}
                       </SelectItem>
                     ))}
                   </SelectContent>

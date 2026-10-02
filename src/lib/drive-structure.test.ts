@@ -29,7 +29,7 @@ function fakeDrive() {
 }
 
 describe("Google Drive structure", () => {
-  it("creation is idempotent — retries never make 'Fund (1)'", async () => {
+  it("creation is idempotent - retries never make 'Fund (1)'", async () => {
     const { client, files } = fakeDrive();
     const a = await ensureTaggedFolder(client, "root", "Alpha Fund", fundKey("o1"));
     const b = await ensureTaggedFolder(client, "root", "Alpha Fund", fundKey("o1"));

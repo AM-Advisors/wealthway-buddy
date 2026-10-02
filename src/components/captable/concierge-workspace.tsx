@@ -42,7 +42,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 const dateFmt = (value: string | null | undefined) =>
-  value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—";
+  value ? new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" }) : "-";
 const numFmt = (value: number) => Number(value ?? 0).toLocaleString("en-US");
 
 export function ConciergeWorkspace() {
@@ -146,7 +146,7 @@ function Queue({ onOpen }: { onOpen: (id: string) => void }) {
                     </TableCell>
                     <TableCell className="text-sm">{row.specialist ?? "Unassigned"}</TableCell>
                     <TableCell className="text-sm">
-                      {row.openQuestions ? `${row.openQuestions} open` : "—"}
+                      {row.openQuestions ? `${row.openQuestions} open` : "-"}
                       {row.answeredQuestions ? ` · ${row.answeredQuestions} answered` : ""}
                     </TableCell>
                     <TableCell className="text-sm">{dateFmt(row.targetDate)}</TableCell>
@@ -492,8 +492,8 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }) 
                 return (
                   <TableRow key={row.id}>
                     <TableCell>{row.rowNumber}</TableCell>
-                    <TableCell>{String(mapped['holderName'] ?? "—")}</TableCell>
-                    <TableCell>{String(mapped['securityClass'] ?? mapped['securityType'] ?? "—")}</TableCell>
+                    <TableCell>{String(mapped['holderName'] ?? "-")}</TableCell>
+                    <TableCell>{String(mapped['securityClass'] ?? mapped['securityType'] ?? "-")}</TableCell>
                     <TableCell className="text-right">{numFmt(Number(mapped['quantity'] ?? 0))}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {match ? match.name : "New shareholder"}

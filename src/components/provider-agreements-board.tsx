@@ -34,7 +34,7 @@ const money = (cents: number) =>
   (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 const when = (v: string | null | undefined) =>
-  v ? new Date(v).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—";
+  v ? new Date(v).toLocaleDateString("en-US", { dateStyle: "medium" }) : "-";
 
 const stageLabel = (value: string) =>
   AGREEMENT_STAGES.find((s) => s.value === value)?.label ?? value;
@@ -408,9 +408,9 @@ export function ProviderAgreementsBoard() {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                Signed for the provider by {selected.provider_signer_name ?? "—"} on{" "}
+                Signed for the provider by {selected.provider_signer_name ?? "-"} on{" "}
                 {when(selected.provider_signed_at)}; for Harmonious by{" "}
-                {selected.harmonious_signer_name ?? "—"} on {when(selected.harmonious_signed_at)}.
+                {selected.harmonious_signer_name ?? "-"} on {when(selected.harmonious_signed_at)}.
               </p>
               {selected.termination_reason ? (
                 <p className="text-muted-foreground">
@@ -520,7 +520,7 @@ export function ProviderAgreementsBoard() {
                   {selected.status === "signed" ? (
                     <p className="text-xs text-muted-foreground">
                       {outstanding > 0
-                        ? `${outstanding} required condition${outstanding === 1 ? "" : "s"} still outstanding — activation is blocked until they are cleared.`
+                        ? `${outstanding} required condition${outstanding === 1 ? "" : "s"} still outstanding - activation is blocked until they are cleared.`
                         : "All required conditions are cleared. At least one agreed price is also needed."}
                     </p>
                   ) : null}
@@ -615,7 +615,7 @@ export function ProviderAgreementsBoard() {
             <CardHeader>
               <CardTitle className="text-base">Conditions before go-live</CardTitle>
               <CardDescription>
-                Insurance, security review, data handling, service levels — required items must be
+                Insurance, security review, data handling, service levels - required items must be
                 cleared before the agreement can be activated.
               </CardDescription>
             </CardHeader>

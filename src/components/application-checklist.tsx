@@ -153,7 +153,7 @@ export function ApplicationChecklist({ taxClassification }: { taxClassification:
                   title={KIND_LABEL.get(kind) ?? kind}
                   detail={
                     mine
-                      ? `${mine.fileName} — ${mine.reviewStatus === "accepted" ? "accepted" : mine.reviewStatus === "follow_up" ? "the fund team asked for a replacement" : "waiting on review"}`
+                      ? `${mine.fileName} - ${mine.reviewStatus === "accepted" ? "accepted" : mine.reviewStatus === "follow_up" ? "the fund team asked for a replacement" : "waiting on review"}`
                       : KIND_HINT[kind]
                   }
                 />

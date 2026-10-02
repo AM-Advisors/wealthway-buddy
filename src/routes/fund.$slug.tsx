@@ -25,7 +25,7 @@ export const Route = createFileRoute("/fund/$slug")({
     if (!loaderData) {
       return {
         meta: [
-          { title: "Fund unavailable — Harmonious" },
+          { title: "Fund unavailable - Harmonious" },
           { name: "robots", content: "noindex" },
         ],
       };
@@ -36,9 +36,9 @@ export const Route = createFileRoute("/fund/$slug")({
     return {
       meta: [
         { name: "robots", content: "noindex, nofollow" },
-        { title: `${fund.name} — Harmonious` },
+        { title: `${fund.name} - Harmonious` },
         { name: "description", content: description },
-        { property: "og:title", content: `${fund.name} — Harmonious` },
+        { property: "og:title", content: `${fund.name} - Harmonious` },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: url },
@@ -150,7 +150,7 @@ function AccessRequestForm({ slug, fundName }: { slug: string; fundName: string 
           <Label htmlFor="rq-message">Anything we should know? (optional)</Label>
           <Textarea id="rq-message" rows={3} value={form.message} onChange={set("message")} />
         </div>
-        {/* Spam trap — hidden from people. */}
+        {/* Spam trap - hidden from people. */}
         <input
           className="hidden"
           tabIndex={-1}
@@ -374,7 +374,7 @@ function PublicFundPage() {
                         {money(row.received_cents)}
                       </td>
                       <td className="py-2 pr-3 text-right tabular-nums">
-                        {row.shares == null ? "—" : row.shares.toLocaleString("en-US")}
+                        {row.shares == null ? "-" : row.shares.toLocaleString("en-US")}
                       </td>
                       <td className="py-2 text-right tabular-nums">
                         {row.ownership_pct.toFixed(2)}%

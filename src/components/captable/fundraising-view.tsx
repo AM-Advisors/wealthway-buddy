@@ -217,11 +217,11 @@ function Body() {
                   <TableRow key={i.id}>
                     <TableCell className="font-medium">{i.stakeholder}</TableCell>
                     <TableCell>{i.instrumentLabel}</TableCell>
-                    <TableCell className="text-muted-foreground">{i.roundName ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{i.roundName ?? "-"}</TableCell>
                     <TableCell className="text-right">{fmtMoney(i.amount, 0)}</TableCell>
                     <TableCell className="text-right">{fmtNumber(i.shares)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {terms(i) || "—"}
+                      {terms(i) || "-"}
                     </TableCell>
                     <TableCell>
                       <Badge variant={STATUS_TONE[i.status] ?? "secondary"}>

@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/admin/timeline")({
   head: () => ({
     meta: [
-      { title: "Fund Timeline — Harmonious Admin" },
+      { title: "Fund Timeline - Harmonious Admin" },
       {
         name: "description",
         content:
-          "Set each fund's key dates — closing, wire deadline and launch — and share them in the due diligence room.",
+          "Set each fund's key dates - closing, wire deadline and launch - and share them in the due diligence room.",
       },
-      { property: "og:title", content: "Fund Timeline — Harmonious Admin" },
+      { property: "og:title", content: "Fund Timeline - Harmonious Admin" },
       { property: "og:description", content: "Set and publish key dates for each fund." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -4,7 +4,7 @@ import { requireInternalJob } from "@/lib/internal-job-auth.server";
 
 // Safety-net drain for fund manager alert emails. Normal flows send within
 // seconds; this endpoint catches anything that failed or was missed.
-// Internal job only — never callable without the server-side job secret.
+// Internal job only - never callable without the server-side job secret.
 export const Route = createFileRoute("/api/public/notify/drain")({
   server: {
     handlers: {

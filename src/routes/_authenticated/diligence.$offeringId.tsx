@@ -78,13 +78,13 @@ import { getStepRail } from "@/lib/step-rail.functions";
 export const Route = createFileRoute("/_authenticated/diligence/$offeringId")({
   head: () => ({
     meta: [
-      { title: "Fund Due Diligence Room — Harmonious" },
+      { title: "Fund Due Diligence Room - Harmonious" },
       {
         name: "description",
         content:
           "Confidential fund diligence: documents with version history, a diligence checklist, investor questions and a full activity trail.",
       },
-      { property: "og:title", content: "Fund Due Diligence Room — Harmonious" },
+      { property: "og:title", content: "Fund Due Diligence Room - Harmonious" },
       {
         property: "og:description",
         content: "Confidential fund diligence materials, checklist, Q&A and activity trail.",
@@ -161,7 +161,7 @@ function DiligenceRoomPage() {
   const ndaView = useServerFn(recordNdaView);
   const ndaViewLogged = useRef(false);
 
-  // Signed NDA (Box) — when the fund team uploaded an agreement to sign.
+  // Signed NDA (Box) - when the fund team uploaded an agreement to sign.
   const loadNdaSigning = useServerFn(getMyNdaSigning);
   const startSigning = useServerFn(startNdaSigning);
   const refreshSigning = useServerFn(refreshMyNdaSignature);
@@ -188,7 +188,7 @@ function DiligenceRoomPage() {
     onSuccess: (r: any) => {
       queryClient.invalidateQueries({ queryKey: ["nda-signing", offeringId] });
       if (r?.completed) {
-        toast.success("Signature received — the diligence materials are open.");
+        toast.success("Signature received - the diligence materials are open.");
         queryClient.invalidateQueries({ queryKey: ["diligence-access", offeringId] });
       } else {
         toast.message("We haven't received your signature yet.");
@@ -206,7 +206,7 @@ function DiligenceRoomPage() {
   const acceptMutation = useMutation({
     mutationFn: () => acceptNda({ data: { offering_id: offeringId, signer_name: signer.trim() } }),
     onSuccess: () => {
-      toast.success("Thank you — the diligence materials are now open to you.");
+      toast.success("Thank you - the diligence materials are now open to you.");
       queryClient.invalidateQueries({ queryKey: ["diligence-access", offeringId] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not record your acceptance."),
@@ -311,7 +311,7 @@ function DiligenceRoomPage() {
                     {sig?.completedAt
                       ? `Signed ${when(sig.completedAt)}.`
                       : sig?.viewedAt
-                        ? `You opened it ${when(sig.viewedAt)} — it still needs your signature.`
+                        ? `You opened it ${when(sig.viewedAt)} - it still needs your signature.`
                         : sig?.sentAt
                           ? `Sent to you ${when(sig.sentAt)}.`
                           : "Sign it securely; a countersigned copy is filed for both of us."}
@@ -333,7 +333,7 @@ function DiligenceRoomPage() {
                     disabled={checkSignedMutation.isPending || !sig}
                     onClick={() => checkSignedMutation.mutate()}
                   >
-                    {checkSignedMutation.isPending ? "Checking…" : "I've signed — check now"}
+                    {checkSignedMutation.isPending ? "Checking…" : "I've signed - check now"}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -361,7 +361,7 @@ function DiligenceRoomPage() {
                   disabled={signer.trim().length < 2 || acceptMutation.isPending}
                   onClick={() => acceptMutation.mutate()}
                 >
-                  {acceptMutation.isPending ? "Recording…" : "I agree — open the room"}
+                  {acceptMutation.isPending ? "Recording…" : "I agree - open the room"}
                 </Button>
                 <p className="mt-3 text-xs text-muted-foreground">
                   Your name, the date and time and your network address are recorded with this acceptance.
@@ -383,7 +383,7 @@ function DiligenceRoomPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="text-3xl">{offering?.name} — due diligence</h1>
+      <h1 className="text-3xl">{offering?.name} - due diligence</h1>
       {offering?.summary ? <p className="mt-2 text-muted-foreground">{offering.summary}</p> : null}
       {a.accepted ? (
         <p className="mt-2 text-xs text-muted-foreground">
@@ -685,7 +685,7 @@ function DocumentsTab({
       setLastSync({ at: res.syncedAt, added: res.added, checked: res.checked });
       toast.success(
         res.added > 0
-          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in — your managers have been notified`
+          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in - your managers have been notified`
           : "Everything in the folder is already listed",
       );
       refresh();
@@ -961,7 +961,7 @@ function DocumentsTab({
           <DialogHeader>
             <DialogTitle>{viewer?.title}</DialogTitle>
             <DialogDescription>
-              Confidential — for your evaluation only. Please do not redistribute.
+              Confidential - for your evaluation only. Please do not redistribute.
             </DialogDescription>
           </DialogHeader>
           {viewer?.src ? (
@@ -1623,7 +1623,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
                           <span className={r.isTeam ? "" : "font-medium text-foreground"}>
                             {r.name || r.email || "Someone"}
                           </span>
-                          {r.isTeam ? " (your team)" : ""} — first {when(r.firstOpened)}, last{" "}
+                          {r.isTeam ? " (your team)" : ""} - first {when(r.firstOpened)}, last{" "}
                           {when(r.lastOpened)}
                           {r.opens > 0 ? `, read ${r.opens}×` : ""}
                           {r.downloads > 0 ? `, downloaded ${r.downloads}×` : ""}
@@ -1642,7 +1642,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle>Who's opening this room</CardTitle>
           <CardDescription>
-            Real activity inside the room — when each person came in and which documents they
+            Real activity inside the room - when each person came in and which documents they
             actually opened. Repeat visits within 30 minutes count once.
           </CardDescription>
         </CardHeader>
@@ -1681,7 +1681,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
                     <ul className="space-y-1 text-xs text-muted-foreground">
                       {v.documents.map((d: any) => (
                         <li key={d.id}>
-                          {d.title} — opened {d.opens} time{d.opens === 1 ? "" : "s"}, last{" "}
+                          {d.title} - opened {d.opens} time{d.opens === 1 ? "" : "s"}, last{" "}
                           {when(d.lastOpened)}
                         </li>
                       ))}
@@ -1702,7 +1702,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle>Has access, never opened it</CardTitle>
           <CardDescription>
-            People who can reach this room but have not been in yet — worth a nudge.
+            People who can reach this room but have not been in yet - worth a nudge.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1775,7 +1775,7 @@ function NdaSettings({ offeringId, access }: { offeringId: string; access: any }
         <div className="flex items-center gap-2">
           <Checkbox id="nda-bump" checked={bump} onCheckedChange={(v) => setBump(Boolean(v))} />
           <Label htmlFor="nda-bump">
-            This is a material change — ask everyone to accept it again
+            This is a material change - ask everyone to accept it again
           </Label>
         </div>
         <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
@@ -1817,7 +1817,7 @@ function InvestingPath({ offeringId }: { offeringId: string }) {
   const startMutation = useMutation({
     mutationFn: () => start({ data: { offering_id: offeringId } }),
     onSuccess: () => {
-      toast.success("Your application is open — let's start with your identity check.");
+      toast.success("Your application is open - let's start with your identity check.");
       queryClient.invalidateQueries({ queryKey: ["diligence-onboarding", offeringId] });
       queryClient.invalidateQueries({ queryKey: ["nav-state"] });
       window.location.href = STEP_LINKS.kyc;

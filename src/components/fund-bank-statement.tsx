@@ -209,7 +209,7 @@ export function FundBankStatement({ fundId }: { fundId: string }) {
         <CardDescription>
           Deposits on the fund's own account
           {data?.account
-            ? ` — ${data.account.institution_name ?? "Bank"} ${data.account.account_mask ? `••${data.account.account_mask}` : ""}`
+            ? ` - ${data.account.institution_name ?? "Bank"} ${data.account.account_mask ? `••${data.account.account_mask}` : ""}`
             : ""}
           . Payments clients report from their portal are matched to the invoice on their own when
           the amount and the reference or date agree; anything else is matched here by hand.

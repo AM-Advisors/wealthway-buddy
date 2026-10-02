@@ -171,7 +171,7 @@ export function DiligenceAccessPanel({ offeringId }: { offeringId: string }) {
                     <div className="mt-3 space-y-3 border-t pt-3">
                       {restricted.length === 0 ? (
                         <p className="text-xs text-muted-foreground">
-                          No limited documents yet — everything above is shared with the whole room.
+                          No limited documents yet - everything above is shared with the whole room.
                         </p>
                       ) : (
                         <ul className="space-y-2">

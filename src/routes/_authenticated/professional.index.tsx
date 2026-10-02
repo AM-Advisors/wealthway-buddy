@@ -31,8 +31,8 @@ function MyClients() {
                   <div>
                     <p className="font-medium">{c.principalName}</p>
                     <p className="text-muted-foreground">
-                      {c.organizationName ? `${c.organizationName} — ` : ""}
-                      {c.scopeLabel} — {AUTHORITY_LABELS[c.authorityLevel] ?? c.authorityLevel}
+                      {c.organizationName ? `${c.organizationName} - ` : ""}
+                      {c.scopeLabel} - {AUTHORITY_LABELS[c.authorityLevel] ?? c.authorityLevel}
                     </p>
                   </div>
                   <Link
@@ -60,7 +60,7 @@ function MyClients() {
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Effective</dt>
-                    <dd>{c.effectiveAt ? new Date(c.effectiveAt).toLocaleDateString() : "—"}</dd>
+                    <dd>{c.effectiveAt ? new Date(c.effectiveAt).toLocaleDateString() : "-"}</dd>
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Expires</dt>
@@ -68,7 +68,7 @@ function MyClients() {
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Last activity</dt>
-                    <dd>{c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleString() : "—"}</dd>
+                    <dd>{c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleString() : "-"}</dd>
                   </div>
                 </dl>
                 <p className="mt-2 text-xs text-muted-foreground">

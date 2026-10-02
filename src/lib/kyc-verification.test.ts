@@ -1,6 +1,6 @@
 /**
  * Adversarial proofs for the KYC/AML rules. Everything here exercises the
- * authoritative decision layer — the layer that decides what Harmonious
+ * authoritative decision layer - the layer that decides what Harmonious
  * believes, regardless of what a provider or a browser claims.
  */
 import { describe, expect, it } from "vitest";

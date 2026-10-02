@@ -18,13 +18,13 @@ import { isReconciledFunding } from "@/lib/funding-status";
 export const Route = createFileRoute("/_authenticated/manager/investors")({
   head: () => ({
     meta: [
-      { title: "Investors — Harmonious Manager" },
+      { title: "Investors - Harmonious Manager" },
       {
         name: "description",
         content:
           "Fund managers review every investor in their fund: identity checks, accreditation, signed documents and funding, in one place.",
       },
-      { property: "og:title", content: "Investors — Harmonious Manager" },
+      { property: "og:title", content: "Investors - Harmonious Manager" },
       {
         property: "og:description",
         content: "One workspace per fund: investor roster, verification status and document review.",

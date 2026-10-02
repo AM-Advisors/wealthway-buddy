@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/transactions")({
   head: () => ({ meta: [
-    { title: "Fund transactions — Harmonious" }, { name: "description", content: "Track incoming wires, payments, closings, bank activity, and transaction exceptions." },
-    { property: "og:title", content: "Fund transactions — Harmonious" }, { property: "og:description", content: "Track incoming wires, payments, closings, and transaction exceptions." },
+    { title: "Fund transactions - Harmonious" }, { name: "description", content: "Track incoming wires, payments, closings, bank activity, and transaction exceptions." },
+    { property: "og:title", content: "Fund transactions - Harmonious" }, { property: "og:description", content: "Track incoming wires, payments, closings, and transaction exceptions." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }), component: Page,
 });

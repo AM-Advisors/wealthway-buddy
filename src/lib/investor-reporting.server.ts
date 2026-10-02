@@ -9,7 +9,7 @@
  *  - nothing is recalculated; a package only references records that are
  *    already eligible for investor publication;
  *  - publishing freezes the exact component versions in a manifest;
- *  - a published package is never rewritten — corrections supersede it;
+ *  - a published package is never rewritten - corrections supersede it;
  *  - the generator of a package cannot approve or publish it;
  *  - investors see only their own positions, one investment profile at a time;
  *  - a delegated professional needs the explicit capability for each section;
@@ -226,7 +226,7 @@ export async function savePackageTemplate(
   return data;
 }
 
-/** The template that applies to a fund, class and frequency — preset as fallback. */
+/** The template that applies to a fund, class and frequency - preset as fallback. */
 async function templateFor(
   offeringId: string,
   frequency: string,
@@ -527,7 +527,7 @@ async function buildPackageFor(
   const branding = brandingFor(fundName, period.periodLabel, policy);
 
   if (sections.includes("cover")) {
-    push("cover", `${fundName} — ${period.periodLabel}`, {
+    push("cover", `${fundName} - ${period.periodLabel}`, {
       branding,
       investorName: position.display_name,
       capacity: position.capacity,
@@ -1352,7 +1352,7 @@ export async function investorDocumentLibrary(userId: string, options: ViewerOpt
     ...((packages ?? []) as any[]).map((p) => ({
       id: p.id,
       group: "Reporting" as const,
-      title: `Investor package — ${p.period_label}`,
+      title: `Investor package - ${p.period_label}`,
       date: p.published_at,
       offeringId: p.offering_id,
       kind: "package",
@@ -1360,7 +1360,7 @@ export async function investorDocumentLibrary(userId: string, options: ViewerOpt
     ...((statements ?? []) as any[]).map((s) => ({
       id: s.id,
       group: "Capital statements" as const,
-      title: `Capital account statement — ${s.period_end}`,
+      title: `Capital account statement - ${s.period_end}`,
       date: s.period_end,
       offeringId: s.offering_id,
       kind: "statement",

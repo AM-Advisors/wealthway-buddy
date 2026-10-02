@@ -91,7 +91,7 @@ const STATUS_FIELD_LABELS: Record<string, string> = {
 };
 
 function pretty(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return value.replace(/_/g, " ");
 }
 

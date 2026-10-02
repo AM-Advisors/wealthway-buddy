@@ -51,12 +51,12 @@ const STAGE_LABEL: Record<string, string> = {
 };
 
 function when(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleString();
 }
 
 function day(value?: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleDateString("en-US", { dateStyle: "medium" });
 }
 

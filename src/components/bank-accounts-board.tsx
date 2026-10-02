@@ -166,15 +166,15 @@ export function BankAccountsBoard() {
                   <dl className="grid gap-3 text-sm sm:grid-cols-3">
                     <div>
                       <dt className="text-muted-foreground">Bank</dt>
-                      <dd className="break-words">{fund.account.institutionName ?? "—"}</dd>
+                      <dd className="break-words">{fund.account.institutionName ?? "-"}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">Account name</dt>
-                      <dd className="break-words">{fund.account.accountName ?? "—"}</dd>
+                      <dd className="break-words">{fund.account.accountName ?? "-"}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">Last four</dt>
-                      <dd>{fund.account.accountMask ? `••••${fund.account.accountMask}` : "—"}</dd>
+                      <dd>{fund.account.accountMask ? `••••${fund.account.accountMask}` : "-"}</dd>
                     </div>
                   </dl>
                 ) : (

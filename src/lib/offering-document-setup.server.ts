@@ -2,7 +2,7 @@ import { canonicalExecutionStatus } from "@/lib/document-execution-status";
 /**
  * Offering Documents in Fund Setup. Staff configure; managers of the exact fund
  * read; investors see only documents that apply to their own Investment.
- * No provider calls here — signing still runs through the existing Box flow.
+ * No provider calls here - signing still runs through the existing Box flow.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";

@@ -27,13 +27,13 @@ import { UPLOAD_KINDS } from "@/lib/investor-uploads.functions";
 export const Route = createFileRoute("/_authenticated/manager/inbox")({
   head: () => ({
     meta: [
-      { title: "Document Inbox — Harmonious Manager" },
+      { title: "Document Inbox - Harmonious Manager" },
       {
         name: "description",
         content:
           "Every document your investors upload arrives here automatically, ready to open, accept or send back for follow-up.",
       },
-      { property: "og:title", content: "Document Inbox — Harmonious Manager" },
+      { property: "og:title", content: "Document Inbox - Harmonious Manager" },
       {
         property: "og:description",
         content: "Review investor documents in one place, without chasing links.",
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/manager/inbox")({
 const KIND_LABEL = new Map(UPLOAD_KINDS.map((k) => [k.value as string, k.label]));
 
 function when(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Date(value).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -130,7 +130,7 @@ function ManagerInboxPage() {
         <h1 className="text-3xl font-semibold tracking-tight">Document inbox</h1>
         <p className="text-muted-foreground max-w-2xl">
           Everything your investors upload arrives here automatically. Open a file, accept it, or
-          send it back for follow-up — no links to chase.
+          send it back for follow-up - no links to chase.
         </p>
         <Button asChild variant="link" className="px-0">
           <Link to="/manager">Back to your panel</Link>

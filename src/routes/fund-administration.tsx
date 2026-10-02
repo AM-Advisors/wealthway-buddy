@@ -58,7 +58,7 @@ function FundAdministrationPage() {
               The Quiet Work, Done Properly
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-primary-foreground/75">
-              Formation is the easy day. Administration is every day after it — capital, closings,
+              Formation is the easy day. Administration is every day after it - capital, closings,
               records and the answers your investors ask for.
             </p>
           </div>

@@ -1,5 +1,5 @@
 /**
- * Phase 3C server functions — firm verification, credentials, delegation
+ * Phase 3C server functions - firm verification, credentials, delegation
  * acceptance, authority documents and authorized signing.
  *
  * Every handler re-derives authority from stored records. Nothing trusts an id,

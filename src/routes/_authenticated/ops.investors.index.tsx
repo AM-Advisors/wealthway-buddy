@@ -5,9 +5,9 @@ import { OpsRecordList } from "@/components/ops-record";
 export const Route = createFileRoute("/_authenticated/ops/investors/")({
   head: () => ({
     meta: [
-      { title: "Investors — Harmonious operations" },
+      { title: "Investors - Harmonious operations" },
       { name: "description", content: "Every investor relationship, with profiles, investments and checks." },
-      { property: "og:title", content: "Investors — Harmonious operations" },
+      { property: "og:title", content: "Investors - Harmonious operations" },
       { property: "og:description", content: "Every investor relationship, with profiles, investments and checks." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -1,5 +1,5 @@
 /**
- * Fund Team Access — roles a Fund Manager can grant on their own Fund.
+ * Fund Team Access - roles a Fund Manager can grant on their own Fund.
  * Pure: role → permissions map and grant-eligibility checks.
  * Sensitive data (bank/wire, tax IDs, KYC evidence) and authority actions
  * (sign, approve, launch, fund, move money, grant access) are never included.

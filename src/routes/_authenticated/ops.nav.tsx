@@ -5,13 +5,13 @@ import { NavBoard } from "@/components/nav-board";
 export const Route = createFileRoute("/_authenticated/ops/nav")({
   head: () => ({
     meta: [
-      { title: "NAV review — Harmonious" },
+      { title: "NAV review - Harmonious" },
       {
         name: "description",
         content:
           "Calculate, review, approve and publish fund net asset value from the ledger and approved valuations.",
       },
-      { property: "og:title", content: "NAV review — Harmonious" },
+      { property: "og:title", content: "NAV review - Harmonious" },
       {
         property: "og:description",
         content: "Reproducible NAV with pre-NAV checks, a reconciling bridge and immutable snapshots.",

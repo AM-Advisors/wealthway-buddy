@@ -3,7 +3,7 @@
  *
  * The Statement of Work body is assembled from these templates when a new fund
  * or SPV is requested, and the Master Services Agreement is published from the
- * section list below. Clients never edit this language directly — they approve
+ * section list below. Clients never edit this language directly - they approve
  * a section or raise a change request against it.
  */
 
@@ -46,11 +46,11 @@ export type FundFacts = {
 };
 
 const money = (cents?: number | null) =>
-  cents == null ? "—" : `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  cents == null ? "-" : `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 export function buildSowSections(facts: FundFacts) {
   const serviceList = facts.services.length
-    ? facts.services.map((s) => `• ${s.label}${s.description ? ` — ${s.description}` : ""}`).join("\n")
+    ? facts.services.map((s) => `• ${s.label}${s.description ? ` - ${s.description}` : ""}`).join("\n")
     : "• Fund administration";
 
   const bodies: Record<SowSectionKey, string> = {

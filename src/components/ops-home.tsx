@@ -1,5 +1,5 @@
 /**
- * Operations Home — the daily work queue.
+ * Operations Home - the daily work queue.
  *
  * Everything on this page is a reading of a workflow record that lives
  * somewhere else: an onboarding, a capital call, a bank line, a journal entry,
@@ -323,7 +323,7 @@ export function OperationsWorkHome() {
           {activity.data?.activity.map((entry, index) => (
             <p key={`${entry.at}-${index}`} className="text-sm">
               <span className="text-muted-foreground">{when(entry.at) ?? ""} · </span>
-              {entry.actor} ({entry.capacity}) {entry.action} — {entry.resource}
+              {entry.actor} ({entry.capacity}) {entry.action} - {entry.resource}
             </p>
           ))}
           {activity.data && activity.data.activity.length === 0 && (
@@ -352,7 +352,7 @@ export function OperationsWorkHome() {
   );
 }
 
-/** Global "+ New" — shown per granular capability; each destination re-checks on the server. */
+/** Global "+ New" - shown per granular capability; each destination re-checks on the server. */
 function OpsNewMenu({ capabilities }: { capabilities?: readonly string[] | undefined }) {
   const may = (area: string) => (capabilities ?? []).includes(`${area}:prepare`);
   if (!may("clients") && !may("funds") && !may("companies") && !may("investors")) return null;

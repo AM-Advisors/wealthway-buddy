@@ -14,7 +14,7 @@ import { listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
     ? (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
-    : "—";
+    : "-";
 
 const STATUS: Record<string, string> = {
   issued: "Awaiting payment",
@@ -42,7 +42,7 @@ export function ClientInvoicesPanel() {
     onSuccess: (_r, input: any) => {
       toast.success(
         input.decision === "approved"
-          ? "Thank you — your approval has been recorded."
+          ? "Thank you - your approval has been recorded."
           : "We've recorded your query and the team will be in touch.",
       );
       queryClient.invalidateQueries({ queryKey: ["my-invoices"] });

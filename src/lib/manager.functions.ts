@@ -122,7 +122,7 @@ export const getFundOverview = createServerFn({ method: "GET" })
 const opsSchema = z.object({ offeringId: z.string().uuid() });
 
 /**
- * Every signed copy for one fund — newest first — with its Box filing status,
+ * Every signed copy for one fund - newest first - with its Box filing status,
  * so the fund page and the manager dashboard show the same signed documents
  * as the review board.
  */

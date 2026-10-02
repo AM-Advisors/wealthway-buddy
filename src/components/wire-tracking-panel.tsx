@@ -125,7 +125,7 @@ export function WireTrackingPanel({ offeringId }: { offeringId?: string } = {}) 
                             row.wire.reviewedAt ? ` · reviewed ${when(row.wire.reviewedAt)}` : " · not reviewed yet"
                           }`
                         : row.expectedDate
-                          ? `Expected ${day(row.expectedDate)} — no confirmation from the investor yet`
+                          ? `Expected ${day(row.expectedDate)} - no confirmation from the investor yet`
                           : "No confirmation from the investor yet"}
                   </p>
                 </div>

@@ -5,13 +5,13 @@ import { FundBanking } from "@/components/fund-banking";
 export const Route = createFileRoute("/_authenticated/manager/fund-banking/$fundId")({
   head: () => ({
     meta: [
-      { title: "Fund Banking — Harmonious" },
+      { title: "Fund Banking - Harmonious" },
       {
         name: "description",
         content:
           "Enter your fund's receiving account, apply for an account through Harmonious, and follow deposits and investor wires.",
       },
-      { property: "og:title", content: "Fund Banking — Harmonious" },
+      { property: "og:title", content: "Fund Banking - Harmonious" },
       {
         property: "og:description",
         content: "Bank details, bank applications, deposits and wire tracking for your fund.",

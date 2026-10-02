@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 /**
  * One list of everything the signed-in person has on file with Harmonious:
  * what they signed, what was issued to them, what they sent us and the
- * statements and invoices they received. Read-only — every row points back to
+ * statements and invoices they received. Read-only - every row points back to
  * the page that owns that step.
  */
 

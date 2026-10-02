@@ -272,7 +272,7 @@ export function DocumentPermissionsBoard({ backTo }: { backTo: BackTo }) {
                       {investor.name ?? investor.email ?? "Investor"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {investor.email ?? "—"} · {investor.allowed_document_ids.length} limited
+                      {investor.email ?? "-"} · {investor.allowed_document_ids.length} limited
                       document{investor.allowed_document_ids.length === 1 ? "" : "s"}
                     </p>
                   </div>

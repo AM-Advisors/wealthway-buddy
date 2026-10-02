@@ -164,11 +164,11 @@ export const getDeliveryDetails = createServerFn({ method: "POST" })
       { label: "To", value: data.recipient },
       { label: "From", value: "Harmonious <noreply@onboarding.harmonious.co>" },
       { label: "Sender domain", value: "notify.onboarding.harmonious.co" },
-      { label: "Subject", value: sent?.subject ?? "—" },
-      { label: "Message-ID", value: messageId ?? "—" },
+      { label: "Subject", value: sent?.subject ?? "-" },
+      { label: "Message-ID", value: messageId ?? "-" },
       {
         label: "Date",
-        value: sent?.created_at ? new Date(sent.created_at).toISOString() : "—",
+        value: sent?.created_at ? new Date(sent.created_at).toISOString() : "-",
       },
       { label: "Purpose", value: "transactional" },
     ];

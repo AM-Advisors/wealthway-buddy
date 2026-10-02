@@ -17,13 +17,13 @@ import { AccountSwitcher } from "@/components/account-switcher";
 export const Route = createFileRoute("/_authenticated/apply")({
   head: () => ({
     meta: [
-      { title: "Apply to Join a Fund — Harmonious Investor Portal" },
+      { title: "Apply to Join a Fund - Harmonious Investor Portal" },
       {
         name: "description",
         content:
           "Apply to join a Harmonious fund: choose the fund, tell us how you invest and how much, then step through identity, accreditation and funding.",
       },
-      { property: "og:title", content: "Apply to Join a Fund — Harmonious Investor Portal" },
+      { property: "og:title", content: "Apply to Join a Fund - Harmonious Investor Portal" },
       {
         property: "og:description",
         content: "Start your subscription application and follow each step through to funding.",
@@ -53,7 +53,7 @@ const NEXT_STEPS = [
 ];
 
 function money(cents?: number | null) {
-  if (!cents) return "—";
+  if (!cents) return "-";
   return `$${(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -125,7 +125,7 @@ function ApplyPage() {
             <CardTitle>You have applied to {selected?.name ?? "the fund"}</CardTitle>
             <CardDescription>
               Your application is open and the fund team has been notified. Here is what happens
-              next — you can do these in order, and come back any time.
+              next - you can do these in order, and come back any time.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -161,7 +161,7 @@ function ApplyPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Apply to join a fund</h1>
         <p className="text-sm text-muted-foreground">
-          Step {step} of 3 — choose a fund, tell us how you invest, then follow the steps into your
+          Step {step} of 3 - choose a fund, tell us how you invest, then follow the steps into your
           portal.
         </p>
       </div>
@@ -221,7 +221,7 @@ function ApplyPage() {
               <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
                 {joined.map((f) => (
                   <li key={f.id}>
-                    {f.name} — {String(f.application.status).replace(/_/g, " ")} ·{" "}
+                    {f.name} - {String(f.application.status).replace(/_/g, " ")} ·{" "}
                     <Link to="/home" className="underline">
                       open in your portal
                     </Link>

@@ -224,7 +224,7 @@ export const getSharedFund = createServerFn({ method: "GET" })
       roster: ((apps ?? []) as any[]).map((a) => ({
         id: a.id as string,
         name: (nm.get(a.user_id) as string) || "Investor",
-        stage: String(a.status ?? "—"),
+        stage: String(a.status ?? "-"),
         committedCents: (a.commitment_cents as number | null) ?? null,
       })),
     };

@@ -5,9 +5,9 @@ import { TaxFormReview, type ProTaxKind } from "@/components/professional-tax";
 export const Route = createFileRoute("/_authenticated/ops/tax_/$kind/$id")({
   head: () => ({
     meta: [
-      { title: "Prepare and review tax form — Harmonious Operations" },
+      { title: "Prepare and review tax form - Harmonious Operations" },
       { name: "description", content: "Prepare, submit and second-person review of a Fund tax return or form." },
-      { property: "og:title", content: "Prepare and review tax form — Harmonious Operations" },
+      { property: "og:title", content: "Prepare and review tax form - Harmonious Operations" },
       { property: "og:description", content: "Maker-checker review of Fund tax forms." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

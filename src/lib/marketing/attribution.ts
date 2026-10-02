@@ -1,7 +1,7 @@
 /**
  * Marketing attribution. Captures first-touch UTM parameters and referrer in
  * sessionStorage (browser only) and assembles them with the CTA and page at
- * submission time. Attribution is informational only — never authorization.
+ * submission time. Attribution is informational only - never authorization.
  */
 export interface Attribution {
   cta?: string | undefined;
@@ -59,7 +59,7 @@ export function captureAttribution(): void {
     };
     sessionStorage.setItem(KEY, JSON.stringify(data));
   } catch {
-    /* storage unavailable — attribution is best-effort */
+    /* storage unavailable - attribution is best-effort */
   }
 }
 

@@ -42,7 +42,7 @@ export const listAccessPeople = createServerFn({ method: "GET" })
       ];
       return {
         userId: u.id as string,
-        name: names.get(u.id) ?? u.email ?? "—",
+        name: names.get(u.id) ?? u.email ?? "-",
         email: (u.email ?? "") as string,
         types,
         organizations: [...new Set(orgs)],

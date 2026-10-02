@@ -5,7 +5,7 @@
  * written, no status is duplicated, and no due date appears unless the source
  * record actually holds one.
  *
- * Scope is resolved here, from the reader's own relationship records — the
+ * Scope is resolved here, from the reader's own relationship records - the
  * browser never says which investor, fund, client or delegation it wants. A
  * collector that finds no relationship returns nothing at all.
  */
@@ -186,7 +186,7 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
           source: "investor.funding",
           group: working ? "harmonious_working" : "needs_you",
           severity: working ? "info" : "action",
-          title: fundName ? `Funding — ${fundName}` : "Funding",
+          title: fundName ? `Funding - ${fundName}` : "Funding",
           workflowState: String(a.funding_status),
           href: "/onboarding/funding",
         }),
@@ -528,11 +528,11 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "fund_manager",
         group: state === "published" ? "waiting_third_party" : "harmonious_working",
         severity: "info",
-        title: c.title ? `Capital call — ${c.title}` : "Capital call",
+        title: c.title ? `Capital call - ${c.title}` : "Capital call",
         workflowState: state,
         status:
           state === "published"
-            ? "Issued — waiting for investor transfers"
+            ? "Issued - waiting for investor transfers"
             : plainStatus(state),
         sourceTable: "capital_calls",
         sourceId: c.id,
@@ -660,7 +660,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "fund_manager",
         group: finished ? "recently_completed" : "harmonious_working",
         severity: state === "manager_approval" ? "action" : "info",
-        title: d.title ? `Distribution — ${d.title}` : "Distribution",
+        title: d.title ? `Distribution - ${d.title}` : "Distribution",
         workflowState: state,
         status:
           state === "manager_approval"
@@ -700,7 +700,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "fund_manager",
         group: "needs_you",
         severity: "action",
-        title: `Signature required — ${fundName(c.offering_id) ?? "Fund"}`,
+        title: `Signature required - ${fundName(c.offering_id) ?? "Fund"}`,
         workflowState: "awaiting_fund_manager",
         status: "The investor has signed. Review & countersign.",
         sourceTable: "document_signature_signers",
@@ -794,11 +794,11 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "company",
         group: state === "scoped" ? "needs_you" : "harmonious_working",
         severity: state === "scoped" ? "action" : "info",
-        title: r.summary ? `Service request — ${r.summary}` : "Service request",
+        title: r.summary ? `Service request - ${r.summary}` : "Service request",
         workflowState: state,
         status:
           state === "scoped"
-            ? "Harmonious has scoped this — your approval is needed"
+            ? "Harmonious has scoped this - your approval is needed"
             : "Harmonious is reviewing your request",
         sourceTable: "client_intake_requests",
         sourceId: r.id,
@@ -810,7 +810,7 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   }
 
   // Billing and fee proposals belong to the client engagement, so they are
-  // read only for clients this person is a member of (client_users) — never
+  // read only for clients this person is a member of (client_users) - never
   // for cap-table-only access. The database policy enforces the same scope.
   const engagementClientIds = [...new Set((memberships as any[]).map((m) => String(m.client_id)))];
   if (engagementClientIds.length) {
@@ -1084,7 +1084,7 @@ async function preparedInvestorItems(ctx: Ctx, investments: any[], n: Names): Pr
     if (Object.values(prov).some((p) => p.status === "prepared")) {
       out.push(buildAttentionItem({
         id: `investor-confirm-info:${inv.id}`, source: "investor.prepared_info", workspace: "investor" as WorkspaceKind,
-        group: "needs_you", severity: "action", title: `Confirm your investment information${fundName ? ` — ${fundName}` : ""}`,
+        group: "needs_you", severity: "action", title: `Confirm your investment information${fundName ? ` - ${fundName}` : ""}`,
         workflowState: "prepared", status: "Some information was provided for you. Please review it.",
         sourceTable: "investor_prep_drafts", sourceId: inv.id, href: `/onboard/i/${inv.id}#confirm`, at: inv.updated_at ?? null, fundName,
       }));
@@ -1093,7 +1093,7 @@ async function preparedInvestorItems(ctx: Ctx, investments: any[], n: Names): Pr
     for (const sn of (snaps ?? []) as any[]) {
       out.push(buildAttentionItem({
         id: `investor-review-doc:${inv.id}:${sn.document_id}`, source: "investor.document_review", workspace: "investor" as WorkspaceKind,
-        group: "needs_you", severity: "action", title: `Review investment document${fundName ? ` — ${fundName}` : ""}`,
+        group: "needs_you", severity: "action", title: `Review investment document${fundName ? ` - ${fundName}` : ""}`,
         workflowState: "prepared", status: `Version ${sn.version} is ready for your review`,
         sourceTable: "investor_document_snapshots", sourceId: sn.id, href: `/onboard/i/${inv.id}#documents-review`, at: inv.updated_at ?? null, fundName,
       }));
@@ -1109,7 +1109,7 @@ async function preparedManagerItems(ctx: Ctx, fundIds: string[], fundName: (id: 
   for (const d of drafts as any[]) {
     out.push(buildAttentionItem({
       id: `manager-prep-draft:${d.id}`, source: "manager.prepared_draft", workspace: "fund_manager", group: "needs_you", severity: "action",
-      title: `Investor draft ready to send — ${d.display_name || d.email}`, workflowState: "draft", status: "Prepared but not sent",
+      title: `Investor draft ready to send - ${d.display_name || d.email}`, workflowState: "draft", status: "Prepared but not sent",
       sourceTable: "investor_prep_drafts", sourceId: d.id, href: `/manager/funds/${d.offering_id}?tab=investors`, at: d.updated_at ?? null, fundName: fundName(d.offering_id),
     }));
   }

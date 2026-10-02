@@ -4,7 +4,7 @@
  * NAV, financial statements, capital accounts and performance will all read
  * their asset values from this layer, so every rule about what a valuation is,
  * when it becomes effective, what makes it stale or suspicious, and how it
- * touches the ledger lives here as a pure function — testable without a
+ * touches the ledger lives here as a pure function - testable without a
  * database and without any authority of its own.
  */
 
@@ -316,7 +316,7 @@ export type ValuationCandidate = {
 
 /**
  * Everything wrong with a proposed valuation, named. Returning an empty list
- * is not approval — it only means nothing is obviously broken.
+ * is not approval - it only means nothing is obviously broken.
  */
 export function valuationExceptions(
   candidate: ValuationCandidate,
@@ -442,7 +442,7 @@ export type RealizationResult = {
 
 /**
  * A disposition relieves cost and recognises a realised result. It never sets
- * the asset's fair value to zero — the remaining position keeps its own
+ * the asset's fair value to zero - the remaining position keeps its own
  * unrealised marks.
  */
 export function realization(input: RealizationInput): RealizationResult {
@@ -503,7 +503,7 @@ export type ValuationRecord = {
 };
 
 /**
- * The valuation that was effective on `date` — not today's latest mark.
+ * The valuation that was effective on `date` - not today's latest mark.
  * Quarterly statements, NAV history, audits and amended reports all depend on
  * this being historically honest.
  */

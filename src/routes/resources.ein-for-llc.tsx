@@ -14,7 +14,7 @@ const URL = `https://www.harmonious.co${PATH}`;
 export const Route = createFileRoute("/resources/ein-for-llc")({
   head: () => ({
     meta: [
-      { title: `${TITLE} — Harmonious` },
+      { title: `${TITLE} - Harmonious` },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
@@ -69,7 +69,7 @@ const STEPS = [
   },
   {
     title: "Decide who the responsible party is",
-    body: "The responsible party is the individual who ultimately controls the entity — not an attorney, not a formation agent. Only a natural person qualifies, and the IRS limits each responsible party to one EIN issued per day.",
+    body: "The responsible party is the individual who ultimately controls the entity - not an attorney, not a formation agent. Only a natural person qualifies, and the IRS limits each responsible party to one EIN issued per day.",
   },
   {
     title: "Choose the tax classification",
@@ -85,21 +85,21 @@ const STEPS = [
   },
   {
     title: "Store the CP 575 notice",
-    body: "The CP 575 confirmation is what banks, payroll providers, and brokers ask for. Keep it with the formation documents — the IRS will not reissue it, only a replacement 147C letter.",
+    body: "The CP 575 confirmation is what banks, payroll providers, and brokers ask for. Keep it with the formation documents - the IRS will not reissue it, only a replacement 147C letter.",
   },
 ];
 
 const PITFALLS = [
-  "Legal name on the SS-4 does not exactly match the state filing — a common rejection cause.",
+  "Legal name on the SS-4 does not exactly match the state filing - a common rejection cause.",
   "Naming a formation company or lawyer as the responsible party instead of a controlling individual.",
   "Applying before the state approves the formation, so the entity does not yet legally exist.",
   "Hitting the one-EIN-per-responsible-party-per-day limit when spinning up several entities at once.",
   "Selecting the wrong reason for applying, which can trigger unnecessary employment-tax filing expectations.",
-  "Applying for a second EIN after a name change — a name change is an update, not a new EIN.",
+  "Applying for a second EIN after a name change - a name change is an update, not a new EIN.",
 ];
 
 const AFTER = [
-  "Open the operating bank account — the EIN and CP 575 are prerequisites at almost every bank.",
+  "Open the operating bank account - the EIN and CP 575 are prerequisites at almost every bank.",
   "Register for state tax accounts and any payroll withholding accounts you need.",
   "Set the cap table's start of record: founder shares or units, vesting, and the 83(b) clock.",
   "If you plan to raise, line up the offering exemption before you take the first check.",

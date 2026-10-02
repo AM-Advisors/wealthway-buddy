@@ -44,11 +44,11 @@ export function ManagerBankingSummary({ fundId }: { fundId: string }) {
             <dt className="text-muted-foreground">Banking setup</dt>
             <dd>{banking?.path ? PATH_LABELS[banking.path] ?? banking.path : "Not chosen yet"}</dd>
             <dt className="text-muted-foreground">Bank name</dt>
-            <dd className="break-words">{cur?.bankName || "—"}</dd>
+            <dd className="break-words">{cur?.bankName || "-"}</dd>
             <dt className="text-muted-foreground">Account name</dt>
-            <dd className="break-words">{cur?.accountName || "—"}</dd>
+            <dd className="break-words">{cur?.accountName || "-"}</dd>
             <dt className="text-muted-foreground">Account number</dt>
-            <dd>{cur?.accountMasked ? cur.accountMasked.replace("••••", "•••• ") : "—"}</dd>
+            <dd>{cur?.accountMasked ? cur.accountMasked.replace("••••", "•••• ") : "-"}</dd>
             <dt className="text-muted-foreground">Verification</dt>
             <dd>
               {cur ? (

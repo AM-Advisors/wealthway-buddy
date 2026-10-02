@@ -117,7 +117,7 @@ export async function matchDeclaredPayments(
 
     const reference =
       String(hit.client_payment_reference ?? "").trim() ||
-      `Bank statement ${line.posted_on} — ${line.name || "deposit"}`;
+      `Bank statement ${line.posted_on} - ${line.name || "deposit"}`;
     const now = new Date().toISOString();
 
     const { error: invoiceError } = await supabase

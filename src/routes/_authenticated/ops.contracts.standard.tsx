@@ -23,9 +23,9 @@ export const Route = createFileRoute("/_authenticated/ops/contracts/standard")({
   validateSearch: z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().optional() }),
   head: () => ({
     meta: [
-      { title: "Harmonious Standard Agreement — Harmonious operations" },
+      { title: "Harmonious Standard Agreement - Harmonious operations" },
       { name: "description", content: "Prepare a client agreement from an approved Harmonious template version." },
-      { property: "og:title", content: "Harmonious Standard Agreement — Harmonious operations" },
+      { property: "og:title", content: "Harmonious Standard Agreement - Harmonious operations" },
       { property: "og:description", content: "Approved template, reviewed preview, signing handoff." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -36,9 +36,9 @@ export const Route = createFileRoute("/_authenticated/ops/contracts/standard")({
 });
 
 const STATUS: Record<string, string> = {
-  draft: "Draft — awaiting Harmonious review",
-  approved_to_send: "Reviewed — ready to send",
-  sent: "Sent for signature — not executed",
+  draft: "Draft - awaiting Harmonious review",
+  approved_to_send: "Reviewed - ready to send",
+  sent: "Sent for signature - not executed",
   executed: "Executed (confirmed by signing workflow)",
 };
 
@@ -123,7 +123,7 @@ function StandardAgreement() {
                 <Button onClick={async () => {
                   try {
                     const r = await save({ data: { clientId, draftId: draftId ?? null, msaVersionId: versionId, fields: fields as any, serviceKeys } });
-                    toast.success("Draft saved — preview below");
+                    toast.success("Draft saved - preview below");
                     navigate({ to: "/ops/contracts/standard", search: { clientId, draftId: r.draftId } });
                     refresh();
                   } catch (e) { toast.error((e as Error).message); }
@@ -170,8 +170,8 @@ function StandardAgreement() {
             {status === "sent" ? (
               <Button variant="outline" onClick={() => act(async () => {
                 const r = await sync({ data: { draftId: d.draft.id } });
-                if (!r.executed) throw new Error("Not signed yet — the signing workflow hasn't recorded execution.");
-              }, "Execution confirmed — terms ready for review")}>Check signing status</Button>
+                if (!r.executed) throw new Error("Not signed yet - the signing workflow hasn't recorded execution.");
+              }, "Execution confirmed - terms ready for review")}>Check signing status</Button>
             ) : null}
             {status === "executed" ? (
               <Button asChild><Link to="/ops/contracts/$documentId" params={{ documentId: d.draft.id }}>Review template terms & approve</Link></Button>

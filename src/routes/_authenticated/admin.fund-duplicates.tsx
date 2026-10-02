@@ -12,9 +12,9 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/admin/fund-duplicates")({
   head: () => ({
     meta: [
-      { title: "Fund Duplicate Review — Harmonious Operations" },
+      { title: "Fund Duplicate Review - Harmonious Operations" },
       { name: "description", content: "Compare same-named Fund records and record an explicit Harmonious decision." },
-      { property: "og:title", content: "Fund Duplicate Review — Harmonious Operations" },
+      { property: "og:title", content: "Fund Duplicate Review - Harmonious Operations" },
       { property: "og:description", content: "Compare same-named Fund records and record an explicit Harmonious decision." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

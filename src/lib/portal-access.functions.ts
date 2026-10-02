@@ -8,7 +8,7 @@ const emailSchema = z.object({ email: z.string().trim().email().max(255) });
 /**
  * Public check used before an account is created: is this email address one the
  * fund team actually invited (or already gave access to)?
- * Returns a boolean only — never any fund or investor detail.
+ * Returns a boolean only - never any fund or investor detail.
  */
 export const checkInviteEligibility = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => emailSchema.parse(data))

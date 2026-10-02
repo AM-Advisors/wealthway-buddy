@@ -51,7 +51,7 @@ export function validatePrepFields(fields: Record<string, unknown>): { ok: true 
   return { ok: true };
 }
 
-/** Prepared values always start as "prepared" — never investor-certified. */
+/** Prepared values always start as "prepared" - never investor-certified. */
 export function toPreparedFields(fields: Record<string, unknown>, by: PreparerCapacity): Record<string, PreparedField> {
   const out: Record<string, PreparedField> = {};
   for (const [k, v] of Object.entries(fields)) if (v !== undefined && v !== "") out[k] = { value: v, state: "prepared", source: by };

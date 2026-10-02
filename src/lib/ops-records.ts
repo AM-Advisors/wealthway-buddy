@@ -197,7 +197,7 @@ export function redactActivity(
 
 /**
  * Where every summary value on a record page comes from. A record page reads
- * these and only these — it never keeps a second copy of a status or balance.
+ * these and only these - it never keeps a second copy of a status or balance.
  */
 export const SUMMARY_SOURCES: Record<string, string> = {
   "client.status": "clients.status",

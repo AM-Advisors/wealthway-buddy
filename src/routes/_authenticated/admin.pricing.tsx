@@ -24,13 +24,13 @@ import { getPricingBoard } from "@/lib/contracts.functions";
 export const Route = createFileRoute("/_authenticated/admin/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing and agreements — Harmonious" },
+      { title: "Pricing and agreements - Harmonious" },
       {
         name: "description",
         content:
           "Edit the Harmonious rate card, contracted client rates and statements of work without a code change.",
       },
-      { property: "og:title", content: "Pricing and agreements — Harmonious" },
+      { property: "og:title", content: "Pricing and agreements - Harmonious" },
       {
         property: "og:description",
         content: "Rate card versions, contracted client rates and engagement terms in one place.",

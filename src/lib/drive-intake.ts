@@ -1,5 +1,5 @@
 /**
- * Drive File Intake — pure rules. Super Administrators locate existing files in
+ * Drive File Intake - pure rules. Super Administrators locate existing files in
  * the approved Drive repositories and import a Harmonious-owned copy. Drive is
  * source/provenance only; nothing here ever writes to Drive.
  */
@@ -85,7 +85,7 @@ export function exportFormat(mime: string): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Taxonomy — the same Fund/Investor document kinds already used by the Drive
+// Taxonomy - the same Fund/Investor document kinds already used by the Drive
 // filing router (filingTargets / classifyDocument). No second taxonomy.
 // ---------------------------------------------------------------------------
 
@@ -247,7 +247,7 @@ export function reviewStateFor(category: DocumentCategory, documentType: string)
   return category === "investor" && documentType === "accreditation_evidence" ? "evidence_received_needs_review" : "not_applicable";
 }
 
-/** A Drive copy is at most an administrator's historical attestation — never Box-verified. */
+/** A Drive copy is at most an administrator's historical attestation - never Box-verified. */
 export function executionEvidenceFor(row: Pick<AssociationRow, "historicalExecuted" | "recordStatus">): "historical_executed" | "none" {
   return row.historicalExecuted && row.recordStatus === "historical" ? "historical_executed" : "none";
 }

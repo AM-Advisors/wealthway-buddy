@@ -12,13 +12,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/my-portfolio")({
   head: () => ({
     meta: [
-      { title: "My Portfolio Value — Harmonious" },
+      { title: "My Portfolio Value - Harmonious" },
       {
         name: "description",
         content:
           "The value of your holdings in each Harmonious fund: shares, price per share, committed capital and money received.",
       },
-      { property: "og:title", content: "My Portfolio Value — Harmonious" },
+      { property: "og:title", content: "My Portfolio Value - Harmonious" },
       {
         property: "og:description",
         content: "Shares, price per share and equity value for each of your fund positions.",
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/my-portfolio")({
 });
 
 function money(cents: number | null | undefined) {
-  if (!cents && cents !== 0) return "—";
+  if (!cents && cents !== 0) return "-";
   return `$${Math.round(cents / 100).toLocaleString("en-US")}`;
 }
 
@@ -169,7 +169,7 @@ function MyPortfolio() {
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Your shares</span>
                     <span className="font-medium">
-                      {fund.shares != null ? fund.shares.toLocaleString("en-US") : "—"}
+                      {fund.shares != null ? fund.shares.toLocaleString("en-US") : "-"}
                     </span>
                   </div>
                 </div>

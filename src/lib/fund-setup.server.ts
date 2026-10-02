@@ -5,8 +5,8 @@
  * request to "ready for investor onboarding". Authority is always resolved
  * from authoritative records:
  *
- *   Harmonious staff — admin role in user_roles; owns every control
- *   fund manager     — fund_managers assignment for that exact offering;
+ *   Harmonious staff - admin role in user_roles; owns every control
+ *   fund manager     - fund_managers assignment for that exact offering;
  *                      reads its own setup, answers client-owned items,
  *                      never approves, never launches, never sees unreleased
  *                      banking instructions
@@ -380,7 +380,7 @@ export async function updateTask(
 
   if (!actor.isStaff) {
     // A fund manager may answer their own items. Harmonious-controlled
-    // requirements — and completion itself — are never client-side acts.
+    // requirements - and completion itself - are never client-side acts.
     const verdict = clientMayUpdateTask(
       { responsibleParty: task.responsible_party, clientEditable: task.client_editable },
       (input.status ?? task.status) as TaskStatus,
@@ -1196,7 +1196,7 @@ export async function launchPreparers(setupId: string, setup?: any) {
 }
 
 /**
- * Harmonious approves — or declines — the fund for investor onboarding.
+ * Harmonious approves - or declines - the fund for investor onboarding.
  * The decision is recorded immutably, with the unmet conditions at the time.
  */
 export async function decideLaunch(
@@ -1275,7 +1275,7 @@ export async function decideLaunch(
 
 /**
  * Generate the investor entry point. Only possible after an approval, and the
- * link is derived from the offering record — never from client input.
+ * link is derived from the offering record - never from client input.
  */
 export async function launchFund(userId: string, setupId: string) {
   await assertStaff(userId);

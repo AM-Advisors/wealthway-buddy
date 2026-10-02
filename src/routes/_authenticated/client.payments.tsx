@@ -6,13 +6,13 @@ import { useClientPortal } from "@/components/client-portal-context";
 export const Route = createFileRoute("/_authenticated/client/payments")({
   head: () => ({
     meta: [
-      { title: "Payments — Harmonious" },
+      { title: "Payments - Harmonious" },
       {
         name: "description",
         content:
           "Payments Harmonious has approved and processed under your statement of work, with status and references.",
       },
-      { property: "og:title", content: "Payments — Harmonious" },
+      { property: "og:title", content: "Payments - Harmonious" },
       {
         property: "og:description",
         content: "Approved payments and their status under your agreement.",
