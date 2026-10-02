@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
+import { FundPaymentDialog, PaymentSummary, useFundPayment } from "@/components/fund-payment-checkout";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,10 +123,12 @@ function NewFundRequest() {
     onSuccess: () => toast.success("Draft saved."),
     onError: (e: any) => toast.error(e?.message ?? "Could not save."),
   });
+  const [payOpen, setPayOpen] = useState(false);
+  const quote = useFundPayment(step === "review" && id ? { kind: "new_fund_request", clientId: id, request: r as any } : null);
   const send = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (paymentId?: string) => {
       if (!id) throw new Error("No client account selected.");
-      return submit({ data: { clientId: id, draftId, request: r as any } });
+      return submit({ data: { clientId: id, draftId, request: r as any, paymentId: paymentId ?? null } });
     },
     onSuccess: (res) => {
       toast.success(res.duplicate
@@ -383,9 +386,15 @@ function NewFundRequest() {
                 ))}
                 <F label="Anything else Harmonious should know?"><Textarea rows={3} value={r.notes} onChange={(e) => set("notes", e.target.value)} /></F>
                 <div className="rounded-md border bg-muted p-3 text-xs text-muted-foreground">
-                  Sending creates your {spv ? "SPV" : "fund"} in Funds, closed to investors, and tells the Harmonious Operations team. Harmonious confirms every detail before launch. Nothing is filed, paid or sent to investors automatically.
+                  Sending creates your {spv ? "SPV" : "fund"} in Funds, closed to investors, and tells the Harmonious Operations team. Harmonious confirms every detail before launch. Nothing is filed or sent to investors automatically.
                 </div>
-                <Button disabled={send.isPending || Object.keys(missing).length > 0} onClick={() => send.mutate()}>Send to Harmonious</Button>
+                {quote.data && <PaymentSummary items={quote.data.items} total={quote.data.totalCents} />}
+                <p className="text-xs text-muted-foreground">The ${"$"}2,500 setup fee and any add-ons are paid by card before the request is sent. Add-ons use your agreed SOW price where one is approved.</p>
+                <Button disabled={send.isPending || !quote.data || Object.keys(missing).length > 0} onClick={() => (quote.data!.totalCents > 0 ? setPayOpen(true) : send.mutate(undefined))}>Pay and send to Harmonious</Button>
+                {id && payOpen && (
+                  <FundPaymentDialog open={payOpen} onOpenChange={setPayOpen} target={{ kind: "new_fund_request", clientId: id, request: r as any }}
+                    onPaid={(pid) => { setPayOpen(false); send.mutate(pid); }} />
+                )}
               </div>
             )}
 
