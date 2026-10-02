@@ -1,0 +1,1 @@
+ALTER TABLE public.fund_investor_updates ADD COLUMN IF NOT EXISTS file_id uuid REFERENCES public.fund_files(id), ADD COLUMN IF NOT EXISTS asset_id uuid REFERENCES public.portfolio_assets(id);

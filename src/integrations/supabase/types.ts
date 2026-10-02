@@ -16482,7 +16482,9 @@ export type Database = {
       }
       fund_investor_updates: {
         Row: {
+          asset_id: string | null
           body: string
+          file_id: string | null
           id: string
           offering_id: string
           posted_at: string
@@ -16492,7 +16494,9 @@ export type Database = {
           title: string
         }
         Insert: {
+          asset_id?: string | null
           body: string
+          file_id?: string | null
           id?: string
           offering_id: string
           posted_at?: string
@@ -16502,7 +16506,9 @@ export type Database = {
           title: string
         }
         Update: {
+          asset_id?: string | null
           body?: string
+          file_id?: string | null
           id?: string
           offering_id?: string
           posted_at?: string
@@ -16512,6 +16518,20 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fund_investor_updates_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_investor_updates_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "fund_files"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fund_investor_updates_offering_id_fkey"
             columns: ["offering_id"]
