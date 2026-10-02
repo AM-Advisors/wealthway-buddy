@@ -19374,6 +19374,7 @@ export type Database = {
       }
       inbox_threads: {
         Row: {
+          addressed_email: string | null
           channel: string
           client_id: string
           created_at: string
@@ -19381,9 +19382,11 @@ export type Database = {
           id: string
           last_message_at: string
           rep_user_id: string | null
+          started_side: string
           subject: string
         }
         Insert: {
+          addressed_email?: string | null
           channel: string
           client_id: string
           created_at?: string
@@ -19391,9 +19394,11 @@ export type Database = {
           id?: string
           last_message_at?: string
           rep_user_id?: string | null
+          started_side?: string
           subject: string
         }
         Update: {
+          addressed_email?: string | null
           channel?: string
           client_id?: string
           created_at?: string
@@ -19401,6 +19406,7 @@ export type Database = {
           id?: string
           last_message_at?: string
           rep_user_id?: string | null
+          started_side?: string
           subject?: string
         }
         Relationships: [
