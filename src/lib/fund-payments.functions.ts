@@ -156,12 +156,12 @@ export const markFundPaymentReceived = createServerFn({ method: "POST" })
     // Receipt email to the person who started the payment. Never blocks the confirmation.
     let receiptSent = false;
     try {
-      const { data: full } = await db.from("fund_payments").select("id, kind, total_cents, created_by, clients(name)").eq("id", data.id).maybeSingle();
+      const { data: full } = await (db as any).from("fund_payments").select("id, kind, total_cents, created_by, clients(name)").eq("id", data.id).maybeSingle();
       if (full?.created_by) {
         const { data: u } = await db.auth.admin.getUserById(full.created_by);
         const email = u?.user?.email;
         if (email) {
-          const { data: prof } = await db.from("profiles").select("full_name").eq("id", full.created_by).maybeSingle();
+          const { data: prof } = await (db as any).from("profiles").select("full_name").eq("id", full.created_by).maybeSingle();
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           const r = await sendTemplateEmail("payment-received", email, {
             idempotencyKey: `payment-received-${full.id}`,
