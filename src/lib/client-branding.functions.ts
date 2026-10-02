@@ -70,18 +70,56 @@ export const listClientSetup = createServerFn({ method: "GET" })
     };
   });
 
-/** Client asks to turn on paid white-labeling ($100/month). Billing is set up separately. */
+/** Starts the $100/month white-label card subscription. Branding turns on only after the payment confirms. */
 export const requestPaidWhitelabel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
-    if (!(await canEdit(context, data.clientId))) throw new Error("You can't change this client's options.");
+  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
+  .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
+    if (!(await canEdit(context, data.clientId))) return { error: "You can't change this client's options." };
     const db = await admin();
     const { data: cur } = await db.from("client_branding").select("whitelabel_status").eq("client_id", data.clientId).maybeSingle();
-    if (cur && cur.whitelabel_status !== "off") return { ok: true };
-    await db.from("client_branding").upsert({ client_id: data.clientId, whitelabel_status: "payment_pending", updated_by: context.userId, updated_at: new Date().toISOString() });
-    await log(db, data.clientId, context.userId, "paid_whitelabel_requested", { monthly_fee_cents: 10000 });
-    return { ok: true };
+    if (cur && ["active_paid", "unlocked_free"].includes(cur.whitelabel_status)) return { error: "White-labeling is already on." };
+    const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+    try {
+      const stripe = createStripeClient(data.environment);
+      const prices = await stripe.prices.list({ lookup_keys: ["whitelabel_monthly"] });
+      const price = prices.data[0];
+      if (!price) return { error: "That price isn't available yet." };
+      const { data: { user } } = await context.supabase.auth.getUser();
+      const { customerForClient } = await import("@/lib/billing.server");
+      const customer = await customerForClient(stripe, data.clientId, user?.email, context.userId);
+      const meta = { kind: "whitelabel", clientId: data.clientId, userId: context.userId };
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription", line_items: [{ price: price.id, quantity: 1 }], customer,
+        success_url: data.returnUrl, cancel_url: data.returnUrl, metadata: meta, subscription_data: { metadata: meta },
+        managed_payments: { enabled: true },
+      } as any);
+      await db.from("client_branding").upsert({ client_id: data.clientId, whitelabel_status: "payment_pending", billing_environment: data.environment, stripe_customer_id: customer, updated_by: context.userId, updated_at: new Date().toISOString() }, { onConflict: "client_id" });
+      await log(db, data.clientId, context.userId, "paid_whitelabel_checkout_started", { monthly_fee_cents: 10000 });
+      return { url: session.url ?? "" };
+    } catch (e) {
+      return { error: getStripeErrorMessage(e) };
+    }
+  });
+
+/** Opens the billing page for the white-label subscription (card, invoices, cancel at period end). */
+export const openWhitelabelBilling = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
+  .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
+    if (!(await canEdit(context, data.clientId))) return { error: "Not allowed." };
+    const db = await admin();
+    const { data: cur } = await db.from("client_branding").select("stripe_customer_id").eq("client_id", data.clientId).maybeSingle();
+    if (!cur?.stripe_customer_id) return { error: "No card billing on file yet." };
+    const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+    try {
+      const stripe = createStripeClient(data.environment);
+      const { ensurePortalConfig } = await import("@/lib/billing.server");
+      const portal = await stripe.billingPortal.sessions.create({ customer: cur.stripe_customer_id, return_url: data.returnUrl, configuration: await ensurePortalConfig(stripe) });
+      return { url: portal.url };
+    } catch (e) {
+      return { error: getStripeErrorMessage(e) };
+    }
   });
 
 /** Super Administrator unlocks white-labeling at no charge, or turns it back off. */
