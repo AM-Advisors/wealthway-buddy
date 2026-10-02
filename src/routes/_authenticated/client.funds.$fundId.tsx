@@ -17,9 +17,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getClientFund, getFundCapTable } from "@/lib/fund-cap-table.functions";
-import { createFundCloseRequest, getCloseCandidates, getFundTabsData, listFundCloseRequests } from "@/lib/fund-close-requests.functions";
+import { getFundTabsData, listFundCloseRequests } from "@/lib/fund-close-requests.functions";
+import { TodosTab } from "@/components/fund-tabs/todos-tab";
+import { TeamTab } from "@/components/fund-tabs/team-tab";
+import { InvestorsTab } from "@/components/fund-tabs/investors-tab";
+import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
+import { BankingTab } from "@/components/fund-tabs/banking-tab";
+import { RequestCloseDialog } from "@/components/fund-tabs/request-close-dialog";
 
-const TABS = ["details", "investors", "banking", "taxes", "assets", "closes"] as const;
+const TABS = ["todos", "details", "team", "investors", "documents", "banking", "taxes", "assets", "closes"] as const;
 type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/client/funds/$fundId")({
@@ -57,7 +63,7 @@ function Empty({ text }: { text: string }) {
 
 function ClientFundPage() {
   const { fundId } = Route.useParams();
-  const { tab = "details" } = Route.useSearch();
+  const { tab = "todos" } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [closeOpen, setCloseOpen] = useState(false);
   const loadFund = useServerFn(getClientFund);
@@ -104,13 +110,20 @@ function ClientFundPage() {
 
       <Tabs value={tab} onValueChange={(v) => navigate({ search: { tab: v as Tab }, replace: true })}>
         <TabsList className="h-auto flex-wrap justify-start">
+          <TabsTrigger value="todos">To dos{steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length ? ` (${steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length})` : ""}</TabsTrigger>
           <TabsTrigger value="details">Fund Details</TabsTrigger>
+          <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="investors">Investors</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="banking">Banking</TabsTrigger>
           <TabsTrigger value="taxes">Taxes</TabsTrigger>
           <TabsTrigger value="assets">Assets</TabsTrigger>
           <TabsTrigger value="closes">Closes</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="todos"><TodosTab fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done) as any} /></TabsContent>
+        <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>
+        <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
 
         <TabsContent value="details" className="space-y-5">
           <Card>
@@ -127,7 +140,6 @@ function ClientFundPage() {
             </CardContent>
           </Card>
 
-          <WaitingOnYou fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done)} />
 
           <Card>
             <CardHeader>
@@ -149,62 +161,23 @@ function ClientFundPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="investors">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Investors</CardTitle>
-              <CardDescription>For your information. Funded counts only money matched to the bank.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {cq.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
-               cq.error ? <Empty text="Investor list isn't available yet." /> :
-               !cap || cap.rows.length === 0 ? <Empty text="No investors yet." /> : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-left text-xs text-muted-foreground">
-                      <tr><th className="py-2">Investor</th><th>Class</th><th>Stage</th><th className="text-right">Committed</th><th className="text-right">Funded</th><th className="text-right">% of commitments</th><th>Side letter</th></tr>
-                    </thead>
-                    <tbody>
-                      {cap.rows.map((r) => (
-                        <tr key={r.id} className="border-t">
-                          <td className="py-2"><p className="font-medium">{r.investorName}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
-                          <td>{r.classKey || "-"}</td>
-                          <td className="capitalize">{r.stage || "-"}</td>
-                          <td className="text-right">{usd(r.commitmentCountedCents)}</td>
-                          <td className="text-right">{usd(r.fundedCountedCents)}</td>
-                          <td className="text-right">{r.pctCommitted.toFixed(2)}%</td>
-                          <td>{r.sideLetter ? <Badge variant="secondary">{r.sideLetter.status}</Badge> : "-"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <TabsContent value="investors"><InvestorsTab fundId={fundId} /></TabsContent>
 
-        <TabsContent value="banking">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Banking</CardTitle>
-              <CardDescription>For your information. Account numbers are partly hidden.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm">Funded (matched to the bank): <span className="font-semibold">{cap ? usd(cap.totals.fundedCents) : "-"}</span></p>
-              {tq.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
-               !td?.banks.length ? <Empty text="No bank accounts connected yet." /> : (
-                <div className="divide-y rounded-md border">
-                  {td.banks.map((b) => (
-                    <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-                      <div><p className="font-medium">{b.institution || "Bank"}{b.mask ? ` ${b.mask}` : ""}</p><p className="text-xs text-muted-foreground">{b.name || "Operating account"}</p></div>
-                      <div className="text-right text-xs text-muted-foreground"><Badge variant="outline" className="capitalize">{b.status}</Badge><p>Last updated {fmtDate(b.lastSynced)}</p></div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="banking" className="space-y-5">
+          {!!td?.banks.length && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Connected accounts</CardTitle></CardHeader>
+              <CardContent className="divide-y">
+                {td.banks.map((b) => (
+                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                    <div><p className="font-medium">{b.institution || "Bank"}{b.mask ? ` ${b.mask}` : ""}</p><p className="text-xs text-muted-foreground">{b.name || "Operating account"}</p></div>
+                    <Badge variant="outline" className="capitalize">{b.status}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          <BankingTab fundId={fundId} />
         </TabsContent>
 
         <TabsContent value="taxes">
@@ -297,131 +270,6 @@ function ClientFundPage() {
       </Tabs>
 
       <RequestCloseDialog fundId={fundId} open={closeOpen} onOpenChange={setCloseOpen} onDone={() => navigate({ search: { tab: "closes" }, replace: true })} />
-    </div>
-  );
-}
-
-function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fundId: string; open: boolean; onOpenChange: (o: boolean) => void; onDone: () => void }) {
-  const qc = useQueryClient();
-  const loadCandidates = useServerFn(getCloseCandidates);
-  const submit = useServerFn(createFundCloseRequest);
-  const cq = useQuery({ queryKey: ["close-candidates", fundId], queryFn: () => loadCandidates({ data: { fundId } }), enabled: open });
-  const [picked, setPicked] = useState<Set<string>>(new Set());
-  const [date, setDate] = useState("");
-  const [notes, setNotes] = useState("");
-  const [busy, setBusy] = useState(false);
-  const rows = cq.data ?? [];
-  const notReady = rows.filter((r) => picked.has(r.id) && r.openItems.length > 0).length;
-
-  const toggle = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
-
-  async function onSubmit() {
-    setBusy(true);
-    try {
-      await submit({ data: { fundId, onboardingIds: [...picked], targetDate: date || null, notes } });
-      toast.success("Close request sent to Harmonious.");
-      await qc.invalidateQueries({ queryKey: ["client-fund-closes", fundId] });
-      setPicked(new Set()); setDate(""); setNotes("");
-      onOpenChange(false);
-      onDone();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't send the close request.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Request Fund Close</DialogTitle>
-          <DialogDescription>Pick the investors to include. Harmonious reviews every request; nothing closes, files or moves money automatically.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="max-h-72 space-y-1 overflow-y-auto rounded-md border p-2">
-            {cq.isLoading ? <p className="p-2 text-sm text-muted-foreground">Loading investors…</p> :
-             rows.length === 0 ? <p className="p-2 text-sm text-muted-foreground">No investors in this fund yet.</p> :
-             rows.map((r) => (
-              <label key={r.id} className="flex cursor-pointer items-start gap-3 rounded p-2 text-sm hover:bg-muted">
-                <Checkbox checked={picked.has(r.id)} onCheckedChange={() => toggle(r.id)} className="mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium">{r.name}{r.profileName ? <span className="font-normal text-muted-foreground"> · {r.profileName}</span> : null}</p>
-                  <p className="text-xs text-muted-foreground">{r.openItems.length ? `Not ready: ${r.openItems.slice(0, 2).join(", ")}${r.openItems.length > 2 ? "…" : ""}` : "Ready"}</p>
-                </div>
-                <span className="text-xs">{usd(r.amountCents)}</span>
-              </label>
-            ))}
-          </div>
-          {notReady > 0 && <p className="text-xs text-destructive">{notReady} selected investor{notReady === 1 ? " isn't" : "s aren't"} ready yet. Harmonious will follow up before closing them.</p>}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1"><Label htmlFor="close-date">Target close date</Label><Input id="close-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-          </div>
-          <div className="space-y-1"><Label htmlFor="close-notes">Notes (optional)</Label><Textarea id="close-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} /></div>
-          <p className="text-xs text-muted-foreground">Estimate only: the Form D filing has a $160 Harmonious Form D Filing Fee, plus state Blue Sky fees where they apply. You won't be charged from this form.</p>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={onSubmit} disabled={busy || picked.size === 0}>{busy ? "Sending…" : "Send request"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-type Step = { id: string; label: string; description: string | null; status: string; dueDate: string | null; answer: string };
-
-function WaitingOnYou({ fundId, steps }: { fundId: string; steps: Step[] }) {
-  if (steps.length === 0) return null;
-  const open = steps.filter((s) => s.status !== "review").length;
-  return (
-    <Card className="border-primary/40">
-      <CardHeader>
-        <CardTitle className="text-base">Waiting on you</CardTitle>
-        <CardDescription>
-          {open ? `${open} item${open === 1 ? "" : "s"} need your answer.` : "Everything is sent. Harmonious is reviewing."} Harmonious reviews each answer before the step is marked complete.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {steps.map((s) => <WaitingItem key={s.id} fundId={fundId} step={s} />)}
-      </CardContent>
-    </Card>
-  );
-}
-
-function WaitingItem({ fundId, step }: { fundId: string; step: Step }) {
-  const qc = useQueryClient();
-  const save = useServerFn(updateSetupTaskFn);
-  const [answer, setAnswer] = useState(step.answer);
-  const [busy, setBusy] = useState(false);
-  const inReview = step.status === "review";
-  const submit = async () => {
-    if (answer.trim().length < 2) { toast.error("Add your answer or note first."); return; }
-    setBusy(true);
-    try {
-      await save({ data: { taskId: step.id, status: "review", response: { answer: answer.trim() } } });
-      toast.success("Sent to Harmonious for review.");
-      await qc.invalidateQueries({ queryKey: ["client-fund", fundId] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't send this item.");
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <div className="rounded-md border p-3">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-medium">{step.label}</p>
-          {step.description && <p className="text-xs text-muted-foreground">{step.description}</p>}
-          {step.dueDate && <p className="text-xs text-muted-foreground">Due {fmtDate(step.dueDate)}</p>}
-        </div>
-        <Badge variant={inReview ? "secondary" : "outline"}>{inReview ? "Sent - Harmonious reviewing" : "Waiting on you"}</Badge>
-      </div>
-      <Textarea className="mt-2" rows={2} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Your answer, details or a note for Harmonious" maxLength={4000} />
-      <div className="mt-2 flex justify-end">
-        <Button size="sm" onClick={submit} disabled={busy}>{busy ? "Sending…" : inReview ? "Update answer" : "Mark done and send"}</Button>
-      </div>
     </div>
   );
 }

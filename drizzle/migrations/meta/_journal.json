@@ -799,6 +799,13 @@
       "when": 1790924613845,
       "tag": "0113_client_inbox_threads_and_view_as_preview",
       "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1790927303812,
+      "tag": "0114_fund_tabs_team_documents_books_close_details",
+      "breakpoints": true
     }
   ]
 }
