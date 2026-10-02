@@ -14,6 +14,7 @@ import { FundPaymentDialog, PaymentSummary, useFundPayment } from "@/components/
 import { REPORT_FIELDS, computeNav, type ReportInputs } from "@/lib/fund-report-model";
 import { decideReportFn, fundReportsFn, setReportFrequencyFn, submitReportFiguresFn } from "@/lib/fund-reports.functions";
 import { fmtDate, toCents, usd } from "./shared";
+import { booksFiguresFn } from "@/lib/fund-books.functions";
 
 const KIND_LABEL = { nav: "NAV report", financial_review: "Financial review" } as const;
 const KEY = { nav: "nav_reporting", financial_review: "financial_review" } as const;
@@ -34,6 +35,7 @@ export function AutomatedReports({ fundId, fundName }: { fundId: string; fundNam
   const setFreq = useServerFn(setReportFrequencyFn);
   const submit = useServerFn(submitReportFiguresFn);
   const decide = useServerFn(decideReportFn);
+  const books = useServerFn(booksFiguresFn);
   const freq = q.data?.frequency ?? "quarterly";
   const [kind, setKind] = useState<"nav" | "financial_review">("nav");
   const [period, setPeriod] = useState<{ start: string; end: string } | null>(null);
@@ -99,6 +101,15 @@ export function AutomatedReports({ fundId, fundName }: { fundId: string; fundNam
           ))}
           <div className="space-y-1"><Label className="text-xs">Units outstanding (optional)</Label><Input inputMode="decimal" value={units} onChange={(e) => setUnits(e.target.value)} /></div>
         </div>
+        <Button size="sm" variant="outline" onClick={async () => {
+          try {
+            const r = await books({ data: { fundId, start: p.start, end: p.end, taxYear: Number(p.end.slice(0, 4)) } });
+            if (!r.entryCount) { toast.error("No books entries yet. Apply a bank statement or connect the bank first."); return; }
+            const v: Record<string, string> = {};
+            for (const [k, c] of Object.entries(r.nav as Record<string, number>)) if (c) v[k] = (c / 100).toFixed(2);
+            setVals((cur) => ({ ...cur, ...v })); toast.success("Filled from the books and approved asset values. Check and add liabilities.");
+          } catch (e) { toast.error((e as Error).message); }
+        }}>Fill from books</Button>
         <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} placeholder="Notes for Harmonious (valuation sources, unusual items)" />
         <div className="grid gap-3 rounded-lg border bg-muted/40 p-3 text-sm sm:grid-cols-4">
           <div><p className="text-xs text-muted-foreground">Gross assets</p><p className="font-semibold">{usd(preview.grossAssetsCents)}</p></div>
