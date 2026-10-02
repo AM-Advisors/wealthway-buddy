@@ -848,6 +848,13 @@
       "when": 1790964129525,
       "tag": "0120_investor_onboarding_uploads_fees_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1790967277393,
+      "tag": "0121_harmonious_standard_forms",
+      "breakpoints": true
     }
   ]
 }
