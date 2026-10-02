@@ -4594,6 +4594,100 @@ export type Database = {
           },
         ]
       }
+      client_branding: {
+        Row: {
+          accent_color: string | null
+          body_font: string | null
+          client_id: string
+          created_at: string
+          heading_font: string | null
+          logo_path: string | null
+          monthly_fee_cents: number
+          primary_color: string | null
+          subdomain: string | null
+          unlocked_at: string | null
+          unlocked_by: string | null
+          updated_at: string
+          updated_by: string | null
+          whitelabel_status: string
+        }
+        Insert: {
+          accent_color?: string | null
+          body_font?: string | null
+          client_id: string
+          created_at?: string
+          heading_font?: string | null
+          logo_path?: string | null
+          monthly_fee_cents?: number
+          primary_color?: string | null
+          subdomain?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whitelabel_status?: string
+        }
+        Update: {
+          accent_color?: string | null
+          body_font?: string | null
+          client_id?: string
+          created_at?: string
+          heading_font?: string | null
+          logo_path?: string | null
+          monthly_fee_cents?: number
+          primary_color?: string | null
+          subdomain?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          whitelabel_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_branding_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_branding_events: {
+        Row: {
+          actor_id: string | null
+          client_id: string
+          created_at: string
+          detail: Json
+          event_kind: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          client_id: string
+          created_at?: string
+          detail?: Json
+          event_kind: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          client_id?: string
+          created_at?: string
+          detail?: Json
+          event_kind?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_branding_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_contact_scopes: {
         Row: {
           client_id: string

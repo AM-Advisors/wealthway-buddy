@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { Logo, LogoIcon } from "@/components/Logo";
+import { ClientBrandStyles, useClientBrand } from "@/components/client-brand";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import {
@@ -80,6 +81,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const navigation = getNavigation(session as never, activeId, pathname);
   const items = navigation.primary;
   const active = options.find((o) => o.id === activeId);
+  const brand = useClientBrand(active?.kind === "company");
   const sharedFn = useServerFn(listMySharedFunds);
   const shared = useQuery({ queryKey: ["my-shared-funds"], queryFn: () => sharedFn(), staleTime: 60_000 });
   const hasShared = (shared.data?.funds.length ?? 0) > 0;
@@ -100,7 +102,10 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link to="/home" aria-label="Harmonious home" data-testid="brand-logo" className="flex items-center px-2 py-1">
-          {collapsed ? (
+          <ClientBrandStyles brand={brand} />
+          {brand?.logo_path ? (
+            <img src={brand.logo_path} alt="Company logo" className={collapsed ? "h-6 w-6 object-contain object-left" : "h-7 w-auto max-w-[160px] object-contain object-left"} />
+          ) : collapsed ? (
             <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (
             <Logo variant="white" className="h-7 w-auto" />

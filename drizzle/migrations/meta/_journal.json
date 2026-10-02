@@ -743,6 +743,13 @@
       "when": 1790898766338,
       "tag": "0105_bank_setup_packets",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1790900786718,
+      "tag": "0106_client_whitelabel_branding",
+      "breakpoints": true
     }
   ]
 }
