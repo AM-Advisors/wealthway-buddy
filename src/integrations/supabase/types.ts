@@ -15382,6 +15382,94 @@ export type Database = {
           },
         ]
       }
+      fund_close_request_events: {
+        Row: {
+          actor_id: string | null
+          close_request_id: string
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          to_status: string
+        }
+        Insert: {
+          actor_id?: string | null
+          close_request_id: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status: string
+        }
+        Update: {
+          actor_id?: string | null
+          close_request_id?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_close_request_events_close_request_id_fkey"
+            columns: ["close_request_id"]
+            isOneToOne: false
+            referencedRelation: "fund_close_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_close_requests: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          offering_id: string
+          onboarding_ids: string[]
+          requested_by: string
+          staff_note: string | null
+          status: string
+          target_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          offering_id: string
+          onboarding_ids?: string[]
+          requested_by: string
+          staff_note?: string | null
+          status?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          offering_id?: string
+          onboarding_ids?: string[]
+          requested_by?: string
+          staff_note?: string | null
+          status?: string
+          target_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_close_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_compliance_items: {
         Row: {
           category: string
