@@ -278,6 +278,7 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
         summary: z.string().min(3),
         answers: z.record(z.string(), z.string()).default({}),
         requestedServiceKeys: z.array(z.string()).default([]),
+        paymentId: z.string().uuid().nullable().optional(),
       })
       .parse(data),
   )
@@ -285,6 +286,14 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
     const clientIds = await myClientIds(context);
     if (clientIds.length === 0) throw new Error("You aren't linked to an organisation yet.");
     const clientId = clientIds[0] as string;
+
+    // A la carte add-ons are paid in full upfront at the approved SOW price (server-verified).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { coreServicesFor } = await import("@/lib/client-portal-model");
+    const core = coreServicesFor(data.answers["vehicle_structure"], data.answers["offering_exemption"], data.answers["jurisdiction"]);
+    const pay = await import("@/lib/fund-payments.server");
+    const quote = await pay.buildQuote(supabaseAdmin, { clientId, kind: "service_request", addOnKeys: data.requestedServiceKeys.filter((k) => !core.includes(k)) });
+    const paymentId = await pay.verifyPayment(supabaseAdmin, { paymentId: data.paymentId, clientId, kind: "service_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
     const { data: created, error } = await context.supabase
       .from("client_intake_requests")
@@ -302,6 +311,8 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    await pay.markPaymentUsed(supabaseAdmin, paymentId, (created as any).id, context.userId);
 
     await context.supabase.from("contract_audit_events").insert({
       actor_id: context.userId,

@@ -101,7 +101,7 @@ export const uploadFundRequestFile = createServerFn({ method: "POST" })
 export const submitFundRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().nullable().optional(), request: requestSchema }).parse(d),
+    z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().nullable().optional(), request: requestSchema, paymentId: z.string().uuid().nullable().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const member = await requireMember(context, data.clientId, true);
@@ -110,6 +110,13 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     const missing = missingFields(r);
     if (Object.keys(missing).length) throw new Error(`Still needed: ${Object.values(missing).flat().join(", ")}.`);
     const db = await admin();
+
+    // The $2,500 setup fee and any a la carte add-ons must be paid first (verified server-side).
+    const { autoServices } = await import("@/lib/fund-request-model");
+    const core = autoServices(r);
+    const pay = await import("@/lib/fund-payments.server");
+    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: (r.service_keys ?? []).filter((k) => !core.includes(k)) });
+    const paymentId = await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
     // Create the closed Fund. A likely duplicate name becomes a Harmonious review item instead.
     let offeringId: string | null = null;
@@ -163,6 +170,8 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       status: "submitted",
       requested_by: context.userId,
     });
+
+    await pay.markPaymentUsed(db, paymentId, offeringId, context.userId);
 
     await db.from("contract_audit_events").insert({
       actor_id: context.userId, actor_role: String(member.client_role ?? "client"), client_id: data.clientId,
