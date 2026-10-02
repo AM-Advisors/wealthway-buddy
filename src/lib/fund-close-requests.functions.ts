@@ -42,9 +42,7 @@ export const getFundTabsData = createServerFn({ method: "GET" })
         mask: b.account_mask ? `••••${String(b.account_mask).slice(-4)}` : null, status: b.status, lastSynced: b.last_synced_at,
       })),
       taxDocs: (taxDocs ?? []) as any[],
-      assets: ((assets ?? []) as any[]).map((a) => ({
-        ...a, latestValueCents: latest[a.asset_name]?.value_cents ?? null, latestValueDate: latest[a.asset_name]?.valuation_date ?? null,
-      })),
+      assets: await (await import("@/lib/fund-books.server")).assetsWithMarks(data.fundId),
     };
   });
 
