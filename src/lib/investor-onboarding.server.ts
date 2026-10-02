@@ -25,6 +25,7 @@ import {
   applyExemption,
   invitationRecipientError,
   isAuthoritativeSignature,
+  investorHomeSummary,
   journeySteps,
   managerInvestorStatus,
   nextJourneyStep,
