@@ -200,6 +200,7 @@ import { Route as AuthenticatedOpsAccessControlRouteImport } from './routes/_aut
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
 import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
+import { Route as AuthenticatedOpsCloseRequestsRouteImport } from './routes/_authenticated/ops.close-requests'
 import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authenticated/ops.compliance'
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
 import { Route as AuthenticatedOpsDocumentTemplatesRouteImport } from './routes/_authenticated/ops.document-templates'
@@ -1405,6 +1406,12 @@ const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   path: '/ops/banking',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsCloseRequestsRoute =
+  AuthenticatedOpsCloseRequestsRouteImport.update({
+    id: '/ops/close-requests',
+    path: '/ops/close-requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsComplianceRoute =
   AuthenticatedOpsComplianceRouteImport.update({
     id: '/ops/compliance',
@@ -2384,6 +2391,7 @@ export interface FileRoutesByFullPath {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
@@ -2705,6 +2713,7 @@ export interface FileRoutesByTo {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
@@ -3033,6 +3042,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/_authenticated/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/_authenticated/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/_authenticated/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
@@ -3362,6 +3372,7 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/allocations'
     | '/ops/banking'
+    | '/ops/close-requests'
     | '/ops/compliance'
     | '/ops/distributions'
     | '/ops/document-templates'
@@ -3683,6 +3694,7 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/allocations'
     | '/ops/banking'
+    | '/ops/close-requests'
     | '/ops/compliance'
     | '/ops/distributions'
     | '/ops/document-templates'
@@ -4010,6 +4022,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/accounting'
     | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
+    | '/_authenticated/ops/close-requests'
     | '/_authenticated/ops/compliance'
     | '/_authenticated/ops/distributions'
     | '/_authenticated/ops/document-templates'
@@ -5546,6 +5559,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsBankingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/close-requests': {
+      id: '/_authenticated/ops/close-requests'
+      path: '/ops/close-requests'
+      fullPath: '/ops/close-requests'
+      preLoaderRoute: typeof AuthenticatedOpsCloseRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/compliance': {
       id: '/_authenticated/ops/compliance'
       path: '/ops/compliance'
@@ -6892,6 +6912,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
   AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
+  AuthenticatedOpsCloseRequestsRoute: typeof AuthenticatedOpsCloseRequestsRoute
   AuthenticatedOpsComplianceRoute: typeof AuthenticatedOpsComplianceRoute
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
   AuthenticatedOpsDocumentTemplatesRoute: typeof AuthenticatedOpsDocumentTemplatesRoute
@@ -7118,6 +7139,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
   AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
+  AuthenticatedOpsCloseRequestsRoute: AuthenticatedOpsCloseRequestsRoute,
   AuthenticatedOpsComplianceRoute: AuthenticatedOpsComplianceRoute,
   AuthenticatedOpsDistributionsRoute: AuthenticatedOpsDistributionsRoute,
   AuthenticatedOpsDocumentTemplatesRoute:
