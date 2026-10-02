@@ -4600,6 +4600,7 @@ export type Database = {
           body_font: string | null
           client_id: string
           created_at: string
+          display_name: string | null
           heading_font: string | null
           logo_path: string | null
           monthly_fee_cents: number
@@ -4616,6 +4617,7 @@ export type Database = {
           body_font?: string | null
           client_id: string
           created_at?: string
+          display_name?: string | null
           heading_font?: string | null
           logo_path?: string | null
           monthly_fee_cents?: number
@@ -4632,6 +4634,7 @@ export type Database = {
           body_font?: string | null
           client_id?: string
           created_at?: string
+          display_name?: string | null
           heading_font?: string | null
           logo_path?: string | null
           monthly_fee_cents?: number

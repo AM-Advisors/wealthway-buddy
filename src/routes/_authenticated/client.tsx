@@ -22,6 +22,7 @@ import { listMyMessages } from "@/lib/client-inbox.functions";
 import { recordPortalSignIn } from "@/lib/sign-in-log.functions";
 
 import { ClientIntakeGate } from "@/components/client-intake-gate";
+import { useClientBrand } from "@/components/client-brand";
 import { ClientPortalProvider, useClientPortal } from "@/components/client-portal-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,7 @@ function ClientShell() {
   const unreadMessages = ((inboxQuery.data?.messages ?? []) as any[]).filter(
     (m) => !m.read_at,
   ).length;
+  const brand = useClientBrand(Boolean(data?.client));
 
   if (isLoading) {
     return (
@@ -207,7 +209,11 @@ function ClientShell() {
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {section === "settings" ? "Settings" : section === "home" ? "Home" : section === "funds" ? "Funds" : "Cap Table"}
           </p>
-          <h1 className="mt-1 text-2xl sm:text-3xl">{client.name}</h1>
+          {brand?.logo_path ? (
+            <img src={brand.logo_path} alt={brand.display_name || client.name} className="mt-1 h-10 w-auto max-w-[260px] object-contain object-left" />
+          ) : (
+            <h1 className="mt-1 text-2xl sm:text-3xl">{brand?.display_name || client.name}</h1>
+          )}
           <p className="mt-1 text-sm text-muted-foreground">
             Funds, cap table and your account settings with Harmonious.
           </p>
@@ -232,7 +238,7 @@ function ClientShell() {
         <div className="mt-6 flex flex-col gap-6 md:flex-row">
           <aside className="md:w-56 md:shrink-0">
             <p className="mb-2 hidden px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground md:block">
-              {client.name} settings
+              {brand?.display_name || client.name} settings
             </p>
             <nav
               aria-label="Client settings"

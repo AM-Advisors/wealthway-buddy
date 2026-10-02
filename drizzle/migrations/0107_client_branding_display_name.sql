@@ -1,0 +1,1 @@
+ALTER TABLE public.client_branding ADD COLUMN IF NOT EXISTS display_name text;

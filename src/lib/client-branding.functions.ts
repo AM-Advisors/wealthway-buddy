@@ -111,6 +111,7 @@ export const saveClientBranding = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       clientId: z.string().uuid(),
+      displayName: z.string().trim().max(120).nullable(),
       logoDataUrl: z.string().max(400_000).regex(/^data:image\/(png|jpeg|svg\+xml|webp);base64,/).nullable().optional(),
       headingFont: font,
       bodyFont: font,
@@ -127,6 +128,7 @@ export const saveClientBranding = createServerFn({ method: "POST" })
       throw new Error("White-labeling isn't active for this client yet.");
     }
     const patch: Record<string, unknown> = {
+      display_name: data.displayName || null,
       heading_font: data.headingFont,
       body_font: data.bodyFont,
       primary_color: data.primaryColor,
