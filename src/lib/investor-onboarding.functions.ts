@@ -98,8 +98,8 @@ export const prepareSubscriptionDocumentsFn = createServerFn({ method: "POST" })
   .inputValidator(onboardingInput.parse)
   .handler(async ({ data, context }) => {
     await (await import("@/lib/investor-extras.server")).assertFeesAccepted(context.userId, data.onboardingId);
-    return reconciled(data.onboardingId, context.userId, "prepareSubscriptionDocuments", (await engine()).prepareSubscriptionDocuments(context.userId, data.onboardingId)),
-  );
+    return reconciled(data.onboardingId, context.userId, "prepareSubscriptionDocuments", (await engine()).prepareSubscriptionDocuments(context.userId, data.onboardingId));
+  });
 
 export const recordSubscriptionSignatureFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -110,13 +110,14 @@ export const recordSubscriptionSignatureFn = createServerFn({ method: "POST" })
       capacity: z.string().max(120).nullish(),
     }).parse,
   )
-  .handler(async ({ data, context }) =>
-    reconciled(data.onboardingId, context.userId, "recordSubscriptionSignature", (await engine()).recordSubscriptionSignature(context.userId, {
+  .handler(async ({ data, context }) => {
+    await (await import("@/lib/investor-extras.server")).assertFeesAccepted(context.userId, data.onboardingId);
+    return reconciled(data.onboardingId, context.userId, "recordSubscriptionSignature", (await engine()).recordSubscriptionSignature(context.userId, {
       onboardingId: data.onboardingId,
       signerName: data.signerName,
       capacity: data.capacity ?? null,
-    })),
-  );
+    }));
+  });
 
 export const fundingInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
