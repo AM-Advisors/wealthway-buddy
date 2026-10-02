@@ -9,8 +9,23 @@ import { DocumentsStep } from "@/components/steps/documents-step";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  FundCapitalCallsPanel,
+  FundTaxDocumentsPanel,
+  InvestorFundMessages,
+  InvestorFundStatusPanel,
+} from "@/components/investor-fund-panels";
 
-type Tab = "investment" | "documents" | "deal-room";
+type Tab = "investment" | "payments" | "documents" | "deal-room" | "taxes" | "messages";
+
+const TABS: { value: Tab; label: string }[] = [
+  { value: "investment", label: "Investment information" },
+  { value: "payments", label: "Payments" },
+  { value: "documents", label: "Documents" },
+  { value: "deal-room", label: "Deal room" },
+  { value: "taxes", label: "Tax documents" },
+  { value: "messages", label: "Messages" },
+];
 
 export const Route = createFileRoute("/_authenticated/my-portfolio_/$offeringId")({
   head: () => ({
@@ -18,19 +33,17 @@ export const Route = createFileRoute("/_authenticated/my-portfolio_/$offeringId"
       { title: "Your Fund - Harmonious" },
       {
         name: "description",
-        content: "Your investment in this fund: holdings, fund documents and the fund's deal room.",
+        content: "Your investment in this fund: holdings, payments, documents, deal room and taxes.",
       },
       { property: "og:title", content: "Your Fund - Harmonious" },
-      { property: "og:description", content: "Investment details, documents and deal room for one fund." },
+      { property: "og:description", content: "Investment details, payments, documents and deal room for one fund." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { tab?: Tab } =>
-    s["tab"] === "documents" || s["tab"] === "deal-room" || s["tab"] === "investment"
-      ? { tab: s["tab"] as Tab }
-      : {},
+    TABS.some((t) => t.value === s["tab"]) ? { tab: s["tab"] as Tab } : {},
   component: InvestorFundPage,
 });
 
@@ -57,37 +70,42 @@ function InvestorFundPage() {
 
       <Tabs value={tab} onValueChange={(v) => navigate({ search: { tab: v as Tab }, replace: true })}>
         <TabsList>
-          <TabsTrigger value="investment">Investment information</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="deal-room">Deal room</TabsTrigger>
+          {TABS.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
         </TabsList>
 
         <TabsContent value="investment" className="mt-4">
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
-          ) : !fund ? (
-            <Card><CardContent className="py-6 text-sm text-muted-foreground">
-              You don't have a position in this fund yet. Its documents and deal room are in the other tabs.
-            </CardContent></Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Your position</CardTitle>
-                <CardDescription>
-                  {fund.share_class}
-                  {fund.reg_type ? ` · Reg D ${fund.reg_type}` : ""}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4 text-sm sm:grid-cols-3">
-                <Stat label="Committed" value={money(fund.commitment_cents)} />
-                <Stat label="Received by the fund" value={money(fund.funded_cents)} />
-                <Stat label="Equity value" value={money(fund.equity_value_cents)} />
-                <Stat label="Shares" value={fund.shares != null ? Number(fund.shares).toLocaleString("en-US") : "-"} />
-                <Stat label="Price per share" value={money(fund.share_price_cents)} />
-                <Stat label="Share of fund" value={fund.pct_of_committed ? `${Number(fund.pct_of_committed).toFixed(2)}%` : "0%"} />
-              </CardContent>
-            </Card>
-          )}
+          <div className="space-y-4">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : !fund ? (
+              <Card><CardContent className="py-6 text-sm text-muted-foreground">
+                You don't have a position in this fund yet. Its documents and deal room are in the other tabs.
+              </CardContent></Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Your position</CardTitle>
+                  <CardDescription>
+                    {fund.share_class}
+                    {fund.reg_type ? ` · Reg D ${fund.reg_type}` : ""}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 text-sm sm:grid-cols-3">
+                  <Stat label="Committed" value={money(fund.commitment_cents)} />
+                  <Stat label="Received by the fund" value={money(fund.funded_cents)} />
+                  <Stat label="Equity value" value={money(fund.equity_value_cents)} />
+                  <Stat label="Shares" value={fund.shares != null ? Number(fund.shares).toLocaleString("en-US") : "-"} />
+                  <Stat label="Price per share" value={money(fund.share_price_cents)} />
+                  <Stat label="Share of fund" value={fund.pct_of_committed ? `${Number(fund.pct_of_committed).toFixed(2)}%` : "0%"} />
+                </CardContent>
+              </Card>
+            )}
+            <InvestorFundStatusPanel offeringId={offeringId} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="payments" className="mt-4">
+          <FundCapitalCallsPanel offeringId={offeringId} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-4">
@@ -97,9 +115,23 @@ function InvestorFundPage() {
         <TabsContent value="deal-room" className="mt-4">
           <DiligenceRoom offeringId={offeringId} />
         </TabsContent>
+
+        <TabsContent value="taxes" className="mt-4">
+          <FundTaxDocumentsPanel offeringId={offeringId} />
+        </TabsContent>
+
+        <TabsContent value="messages" className="mt-4">
+          <FundMessages offeringId={offeringId} />
+        </TabsContent>
       </Tabs>
     </main>
   );
+}
+
+function FundMessages({ offeringId }: { offeringId: string }) {
+  const load = useServerFn(investorFundStatusFn);
+  const q = useQuery({ queryKey: ["investor-fund-status", offeringId], queryFn: () => load({ data: { offeringId } }) });
+  return <InvestorFundMessages applicationId={q.data?.applicationId ?? null} />;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

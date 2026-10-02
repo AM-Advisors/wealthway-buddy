@@ -12,11 +12,10 @@ import { PortalMessageThread } from "@/components/portal-message-thread";
 import {
   acknowledgeK1Fn,
   investorFundStatusFn,
-  k1DownloadUrlFn,
   myFundCapitalCallsFn,
   myFundK1sFn,
 } from "@/lib/investor-fund-page.functions";
-import { capitalCallDetailFn, fundingReceiptFn, reportTransferInitiatedFn } from "@/lib/capital-calls.functions";
+import { capitalCallDetailFn, reportTransferInitiatedFn } from "@/lib/capital-calls.functions";
 
 function usd(cents: number | null | undefined) {
   if (cents == null) return "-";
@@ -44,9 +43,9 @@ const FUNDING_LABELS: Record<string, string> = {
   returned: "Needs review",
   overfunded: "Needs review",
   failed: "Needs review",
-  investor_reports_sent: "Reported by you",
-  awaiting_wire: "Ready for your wire",
-  instructions_released: "Ready for your wire",
+  investor_reports_sent: "Transfer reported",
+  awaiting_wire: "Ready for your payment",
+  instructions_released: "Ready for your payment",
 };
 
 // ---------------------------------------------------------------- status
@@ -116,19 +115,22 @@ export function InvestorFundStatusPanel({ offeringId }: { offeringId: string }) 
 
 // ---------------------------------------------------------------- capital calls
 
+const CALL_STATUS: Record<string, string> = {
+  outstanding: "Payment outstanding",
+  partially_funded: "Partially funded",
+  satisfied: "Funded",
+  waived: "Waived",
+  cancelled: "Cancelled",
+};
+
 export function FundCapitalCallsPanel({ offeringId }: { offeringId: string }) {
   const load = useServerFn(myFundCapitalCallsFn);
   const detail = useServerFn(capitalCallDetailFn);
   const report = useServerFn(reportTransferInitiatedFn);
-  const receipt = useServerFn(fundingReceiptFn);
   const q = useQuery({ queryKey: ["investor-fund-calls", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const [openLine, setOpenLine] = useState<string | null>(null);
-  const [method, setMethod] = useState("wire");
-  const [ref, setRef] = useState("");
-  const [busy, setBusy] = useState(false);
 
   const calls: any[] = q.data ?? [];
-  const openCall = openLine ? calls.find((c) => c.lineId === openLine) : null;
 
   return (
     <div className="space-y-4">
@@ -141,78 +143,54 @@ export function FundCapitalCallsPanel({ offeringId }: { offeringId: string }) {
           <Card key={c.lineId}>
             <CardHeader className="pb-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-base">{c.callTitle}</CardTitle>
-                <Badge variant={c.amountDueCents > 0 ? "default" : "secondary"}>{c.statusLabel}</Badge>
+                <CardTitle className="text-base">
+                  Capital call {c.callNumber ? `#${c.callNumber}` : ""}
+                  {c.title ? `: ${c.title}` : ""}
+                </CardTitle>
+                <Badge variant={c.status === "satisfied" ? "secondary" : "outline"}>
+                  {CALL_STATUS[c.status] ?? c.status.replace(/_/g, " ")}
+                </Badge>
               </div>
               <CardDescription>
-                Due {dt(c.dueDate)} · Called {usd(c.calledCents)} · Remaining {usd(c.amountDueCents)}
+                {c.dueDate ? `Due ${dt(c.dueDate)} · ` : ""}
+                Called {usd(c.calledCents)} · Remaining {usd(c.amountDueCents)}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {c.statusLabel === "Ready for your wire" ? (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setOpenLine(c.lineId);
-                    setMethod("wire");
-                    setRef("");
-                  }}
-                >
-                  Pay this call
-                </Button>
-              ) : c.statusLabel === "Awaiting reconciliation" ? (
-                <p className="text-sm text-muted-foreground">Your reported transfer is with the fund for reconciliation.</p>
-              ) : null}
+              <Button size="sm" variant={c.status === "outstanding" || c.status === "partially_funded" ? "default" : "outline"} onClick={() => setOpenLine(c.lineId)}>
+                View payment details
+              </Button>
             </CardContent>
           </Card>
         ))
       )}
 
-      {openCall ? (
-        <CallPaySheet
-          lineId={openCall.lineId}
-          onClose={() => setOpenLine(null)}
-          detail={detail}
-          report={report}
-          receipt={receipt}
-          method={method}
-          setMethod={setMethod}
-          refCode={ref}
-          setRefCode={setRef}
-          busy={busy}
-          setBusy={setBusy}
-          onDone={() => {
-            setOpenLine(null);
-            q.refetch();
-          }}
-        />
+      {openLine ? (
+        <CallPayPanel lineId={openLine} onClose={() => setOpenLine(null)} detail={detail} report={report} onDone={() => q.refetch()} />
       ) : null}
     </div>
   );
 }
 
-function CallPaySheet(props: any) {
-  const { lineId, onClose } = props;
-  const dq = useQuery({ queryKey: ["capital-call-detail", lineId], queryFn: () => props.detail({ data: { lineId } }) });
+function CallPayPanel(props: { lineId: string; onClose: () => void; detail: any; report: any; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const dq = useQuery({ queryKey: ["capital-call-detail", props.lineId], queryFn: () => props.detail({ data: { lineId: props.lineId } }) });
   const d = dq.data;
 
   const submit = async () => {
-    props.setBusy(true);
+    setBusy(true);
     try {
-      if (props.method === "wire") {
-        await props.report({ data: { lineId, reference: props.refCode || null } });
-        toast.success("Noted. The fund will reconcile your transfer before it counts as funded.");
-      } else {
-        await props.receipt({ data: { lineId, method: "ach", note: props.refCode || null } });
-        toast.success("Noted. The fund will reconcile your transfer before it counts as funded.");
-      }
+      await props.report({ data: { lineId: props.lineId } });
+      toast.success("Noted. The fund will reconcile your transfer before it counts as funded.");
       props.onDone();
     } catch (e: any) {
       toast.error(e?.message ?? "Could not record that.");
     } finally {
-      props.setBusy(false);
+      setBusy(false);
     }
   };
+
+  const funding = d?.funding;
 
   return (
     <Card>
@@ -221,54 +199,45 @@ function CallPaySheet(props: any) {
           <div>
             <CardTitle className="text-base">Payment details</CardTitle>
             <CardDescription>
-              Harmonious never moves your money. You send the transfer through your own bank, then record it here.
+              Harmonious never moves your money. You send the transfer through your own bank; recording it here is informational only.
             </CardDescription>
           </div>
-          <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>
+          <Button size="sm" variant="ghost" onClick={props.onClose}>Close</Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        {dq.isLoading ? <p className="text-muted-foreground">Loading instructions…</p> :
+        {dq.isLoading ? <p className="text-muted-foreground">Loading…</p> :
          dq.error ? <p className="text-destructive">{(dq.error as Error).message}</p> : (
           <>
-            <p className="text-2xl font-semibold">{usd(d?.amountDueCents ?? 0)}</p>
-            {d?.instructions ? (
-              <dl className="grid grid-cols-[8rem_1fr] gap-x-3 gap-y-1 rounded-md border p-3">
-                {Object.entries(d.instructions as Record<string, string>)
-                  .filter(([, v]) => !!v)
-                  .map(([k, v]) => (
-                    <div key={k} className="contents">
-                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{k.replace(/_/g, " ")}</dt>
-                      <dd className="break-all">{v}</dd>
+            <p className="text-2xl font-semibold">{usd(d?.amountDueCents ?? 0)} remaining on this call</p>
+            {funding?.unlocked && funding.instructions ? (
+              <>
+                <dl className="grid grid-cols-[8rem_1fr] gap-x-3 gap-y-1 rounded-md border p-3">
+                  {Object.entries(funding.instructions.details as Record<string, string>)
+                    .filter(([, v]) => !!v)
+                    .map(([k, v]) => (
+                      <div key={k} className="contents">
+                        <dt className="text-xs uppercase tracking-wide text-muted-foreground">{k.replace(/_/g, " ")}</dt>
+                        <dd className="break-all">{v}</dd>
+                      </div>
+                    ))}
+                  {funding.instructions.reference ? (
+                    <div className="contents">
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">Your reference</dt>
+                      <dd className="break-all">{funding.instructions.reference}</dd>
                     </div>
-                  ))}
-              </dl>
+                  ) : null}
+                </dl>
+                <p className="text-xs text-muted-foreground">{funding.instructions.warning}</p>
+                <Button onClick={submit} disabled={busy || d.investorInitiatedAt}>
+                  {d.investorInitiatedAt ? "Transfer already reported" : busy ? "Recording…" : "I sent this transfer"}
+                </Button>
+              </>
             ) : (
-              <p className="text-muted-foreground">Funding instructions are not released for this call yet.</p>
+              <ul className="list-disc pl-5 text-muted-foreground">
+                {((funding?.reasons ?? []) as string[]).map((r) => <li key={r}>{r}</li>)}
+              </ul>
             )}
-            <div className="flex flex-wrap items-end gap-2">
-              <label className="text-xs text-muted-foreground">
-                Method
-                <select
-                  className="mt-1 block rounded-md border bg-background px-2 py-1.5 text-sm"
-                  value={props.method}
-                  onChange={(e) => props.setMethod(e.target.value)}
-                >
-                  <option value="wire">Wire</option>
-                  <option value="ach">ACH</option>
-                </select>
-              </label>
-              <label className="min-w-[16rem] flex-1 text-xs text-muted-foreground">
-                Reference or confirmation number (optional)
-                <Input value={props.refCode} onChange={(e) => props.setRefCode(e.target.value)} placeholder="e.g. bank confirmation number" />
-              </label>
-              <Button onClick={submit} disabled={props.busy || !d?.instructions}>
-                {props.busy ? "Recording…" : "I sent this transfer"}
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Recording the transfer is informational only and does not count as funding until the fund reconciles it against the bank.
-            </p>
           </>
         )}
       </CardContent>
@@ -298,7 +267,6 @@ const K1_BOXES: Record<string, string> = {
 
 export function FundTaxDocumentsPanel({ offeringId }: { offeringId: string }) {
   const load = useServerFn(myFundK1sFn);
-  const url = useServerFn(k1DownloadUrlFn);
   const ack = useServerFn(acknowledgeK1Fn);
   const q = useQuery({ queryKey: ["investor-fund-k1s", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -348,10 +316,12 @@ export function FundTaxDocumentsPanel({ offeringId }: { offeringId: string }) {
             <CardContent className="space-y-3 text-sm">
               <dl className="grid grid-cols-[10rem_1fr] gap-x-3 gap-y-1 rounded-md border p-3">
                 {Object.entries((k.boxes as Record<string, number>) ?? {})
-                  .filter(([v]) => Math.abs(Number(v)) > 0)
+                  .filter(([, v]) => Math.abs(Number(v)) > 0)
                   .map(([box, v]) => (
                     <div key={box} className="contents">
-                      <dt className="text-xs text-muted-foreground">Box {box}{K1_BOXES[box] ? ` - ${K1_BOXES[box]}` : ""}</dt>
+                      <dt className="text-xs text-muted-foreground">
+                        Box {box}{K1_BOXES[box] ? ` - ${K1_BOXES[box]}` : ""}
+                      </dt>
                       <dd>{usd(Number(v))}</dd>
                     </div>
                   ))}
@@ -380,7 +350,7 @@ export function FundTaxDocumentsPanel({ offeringId }: { offeringId: string }) {
 
 // ---------------------------------------------------------------- messages
 
-export function InvestorFundMessages({ offeringId, applicationId }: { offeringId: string; applicationId: string | null }) {
+export function InvestorFundMessages({ applicationId }: { applicationId: string | null }) {
   if (!applicationId) {
     return (
       <Card>
