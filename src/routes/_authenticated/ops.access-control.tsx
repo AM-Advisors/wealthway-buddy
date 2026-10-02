@@ -14,5 +14,13 @@ export const Route = createFileRoute("/_authenticated/ops/access-control")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: AccessControlCenter,
+  validateSearch: (s: Record<string, unknown>): { tab?: string } => (typeof s.tab === "string" ? { tab: s.tab } : {}),
+  component: AccessControlPage,
+
 });
+
+function AccessControlPage() {
+  const { tab } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  return <AccessControlCenter tab={tab ?? "people"} onTabChange={(t) => navigate({ search: { tab: t }, replace: true })} />;
+}

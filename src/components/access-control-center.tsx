@@ -37,6 +37,7 @@ import { ACCOUNT_CLASSIFICATIONS, CLASSIFICATION_LABEL, type AccountClassificati
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { InviteStaffForm } from "@/components/invite-staff-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -60,7 +61,7 @@ const SOURCE_TONE: Record<SourceKind, string> = {
   delegated: "D",
 };
 
-export function AccessControlCenter() {
+export function AccessControlCenter({ tab = "people", onTabChange }: { tab?: string; onTabChange?: (t: string) => void } = {}) {
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8">
       <h1 className="text-2xl font-semibold">Access Control</h1>
@@ -68,14 +69,17 @@ export function AccessControlCenter() {
         Who can do what, and why. Authorized administrators can assign roles, grants and denies from a
         person's profile; every change needs a reason and is permanently audited. Every request is still checked on the server.
       </p>
-      <Tabs defaultValue="people" className="mt-6">
+      <div className="mt-4"><Button onClick={() => onTabChange?.("invite")}>Invite user</Button></div>
+      <Tabs value={tab} onValueChange={(t) => onTabChange?.(t)} className="mt-6">
         <TabsList>
+          <TabsTrigger value="invite">Invite</TabsTrigger>
           <TabsTrigger value="people">People</TabsTrigger>
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="matrix">Permission Matrix</TabsTrigger>
           <TabsTrigger value="audit">Access Audit</TabsTrigger>
           <TabsTrigger value="review">Needs Review</TabsTrigger>
         </TabsList>
+        <TabsContent value="invite"><InviteStaffForm /></TabsContent>
         <TabsContent value="people"><PeopleTab /></TabsContent>
         <TabsContent value="roles"><RolesTab /></TabsContent>
         <TabsContent value="matrix"><MatrixTab /></TabsContent>
