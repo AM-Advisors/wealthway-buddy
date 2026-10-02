@@ -65,7 +65,7 @@ export const listPortalMessages = createServerFn({ method: "GET" })
     // Investors never see who on the Harmonious staff wrote a message: staff
     // replies are shown as "Harmonious", never by personal name or account.
     const messages = isInvestor
-      ? raw.map((m) => (m.sender_role === "admin" ? { ...m, sender_name: "Harmonious", sender_id: null } as PortalMessage : m))
+      ? raw.map((m) => (m.sender_role === "admin" ? { ...m, sender_name: "Harmonious", sender_id: "" } as PortalMessage : m))
       : raw;
 
     // Mark the other side's messages as read for whoever is looking.
