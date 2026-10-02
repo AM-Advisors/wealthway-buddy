@@ -49,14 +49,14 @@ function EinField({ fundId }: { fundId: string }) {
   return <div><dt className="text-xs text-muted-foreground">EIN</dt><dd>{body}</dd></div>;
 }
 
-const TABS = ["todos", "details", "team", "investors", "documents", "banking", "account", "assets", "closes", "regulatory"] as const;
+const TABS = ["todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory"] as const;
 type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/client/funds/$fundId")({
   head: () => ({
     meta: [
       { title: "Fund - Harmonious client portal" },
-      { name: "description", content: "Fund details, investors, banking, account, assets and closes for your fund." },
+      { name: "description", content: "Fund details, investors, banking, accounting, assets and closes for your fund." },
       { property: "og:title", content: "Fund - Harmonious client portal" },
       { property: "og:description", content: "Fund details, investors, banking, taxes, assets and closes." },
       { property: "og:type", content: "website" },
@@ -145,7 +145,7 @@ function ClientFundPage() {
           <TabsTrigger value="investors">Investors</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="banking">Banking</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="accounting">Accounting</TabsTrigger>
           <TabsTrigger value="assets">Assets</TabsTrigger>
           <TabsTrigger value="closes">Closes</TabsTrigger>
           <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
@@ -214,7 +214,7 @@ function ClientFundPage() {
           <BankingTab fundId={fundId} />
         </TabsContent>
 
-        <TabsContent value="account"><AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} /></TabsContent>
+        <TabsContent value="accounting"><AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} /></TabsContent>
 
         <TabsContent value="assets" className="space-y-5">
           {!!td?.assets.length && (
