@@ -750,6 +750,13 @@
       "when": 1790900786718,
       "tag": "0106_client_whitelabel_branding",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1790902244386,
+      "tag": "0107_client_branding_display_name",
+      "breakpoints": true
     }
   ]
 }
