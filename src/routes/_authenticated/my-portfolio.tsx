@@ -174,11 +174,18 @@ function MyPortfolio() {
                   </div>
                 </div>
                 <div className="sm:col-span-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/diligence/$offeringId" params={{ offeringId: fund.offering_id }}>
-                      Open this fund's room
-                    </Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm">
+                      <Link to="/my-portfolio/$offeringId" params={{ offeringId: fund.offering_id }}>
+                        Open fund
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/my-portfolio/$offeringId" params={{ offeringId: fund.offering_id }} search={{ tab: "deal-room" }}>
+                        Deal room
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

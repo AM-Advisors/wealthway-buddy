@@ -169,7 +169,7 @@ export function InvestorUpdatesCard() {
             <div key={f.fundId} className="flex items-center justify-between gap-2 text-sm">
               <span className="truncate">{f.fundName}</span>
               {f.hasDealRoom
-                ? <Button size="sm" variant="outline" asChild><Link to="/diligence/$offeringId" params={{ offeringId: f.fundId }}>Open</Link></Button>
+                ? <Button size="sm" variant="outline" asChild><Link to="/my-portfolio/$offeringId" params={{ offeringId: f.fundId }} search={{ tab: "deal-room" }}>Open</Link></Button>
                 : <span className="text-xs text-muted-foreground">Not opened yet</span>}
             </div>
           ))}
