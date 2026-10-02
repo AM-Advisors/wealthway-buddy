@@ -42,13 +42,13 @@ export async function getFundLink(userId: string, offeringId: string) {
     regeneratedAt: row && first && row.created_at !== first.created_at ? (row.created_at as string) : null,
     lastUsedAt: (row?.last_used_at ?? null) as string | null,
     starts: count ?? 0,
-    canManage: actor.isStaff,
+    canManage: true,
   };
 }
 
-/** Create or regenerate. Old link stops working; investors it already started are untouched. Staff only. */
+/** Create or regenerate. Old link stops working; investors it already started are untouched. Staff or this fund's managers. */
 export async function regenerateFundLink(userId: string, offeringId: string) {
-  await assertStaff(userId);
+  await assertLinkViewer(userId, offeringId);
   await launchedOffering(offeringId);
   const prev = await currentLink(offeringId);
   if (prev) await db().from("fund_onboarding_links").update({ status: "superseded", superseded_at: new Date().toISOString() }).eq("id", prev.id);
@@ -59,7 +59,7 @@ export async function regenerateFundLink(userId: string, offeringId: string) {
 }
 
 export async function setFundLinkEnabled(userId: string, offeringId: string, enabled: boolean) {
-  await assertStaff(userId);
+  await assertLinkViewer(userId, offeringId);
   const row = await currentLink(offeringId);
   if (!row) throw new Error("No onboarding link is configured for this fund.");
   await db().from("fund_onboarding_links").update(enabled ? { status: "active", disabled_at: null } : { status: "disabled", disabled_at: new Date().toISOString() }).eq("id", row.id);
