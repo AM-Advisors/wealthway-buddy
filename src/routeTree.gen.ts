@@ -311,6 +311,7 @@ import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/publi
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
@@ -2054,6 +2055,12 @@ const ApiPublicPacketTokenRoute = ApiPublicPacketTokenRouteImport.update({
   path: '/api/public/packet/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
   id: '/api/public/security/revoke',
   path: '/api/public/security/revoke',
@@ -2476,6 +2483,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -2794,6 +2802,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -3121,6 +3130,7 @@ export interface FileRoutesById {
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -3448,6 +3458,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/payments/webhook'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -3766,6 +3777,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/payments/webhook'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -4092,6 +4104,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
+    | '/api/public/payments/webhook'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -4174,6 +4187,7 @@ export interface RootRouteChildren {
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicSecurityRevokeRoute: typeof ApiPublicSecurityRevokeRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
@@ -6296,6 +6310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPacketTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/security/revoke': {
       id: '/api/public/security/revoke'
       path: '/api/public/security/revoke'
@@ -7228,6 +7249,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicSecurityRevokeRoute: ApiPublicSecurityRevokeRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
