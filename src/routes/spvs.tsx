@@ -1,4 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import spvImage from "@/assets/site-spv.jpg";
+import { OfferingSection } from "@/components/marketing/offering-section";
 import { marketingHead } from "@/lib/marketing/seo";
 
 import { Button } from "@/components/ui/button";
@@ -30,10 +32,11 @@ const INCLUDED = [
   "Operating agreement and subscription documents",
   "Offering memorandum and offering terms page",
   "Private due diligence room with NDA gate",
-  "KYC, AML and accreditation on every investor",
+  "Investor Onboarding included: KYC/KYB, AML, sanctions and beneficial owner screening, W-9/W-8 collection",
   "E-signature with signed copies filed for you",
   "Investor funding instructions, with receipt matched and reconciled",
-  "Cap table and investor reporting from first close",
+  "Capital accounts, statements, wire-instruction management and deadline tracking",
+  "Form D and Blue Sky filings prepared at each close",
 ] as const;
 
 function SpvPage() {
@@ -58,6 +61,10 @@ function SpvPage() {
               <Link to="/contactus" search={{ cta: "start_spv", intent: "spv" }}>Start an SPV</Link>
             </Button>
           </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 pt-16">
+          <img src={spvImage} alt="Partners shaking hands after closing a deal" width={1600} height={1000} loading="lazy" className="aspect-[16/7] w-full rounded-2xl object-cover" />
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-20">
@@ -96,6 +103,8 @@ function SpvPage() {
             </ul>
           </div>
         </section>
+
+        <OfferingSection spv />
 
         <section className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 sm:flex-row sm:items-center sm:justify-between">
           <div>

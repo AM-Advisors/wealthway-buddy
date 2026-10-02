@@ -272,10 +272,24 @@ export interface PricingSection {
  * are not copied here. Unapproved items render as "Contact us for pricing".
  */
 export const PRICING: PricingSection[] = [
-  { id: "spvs", title: "SPVs", items: [] },
-  { id: "fund_administration", title: "Fund Administration", items: [] },
-  { id: "cap_tables", title: "Cap Tables", items: [] },
-  { id: "additional", title: "Additional Services", items: [] },
+  { id: "spvs", title: "SPVs", items: [
+    { name: "New fund or SPV setup", description: "One-time setup fee, paid when the request is sent. Investor Onboarding included for SPVs.", kind: "fixed", amountUsd: 2500, unit: "one-time", approved: true },
+  ] },
+  { id: "fund_administration", title: "Fund Administration", items: [
+    { name: "Fund administration", description: "Capital accounts, statements, wire-instruction management and deadline tracking included. Priced from your statement of work.", kind: "custom", approved: true },
+  ] },
+  { id: "cap_tables", title: "Cap Tables", items: [
+    { name: "Free", description: "Up to 5 stakeholders.", kind: "fixed", amountUsd: 0, approved: true },
+    { name: "Starter", description: "Up to 25 stakeholders. $1,290 billed yearly.", kind: "fixed", amountUsd: 129, unit: "/ month", approved: true },
+    { name: "Growth", description: "Up to 50 stakeholders. $2,990 billed yearly.", kind: "fixed", amountUsd: 299, unit: "/ month", approved: true },
+    { name: "Scale", description: "For larger cap tables.", kind: "fixed", amountUsd: 599, unit: "/ month", approved: true },
+    { name: "Enterprise", description: "Talk to our team.", kind: "custom", approved: true },
+  ] },
+  { id: "additional", title: "Additional Services", items: [
+    { name: "Investor Onboarding", description: "KYC/KYB, AML, sanctions, beneficial owner screening, W-9/W-8, investor records and inquiries. Add-on for non-SPV funds.", kind: "custom", approved: true },
+    { name: "Tax", description: "Federal and state partnership returns, K-1 and 1042-S coordination.", kind: "custom", approved: true },
+    { name: "White-label portal", description: "Your branding on the investor portal.", kind: "fixed", amountUsd: 100, unit: "/ month", approved: true },
+  ] },
 ];
 
 export function formatPrice(item: PricingItem): string {

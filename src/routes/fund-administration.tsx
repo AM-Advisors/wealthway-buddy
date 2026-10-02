@@ -1,4 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import adminImage from "@/assets/site-fund-admin.jpg";
+import { OfferingSection } from "@/components/marketing/offering-section";
 import { marketingHead } from "@/lib/marketing/seo";
 
 import { Button } from "@/components/ui/button";
@@ -24,8 +26,8 @@ const SERVICES = [
     body: "Commitments confirmed against the fund's minimum, investor funding coordinated and reconciled on receipt, and closings confirmed once the round is fully funded.",
   },
   {
-    title: "Cap Table Maintenance",
-    body: "Shares, share class and ownership percentage per investor, with per-investor fee overrides and a change log showing who edited what and when.",
+    title: "Capital Accounts & Statements",
+    body: "Each investor's contributions, allocations and balance tracked, with capital account statements included for every fund.",
   },
   {
     title: "Investor Reporting",
@@ -36,8 +38,8 @@ const SERVICES = [
     body: "Offering documents versioned, signed copies hashed and stored privately, and every file filed into your document vault with a timestamp.",
   },
   {
-    title: "Compliance Record",
-    body: "Identity, screening and accreditation decisions kept with the application, alongside acknowledgements of the wire instructions the investor actually saw.",
+    title: "Regulatory & Deadlines",
+    body: "Form D and Blue Sky filings prepared for review, state franchise fees and every deadline on one regulatory calendar.",
   },
   {
     title: "Oversight & Alerts",
@@ -63,6 +65,12 @@ function FundAdministrationPage() {
             </p>
           </div>
         </section>
+
+        <section className="mx-auto max-w-6xl px-4 pt-16">
+          <img src={adminImage} alt="A fund manager reviewing investor documents" width={1600} height={1000} loading="lazy" className="aspect-[16/7] w-full rounded-2xl object-cover" />
+        </section>
+
+        <OfferingSection />
 
         <section className="mx-auto max-w-6xl px-4 py-20">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
