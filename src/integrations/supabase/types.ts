@@ -18913,6 +18913,108 @@ export type Database = {
           },
         ]
       }
+      inbox_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          sender_side: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          sender_side: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          sender_side?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_read_markers: {
+        Row: {
+          read_at: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          read_at?: string
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          read_at?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_read_markers_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_threads: {
+        Row: {
+          channel: string
+          client_id: string
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string
+          rep_user_id: string | null
+          subject: string
+        }
+        Insert: {
+          channel: string
+          client_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string
+          rep_user_id?: string | null
+          subject: string
+        }
+        Update: {
+          channel?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string
+          rep_user_id?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_threads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       individual_tax_documents: {
         Row: {
           created_at: string
@@ -33702,6 +33804,7 @@ export type Database = {
           offering_id: string | null
           onboarding_id: string | null
           perspective: string
+          preview: boolean
           staff_user_id: string
           subject_user_id: string
         }
@@ -33715,6 +33818,7 @@ export type Database = {
           offering_id?: string | null
           onboarding_id?: string | null
           perspective: string
+          preview?: boolean
           staff_user_id: string
           subject_user_id: string
         }
@@ -33728,6 +33832,7 @@ export type Database = {
           offering_id?: string | null
           onboarding_id?: string | null
           perspective?: string
+          preview?: boolean
           staff_user_id?: string
           subject_user_id?: string
         }

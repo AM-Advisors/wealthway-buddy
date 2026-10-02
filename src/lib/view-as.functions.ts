@@ -18,6 +18,7 @@ export const startViewAsFn = createServerFn({ method: "POST" })
     subjectUserId: z.string().uuid(),
     offeringId: z.string().uuid(),
     onboardingId: z.string().uuid().nullable(),
+    preview: z.boolean().optional(),
   }).parse)
   .handler(async ({ data, context }) => (await va()).startViewAs(context.userId, sid(context.claims), data));
 

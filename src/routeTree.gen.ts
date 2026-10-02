@@ -41,6 +41,7 @@ import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFundDocumentsRouteImport } from './routes/_authenticated/fund-documents'
 import { Route as AuthenticatedFundMemoRouteImport } from './routes/_authenticated/fund-memo'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedInvestorDistributionsRouteImport } from './routes/_authenticated/investor-distributions'
 import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
 import { Route as AuthenticatedInvestorPerformanceRouteImport } from './routes/_authenticated/investor-performance'
@@ -495,6 +496,11 @@ const AuthenticatedFundMemoRoute = AuthenticatedFundMemoRouteImport.update({
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedInvestorDistributionsRoute =
@@ -2238,6 +2244,7 @@ export interface FileRoutesByFullPath {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/inbox': typeof AuthenticatedInboxRoute
   '/investor-distributions': typeof AuthenticatedInvestorDistributionsRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
@@ -2564,6 +2571,7 @@ export interface FileRoutesByTo {
   '/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/fund-memo': typeof AuthenticatedFundMemoRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/inbox': typeof AuthenticatedInboxRoute
   '/investor-distributions': typeof AuthenticatedInvestorDistributionsRoute
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
@@ -2889,6 +2897,7 @@ export interface FileRoutesById {
   '/_authenticated/fund-documents': typeof AuthenticatedFundDocumentsRoute
   '/_authenticated/fund-memo': typeof AuthenticatedFundMemoRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/inbox': typeof AuthenticatedInboxRoute
   '/_authenticated/investor-distributions': typeof AuthenticatedInvestorDistributionsRoute
   '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/_authenticated/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
@@ -3219,6 +3228,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/inbox'
     | '/investor-distributions'
     | '/investor-financials'
     | '/investor-performance'
@@ -3545,6 +3555,7 @@ export interface FileRouteTypes {
     | '/fund-documents'
     | '/fund-memo'
     | '/home'
+    | '/inbox'
     | '/investor-distributions'
     | '/investor-financials'
     | '/investor-performance'
@@ -3869,6 +3880,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fund-documents'
     | '/_authenticated/fund-memo'
     | '/_authenticated/home'
+    | '/_authenticated/inbox'
     | '/_authenticated/investor-distributions'
     | '/_authenticated/investor-financials'
     | '/_authenticated/investor-performance'
@@ -4444,6 +4456,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inbox': {
+      id: '/_authenticated/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AuthenticatedInboxRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/investor-distributions': {
@@ -6786,6 +6805,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFundDocumentsRoute: typeof AuthenticatedFundDocumentsRoute
   AuthenticatedFundMemoRoute: typeof AuthenticatedFundMemoRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
   AuthenticatedInvestorDistributionsRoute: typeof AuthenticatedInvestorDistributionsRoute
   AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
   AuthenticatedInvestorPerformanceRoute: typeof AuthenticatedInvestorPerformanceRoute
@@ -6992,6 +7012,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFundDocumentsRoute: AuthenticatedFundDocumentsRoute,
   AuthenticatedFundMemoRoute: AuthenticatedFundMemoRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedInboxRoute: AuthenticatedInboxRoute,
   AuthenticatedInvestorDistributionsRoute:
     AuthenticatedInvestorDistributionsRoute,
   AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,

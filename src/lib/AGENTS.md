@@ -54,3 +54,5 @@
 
 - Fund managers count as members of the client that owns any fund they manage: getClientPortal unions fund_managers clients into clientIds, and isClientMemberOfFund accepts a manager of any fund under the same client. Why: a manager who requests a fund must see it in "Funds we administer for you" and open it during setup, before any contact row exists.
 - Fund close requests (src/lib/fund-close-requests.functions.ts) are manager-submitted and staff-reviewed only; status changes never file, charge, close or move money, and history is append-only - why: closes need Harmonious review.
+- Client inbox (src/lib/inbox.server.ts) threads are server-only (no client RLS policies), channel operations|sales|rep; visibility re-derived each call (client members, Operations/Sales team, assigned rep, admins); messages append-only - why: route questions to the right Harmonious team without exposing other clients.
+- View As fund manager preview (view_as_sessions.preview) renders fundReadiness in the manager view for staff when no signed-in manager exists; it never borrows a client account - why: staff can see the manager screen before anyone signs in.

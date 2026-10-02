@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   Table,
   Users,
+  MessageSquare,
 } from "lucide-react";
+import { useInboxUnread } from "@/components/unified-inbox";
 
 import { Logo, LogoIcon } from "@/components/Logo";
 import { Input } from "@/components/ui/input";
@@ -66,6 +68,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed" && !isMobile;
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const inbox = useInboxUnread();
   const { session } = useClientWorkspace();
   const sections = getNavigation(session as never, "operations", pathname).operations;
   const salesOnly = !session?.operations;
@@ -164,6 +167,23 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarGroup>
             </div>
           ))
+        )}
+        {!results && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/inbox"} tooltip="Inbox">
+                    <Link to="/inbox" onClick={close} className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 truncate">Inbox</span>
+                      {!collapsed && !!inbox.data?.unread && <span className="rounded-full bg-sidebar-primary px-1.5 text-xs text-sidebar-primary-foreground">{inbox.data.unread}</span>}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
       </SidebarContent>
 

@@ -19,7 +19,13 @@ async function nameOf(userId: string) {
 }
 
 /** Canonical relationship check - fund_managers row or the investment's own investor. */
-async function relationshipHolds(p: { perspective: Perspective; subjectUserId: string; offeringId: string | null; onboardingId: string | null }) {
+async function relationshipHolds(p: { perspective: Perspective; subjectUserId: string; offeringId: string | null; onboardingId: string | null; preview?: boolean | undefined }) {
+  // Preview: fund manager screens rendered from the fund's own records; no client account involved.
+  if (p.preview) {
+    if (p.perspective !== "fund_manager" || !p.offeringId) return false;
+    const { data } = await db().from("offerings").select("id").eq("id", p.offeringId).maybeSingle();
+    return !!data;
+  }
   const subject = await onboardingActor(p.subjectUserId);
   if (!subjectAllowed(subject)) return false;
   if (p.perspective === "fund_manager") return !!p.offeringId && subject.managedOfferingIds.includes(p.offeringId);
@@ -32,7 +38,7 @@ async function relationshipHolds(p: { perspective: Perspective; subjectUserId: s
 export async function listPerspectives(staffUserId: string, input: { onboardingId?: string | null; offeringId?: string | null }) {
   await assertStaff(staffUserId);
   let offeringId = input.offeringId ?? null;
-  const out: { perspective: Perspective; subjectUserId: string; name: string; offeringId: string; onboardingId: string | null }[] = [];
+  const out: { perspective: Perspective; subjectUserId: string; name: string; offeringId: string; onboardingId: string | null; preview?: boolean }[] = [];
   if (input.onboardingId) {
     const { data } = await db().from("investor_onboardings").select("investor_user_id, offering_id").eq("id", input.onboardingId).maybeSingle();
     if (!data) deny("that investment was not found.");
@@ -46,12 +52,18 @@ export async function listPerspectives(staffUserId: string, input: { onboardingI
       const subject = await onboardingActor(m.user_id);
       if (subjectAllowed(subject)) out.push({ perspective: "fund_manager", subjectUserId: m.user_id, name: await nameOf(m.user_id), offeringId, onboardingId: null });
     }
+    const assigned = (data ?? []).length > 0;
+    if (!out.some((o) => o.perspective === "fund_manager")) {
+      out.push({ perspective: "fund_manager", subjectUserId: staffUserId, offeringId, onboardingId: null, preview: true,
+        name: assigned ? "Preview - fund manager has not signed in yet" : "Preview - no fund manager assigned" });
+    }
   }
   return out;
 }
 
-export async function startViewAs(staffUserId: string, authSessionId: string | null, p: { perspective: Perspective; subjectUserId: string; offeringId: string; onboardingId: string | null }) {
+export async function startViewAs(staffUserId: string, authSessionId: string | null, p: { perspective: Perspective; subjectUserId: string; offeringId: string; onboardingId: string | null; preview?: boolean | undefined }) {
   await assertStaff(staffUserId);
+  if (p.preview) p = { ...p, subjectUserId: staffUserId, onboardingId: null };
   if (!(await relationshipHolds(p))) {
     await recordAccessEvent({ actorUserId: staffUserId, actorIdentity: null, targetUserId: p.subjectUserId, action: "view_as.start", outcome: "denied", scopeType: "offering", scopeId: p.offeringId, reason: "no canonical relationship" });
     deny("that perspective does not exist.");
@@ -61,7 +73,7 @@ export async function startViewAs(staffUserId: string, authSessionId: string | n
   await db().from("view_as_sessions").update({ ended_at: new Date().toISOString(), end_reason: "switched" }).eq("staff_user_id", staffUserId).is("ended_at", null);
   const { data, error } = await db().from("view_as_sessions").insert({
     staff_user_id: staffUserId, auth_session_id: authSessionId, perspective: p.perspective, subject_user_id: p.subjectUserId,
-    offering_id: p.offeringId, onboarding_id: p.onboardingId,
+    offering_id: p.offeringId, onboarding_id: p.onboardingId, preview: !!p.preview,
     expires_at: new Date(Date.now() + VIEW_AS_MINUTES * 60000).toISOString(),
   }).select("id").single();
   if (error) deny("could not start.");
@@ -83,7 +95,7 @@ export async function resolvePerspective(staffUserId: string, authSessionId: str
   if (!actor.isStaff) return null;
   const { data: row } = await db().from("view_as_sessions").select("*").eq("staff_user_id", staffUserId).is("ended_at", null).maybeSingle();
   if (!row || !sessionIsLive(row, staffUserId, authSessionId)) return null;
-  const p = { perspective: row.perspective as Perspective, subjectUserId: row.subject_user_id, offeringId: row.offering_id, onboardingId: row.onboarding_id };
+  const p = { perspective: row.perspective as Perspective, subjectUserId: row.subject_user_id, offeringId: row.offering_id, onboardingId: row.onboarding_id, preview: !!row.preview };
   if (!(await relationshipHolds(p))) return null;
   return { ...p, sessionId: row.id as string };
 }
@@ -94,7 +106,7 @@ export async function activeViewAs(staffUserId: string, authSessionId: string | 
   if (!p) return null;
   const [{ data: off }, name, onb] = await Promise.all([
     db().from("offerings").select("name").eq("id", p.offeringId).maybeSingle(),
-    nameOf(p.subjectUserId),
+    p.preview ? Promise.resolve("Fund manager preview") : nameOf(p.subjectUserId),
     p.onboardingId ? db().from("investor_onboardings").select("requested_amount_cents").eq("id", p.onboardingId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   return {
@@ -122,7 +134,7 @@ export async function viewAsInvestment(staffUserId: string, authSessionId: strin
 export async function viewAsFund(staffUserId: string, authSessionId: string | null) {
   const p = await resolvePerspective(staffUserId, authSessionId);
   if (!p || p.perspective !== "fund_manager") deny("no active fund manager view.");
-  return fundReadiness(p!.subjectUserId, p!.offeringId);
+  return p!.preview ? fundReadiness(staffUserId, p!.offeringId, "manager") : fundReadiness(p!.subjectUserId, p!.offeringId);
 }
 
 /**
