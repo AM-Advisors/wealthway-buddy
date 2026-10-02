@@ -12,7 +12,7 @@ import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
 const usd = (c: number) => `$${(c / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-type Target = Parameters<typeof quoteFundPayment>[0]["data"];
+type Target = { kind: "new_fund_request"; clientId: string; request: Record<string, any> } | { kind: "service_request"; clientId?: string; answers: Record<string, string>; serviceKeys: string[]; offeringId?: string | null };
 
 /** Shows what is due, takes the card payment, and calls onPaid once the payment is confirmed. */
 export function useFundPayment(target: Target | null) {
