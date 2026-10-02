@@ -82,7 +82,7 @@ export function InvestorFundStatusPanel({ offeringId }: { offeringId: string }) 
         </div>
         {status.unreadFromTeam > 0 && status.applicationId ? (
           <Button asChild size="sm" variant="outline">
-            <Link to="/manager/messages">
+            <Link to="." search={{ tab: "messages" }}>
               <MessageCircle className="mr-1 h-4 w-4" />
               {status.unreadFromTeam} new from the fund team
             </Link>
