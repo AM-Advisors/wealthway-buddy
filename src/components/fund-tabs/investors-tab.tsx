@@ -18,6 +18,8 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
   const [invite, setInvite] = useState(false);
   const rows = q.data ?? [];
   return (
+    <div className="space-y-6">
+    <FundOnboardingLinkCard fundId={fundId} />
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
         <div>
