@@ -16,13 +16,13 @@ import { CAP_TABLE_TIERS, type BillingInterval, type CapTierKey, fmtUsd, tierPri
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/client/add-cap-table")({
-  validateSearch: (s: Record<string, unknown>): { sub?: string } => ({ sub: typeof s.sub === "string" ? s.sub : undefined }),
+  validateSearch: (s: Record<string, unknown>): { sub?: string | undefined } => ({ sub: typeof s["sub"] === "string" ? s["sub"] : undefined }),
   head: () => ({ meta: [{ title: "Add a cap table | Harmonious" }, { name: "description", content: "Choose a cap table plan, set up auto pay and start building." }] }),
   component: AddCapTablePage,
 });
 
 function TestBanner() {
-  const t = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
+  const t = import.meta.env['VITE_PAYMENTS_CLIENT_TOKEN'] as string | undefined;
   if (t && !t.startsWith("pk_test_")) return null;
   return (
     <div className="rounded-md border border-accent bg-accent/10 px-4 py-2 text-sm">
