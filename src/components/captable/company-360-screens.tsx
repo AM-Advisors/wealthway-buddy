@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { fmtDate, fmtMoney, fmtNumber, fmtPercent, useCapTable } from "./captable-context";
 import { CapTableEmpty, CapTableSection } from "./captable-states";
+import { ClientContactsDirectory } from "./client-contacts-directory";
 
 function useOwnership(asOf?: string) {
   const { workspace } = useCapTable();
@@ -37,7 +38,29 @@ const STATUS_LABEL: Record<string, string> = { draft: "Draft", review: "Review",
 
 /* ------------------------------------------------------------ Stakeholders */
 export function StakeholdersScreen() {
-  return <CapTableSection><StakeholdersInner /></CapTableSection>;
+  return (
+    <Tabs defaultValue="contacts" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="contacts">All contacts</TabsTrigger>
+        <TabsTrigger value="ownership">Ownership</TabsTrigger>
+      </TabsList>
+      <TabsContent value="contacts"><ContactsWithOwnership /></TabsContent>
+      <TabsContent value="ownership"><CapTableSection><StakeholdersInner /></CapTableSection></TabsContent>
+    </Tabs>
+  );
+}
+function ContactsWithOwnership() {
+  const data = useOwnership();
+  const { workspace } = useCapTable();
+  const byEmail = useMemo(() => {
+    const out: Record<string, { securities: number; pctFullyDiluted: number }> = {};
+    for (const s of workspace?.stakeholders ?? []) {
+      const r = data?.view.rows.find((x) => x.id === s.id);
+      if (s.email && r) out[s.email.toLowerCase()] = { securities: Number(r.securities) || 0, pctFullyDiluted: Number(r.pctFullyDiluted) || 0 };
+    }
+    return out;
+  }, [data, workspace]);
+  return <ClientContactsDirectory ownershipByEmail={byEmail} />;
 }
 function StakeholdersInner() {
   const { workspace } = useCapTable();
