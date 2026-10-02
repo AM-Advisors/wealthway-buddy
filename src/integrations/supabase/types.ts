@@ -2792,6 +2792,161 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_statement_lines: {
+        Row: {
+          amount_cents: number
+          applied_tx_id: string | null
+          confirmed_category: string | null
+          created_at: string
+          description: string
+          direction: string
+          duplicate_of: string | null
+          id: string
+          line_no: number
+          matched_onboarding_id: string | null
+          offering_id: string
+          posted_on: string
+          skip: boolean
+          suggested_category: string | null
+          upload_id: string
+        }
+        Insert: {
+          amount_cents: number
+          applied_tx_id?: string | null
+          confirmed_category?: string | null
+          created_at?: string
+          description: string
+          direction: string
+          duplicate_of?: string | null
+          id?: string
+          line_no: number
+          matched_onboarding_id?: string | null
+          offering_id: string
+          posted_on: string
+          skip?: boolean
+          suggested_category?: string | null
+          upload_id: string
+        }
+        Update: {
+          amount_cents?: number
+          applied_tx_id?: string | null
+          confirmed_category?: string | null
+          created_at?: string
+          description?: string
+          direction?: string
+          duplicate_of?: string | null
+          id?: string
+          line_no?: number
+          matched_onboarding_id?: string | null
+          offering_id?: string
+          posted_on?: string
+          skip?: boolean
+          suggested_category?: string | null
+          upload_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_statement_lines_applied_tx_id_fkey"
+            columns: ["applied_tx_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_lines_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_lines_matched_onboarding_id_fkey"
+            columns: ["matched_onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_lines_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_statement_lines_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statement_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_statement_uploads: {
+        Row: {
+          account_mask: string | null
+          applied_at: string | null
+          applied_by: string | null
+          bank_name: string | null
+          closing_balance_cents: number | null
+          created_at: string
+          file_name: string
+          id: string
+          offering_id: string
+          opening_balance_cents: number | null
+          parse_error: string | null
+          period_end: string | null
+          period_start: string | null
+          status: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          account_mask?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          bank_name?: string | null
+          closing_balance_cents?: number | null
+          created_at?: string
+          file_name: string
+          id?: string
+          offering_id: string
+          opening_balance_cents?: number | null
+          parse_error?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          account_mask?: string | null
+          applied_at?: string | null
+          applied_by?: string | null
+          bank_name?: string | null
+          closing_balance_cents?: number | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          offering_id?: string
+          opening_balance_cents?: number | null
+          parse_error?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_statement_uploads_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_transactions: {
         Row: {
           amount_cents: number
