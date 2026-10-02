@@ -21,6 +21,7 @@ import { getFundTabsData, listFundCloseRequests } from "@/lib/fund-close-request
 import { TodosTab } from "@/components/fund-tabs/todos-tab";
 import { TeamTab } from "@/components/fund-tabs/team-tab";
 import { InvestorsTab } from "@/components/fund-tabs/investors-tab";
+import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
 import { BankingTab } from "@/components/fund-tabs/banking-tab";
 import { RequestCloseDialog } from "@/components/fund-tabs/request-close-dialog";
@@ -165,7 +166,7 @@ function ClientFundPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="investors"><InvestorsTab fundId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4"><InvestorsTab fundId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
         <TabsContent value="banking" className="space-y-5">
           {!!td?.banks.length && (

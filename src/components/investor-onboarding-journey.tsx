@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { FeeAcceptanceCard, OnboardingUploadsCard, useFeesAccepted } from "@/components/investor-onboarding-extras";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -157,6 +158,7 @@ export function InvestorOnboardingJourney({
       {current === "verify" ? <Verify d={d} onboardingId={onboardingId} /> : null}
       {current === "sign" ? <Sign d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {current === "fund" ? <Fund d={d} onboardingId={onboardingId} done={refresh} /> : null}
+      {current !== "fund" ? <OnboardingUploadsCard onboardingId={onboardingId} /> : null}
     </div>
   );
 }
@@ -300,6 +302,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const docs: any[] = d.documents ?? [];
   const questionnaireDone = (d.requirements ?? []).find((r: any) => r.key === "subscription_questionnaire")?.state !== "missing";
   const signed = (d.requirements ?? []).find((r: any) => r.key === "signature")?.state === "valid";
+  const fees = useFeesAccepted(onboardingId);
 
   return (
     <Card>
@@ -321,6 +324,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
           </div>
         ) : null}
 
+        <FeeAcceptanceCard onboardingId={onboardingId} />
+
         <ul className="space-y-2">
           {docs.map((doc) => (
             <li key={doc.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
@@ -331,7 +336,9 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
           {docs.length === 0 ? <li className="text-sm text-muted-foreground">Your documents are being prepared.</li> : null}
         </ul>
 
-        {!signed ? (
+        {!signed && !fees.ok ? (
+          <p className="text-sm text-muted-foreground">Accept the fund's fees above to review and sign your documents.</p>
+        ) : !signed ? (
           <Button
             asChild
             onClick={() => {

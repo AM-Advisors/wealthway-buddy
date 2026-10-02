@@ -16470,6 +16470,47 @@ export type Database = {
         }
         Relationships: []
       }
+      fund_investor_updates: {
+        Row: {
+          body: string
+          id: string
+          offering_id: string
+          posted_at: string
+          posted_by: string
+          removed_at: string | null
+          removed_by: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          id?: string
+          offering_id: string
+          posted_at?: string
+          posted_by: string
+          removed_at?: string | null
+          removed_by?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          id?: string
+          offering_id?: string
+          posted_at?: string
+          posted_by?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_investor_updates_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_invitations: {
         Row: {
           accepted_at: string | null
@@ -20453,7 +20494,7 @@ export type Database = {
       }
       investor_documents: {
         Row: {
-          application_id: string
+          application_id: string | null
           box_error: string | null
           box_file_id: string | null
           box_folder_id: string | null
@@ -20463,6 +20504,7 @@ export type Database = {
           id: string
           note: string | null
           offering_id: string
+          onboarding_id: string | null
           review_note: string | null
           review_status: string
           reviewed_at: string | null
@@ -20472,7 +20514,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          application_id: string
+          application_id?: string | null
           box_error?: string | null
           box_file_id?: string | null
           box_folder_id?: string | null
@@ -20482,6 +20524,7 @@ export type Database = {
           id?: string
           note?: string | null
           offering_id: string
+          onboarding_id?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
@@ -20491,7 +20534,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          application_id?: string
+          application_id?: string | null
           box_error?: string | null
           box_file_id?: string | null
           box_folder_id?: string | null
@@ -20501,6 +20544,7 @@ export type Database = {
           id?: string
           note?: string | null
           offering_id?: string
+          onboarding_id?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
@@ -20522,6 +20566,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_documents_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
             referencedColumns: ["id"]
           },
         ]
@@ -20650,6 +20701,61 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_fee_acceptances: {
+        Row: {
+          accepted_at: string
+          accepted_by: string
+          accepted_name: string
+          fee_terms_id: string
+          id: string
+          offering_id: string
+          onboarding_id: string
+          terms: Json
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_by: string
+          accepted_name: string
+          fee_terms_id: string
+          id?: string
+          offering_id: string
+          onboarding_id: string
+          terms: Json
+        }
+        Update: {
+          accepted_at?: string
+          accepted_by?: string
+          accepted_name?: string
+          fee_terms_id?: string
+          id?: string
+          offering_id?: string
+          onboarding_id?: string
+          terms?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_fee_acceptances_fee_terms_id_fkey"
+            columns: ["fee_terms_id"]
+            isOneToOne: false
+            referencedRelation: "fund_fee_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_fee_acceptances_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_fee_acceptances_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
             referencedColumns: ["id"]
           },
         ]

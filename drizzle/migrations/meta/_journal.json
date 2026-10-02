@@ -841,6 +841,13 @@
       "when": 1790956482142,
       "tag": "0119_mercury_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1790964129525,
+      "tag": "0120_investor_onboarding_uploads_fees_updates",
+      "breakpoints": true
     }
   ]
 }
