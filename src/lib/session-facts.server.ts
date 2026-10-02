@@ -120,7 +120,7 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
     await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle(),
-      supabase.from("fund_managers").select("offering_id").eq("user_id", userId),
+      supabase.from("fund_managers").select("offering_id, offerings(client_id)").eq("user_id", userId),
       supabase.from("investment_profiles").select("id").eq("owner_user_id", userId),
       supabase.from("investor_positions").select("id").eq("investor_user_id", userId),
       supabase.from("client_users").select("client_id").eq("user_id", userId),
@@ -151,6 +151,20 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
   const investorPositionIds = rows(positions).map((r) => String(r.id));
   facts.investmentCount = investorPositionIds.length;
   facts.clientIds = rows(clientMemberships).map((r) => String(r.client_id));
+  // A fund manager belongs to every client whose funds they manage, even
+  // before a client contact row exists. Each client becomes its own workspace.
+  const managedClientIds = rows(managed)
+    .map((r) => String(r.offerings?.client_id ?? ""))
+    .filter((id) => id && id !== "null");
+  const accountIds = [...new Set([...facts.clientIds, ...managedClientIds])];
+  if (accountIds.length > 0) {
+    const { data: names } = await supabase.from("clients").select("id, name").in("id", accountIds);
+    const nameById = new Map(((names ?? []) as any[]).map((c) => [String(c.id), String(c.name ?? "Client account")]));
+    facts.clientIds = accountIds.filter((id) => nameById.has(id));
+    facts.clientAccounts = facts.clientIds
+      .map((id) => ({ id, name: nameById.get(id)! }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
   facts.companyIds = rows(capAccess)
     .filter((r) => !r.revoked_at)
     .map((r) => String(r.client_id));

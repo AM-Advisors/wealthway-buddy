@@ -26,6 +26,8 @@ export type RelationshipFacts = {
   investmentCount: number;
   /** Client organisations this person belongs to as a staff member of the client. */
   clientIds: string[];
+  /** Names for clientIds, alphabetical. Each becomes a separate workspace. */
+  clientAccounts?: { id: string; name: string }[];
   /** Companies whose cap table this person administers. */
   companyIds: string[];
   /** Active, accepted professional delegations naming this person. */
@@ -86,7 +88,18 @@ export function availableWorkspaces(facts: RelationshipFacts): Workspace[] {
     });
   }
 
-  if (facts.clientIds.length > 0 || facts.companyIds.length > 0) {
+  const accounts = facts.clientAccounts ?? [];
+  if (accounts.length > 1) {
+    for (const account of accounts) {
+      list.push({
+        kind: "company",
+        id: `client:${account.id}`,
+        label: account.name,
+        path: "/client/home",
+        surface: "client",
+      });
+    }
+  } else if (facts.clientIds.length > 0 || facts.companyIds.length > 0) {
     list.push({
       kind: "company",
       id: "company",
@@ -203,7 +216,10 @@ export function resolveDestination(
 
 /** Whether a requested workspace may be entered. Used on every workspace switch. */
 export function canEnterWorkspace(facts: RelationshipFacts, workspaceId: string): boolean {
-  return availableWorkspaces(facts).some((w) => w.id === workspaceId);
+  const list = availableWorkspaces(facts);
+  // Legacy single "company" id still enters the first client account.
+  if (workspaceId === "company") return list.some((w) => w.kind === "company");
+  return list.some((w) => w.id === workspaceId);
 }
 
 /** Progress for the "Complete your setup" card on the client home page. */

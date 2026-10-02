@@ -194,3 +194,15 @@ describe("setup progress", () => {
     expect(setupProgress([], []).next).toBeNull();
   });
 });
+
+import { availableWorkspaces as aw, canEnterWorkspace as ce } from "@/lib/session-resolution";
+describe("multiple client accounts", () => {
+  const base: any = { staff: { active: false, roles: [] }, managedFundIds: ["f"], investmentProfileIds: [], investmentCount: 0, clientIds: ["a", "b"], companyIds: [], activeDelegationIds: [], pendingInvitationCount: 0, outstandingRequirements: [], clientAccounts: [{ id: "a", name: "Acme" }, { id: "b", name: "Birch" }] };
+  it("lists one workspace per client and only lets members enter", () => {
+    const ids = aw(base).map((w) => w.id);
+    expect(ids).toContain("client:a");
+    expect(ids).toContain("client:b");
+    expect(ce(base, "client:c")).toBe(false);
+    expect(ce(base, "company")).toBe(true);
+  });
+});

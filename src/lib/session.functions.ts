@@ -67,7 +67,7 @@ export const enterWorkspace = createServerFn({ method: "POST" })
     if (!canEnterWorkspace(facts, data.workspaceId)) {
       throw new Error("You don't have access to that workspace.");
     }
-    const workspace = availableWorkspaces(facts).find((w) => w.id === data.workspaceId)!;
+    const workspace = availableWorkspaces(facts).find((w) => w.id === data.workspaceId || (data.workspaceId === "company" && w.kind === "company"))!;
     // The client must drop anything remembered from the previous workspace.
     return {
       path: workspace.path,
