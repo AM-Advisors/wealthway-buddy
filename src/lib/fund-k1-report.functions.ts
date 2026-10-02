@@ -53,7 +53,7 @@ export const submitK1FiguresFn = createServerFn({ method: "POST" }).middleware([
       inputs: { ...data.totals, taxYear: data.taxYear, notes: data.notes }, computed, payment_id: paymentId, submitted_by: context.userId,
     }).select("id").single();
     if (error) throw new Error("Couldn't save the K-1 report.");
-    if (paymentId) await d.from("fund_payments").update({ used_for: row.id, used_at: new Date().toISOString() }).eq("id", paymentId);
+    if (paymentId) { const pay = await import("@/lib/fund-payments.server"); await pay.markPaymentUsed(d, paymentId, `fund_report:${row.id}`, context.userId); }
     return { ok: true };
   });
 
