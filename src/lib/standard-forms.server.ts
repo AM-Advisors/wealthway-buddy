@@ -75,7 +75,7 @@ export async function generate(uid: string, fundId: string, key: StandardFormKey
   });
   const title = STANDARD_FORMS.find((f) => f.key === key)!.title;
   const { data, error } = await d.from("fund_files").insert({
-    offering_id: fundId, title: `${title} - ${values.legal_name || values.fund_name}`, category: "fund_document",
+    offering_id: fundId, title: `${title} - ${values["legal_name"] || values["fund_name"]}`, category: "fund_document",
     template_key: `standard:${key}`, standard_form_id: (form as any).id, body, uploaded_by: uid,
   }).select("id").single();
   if (error) throw new Error("Couldn't save the document.");
