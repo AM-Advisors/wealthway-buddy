@@ -126,3 +126,21 @@ export const recordCloseFiling = createServerFn({ method: "POST" })
     await db.from("fund_close_request_events").insert({ close_request_id: f.close_request_id, actor_id: context.userId, from_status: "approved", to_status: "approved", note: `${label} recorded as ${data.outcome === "filed" ? "filed" : "not required"}.` });
     return { ok: true };
   });
+
+export const getFilingForm = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await staffDb(context.userId);
+    const { data: filing } = await db.from("fund_close_filings").select("*").eq("id", data.id).maybeSingle();
+    if (!filing) throw new Error("Filing not found.");
+    const [{ data: offering }, { data: team }, { data: req }] = await Promise.all([
+      db.from("offerings").select("*").eq("id", filing.offering_id).maybeSingle(),
+      db.from("fund_team_members").select("full_name, team_role").eq("offering_id", filing.offering_id).in("team_role", ["gp", "manager"]).is("removed_at", null),
+      db.from("fund_close_requests").select("target_date, created_at").eq("id", filing.close_request_id).maybeSingle(),
+    ]);
+    const related = ((team ?? []) as any[]).map((t) => ({ name: t.full_name, role: t.team_role === "gp" ? "Promoter (General Partner / Manager)" : "Executive Officer" }));
+    if (!related.length && offering?.gp_entity_name) related.push({ name: offering.gp_entity_name, role: "Promoter (General Partner / Manager)" });
+    const { buildFilingForm } = await import("@/lib/filing-forms");
+    return buildFilingForm({ filing, offering, related, firstSaleDate: req?.target_date ?? null });
+  });
