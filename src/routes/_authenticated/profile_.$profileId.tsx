@@ -92,17 +92,17 @@ function ProfileDetailPage() {
 function BasicsCard({ data, onSaved }: { data: any; onSaved: () => void }) {
   const p = data.profile;
   const save = useServerFn(saveProfileBasicsFn);
-  const [f, setF] = useState<Record<string, string>>({});
+  const [f, setF] = useState<any>({});
   useEffect(() => {
     setF({
       legal_name: p.legal_name ?? "", phone: p.phone ?? "", address_line1: p.address_line1 ?? "", address_line2: p.address_line2 ?? "",
       city: p.city ?? "", region: p.region ?? "", postal_code: p.postal_code ?? "", country: p.country ?? "United States", tax_id: "",
     });
   }, [p.id]);
-  const set = (k: string) => (v: string) => setF((x) => ({ ...x, [k]: v }));
+  const set = (k: string) => (v: string) => setF((x: any) => ({ ...x, [k]: v }));
   const m = useMutation({
     mutationFn: () => save({ data: { profileId: p.id, ...f, tax_id_type: data.isEntity ? "ein" : undefined } }),
-    onSuccess: () => { toast.success("Saved."); setF((x) => ({ ...x, tax_id: "" })); onSaved(); },
+    onSuccess: () => { toast.success("Saved."); setF((x: any) => ({ ...x, tax_id: "" })); onSaved(); },
     onError: (e: any) => toast.error(e?.message ?? "Couldn't save."),
   });
   const taxLabel = data.isEntity ? "EIN" : "SSN or ITIN";
@@ -192,12 +192,12 @@ function FormationCard({ data, onSaved }: { data: any; onSaved: () => void }) {
   const fm = data.formation ?? {};
   const save = useServerFn(saveProfileFormationFn);
   const isTrust = data.profile.profile_type === "trust";
-  const [f, setF] = useState<Record<string, string>>({});
+  const [f, setF] = useState<any>({});
   useEffect(() => {
     setF({ legal_name: fm.legal_name ?? data.profile.legal_name ?? "", entity_type: fm.entity_type ?? "", formation_jurisdiction: fm.formation_jurisdiction ?? "",
       formation_date: fm.formation_date ?? "", trust_type: fm.trust_type ?? "", trust_date: fm.trust_date ?? "" });
   }, [data.profile.id]);
-  const set = (k: string) => (v: string) => setF((x) => ({ ...x, [k]: v }));
+  const set = (k: string) => (v: string) => setF((x: any) => ({ ...x, [k]: v }));
   const locked = fm.kyb_status === "approved";
   const m = useMutation({
     mutationFn: () => save({ data: { profileId: data.profile.id, legal_name: f.legal_name ?? "", ...f } }),
