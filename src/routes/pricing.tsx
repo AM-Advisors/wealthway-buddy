@@ -60,8 +60,6 @@ function PricingPage() {
         </div>
       </main>
       <OfferingSection />
-      <main className="mx-auto max-w-6xl px-4">
-      </main>
       <SiteFooter />
     </div>
   );
