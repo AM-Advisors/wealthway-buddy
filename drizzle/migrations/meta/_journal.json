@@ -876,6 +876,13 @@
       "when": 1790972739056,
       "tag": "0124_k1_investor_acknowledgment",
       "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1790976208398,
+      "tag": "0125_investor_reminders",
+      "breakpoints": true
     }
   ]
 }

@@ -23,13 +23,25 @@ async function relationshipFundIds(context: any) {
 
 export const getMyFunds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}))
+  .handler(async ({ data, context }) => {
     const facts = await relationshipFundIds(context);
     const all = [...new Set([...facts.managedFundIds, ...facts.investorFundIds])];
     if (!all.length) return { funds: [] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const { data: funds } = await db.from("offerings").select("id, name, fund_type, entity_type, is_open, client_id").in("id", all);
+    const { data: allFunds } = await db.from("offerings").select("id, name, fund_type, entity_type, is_open, client_id").in("id", all);
+    // The chosen client account filters managed funds only; it is honoured only
+    // when the caller really manages a fund there (or is a member of it).
+    let funds = allFunds as any[] | null;
+    if (data.clientId) {
+      const { data: member } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId).eq("client_id", data.clientId).maybeSingle();
+      const managesThere = ((allFunds ?? []) as any[]).some((f) => f.client_id === data.clientId && facts.managedFundIds.includes(f.id));
+      if (member || managesThere) {
+        funds = ((allFunds ?? []) as any[]).filter((f) => !facts.managedFundIds.includes(f.id) || f.client_id === data.clientId);
+        facts.managedFundIds = facts.managedFundIds.filter((id) => (funds ?? []).some((f) => f.id === id));
+      }
+    }
     const clientIds = [...new Set(((funds ?? []) as any[]).filter((f) => facts.managedFundIds.includes(f.id)).map((f) => f.client_id).filter(Boolean))];
     const { data: clients } = clientIds.length ? await db.from("clients").select("id, name").in("id", clientIds) : { data: [] };
     const cname = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name]));

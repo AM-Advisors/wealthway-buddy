@@ -161,7 +161,12 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
     options,
     activeId: resolvedActive?.id ?? null,
     activeKind: (resolvedActive?.kind as WorkspaceKind | undefined) ?? null,
-    activeClientId: resolvedActive?.id?.startsWith("client:") ? resolvedActive.id.slice(7) : null,
+    // The last client account chosen stays in force on shared pages (My Funds).
+    activeClientId: resolvedActive?.id?.startsWith("client:")
+      ? resolvedActive.id.slice(7)
+      : activeId?.startsWith("client:") && options.some((o) => o.id === activeId)
+        ? activeId.slice(7)
+        : null,
     switchTo,
     clearWorkspace,
   };

@@ -282,3 +282,53 @@ export async function voidEntry(uid: string, fundId: string, id: string, reason:
   await d.from("fund_ledger_entries").update({ voided_at: new Date().toISOString(), voided_by: uid, void_reason: reason }).eq("id", id);
   return { ok: true };
 }
+
+/* ---------------- Investor reminders ---------------- */
+
+const STEP_COPY: Record<string, string> = {
+  verification: "Your identity verification is still open. Please sign in and finish the verification step so your investment can move forward.",
+  sign: "Your fund documents are ready and waiting for your signature. Please sign in to review and sign them.",
+  fund: "Your documents are signed. Please sign in to view your funding instructions and send your investment when ready.",
+};
+
+/** Last reminder per onboarding for this fund. */
+export async function lastReminders(fundId: string): Promise<Record<string, string>> {
+  const { data } = await (await db()).from("investor_reminders").select("onboarding_id, created_at").eq("offering_id", fundId).order("created_at", { ascending: false }).limit(2000);
+  const out: Record<string, string> = {};
+  for (const r of (data ?? []) as any[]) if (!out[r.onboarding_id]) out[r.onboarding_id] = r.created_at;
+  return out;
+}
+
+/**
+ * Sends a reminder email to investors stuck on Verification, Sign or Fund.
+ * At most once per investor per cooldown; logs every send; never changes status.
+ */
+export async function sendReminders(uid: string, fundId: string, onboardingIds: string[]) {
+  const { reminderAllowed, reminderStep } = await import("@/lib/fund-health");
+  const d = await db();
+  const grid = await investorGrid(fundId);
+  const last = await lastReminders(fundId);
+  const { data: fundRow } = await d.from("offerings").select("name").eq("id", fundId).maybeSingle();
+  const { appUrl } = await import("@/lib/app-origins");
+  const link = appUrl("client", "/home", process.env as any);
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  const results: { id: string; outcome: "sent" | "skipped" | "failed"; reason?: string }[] = [];
+  for (const id of onboardingIds) {
+    const r = grid.find((g) => g.id === id);
+    if (!r) { results.push({ id, outcome: "skipped", reason: "Not an investor in this fund" }); continue; }
+    const step = reminderStep(r.stage, r.docs, r.wiring);
+    if (!step) { results.push({ id, outcome: "skipped", reason: "Nothing outstanding" }); continue; }
+    if (!r.email) { results.push({ id, outcome: "skipped", reason: "No email on file" }); continue; }
+    if (!reminderAllowed(last[id] ?? null)) { results.push({ id, outcome: "skipped", reason: "Reminded in the last 3 days" }); continue; }
+    let delivery = "sent"; let note: string | null = null;
+    try {
+      await sendTemplateEmail("investor-message", r.email, {
+        idempotencyKey: `reminder-${id}-${new Date().toISOString().slice(0, 10)}`,
+        templateData: { investorName: r.name, offeringName: fundRow?.name ?? "Your fund", subject: `Reminder: next step for ${fundRow?.name ?? "your investment"}`, body: `${STEP_COPY[step]}\n\nSign in: ${link}` },
+      });
+    } catch (e) { delivery = "failed"; note = (e as Error).message.slice(0, 300); }
+    await d.from("investor_reminders").insert({ offering_id: fundId, onboarding_id: id, step, sent_by: uid, recipient_email: r.email, delivery, delivery_note: note });
+    results.push({ id, outcome: delivery === "sent" ? "sent" : "failed", reason: note ?? undefined });
+  }
+  return results;
+}

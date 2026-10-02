@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { filterMyFunds, MY_FUNDS_FILTERS, type MyFundsFilter } from "@/lib/client-portal-model";
 import { getMyFunds } from "@/lib/my-funds.functions";
+import { useClientWorkspace } from "@/components/client-workspace";
 
 export const Route = createFileRoute("/_authenticated/my-funds/")({
   head: () => ({
@@ -25,7 +26,8 @@ export const Route = createFileRoute("/_authenticated/my-funds/")({
 
 function MyFundsPage() {
   const load = useServerFn(getMyFunds);
-  const q = useQuery({ queryKey: ["my-funds"], queryFn: () => load() });
+  const { activeClientId } = useClientWorkspace();
+  const q = useQuery({ queryKey: ["my-funds", activeClientId], queryFn: () => load({ data: { clientId: activeClientId } }) });
   const [filter, setFilter] = useState<MyFundsFilter>("all");
   const funds = q.data?.funds ?? [];
   const shown = filterMyFunds(funds, filter);
