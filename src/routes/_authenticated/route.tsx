@@ -1,5 +1,6 @@
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 
 import { OpsSidebar } from "@/components/ops-sidebar";
 
@@ -89,7 +90,7 @@ function Menu({ onSignOut }: { onSignOut: () => void }) {
  * Operations pages are Harmonious-only. Server functions already refuse
  * non-staff, but non-staff must not see the Operations page shell either.
  */
-function OpsAreaGate({ children }: { children: React.ReactNode }) {
+function OpsAreaGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { activeId, session, loading } = useClientWorkspace();
   if (!(pathname === "/ops" || pathname.startsWith("/ops/"))) return <>{children}</>;
