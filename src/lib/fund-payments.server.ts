@@ -45,13 +45,21 @@ const sig = (items: PayItem[]) => items.map((i) => `${i.key}:${i.cents}`).sort()
  * Called inside the submit handlers: the payment must be paid, unused, for this client and kind,
  * and match exactly what is being submitted now. Marks it used (once).
  */
-export async function consumePayment(db: any, args: { paymentId: string | null | undefined; clientId: string; kind: string; expected: PayItem[]; usedFor: string | null; actorId: string }) {
+export async function verifyPayment(db: any, args: { paymentId: string | null | undefined; clientId: string; kind: string; expected: PayItem[]; usedFor: string | null; actorId: string }) {
   if (totalOf(args.expected) === 0) return null;
   if (!args.paymentId) throw new Error("Payment is required before this can be sent to Harmonious.");
   const { data: p } = await db.from("fund_payments").select("*").eq("id", args.paymentId).maybeSingle();
   if (!p || p.client_id !== args.clientId || p.kind !== args.kind) throw new Error("Payment not found.");
   if (p.status !== "paid") throw new Error(p.status === "used" ? "This payment was already used." : "Payment hasn't been confirmed yet.");
   if (sig(p.items) !== sig(args.expected)) throw new Error("Your selected add-ons changed after payment. Please contact Harmonious.");
+  return p.id as string;
+}
+
+/** Marks a verified payment used once the submission has been created. */
+export async function markPaymentUsed(db: any, paymentId: string | null, usedFor: string | null, actorId: string) {
+  if (!paymentId) return;
+  const p = { id: paymentId };
+  const args = { usedFor, actorId };
   const { data: upd } = await db.from("fund_payments").update({ status: "used", used_at: new Date().toISOString(), used_for: args.usedFor, updated_at: new Date().toISOString() })
     .eq("id", p.id).eq("status", "paid").select("id");
   if (!upd?.length) throw new Error("This payment was already used.");
