@@ -1,0 +1,1 @@
+CREATE POLICY "Fund managers read their client fund payments" ON public.fund_payments FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.fund_managers fm JOIN public.offerings o ON o.id = fm.offering_id WHERE fm.user_id = auth.uid() AND o.client_id = fund_payments.client_id));
