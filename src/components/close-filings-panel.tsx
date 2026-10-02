@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FilingFormDialog } from "@/components/filing-form-dialog";
 import { generateCloseFilings, listCloseFilings, recordCloseFiling } from "@/lib/close-filings.functions";
 
 const money = (c: number | null | undefined) =>
@@ -66,6 +67,7 @@ function FilingRow({ f, onDone }: { f: any; onDone: () => void }) {
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const title = f.filing_type === "form_d" ? `Form D${f.is_amendment ? " (amendment)" : ""}` : `${f.jurisdiction} state notice filing`;
 
   function download() {
@@ -109,7 +111,9 @@ function FilingRow({ f, onDone }: { f: any; onDone: () => void }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={f.status === "prepared" ? "outline" : "secondary"}>{statusLabel}</Badge>
-          <Button size="sm" variant="ghost" onClick={download}>Download packet</Button>
+          <Button size="sm" variant="outline" onClick={() => setFormOpen(true)}>Open filled form</Button>
+          <Button size="sm" variant="ghost" onClick={download}>Download data</Button>
+          <FilingFormDialog filingId={f.id} fileName={`${f.filing_type === "form_d" ? "form-d" : "state-notice"}-${f.jurisdiction}.pdf`} open={formOpen} onOpenChange={setFormOpen} />
           {f.status === "prepared" && (
             <Button size="sm" variant="outline" onClick={() => setOpen((o) => !o)}>Record</Button>
           )}
