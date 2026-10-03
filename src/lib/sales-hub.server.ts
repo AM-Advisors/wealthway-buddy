@@ -16,9 +16,16 @@ export async function salesActor(userId: string) {
   let visible: string[] | null = null; // null = everyone
   if (scope === "own") visible = [userId];
   if (scope === "team") {
-    const { data: lines } = await db.from("sales_reporting_lines").select("user_id").eq("manager_user_id", userId);
-    const reports = ((lines ?? []) as any[]).map((l) => l.user_id);
-    visible = reports.length ? [userId, ...reports] : null;
+    // Everyone below this manager in the reporting chain (recursive); never the whole team by default.
+    const { data: lines } = await db.from("sales_reporting_lines").select("user_id, manager_user_id");
+    const all = (lines ?? []) as any[];
+    const seen = new Set<string>([userId]);
+    const queue = [userId];
+    while (queue.length) {
+      const m = queue.shift()!;
+      for (const l of all) if (l.manager_user_id === m && !seen.has(l.user_id)) { seen.add(l.user_id); queue.push(l.user_id); }
+    }
+    visible = [...seen];
   }
   return { userId, roles, scope, visible };
 }
