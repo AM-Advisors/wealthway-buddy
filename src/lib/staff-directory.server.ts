@@ -15,6 +15,7 @@ export const TEAMS = {
   operations: { title: "Operations", roles: ["operations", "fund_administration"] },
   finance: { title: "Accounting & Finance", roles: ["finance", "tax", "fund_administration"] },
   compliance: { title: "Compliance", roles: ["compliance", "legal"] },
+  marketing: { title: "Marketing", roles: ["marketing_manager", "marketing_specialist"] },
   leadership: { title: "Leadership", roles: [] as string[] },
 } as const;
 export type TeamKey = keyof typeof TEAMS;
@@ -208,6 +209,7 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
 
   if (team === "operations") return { team, title: TEAMS[team].title, teamStats, ...(await ops()) };
   if (team === "finance") return { team, title: TEAMS[team].title, teamStats, ...(await finance()) };
+  if (team === "marketing") { const { marketingTeamStats } = await import("@/lib/marketing.server"); return { team, title: TEAMS[team].title, teamStats, ...(await marketingTeamStats()) }; }
   if (team === "compliance") return { team, title: TEAMS[team].title, teamStats, ...(await compliance()) };
   const [o, f, c] = await Promise.all([ops(), finance(), compliance()]);
   const byTeam: Record<string, number> = {};

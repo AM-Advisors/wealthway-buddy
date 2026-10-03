@@ -102,8 +102,8 @@ export function getNavigation(
     null;
   const activeKind = active?.kind ?? null;
   const staff = Boolean(session?.operations);
-  const commercialStaff = Boolean(session?.staffRoles?.some((role) => ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager"].includes(role)));
-  const salesPage = isUnder(pathname, "/sales") || isUnder(pathname, "/account-manager");
+  const commercialStaff = Boolean(session?.staffRoles?.some((role) => ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager", "marketing_manager", "marketing_specialist"].includes(role)));
+  const salesPage = isUnder(pathname, "/sales") || isUnder(pathname, "/account-manager") || isUnder(pathname, "/marketing");
   const operations = staff ? [OPS_HOME, ...opsNavigation(session?.operationsCapabilities ?? [])] : commercialStaff && salesPage
     ? [{ id: "sales-dashboard", title: "Sales dashboard", url: "/sales/dashboard", icon: "briefcase" }, { id: "sales", title: "Sales", url: "/sales", icon: "briefcase" }, { id: "sales-outreach", title: "Outreach", url: "/sales/outreach", icon: "people" }, { id: "sales-team", title: "Sales team", url: "/sales/team", icon: "people" }, { id: "sales-quotes", title: "Quotes", url: "/sales/quotes", icon: "briefcase" }, { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" }, { id: "account-manager", title: "Account management", url: "/account-manager", icon: "people" }] : [];
 

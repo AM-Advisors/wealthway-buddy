@@ -2,7 +2,7 @@
  * Harmonious leadership & commercial role hierarchy (pure).
  * Decides who may assign which managed role. Server re-checks every change.
  */
-export const MANAGED_ROLES = ["super_admin", "executive", "cro", "sales_management", "account_executive", "bdr", "sales", "account_manager"] as const;
+export const MANAGED_ROLES = ["super_admin", "executive", "cro", "sales_management", "account_executive", "bdr", "sales", "account_manager", "marketing_manager", "marketing_specialist"] as const;
 export type ManagedRole = (typeof MANAGED_ROLES)[number];
 
 export const MANAGED_ROLE_LABEL: Record<ManagedRole, string> = {
@@ -14,6 +14,8 @@ export const MANAGED_ROLE_LABEL: Record<ManagedRole, string> = {
   bdr: "BDR",
   sales: "Sales",
   account_manager: "Account Manager",
+  marketing_manager: "Marketing Manager",
+  marketing_specialist: "Marketing Specialist",
 };
 
 export const MANAGED_ROLE_SEES: Record<ManagedRole, string> = {
@@ -25,11 +27,13 @@ export const MANAGED_ROLE_SEES: Record<ManagedRole, string> = {
   bdr: "Their own contacts and outreach through Meeting set",
   sales: "Their own pipeline and contacts (commercial data only)",
   account_manager: "Their assigned clients: funds, tasks and health",
+  marketing_manager: "Marketing: create, approve and schedule posts and emails; channels",
+  marketing_specialist: "Marketing: create posts and emails and submit them for approval",
 };
 
 /** Higher number = more authority. */
 export const ROLE_RANK: Record<ManagedRole, number> = {
-  super_admin: 100, executive: 90, cro: 80, sales_management: 70, account_executive: 30, bdr: 20, sales: 10, account_manager: 10,
+  super_admin: 100, executive: 90, cro: 80, sales_management: 70, account_executive: 30, bdr: 20, sales: 10, account_manager: 10, marketing_manager: 40, marketing_specialist: 15,
 };
 
 /** Roles that need an Individual account classification. */

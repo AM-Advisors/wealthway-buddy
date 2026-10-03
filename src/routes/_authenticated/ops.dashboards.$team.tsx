@@ -5,7 +5,7 @@ import { Bars, Panel, Stat } from "@/components/sales/sales-ui";
 import { AmPage, money } from "@/components/account-management-ui";
 import { getTeamDashboard } from "@/lib/staff-directory.functions";
 
-const TEAMS = ["operations", "finance", "compliance", "leadership"] as const;
+const TEAMS = ["operations", "finance", "compliance", "marketing", "leadership"] as const;
 type Team = (typeof TEAMS)[number];
 
 export const Route = createFileRoute("/_authenticated/ops/dashboards/$team")({
