@@ -68,13 +68,13 @@ function AboutPage() {
       <SiteHeader />
 
       <main>
-        <section className="bg-brand-gradient text-primary-foreground">
+        <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
             <LogoIcon variant="teal" className="h-12 w-auto" />
             <h1 className="mt-8 max-w-3xl text-4xl leading-[1.1] sm:text-5xl">
               The administration partner behind private funds.
             </h1>
-            <p className="mt-6 max-w-3xl text-lg text-primary-foreground/75">
+            <p className="mt-6 max-w-3xl text-lg text-brand-white/80">
               Harmonious Capital Administration gives sponsors and fund managers a single, secure
               workspace for forming a vehicle, onboarding investors, moving money carefully and
               keeping records that stand up years later. Our mission is to use that platform to

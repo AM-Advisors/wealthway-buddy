@@ -36,7 +36,8 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
         <Link to="/" aria-label="Harmonious home" className="shrink-0">
-          <Logo variant="navy" className="h-7 w-auto" />
+          <span className="dark:hidden"><Logo variant="navy" className="h-7 w-auto" /></span>
+          <span className="hidden dark:block"><Logo variant="white" className="h-7 w-auto" /></span>
         </Link>
 
         <nav ref={navRef} className="hidden items-center gap-1 lg:flex" aria-label="Main">

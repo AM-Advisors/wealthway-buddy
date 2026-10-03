@@ -85,13 +85,13 @@ function CapTableLanding() {
 
       <main>
         {/* Hero */}
-        <section className="bg-brand-gradient text-primary-foreground">
+        <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto max-w-6xl px-4 py-20 lg:py-28">
-            <p className="text-xs uppercase tracking-[0.22em] text-accent">Harmonious CapTable</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-brand-teal">Harmonious CapTable</p>
             <h1 className="mt-6 max-w-3xl text-4xl leading-[1.1] sm:text-5xl lg:text-6xl">
               Know Exactly Who Owns Your Company
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-primary-foreground/75">
+            <p className="mt-6 max-w-2xl text-lg text-brand-white/80">
               Control how your private shares move. Verify ownership, document exposure and maintain
               the record - the ownership operating system for private companies, not simply a cap
               table.
@@ -106,13 +106,13 @@ function CapTableLanding() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                className="border-brand-white/40 bg-transparent text-brand-white hover:bg-brand-white/10 hover:text-brand-white"
                 onClick={() => ask("none")}
               >
                 Start fresh
               </Button>
             </div>
-            <p className="mt-6 text-sm text-primary-foreground/60">
+            <p className="mt-6 text-sm text-brand-white/80">
               Your history comes with you.
             </p>
           </div>

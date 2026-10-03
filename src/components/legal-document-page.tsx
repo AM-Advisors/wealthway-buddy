@@ -9,13 +9,13 @@ export function LegalDocumentPage({ doc }: { doc: LegalDocument }) {
       <SiteHeader />
 
       <main>
-        <section className="bg-brand-gradient text-primary-foreground">
+        <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto max-w-4xl px-4 py-14 sm:py-20">
             <h1 className="text-3xl leading-tight sm:text-4xl">{doc.title}</h1>
-            <p className="mt-4 text-sm text-primary-foreground/75">
+            <p className="mt-4 text-sm text-brand-white/80">
               Last updated {doc.updated}
             </p>
-            <p className="mt-6 max-w-2xl text-base text-primary-foreground/80">{doc.summary}</p>
+            <p className="mt-6 max-w-2xl text-base text-brand-white/85">{doc.summary}</p>
           </div>
         </section>
 

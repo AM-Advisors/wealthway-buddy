@@ -75,13 +75,13 @@ function PlatformPage() {
       <SiteHeader />
 
       <main>
-        <section className="bg-brand-gradient text-primary-foreground">
+        <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto max-w-6xl px-4 py-20">
-            <p className="text-xs uppercase tracking-[0.22em] text-accent">The platform</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-brand-teal">The platform</p>
             <h1 className="mt-6 max-w-3xl text-4xl leading-[1.1] sm:text-5xl">
               Everything Between The Term Sheet And The Final Close
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-primary-foreground/75">
+            <p className="mt-6 max-w-2xl text-lg text-brand-white/80">
               Harmonious replaces the spreadsheet, the shared drive and the signature chase with a
               single record that sponsors, managers and investors all work from.
             </p>

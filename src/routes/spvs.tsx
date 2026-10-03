@@ -45,15 +45,15 @@ function SpvPage() {
       <SiteHeader />
 
       <main>
-        <section className="bg-brand-gradient text-primary-foreground">
+        <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto max-w-6xl px-4 py-20">
-            <p className="text-xs uppercase tracking-[0.22em] text-accent">
+            <p className="text-xs uppercase tracking-[0.22em] text-brand-teal">
               Streamlined SPV formation and administration
             </p>
             <h1 className="mt-6 max-w-3xl text-4xl leading-[1.1] sm:text-5xl">
               Move At The Speed Of The Deal
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-primary-foreground/75">
+            <p className="mt-6 max-w-2xl text-lg text-brand-white/80">
               The difference between closing an opportunity and missing it is usually a week of
               paperwork. Rapid entity formation and streamlined investor onboarding remove it.
             </p>
