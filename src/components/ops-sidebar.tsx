@@ -17,6 +17,7 @@ import {
   Table,
   Users,
   MessageSquare,
+  ChevronDown,
 } from "lucide-react";
 import { useInboxUnread } from "@/components/unified-inbox";
 
@@ -159,6 +160,15 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                           {section.id === "funds" && !collapsed && <div className="ml-6 border-l border-sidebar-border pl-3">
                             <Link to="/ops/fund-setup" aria-current={pathname.startsWith("/ops/fund-setup") ? "page" : undefined} onClick={close} className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground">Fund Setup</Link>
                           </div>}
+                          {section.id === "clients" && !collapsed && <>
+                            <button type="button" onClick={() => setClientsOpen((o) => !o)} aria-expanded={clientsOpen} aria-label={clientsOpen ? "Hide client contacts" : "Show client contacts"} className="absolute right-1 top-1.5 rounded p-1 text-sidebar-foreground/70 hover:bg-sidebar-accent">
+                              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${clientsOpen ? "" : "-rotate-90"}`} />
+                            </button>
+                            {clientsOpen && <div className="ml-6 border-l border-sidebar-border pl-3">
+                              <Link to="/ops/clients/fund-managers" aria-current={pathname.startsWith("/ops/clients/fund-managers") ? "page" : undefined} onClick={close} className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">Fund Managers</Link>
+                              <Link to="/ops/clients/founders" aria-current={pathname.startsWith("/ops/clients/founders") ? "page" : undefined} onClick={close} className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">Founders</Link>
+                            </div>}
+                          </>}
                         </SidebarMenuItem>
                       );
                     })}
