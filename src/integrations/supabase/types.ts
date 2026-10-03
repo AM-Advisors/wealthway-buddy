@@ -36492,6 +36492,8 @@ export type Database = {
         | "account_manager"
         | "account_executive"
         | "bdr"
+        | "marketing_manager"
+        | "marketing_specialist"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -36978,6 +36980,8 @@ export const Constants = {
         "account_manager",
         "account_executive",
         "bdr",
+        "marketing_manager",
+        "marketing_specialist",
       ],
       assisted_draft_status: [
         "awaiting_client_review",
