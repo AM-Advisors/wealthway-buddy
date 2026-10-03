@@ -13,3 +13,4 @@
 - Browser tests live in e2e/*.e2e.ts (Playwright, `bun run test:e2e`), run only against QA with synthetic sessions; helpers refuse production URLs — why: keep them out of unit runs and away from real data.
 - Sales uses the Operations shell for authorized Operations staff, while commercial-only Sales staff get a Sales-only menu — why: presentation must not imply wider Operations access.
 - Server functions import requireSupabaseAuth from src/lib/require-auth.ts (same runtime middleware, light context type), never the generated module directly - why: the generated Database-typed context made the whole-app typecheck exceed the preview time limit.
+- The client fund page and the Operations fund setup page share src/components/fund-workspace.tsx (mode client|harmonious); Harmonious-only controls are gated by mode and every action keeps its own server-side check - why: one fund view that can't drift, display mode never grants authority.
