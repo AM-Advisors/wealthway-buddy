@@ -37,6 +37,8 @@ async function syncFromAgreements(quotes: any[]) {
     }
     q.status = "signed"; q.signed_at = at;
   }
+  const { handoffSignedQuote } = await import("@/lib/sales-handoff.server");
+  for (const q of quotes) if (q.status === "signed" && !q.onboarded_at) await handoffSignedQuote(q.id);
   return quotes;
 }
 
