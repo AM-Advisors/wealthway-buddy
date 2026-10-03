@@ -1,0 +1,2 @@
+ALTER TABLE public.user_access_states ADD COLUMN IF NOT EXISTS membership_snapshot jsonb;
+COMMENT ON COLUMN public.client_users.revoked_at IS 'DEPRECATED: scoped revoke moves the membership into user_access_states.membership_snapshot instead';

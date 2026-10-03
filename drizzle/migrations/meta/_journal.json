@@ -1009,6 +1009,13 @@
       "when": 1791011482582,
       "tag": "0143_user_access_states",
       "breakpoints": true
+    },
+    {
+      "idx": 144,
+      "version": "7",
+      "when": 1791011532464,
+      "tag": "0144_user_access_snapshot",
+      "breakpoints": true
     }
   ]
 }

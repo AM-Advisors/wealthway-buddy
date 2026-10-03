@@ -35889,6 +35889,7 @@ export type Database = {
           id: string
           lifted_at: string | null
           lifted_by: string | null
+          membership_snapshot: Json | null
           person_id: string | null
           reason: string
           scope: string
@@ -35903,6 +35904,7 @@ export type Database = {
           id?: string
           lifted_at?: string | null
           lifted_by?: string | null
+          membership_snapshot?: Json | null
           person_id?: string | null
           reason: string
           scope: string
@@ -35917,6 +35919,7 @@ export type Database = {
           id?: string
           lifted_at?: string | null
           lifted_by?: string | null
+          membership_snapshot?: Json | null
           person_id?: string | null
           reason?: string
           scope?: string
