@@ -266,6 +266,7 @@ import { Route as AuthenticatedProfessionalTasksRouteImport } from './routes/_au
 import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_authenticated/professional.tax'
 import { Route as AuthenticatedProfessionalVerificationRouteImport } from './routes/_authenticated/professional.verification'
 import { Route as AuthenticatedProfileProfileIdRouteImport } from './routes/_authenticated/profile_.$profileId'
+import { Route as AuthenticatedSalesCommissionsRouteImport } from './routes/_authenticated/sales_.commissions'
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
 import { Route as AuthenticatedSalesCroRouteImport } from './routes/_authenticated/sales_.cro'
 import { Route as AuthenticatedSalesDashboardRouteImport } from './routes/_authenticated/sales_.dashboard'
@@ -1839,6 +1840,12 @@ const AuthenticatedProfileProfileIdRoute =
     path: '/profile/$profileId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSalesCommissionsRoute =
+  AuthenticatedSalesCommissionsRouteImport.update({
+    id: '/sales_/commissions',
+    path: '/sales/commissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSalesCrmRoute = AuthenticatedSalesCrmRouteImport.update({
   id: '/sales_/crm',
   path: '/sales/crm',
@@ -2802,6 +2809,7 @@ export interface FileRoutesByFullPath {
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
+  '/sales/commissions': typeof AuthenticatedSalesCommissionsRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
@@ -3175,6 +3183,7 @@ export interface FileRoutesByTo {
   '/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
+  '/sales/commissions': typeof AuthenticatedSalesCommissionsRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
@@ -3556,6 +3565,7 @@ export interface FileRoutesById {
   '/_authenticated/professional/tax': typeof AuthenticatedProfessionalTaxRoute
   '/_authenticated/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/_authenticated/profile_/$profileId': typeof AuthenticatedProfileProfileIdRoute
+  '/_authenticated/sales_/commissions': typeof AuthenticatedSalesCommissionsRoute
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
   '/_authenticated/sales_/cro': typeof AuthenticatedSalesCroRoute
   '/_authenticated/sales_/dashboard': typeof AuthenticatedSalesDashboardRoute
@@ -3938,6 +3948,7 @@ export interface FileRouteTypes {
     | '/professional/tax'
     | '/professional/verification'
     | '/profile/$profileId'
+    | '/sales/commissions'
     | '/sales/crm'
     | '/sales/cro'
     | '/sales/dashboard'
@@ -4311,6 +4322,7 @@ export interface FileRouteTypes {
     | '/professional/tax'
     | '/professional/verification'
     | '/profile/$profileId'
+    | '/sales/commissions'
     | '/sales/crm'
     | '/sales/cro'
     | '/sales/dashboard'
@@ -4691,6 +4703,7 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/tax'
     | '/_authenticated/professional/verification'
     | '/_authenticated/profile_/$profileId'
+    | '/_authenticated/sales_/commissions'
     | '/_authenticated/sales_/crm'
     | '/_authenticated/sales_/cro'
     | '/_authenticated/sales_/dashboard'
@@ -6686,6 +6699,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileProfileIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales_/commissions': {
+      id: '/_authenticated/sales_/commissions'
+      path: '/sales/commissions'
+      fullPath: '/sales/commissions'
+      preLoaderRoute: typeof AuthenticatedSalesCommissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sales_/crm': {
       id: '/_authenticated/sales_/crm'
       path: '/sales/crm'
@@ -7987,6 +8007,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
   AuthenticatedProfileProfileIdRoute: typeof AuthenticatedProfileProfileIdRoute
+  AuthenticatedSalesCommissionsRoute: typeof AuthenticatedSalesCommissionsRoute
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
   AuthenticatedSalesCroRoute: typeof AuthenticatedSalesCroRoute
   AuthenticatedSalesDashboardRoute: typeof AuthenticatedSalesDashboardRoute
@@ -8261,6 +8282,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
   AuthenticatedProfileProfileIdRoute: AuthenticatedProfileProfileIdRoute,
+  AuthenticatedSalesCommissionsRoute: AuthenticatedSalesCommissionsRoute,
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
   AuthenticatedSalesCroRoute: AuthenticatedSalesCroRoute,
   AuthenticatedSalesDashboardRoute: AuthenticatedSalesDashboardRoute,
