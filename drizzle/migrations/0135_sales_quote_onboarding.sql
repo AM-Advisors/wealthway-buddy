@@ -1,0 +1,1 @@
+ALTER TABLE public.sales_quotes ADD COLUMN IF NOT EXISTS onboarded_at timestamptz, ADD COLUMN IF NOT EXISTS onboarded_offering_id uuid, ADD COLUMN IF NOT EXISTS onboarding_error text;

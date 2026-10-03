@@ -31704,6 +31704,9 @@ export type Database = {
           msa_id: string | null
           needs_exec_approval: boolean
           notes: string | null
+          onboarded_at: string | null
+          onboarded_offering_id: string | null
+          onboarding_error: string | null
           owner_user_id: string
           pricing_version_id: string | null
           quote_number: number
@@ -31732,6 +31735,9 @@ export type Database = {
           msa_id?: string | null
           needs_exec_approval?: boolean
           notes?: string | null
+          onboarded_at?: string | null
+          onboarded_offering_id?: string | null
+          onboarding_error?: string | null
           owner_user_id: string
           pricing_version_id?: string | null
           quote_number?: number
@@ -31760,6 +31766,9 @@ export type Database = {
           msa_id?: string | null
           needs_exec_approval?: boolean
           notes?: string | null
+          onboarded_at?: string | null
+          onboarded_offering_id?: string | null
+          onboarding_error?: string | null
           owner_user_id?: string
           pricing_version_id?: string | null
           quote_number?: number
