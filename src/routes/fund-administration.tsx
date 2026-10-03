@@ -55,7 +55,7 @@ function FundAdministrationPage() {
       <main>
         <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto max-w-6xl px-4 py-20">
-            <p className="text-xs uppercase tracking-[0.22em] text-accent">Fund administration</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-brand-teal">Fund administration</p>
             <h1 className="mt-6 max-w-3xl text-4xl leading-[1.1] sm:text-5xl">
               The Quiet Work, Done Properly
             </h1>

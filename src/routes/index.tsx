@@ -65,7 +65,7 @@ function Index() {
         <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2 lg:py-28">
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-accent">
+              <p className="text-xs uppercase tracking-[0.22em] text-brand-teal">
                 Harmonious Capital Administration
               </p>
               <h1 className="mt-6 text-4xl leading-[1.1] sm:text-5xl lg:text-6xl">
@@ -241,11 +241,11 @@ function Index() {
         </section>
 
         {/* CTA */}
-        <section className="bg-primary text-primary-foreground">
+        <section className="bg-brand-deep-navy text-brand-white">
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-3xl">Ready To Move At The Speed Of The Deal?</h2>
-              <p className="mt-2 text-primary-foreground/70">
+              <p className="mt-2 text-brand-white/80">
                 Create your account, or sign in to pick up where you left off.
               </p>
             </div>
@@ -257,7 +257,7 @@ function Index() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                className="border-brand-white/40 bg-transparent text-brand-white hover:bg-brand-white/10 hover:text-brand-white"
               >
                 <Link to="/auth">Sign in</Link>
               </Button>

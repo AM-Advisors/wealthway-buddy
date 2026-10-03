@@ -87,7 +87,7 @@ function CapTableLanding() {
         {/* Hero */}
         <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto max-w-6xl px-4 py-20 lg:py-28">
-            <p className="text-xs uppercase tracking-[0.22em] text-accent">Harmonious CapTable</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-brand-teal">Harmonious CapTable</p>
             <h1 className="mt-6 max-w-3xl text-4xl leading-[1.1] sm:text-5xl lg:text-6xl">
               Know Exactly Who Owns Your Company
             </h1>
