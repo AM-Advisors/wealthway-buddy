@@ -24635,6 +24635,51 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaigns: {
+        Row: {
+          archived_at: string | null
+          color: string
+          created_at: string
+          created_by: string
+          ends_on: string
+          goal: string | null
+          id: string
+          name: string
+          notes: string | null
+          starts_on: string
+          theme: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          created_by: string
+          ends_on: string
+          goal?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          starts_on: string
+          theme?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          created_by?: string
+          ends_on?: string
+          goal?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          starts_on?: string
+          theme?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_channels: {
         Row: {
           account_ref: string | null
@@ -24701,6 +24746,7 @@ export type Database = {
           audience_id: string | null
           author_id: string
           blocks: Json
+          campaign_id: string | null
           created_at: string
           external_id: string | null
           external_source: string | null
@@ -24721,6 +24767,7 @@ export type Database = {
           audience_id?: string | null
           author_id: string
           blocks?: Json
+          campaign_id?: string | null
           created_at?: string
           external_id?: string | null
           external_source?: string | null
@@ -24741,6 +24788,7 @@ export type Database = {
           audience_id?: string | null
           author_id?: string
           blocks?: Json
+          campaign_id?: string | null
           created_at?: string
           external_id?: string | null
           external_source?: string | null
@@ -24761,6 +24809,13 @@ export type Database = {
             columns: ["audience_id"]
             isOneToOne: false
             referencedRelation: "marketing_audiences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_emails_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -24917,6 +24972,7 @@ export type Database = {
           approved_by: string | null
           author_id: string
           body: string
+          campaign_id: string | null
           channels: string[]
           created_at: string
           external_id: string | null
@@ -24935,6 +24991,7 @@ export type Database = {
           approved_by?: string | null
           author_id: string
           body?: string
+          campaign_id?: string | null
           channels?: string[]
           created_at?: string
           external_id?: string | null
@@ -24953,6 +25010,7 @@ export type Database = {
           approved_by?: string | null
           author_id?: string
           body?: string
+          campaign_id?: string | null
           channels?: string[]
           created_at?: string
           external_id?: string | null
@@ -24966,7 +25024,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketing_posts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketing_releases: {
         Row: {
