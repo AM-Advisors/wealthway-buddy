@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
 
 /** Everyone signing in accepts the current privacy notice, terms of use,
  *  fee schedule and electronic-records consent before using the platform. */

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
 import { grantRefusal, isGrantLive, type FundTeamRole } from "@/lib/fund-team-access";
 
 /**

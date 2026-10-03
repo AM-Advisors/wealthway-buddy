@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
 
 const emailSchema = z.object({ email: z.string().trim().email().max(255) });
 
