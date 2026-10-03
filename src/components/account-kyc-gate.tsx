@@ -33,7 +33,7 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
       <div className="w-full max-w-lg space-y-5 rounded-xl border bg-card p-6 shadow-sm sm:p-8">
-        <Logo className="h-8" />
+        <Logo variant="navy" className="h-8 w-auto" />
         <div className="space-y-2">
           <h1 className="font-heading text-2xl text-primary">{body.title}</h1>
           <p className="text-sm text-muted-foreground">{body.text}</p>
