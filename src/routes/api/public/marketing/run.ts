@@ -13,7 +13,9 @@ export const Route = createFileRoute("/api/public/marketing/run")({
         }
         const { runDue } = await import("@/lib/marketing.server");
         const result = await runDue();
-        return Response.json(result);
+        const { syncDueClickup } = await import("@/lib/marketing-imports.server");
+        const clickup = await syncDueClickup().catch((e) => { console.error("clickup sync", e); return { synced: 0 }; });
+        return Response.json({ ...result, clickup });
       },
     },
   },

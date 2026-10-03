@@ -220,6 +220,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "mk-emails", title: "Emails", url: "/marketing/emails", icon: "document" },
     { id: "mk-audiences", title: "Audiences", url: "/marketing/audiences", icon: "people" },
     { id: "mk-channels", title: "Channels", url: "/marketing/channels", icon: "check" },
+    { id: "mk-imports", title: "Imports", url: "/marketing/imports", icon: "document" },
   ] : [];
 
   const exact = (i: NavItem) => pathname === i.url;
