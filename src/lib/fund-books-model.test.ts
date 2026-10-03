@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balanceTie, deriveK1Totals, investorBasis, investorDistributions } from "./fund-books-model";
+import { balanceTie, buildStatements as bs2, deriveK1Totals, investorBasis, investorDistributions, liabilitiesAt } from "./fund-books-model";
 
 const e = (entry_date: string, category: string, direction: "in" | "out", amount_cents: number, onboarding_id: string | null = null) => ({ entry_date, category, direction, amount_cents, onboarding_id });
 
@@ -22,8 +22,8 @@ describe("fund books model", () => {
   });
 });
 
-import { buildStatements as bs2, liabilitiesAt } from "./fund-books-model";
-test("liabilities reduce partners' capital and drop once settled", () => {
+
+it("liabilities reduce partners' capital and drop once settled", () => {
   const ls = [{ amount_cents: 500, incurred_on: "2025-01-10", settled_on: "2025-03-01" }, { amount_cents: 200, incurred_on: "2025-02-01", settled_on: null }];
   expect(liabilitiesAt(ls, "2025-02-15")).toBe(700);
   expect(liabilitiesAt(ls, "2025-03-01")).toBe(200);
