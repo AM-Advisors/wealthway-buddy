@@ -204,6 +204,7 @@ import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_au
 import { Route as AuthenticatedMarketingCampaignsRouteImport } from './routes/_authenticated/marketing_.campaigns'
 import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
+import { Route as AuthenticatedMarketingFlowsRouteImport } from './routes/_authenticated/marketing_.flows'
 import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_authenticated/marketing_.imports'
 import { Route as AuthenticatedMarketingPostsRouteImport } from './routes/_authenticated/marketing_.posts'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
@@ -268,6 +269,7 @@ import { Route as AuthenticatedProfileProfileIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
 import { Route as AuthenticatedSalesCroRouteImport } from './routes/_authenticated/sales_.cro'
 import { Route as AuthenticatedSalesDashboardRouteImport } from './routes/_authenticated/sales_.dashboard'
+import { Route as AuthenticatedSalesFollowUpsRouteImport } from './routes/_authenticated/sales_.follow-ups'
 import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authenticated/sales_.outreach'
 import { Route as AuthenticatedSalesQuotesRouteImport } from './routes/_authenticated/sales_.quotes'
 import { Route as AuthenticatedSalesTeamRouteImport } from './routes/_authenticated/sales_.team'
@@ -325,6 +327,7 @@ import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './ro
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedMarketingCampaignsIdRouteImport } from './routes/_authenticated/marketing_.campaigns_.$id'
 import { Route as AuthenticatedMarketingEmailsIdRouteImport } from './routes/_authenticated/marketing_.emails_.$id'
+import { Route as AuthenticatedMarketingFlowsIdRouteImport } from './routes/_authenticated/marketing_.flows_.$id'
 import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_authenticated/marketing_.posts_.$id'
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
@@ -1474,6 +1477,12 @@ const AuthenticatedMarketingEmailsRoute =
     path: '/marketing/emails',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingFlowsRoute =
+  AuthenticatedMarketingFlowsRouteImport.update({
+    id: '/marketing_/flows',
+    path: '/marketing/flows',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingImportsRoute =
   AuthenticatedMarketingImportsRouteImport.update({
     id: '/marketing_/imports',
@@ -1846,6 +1855,12 @@ const AuthenticatedSalesDashboardRoute =
     path: '/sales/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSalesFollowUpsRoute =
+  AuthenticatedSalesFollowUpsRouteImport.update({
+    id: '/sales_/follow-ups',
+    path: '/sales/follow-ups',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSalesOutreachRoute =
   AuthenticatedSalesOutreachRouteImport.update({
     id: '/sales_/outreach',
@@ -2176,6 +2191,12 @@ const AuthenticatedMarketingEmailsIdRoute =
   AuthenticatedMarketingEmailsIdRouteImport.update({
     id: '/marketing_/emails_/$id',
     path: '/marketing/emails/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingFlowsIdRoute =
+  AuthenticatedMarketingFlowsIdRouteImport.update({
+    id: '/marketing_/flows_/$id',
+    path: '/marketing/flows/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingPostsIdRoute =
@@ -2722,6 +2743,7 @@ export interface FileRoutesByFullPath {
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -2783,6 +2805,7 @@ export interface FileRoutesByFullPath {
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
@@ -2841,6 +2864,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
+  '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -3092,6 +3116,7 @@ export interface FileRoutesByTo {
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -3153,6 +3178,7 @@ export interface FileRoutesByTo {
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
@@ -3210,6 +3236,7 @@ export interface FileRoutesByTo {
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
+  '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -3470,6 +3497,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/_authenticated/marketing_/flows': typeof AuthenticatedMarketingFlowsRoute
   '/_authenticated/marketing_/imports': typeof AuthenticatedMarketingImportsRoute
   '/_authenticated/marketing_/posts': typeof AuthenticatedMarketingPostsRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -3531,6 +3559,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
   '/_authenticated/sales_/cro': typeof AuthenticatedSalesCroRoute
   '/_authenticated/sales_/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/_authenticated/sales_/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
   '/_authenticated/sales_/outreach': typeof AuthenticatedSalesOutreachRoute
   '/_authenticated/sales_/quotes': typeof AuthenticatedSalesQuotesRoute
   '/_authenticated/sales_/team': typeof AuthenticatedSalesTeamRoute
@@ -3589,6 +3618,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/_authenticated/marketing_/campaigns_/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/_authenticated/marketing_/emails_/$id': typeof AuthenticatedMarketingEmailsIdRoute
+  '/_authenticated/marketing_/flows_/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/_authenticated/marketing_/posts_/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -3849,6 +3879,7 @@ export interface FileRouteTypes {
     | '/marketing/campaigns'
     | '/marketing/channels'
     | '/marketing/emails'
+    | '/marketing/flows'
     | '/marketing/imports'
     | '/marketing/posts'
     | '/my-funds/$fundId'
@@ -3910,6 +3941,7 @@ export interface FileRouteTypes {
     | '/sales/crm'
     | '/sales/cro'
     | '/sales/dashboard'
+    | '/sales/follow-ups'
     | '/sales/outreach'
     | '/sales/quotes'
     | '/sales/team'
@@ -3968,6 +4000,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId'
     | '/marketing/campaigns/$id'
     | '/marketing/emails/$id'
+    | '/marketing/flows/$id'
     | '/marketing/posts/$id'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
@@ -4219,6 +4252,7 @@ export interface FileRouteTypes {
     | '/marketing/campaigns'
     | '/marketing/channels'
     | '/marketing/emails'
+    | '/marketing/flows'
     | '/marketing/imports'
     | '/marketing/posts'
     | '/my-funds/$fundId'
@@ -4280,6 +4314,7 @@ export interface FileRouteTypes {
     | '/sales/crm'
     | '/sales/cro'
     | '/sales/dashboard'
+    | '/sales/follow-ups'
     | '/sales/outreach'
     | '/sales/quotes'
     | '/sales/team'
@@ -4337,6 +4372,7 @@ export interface FileRouteTypes {
     | '/manager/fund-setup/$requestId'
     | '/marketing/campaigns/$id'
     | '/marketing/emails/$id'
+    | '/marketing/flows/$id'
     | '/marketing/posts/$id'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
@@ -4596,6 +4632,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/campaigns'
     | '/_authenticated/marketing_/channels'
     | '/_authenticated/marketing_/emails'
+    | '/_authenticated/marketing_/flows'
     | '/_authenticated/marketing_/imports'
     | '/_authenticated/marketing_/posts'
     | '/_authenticated/my-funds/$fundId'
@@ -4657,6 +4694,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/crm'
     | '/_authenticated/sales_/cro'
     | '/_authenticated/sales_/dashboard'
+    | '/_authenticated/sales_/follow-ups'
     | '/_authenticated/sales_/outreach'
     | '/_authenticated/sales_/quotes'
     | '/_authenticated/sales_/team'
@@ -4715,6 +4753,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/marketing_/campaigns_/$id'
     | '/_authenticated/marketing_/emails_/$id'
+    | '/_authenticated/marketing_/flows_/$id'
     | '/_authenticated/marketing_/posts_/$id'
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/clients/$clientId'
@@ -6213,6 +6252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingEmailsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/flows': {
+      id: '/_authenticated/marketing_/flows'
+      path: '/marketing/flows'
+      fullPath: '/marketing/flows'
+      preLoaderRoute: typeof AuthenticatedMarketingFlowsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/imports': {
       id: '/_authenticated/marketing_/imports'
       path: '/marketing/imports'
@@ -6661,6 +6707,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales_/follow-ups': {
+      id: '/_authenticated/sales_/follow-ups'
+      path: '/sales/follow-ups'
+      fullPath: '/sales/follow-ups'
+      preLoaderRoute: typeof AuthenticatedSalesFollowUpsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sales_/outreach': {
       id: '/_authenticated/sales_/outreach'
       path: '/sales/outreach'
@@ -7058,6 +7111,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/emails/$id'
       fullPath: '/marketing/emails/$id'
       preLoaderRoute: typeof AuthenticatedMarketingEmailsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/flows_/$id': {
+      id: '/_authenticated/marketing_/flows_/$id'
+      path: '/marketing/flows/$id'
+      fullPath: '/marketing/flows/$id'
+      preLoaderRoute: typeof AuthenticatedMarketingFlowsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing_/posts_/$id': {
@@ -7882,6 +7942,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingCampaignsRoute: typeof AuthenticatedMarketingCampaignsRoute
   AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
+  AuthenticatedMarketingFlowsRoute: typeof AuthenticatedMarketingFlowsRoute
   AuthenticatedMarketingImportsRoute: typeof AuthenticatedMarketingImportsRoute
   AuthenticatedMarketingPostsRoute: typeof AuthenticatedMarketingPostsRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
@@ -7929,6 +7990,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
   AuthenticatedSalesCroRoute: typeof AuthenticatedSalesCroRoute
   AuthenticatedSalesDashboardRoute: typeof AuthenticatedSalesDashboardRoute
+  AuthenticatedSalesFollowUpsRoute: typeof AuthenticatedSalesFollowUpsRoute
   AuthenticatedSalesOutreachRoute: typeof AuthenticatedSalesOutreachRoute
   AuthenticatedSalesQuotesRoute: typeof AuthenticatedSalesQuotesRoute
   AuthenticatedSalesTeamRoute: typeof AuthenticatedSalesTeamRoute
@@ -7954,6 +8016,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
   AuthenticatedMarketingCampaignsIdRoute: typeof AuthenticatedMarketingCampaignsIdRoute
   AuthenticatedMarketingEmailsIdRoute: typeof AuthenticatedMarketingEmailsIdRoute
+  AuthenticatedMarketingFlowsIdRoute: typeof AuthenticatedMarketingFlowsIdRoute
   AuthenticatedMarketingPostsIdRoute: typeof AuthenticatedMarketingPostsIdRoute
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
@@ -8148,6 +8211,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingCampaignsRoute: AuthenticatedMarketingCampaignsRoute,
   AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
+  AuthenticatedMarketingFlowsRoute: AuthenticatedMarketingFlowsRoute,
   AuthenticatedMarketingImportsRoute: AuthenticatedMarketingImportsRoute,
   AuthenticatedMarketingPostsRoute: AuthenticatedMarketingPostsRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
@@ -8200,6 +8264,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
   AuthenticatedSalesCroRoute: AuthenticatedSalesCroRoute,
   AuthenticatedSalesDashboardRoute: AuthenticatedSalesDashboardRoute,
+  AuthenticatedSalesFollowUpsRoute: AuthenticatedSalesFollowUpsRoute,
   AuthenticatedSalesOutreachRoute: AuthenticatedSalesOutreachRoute,
   AuthenticatedSalesQuotesRoute: AuthenticatedSalesQuotesRoute,
   AuthenticatedSalesTeamRoute: AuthenticatedSalesTeamRoute,
@@ -8239,6 +8304,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingCampaignsIdRoute:
     AuthenticatedMarketingCampaignsIdRoute,
   AuthenticatedMarketingEmailsIdRoute: AuthenticatedMarketingEmailsIdRoute,
+  AuthenticatedMarketingFlowsIdRoute: AuthenticatedMarketingFlowsIdRoute,
   AuthenticatedMarketingPostsIdRoute: AuthenticatedMarketingPostsIdRoute,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,

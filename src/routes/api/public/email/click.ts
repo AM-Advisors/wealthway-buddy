@@ -20,6 +20,11 @@ export const Route = createFileRoute("/api/public/email/click")({
           if (!link) return Response.redirect(fallback, 302);
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { recordMarketingEvent } = await import("@/lib/email-tracking.server");
+          if (await recordMarketingEvent(supabaseAdmin, link.template, link.recipient, "click", request, link.url)) {
+            await (await import("@/lib/email-flows.server")).onEmailClick(link.recipient);
+            return Response.redirect(link.url, 302);
+          }
           await supabaseAdmin.from("email_link_clicks").insert({
             recipient: link.recipient,
             template: link.template,

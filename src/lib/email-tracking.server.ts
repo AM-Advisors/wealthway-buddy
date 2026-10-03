@@ -153,3 +153,33 @@ export async function decodeOpenPixel(token: string): Promise<DecodedOpenPixel |
     return null;
   }
 }
+
+
+/**
+ * Adds open + click tracking to a marketing or flow email. `key` is "mk:<emailId>" or "flow:<sendId>".
+ * The unsubscribe link is never wrapped.
+ */
+export async function trackMarketingHtml(html: string, recipient: string, key: string, unsubscribeUrl: string): Promise<string> {
+  const hrefs = [...new Set([...html.matchAll(/href="(https:\/\/[^"]+)"/g)].map((m) => m[1]!))].filter((h) => h !== unsubscribeUrl && !h.includes("/unsubscribe/"));
+  let out = html;
+  for (const h of hrefs) {
+    const real = h.replace(/&amp;/g, "&");
+    const tracked = await buildTrackedUrl({ url: real, recipient, template: key });
+    out = out.split(`href="${h}"`).join(`href="${tracked}"`);
+  }
+  const pixel = await buildOpenPixelUrl({ recipient, template: key });
+  return out.replace("</body>", `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body>`);
+}
+
+/** Records an open/click for marketing and flow emails. Returns false when the key isn't one of ours. */
+export async function recordMarketingEvent(db: any, key: string | null, recipient: string, kind: "open" | "click", request: Request, url?: string) {
+  if (!key || !(key.startsWith("mk:") || key.startsWith("flow:"))) return false;
+  const id = key.slice(key.indexOf(":") + 1);
+  const ip = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  const hash = ip ? b64url(new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(`${ip}|${process.env["EMAIL_TRACKING_SECRET"] ?? ""}`)))).slice(0, 22) : null;
+  await db.from("marketing_email_events").insert({
+    source: key.startsWith("mk:") ? "campaign" : "flow", email_id: key.startsWith("mk:") ? id : null, flow_send_id: key.startsWith("flow:") ? id : null,
+    recipient, kind, url: url ?? null, ip_hash: hash, user_agent: (request.headers.get("user-agent") ?? "").slice(0, 300),
+  });
+  return true;
+}

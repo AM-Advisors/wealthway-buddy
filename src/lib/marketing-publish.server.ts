@@ -82,7 +82,7 @@ export async function publishInstagram(igId: string, text: string, imageUrl: str
 }
 
 /** One marketing email through Brevo with List-Unsubscribe. */
-export async function sendMarketingEmail(to: string, subject: string, html: string, text: string, unsubscribeUrl: string, key: string) {
+export async function sendMarketingEmail(to: string, subject: string, html: string, text: string, unsubscribeUrl: string, key: string, replyTo?: string) {
   const lovable = process.env["LOVABLE_API_KEY"];
   const brevo = process.env["BREVO_API_KEY"];
   if (!lovable || !brevo) throw new Error("Email sending isn't configured.");
@@ -91,7 +91,7 @@ export async function sendMarketingEmail(to: string, subject: string, html: stri
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovable}`, "X-Connection-Api-Key": brevo },
     body: JSON.stringify({
       sender: { name: "Harmonious", email: "marketing@onboarding.harmonious.co" },
-      to: [{ email: to }], subject, htmlContent: html, textContent: text, tags: ["marketing"],
+      to: [{ email: to }], ...(replyTo ? { replyTo: { email: replyTo } } : {}), subject, htmlContent: html, textContent: text, tags: ["marketing"],
       headers: { "List-Unsubscribe": `<${unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click", "X-Idempotency-Key": key },
     }),
   });

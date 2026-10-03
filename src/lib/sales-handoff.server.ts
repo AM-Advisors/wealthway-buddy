@@ -10,7 +10,7 @@ const admin = async () => (await import("@/integrations/supabase/client.server")
 
 export async function handoffSignedQuote(quoteId: string) {
   const db = await admin();
-  const { data: q } = await db.from("sales_quotes").select("id, quote_number, title, client_id, sow_id, owner_user_id, status, onboarded_at, total_cents").eq("id", quoteId).maybeSingle();
+  const { data: q } = await db.from("sales_quotes").select("id, quote_number, title, client_id, sow_id, owner_user_id, status, onboarded_at, total_cents, deal_id").eq("id", quoteId).maybeSingle();
   if (!q || q.status !== "signed" || q.onboarded_at || !q.client_id || !q.sow_id) return;
   // Claim first so concurrent page loads can't create two funds.
   const { data: claimed } = await db.from("sales_quotes").update({ onboarded_at: new Date().toISOString() }).eq("id", q.id).is("onboarded_at", null).select("id");
@@ -61,6 +61,7 @@ export async function handoffSignedQuote(quoteId: string) {
       subject: `New client signed: ${client.legal_name}`,
     }).select("id").single();
     if (t) await db.from("inbox_messages").insert({ thread_id: t.id, sender_id: q.owner_user_id, sender_side: "harmonious", body });
+    await (await import("@/lib/email-flows.server")).onClientSigned(client.id, (q as any).deal_id ?? null);
     await db.from("sales_quote_events").insert({ quote_id: q.id, event: "handed_off", actor_id: null, note: created ? "Draft fund created; Operations notified" : "Operations notified" });
   } catch (e) {
     // Release the claim so the next load retries; record why.
