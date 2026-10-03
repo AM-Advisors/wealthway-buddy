@@ -1,7 +1,8 @@
 /** Marketing AI helpers (copy + images) through the Lovable AI gateway. Server-only. */
 const URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const TEXT_MODEL = "google/gemini-2.5-flash";
-const IMAGE_MODEL = "google/gemini-2.5-flash-image";
+const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
+const TEXT_MODEL = "openai/gpt-6-astra";
+const IMAGE_MODEL = "google/gemini-3.1-flash-image";
 
 const VOICE = "You write for Harmonious (harmonious.co), a fund administration and back-office platform for venture funds, SPVs and their investors. Voice: clear, confident, warm, professional; no hype, no emojis unless asked, no guaranteed returns or investment advice, no specific performance claims. Never invent facts, clients, numbers or quotes.";
 
@@ -27,20 +28,19 @@ export async function draftCopy(kind: "linkedin" | "facebook" | "instagram" | "e
     email: "Write the body of a marketing email: plain text paragraphs separated by blank lines, no subject line, no greeting placeholders like [Name], no sign-off block (the footer is added automatically).",
     subject: "Write 5 email subject line options, one per line, each under 60 characters, no numbering.",
   }[kind];
-  const res = await fetch(URL, {
+  const res = await fetch(RESPONSES_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${key()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: TEXT_MODEL,
-      messages: [
-        { role: "system", content: `${VOICE}\n${task}\nReturn only the text.` },
-        { role: "user", content: `Brief: ${brief}${current ? `\n\nCurrent draft to improve:\n${current}` : ""}` },
-      ],
+      reasoning: { effort: "low" },
+      instructions: `${VOICE}\n${task}\nReturn only the text.`,
+      input: `Brief: ${brief}${current ? `\n\nCurrent draft to improve:\n${current}` : ""}`,
     }),
   });
   await check(res);
   const j: any = await res.json();
-  const text = String(j?.choices?.[0]?.message?.content ?? "").trim();
+  const text = String(j?.output_text ?? (j?.output ?? []).flatMap((o: any) => o?.content ?? []).filter((c: any) => c?.type === "output_text").map((c: any) => c.text).join("")).trim();
   if (!text) throw new Error("The AI helper returned nothing for that brief.");
   return text;
 }
