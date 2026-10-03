@@ -911,6 +911,13 @@
       "when": 1790984724311,
       "tag": "0129_bank_statement_ingestion",
       "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1790994852675,
+      "tag": "0130_fund_liabilities",
+      "breakpoints": true
     }
   ]
 }
