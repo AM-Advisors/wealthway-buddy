@@ -3,7 +3,7 @@ import { HarmoniousTeamCard } from "@/components/harmonious-team-card";
 import { ClientContractsPanel } from "@/components/client-contracts";
 import { InvestorDriveIntakeCard } from "@/components/investor-drive-intake";
 import { ClientFundsPanel, ClientOverviewActions, ClientPeoplePanel, ClientServicesPricingPanel } from "@/components/client-admin";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,8 @@ import { DriveImportsCard } from "@/components/drive-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   getOpsClientRecord,
   getOpsClientTab,
@@ -27,7 +29,7 @@ import {
   getOpsInvestorTab,
   listOpsRecords,
 } from "@/lib/ops-records.functions";
-import { allowedActions, recordPath, recordTabs, RECORD_AREA, type OpsRecordType } from "@/lib/ops-records";
+import { allowedActions, recordPath, recordTabs, RECORD_AREA, type InvestorListRow, type OpsRecordType } from "@/lib/ops-records";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { FundCapTable } from "@/components/fund-cap-table";
