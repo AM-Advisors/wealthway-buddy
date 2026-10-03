@@ -91,7 +91,7 @@ export function priceQuote(lines: readonly QuoteLineInput[]) {
 
 export type PeriodKey = "day" | "week" | "month" | "quarter" | "year" | "custom";
 /** Inclusive start, exclusive end, as ISO strings (UTC). */
-export function periodRange(period: PeriodKey, now = new Date(), custom?: { from?: string; to?: string }): { from: string; to: string } {
+export function periodRange(period: PeriodKey, now = new Date(), custom?: { from?: string | undefined; to?: string  | undefined}): { from: string; to: string } {
   const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   let start = new Date(d);
   let end = new Date(d);

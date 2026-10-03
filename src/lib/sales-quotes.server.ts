@@ -77,7 +77,7 @@ export async function getQuote(userId: string, id: string) {
   };
 }
 
-export async function saveQuote(userId: string, d: { id?: string | null; title: string; clientId?: string | null; contactId?: string | null; dealId?: string | null; validUntil?: string | null; notes?: string | null; lines: QuoteLineInput[] }) {
+export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; lines: QuoteLineInput[] }) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   if (!d.lines.length) throw new Error("Add at least one service.");
@@ -119,7 +119,7 @@ export async function submitQuote(userId: string, id: string) {
   return { ok: true };
 }
 
-export async function decideQuote(userId: string, d: { id: string; approve: boolean; note?: string | null }) {
+export async function decideQuote(userId: string, d: { id: string; approve: boolean; note?: string | null  | undefined}) {
   const a = await salesActor(userId);
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", d.id).maybeSingle();

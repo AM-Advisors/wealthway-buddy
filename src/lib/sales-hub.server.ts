@@ -129,7 +129,7 @@ export async function dashboard(userId: string, from: string, to: string) {
   };
 }
 
-export async function listOutreach(userId: string, f: { from?: string; to?: string; ownerId?: string; channel?: string; serviceKey?: string; contactId?: string }) {
+export async function listOutreach(userId: string, f: { from?: string | undefined; to?: string | undefined; ownerId?: string | undefined; channel?: string | undefined; serviceKey?: string | undefined; contactId?: string  | undefined}) {
   const a = await salesActor(userId);
   const rows = await visibleOutreach(a, { ...f, limit: 500 });
   const db = await admin();
@@ -166,7 +166,7 @@ async function loadContact(a: Actor, contactId: string) {
   return c;
 }
 
-export async function logOutreach(userId: string, d: { contactId: string; channel: OutreachChannel; direction: "outbound" | "inbound"; subject?: string | null; body?: string | null; occurredAt?: string | null; serviceKey?: string | null; visibility: "team" | "private"; source?: "logged" | "sent" | "pulled_in"; deliveryStatus?: string | null; providerRef?: string | null }) {
+export async function logOutreach(userId: string, d: { contactId: string; channel: OutreachChannel; direction: "outbound" | "inbound"; subject?: string | null | undefined; body?: string | null | undefined; occurredAt?: string | null | undefined; serviceKey?: string | null | undefined; visibility: "team" | "private"; source?: "logged" | "sent" | "pulled_in" | undefined; deliveryStatus?: string | null | undefined; providerRef?: string | null  | undefined}) {
   const a = await salesActor(userId);
   const c = await loadContact(a, d.contactId);
   const db = await admin();
@@ -187,7 +187,7 @@ export async function logOutreach(userId: string, d: { contactId: string; channe
   return { ok: true };
 }
 
-export async function sendOutreach(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; subject?: string | null; body: string; serviceKey?: string | null; visibility: "team" | "private" }) {
+export async function sendOutreach(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; subject?: string | null | undefined; body: string; serviceKey?: string | null | undefined; visibility: "team" | "private" }) {
   const a = await salesActor(userId);
   const c = await loadContact(a, d.contactId);
   const db = await admin();
@@ -224,7 +224,7 @@ export async function sendOutreach(userId: string, d: { contactId: string; chann
   return { ok: true };
 }
 
-export async function recordOptOut(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; note?: string | null }) {
+export async function recordOptOut(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; note?: string | null  | undefined}) {
   const a = await salesActor(userId);
   const c = await loadContact(a, d.contactId);
   const db = await admin();
@@ -261,7 +261,7 @@ export async function parseLinkedIn(userId: string, d: { text: string }) {
   return { contact: parsed.contact ?? {}, messages: (parsed.messages ?? []) as { date: string | null; direction: "outbound" | "inbound"; sender: string | null; text: string }[] };
 }
 
-export async function saveLinkedInImport(userId: string, d: { contactId: string; messages: { date: string | null; direction: "outbound" | "inbound"; text: string; visibility: "team" | "private" }[]; contactFields: { title?: string | null; organization?: string | null; linkedin_url?: string | null }; serviceKey?: string | null }) {
+export async function saveLinkedInImport(userId: string, d: { contactId: string; messages: { date: string | null; direction: "outbound" | "inbound"; text: string; visibility: "team" | "private" }[]; contactFields: { title?: string | null | undefined; organization?: string | null | undefined; linkedin_url?: string | null  | undefined}; serviceKey?: string | null  | undefined}) {
   const a = await salesActor(userId);
   const c = await loadContact(a, d.contactId);
   const db = await admin();
@@ -273,7 +273,7 @@ export async function saveLinkedInImport(userId: string, d: { contactId: string;
   return { ok: true, saved: d.messages.length };
 }
 
-export async function moveStage(userId: string, d: { dealId: string; stage: SalesStage; connectedVia?: string | null; followUpAt?: string | null; lossReason?: string | null; note?: string | null; serviceKey?: string | null; amountCents?: number | null }) {
+export async function moveStage(userId: string, d: { dealId: string; stage: SalesStage; connectedVia?: string | null | undefined; followUpAt?: string | null | undefined; lossReason?: string | null | undefined; note?: string | null | undefined; serviceKey?: string | null | undefined; amountCents?: number | null  | undefined}) {
   const a = await salesActor(userId);
   if (!canMoveToStage(a.roles, d.stage)) throw new Error("Your role can't move a deal to that stage. Hand it to an Account Executive.");
   if (d.stage === "contract_lost" && !d.lossReason?.trim()) throw new Error("Add the reason this contract was lost.");
