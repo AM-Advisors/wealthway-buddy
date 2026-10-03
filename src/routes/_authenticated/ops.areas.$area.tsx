@@ -22,6 +22,7 @@ import { readRecent, type RecentScreen } from "@/lib/recent-screens";
 
 export const Route = createFileRoute("/_authenticated/ops/areas/$area")({
   loader: ({ params }) => {
+    if (params.area === "administration") throw redirect({ to: "/ops/dashboards/$team", params: { team: "leadership" }, replace: true });
     const moved = RETIRED_AREA_REDIRECTS[params.area];
     if (moved) throw redirect({ to: "/ops/areas/$area", params: { area: moved }, replace: true });
     const area = opsWorkArea(params.area);
