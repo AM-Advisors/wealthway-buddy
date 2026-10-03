@@ -178,17 +178,35 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(leader || has("finance", "tax", "fund_administration") ? [{ id: "dash-finance", title: "Finance dashboard", url: "/ops/dashboards/finance", icon: "report" }] : []),
     ...sections.filter((s) => FINANCE_IDS.includes(s.id)).map(toItem),
   ];
+  const viewLeader = leader || has("leadership");
+  const allowed = (u: string) => leader || has("leadership") || allowedUrls.has(u);
+  const grp = (id: string, title: string, icon: string, sub: { title: string; url: string }[]): NavItem[] => {
+    const ok = sub.filter((x) => allowed(x.url));
+    return ok.length ? [{ id, title, url: ok[0]!.url, icon, sub: ok }] : [];
+  };
   const teamItems: NavItem[] = salesOnly ? [] : [
-    ...(leader ? [{ id: "dash-leadership", title: "Leadership dashboard", url: "/ops/dashboards/leadership", icon: "report" }] : []),
     { id: "employees", title: "Employees & activity", url: "/ops/employees", icon: "people" },
     { id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" },
     { id: "mail", title: "Mail", url: "/ops/mail", icon: "document" },
-    ...(leader ? [
-      { id: "invites", title: "Invites & access", url: "/ops/access-control", icon: "shield" },
-      { id: "roles", title: "Roles", url: "/ops/roles", icon: "check" },
-      { id: "people-all", title: "People: All users", url: "/ops/people", icon: "people" },
-      { id: "people-test", title: "Test & Demo users", url: "/ops/people/test-demo", icon: "people" },
-    ] : []),
+  ];
+  const leadershipItems: NavItem[] = salesOnly || !(viewLeader || adminSection) ? [] : [
+    ...(viewLeader ? [{ id: "dash-leadership", title: "Leadership dashboard", url: "/ops/dashboards/leadership", icon: "report" }] : []),
+    ...(viewLeader ? grp("lead-people", "People", "people", [
+      { title: "All users", url: "/ops/people" }, { title: "Test & Demo users", url: "/ops/people/test-demo" }, { title: "Employees & activity", url: "/ops/employees" },
+    ]) : []),
+    ...grp("lead-access", "Access", "shield", [
+      ...(viewLeader ? [{ title: "Invites & access", url: "/ops/access-control" }, { title: "Roles", url: "/ops/roles" }] : []),
+      { title: "Legacy permission settings", url: "/admin/permissions" },
+    ]),
+    ...grp("lead-oversight", "Oversight", "check", [
+      { title: "Audit log", url: "/admin/audit" }, { title: "Activity log", url: "/admin/activity" },
+      { title: "Timeline", url: "/admin/timeline" }, { title: "Compliance & Controls", url: "/ops/compliance" },
+    ]),
+    ...grp("lead-platform", "Platform", "settings", [
+      { title: "Client setup options", url: "/admin/client-setup" }, { title: "Security", url: "/admin/security" },
+      { title: "Email preview", url: "/admin/email-preview" }, { title: "Email delivery", url: "/ops/email-health" },
+      { title: "Webhook log", url: "/ops/webhook-log" }, { title: "System status", url: "/ops/system-status" },
+    ]),
   ];
 
   const showSales = salesOnly || staffRoles.some((r) => SALES_ROLES.includes(r));
@@ -305,10 +323,9 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={amItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.url === "/marketing" ? pathname === i.url : pathname.startsWith(i.url)} />
-            <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "employees" ? pathname.startsWith(i.url) : pathname === i.url} />
-            {adminSection && (
-              <NavSection id="administration" label="Administration" items={[adminSection]} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
-            )}
+            <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "employees" ? pathname.startsWith(i.url) && !pathname.startsWith("/ops/people") : pathname === i.url} />
+            <NavSection id="leadership" label="Leadership" items={leadershipItems} pathname={pathname} collapsed={collapsed} onNavigate={close}
+              isActive={(i) => i.sub ? i.sub.some((x) => pathname === x.url) : pathname === i.url} />
             <SidebarSeparator />
             <SidebarGroup>
               <SidebarGroupContent>
