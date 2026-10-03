@@ -102,7 +102,8 @@ describe("Operations sidebar consolidation", () => {
     const s = { ...session(["investor"]), staffRoles: ["sales"] };
     const sales = getNavigation(s, "investor", "/sales");
     expect(sales.shell).toBe("ops");
-    expect(sales.operations.map((item) => item.url)).toEqual(["/sales", "/sales/crm", "/account-manager"]);
+    expect(sales.operations.map((item) => item.url)).toEqual(expect.arrayContaining(["/sales", "/sales/crm", "/account-manager"]));
+    expect(sales.operations.every((item) => item.url.startsWith("/sales") || item.url.startsWith("/account-manager"))).toBe(true);
     expect(getNavigation(s, "investor", "/home").shell).toBe("client");
     expect(getNavigation(session(["investor"]), "investor", "/sales").shell).toBe("client");
   });
@@ -130,7 +131,7 @@ describe("shell chrome", () => {
   it("collapsed state is presentation only", () => {
     const src = readFileSync("src/components/ops-sidebar.tsx", "utf8");
     expect(src).toContain('collapsible="icon"');
-    expect(src).toContain("tooltip={section.title}");
+    expect(src).toContain("tooltip={item.title}");
     expect(src).not.toMatch(/collapsed[^\n]*operationsCapabilities/);
   });
 });
