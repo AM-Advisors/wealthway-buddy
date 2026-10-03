@@ -1,3 +1,4 @@
+import { InvoicesBoard } from "@/components/invoices-board";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -73,6 +74,10 @@ function FinanceOverview() {
       <Stat label="Overdue" value={money(d.totals.overdue)} />
       <Stat label="Pending quotes" value={money(d.totals.pendingQuotes)} hint={`${d.quotes.length} open`} />
     </div>
+    <Panel title="Invoice builder">
+      <p className="mb-3 text-sm text-muted-foreground">Create an invoice, add line items, send it to the client and track it through to paid.</p>
+      <InvoicesBoard />
+    </Panel>
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel title="Revenue by month"><Bars money data={d.byMonth.map((m) => ({ name: monthLabel(m.month), value: m.cents }))} /></Panel>
       <Panel title="Revenue by client"><Bars money data={d.byClient.slice(0, 10).map((c) => ({ name: c.client, value: c.paid }))} /></Panel>
