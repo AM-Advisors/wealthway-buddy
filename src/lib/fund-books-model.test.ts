@@ -21,3 +21,12 @@ describe("fund books model", () => {
     expect(balanceTie(1000, 1400, [{ amount_cents: 600, direction: "in" }]).gapCents).toBe(-200);
   });
 });
+
+import { buildStatements as bs2, liabilitiesAt } from "./fund-books-model";
+test("liabilities reduce partners' capital and drop once settled", () => {
+  const ls = [{ amount_cents: 500, incurred_on: "2025-01-10", settled_on: "2025-03-01" }, { amount_cents: 200, incurred_on: "2025-02-01", settled_on: null }];
+  expect(liabilitiesAt(ls, "2025-02-15")).toBe(700);
+  expect(liabilitiesAt(ls, "2025-03-01")).toBe(200);
+  const s = bs2([{ entry_date: "2025-01-05", category: "Capital contribution", direction: "in", amount_cents: 10000 }], "2025-01-01", "2025-12-31", [], 200);
+  expect(s.balanceSheet.partnersCapitalCents).toBe(9800);
+});

@@ -253,8 +253,10 @@ export async function assetsWithMarks(fundId: string) {
 
 export async function booksFigures(uid: string, fundId: string, i: { start: string; end: string; taxYear: number }) {
   await assertFund(uid, fundId);
-  const { deriveK1Totals, investorBasis, investorDistributions, cashThrough, buildStatements } = await import("@/lib/fund-books-model");
+  const { deriveK1Totals, investorBasis, investorDistributions, cashThrough, buildStatements, liabilitiesAt, balanceSeries } = await import("@/lib/fund-books-model");
   const entries = await bookEntries(fundId);
+  const liabs = await liabilityRows(fundId);
+  const liabCents = liabilitiesAt(liabs, i.end);
   const assets = await assetsWithMarks(fundId);
   const marked = assets.filter((a) => a.status !== "realized").map((a) => ({ costCents: Number(a.cost_basis_cents ?? 0), valueCents: Number(a.latestValueCents ?? a.cost_basis_cents ?? 0) }));
   const period = entries.filter((e) => e.entry_date >= i.start && e.entry_date <= i.end);
@@ -263,6 +265,7 @@ export async function booksFigures(uid: string, fundId: string, i: { start: stri
     cash: cashThrough(entries, i.end),
     investments_fv: marked.reduce((t, a) => t + a.valueCents, 0),
     investments_cost: marked.reduce((t, a) => t + a.costCents, 0),
+    liabilities: liabCents,
     contributions: sumCat(["Capital contribution"], "in"),
     distributions: sumCat(["Distribution"], "out"),
     income: sumCat(["Interest income", "Other income", "Dividend income", "Short-term gain", "Long-term gain", "Section 1231 gain"], "in"),
@@ -270,12 +273,14 @@ export async function booksFigures(uid: string, fundId: string, i: { start: stri
     fund_expenses: sumCat(["Legal fees", "Accounting & tax", "Bank fees", "Formation & filing", "Broker/Dealer fee", "Other expense"], "out"),
   };
   return {
-    entryCount: entries.length,
+    entryCount: entries.length + liabs.length + assets.length,
+    assets: assets.map((a: any) => ({ name: String(a.asset_name), assetClass: String(a.asset_class ?? "other"), costCents: Number(a.cost_basis_cents ?? 0), valueCents: Number(a.latestValueCents ?? a.cost_basis_cents ?? 0) })),
+    series: balanceSeries(entries, liabs, marked.reduce((t, a) => t + a.valueCents, 0), i.end),
     nav,
     k1: deriveK1Totals(entries, i.taxYear),
     basis: Object.fromEntries(investorBasis(entries, i.taxYear)),
     distributionsByInvestor: Object.fromEntries(investorDistributions(entries, i.taxYear)),
-    statements: buildStatements(entries, i.start, i.end, marked),
+    statements: buildStatements(entries, i.start, i.end, marked, liabCents),
   };
 }
 
@@ -306,4 +311,40 @@ export async function k1Readiness(uid: string, fundId: string) {
     return { onboardingId: String(o.id), name: per.preferred_name || [per.legal_first_name, per.legal_last_name].filter(Boolean).join(" ") || "Investor",
       entity: p?.legal_name ?? null, address: addr || null, taxIdLast4: last4, missing };
   });
+}
+
+/* ---------------- Liabilities ---------------- */
+
+async function liabilityRows(fundId: string) {
+  const d = await db();
+  const { data } = await d.from("fund_liabilities").select("amount_cents, incurred_on, settled_on").eq("offering_id", fundId);
+  return ((data ?? []) as any[]).map((l) => ({ amount_cents: Number(l.amount_cents), incurred_on: String(l.incurred_on), settled_on: l.settled_on ? String(l.settled_on) : null }));
+}
+
+export async function listLiabilities(uid: string, fundId: string) {
+  await assertFund(uid, fundId);
+  const d = await db();
+  const { data } = await d.from("fund_liabilities").select("id, description, kind, amount_cents, incurred_on, settled_on, note").eq("offering_id", fundId).order("incurred_on", { ascending: false });
+  return (data ?? []) as any[];
+}
+
+export async function addLiability(uid: string, fundId: string, l: { description: string; kind: string; amountCents: number; incurredOn: string; note: string | null }) {
+  await assertFund(uid, fundId);
+  const d = await db();
+  const { error } = await d.from("fund_liabilities").insert({ offering_id: fundId, description: l.description, kind: l.kind, amount_cents: l.amountCents, incurred_on: l.incurredOn, note: l.note, created_by: uid });
+  if (error) throw new Error("Couldn't add the liability.");
+  return { ok: true };
+}
+
+/** Mark paid off on a date; the row stays so earlier balance sheets still show it. */
+export async function settleLiability(uid: string, fundId: string, id: string, settledOn: string) {
+  await assertFund(uid, fundId);
+  const d = await db();
+  const { data: row } = await d.from("fund_liabilities").select("incurred_on, settled_on").eq("id", id).eq("offering_id", fundId).maybeSingle();
+  if (!row) throw new Error("That liability isn't in this fund.");
+  if ((row as any).settled_on) throw new Error("Already marked paid.");
+  if (settledOn < String((row as any).incurred_on)) throw new Error("Paid date can't be before it was incurred.");
+  const { error } = await d.from("fund_liabilities").update({ settled_on: settledOn, settled_by: uid }).eq("id", id).is("settled_on", null);
+  if (error) throw new Error("Couldn't update the liability.");
+  return { ok: true };
 }

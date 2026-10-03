@@ -71,7 +71,29 @@ export function cashThrough(entries: Entry[], date: string) {
 }
 
 /** Simple statements for a period from books entries plus the asset marks. */
-export function buildStatements(entries: Entry[], start: string, end: string, assets: { costCents: number; valueCents: number }[]) {
+export type Liability = { amount_cents: number; incurred_on: string; settled_on: string | null };
+/** Liabilities still open at a date (incurred on/before, not settled by then). */
+export function liabilitiesAt(ls: Liability[], date: string) {
+  return ls.filter((l) => l.incurred_on <= date && (!l.settled_on || l.settled_on > date)).reduce((t, l) => t + l.amount_cents, 0);
+}
+
+/** Month-end balance sheet series for charts: cash, investments (current marks), liabilities, net assets. */
+export function balanceSeries(entries: Entry[], ls: Liability[], investmentsCents: number, end: string, months = 12) {
+  const out: { label: string; cash: number; investments: number; liabilities: number; netAssets: number }[] = [];
+  const first = [...entries.map((e) => e.entry_date), ...ls.map((l) => l.incurred_on)].sort()[0];
+  if (!first) return out;
+  const e = new Date(`${end}T00:00:00Z`);
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth() - i + 1, 0));
+    const iso = (i === 0 ? end : d.toISOString().slice(0, 10));
+    if (iso < first.slice(0, 7) + "-01") continue;
+    const cash = cashThrough(entries, iso), liab = liabilitiesAt(ls, iso), inv = investmentsCents;
+    out.push({ label: iso.slice(0, 7), cash, investments: inv, liabilities: liab, netAssets: cash + inv - liab });
+  }
+  return out;
+}
+
+export function buildStatements(entries: Entry[], start: string, end: string, assets: { costCents: number; valueCents: number }[], liabilitiesCents = 0) {
   const period = entries.filter((e) => e.entry_date >= start && e.entry_date <= end);
   const prior = entries.filter((e) => e.entry_date < start);
   const sum = (es: Entry[], cat: (c: string) => boolean, dir: "in" | "out") => es.filter((e) => cat(e.category)).reduce((t, e) => t + signed(e, dir), 0);
@@ -87,7 +109,7 @@ export function buildStatements(entries: Entry[], start: string, end: string, as
     + sum(prior, (c) => !NOT_PNL.has(c) && !EXPENSES.has(c), "in") - sum(prior, (c) => EXPENSES.has(c), "out");
   const netIncome = income - expenses;
   return {
-    balanceSheet: { cashCents: cash, investmentsCents: investmentsValue, totalAssetsCents: cash + investmentsValue, liabilitiesCents: 0, partnersCapitalCents: cash + investmentsValue },
+    balanceSheet: { cashCents: cash, investmentsCents: investmentsValue, totalAssetsCents: cash + investmentsValue, liabilitiesCents, partnersCapitalCents: cash + investmentsValue - liabilitiesCents },
     incomeStatement: { incomeCents: income, expensesCents: expenses, netIncomeCents: netIncome, unrealizedGainCents: unrealized, totalReturnCents: netIncome + unrealized },
     changesInCapital: { openingCents: openingCapital, contributionsCents: contributions, distributionsCents: distributions, netIncomeCents: netIncome, unrealizedCents: unrealized, closingCents: openingCapital + contributions - distributions + netIncome + unrealized },
   };
