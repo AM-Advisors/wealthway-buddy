@@ -8450,6 +8450,8 @@ export type Database = {
           created_at: string
           created_by: string
           email: string | null
+          external_id: string | null
+          external_source: string | null
           full_name: string
           id: string
           linkedin_url: string | null
@@ -8472,6 +8474,8 @@ export type Database = {
           created_at?: string
           created_by: string
           email?: string | null
+          external_id?: string | null
+          external_source?: string | null
           full_name: string
           id?: string
           linkedin_url?: string | null
@@ -8494,6 +8498,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           email?: string | null
+          external_id?: string | null
+          external_source?: string | null
           full_name?: string
           id?: string
           linkedin_url?: string | null
@@ -8534,6 +8540,8 @@ export type Database = {
           created_at: string
           created_by: string
           expected_close: string | null
+          external_id: string | null
+          external_source: string | null
           follow_up_at: string | null
           id: string
           lost_reason: string | null
@@ -8556,6 +8564,8 @@ export type Database = {
           created_at?: string
           created_by: string
           expected_close?: string | null
+          external_id?: string | null
+          external_source?: string | null
           follow_up_at?: string | null
           id?: string
           lost_reason?: string | null
@@ -8578,6 +8588,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           expected_close?: string | null
+          external_id?: string | null
+          external_source?: string | null
           follow_up_at?: string | null
           id?: string
           lost_reason?: string | null
@@ -8611,6 +8623,53 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_email_history: {
+        Row: {
+          contact_id: string
+          created_at: string
+          direction: string | null
+          external_id: string
+          external_source: string
+          id: string
+          imported_by: string
+          sent_at: string | null
+          snippet: string | null
+          subject: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          direction?: string | null
+          external_id: string
+          external_source: string
+          id?: string
+          imported_by: string
+          sent_at?: string | null
+          snippet?: string | null
+          subject?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          direction?: string | null
+          external_id?: string
+          external_source?: string
+          id?: string
+          imported_by?: string
+          sent_at?: string | null
+          snippet?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_email_history_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -19984,6 +20043,30 @@ export type Database = {
           },
         ]
       }
+      import_runs: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          provider: string
+          result: Json
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          provider: string
+          result: Json
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          provider?: string
+          result?: Json
+        }
+        Relationships: []
+      }
       inbox_messages: {
         Row: {
           body: string
@@ -24604,6 +24687,10 @@ export type Database = {
           author_id: string
           blocks: Json
           created_at: string
+          external_id: string | null
+          external_source: string | null
+          external_stats: Json | null
+          external_url: string | null
           id: string
           name: string
           preheader: string | null
@@ -24620,6 +24707,10 @@ export type Database = {
           author_id: string
           blocks?: Json
           created_at?: string
+          external_id?: string | null
+          external_source?: string | null
+          external_stats?: Json | null
+          external_url?: string | null
           id?: string
           name: string
           preheader?: string | null
@@ -24636,6 +24727,10 @@ export type Database = {
           author_id?: string
           blocks?: Json
           created_at?: string
+          external_id?: string | null
+          external_source?: string | null
+          external_stats?: Json | null
+          external_url?: string | null
           id?: string
           name?: string
           preheader?: string | null
@@ -24654,6 +24749,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketing_import_sources: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          keep_syncing: boolean
+          kind: string
+          last_result: Json | null
+          last_synced_at: string | null
+          name: string
+          provider: string
+          ref_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          keep_syncing?: boolean
+          kind: string
+          last_result?: Json | null
+          last_synced_at?: string | null
+          name: string
+          provider: string
+          ref_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          keep_syncing?: boolean
+          kind?: string
+          last_result?: Json | null
+          last_synced_at?: string | null
+          name?: string
+          provider?: string
+          ref_id?: string
+        }
+        Relationships: []
       }
       marketing_leads: {
         Row: {
@@ -24770,6 +24904,9 @@ export type Database = {
           body: string
           channels: string[]
           created_at: string
+          external_id: string | null
+          external_source: string | null
+          external_url: string | null
           id: string
           image_paths: string[]
           published_at: string | null
@@ -24785,6 +24922,9 @@ export type Database = {
           body?: string
           channels?: string[]
           created_at?: string
+          external_id?: string | null
+          external_source?: string | null
+          external_url?: string | null
           id?: string
           image_paths?: string[]
           published_at?: string | null
@@ -24800,6 +24940,9 @@ export type Database = {
           body?: string
           channels?: string[]
           created_at?: string
+          external_id?: string | null
+          external_source?: string | null
+          external_url?: string | null
           id?: string
           image_paths?: string[]
           published_at?: string | null
