@@ -58,7 +58,7 @@ function AccountManagerPage() {
             {d.book.map((c) => (
               <li key={c.clientId} className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
-                  <Link to="/ops/clients/$clientId" params={{ clientId: c.clientId }} className="font-medium hover:underline">{c.name}</Link>
+                  <Link to="/ops/clients/$clientId" params={{ clientId: c.clientId }} search={{} as any} className="font-medium hover:underline">{c.name}</Link>
                   <p className="text-xs text-muted-foreground">{c.funds} funds · {c.inSetup} in setup{c.stale ? ` · ${c.stale} quiet 30+ days` : ""}</p>
                 </div>
                 <div className="flex items-center gap-2">
