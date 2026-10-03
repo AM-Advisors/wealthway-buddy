@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getFundDriveStatus, syncFundDrive } from "@/lib/drive.functions";
+import { getFundDriveStatus, syncAllInvestorDrive, syncFundDrive } from "@/lib/drive.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +54,17 @@ export function DriveStatusCard({ offeringId }: { offeringId: string }) {
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not sync Google Drive."),
   });
+  const syncAll = useServerFn(syncAllInvestorDrive);
+  const investorMutation = useMutation({
+    mutationFn: () => syncAll({ data: { offeringId } }),
+    onSuccess: (r) => {
+      if (r.total === 0) toast.info("This fund has no investor profiles to sync yet.");
+      else if (r.failed === 0) toast.success(`${r.synced} investor folder${r.synced === 1 ? "" : "s"} synced.`);
+      else toast.error(`${r.synced} of ${r.total} investor folders synced; ${r.failed} need${r.failed === 1 ? "s" : ""} attention.`);
+      void qc.invalidateQueries({ queryKey: ["fund-drive", offeringId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not sync investor records."),
+  });
 
   if (query.isError) return null;
   const d = query.data;
@@ -92,6 +103,9 @@ export function DriveStatusCard({ offeringId }: { offeringId: string }) {
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => mutation.mutate(undefined)} disabled={mutation.isPending}>
               {fundStatus === "not_connected" ? "Create Fund Records Folder" : fundStatus === "needs_attention" ? "Retry" : "Sync Fund Records"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => investorMutation.mutate()} disabled={investorMutation.isPending}>
+              {investorMutation.isPending ? "Syncing investor records…" : "Create & Sync Investor Records"}
             </Button>
             {conflict && (
               <>

@@ -126,6 +126,43 @@ export const syncInvestorDrive = createServerFn({ method: "POST" })
     return { status: String(mapping.status), error: (mapping.last_error as string | null) ?? null };
   });
 
+/** Operations fund page: create and sync investor records folders for every investor in the fund. */
+export const syncAllInvestorDrive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await requireOperations(context, "documents", "prepare");
+    const userId = (context as any).userId as string;
+    const s = await db();
+    const { data: onboardings } = await s
+      .from("investor_onboardings")
+      .select("investment_profile_id")
+      .eq("offering_id", data.offeringId)
+      .not("investment_profile_id", "is", null);
+    const profileIds: string[] = [...new Set<string>((onboardings ?? []).map((o: any) => o.investment_profile_id as string))];
+    if (!profileIds.length) return { total: 0, synced: 0, failed: 0, results: [] as { profileId: string; label: string; status: string; error: string | null }[] };
+    const { data: profiles } = await s.from("investment_profiles").select("id,display_label,legal_name").in("id", profileIds);
+    const drive = await import("@/lib/drive.server");
+    const results: { profileId: string; label: string; status: string; error: string | null }[] = [];
+    for (const profileId of profileIds) {
+      const p = (profiles ?? []).find((x: any) => x.id === profileId);
+      const label = p?.display_label ?? p?.legal_name ?? "Investor";
+      try {
+        const mapping: any = await drive.ensureInvestorStructure(data.offeringId, profileId, { userId });
+        results.push({
+          profileId,
+          label,
+          status: mapping ? String(mapping.status) : "needs_attention",
+          error: mapping ? ((mapping.last_error as string | null) ?? null) : INVESTOR_UNAVAILABLE,
+        });
+      } catch (e: any) {
+        results.push({ profileId, label, status: "needs_attention", error: e?.message ?? "Sync failed" });
+      }
+    }
+    const synced = results.filter((r) => r.status === "active").length;
+    return { total: results.length, synced, failed: results.length - synced, results };
+  });
+
 export const listDriveExceptions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ includeResolved: z.boolean().optional() }).parse(d ?? {}))
