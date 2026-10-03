@@ -8512,6 +8512,7 @@ export type Database = {
           lost_reason: string | null
           offering_id: string | null
           owner_user_id: string
+          sales_stage: string | null
           scope: string
           service_key: string | null
           stage: string
@@ -8533,6 +8534,7 @@ export type Database = {
           lost_reason?: string | null
           offering_id?: string | null
           owner_user_id: string
+          sales_stage?: string | null
           scope: string
           service_key?: string | null
           stage?: string
@@ -8554,6 +8556,7 @@ export type Database = {
           lost_reason?: string | null
           offering_id?: string | null
           owner_user_id?: string
+          sales_stage?: string | null
           scope?: string
           service_key?: string | null
           stage?: string
