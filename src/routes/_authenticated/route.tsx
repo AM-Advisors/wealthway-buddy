@@ -11,6 +11,7 @@ import { getNavigation } from "@/lib/navigation";
 import { ClientSidebar } from "@/components/client-sidebar";
 import { ClientWorkspaceProvider, useClientWorkspace } from "@/components/client-workspace";
 import { PolicyGate } from "@/components/policy-gate";
+import { AccountKycGate } from "@/components/account-kyc-gate";
 import { PortalGate } from "@/components/portal-gate";
 import { PortalTopbar } from "@/components/portal-topbar";
 import { PortalFooter } from "@/components/portal-footer";
@@ -55,11 +56,13 @@ function AuthenticatedLayout() {
             <EditContextBanner />
             <main className="min-w-0 flex-1">
               <PolicyGate onSignOut={signOut}>
+                <AccountKycGate onSignOut={signOut}>
                 <PortalGate onSignOut={signOut}>
                   <OpsAreaGate>
                     <Outlet />
                   </OpsAreaGate>
                 </PortalGate>
+                </AccountKycGate>
               </PolicyGate>
             </main>
             <PortalFooter />
