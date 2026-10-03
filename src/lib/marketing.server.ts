@@ -79,7 +79,7 @@ export async function getPost(userId: string, id: string) {
   };
 }
 
-export async function savePost(userId: string, d: { id?: string | null; title: string; body: string; channels: string[]; imagePaths: string[]; scheduledAt: string | null }) {
+export async function savePost(userId: string, d: { id?: string | null | undefined; title: string; body: string; channels: string[]; imagePaths: string[]; scheduledAt: string | null }) {
   const { db } = await requireMarketing(userId);
   const channels = d.channels.filter((c) => (CHANNELS as readonly string[]).includes(c));
   const fields = { title: d.title.slice(0, 200), body: d.body, channels, image_paths: d.imagePaths.slice(0, 10), scheduled_at: d.scheduledAt, updated_at: new Date().toISOString() };
@@ -177,7 +177,7 @@ export async function listAudiences(userId: string) {
   return rows.map((a, i) => ({ ...a, members: counts[i] }));
 }
 
-export async function createAudience(userId: string, d: { name: string; sources: string[]; csv?: string | null }) {
+export async function createAudience(userId: string, d: { name: string; sources: string[]; csv?: string | null | undefined }) {
   const { db } = await requireMarketing(userId);
   const members = new Map<string, string | null>();
   const add = (email: string | null | undefined, name: string | null | undefined) => { const e = email?.trim().toLowerCase(); if (e && /@/.test(e) && !members.has(e)) members.set(e, name ?? null); };
@@ -234,7 +234,7 @@ export async function getEmail(userId: string, id: string) {
   };
 }
 
-export async function saveEmail(userId: string, d: { id?: string | null; name: string; subject: string; preheader: string | null; blocks: EmailBlock[]; audienceId: string | null; scheduledAt: string | null }) {
+export async function saveEmail(userId: string, d: { id?: string | null | undefined; name: string; subject: string; preheader: string | null; blocks: EmailBlock[]; audienceId: string | null; scheduledAt: string | null }) {
   const { db } = await requireMarketing(userId);
   const fields = { name: d.name.slice(0, 200), subject: d.subject.slice(0, 200), preheader: d.preheader, blocks: d.blocks.slice(0, 60), audience_id: d.audienceId, scheduled_at: d.scheduledAt, updated_at: new Date().toISOString() };
   if (!d.id) {

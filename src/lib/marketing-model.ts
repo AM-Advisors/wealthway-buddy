@@ -22,7 +22,7 @@ export const STATUS_LABEL: Record<string, string> = {
 export type EmailBlock =
   | { type: "heading"; text: string }
   | { type: "text"; text: string }
-  | { type: "image"; url: string; alt?: string }
+  | { type: "image"; url: string; alt?: string | undefined }
   | { type: "button"; text: string; href: string }
   | { type: "divider" };
 
