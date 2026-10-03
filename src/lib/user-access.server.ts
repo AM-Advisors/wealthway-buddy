@@ -8,7 +8,7 @@
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
 export const ACCESS_MANAGERS = ["super_admin", "executive", "admin", "operations"];
-const STAFF = ["super_admin", "super_administrator", "executive", "admin", "operations", "finance", "tax", "compliance", "legal",
+const STAFF = ["leadership", "super_admin", "super_administrator", "executive", "admin", "operations", "finance", "tax", "compliance", "legal",
   "fund_administration", "client_success", "sales_management", "cro", "account_executive", "bdr", "account_manager",
   "marketing_manager", "marketing_specialist", "operations_administrator", "access_administrator", "staff_administrator"];
 const BAN = "876000h"; // ~100 years; lifted on restore
@@ -21,6 +21,13 @@ export async function requireAccessManager(uid: string) {
   const db = await admin();
   const r = await rolesOf(db, uid);
   if (!r.some((x) => ACCESS_MANAGERS.includes(x))) throw new Error("Only Super Admin and Operations leads can manage access.");
+  return db;
+}
+/** Reads: access managers plus the view-only Leadership role. */
+export async function requireAccessViewer(uid: string) {
+  const db = await admin();
+  const r = await rolesOf(db, uid);
+  if (!r.some((x) => ACCESS_MANAGERS.includes(x) || x === "leadership")) throw new Error("Only leadership and Operations leads can view access.");
   return db;
 }
 async function log(db: any, e: { subject_kind: string; subject_id: string; action: string; scope?: string | null; scope_id?: string | null; reason?: string | null; actor_id: string }) {
@@ -56,7 +63,7 @@ export async function isGloballyBlocked(uid: string) {
 /* ---------- Directory ---------- */
 export type PersonType = "Employee" | "Fund Manager" | "Founder" | "Client contact" | "Investor" | "User";
 export async function directory(viewer: string) {
-  const db = await requireAccessManager(viewer);
+  const db = await requireAccessViewer(viewer);
   const [users, roles, cu, ftm, contacts, profiles, states, persons, si, ci, fi] = await Promise.all([
     allAuthUsers(db),
     db.from("user_roles").select("user_id, role").limit(50000),
@@ -101,12 +108,13 @@ export async function directory(viewer: string) {
     ...((fi.data ?? []) as any[]).map((i) => ({ table: "fund_invitations", id: i.id, email: i.email, name: i.invited_name, type: String(i.invite_role ?? i.role ?? "").includes("investor") ? "Investor" : "Fund Manager", invitedBy: names.get(i.invited_by) ?? "", sentAt: i.created_at, lastSent: i.last_sent_at ?? i.created_at, isTestDemo: i.is_test_demo })),
   ];
   const { data: clients } = await db.from("clients").select("id, name, status, is_test_demo").order("name");
-  return { people, invites, clients: clients ?? [] };
+  const canManage = (await rolesOf(db, viewer)).some((x) => ACCESS_MANAGERS.includes(x));
+  return {canManage,  people, invites, clients: clients ?? [] };
 }
 
 /** Quick status lookup for list pages (by emails). */
 export async function statusByEmail(viewer: string, emails: string[]) {
-  const db = await requireAccessManager(viewer);
+  const db = await requireAccessViewer(viewer);
   const list = [...new Set(emails.filter(Boolean).map((e) => e.toLowerCase()))].slice(0, 2000);
   if (!list.length) return {};
   const { data: profs } = await db.from("profiles").select("user_id, email, is_test_demo").in("email", list);
@@ -223,7 +231,7 @@ export async function archiveClient(viewer: string, clientId: string, archive: b
 }
 
 export async function accessHistory(viewer: string, subjectId: string) {
-  const db = await requireAccessManager(viewer);
+  const db = await requireAccessViewer(viewer);
   const { data } = await db.from("user_access_events").select("*").eq("subject_id", subjectId).order("created_at", { ascending: false }).limit(100);
   return data ?? [];
 }

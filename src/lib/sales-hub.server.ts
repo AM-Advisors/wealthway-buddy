@@ -431,7 +431,7 @@ export async function lossReasons(userId: string, from: string, to: string) {
 /** CRO home: team dashboard + targets + quoting-engine queues. Leadership only. */
 export async function croDashboard(userId: string, from: string, to: string) {
   const a = await salesActor(userId);
-  if (!a.roles.some((r) => ["cro", "sales_management", "super_admin", "executive"].includes(r))) throw new Error("The CRO dashboard is for Sales leadership.");
+  if (!a.roles.some((r) => ["cro", "sales_management", "super_admin", "executive", "leadership"].includes(r))) throw new Error("The CRO dashboard is for Sales leadership.");
   const base = await dashboard(userId, from, to);
   const db = await admin();
   const quotes = await visibleQuotes(a);

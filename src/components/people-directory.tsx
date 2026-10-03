@@ -63,7 +63,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                   <td className="p-3"><div className="flex flex-wrap gap-1">{p.types.map((t: string) => <Badge key={t} variant="outline">{t}</Badge>)}</div></td>
                   <td className="p-3">{p.status === "active" && !p.scopedRevokes.length && !p.isTestDemo ? "Active" : <AccessBadge info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}</td>
                   <td className="whitespace-nowrap p-3">{when(p.lastSignIn)}</td>
-                  <td className="p-3 text-right">{!p.isSelf && <PeopleActions userId={p.id} email={p.email} name={p.name} info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}</td>
+                  <td className="p-3 text-right">{!p.isSelf && q.data?.canManage && <PeopleActions userId={p.id} email={p.email} name={p.name} info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}</td>
                 </tr>
               ))}
               {!people.length && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No one here.</td></tr>}
@@ -86,9 +86,9 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                     <td className="p-3">{i.invitedBy || "—"}</td>
                     <td className="whitespace-nowrap p-3">{when(i.sentAt)}</td>
                     <td className="whitespace-nowrap p-3">{when(i.lastSent)}</td>
-                    <td className="space-x-1 whitespace-nowrap p-3 text-right">
+                    <td className="space-x-1 whitespace-nowrap p-3 text-right">{q.data?.canManage && <>
                       <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: i.table, id: i.id, value: !i.isTestDemo } }), i.isTestDemo ? "Unmarked." : "Marked as test/demo.")}>{i.isTestDemo ? "Unmark test" : "Mark test"}</Button>
-                      <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button>
+                      <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button></>}
                     </td>
                   </tr>
                 ))}
@@ -106,7 +106,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
           {!testClients.length ? <p className="text-sm text-muted-foreground">None marked. Use "Mark test" on the Clients list.</p> : (
             <ul className="divide-y rounded-lg border text-sm">{testClients.map((c: any) => (
               <li key={c.id} className="flex items-center justify-between p-3"><span>{c.name}</span>
-                <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: "client", id: c.id, value: false } }), "Unmarked.")}>Unmark test</Button></li>))}</ul>
+                {q.data?.canManage && <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: "client", id: c.id, value: false } }), "Unmarked.")}>Unmark test</Button>}</li>))}</ul>
           )}
         </section>
       )}

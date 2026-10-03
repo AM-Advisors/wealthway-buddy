@@ -108,7 +108,7 @@ export const accountBookFn = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const mine = await rolesOf(context);
-    const team = seesWholeTeam(mine) || mine.includes("executive");
+    const team = seesWholeTeam(mine) || mine.includes("executive") || mine.includes("leadership");
     if (!team && !mine.includes("account_manager")) throw new Error("Account Manager access only.");
     const db = await admin();
     let q = db.from("client_team_assignments").select("client_id, user_id").eq("team_role", "account_manager");

@@ -1,5 +1,5 @@
 // Pure: who must pass the account identity check, and what the gate shows. No I/O.
-export const STAFF_EXEMPT_ROLES = ["admin", "super_admin", "operations", "legal", "compliance", "fund_administration", "tax", "finance", "client_success", "executive", "sales", "account_executive", "bdr", "sales_management", "cro", "account_manager", "marketing_manager", "marketing_specialist"];
+export const STAFF_EXEMPT_ROLES = ["admin", "super_admin", "operations", "legal", "compliance", "fund_administration", "tax", "finance", "client_success", "executive", "sales", "account_executive", "bdr", "sales_management", "cro", "account_manager", "marketing_manager", "marketing_specialist", "leadership"];
 export const ACCOUNT_KYC_DECIDERS = ["admin", "super_admin", "compliance", "operations"];
 
 export type AccountCheckStatus = "not_started" | "pending" | "review" | "approved" | "declined" | "expired" | "sent_back";
