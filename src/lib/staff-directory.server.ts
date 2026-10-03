@@ -231,8 +231,13 @@ export async function financeOverview(viewer: string) {
   const [{ data: inv }, { data: quotes }, { data: clients }] = await Promise.all([
     db.from("invoices").select("id, number, client_id, status, issue_date, due_date, paid_on, total_cents, voided_at").order("issue_date", { ascending: false }).limit(5000),
     db.from("sales_quotes").select("id, quote_number, version, title, client_id, status, total_cents, valid_until, created_at").in("status", ["draft", "pending_approval", "approved", "sent"]).order("created_at", { ascending: false }).limit(500),
-    db.from("clients").select("id, name"),
+    db.from("clients").select("id, name, is_test_demo"),
   ]);
+  const testIds = new Set(((clients ?? []) as any[]).filter((c) => c.is_test_demo).map((c) => c.id));
+  if (testIds.size) {
+    (inv as any[] | null)?.splice(0, (inv as any[]).length, ...((inv as any[]).filter((r) => !testIds.has(r.client_id))));
+    (quotes as any[] | null)?.splice(0, (quotes as any[]).length, ...((quotes as any[]).filter((r) => !testIds.has(r.client_id))));
+  }
   const name = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name as string]));
   const invoices = ((inv ?? []) as any[]).filter((i) => !i.voided_at && i.status !== "void");
   const paid = invoices.filter((i) => i.paid_on || i.status === "paid");

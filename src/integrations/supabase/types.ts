@@ -5807,6 +5807,7 @@ export type Database = {
           invite_status: string | null
           invited_by: string | null
           invited_name: string | null
+          is_test_demo: boolean
           note: string | null
           status: string
           updated_at: string
@@ -5826,6 +5827,7 @@ export type Database = {
           invite_status?: string | null
           invited_by?: string | null
           invited_name?: string | null
+          is_test_demo?: boolean
           note?: string | null
           status?: string
           updated_at?: string
@@ -5845,6 +5847,7 @@ export type Database = {
           invite_status?: string | null
           invited_by?: string | null
           invited_name?: string | null
+          is_test_demo?: boolean
           note?: string | null
           status?: string
           updated_at?: string
@@ -6566,6 +6569,8 @@ export type Database = {
           client_role: string
           created_at: string
           id: string
+          revoked_at: string | null
+          revoked_by: string | null
           user_id: string
         }
         Insert: {
@@ -6574,6 +6579,8 @@ export type Database = {
           client_role?: string
           created_at?: string
           id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
           user_id: string
         }
         Update: {
@@ -6582,6 +6589,8 @@ export type Database = {
           client_role?: string
           created_at?: string
           id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
           user_id?: string
         }
         Relationships: [
@@ -6614,6 +6623,7 @@ export type Database = {
           id: string
           intake_status: string
           intake_step: number
+          is_test_demo: boolean
           jurisdiction: string | null
           legal_name: string | null
           msa_document_path: string | null
@@ -6650,6 +6660,7 @@ export type Database = {
           id?: string
           intake_status?: string
           intake_step?: number
+          is_test_demo?: boolean
           jurisdiction?: string | null
           legal_name?: string | null
           msa_document_path?: string | null
@@ -6686,6 +6697,7 @@ export type Database = {
           id?: string
           intake_status?: string
           intake_step?: number
+          is_test_demo?: boolean
           jurisdiction?: string | null
           legal_name?: string | null
           msa_document_path?: string | null
@@ -16952,6 +16964,7 @@ export type Database = {
           invite_role: Database["public"]["Enums"]["invitation_role"]
           invited_by: string | null
           invited_name: string | null
+          is_test_demo: boolean
           last_sent_at: string | null
           offering_id: string
           onboarding_status: string | null
@@ -16972,6 +16985,7 @@ export type Database = {
           invite_role?: Database["public"]["Enums"]["invitation_role"]
           invited_by?: string | null
           invited_name?: string | null
+          is_test_demo?: boolean
           last_sent_at?: string | null
           offering_id: string
           onboarding_status?: string | null
@@ -16992,6 +17006,7 @@ export type Database = {
           invite_role?: Database["public"]["Enums"]["invitation_role"]
           invited_by?: string | null
           invited_name?: string | null
+          is_test_demo?: boolean
           last_sent_at?: string | null
           offering_id?: string
           onboarding_status?: string | null
@@ -28968,6 +28983,7 @@ export type Database = {
           entry_source: string
           id: string
           identity_verified_at: string | null
+          is_test_demo: boolean
           kyc_status: Database["public"]["Enums"]["check_status"]
           kyc_verified_at: string | null
           legal_first_name: string | null
@@ -29003,6 +29019,7 @@ export type Database = {
           entry_source?: string
           id?: string
           identity_verified_at?: string | null
+          is_test_demo?: boolean
           kyc_status?: Database["public"]["Enums"]["check_status"]
           kyc_verified_at?: string | null
           legal_first_name?: string | null
@@ -29038,6 +29055,7 @@ export type Database = {
           entry_source?: string
           id?: string
           identity_verified_at?: string | null
+          is_test_demo?: boolean
           kyc_status?: Database["public"]["Enums"]["check_status"]
           kyc_verified_at?: string | null
           legal_first_name?: string | null
@@ -30469,6 +30487,7 @@ export type Database = {
           entity_name: string | null
           id: string
           investor_type: Database["public"]["Enums"]["investor_type"] | null
+          is_test_demo: boolean
           legal_name: string | null
           phone: string | null
           postal_code: string | null
@@ -30489,6 +30508,7 @@ export type Database = {
           entity_name?: string | null
           id?: string
           investor_type?: Database["public"]["Enums"]["investor_type"] | null
+          is_test_demo?: boolean
           legal_name?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -30509,6 +30529,7 @@ export type Database = {
           entity_name?: string | null
           id?: string
           investor_type?: Database["public"]["Enums"]["investor_type"] | null
+          is_test_demo?: boolean
           legal_name?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -34042,6 +34063,7 @@ export type Database = {
           id: string
           invited_by: string | null
           invited_name: string | null
+          is_test_demo: boolean
           role: Database["public"]["Enums"]["app_role"]
           status: string
           updated_at: string
@@ -34055,6 +34077,7 @@ export type Database = {
           id?: string
           invited_by?: string | null
           invited_name?: string | null
+          is_test_demo?: boolean
           role: Database["public"]["Enums"]["app_role"]
           status?: string
           updated_at?: string
@@ -34068,6 +34091,7 @@ export type Database = {
           id?: string
           invited_by?: string | null
           invited_name?: string | null
+          is_test_demo?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           updated_at?: string
@@ -35818,6 +35842,90 @@ export type Database = {
           sla?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_access_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          scope: string | null
+          scope_id: string | null
+          subject_id: string
+          subject_kind: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          scope?: string | null
+          scope_id?: string | null
+          subject_id: string
+          subject_kind: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          scope?: string | null
+          scope_id?: string | null
+          subject_id?: string
+          subject_kind?: string
+        }
+        Relationships: []
+      }
+      user_access_states: {
+        Row: {
+          actor_id: string
+          created_at: string
+          email: string | null
+          id: string
+          lifted_at: string | null
+          lifted_by: string | null
+          membership_snapshot: Json | null
+          person_id: string | null
+          reason: string
+          scope: string
+          scope_id: string | null
+          state: string
+          user_id: string | null
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          lifted_at?: string | null
+          lifted_by?: string | null
+          membership_snapshot?: Json | null
+          person_id?: string | null
+          reason: string
+          scope: string
+          scope_id?: string | null
+          state: string
+          user_id?: string | null
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          lifted_at?: string | null
+          lifted_by?: string | null
+          membership_snapshot?: Json | null
+          person_id?: string | null
+          reason?: string
+          scope?: string
+          scope_id?: string | null
+          state?: string
+          user_id?: string | null
         }
         Relationships: []
       }

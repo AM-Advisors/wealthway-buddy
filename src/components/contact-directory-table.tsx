@@ -16,6 +16,7 @@ import {
 } from "@/lib/client-directory.functions";
 import { inviteToFund } from "@/lib/invitations.functions";
 import { inviteClientContact } from "@/lib/client-contacts.functions";
+import { AccessBadge, PeopleActions, useAccessStatus } from "@/components/people-actions";
 import { filterDirectory, INVITE_LABEL, type DirectoryRow } from "@/lib/client-directory-model";
 
 type Kind = "fund_managers" | "founders";
@@ -38,7 +39,18 @@ export function ContactDirectoryTable({ kind }: { kind: Kind }) {
   const [client, setClient] = useState("all");
   const [status, setStatus] = useState("all");
   const [dialog, setDialog] = useState<DialogState>(null);
-  const rows = useMemo(() => filterDirectory((q.data?.rows ?? []) as DirectoryRow[], search, client, status), [q.data, search, client, status]);
+  const access = useAccessStatus(((q.data?.rows ?? []) as DirectoryRow[]).map((r) => r.email));
+  const acc = (e: string) => access.data?.[e.toLowerCase()];
+  const rows = useMemo(() => {
+    const base = filterDirectory((q.data?.rows ?? []) as DirectoryRow[], search, client, ["revoked", "archived", "test"].includes(status) ? "all" : status);
+    return base.filter((r) => {
+      const a = access.data?.[r.email.toLowerCase()];
+      if (status === "revoked") return a?.status === "revoked" || (a?.scoped ?? 0) > 0;
+      if (status === "archived") return a?.status === "archived";
+      if (status === "test") return !!a?.isTestDemo;
+      return a?.status !== "archived";
+    });
+  }, [q.data, search, client, status, access.data]);
   const targets = (q.data?.targets ?? []) as Target[];
   const refresh = () => qc.invalidateQueries({ queryKey: key });
 
@@ -77,6 +89,9 @@ export function ContactDirectoryTable({ kind }: { kind: Kind }) {
             <SelectItem value="all">Any status</SelectItem>
             <SelectItem value="not_invited">Not invited</SelectItem>
             <SelectItem value="invited">Invited</SelectItem>
+            <SelectItem value="revoked">Revoked</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+            <SelectItem value="test">Test/Demo</SelectItem>
             <SelectItem value="active">Active</SelectItem>
           </SelectContent>
         </Select>
@@ -104,11 +119,14 @@ export function ContactDirectoryTable({ kind }: { kind: Kind }) {
                 <TableCell><div className="font-medium">{r.name}</div><div className="text-xs text-muted-foreground">{r.email}</div></TableCell>
                 <TableCell className="text-sm">{r.companies.join(", ") || "—"}</TableCell>
                 <TableCell className="text-sm">{r.assignments.length ? r.assignments.map((a) => a.name).join(", ") : <span className="text-muted-foreground">None</span>}</TableCell>
-                <TableCell><Badge variant={r.invite === "active" ? "default" : r.invite === "invited" ? "secondary" : "outline"}>{INVITE_LABEL[r.invite]}</Badge></TableCell>
+                <TableCell><Badge variant={r.invite === "active" ? "default" : r.invite === "invited" ? "secondary" : "outline"}>{INVITE_LABEL[r.invite]}</Badge> <AccessBadge info={acc(r.email)} /></TableCell>
                 <TableCell className="text-sm">{r.verified ? "Verified" : <span className="text-muted-foreground">Not yet</span>}</TableCell>
                 <TableCell className="space-x-2 text-right">
                   <Button size="sm" variant="outline" onClick={() => setDialog({ mode: "assign", row: r })}>Assign</Button>
                   {r.invite !== "active" && <Button size="sm" variant="outline" disabled={invite.isPending} onClick={() => invite.mutate(r)}>{r.invite === "invited" ? "Resend" : "Invite"}</Button>}
+                  {access.data && <PeopleActions email={r.email} name={r.name} info={acc(r.email)}
+                    context={isFund ? (r.assignments.length === 1 ? { kind: "offering", id: r.assignments[0]!.id, label: r.assignments[0]!.name } : null)
+                      : (r.clientIds.length === 1 ? { kind: "client", id: r.clientIds[0]!, label: r.companies[0] ?? "this client" } : null)} />}
                 </TableCell>
               </TableRow>
             ))}

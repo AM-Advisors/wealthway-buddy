@@ -233,6 +233,7 @@ import { Route as AuthenticatedOpsMailRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOpsMailboxesRouteImport } from './routes/_authenticated/ops.mailboxes'
 import { Route as AuthenticatedOpsMessagesRouteImport } from './routes/_authenticated/ops.messages'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
+import { Route as AuthenticatedOpsPeopleRouteImport } from './routes/_authenticated/ops.people'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticated/ops.queue'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
@@ -346,6 +347,7 @@ import { Route as AuthenticatedOpsFundsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
 import { Route as AuthenticatedOpsInvestorsIndexRouteImport } from './routes/_authenticated/ops.investors.index'
 import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './routes/_authenticated/ops.investors.$investorId'
+import { Route as AuthenticatedOpsPeopleTestDemoRouteImport } from './routes/_authenticated/ops.people_.test-demo'
 import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from './routes/_authenticated/professional.acting.$delegationId'
 import { Route as AuthenticatedSalesQuotesIdRouteImport } from './routes/_authenticated/sales_.quotes_.$id'
 import { Route as AuthenticatedSalesRepsIdRouteImport } from './routes/_authenticated/sales_.reps.$id'
@@ -1640,6 +1642,11 @@ const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
   path: '/ops/nav',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsPeopleRoute = AuthenticatedOpsPeopleRouteImport.update({
+  id: '/ops/people',
+  path: '/ops/people',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpsPerformanceRoute =
   AuthenticatedOpsPerformanceRouteImport.update({
     id: '/ops/performance',
@@ -2301,6 +2308,12 @@ const AuthenticatedOpsInvestorsInvestorIdRoute =
     path: '/ops/investors/$investorId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsPeopleTestDemoRoute =
+  AuthenticatedOpsPeopleTestDemoRouteImport.update({
+    id: '/ops/people_/test-demo',
+    path: '/ops/people/test-demo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProfessionalActingDelegationIdRoute =
   AuthenticatedProfessionalActingDelegationIdRouteImport.update({
     id: '/acting/$delegationId',
@@ -2722,6 +2735,7 @@ export interface FileRoutesByFullPath {
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/ops/people': typeof AuthenticatedOpsPeopleRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -2830,6 +2844,7 @@ export interface FileRoutesByFullPath {
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
+  '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
@@ -3088,6 +3103,7 @@ export interface FileRoutesByTo {
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/ops/people': typeof AuthenticatedOpsPeopleRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -3195,6 +3211,7 @@ export interface FileRoutesByTo {
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
+  '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
@@ -3462,6 +3479,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/_authenticated/ops/people': typeof AuthenticatedOpsPeopleRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -3570,6 +3588,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
+  '/_authenticated/ops/people_/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
   '/_authenticated/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/_authenticated/sales_/quotes_/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/_authenticated/sales_/reps/$id': typeof AuthenticatedSalesRepsIdRoute
@@ -3837,6 +3856,7 @@ export interface FileRouteTypes {
     | '/ops/mailboxes'
     | '/ops/messages'
     | '/ops/nav'
+    | '/ops/people'
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
@@ -3945,6 +3965,7 @@ export interface FileRouteTypes {
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
+    | '/ops/people/test-demo'
     | '/professional/acting/$delegationId'
     | '/sales/quotes/$id'
     | '/sales/reps/$id'
@@ -4203,6 +4224,7 @@ export interface FileRouteTypes {
     | '/ops/mailboxes'
     | '/ops/messages'
     | '/ops/nav'
+    | '/ops/people'
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
@@ -4310,6 +4332,7 @@ export interface FileRouteTypes {
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
+    | '/ops/people/test-demo'
     | '/professional/acting/$delegationId'
     | '/sales/quotes/$id'
     | '/sales/reps/$id'
@@ -4576,6 +4599,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/mailboxes'
     | '/_authenticated/ops/messages'
     | '/_authenticated/ops/nav'
+    | '/_authenticated/ops/people'
     | '/_authenticated/ops/performance'
     | '/_authenticated/ops/queue'
     | '/_authenticated/ops/readiness'
@@ -4684,6 +4708,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
     | '/_authenticated/ops/investors/$investorId'
+    | '/_authenticated/ops/people_/test-demo'
     | '/_authenticated/professional/acting/$delegationId'
     | '/_authenticated/sales_/quotes_/$id'
     | '/_authenticated/sales_/reps/$id'
@@ -6365,6 +6390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsNavRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/people': {
+      id: '/_authenticated/ops/people'
+      path: '/ops/people'
+      fullPath: '/ops/people'
+      preLoaderRoute: typeof AuthenticatedOpsPeopleRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/performance': {
       id: '/_authenticated/ops/performance'
       path: '/ops/performance'
@@ -7156,6 +7188,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsInvestorsInvestorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/people_/test-demo': {
+      id: '/_authenticated/ops/people_/test-demo'
+      path: '/ops/people/test-demo'
+      fullPath: '/ops/people/test-demo'
+      preLoaderRoute: typeof AuthenticatedOpsPeopleTestDemoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/professional/acting/$delegationId': {
       id: '/_authenticated/professional/acting/$delegationId'
       path: '/acting/$delegationId'
@@ -7830,6 +7869,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsMailboxesRoute: typeof AuthenticatedOpsMailboxesRoute
   AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
+  AuthenticatedOpsPeopleRoute: typeof AuthenticatedOpsPeopleRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsQueueRoute: typeof AuthenticatedOpsQueueRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
@@ -7891,6 +7931,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
+  AuthenticatedOpsPeopleTestDemoRoute: typeof AuthenticatedOpsPeopleTestDemoRoute
   AuthenticatedSalesQuotesIdRoute: typeof AuthenticatedSalesQuotesIdRoute
   AuthenticatedSalesRepsIdRoute: typeof AuthenticatedSalesRepsIdRoute
   AuthenticatedAdminContractsIndexRoute: typeof AuthenticatedAdminContractsIndexRoute
@@ -8097,6 +8138,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsMailboxesRoute: AuthenticatedOpsMailboxesRoute,
   AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
+  AuthenticatedOpsPeopleRoute: AuthenticatedOpsPeopleRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsQueueRoute: AuthenticatedOpsQueueRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
@@ -8179,6 +8221,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
   AuthenticatedOpsInvestorsInvestorIdRoute:
     AuthenticatedOpsInvestorsInvestorIdRoute,
+  AuthenticatedOpsPeopleTestDemoRoute: AuthenticatedOpsPeopleTestDemoRoute,
   AuthenticatedSalesQuotesIdRoute: AuthenticatedSalesQuotesIdRoute,
   AuthenticatedSalesRepsIdRoute: AuthenticatedSalesRepsIdRoute,
   AuthenticatedAdminContractsIndexRoute: AuthenticatedAdminContractsIndexRoute,

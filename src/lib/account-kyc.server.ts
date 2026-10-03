@@ -41,6 +41,8 @@ export async function accountKycStatus(uid: string) {
 
 /** Throws unless the account may use the platform. Used by the server-side gate. */
 export async function assertAccountVerified(uid: string) {
+  const { isGloballyBlocked } = await import("@/lib/user-access.server");
+  if (await isGloballyBlocked(uid)) throw new Response("Access revoked", { status: 403 });
   const s = await accountKycStatus(uid);
   if (!s.open) throw new Response("Identity verification required", { status: 403 });
 }
