@@ -198,8 +198,11 @@ export async function sendOutreach(userId: string, d: { contactId: string; chann
     if (!c.email) throw new Error("This contact has no email address.");
     if (c.consent === "unsubscribed") throw new Error("This contact has unsubscribed from email.");
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const res: any = await sendTemplateEmail("crm-campaign", c.email, { templateData: { subject: d.subject || "Following up", body: d.body, fundName: null } } as any);
-    if (res && res.ok === false) throw new Error("The email couldn't be sent. Please try again.");
+    let res;
+    try {
+      res = await sendTemplateEmail("crm-campaign", c.email, { templateData: { subject: d.subject || "Following up", body: d.body, fundName: null } });
+    } catch (e) { console.error("Sales email failed", e); throw new Error("The email couldn't be sent. Please try again."); }
+    if (!res.sent) throw new Error("This address is on the do-not-email list.");
   } else {
     if (!c.phone) throw new Error("This contact has no phone number.");
     const lovable = process.env["LOVABLE_API_KEY"];
