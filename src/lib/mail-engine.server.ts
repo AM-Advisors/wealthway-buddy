@@ -19,7 +19,7 @@ export async function resolveMailbox(userId: string, ref: MailboxRef): Promise<{
     const key = await getConnectionKeyForUser(userId, GMAIL_CONNECTOR_ID);
     if (!key) throw new Error("Connect your Google inbox on the Mailboxes page first.");
     const call: Caller = async (path, init) => {
-      const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: GMAIL_CONNECTOR_ID, path, init, requiredScopes: GOOGLE_MAIL_SCOPES });
+      const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: GMAIL_CONNECTOR_ID, path, ...(init ? { init } : {}), requiredScopes: GOOGLE_MAIL_SCOPES });
       if (await appUserReconnectRequired(res)) throw new Error("Your Google access needs to be renewed — reconnect on the Mailboxes page.");
       return res;
     };
@@ -162,7 +162,7 @@ const b64 = (s: string) => Buffer.from(s, "utf8").toString("base64");
 const mimeHeader = (v: string) => (/^[\x00-\x7F]*$/.test(v) ? v : `=?UTF-8?B?${b64(v)}?=`);
 const clean = (v: string) => v.replace(/[\r\n]+/g, " ").trim();
 
-export interface Outgoing { to: string; cc?: string; subject: string; body: string; threadId?: string; inReplyTo?: string; references?: string }
+export interface Outgoing { to: string; cc?: string | undefined; subject: string; body: string; threadId?: string | undefined; inReplyTo?: string | undefined; references?: string | undefined }
 
 function raw(o: Outgoing): string {
   const lines = [
@@ -313,7 +313,7 @@ export async function ticketDetail(mailboxId: string, threadId: string) {
 
 const LEADERS = ["super_admin", "executive", "admin", "operations"];
 
-export async function updateTicket(actor: string, ticketId: string, patch: { assigneeId?: string | null; status?: "open" | "in_progress" | "waiting" | "resolved"; note?: string }) {
+export async function updateTicket(actor: string, ticketId: string, patch: { assigneeId?: string | null | undefined; status?: "open" | "in_progress" | "waiting" | "resolved" | undefined; note?: string | undefined }) {
   await requireStaff(actor);
   const db = await admin();
   const { data: t } = await db.from("mail_tickets").select("*").eq("id", ticketId).maybeSingle();
