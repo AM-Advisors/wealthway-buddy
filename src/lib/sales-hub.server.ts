@@ -44,7 +44,9 @@ export async function salesTeam(a: Actor) {
   const { data } = await db.from("user_roles").select("user_id, role").in("role", SALES_TEAM_ROLES);
   const byUser = new Map<string, string[]>();
   for (const r of (data ?? []) as any[]) byUser.set(r.user_id, [...(byUser.get(r.user_id) ?? []), r.role]);
-  const ids = [...byUser.keys()].filter((id) => canSee(a, id));
+  const { testDemoIds } = await import("@/lib/user-access.server");
+  const td = await testDemoIds();
+  const ids = [...byUser.keys()].filter((id) => canSee(a, id) && !td.users.has(id));
   const nm = await names(ids);
   const { data: lines } = await db.from("sales_reporting_lines").select("user_id, manager_user_id");
   const mgr = new Map(((lines ?? []) as any[]).map((l) => [l.user_id, l.manager_user_id]));
@@ -63,7 +65,9 @@ async function visibleOutreach(a: Actor, f: { from?: string | undefined; to?: st
   if (f.contactId) q = q.eq("contact_id", f.contactId);
   if (a.visible) q = q.in("owner_user_id", a.visible);
   const { data } = await q;
-  return ((data ?? []) as any[]).filter((r) => r.visibility !== "private" || r.owner_user_id === a.userId);
+  const { testDemoIds } = await import("@/lib/user-access.server");
+  const td = await testDemoIds();
+  return ((data ?? []) as any[]).filter((r) => !td.users.has(r.owner_user_id)).filter((r) => r.visibility !== "private" || r.owner_user_id === a.userId);
 }
 
 async function visibleDeals(a: Actor) {
@@ -71,14 +75,18 @@ async function visibleDeals(a: Actor) {
   let q = db.from("crm_deals").select("*").eq("scope", "harmonious").is("archived_at", null);
   if (a.visible) q = q.in("owner_user_id", a.visible);
   const { data } = await q;
-  return ((data ?? []) as any[]).map((d) => ({ ...d, s: normalizeStage(d.sales_stage ?? d.stage) as SalesStage }));
+  const { testDemoIds, isTestRow } = await import("@/lib/user-access.server");
+  const td = await testDemoIds();
+  return ((data ?? []) as any[]).filter((d) => !isTestRow(td, d)).map((d) => ({ ...d, s: normalizeStage(d.sales_stage ?? d.stage) as SalesStage }));
 }
 
 async function visibleQuotes(a: Actor) {
   const db = await admin();
   let q = db.from("sales_quotes").select("*").neq("status", "superseded");
   if (a.visible) q = q.in("owner_user_id", a.visible);
-  return ((await q).data ?? []) as any[];
+  const { testDemoIds, isTestRow } = await import("@/lib/user-access.server");
+  const td = await testDemoIds();
+  return (((await q).data ?? []) as any[]).filter((r) => !isTestRow(td, r));
 }
 
 const inRange = (iso: string | null | undefined, from: string, to: string) => !!iso && iso >= from && iso < to;

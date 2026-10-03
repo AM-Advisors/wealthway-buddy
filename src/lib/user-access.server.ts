@@ -239,9 +239,18 @@ export async function accessHistory(viewer: string, subjectId: string) {
 /** Ids marked test/demo, for excluding from totals. */
 export async function testDemoIds() {
   const db = await admin();
-  const [p, c] = await Promise.all([
+  const [p, c, pe] = await Promise.all([
     db.from("profiles").select("user_id").eq("is_test_demo", true),
     db.from("clients").select("id").eq("is_test_demo", true),
+    db.from("persons").select("id, user_id").eq("is_test_demo", true),
   ]);
-  return { users: new Set<string>(((p.data ?? []) as any[]).map((x) => x.user_id)), clients: new Set<string>(((c.data ?? []) as any[]).map((x) => x.id)) };
+  const users = new Set<string>(((p.data ?? []) as any[]).map((x) => x.user_id));
+  const persons = new Set<string>();
+  for (const x of (pe.data ?? []) as any[]) { persons.add(x.id); if (x.user_id) users.add(x.user_id); }
+  return { users, persons, clients: new Set<string>(((c.data ?? []) as any[]).map((x) => x.id)) };
+}
+
+/** True when a row belongs to a test/demo client, user or person. */
+export function isTestRow(t: { users: Set<string>; persons: Set<string>; clients: Set<string> }, r: any) {
+  return (r.client_id && t.clients.has(r.client_id)) || (r.investor_user_id && t.users.has(r.investor_user_id)) || (r.owner_user_id && t.users.has(r.owner_user_id)) || (r.user_id && t.users.has(r.user_id)) || (r.person_id && t.persons.has(r.person_id));
 }
