@@ -1,5 +1,6 @@
 import { FundSignoffQueue } from "@/components/signoff-board";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { FundWorkspace, FUND_TABS } from "@/components/fund-workspace";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
@@ -16,20 +17,23 @@ export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
     { property: "og:description", content: "Fund formation and launch readiness for Harmonious staff." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" },
   ] }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string | undefined } => ({
+    tab: typeof s["tab"] === "string" && (s["tab"] === "setup" || (FUND_TABS as readonly string[]).includes(s["tab"])) ? (s["tab"] as string) : undefined,
+  }),
   component: FundSetupDetail,
 });
 
 function FundSetupDetail() {
   const { fundId } = Route.useParams();
+  const { tab = "setup" } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const get = useServerFn(getStaffFundSetup);
   const q = useQuery({ queryKey: ["staff-fund-setup", fundId], queryFn: () => get({ data: { offeringId: fundId } }), retry: false });
   if (q.isPending) return <main className="p-6">Loading setup…</main>;
   if (q.isError) return <main className="p-6" role="alert">{(q.error as Error).message}</main>;
   const d = q.data;
-  return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-    <Button variant="ghost" size="sm" asChild><Link to="/ops/fund-setup">← Funds &amp; SPVs</Link></Button>
-    <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>
-    {d.retired ? <p>This Fund is retired. Its setup cannot be changed.</p> : d.canSeeOperations ? <>
+  const setupBody = <>
+{d.retired ? <p>This Fund is retired. Its setup cannot be changed.</p> : d.canSeeOperations ? <>
       <section className="space-y-3 border-t pt-6" aria-label="Entity formation and launch">
         <h2 className="font-heading text-xl font-semibold">Entity formation &amp; launch</h2>
         {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
@@ -54,5 +58,14 @@ function FundSetupDetail() {
         <FundSignoffQueue fundId={fundId} />
       </section>}
     </> : <p>Fund details are available to the Operations team.</p>}
+  </>;
+  return <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
+    <Button variant="ghost" size="sm" asChild><Link to="/ops/fund-setup">← Funds &amp; SPVs</Link></Button>
+    {(d.retired || !d.canSeeOperations) && <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>}
+    {d.retired || !d.canSeeOperations ? setupBody : <FundWorkspace fundId={fundId} mode="harmonious" tab={tab} onTab={(v) => navigate({ search: { tab: v }, replace: true })}
+      headerExtra={<>
+        <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
+      </>}
+      extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6">{setupBody}</div> }]} />}
   </main>;
 }
