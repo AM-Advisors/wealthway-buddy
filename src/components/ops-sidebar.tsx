@@ -40,6 +40,8 @@ import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
 import { opsWorkAreas, type OpsCapability } from "@/lib/ops-capabilities";
+import { useServerFn } from "@tanstack/react-start";
+import { recordStaffActivity } from "@/lib/staff-directory.functions";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -73,6 +75,7 @@ const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]
 const SALES_ROLES = ["sales", "account_executive", "bdr", "sales_management", "cro", "executive", "super_admin"];
 const AM_ROLES = ["account_manager", "client_success", "executive", "super_admin", "cro", "sales_management"];
 const LEADER_ROLES = ["cro", "sales_management", "executive", "super_admin"];
+const FINANCE_IDS = ["capital", "accounting", "tax"];
 
 function useSectionOpen(id: string, containsActive: boolean) {
   const [open, setOpen] = useState(true);
@@ -159,14 +162,29 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const home = sections.find((s) => s.id === "home");
   const adminSection = sections.find((s) => s.id === "administration");
+  const has = (...r: string[]) => staffRoles.some((x) => r.includes(x));
+  const leader = has("super_admin", "executive", "admin");
+  const toItem = (s: (typeof sections)[number]) => ({ ...s, sub: (OPS_SUB[s.id] ?? []).filter((x) => x.always || allowedUrls.has(x.url)) });
   const opsItems: NavItem[] = salesOnly ? [] : [
+    ...(leader || has("operations", "fund_administration") ? [{ id: "dash-ops", title: "Operations dashboard", url: "/ops/dashboards/operations", icon: "report" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
-    ...sections.filter((s) => s.id !== "home" && s.id !== "administration").map((s) => ({
-      ...s, sub: (OPS_SUB[s.id] ?? []).filter((x) => x.always || allowedUrls.has(x.url)),
-    })),
+    ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
   ];
   const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Compliance & Controls", url: "/ops/compliance" }].filter((x) => allowedUrls.has(x.url));
+  if (leader || has("compliance", "legal")) regulatorySub.unshift({ title: "Compliance dashboard", url: "/ops/dashboards/compliance" });
   if (regulatorySub.length) opsItems.push({ id: "regulatory", title: "Regulatory & filings", url: regulatorySub[0]!.url, icon: "shield", sub: regulatorySub });
+  const financeItems: NavItem[] = salesOnly ? [] : [
+    ...(leader || has("finance", "tax", "fund_administration") ? [{ id: "dash-finance", title: "Finance dashboard", url: "/ops/dashboards/finance", icon: "report" }] : []),
+    ...sections.filter((s) => FINANCE_IDS.includes(s.id)).map(toItem),
+  ];
+  const teamItems: NavItem[] = salesOnly ? [] : [
+    ...(leader ? [{ id: "dash-leadership", title: "Leadership dashboard", url: "/ops/dashboards/leadership", icon: "report" }] : []),
+    { id: "employees", title: "Employees & activity", url: "/ops/employees", icon: "people" },
+    ...(leader ? [
+      { id: "invites", title: "Invites & access", url: "/ops/access-control", icon: "shield" },
+      { id: "roles", title: "Roles", url: "/ops/roles", icon: "check" },
+    ] : []),
+  ];
 
   const showSales = salesOnly || staffRoles.some((r) => SALES_ROLES.includes(r));
   const salesItems: NavItem[] = showSales ? [
@@ -192,7 +210,14 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   ] : [];
 
   const exact = (i: NavItem) => pathname === i.url;
-  const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
+  const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
+
+  // Record staff screen views for managers' activity view (append-only, server re-checks staff).
+  const logView = useServerFn(recordStaffActivity);
+  useEffect(() => {
+    const t = setTimeout(() => { void logView({ data: { kind: "page", path: pathname, label: document.title.replace(/ - Harmonious.*$/, "") || null } }).catch(() => {}); }, 800);
+    return () => clearTimeout(t);
+  }, [pathname, logView]);
 
   const close = () => {
     setQuery("");
@@ -260,8 +285,10 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarGroup>
             )}
             <NavSection id="operations" label="Operations" items={opsItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
+            <NavSection id="finance" label="Accounting & Finance" items={financeItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={amItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
+            <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "employees" ? pathname.startsWith(i.url) : pathname === i.url} />
             {adminSection && (
               <NavSection id="administration" label="Administration" items={[adminSection]} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             )}
