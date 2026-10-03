@@ -64,7 +64,6 @@ function FundSetupDetail() {
     <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>
     {d.retired || !d.canSeeOperations ? setupBody : <FundWorkspace fundId={fundId} mode="harmonious" tab={tab} onTab={(v) => navigate({ search: { tab: v }, replace: true })}
       headerExtra={<>
-        <Button size="sm" variant="outline" asChild><Link to="/ops/fund/$fundId" params={{ fundId }}>Fund record</Link></Button>
         <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
       </>}
       extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6">{setupBody}</div> }]} />}
