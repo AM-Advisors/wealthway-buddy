@@ -90,6 +90,9 @@ import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/res
 import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
+import { Route as AuthenticatedAccountManagerClientsRouteImport } from './routes/_authenticated/account-manager_.clients'
+import { Route as AuthenticatedAccountManagerHandoffsRouteImport } from './routes/_authenticated/account-manager_.handoffs'
+import { Route as AuthenticatedAccountManagerRenewalsRouteImport } from './routes/_authenticated/account-manager_.renewals'
 import { Route as AuthenticatedAccountAgreementsRouteImport } from './routes/_authenticated/account.agreements'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminApplicationIdRouteImport } from './routes/_authenticated/admin.$applicationId'
@@ -778,6 +781,24 @@ const SolutionsIndexRoute = SolutionsIndexRouteImport.update({
   path: '/solutions/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccountManagerClientsRoute =
+  AuthenticatedAccountManagerClientsRouteImport.update({
+    id: '/account-manager_/clients',
+    path: '/account-manager/clients',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAccountManagerHandoffsRoute =
+  AuthenticatedAccountManagerHandoffsRouteImport.update({
+    id: '/account-manager_/handoffs',
+    path: '/account-manager/handoffs',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAccountManagerRenewalsRoute =
+  AuthenticatedAccountManagerRenewalsRouteImport.update({
+    id: '/account-manager_/renewals',
+    path: '/account-manager/renewals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAccountAgreementsRoute =
   AuthenticatedAccountAgreementsRouteImport.update({
     id: '/account/agreements',
@@ -2444,6 +2465,9 @@ export interface FileRoutesByFullPath {
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/solutions/': typeof SolutionsIndexRoute
+  '/account-manager/clients': typeof AuthenticatedAccountManagerClientsRoute
+  '/account-manager/handoffs': typeof AuthenticatedAccountManagerHandoffsRoute
+  '/account-manager/renewals': typeof AuthenticatedAccountManagerRenewalsRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -2792,6 +2816,9 @@ export interface FileRoutesByTo {
   '/investor': typeof InvestorIndexRoute
   '/resources': typeof ResourcesIndexRoute
   '/solutions': typeof SolutionsIndexRoute
+  '/account-manager/clients': typeof AuthenticatedAccountManagerClientsRoute
+  '/account-manager/handoffs': typeof AuthenticatedAccountManagerHandoffsRoute
+  '/account-manager/renewals': typeof AuthenticatedAccountManagerRenewalsRoute
   '/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -3142,6 +3169,9 @@ export interface FileRoutesById {
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
   '/solutions/': typeof SolutionsIndexRoute
+  '/_authenticated/account-manager_/clients': typeof AuthenticatedAccountManagerClientsRoute
+  '/_authenticated/account-manager_/handoffs': typeof AuthenticatedAccountManagerHandoffsRoute
+  '/_authenticated/account-manager_/renewals': typeof AuthenticatedAccountManagerRenewalsRoute
   '/_authenticated/account/agreements': typeof AuthenticatedAccountAgreementsRoute
   '/_authenticated/admin/$applicationId': typeof AuthenticatedAdminApplicationIdRoute
   '/_authenticated/admin/access': typeof AuthenticatedAdminAccessRoute
@@ -3496,6 +3526,9 @@ export interface FileRouteTypes {
     | '/investor/'
     | '/resources/'
     | '/solutions/'
+    | '/account-manager/clients'
+    | '/account-manager/handoffs'
+    | '/account-manager/renewals'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -3844,6 +3877,9 @@ export interface FileRouteTypes {
     | '/investor'
     | '/resources'
     | '/solutions'
+    | '/account-manager/clients'
+    | '/account-manager/handoffs'
+    | '/account-manager/renewals'
     | '/account/agreements'
     | '/admin/$applicationId'
     | '/admin/access'
@@ -4193,6 +4229,9 @@ export interface FileRouteTypes {
     | '/investor/'
     | '/resources/'
     | '/solutions/'
+    | '/_authenticated/account-manager_/clients'
+    | '/_authenticated/account-manager_/handoffs'
+    | '/_authenticated/account-manager_/renewals'
     | '/_authenticated/account/agreements'
     | '/_authenticated/admin/$applicationId'
     | '/_authenticated/admin/access'
@@ -5092,6 +5131,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/solutions/'
       preLoaderRoute: typeof SolutionsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account-manager_/clients': {
+      id: '/_authenticated/account-manager_/clients'
+      path: '/account-manager/clients'
+      fullPath: '/account-manager/clients'
+      preLoaderRoute: typeof AuthenticatedAccountManagerClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/account-manager_/handoffs': {
+      id: '/_authenticated/account-manager_/handoffs'
+      path: '/account-manager/handoffs'
+      fullPath: '/account-manager/handoffs'
+      preLoaderRoute: typeof AuthenticatedAccountManagerHandoffsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/account-manager_/renewals': {
+      id: '/_authenticated/account-manager_/renewals'
+      path: '/account-manager/renewals'
+      fullPath: '/account-manager/renewals'
+      preLoaderRoute: typeof AuthenticatedAccountManagerRenewalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/account/agreements': {
       id: '/_authenticated/account/agreements'
@@ -7288,6 +7348,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedViewAsRoute: typeof AuthenticatedViewAsRoute
   AuthenticatedWireRoute: typeof AuthenticatedWireRoute
   AuthenticatedWireConfirmationRoute: typeof AuthenticatedWireConfirmationRoute
+  AuthenticatedAccountManagerClientsRoute: typeof AuthenticatedAccountManagerClientsRoute
+  AuthenticatedAccountManagerHandoffsRoute: typeof AuthenticatedAccountManagerHandoffsRoute
+  AuthenticatedAccountManagerRenewalsRoute: typeof AuthenticatedAccountManagerRenewalsRoute
   AuthenticatedAccountAgreementsRoute: typeof AuthenticatedAccountAgreementsRoute
   AuthenticatedAdminApplicationIdRoute: typeof AuthenticatedAdminApplicationIdRoute
   AuthenticatedAdminAccessRoute: typeof AuthenticatedAdminAccessRoute
@@ -7512,6 +7575,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedViewAsRoute: AuthenticatedViewAsRoute,
   AuthenticatedWireRoute: AuthenticatedWireRoute,
   AuthenticatedWireConfirmationRoute: AuthenticatedWireConfirmationRoute,
+  AuthenticatedAccountManagerClientsRoute:
+    AuthenticatedAccountManagerClientsRoute,
+  AuthenticatedAccountManagerHandoffsRoute:
+    AuthenticatedAccountManagerHandoffsRoute,
+  AuthenticatedAccountManagerRenewalsRoute:
+    AuthenticatedAccountManagerRenewalsRoute,
   AuthenticatedAccountAgreementsRoute: AuthenticatedAccountAgreementsRoute,
   AuthenticatedAdminApplicationIdRoute: AuthenticatedAdminApplicationIdRoute,
   AuthenticatedAdminAccessRoute: AuthenticatedAdminAccessRoute,
