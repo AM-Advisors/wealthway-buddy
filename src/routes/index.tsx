@@ -62,7 +62,7 @@ function Index() {
 
       <main>
         {/* Hero */}
-        <section className="bg-brand-gradient text-primary-foreground">
+        <section className="bg-brand-gradient text-brand-white">
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2 lg:py-28">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-accent">
@@ -71,7 +71,7 @@ function Index() {
               <h1 className="mt-6 text-4xl leading-[1.1] sm:text-5xl lg:text-6xl">
                 Your Funds On Easy Mode
               </h1>
-              <p className="mt-6 max-w-lg text-lg text-primary-foreground/75">
+              <p className="mt-6 max-w-lg text-lg text-brand-white/80">
                 Move at the speed of the deal. We form the entity, run compliant investor
                 onboarding and administer the fund, so the difference between closing an
                 opportunity and missing it is never paperwork.
@@ -86,12 +86,12 @@ function Index() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="border-brand-white/40 bg-transparent text-brand-white hover:bg-brand-white/10 hover:text-brand-white"
                 >
                   <Link to="/platform">See how it works</Link>
                 </Button>
               </div>
-              <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-2 text-sm text-primary-foreground/70">
+              <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-2 text-sm text-brand-white/80">
                 <li>Rapid entity formation</li>
                 <li>Streamlined onboarding &amp; compliance</li>
                 <li>Investor-ready from day one</li>

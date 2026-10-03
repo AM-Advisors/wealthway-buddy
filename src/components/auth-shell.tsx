@@ -22,15 +22,15 @@ export function AuthShell({
 }) {
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-2">
-      <aside className="hidden flex-col justify-between bg-brand-gradient px-10 py-12 text-primary-foreground lg:flex">
+      <aside className="hidden flex-col justify-between bg-brand-gradient px-10 py-12 text-brand-white lg:flex">
         <Link to="/" aria-label="Harmonious home">
           <Logo variant="white" className="h-8 w-auto" />
         </Link>
         <div className="max-w-sm">
-          <h2 className="text-3xl leading-tight text-primary-foreground">{heading}</h2>
-          <p className="mt-4 text-primary-foreground/75">{blurb}</p>
+          <h2 className="text-3xl leading-tight text-brand-white">{heading}</h2>
+          <p className="mt-4 text-brand-white/80">{blurb}</p>
         </div>
-        <ul className="space-y-2 text-sm text-primary-foreground/70">
+        <ul className="space-y-2 text-sm text-brand-white/80">
           {points.map((p) => (
             <li key={p}>{p}</li>
           ))}
@@ -41,7 +41,8 @@ export function AuthShell({
         <section className="flex flex-1 items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
             <Link to="/" aria-label="Harmonious home" className="lg:hidden">
-              <Logo variant="navy" className="mb-8 h-7 w-auto" />
+              <span className="dark:hidden"><Logo variant="navy" className="mb-8 h-7 w-auto" /></span>
+              <span className="hidden dark:block"><Logo variant="white" className="mb-8 h-7 w-auto" /></span>
             </Link>
             {children}
           </div>
