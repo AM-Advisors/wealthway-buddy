@@ -1,0 +1,1 @@
+ALTER TABLE public.crm_deals ADD COLUMN IF NOT EXISTS sales_stage text CHECK (sales_stage IS NULL OR sales_stage IN ('outreach','connected','meeting_set','meeting_held','quoted','contract_sent','contract_won','contract_lost','contact_later'));

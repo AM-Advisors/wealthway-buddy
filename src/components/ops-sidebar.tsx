@@ -77,10 +77,14 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const staffRoles = session?.staffRoles ?? [];
   // The Commercial section: Sales and Account Management. Visible to
   // commercial staff and leadership; the backend re-checks every page.
-  const commercialRoles = ["sales", "sales_management", "cro", "account_manager", "client_success", "executive", "super_admin"];
+  const commercialRoles = ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager", "client_success", "executive", "super_admin"];
   const showCommercial = salesOnly || staffRoles.some((r) => commercialRoles.includes(r));
   const commercialItems = [
+    { id: "sales-dashboard", title: "Sales dashboard", url: "/sales/dashboard", icon: "briefcase" },
     { id: "sales", title: "Sales", url: "/sales", icon: "briefcase" },
+    { id: "sales-outreach", title: "Outreach", url: "/sales/outreach", icon: "people" },
+    { id: "sales-team", title: "Sales team", url: "/sales/team", icon: "people" },
+    { id: "sales-quotes", title: "Quotes", url: "/sales/quotes", icon: "briefcase" },
     { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" },
     { id: "account-manager", title: "Account management", url: "/account-manager", icon: "people" },
   ];
@@ -199,7 +203,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                 <SidebarMenu>
                   {commercialItems.map((item) => {
                     const Icon = ICONS[item.icon] ?? Briefcase;
-                    const active = pathname === item.url || pathname.startsWith(item.url + "/");
+                    const active = pathname === item.url || (item.url !== "/sales" && pathname.startsWith(item.url + "/"));
                     return (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton
@@ -248,6 +252,6 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
 /** Plain user type shown under the company name: Operations, Sales or Account Manager. */
 function staffUserType(roles: string[], salesOnly: boolean): string {
   if (roles.includes("client_success")) return "Account Manager";
-  if (salesOnly || (roles.some((r) => r === "sales" || r === "sales_management") && !roles.includes("operations"))) return "Sales";
+  if (salesOnly || (roles.some((r) => ["sales", "account_executive", "bdr", "sales_management"].includes(r)) && !roles.includes("operations"))) return "Sales";
   return "Operations";
 }

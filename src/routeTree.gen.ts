@@ -250,6 +250,10 @@ import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_auth
 import { Route as AuthenticatedProfessionalVerificationRouteImport } from './routes/_authenticated/professional.verification'
 import { Route as AuthenticatedProfileProfileIdRouteImport } from './routes/_authenticated/profile_.$profileId'
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
+import { Route as AuthenticatedSalesDashboardRouteImport } from './routes/_authenticated/sales_.dashboard'
+import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authenticated/sales_.outreach'
+import { Route as AuthenticatedSalesQuotesRouteImport } from './routes/_authenticated/sales_.quotes'
+import { Route as AuthenticatedSalesTeamRouteImport } from './routes/_authenticated/sales_.team'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicCrmUnsubscribeRouteImport } from './routes/api/public/crm-unsubscribe'
@@ -322,6 +326,8 @@ import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsInvestorsIndexRouteImport } from './routes/_authenticated/ops.investors.index'
 import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './routes/_authenticated/ops.investors.$investorId'
 import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from './routes/_authenticated/professional.acting.$delegationId'
+import { Route as AuthenticatedSalesQuotesIdRouteImport } from './routes/_authenticated/sales_.quotes_.$id'
+import { Route as AuthenticatedSalesRepsIdRouteImport } from './routes/_authenticated/sales_.reps.$id'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
@@ -1711,6 +1717,29 @@ const AuthenticatedSalesCrmRoute = AuthenticatedSalesCrmRouteImport.update({
   path: '/sales/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSalesDashboardRoute =
+  AuthenticatedSalesDashboardRouteImport.update({
+    id: '/sales_/dashboard',
+    path: '/sales/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesOutreachRoute =
+  AuthenticatedSalesOutreachRouteImport.update({
+    id: '/sales_/outreach',
+    path: '/sales/outreach',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesQuotesRoute =
+  AuthenticatedSalesQuotesRouteImport.update({
+    id: '/sales_/quotes',
+    path: '/sales/quotes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesTeamRoute = AuthenticatedSalesTeamRouteImport.update({
+  id: '/sales_/team',
+  path: '/sales/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   id: '/api/public/cap-claim',
   path: '/api/public/cap-claim',
@@ -2136,6 +2165,18 @@ const AuthenticatedProfessionalActingDelegationIdRoute =
     path: '/acting/$delegationId',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedSalesQuotesIdRoute =
+  AuthenticatedSalesQuotesIdRouteImport.update({
+    id: '/sales_/quotes_/$id',
+    path: '/sales/quotes/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesRepsIdRoute =
+  AuthenticatedSalesRepsIdRouteImport.update({
+    id: '/sales_/reps/$id',
+    path: '/sales/reps/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicEmailClickRoute = ApiPublicEmailClickRouteImport.update({
   id: '/api/public/email/click',
   path: '/api/public/email/click',
@@ -2550,6 +2591,10 @@ export interface FileRoutesByFullPath {
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
+  '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
+  '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
+  '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -2618,6 +2663,8 @@ export interface FileRoutesByFullPath {
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
+  '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
+  '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
@@ -2888,6 +2935,10 @@ export interface FileRoutesByTo {
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
+  '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
+  '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
+  '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -2955,6 +3006,8 @@ export interface FileRoutesByTo {
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
+  '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
+  '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
@@ -3234,6 +3287,10 @@ export interface FileRoutesById {
   '/_authenticated/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/_authenticated/profile_/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
+  '/_authenticated/sales_/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/_authenticated/sales_/outreach': typeof AuthenticatedSalesOutreachRoute
+  '/_authenticated/sales_/quotes': typeof AuthenticatedSalesQuotesRoute
+  '/_authenticated/sales_/team': typeof AuthenticatedSalesTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -3302,6 +3359,8 @@ export interface FileRoutesById {
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/_authenticated/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
+  '/_authenticated/sales_/quotes_/$id': typeof AuthenticatedSalesQuotesIdRoute
+  '/_authenticated/sales_/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
@@ -3581,6 +3640,10 @@ export interface FileRouteTypes {
     | '/professional/verification'
     | '/profile/$profileId'
     | '/sales/crm'
+    | '/sales/dashboard'
+    | '/sales/outreach'
+    | '/sales/quotes'
+    | '/sales/team'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -3649,6 +3712,8 @@ export interface FileRouteTypes {
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
     | '/professional/acting/$delegationId'
+    | '/sales/quotes/$id'
+    | '/sales/reps/$id'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
@@ -3919,6 +3984,10 @@ export interface FileRouteTypes {
     | '/professional/verification'
     | '/profile/$profileId'
     | '/sales/crm'
+    | '/sales/dashboard'
+    | '/sales/outreach'
+    | '/sales/quotes'
+    | '/sales/team'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -3986,6 +4055,8 @@ export interface FileRouteTypes {
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
     | '/professional/acting/$delegationId'
+    | '/sales/quotes/$id'
+    | '/sales/reps/$id'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
@@ -4264,6 +4335,10 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/verification'
     | '/_authenticated/profile_/$profileId'
     | '/_authenticated/sales_/crm'
+    | '/_authenticated/sales_/dashboard'
+    | '/_authenticated/sales_/outreach'
+    | '/_authenticated/sales_/quotes'
+    | '/_authenticated/sales_/team'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -4332,6 +4407,8 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/funds/$fundId'
     | '/_authenticated/ops/investors/$investorId'
     | '/_authenticated/professional/acting/$delegationId'
+    | '/_authenticated/sales_/quotes_/$id'
+    | '/_authenticated/sales_/reps/$id'
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
@@ -6124,6 +6201,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales_/dashboard': {
+      id: '/_authenticated/sales_/dashboard'
+      path: '/sales/dashboard'
+      fullPath: '/sales/dashboard'
+      preLoaderRoute: typeof AuthenticatedSalesDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales_/outreach': {
+      id: '/_authenticated/sales_/outreach'
+      path: '/sales/outreach'
+      fullPath: '/sales/outreach'
+      preLoaderRoute: typeof AuthenticatedSalesOutreachRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales_/quotes': {
+      id: '/_authenticated/sales_/quotes'
+      path: '/sales/quotes'
+      fullPath: '/sales/quotes'
+      preLoaderRoute: typeof AuthenticatedSalesQuotesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales_/team': {
+      id: '/_authenticated/sales_/team'
+      path: '/sales/team'
+      fullPath: '/sales/team'
+      preLoaderRoute: typeof AuthenticatedSalesTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/cap-claim': {
       id: '/api/public/cap-claim'
       path: '/api/public/cap-claim'
@@ -6627,6 +6732,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/professional/acting/$delegationId'
       preLoaderRoute: typeof AuthenticatedProfessionalActingDelegationIdRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/sales_/quotes_/$id': {
+      id: '/_authenticated/sales_/quotes_/$id'
+      path: '/sales/quotes/$id'
+      fullPath: '/sales/quotes/$id'
+      preLoaderRoute: typeof AuthenticatedSalesQuotesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales_/reps/$id': {
+      id: '/_authenticated/sales_/reps/$id'
+      path: '/sales/reps/$id'
+      fullPath: '/sales/reps/$id'
+      preLoaderRoute: typeof AuthenticatedSalesRepsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/email/click': {
       id: '/api/public/email/click'
@@ -7277,6 +7396,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
   AuthenticatedProfileProfileIdRoute: typeof AuthenticatedProfileProfileIdRoute
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
+  AuthenticatedSalesDashboardRoute: typeof AuthenticatedSalesDashboardRoute
+  AuthenticatedSalesOutreachRoute: typeof AuthenticatedSalesOutreachRoute
+  AuthenticatedSalesQuotesRoute: typeof AuthenticatedSalesQuotesRoute
+  AuthenticatedSalesTeamRoute: typeof AuthenticatedSalesTeamRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
@@ -7313,6 +7436,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
+  AuthenticatedSalesQuotesIdRoute: typeof AuthenticatedSalesQuotesIdRoute
+  AuthenticatedSalesRepsIdRoute: typeof AuthenticatedSalesRepsIdRoute
   AuthenticatedAdminContractsIndexRoute: typeof AuthenticatedAdminContractsIndexRoute
   AuthenticatedAdminEntitiesIndexRoute: typeof AuthenticatedAdminEntitiesIndexRoute
   AuthenticatedOpsClientsIndexRoute: typeof AuthenticatedOpsClientsIndexRoute
@@ -7517,6 +7642,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
   AuthenticatedProfileProfileIdRoute: AuthenticatedProfileProfileIdRoute,
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
+  AuthenticatedSalesDashboardRoute: AuthenticatedSalesDashboardRoute,
+  AuthenticatedSalesOutreachRoute: AuthenticatedSalesOutreachRoute,
+  AuthenticatedSalesQuotesRoute: AuthenticatedSalesQuotesRoute,
+  AuthenticatedSalesTeamRoute: AuthenticatedSalesTeamRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
@@ -7574,6 +7703,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
   AuthenticatedOpsInvestorsInvestorIdRoute:
     AuthenticatedOpsInvestorsInvestorIdRoute,
+  AuthenticatedSalesQuotesIdRoute: AuthenticatedSalesQuotesIdRoute,
+  AuthenticatedSalesRepsIdRoute: AuthenticatedSalesRepsIdRoute,
   AuthenticatedAdminContractsIndexRoute: AuthenticatedAdminContractsIndexRoute,
   AuthenticatedAdminEntitiesIndexRoute: AuthenticatedAdminEntitiesIndexRoute,
   AuthenticatedOpsClientsIndexRoute: AuthenticatedOpsClientsIndexRoute,

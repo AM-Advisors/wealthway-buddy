@@ -932,6 +932,20 @@
       "when": 1790997042492,
       "tag": "0132_staff_roles_hierarchy",
       "breakpoints": true
+    },
+    {
+      "idx": 133,
+      "version": "7",
+      "when": 1791001490587,
+      "tag": "0133_sales_outreach_quotes",
+      "breakpoints": true
+    },
+    {
+      "idx": 134,
+      "version": "7",
+      "when": 1791001661589,
+      "tag": "0134_crm_deals_sales_stage",
+      "breakpoints": true
     }
   ]
 }
