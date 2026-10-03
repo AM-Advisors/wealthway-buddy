@@ -50,6 +50,7 @@ import { Route as AuthenticatedInvestorDistributionsRouteImport } from './routes
 import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
 import { Route as AuthenticatedInvestorPerformanceRouteImport } from './routes/_authenticated/investor-performance'
 import { Route as AuthenticatedInvestorReportingRouteImport } from './routes/_authenticated/investor-reporting'
+import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticated/my-claims'
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
@@ -90,6 +91,7 @@ import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/res
 import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
+import { Route as UnsubscribeTokenRouteImport } from './routes/unsubscribe.$token'
 import { Route as AuthenticatedAccountManagerClientsRouteImport } from './routes/_authenticated/account-manager_.clients'
 import { Route as AuthenticatedAccountManagerHandoffsRouteImport } from './routes/_authenticated/account-manager_.handoffs'
 import { Route as AuthenticatedAccountManagerRenewalsRouteImport } from './routes/_authenticated/account-manager_.renewals'
@@ -342,6 +344,7 @@ import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/emai
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicIrsEfileAckRouteImport } from './routes/api/public/irs-efile/ack'
+import { Route as ApiPublicMarketingRunRouteImport } from './routes/api/public/marketing/run'
 import { Route as ApiPublicMercuryOnboardingRouteImport } from './routes/api/public/mercury/onboarding'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
@@ -579,6 +582,11 @@ const AuthenticatedInvestorReportingRoute =
     path: '/investor-reporting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -784,6 +792,11 @@ const SharesTokenRoute = SharesTokenRouteImport.update({
 const SolutionsIndexRoute = SolutionsIndexRouteImport.update({
   id: '/solutions/',
   path: '/solutions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeTokenRoute = UnsubscribeTokenRouteImport.update({
+  id: '/unsubscribe/$token',
+  path: '/unsubscribe/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountManagerClientsRoute =
@@ -2265,6 +2278,11 @@ const ApiPublicIrsEfileAckRoute = ApiPublicIrsEfileAckRouteImport.update({
   path: '/api/public/irs-efile/ack',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMarketingRunRoute = ApiPublicMarketingRunRouteImport.update({
+  id: '/api/public/marketing/run',
+  path: '/api/public/marketing/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMercuryOnboardingRoute =
   ApiPublicMercuryOnboardingRouteImport.update({
     id: '/api/public/mercury/onboarding',
@@ -2459,6 +2477,7 @@ export interface FileRoutesByFullPath {
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/marketing': typeof AuthenticatedMarketingRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
@@ -2495,6 +2514,7 @@ export interface FileRoutesByFullPath {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
@@ -2740,6 +2760,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -2816,6 +2837,7 @@ export interface FileRoutesByTo {
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/marketing': typeof AuthenticatedMarketingRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
@@ -2851,6 +2873,7 @@ export interface FileRoutesByTo {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth': typeof AuthIndexRoute
   '/investor': typeof InvestorIndexRoute
   '/resources': typeof ResourcesIndexRoute
@@ -3092,6 +3115,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -3173,6 +3197,7 @@ export interface FileRoutesById {
   '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/_authenticated/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/_authenticated/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/my-claims': typeof AuthenticatedMyClaimsRoute
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
@@ -3209,6 +3234,7 @@ export interface FileRoutesById {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
@@ -3454,6 +3480,7 @@ export interface FileRoutesById {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -3535,6 +3562,7 @@ export interface FileRouteTypes {
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
+    | '/marketing'
     | '/messages'
     | '/my-claims'
     | '/my-equity'
@@ -3571,6 +3599,7 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
     | '/resources/'
@@ -3816,6 +3845,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -3892,6 +3922,7 @@ export interface FileRouteTypes {
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
+    | '/marketing'
     | '/messages'
     | '/my-claims'
     | '/my-equity'
@@ -3927,6 +3958,7 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/unsubscribe/$token'
     | '/auth'
     | '/investor'
     | '/resources'
@@ -4168,6 +4200,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -4248,6 +4281,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investor-financials'
     | '/_authenticated/investor-performance'
     | '/_authenticated/investor-reporting'
+    | '/_authenticated/marketing'
     | '/_authenticated/messages'
     | '/_authenticated/my-claims'
     | '/_authenticated/my-equity'
@@ -4284,6 +4318,7 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
     | '/resources/'
@@ -4529,6 +4564,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -4603,6 +4639,7 @@ export interface RootRouteChildren {
   ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
   ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  UnsubscribeTokenRoute: typeof UnsubscribeTokenRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   SolutionsIndexRoute: typeof SolutionsIndexRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
@@ -4618,6 +4655,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicIrsEfileAckRoute: typeof ApiPublicIrsEfileAckRoute
+  ApiPublicMarketingRunRoute: typeof ApiPublicMarketingRunRoute
   ApiPublicMercuryOnboardingRoute: typeof ApiPublicMercuryOnboardingRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
@@ -4917,6 +4955,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorReportingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing': {
+      id: '/_authenticated/marketing'
+      path: '/marketing'
+      fullPath: '/marketing'
+      preLoaderRoute: typeof AuthenticatedMarketingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/messages': {
       id: '/_authenticated/messages'
       path: '/messages'
@@ -5195,6 +5240,13 @@ declare module '@tanstack/react-router' {
       path: '/solutions'
       fullPath: '/solutions/'
       preLoaderRoute: typeof SolutionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe/$token': {
+      id: '/unsubscribe/$token'
+      path: '/unsubscribe/$token'
+      fullPath: '/unsubscribe/$token'
+      preLoaderRoute: typeof UnsubscribeTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account-manager_/clients': {
@@ -6961,6 +7013,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIrsEfileAckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/marketing/run': {
+      id: '/api/public/marketing/run'
+      path: '/api/public/marketing/run'
+      fullPath: '/api/public/marketing/run'
+      preLoaderRoute: typeof ApiPublicMarketingRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mercury/onboarding': {
       id: '/api/public/mercury/onboarding'
       path: '/api/public/mercury/onboarding'
@@ -7424,6 +7483,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
   AuthenticatedInvestorPerformanceRoute: typeof AuthenticatedInvestorPerformanceRoute
   AuthenticatedInvestorReportingRoute: typeof AuthenticatedInvestorReportingRoute
+  AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedMyClaimsRoute: typeof AuthenticatedMyClaimsRoute
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
@@ -7655,6 +7715,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,
   AuthenticatedInvestorPerformanceRoute: AuthenticatedInvestorPerformanceRoute,
   AuthenticatedInvestorReportingRoute: AuthenticatedInvestorReportingRoute,
+  AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedMyClaimsRoute: AuthenticatedMyClaimsRoute,
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
@@ -7981,6 +8042,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
   ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,
   SharesTokenRoute: SharesTokenRoute,
+  UnsubscribeTokenRoute: UnsubscribeTokenRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   SolutionsIndexRoute: SolutionsIndexRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
@@ -7996,6 +8058,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicIrsEfileAckRoute: ApiPublicIrsEfileAckRoute,
+  ApiPublicMarketingRunRoute: ApiPublicMarketingRunRoute,
   ApiPublicMercuryOnboardingRoute: ApiPublicMercuryOnboardingRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
