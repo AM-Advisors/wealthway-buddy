@@ -61,7 +61,7 @@ function CroDashboard() {
           <Stat label="Revenue closed" value={money(d.revenue.closed)} hint={d.totals.revenueTargetCents ? `${progress(d.revenue.closed, d.totals.revenueTargetCents)} of ${money(d.totals.revenueTargetCents)}` : "No targets set"} />
           <Stat label="Revenue pending" value={money(d.revenue.pending)} />
           <Stat label="Win rate" value={pct(d.revenue.winRate)} />
-          <Stat label="Outreach" value={d.total} hint={d.totals.outreachTarget ? `${progress(d.total, d.totals.outreachTarget)} of ${d.totals.outreachTarget}` : undefined} />
+          <Stat label="Outreach" value={d.total} hint={d.totals.outreachTarget ? `${progress(d.total, d.totals.outreachTarget)} of ${d.totals.outreachTarget}` : "No targets set"} />
           <Stat label="Connect rate" value={pct(d.contactsTouched ? d.connected / d.contactsTouched : null)} hint={`${d.connected} of ${d.contactsTouched} contacts`} />
         </div>
 
