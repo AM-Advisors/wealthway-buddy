@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { AccountIdentityQueue } from "@/components/account-identity-queue";
 import { ComplianceCenter } from "@/components/compliance-center";
 
 export const Route = createFileRoute("/_authenticated/ops/compliance")({
@@ -14,5 +15,9 @@ export const Route = createFileRoute("/_authenticated/ops/compliance")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: ComplianceCenter,
+  component: Page,
 });
+
+function Page() {
+  return <div className="space-y-6"><div className="px-4 pt-6 sm:px-6"><AccountIdentityQueue /></div><ComplianceCenter /></div>;
+}
