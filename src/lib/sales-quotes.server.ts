@@ -151,7 +151,13 @@ export async function createAgreements(userId: string, id: string) {
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
   if (!q || !canSee(a, q.owner_user_id) || q.status !== "approved") throw new Error("Only approved quotes can become agreements.");
-  if (q.sow_id) return { sowId: q.sow_id };
+  return draftAgreements(userId, q);
+}
+
+/** Creates the SOW/MSA drafts for an approved quote (idempotent). Caller has already checked visibility/status. */
+async function draftAgreements(userId: string, q: any) {
+  const db = await admin();
+  if (q.sow_id) return { sowId: q.sow_id as string };
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order");
   let msaId: string | null = null;
   const { data: msas } = await db.from("client_msa_agreements").select("id, executed_at, status").eq("client_id", q.client_id).order("created_at", { ascending: false });
@@ -178,7 +184,9 @@ export async function markSent(userId: string, id: string) {
   const a = await salesActor(userId);
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
-  if (!q || !canSee(a, q.owner_user_id) || q.status !== "approved" || !q.sow_id) throw new Error("Draft the agreements before marking this quote sent.");
+  if (!q || !canSee(a, q.owner_user_id) || q.status !== "approved") throw new Error("Only approved quotes can be sent.");
+  // No SOW yet: draft one from this quote so the agreement always matches what was quoted.
+  if (!q.sow_id) await draftAgreements(userId, q);
   const now = new Date().toISOString();
   await db.from("sales_quotes").update({ status: "sent", sent_at: now, updated_at: now }).eq("id", id);
   await event(id, "sent", userId);
