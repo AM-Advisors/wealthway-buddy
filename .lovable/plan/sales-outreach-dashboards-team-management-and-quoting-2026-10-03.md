@@ -3,6 +3,7 @@
 Builds on the existing Sales page, Contacts & deals, staff roles and the SOW/MSA agreements. Sales stays commercial-only: no investor tax, identity, bank or KYC data, and nothing here moves money.
 
 ## 1. Sales roles
+
 - Sales roles in the hierarchy: **CRO > Sales Manager > Account Executive > BDR** (sit beside Account Manager, under CEO/Super Admin).
 - Assigned on the existing Harmonious Roles page with the same protections (no self-change, never above your own rank, every change logged).
 - What each sees:
@@ -12,7 +13,8 @@ Builds on the existing Sales page, Contacts & deals, staff roles and the SOW/MSA
   - CRO / CEO / Super Admin: whole team, targets, quotes above the discount limit, custom prices (keeps the current CEO/CRO price-approval rule).
 
 ## 2. Outreach channels (Sales > Outreach)
-- One outreach timeline per contact with four channels: **Email, Text, WhatsApp, LinkedIn**, plus logged **Calls**.
+
+- One outreach timeline per contact with four channels: **Email, Text, WhatsApp, LinkedIn**, Events, Other, plus logged **Calls**.
 - Email: sent through Brevo, consent and unsubscribe rules unchanged.
 - Text and WhatsApp: sent through Twilio (needs connecting; until then reps can log them manually). Opt-out ("STOP") honoured automatically.
 - LinkedIn: nothing is pulled automatically. The rep chooses what to bring in:
@@ -22,20 +24,24 @@ Builds on the existing Sales page, Contacts & deals, staff roles and the SOW/MSA
 - Every outreach item records who, channel, direction, when, message text, service of interest and resulting stage. History can be added to but not edited.
 
 ## 3. Pipeline stages
+
 Outreach → Connected (Email / LinkedIn / Call / WhatsApp) → Meeting set → Meeting held → Quoted → Contract sent → Contract won / Contract lost, plus **Contact later** (with follow-up date). Each stage change keeps a timestamp so time-in-stage can be measured.
 
 ## 4. Main Sales Dashboard
+
 - Date filter: Day, Week, Month, Quarter, Year, Custom (shared by all dashboards).
 - Totals for outreach as a team, per employee, per channel, per service.
 - Circle chart: outreach vs connected (with connect rate), and a funnel/bar of every stage.
 - Click any number, slice or bar to drill down: employee → channel → contact list → the actual messages with date, time and channel.
 
 ## 5. Per sales rep overview
+
 - Card per rep: current stage counts, outreach this period, connect rate, meetings, revenue closed, revenue pending (open quotes/contracts), win rate.
 - Same date filter. Reps see only themselves; managers see their team; CRO sees all.
 - For each of the rep's clients: assigned Operations contact and Account Manager.
 
 ## 6. Extra management tools for CRO / Sales Manager
+
 - Targets/quotas per rep per period with attainment bars.
 - Forecast: pending revenue weighted by stage.
 - Activity leaderboard and "stale deals" list (no touch in X days, overdue Contact later).
@@ -45,6 +51,7 @@ Outreach → Connected (Email / LinkedIn / Call / WhatsApp) → Meeting set → 
 - Rep's personal "Today" list: follow-ups due, replies waiting, quotes awaiting signature.
 
 ## 7. Quoting engine
+
 - Build a quote from the live rate card: pick services, quantities, setup fee; discounts shown against baseline.
 - Flow: **Draft → Approval → Sent → Signed**.
   - At or above baseline: Sales Manager approves. Below baseline / custom price: CEO or CRO (existing rule). The person drafting cannot approve.
@@ -52,10 +59,12 @@ Outreach → Connected (Email / LinkedIn / Call / WhatsApp) → Meeting set → 
 - Signing moves the deal to Contract won and counts the revenue as closed; quotes are versioned, never overwritten.
 
 ## Not included
+
 - Automatic LinkedIn scraping or sending (against LinkedIn's terms and your instruction).
 - Payments, filings or any money movement.
 
 ## Technical details
+
 - New roles: extend `app_role` with `account_executive` and `bdr`; reuse `cro`, `sales_management` (labelled Sales Manager). Update `staff-role-hierarchy.ts` and record the rule in `src/lib/AGENTS.md`.
 - Tables (with GRANTs + RLS, append-only triggers where noted): `sales_outreach` (append-only; channel, direction, body, sent_at, contact_id, owner_id, service_code, visibility), `sales_stage_events` (append-only), `sales_targets`, `sales_quotes` + `sales_quote_lines` + `sales_quote_events` (append-only), `sales_loss_reasons`. Extend `crm_deals` with stage, service, amount, follow_up_at.
 - Server functions in `src/lib/sales-outreach.functions.ts`, `sales-dashboard.functions.ts`, `sales-quotes.functions.ts` using `requireSupabaseAuth` from `src/lib/require-auth.ts`; visibility derived server-side from role + ownership.
