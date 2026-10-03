@@ -148,7 +148,7 @@ export const syncAllInvestorDrive = createServerFn({ method: "POST" })
       const p = (profiles ?? []).find((x: any) => x.id === profileId);
       const label = p?.display_label ?? p?.legal_name ?? "Investor";
       try {
-        const mapping = await drive.ensureInvestorStructure(data.offeringId, profileId, { userId });
+        const mapping: any = await drive.ensureInvestorStructure(data.offeringId, profileId, { userId });
         results.push({
           profileId,
           label,
