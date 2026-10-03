@@ -217,6 +217,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "sales-outreach", title: "Outreach", url: "/sales/outreach", icon: "people" },
     { id: "sales-follow-ups", title: "Follow-ups & engagement", url: "/sales/follow-ups", icon: "tasks" },
     { id: "sales-quotes", title: "Quotes", url: "/sales/quotes", icon: "document" },
+    { id: "sales-commissions", title: "Commissions", url: "/sales/commissions", icon: "report" },
     { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" },
     { id: "sales-team", title: "Sales team", url: "/sales/team", icon: "people" },
   ] : [];

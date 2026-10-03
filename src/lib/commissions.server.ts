@@ -39,7 +39,7 @@ export async function commissionReport(userId: string, from: string, to: string)
   const { data: clients } = await db.from("clients").select("id, name").in("id", [...new Set(qs.map((q) => q.client_id).filter(Boolean))]);
   const clientName = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name]));
 
-  const team = new Set<string>(a.visibleUserIds ?? [userId]);
+  const team = new Set<string>(a.visible ?? [userId]);
   const rows: any[] = [];
   for (const inv of invs) {
     const q = qs.find((x) => x.sow_id === inv.sow_id); if (!q?.owner_user_id) continue;
@@ -60,7 +60,7 @@ export async function commissionReport(userId: string, from: string, to: string)
     }
   }
   const nm = await names(rows.map((r) => r.userId).filter(Boolean));
-  for (const r of rows) r.name = r.userId ? nm[r.userId] ?? "Unknown" : "Unassigned";
+  for (const r of rows) r.name = r.userId ? nm.get(r.userId) ?? "Unknown" : "Unassigned";
   const byPerson = new Map<string, { userId: string | null; name: string; earnedCents: number; pendingCents: number }>();
   for (const r of rows) {
     const k = r.userId ?? "none";
@@ -72,10 +72,10 @@ export async function commissionReport(userId: string, from: string, to: string)
   const hnm = await names(hist.map((h) => h.set_by));
   return {
     rows, people: [...byPerson.values()].sort((x, y) => y.earnedCents - x.earnedCents), rates: current,
-    history: hist.slice().reverse().map((h) => ({ ...h, setByName: hnm[h.set_by] ?? "Unknown" })),
+    history: hist.slice().reverse().map((h) => ({ ...h, setByName: hnm.get(h.set_by) ?? "Unknown" })),
     canEdit: a.roles.some((r: string) => COMMISSION_EDITORS.includes(r)),
     quotes: qs.map((q) => ({ id: q.id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id })),
-    bdrs: [...rolesOf].filter(([, rs]) => rs.includes("bdr")).map(([id]) => id),
+    bdrs: await (async () => { const ids = [...rolesOf].filter(([, rs]) => rs.includes("bdr")).map(([id]) => id); const m = await names(ids); return ids.map((id) => ({ id, name: m.get(id) ?? "BDR" })); })(),
   };
 }
 
