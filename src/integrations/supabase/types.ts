@@ -8416,6 +8416,7 @@ export type Database = {
       crm_contacts: {
         Row: {
           archived_at: string | null
+          client_id: string | null
           consent: string
           consent_note: string | null
           consent_recorded_at: string | null
@@ -8424,6 +8425,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          linkedin_url: string | null
           offering_id: string | null
           organization: string | null
           owner_user_id: string
@@ -8436,6 +8438,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          client_id?: string | null
           consent?: string
           consent_note?: string | null
           consent_recorded_at?: string | null
@@ -8444,6 +8447,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          linkedin_url?: string | null
           offering_id?: string | null
           organization?: string | null
           owner_user_id: string
@@ -8456,6 +8460,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          client_id?: string | null
           consent?: string
           consent_note?: string | null
           consent_recorded_at?: string | null
@@ -8464,6 +8469,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          linkedin_url?: string | null
           offering_id?: string | null
           organization?: string | null
           owner_user_id?: string
@@ -8475,6 +8481,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "crm_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "crm_contacts_offering_id_fkey"
             columns: ["offering_id"]
@@ -8488,52 +8501,74 @@ export type Database = {
         Row: {
           amount_cents: number | null
           archived_at: string | null
+          client_id: string | null
+          connected_via: string | null
           contact_id: string
           created_at: string
           created_by: string
           expected_close: string | null
+          follow_up_at: string | null
           id: string
           lost_reason: string | null
           offering_id: string | null
           owner_user_id: string
           scope: string
+          service_key: string | null
           stage: string
+          stage_changed_at: string | null
           title: string
           updated_at: string
         }
         Insert: {
           amount_cents?: number | null
           archived_at?: string | null
+          client_id?: string | null
+          connected_via?: string | null
           contact_id: string
           created_at?: string
           created_by: string
           expected_close?: string | null
+          follow_up_at?: string | null
           id?: string
           lost_reason?: string | null
           offering_id?: string | null
           owner_user_id: string
           scope: string
+          service_key?: string | null
           stage?: string
+          stage_changed_at?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           amount_cents?: number | null
           archived_at?: string | null
+          client_id?: string | null
+          connected_via?: string | null
           contact_id?: string
           created_at?: string
           created_by?: string
           expected_close?: string | null
+          follow_up_at?: string | null
           id?: string
           lost_reason?: string | null
           offering_id?: string | null
           owner_user_id?: string
           scope?: string
+          service_key?: string | null
           stage?: string
+          stage_changed_at?: string | null
           title?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "crm_deals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "crm_deals_contact_id_fkey"
             columns: ["contact_id"]
@@ -31459,6 +31494,432 @@ export type Database = {
           },
         ]
       }
+      sales_channel_optouts: {
+        Row: {
+          channel: string
+          contact_id: string
+          created_at: string
+          id: string
+          note: string | null
+          recorded_by: string | null
+        }
+        Insert: {
+          channel: string
+          contact_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          recorded_by?: string | null
+        }
+        Update: {
+          channel?: string
+          contact_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_channel_optouts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_outreach: {
+        Row: {
+          body: string | null
+          channel: string
+          contact_id: string | null
+          created_at: string
+          created_by: string
+          deal_id: string | null
+          delivery_status: string | null
+          direction: string
+          id: string
+          occurred_at: string
+          owner_user_id: string
+          provider_ref: string | null
+          service_key: string | null
+          source: string
+          stage_after: string | null
+          subject: string | null
+          visibility: string
+        }
+        Insert: {
+          body?: string | null
+          channel: string
+          contact_id?: string | null
+          created_at?: string
+          created_by: string
+          deal_id?: string | null
+          delivery_status?: string | null
+          direction?: string
+          id?: string
+          occurred_at?: string
+          owner_user_id: string
+          provider_ref?: string | null
+          service_key?: string | null
+          source?: string
+          stage_after?: string | null
+          subject?: string | null
+          visibility?: string
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string
+          deal_id?: string | null
+          delivery_status?: string | null
+          direction?: string
+          id?: string
+          occurred_at?: string
+          owner_user_id?: string
+          provider_ref?: string | null
+          service_key?: string | null
+          source?: string
+          stage_after?: string | null
+          subject?: string | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_outreach_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_outreach_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quote_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          id: string
+          note: string | null
+          quote_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          note?: string | null
+          quote_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          note?: string | null
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quote_lines: {
+        Row: {
+          baseline_unit_cents: number
+          created_at: string
+          id: string
+          label: string
+          line_cents: number
+          quantity: number
+          quote_id: string
+          service_key: string
+          sort_order: number
+          unit_cents: number
+        }
+        Insert: {
+          baseline_unit_cents?: number
+          created_at?: string
+          id?: string
+          label: string
+          line_cents: number
+          quantity?: number
+          quote_id: string
+          service_key: string
+          sort_order?: number
+          unit_cents: number
+        }
+        Update: {
+          baseline_unit_cents?: number
+          created_at?: string
+          id?: string
+          label?: string
+          line_cents?: number
+          quantity?: number
+          quote_id?: string
+          service_key?: string
+          sort_order?: number
+          unit_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quote_lines_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quotes: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          baseline_cents: number
+          client_id: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string
+          deal_id: string | null
+          decision_note: string | null
+          id: string
+          msa_id: string | null
+          needs_exec_approval: boolean
+          notes: string | null
+          owner_user_id: string
+          pricing_version_id: string | null
+          quote_number: number
+          sent_at: string | null
+          signed_at: string | null
+          sow_id: string | null
+          status: string
+          supersedes_id: string | null
+          title: string
+          total_cents: number
+          updated_at: string
+          valid_until: string | null
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          baseline_cents?: number
+          client_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by: string
+          deal_id?: string | null
+          decision_note?: string | null
+          id?: string
+          msa_id?: string | null
+          needs_exec_approval?: boolean
+          notes?: string | null
+          owner_user_id: string
+          pricing_version_id?: string | null
+          quote_number?: number
+          sent_at?: string | null
+          signed_at?: string | null
+          sow_id?: string | null
+          status?: string
+          supersedes_id?: string | null
+          title: string
+          total_cents?: number
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          baseline_cents?: number
+          client_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string
+          deal_id?: string | null
+          decision_note?: string | null
+          id?: string
+          msa_id?: string | null
+          needs_exec_approval?: boolean
+          notes?: string | null
+          owner_user_id?: string
+          pricing_version_id?: string | null
+          quote_number?: number
+          sent_at?: string | null
+          signed_at?: string | null
+          sow_id?: string | null
+          status?: string
+          supersedes_id?: string | null
+          title?: string
+          total_cents?: number
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_msa_id_fkey"
+            columns: ["msa_id"]
+            isOneToOne: false
+            referencedRelation: "client_msa_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotes_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_reporting_lines: {
+        Row: {
+          manager_user_id: string | null
+          updated_at: string
+          updated_by: string
+          user_id: string
+        }
+        Insert: {
+          manager_user_id?: string | null
+          updated_at?: string
+          updated_by: string
+          user_id: string
+        }
+        Update: {
+          manager_user_id?: string | null
+          updated_at?: string
+          updated_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sales_stage_events: {
+        Row: {
+          actor_id: string
+          connected_via: string | null
+          created_at: string
+          deal_id: string
+          follow_up_at: string | null
+          from_stage: string | null
+          id: string
+          loss_reason: string | null
+          note: string | null
+          to_stage: string
+        }
+        Insert: {
+          actor_id: string
+          connected_via?: string | null
+          created_at?: string
+          deal_id: string
+          follow_up_at?: string | null
+          from_stage?: string | null
+          id?: string
+          loss_reason?: string | null
+          note?: string | null
+          to_stage: string
+        }
+        Update: {
+          actor_id?: string
+          connected_via?: string | null
+          created_at?: string
+          deal_id?: string
+          follow_up_at?: string | null
+          from_stage?: string | null
+          id?: string
+          loss_reason?: string | null
+          note?: string | null
+          to_stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_stage_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_targets: {
+        Row: {
+          created_at: string
+          id: string
+          outreach_target: number
+          period_end: string
+          period_start: string
+          revenue_target_cents: number
+          set_by: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          outreach_target?: number
+          period_end: string
+          period_start: string
+          revenue_target_cents?: number
+          set_by: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          outreach_target?: number
+          period_end?: string
+          period_start?: string
+          revenue_target_cents?: number
+          set_by?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_job_runs: {
         Row: {
           job_key: string
@@ -35936,6 +36397,8 @@ export type Database = {
         | "sales_management"
         | "cro"
         | "account_manager"
+        | "account_executive"
+        | "bdr"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -36420,6 +36883,8 @@ export const Constants = {
         "sales_management",
         "cro",
         "account_manager",
+        "account_executive",
+        "bdr",
       ],
       assisted_draft_status: [
         "awaiting_client_review",
