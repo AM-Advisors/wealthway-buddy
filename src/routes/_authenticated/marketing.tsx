@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Bars, Panel, Stat } from "@/components/sales/sales-ui";
 import { ChannelChip, MkPage, fmt, mkHead } from "@/components/marketing-ui";
 import { getMarketingDashboard } from "@/lib/marketing.functions";
+import { MarketingEngagementPanel } from "@/components/email-engagement-panel";
 
 export const Route = createFileRoute("/_authenticated/marketing")({
   head: mkHead("Marketing dashboard", "Scheduled posts and emails, approvals and results for the Harmonious marketing team."),
@@ -50,6 +51,7 @@ function MarketingDashboard() {
           </Panel>
         </div>
         <Panel title="Posts published by channel (30 days)"><Bars data={d.byChannel} /></Panel>
+        <MarketingEngagementPanel />
       </>)}
     </MkPage>
   );
