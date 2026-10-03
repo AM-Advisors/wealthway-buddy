@@ -36,7 +36,7 @@ export async function deliverK1(k1Id: string, actor: string) {
       const fund = f?.name ?? "your fund";
       await sendTemplateEmail("investor-message", email, {
         idempotencyKey: `k1-delivered-${k1Id}`,
-        templateData: { investorName: "", offeringName: fund, subject: `Your ${k.tax_year} K-1 for ${fund} is ready`, body: `Your ${k.tax_year} Schedule K-1 for ${fund} is ready. Sign in to view and download it under Tax documents.\n\n${appUrl("investor", "/investor", process.env as any)}` },
+        templateData: { investorName: "", offeringName: fund, subject: `Your ${k.tax_year} K-1 for ${fund} is ready`, body: `Your ${k.tax_year} Schedule K-1 for ${fund} is ready. Sign in to view and download it under Tax documents.\n\n${appUrl("client", "/investor", process.env as any)}` },
       });
       emailed = true;
     }
