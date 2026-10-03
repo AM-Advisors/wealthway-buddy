@@ -401,6 +401,15 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
   );
 }
 
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(t);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 function InvestorListTable({ records }: { records: InvestorListRow[] }) {
   if (!records.length) {
     return <p className="text-sm text-muted-foreground">No investors match.</p>;
