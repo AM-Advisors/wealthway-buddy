@@ -221,6 +221,7 @@ import { Route as AuthenticatedOpsEmployeesRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes/_authenticated/ops.formation-reference'
+import { Route as AuthenticatedOpsMailboxesRouteImport } from './routes/_authenticated/ops.mailboxes'
 import { Route as AuthenticatedOpsMessagesRouteImport } from './routes/_authenticated/ops.messages'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
@@ -1558,6 +1559,12 @@ const AuthenticatedOpsFormationReferenceRoute =
     path: '/ops/formation-reference',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsMailboxesRoute =
+  AuthenticatedOpsMailboxesRouteImport.update({
+    id: '/ops/mailboxes',
+    path: '/ops/mailboxes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsMessagesRoute =
   AuthenticatedOpsMessagesRouteImport.update({
     id: '/ops/messages',
@@ -2617,6 +2624,7 @@ export interface FileRoutesByFullPath {
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -2969,6 +2977,7 @@ export interface FileRoutesByTo {
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -3329,6 +3338,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/_authenticated/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -3690,6 +3700,7 @@ export interface FileRouteTypes {
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
+    | '/ops/mailboxes'
     | '/ops/messages'
     | '/ops/nav'
     | '/ops/performance'
@@ -4042,6 +4053,7 @@ export interface FileRouteTypes {
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
+    | '/ops/mailboxes'
     | '/ops/messages'
     | '/ops/nav'
     | '/ops/performance'
@@ -4401,6 +4413,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/formation-reference'
+    | '/_authenticated/ops/mailboxes'
     | '/_authenticated/ops/messages'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/performance'
@@ -6101,6 +6114,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFormationReferenceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/mailboxes': {
+      id: '/_authenticated/ops/mailboxes'
+      path: '/ops/mailboxes'
+      fullPath: '/ops/mailboxes'
+      preLoaderRoute: typeof AuthenticatedOpsMailboxesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/messages': {
       id: '/_authenticated/ops/messages'
       path: '/ops/messages'
@@ -7541,6 +7561,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsFormationReferenceRoute: typeof AuthenticatedOpsFormationReferenceRoute
+  AuthenticatedOpsMailboxesRoute: typeof AuthenticatedOpsMailboxesRoute
   AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
@@ -7797,6 +7818,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsFormationReferenceRoute:
     AuthenticatedOpsFormationReferenceRoute,
+  AuthenticatedOpsMailboxesRoute: AuthenticatedOpsMailboxesRoute,
   AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
