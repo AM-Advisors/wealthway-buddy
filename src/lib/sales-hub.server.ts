@@ -234,27 +234,26 @@ export async function parseLinkedIn(userId: string, d: { text: string }) {
   await salesActor(userId);
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("The LinkedIn reader isn't available right now.");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const schema = { type: "object", additionalProperties: false, properties: {
+    contact: { type: "object", additionalProperties: false, properties: { full_name: { type: ["string", "null"] }, title: { type: ["string", "null"] }, organization: { type: ["string", "null"] }, linkedin_url: { type: ["string", "null"] } }, required: ["full_name", "title", "organization", "linkedin_url"] },
+    messages: { type: "array", items: { type: "object", additionalProperties: false, properties: { date: { type: ["string", "null"] }, direction: { type: "string", enum: ["outbound", "inbound"] }, sender: { type: ["string", "null"] }, text: { type: "string" } }, required: ["date", "direction", "sender", "text"] } },
+  }, required: ["contact", "messages"] };
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: "A salesperson pasted text they copied from LinkedIn (a conversation and/or a profile). Split it into individual messages exactly as written, with dates as YYYY-MM-DD when shown (otherwise null) and direction 'outbound' when sent by the salesperson ('You', 'Me' or the first-person side) else 'inbound'. Extract only contact details that appear in the text. Never invent anything." },
-        { role: "user", content: d.text.slice(0, 40_000) },
-      ],
-      tools: [{ type: "function", function: { name: "report", description: "Report parsed LinkedIn content.", parameters: { type: "object", properties: {
-        contact: { type: "object", properties: { full_name: { type: ["string", "null"] }, title: { type: ["string", "null"] }, organization: { type: ["string", "null"] }, linkedin_url: { type: ["string", "null"] } } },
-        messages: { type: "array", items: { type: "object", properties: { date: { type: ["string", "null"] }, direction: { type: "string", enum: ["outbound", "inbound"] }, sender: { type: ["string", "null"] }, text: { type: "string" } }, required: ["direction", "text"] } },
-      }, required: ["messages"] } } }],
-      tool_choice: { type: "function", function: { name: "report" } },
+      model: "openai/gpt-6-astra",
+      instructions: "A salesperson pasted text they copied from LinkedIn (a conversation and/or a profile). Split it into individual messages exactly as written, with dates as YYYY-MM-DD when shown (otherwise null) and direction 'outbound' when sent by the salesperson ('You', 'Me' or the first-person side) else 'inbound'. Extract only contact details that appear in the text; use null otherwise. Never invent anything.",
+      input: d.text.slice(0, 40_000),
+      tools: [{ type: "function", name: "report", description: "Report parsed LinkedIn content.", strict: true, parameters: schema }],
+      tool_choice: { type: "function", name: "report" },
     }),
   });
   if (res.status === 429) throw new Error("Too many requests right now. Please try again in a minute.");
   if (res.status === 402) throw new Error("AI credits have run out for this workspace.");
   if (!res.ok) { console.error("LinkedIn parse failed", res.status, await res.text()); throw new Error("Couldn't read that text. Try pasting a smaller section."); }
   const json: any = await res.json();
-  const args = json.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+  const args = (json.output ?? []).find((o: any) => o.type === "function_call")?.arguments;
   const parsed = args ? JSON.parse(args) : { messages: [] };
   return { contact: parsed.contact ?? {}, messages: (parsed.messages ?? []) as { date: string | null; direction: "outbound" | "inbound"; sender: string | null; text: string }[] };
 }
