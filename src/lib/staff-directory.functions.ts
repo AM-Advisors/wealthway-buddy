@@ -25,3 +25,7 @@ export const getTeamDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ team: z.enum(["operations", "finance", "compliance", "marketing", "leadership"]) }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-directory.server")).teamDashboard(context.userId, data.team));
+
+export const getFinanceOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await import("@/lib/staff-directory.server")).financeOverview(context.userId));

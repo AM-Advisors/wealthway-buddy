@@ -220,3 +220,57 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
     charts: [{ title: "Staff by team", data: byTeam }, o.charts[0]!, f.charts[1]!, c.charts[0]!],
   };
 }
+
+/** Finance overview: revenue (paid invoices) by client and month, invoices, pending quotes, team activity. Read-only. */
+export async function financeOverview(viewer: string) {
+  const db = await admin();
+  const roles = await rolesOf(db, viewer);
+  if (!isLeader(roles) && !TEAMS.finance.roles.some((r) => roles.includes(r))) throw new Error("Only the Accounting & Finance team and leadership can view this dashboard.");
+  const yearAgo = new Date(); yearAgo.setMonth(yearAgo.getMonth() - 11, 1);
+  const startMonth = yearAgo.toISOString().slice(0, 7);
+  const [{ data: inv }, { data: quotes }, { data: clients }] = await Promise.all([
+    db.from("invoices").select("id, number, client_id, status, issue_date, due_date, paid_on, total_cents, voided_at").order("issue_date", { ascending: false }).limit(5000),
+    db.from("sales_quotes").select("id, quote_number, version, title, client_id, status, total_cents, valid_until, created_at").in("status", ["draft", "pending_approval", "approved", "sent"]).order("created_at", { ascending: false }).limit(500),
+    db.from("clients").select("id, name"),
+  ]);
+  const name = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name as string]));
+  const invoices = ((inv ?? []) as any[]).filter((i) => !i.voided_at && i.status !== "void");
+  const paid = invoices.filter((i) => i.paid_on || i.status === "paid");
+  const months: string[] = [];
+  for (let d = new Date(yearAgo); months.length < 12; d.setMonth(d.getMonth() + 1)) months.push(d.toISOString().slice(0, 7));
+  const byMonth: Record<string, number> = Object.fromEntries(months.map((m) => [m, 0]));
+  const byClient: Record<string, { client: string; paid: number; outstanding: number; invoices: number }> = {};
+  const today = new Date().toISOString().slice(0, 10);
+  for (const i of invoices) {
+    const c = (byClient[i.client_id ?? "none"] ??= { client: name.get(i.client_id) ?? "No client", paid: 0, outstanding: 0, invoices: 0 });
+    c.invoices++;
+    const cents = Number(i.total_cents ?? 0);
+    if (paid.includes(i)) {
+      c.paid += cents;
+      const m = String(i.paid_on ?? i.issue_date ?? "").slice(0, 7);
+      if (m >= startMonth && m in byMonth) byMonth[m]! += cents;
+    } else if (i.status !== "draft") c.outstanding += cents;
+  }
+  const unpaid = invoices.filter((i) => !paid.includes(i) && i.status !== "draft");
+  const q = (quotes ?? []) as any[];
+  const staff = await allStaff(db);
+  const members = [...staff.entries()].filter(([, r]) => TEAMS.finance.roles.some((x) => r.includes(x))).map(([id]) => id);
+  const { data: acts } = members.length ? await db.from("staff_activity_events").select("id, user_id, kind, path, label, created_at").in("user_id", members).order("created_at", { ascending: false }).limit(40) : { data: [] };
+  const ids = [...new Set(((acts ?? []) as any[]).map((a) => a.user_id))];
+  const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
+  const who = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Staff member"]));
+  return {
+    totals: {
+      revenue12m: Object.values(byMonth).reduce((s, v) => s + v, 0),
+      outstanding: unpaid.reduce((s, i) => s + Number(i.total_cents ?? 0), 0),
+      overdue: unpaid.filter((i) => i.due_date && i.due_date < today).reduce((s, i) => s + Number(i.total_cents ?? 0), 0),
+      pendingQuotes: q.reduce((s, x) => s + Number(x.total_cents ?? 0), 0),
+    },
+    byMonth: months.map((m) => ({ month: m, cents: byMonth[m]! })),
+    byClient: Object.values(byClient).sort((a, b) => b.paid + b.outstanding - (a.paid + a.outstanding)),
+    invoices: invoices.slice(0, 25).map((i) => ({ id: i.id, number: i.number, client: name.get(i.client_id) ?? "No client", status: paid.includes(i) ? "paid" : i.due_date && i.due_date < today && i.status !== "draft" ? "overdue" : i.status, issued: i.issue_date, due: i.due_date, paidOn: i.paid_on, cents: Number(i.total_cents ?? 0) })),
+    payments: paid.filter((i) => i.paid_on).sort((a, b) => String(b.paid_on).localeCompare(String(a.paid_on))).slice(0, 15).map((i) => ({ id: i.id, number: i.number, client: name.get(i.client_id) ?? "No client", paidOn: i.paid_on, cents: Number(i.total_cents ?? 0) })),
+    quotes: q.slice(0, 25).map((x) => ({ id: x.id, label: `Q-${x.quote_number}${x.version > 1 ? ` v${x.version}` : ""}`, title: x.title, client: name.get(x.client_id) ?? "Prospect", status: x.status, validUntil: x.valid_until, cents: Number(x.total_cents ?? 0) })),
+    activity: ((acts ?? []) as any[]).map((a) => ({ id: a.id, who: who.get(a.user_id) ?? "Staff member", kind: a.kind, label: a.label ?? a.path, at: a.created_at })),
+  };
+}
