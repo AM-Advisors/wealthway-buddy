@@ -74,6 +74,7 @@ const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]
 
 const SALES_ROLES = ["sales", "account_executive", "bdr", "sales_management", "cro", "executive", "super_admin"];
 const AM_ROLES = ["account_manager", "client_success", "executive", "super_admin", "cro", "sales_management"];
+const MK_ROLES = ["marketing_manager", "marketing_specialist", "executive", "super_admin", "admin"];
 const LEADER_ROLES = ["cro", "sales_management", "executive", "super_admin"];
 const FINANCE_IDS = ["capital", "accounting", "tax"];
 
@@ -210,6 +211,16 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ] : []),
   ] : [];
 
+  const showMk = staffRoles.some((r) => MK_ROLES.includes(r));
+  const mkItems: NavItem[] = showMk ? [
+    { id: "mk-dashboard", title: "Marketing dashboard", url: "/marketing", icon: "report" },
+    { id: "mk-calendar", title: "Calendar", url: "/marketing/calendar", icon: "tasks" },
+    { id: "mk-posts", title: "Social posts", url: "/marketing/posts", icon: "document" },
+    { id: "mk-emails", title: "Emails", url: "/marketing/emails", icon: "document" },
+    { id: "mk-audiences", title: "Audiences", url: "/marketing/audiences", icon: "people" },
+    { id: "mk-channels", title: "Channels", url: "/marketing/channels", icon: "check" },
+  ] : [];
+
   const exact = (i: NavItem) => pathname === i.url;
   const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
 
@@ -289,6 +300,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <NavSection id="finance" label="Accounting & Finance" items={financeItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={amItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
+            <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.url === "/marketing" ? pathname === i.url : pathname.startsWith(i.url)} />
             <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "employees" ? pathname.startsWith(i.url) : pathname === i.url} />
             {adminSection && (
               <NavSection id="administration" label="Administration" items={[adminSection]} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
@@ -321,6 +333,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
 /** Plain user type shown under the company name: Operations, Sales or Account Manager. */
 function staffUserType(roles: string[], salesOnly: boolean): string {
   if (roles.includes("client_success")) return "Account Manager";
+  if (roles.some((r) => r.startsWith("marketing_")) && !roles.includes("operations")) return "Marketing";
   if (salesOnly || (roles.some((r) => ["sales", "account_executive", "bdr", "sales_management"].includes(r)) && !roles.includes("operations"))) return "Sales";
   return "Operations";
 }

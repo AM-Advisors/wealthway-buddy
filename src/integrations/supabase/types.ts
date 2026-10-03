@@ -13794,6 +13794,27 @@ export type Database = {
           },
         ]
       }
+      email_unsubscribes: {
+        Row: {
+          created_at: string
+          email: string
+          token: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          token?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          token?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       engagement_change_orders: {
         Row: {
           change_no: number
@@ -24332,6 +24353,210 @@ export type Database = {
           },
         ]
       }
+      marketing_approvals: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          note: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          note?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
+      marketing_audience_members: {
+        Row: {
+          audience_id: string
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          audience_id: string
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+        }
+        Update: {
+          audience_id?: string
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_audience_members_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_audiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_audiences: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          sources: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          sources?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          sources?: string[]
+        }
+        Relationships: []
+      }
+      marketing_channels: {
+        Row: {
+          account_ref: string | null
+          channel: string
+          display_name: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_ref?: string | null
+          channel: string
+          display_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_ref?: string | null
+          channel?: string
+          display_name?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      marketing_email_sends: {
+        Row: {
+          created_at: string
+          email_id: string
+          error: string | null
+          id: string
+          recipient: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email_id: string
+          error?: string | null
+          id?: string
+          recipient: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          email_id?: string
+          error?: string | null
+          id?: string
+          recipient?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_email_sends_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_emails: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audience_id: string | null
+          author_id: string
+          blocks: Json
+          created_at: string
+          id: string
+          name: string
+          preheader: string | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience_id?: string | null
+          author_id: string
+          blocks?: Json
+          created_at?: string
+          id?: string
+          name: string
+          preheader?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience_id?: string | null
+          author_id?: string
+          blocks?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          preheader?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_emails_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_audiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_leads: {
         Row: {
           company: string
@@ -24395,6 +24620,95 @@ export type Database = {
           utm_source?: string | null
           utm_term?: string | null
           work_email?: string
+        }
+        Relationships: []
+      }
+      marketing_post_targets: {
+        Row: {
+          channel: string
+          created_at: string
+          error: string | null
+          external_id: string | null
+          id: string
+          post_id: string
+          published_at: string | null
+          status: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          post_id: string
+          published_at?: string | null
+          status?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          post_id?: string
+          published_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_post_targets_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_posts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          author_id: string
+          body: string
+          channels: string[]
+          created_at: string
+          id: string
+          image_paths: string[]
+          published_at: string | null
+          scheduled_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_id: string
+          body?: string
+          channels?: string[]
+          created_at?: string
+          id?: string
+          image_paths?: string[]
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_id?: string
+          body?: string
+          channels?: string[]
+          created_at?: string
+          id?: string
+          image_paths?: string[]
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -36492,6 +36806,8 @@ export type Database = {
         | "account_manager"
         | "account_executive"
         | "bdr"
+        | "marketing_manager"
+        | "marketing_specialist"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -36978,6 +37294,8 @@ export const Constants = {
         "account_manager",
         "account_executive",
         "bdr",
+        "marketing_manager",
+        "marketing_specialist",
       ],
       assisted_draft_status: [
         "awaiting_client_review",

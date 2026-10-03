@@ -50,6 +50,7 @@ import { Route as AuthenticatedInvestorDistributionsRouteImport } from './routes
 import { Route as AuthenticatedInvestorFinancialsRouteImport } from './routes/_authenticated/investor-financials'
 import { Route as AuthenticatedInvestorPerformanceRouteImport } from './routes/_authenticated/investor-performance'
 import { Route as AuthenticatedInvestorReportingRouteImport } from './routes/_authenticated/investor-reporting'
+import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedMyClaimsRouteImport } from './routes/_authenticated/my-claims'
 import { Route as AuthenticatedMyEquityRouteImport } from './routes/_authenticated/my-equity'
@@ -90,6 +91,7 @@ import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/res
 import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
+import { Route as UnsubscribeTokenRouteImport } from './routes/unsubscribe.$token'
 import { Route as AuthenticatedAccountManagerClientsRouteImport } from './routes/_authenticated/account-manager_.clients'
 import { Route as AuthenticatedAccountManagerHandoffsRouteImport } from './routes/_authenticated/account-manager_.handoffs'
 import { Route as AuthenticatedAccountManagerRenewalsRouteImport } from './routes/_authenticated/account-manager_.renewals'
@@ -197,6 +199,11 @@ import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_auth
 import { Route as AuthenticatedManagerUpdatesRouteImport } from './routes/_authenticated/manager.updates'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
+import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_authenticated/marketing_.audiences'
+import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
+import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
+import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
+import { Route as AuthenticatedMarketingPostsRouteImport } from './routes/_authenticated/marketing_.posts'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
 import { Route as AuthenticatedMyFundsFundIdRouteImport } from './routes/_authenticated/my-funds.$fundId'
 import { Route as AuthenticatedMyPortfolioOfferingIdRouteImport } from './routes/_authenticated/my-portfolio_.$offeringId'
@@ -311,6 +318,8 @@ import { Route as AuthenticatedManagerCountersignSignerIdRouteImport } from './r
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './routes/_authenticated/manager.fund-setup.$requestId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
+import { Route as AuthenticatedMarketingEmailsIdRouteImport } from './routes/_authenticated/marketing_.emails_.$id'
+import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_authenticated/marketing_.posts_.$id'
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
 import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
@@ -342,6 +351,7 @@ import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/emai
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicIrsEfileAckRouteImport } from './routes/api/public/irs-efile/ack'
+import { Route as ApiPublicMarketingRunRouteImport } from './routes/api/public/marketing/run'
 import { Route as ApiPublicMercuryOnboardingRouteImport } from './routes/api/public/mercury/onboarding'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
@@ -579,6 +589,11 @@ const AuthenticatedInvestorReportingRoute =
     path: '/investor-reporting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -784,6 +799,11 @@ const SharesTokenRoute = SharesTokenRouteImport.update({
 const SolutionsIndexRoute = SolutionsIndexRouteImport.update({
   id: '/solutions/',
   path: '/solutions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeTokenRoute = UnsubscribeTokenRouteImport.update({
+  id: '/unsubscribe/$token',
+  path: '/unsubscribe/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccountManagerClientsRoute =
@@ -1415,6 +1435,36 @@ const AuthenticatedManagerWiresRoute =
   AuthenticatedManagerWiresRouteImport.update({
     id: '/manager/wires',
     path: '/manager/wires',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingAudiencesRoute =
+  AuthenticatedMarketingAudiencesRouteImport.update({
+    id: '/marketing_/audiences',
+    path: '/marketing/audiences',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingCalendarRoute =
+  AuthenticatedMarketingCalendarRouteImport.update({
+    id: '/marketing_/calendar',
+    path: '/marketing/calendar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingChannelsRoute =
+  AuthenticatedMarketingChannelsRouteImport.update({
+    id: '/marketing_/channels',
+    path: '/marketing/channels',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingEmailsRoute =
+  AuthenticatedMarketingEmailsRouteImport.update({
+    id: '/marketing_/emails',
+    path: '/marketing/emails',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingPostsRoute =
+  AuthenticatedMarketingPostsRouteImport.update({
+    id: '/marketing_/posts',
+    path: '/marketing/posts',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMyFundsIndexRoute =
@@ -2082,6 +2132,18 @@ const AuthenticatedManagerFundFundIdRoute =
     path: '/manager/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingEmailsIdRoute =
+  AuthenticatedMarketingEmailsIdRouteImport.update({
+    id: '/marketing_/emails_/$id',
+    path: '/marketing/emails/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingPostsIdRoute =
+  AuthenticatedMarketingPostsIdRouteImport.update({
+    id: '/marketing_/posts_/$id',
+    path: '/marketing/posts/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsAreasAreaRoute =
   AuthenticatedOpsAreasAreaRouteImport.update({
     id: '/ops/areas/$area',
@@ -2263,6 +2325,11 @@ const ApiPublicHooksInvoiceRemindersRoute =
 const ApiPublicIrsEfileAckRoute = ApiPublicIrsEfileAckRouteImport.update({
   id: '/api/public/irs-efile/ack',
   path: '/api/public/irs-efile/ack',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMarketingRunRoute = ApiPublicMarketingRunRouteImport.update({
+  id: '/api/public/marketing/run',
+  path: '/api/public/marketing/run',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicMercuryOnboardingRoute =
@@ -2459,6 +2526,7 @@ export interface FileRoutesByFullPath {
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/marketing': typeof AuthenticatedMarketingRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
@@ -2495,6 +2563,7 @@ export interface FileRoutesByFullPath {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
@@ -2602,6 +2671,11 @@ export interface FileRoutesByFullPath {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
+  '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
+  '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -2714,6 +2788,8 @@ export interface FileRoutesByFullPath {
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
+  '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -2740,6 +2816,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -2816,6 +2893,7 @@ export interface FileRoutesByTo {
   '/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/marketing': typeof AuthenticatedMarketingRoute
   '/messages': typeof AuthenticatedMessagesRoute
   '/my-claims': typeof AuthenticatedMyClaimsRoute
   '/my-equity': typeof AuthenticatedMyEquityRoute
@@ -2851,6 +2929,7 @@ export interface FileRoutesByTo {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth': typeof AuthIndexRoute
   '/investor': typeof InvestorIndexRoute
   '/resources': typeof ResourcesIndexRoute
@@ -2955,6 +3034,11 @@ export interface FileRoutesByTo {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
+  '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
+  '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -3066,6 +3150,8 @@ export interface FileRoutesByTo {
   '/manager/countersign/$signerId': typeof AuthenticatedManagerCountersignSignerIdRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
+  '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
+  '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -3092,6 +3178,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -3173,6 +3260,7 @@ export interface FileRoutesById {
   '/_authenticated/investor-financials': typeof AuthenticatedInvestorFinancialsRoute
   '/_authenticated/investor-performance': typeof AuthenticatedInvestorPerformanceRoute
   '/_authenticated/investor-reporting': typeof AuthenticatedInvestorReportingRoute
+  '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/my-claims': typeof AuthenticatedMyClaimsRoute
   '/_authenticated/my-equity': typeof AuthenticatedMyEquityRoute
@@ -3209,6 +3297,7 @@ export interface FileRoutesById {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
@@ -3316,6 +3405,11 @@ export interface FileRoutesById {
   '/_authenticated/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/_authenticated/marketing_/audiences': typeof AuthenticatedMarketingAudiencesRoute
+  '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
+  '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/_authenticated/marketing_/posts': typeof AuthenticatedMarketingPostsRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/_authenticated/my-portfolio_/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -3428,6 +3522,8 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/_authenticated/marketing_/emails_/$id': typeof AuthenticatedMarketingEmailsIdRoute
+  '/_authenticated/marketing_/posts_/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/_authenticated/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -3454,6 +3550,7 @@ export interface FileRoutesById {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -3535,6 +3632,7 @@ export interface FileRouteTypes {
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
+    | '/marketing'
     | '/messages'
     | '/my-claims'
     | '/my-equity'
@@ -3571,6 +3669,7 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
     | '/resources/'
@@ -3678,6 +3777,11 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/audiences'
+    | '/marketing/calendar'
+    | '/marketing/channels'
+    | '/marketing/emails'
+    | '/marketing/posts'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
@@ -3790,6 +3894,8 @@ export interface FileRouteTypes {
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
     | '/manager/fund/$fundId'
+    | '/marketing/emails/$id'
+    | '/marketing/posts/$id'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -3816,6 +3922,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -3892,6 +3999,7 @@ export interface FileRouteTypes {
     | '/investor-financials'
     | '/investor-performance'
     | '/investor-reporting'
+    | '/marketing'
     | '/messages'
     | '/my-claims'
     | '/my-equity'
@@ -3927,6 +4035,7 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/unsubscribe/$token'
     | '/auth'
     | '/investor'
     | '/resources'
@@ -4031,6 +4140,11 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/audiences'
+    | '/marketing/calendar'
+    | '/marketing/channels'
+    | '/marketing/emails'
+    | '/marketing/posts'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
@@ -4142,6 +4256,8 @@ export interface FileRouteTypes {
     | '/manager/countersign/$signerId'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
+    | '/marketing/emails/$id'
+    | '/marketing/posts/$id'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -4168,6 +4284,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -4248,6 +4365,7 @@ export interface FileRouteTypes {
     | '/_authenticated/investor-financials'
     | '/_authenticated/investor-performance'
     | '/_authenticated/investor-reporting'
+    | '/_authenticated/marketing'
     | '/_authenticated/messages'
     | '/_authenticated/my-claims'
     | '/_authenticated/my-equity'
@@ -4284,6 +4402,7 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
     | '/resources/'
@@ -4391,6 +4510,11 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/updates'
     | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
+    | '/_authenticated/marketing_/audiences'
+    | '/_authenticated/marketing_/calendar'
+    | '/_authenticated/marketing_/channels'
+    | '/_authenticated/marketing_/emails'
+    | '/_authenticated/marketing_/posts'
     | '/_authenticated/my-funds/$fundId'
     | '/_authenticated/my-portfolio_/$offeringId'
     | '/_authenticated/onboarding/accreditation'
@@ -4503,6 +4627,8 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund-setup/$requestId'
     | '/_authenticated/manager/fund/$fundId'
+    | '/_authenticated/marketing_/emails_/$id'
+    | '/_authenticated/marketing_/posts_/$id'
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/clients/$clientId'
     | '/_authenticated/ops/clients/founders'
@@ -4529,6 +4655,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -4603,6 +4730,7 @@ export interface RootRouteChildren {
   ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
   ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  UnsubscribeTokenRoute: typeof UnsubscribeTokenRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   SolutionsIndexRoute: typeof SolutionsIndexRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
@@ -4618,6 +4746,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicIrsEfileAckRoute: typeof ApiPublicIrsEfileAckRoute
+  ApiPublicMarketingRunRoute: typeof ApiPublicMarketingRunRoute
   ApiPublicMercuryOnboardingRoute: typeof ApiPublicMercuryOnboardingRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
@@ -4917,6 +5046,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorReportingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing': {
+      id: '/_authenticated/marketing'
+      path: '/marketing'
+      fullPath: '/marketing'
+      preLoaderRoute: typeof AuthenticatedMarketingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/messages': {
       id: '/_authenticated/messages'
       path: '/messages'
@@ -5195,6 +5331,13 @@ declare module '@tanstack/react-router' {
       path: '/solutions'
       fullPath: '/solutions/'
       preLoaderRoute: typeof SolutionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe/$token': {
+      id: '/unsubscribe/$token'
+      path: '/unsubscribe/$token'
+      fullPath: '/unsubscribe/$token'
+      preLoaderRoute: typeof UnsubscribeTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account-manager_/clients': {
@@ -5944,6 +6087,41 @@ declare module '@tanstack/react-router' {
       path: '/manager/wires'
       fullPath: '/manager/wires'
       preLoaderRoute: typeof AuthenticatedManagerWiresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/audiences': {
+      id: '/_authenticated/marketing_/audiences'
+      path: '/marketing/audiences'
+      fullPath: '/marketing/audiences'
+      preLoaderRoute: typeof AuthenticatedMarketingAudiencesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/calendar': {
+      id: '/_authenticated/marketing_/calendar'
+      path: '/marketing/calendar'
+      fullPath: '/marketing/calendar'
+      preLoaderRoute: typeof AuthenticatedMarketingCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/channels': {
+      id: '/_authenticated/marketing_/channels'
+      path: '/marketing/channels'
+      fullPath: '/marketing/channels'
+      preLoaderRoute: typeof AuthenticatedMarketingChannelsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/emails': {
+      id: '/_authenticated/marketing_/emails'
+      path: '/marketing/emails'
+      fullPath: '/marketing/emails'
+      preLoaderRoute: typeof AuthenticatedMarketingEmailsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/posts': {
+      id: '/_authenticated/marketing_/posts'
+      path: '/marketing/posts'
+      fullPath: '/marketing/posts'
+      preLoaderRoute: typeof AuthenticatedMarketingPostsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/my-funds/': {
@@ -6744,6 +6922,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/emails_/$id': {
+      id: '/_authenticated/marketing_/emails_/$id'
+      path: '/marketing/emails/$id'
+      fullPath: '/marketing/emails/$id'
+      preLoaderRoute: typeof AuthenticatedMarketingEmailsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/posts_/$id': {
+      id: '/_authenticated/marketing_/posts_/$id'
+      path: '/marketing/posts/$id'
+      fullPath: '/marketing/posts/$id'
+      preLoaderRoute: typeof AuthenticatedMarketingPostsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/areas/$area': {
       id: '/_authenticated/ops/areas/$area'
       path: '/ops/areas/$area'
@@ -6959,6 +7151,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/irs-efile/ack'
       fullPath: '/api/public/irs-efile/ack'
       preLoaderRoute: typeof ApiPublicIrsEfileAckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/marketing/run': {
+      id: '/api/public/marketing/run'
+      path: '/api/public/marketing/run'
+      fullPath: '/api/public/marketing/run'
+      preLoaderRoute: typeof ApiPublicMarketingRunRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/mercury/onboarding': {
@@ -7424,6 +7623,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInvestorFinancialsRoute: typeof AuthenticatedInvestorFinancialsRoute
   AuthenticatedInvestorPerformanceRoute: typeof AuthenticatedInvestorPerformanceRoute
   AuthenticatedInvestorReportingRoute: typeof AuthenticatedInvestorReportingRoute
+  AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedMyClaimsRoute: typeof AuthenticatedMyClaimsRoute
   AuthenticatedMyEquityRoute: typeof AuthenticatedMyEquityRoute
@@ -7539,6 +7739,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerUpdatesRoute: typeof AuthenticatedManagerUpdatesRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
+  AuthenticatedMarketingAudiencesRoute: typeof AuthenticatedMarketingAudiencesRoute
+  AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
+  AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
+  AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
+  AuthenticatedMarketingPostsRoute: typeof AuthenticatedMarketingPostsRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
   AuthenticatedMyPortfolioOfferingIdRoute: typeof AuthenticatedMyPortfolioOfferingIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
@@ -7605,6 +7810,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundSetupRequestIdRoute: typeof AuthenticatedManagerFundSetupRequestIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  AuthenticatedMarketingEmailsIdRoute: typeof AuthenticatedMarketingEmailsIdRoute
+  AuthenticatedMarketingPostsIdRoute: typeof AuthenticatedMarketingPostsIdRoute
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
   AuthenticatedOpsClientsFoundersRoute: typeof AuthenticatedOpsClientsFoundersRoute
@@ -7655,6 +7862,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInvestorFinancialsRoute: AuthenticatedInvestorFinancialsRoute,
   AuthenticatedInvestorPerformanceRoute: AuthenticatedInvestorPerformanceRoute,
   AuthenticatedInvestorReportingRoute: AuthenticatedInvestorReportingRoute,
+  AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedMyClaimsRoute: AuthenticatedMyClaimsRoute,
   AuthenticatedMyEquityRoute: AuthenticatedMyEquityRoute,
@@ -7791,6 +7999,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerUpdatesRoute: AuthenticatedManagerUpdatesRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
+  AuthenticatedMarketingAudiencesRoute: AuthenticatedMarketingAudiencesRoute,
+  AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,
+  AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
+  AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
+  AuthenticatedMarketingPostsRoute: AuthenticatedMarketingPostsRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
   AuthenticatedMyPortfolioOfferingIdRoute:
     AuthenticatedMyPortfolioOfferingIdRoute,
@@ -7875,6 +8088,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundSetupRequestIdRoute,
   AuthenticatedManagerFundFundIdRoute:
     AuthenticatedManagerFundFundIdRouteWithChildren,
+  AuthenticatedMarketingEmailsIdRoute: AuthenticatedMarketingEmailsIdRoute,
+  AuthenticatedMarketingPostsIdRoute: AuthenticatedMarketingPostsIdRoute,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
   AuthenticatedOpsClientsFoundersRoute: AuthenticatedOpsClientsFoundersRoute,
@@ -7981,6 +8196,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
   ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,
   SharesTokenRoute: SharesTokenRoute,
+  UnsubscribeTokenRoute: UnsubscribeTokenRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   SolutionsIndexRoute: SolutionsIndexRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
@@ -7996,6 +8212,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicIrsEfileAckRoute: ApiPublicIrsEfileAckRoute,
+  ApiPublicMarketingRunRoute: ApiPublicMarketingRunRoute,
   ApiPublicMercuryOnboardingRoute: ApiPublicMercuryOnboardingRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
