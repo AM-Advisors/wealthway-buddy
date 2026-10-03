@@ -203,6 +203,7 @@ import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_a
 import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
 import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
+import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_authenticated/marketing_.imports'
 import { Route as AuthenticatedMarketingPostsRouteImport } from './routes/_authenticated/marketing_.posts'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
 import { Route as AuthenticatedMyFundsFundIdRouteImport } from './routes/_authenticated/my-funds.$fundId'
@@ -276,6 +277,7 @@ import { Route as ApiPublicPlaidWebhookRouteImport } from './routes/api/public/p
 import { Route as InvestorFundOfferingIdRouteImport } from './routes/investor.fund.$offeringId'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as OauthGoogleReturnRouteImport } from './routes/oauth/google/return'
+import { Route as OauthHubspotReturnRouteImport } from './routes/oauth/hubspot/return'
 import { Route as OnboardIOnboardingIdRouteImport } from './routes/onboard.i.$onboardingId'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
@@ -1462,6 +1464,12 @@ const AuthenticatedMarketingEmailsRoute =
     path: '/marketing/emails',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingImportsRoute =
+  AuthenticatedMarketingImportsRouteImport.update({
+    id: '/marketing_/imports',
+    path: '/marketing/imports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingPostsRoute =
   AuthenticatedMarketingPostsRouteImport.update({
     id: '/marketing_/posts',
@@ -1879,6 +1887,11 @@ const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
 const OauthGoogleReturnRoute = OauthGoogleReturnRouteImport.update({
   id: '/oauth/google/return',
   path: '/oauth/google/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthHubspotReturnRoute = OauthHubspotReturnRouteImport.update({
+  id: '/oauth/hubspot/return',
+  path: '/oauth/hubspot/return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardIOnboardingIdRoute = OnboardIOnboardingIdRouteImport.update({
@@ -2681,6 +2694,7 @@ export interface FileRoutesByFullPath {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -2751,6 +2765,7 @@ export interface FileRoutesByFullPath {
   '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/oauth/google/return': typeof OauthGoogleReturnRoute
+  '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/client/': typeof AuthenticatedClientIndexRoute
@@ -3045,6 +3060,7 @@ export interface FileRoutesByTo {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -3115,6 +3131,7 @@ export interface FileRoutesByTo {
   '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/oauth/google/return': typeof OauthGoogleReturnRoute
+  '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/client': typeof AuthenticatedClientIndexRoute
@@ -3417,6 +3434,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
+  '/_authenticated/marketing_/imports': typeof AuthenticatedMarketingImportsRoute
   '/_authenticated/marketing_/posts': typeof AuthenticatedMarketingPostsRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/_authenticated/my-portfolio_/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -3487,6 +3505,7 @@ export interface FileRoutesById {
   '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/oauth/google/return': typeof OauthGoogleReturnRoute
+  '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
@@ -3790,6 +3809,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/channels'
     | '/marketing/emails'
+    | '/marketing/imports'
     | '/marketing/posts'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
@@ -3860,6 +3880,7 @@ export interface FileRouteTypes {
     | '/investor/fund/$offeringId'
     | '/lovable/email/events'
     | '/oauth/google/return'
+    | '/oauth/hubspot/return'
     | '/onboard/i/$onboardingId'
     | '/admin/'
     | '/client/'
@@ -4154,6 +4175,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/channels'
     | '/marketing/emails'
+    | '/marketing/imports'
     | '/marketing/posts'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
@@ -4224,6 +4246,7 @@ export interface FileRouteTypes {
     | '/investor/fund/$offeringId'
     | '/lovable/email/events'
     | '/oauth/google/return'
+    | '/oauth/hubspot/return'
     | '/onboard/i/$onboardingId'
     | '/admin'
     | '/client'
@@ -4525,6 +4548,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/calendar'
     | '/_authenticated/marketing_/channels'
     | '/_authenticated/marketing_/emails'
+    | '/_authenticated/marketing_/imports'
     | '/_authenticated/marketing_/posts'
     | '/_authenticated/my-funds/$fundId'
     | '/_authenticated/my-portfolio_/$offeringId'
@@ -4595,6 +4619,7 @@ export interface FileRouteTypes {
     | '/investor/fund/$offeringId'
     | '/lovable/email/events'
     | '/oauth/google/return'
+    | '/oauth/hubspot/return'
     | '/onboard/i/$onboardingId'
     | '/_authenticated/admin/'
     | '/_authenticated/client/'
@@ -4752,6 +4777,7 @@ export interface RootRouteChildren {
   ApiPublicPlaidWebhookRoute: typeof ApiPublicPlaidWebhookRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   OauthGoogleReturnRoute: typeof OauthGoogleReturnRoute
+  OauthHubspotReturnRoute: typeof OauthHubspotReturnRoute
   OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
@@ -6129,6 +6155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingEmailsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/imports': {
+      id: '/_authenticated/marketing_/imports'
+      path: '/marketing/imports'
+      fullPath: '/marketing/imports'
+      preLoaderRoute: typeof AuthenticatedMarketingImportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/posts': {
       id: '/_authenticated/marketing_/posts'
       path: '/marketing/posts'
@@ -6638,6 +6671,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth/google/return'
       fullPath: '/oauth/google/return'
       preLoaderRoute: typeof OauthGoogleReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/hubspot/return': {
+      id: '/oauth/hubspot/return'
+      path: '/oauth/hubspot/return'
+      fullPath: '/oauth/hubspot/return'
+      preLoaderRoute: typeof OauthHubspotReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboard/i/$onboardingId': {
@@ -7762,6 +7802,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
   AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
+  AuthenticatedMarketingImportsRoute: typeof AuthenticatedMarketingImportsRoute
   AuthenticatedMarketingPostsRoute: typeof AuthenticatedMarketingPostsRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
   AuthenticatedMyPortfolioOfferingIdRoute: typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -8023,6 +8064,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,
   AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
+  AuthenticatedMarketingImportsRoute: AuthenticatedMarketingImportsRoute,
   AuthenticatedMarketingPostsRoute: AuthenticatedMarketingPostsRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
   AuthenticatedMyPortfolioOfferingIdRoute:
@@ -8227,6 +8269,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPlaidWebhookRoute: ApiPublicPlaidWebhookRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   OauthGoogleReturnRoute: OauthGoogleReturnRoute,
+  OauthHubspotReturnRoute: OauthHubspotReturnRoute,
   OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
