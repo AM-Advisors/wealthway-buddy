@@ -3,7 +3,7 @@ import { HarmoniousTeamCard } from "@/components/harmonious-team-card";
 import { ClientContractsPanel } from "@/components/client-contracts";
 import { InvestorDriveIntakeCard } from "@/components/investor-drive-intake";
 import { ClientFundsPanel, ClientOverviewActions, ClientPeoplePanel, ClientServicesPricingPanel } from "@/components/client-admin";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,8 @@ import { DriveImportsCard } from "@/components/drive-import";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Table as UiTable, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   getOpsClientRecord,
   getOpsClientTab,
@@ -27,7 +29,7 @@ import {
   getOpsInvestorTab,
   listOpsRecords,
 } from "@/lib/ops-records.functions";
-import { allowedActions, recordPath, recordTabs, RECORD_AREA, type OpsRecordType } from "@/lib/ops-records";
+import { allowedActions, recordPath, recordTabs, RECORD_AREA, type InvestorListRow, type OpsRecordType } from "@/lib/ops-records";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { FundCapTable } from "@/components/fund-cap-table";
@@ -399,12 +401,88 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
   );
 }
 
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(t);
+  }, [value, delayMs]);
+  return debounced;
+}
+
+function InvestorListTable({ records }: { records: InvestorListRow[] }) {
+  if (!records.length) {
+    return <p className="text-sm text-muted-foreground">No investors match.</p>;
+  }
+  return (
+    <div className="rounded-md border">
+      <UiTable>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Investor</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Funds</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Stage</TableHead>
+            <TableHead className="w-[80px]" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {records.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell>
+                <Link to={recordPath("investor", row.id) as any} className="font-medium hover:underline">
+                  {row.title}
+                </Link>
+                {row.subtitle ? <div className="text-xs text-muted-foreground">{row.subtitle}</div> : null}
+              </TableCell>
+              <TableCell>
+                {row.clients.length
+                  ? row.clients.map((c) => (
+                      <div key={c.id}>
+                        <Link to={recordPath("client", c.id) as any} className="hover:underline">
+                          {c.name}
+                        </Link>
+                      </div>
+                    ))
+                  : "—"}
+              </TableCell>
+              <TableCell>
+                {row.funds.length
+                  ? row.funds.map((f) => (
+                      <div key={f.fundId}>
+                        <Link to={recordPath("fund", f.fundId) as any} className="hover:underline">
+                          {f.fundName}
+                        </Link>
+                      </div>
+                    ))
+                  : "—"}
+              </TableCell>
+              <TableCell>{row.status ? <Badge variant="secondary">{row.status}</Badge> : "—"}</TableCell>
+              <TableCell>{row.stage ?? "—"}</TableCell>
+              <TableCell>
+                <Button asChild size="sm" variant="outline">
+                  <Link to={recordPath("investor", row.id) as any}>Open</Link>
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </UiTable>
+    </div>
+  );
+}
+
 export function OpsRecordList({ type }: { type: OpsRecordType }) {
   const load = useServerFn(listOpsRecords);
+  const [search, setSearch] = useState("");
+  const debounced = useDebouncedValue(search, 300);
   const query = useQuery({
-    queryKey: ["ops-record-list", type],
-    queryFn: () => load({ data: { type } }),
+    queryKey: ["ops-record-list", type, type === "investor" ? debounced : ""],
+    queryFn: () => load({ data: { type, search: type === "investor" && debounced ? debounced : undefined } }),
   });
+
+  const records = (query.data as any)?.records ?? [];
 
   return (
     <div className="space-y-4 p-6">
@@ -419,6 +497,15 @@ export function OpsRecordList({ type }: { type: OpsRecordType }) {
           Open a record to see everything Harmonious holds for it.
         </p>
       </header>
+      {type === "investor" ? (
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by investor, client or fund…"
+          className="max-w-sm"
+          aria-label="Search investors"
+        />
+      ) : null}
       {query.isPending ? <Skeleton className="h-40 w-full" /> : null}
       {query.error ? (
         <Card>
@@ -428,22 +515,26 @@ export function OpsRecordList({ type }: { type: OpsRecordType }) {
           </CardHeader>
         </Card>
       ) : null}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {((query.data as any)?.records ?? []).map((item: any) => (
-          <Card key={item.id}>
-            <CardHeader>
-              <CardTitle className="text-base">{item.title}</CardTitle>
-              <CardDescription>{item.subtitle ?? "-"}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              {item.status ? <Badge variant="secondary">{item.status}</Badge> : <span />}
-              <Button asChild size="sm" variant="outline">
-                <Link to={recordPath(type, item.id) as any}>Open</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {type === "investor" && !query.isPending && !query.error ? (
+        <InvestorListTable records={records} />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {records.map((item: any) => (
+            <Card key={item.id}>
+              <CardHeader>
+                <CardTitle className="text-base">{item.title}</CardTitle>
+                <CardDescription>{item.subtitle ?? "-"}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between">
+                {item.status ? <Badge variant="secondary">{item.status}</Badge> : <span />}
+                <Button asChild size="sm" variant="outline">
+                  <Link to={recordPath(type, item.id) as any}>Open</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

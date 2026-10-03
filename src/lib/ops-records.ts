@@ -237,3 +237,121 @@ export function recordPath(type: OpsRecordType, id: string, tab?: string): strin
   const path = `${base}/${encodeURIComponent(id)}`;
   return tab ? `${path}?tab=${encodeURIComponent(tab)}` : path;
 }
+
+/* ------------------------------------------- investor list: client & funds */
+
+export type InvestorFundLink = { fundId: string; fundName: string; clientId: string | null; clientName: string | null };
+
+export type InvestorListRow = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  status: string | null;
+  /** Furthest onboarding stage label across the investor's funds. */
+  stage: string | null;
+  clients: { id: string; name: string }[];
+  funds: InvestorFundLink[];
+};
+
+const STAGE_RANK: Record<string, number> = {
+  started: 1,
+  profile_selected: 2,
+  verification: 3,
+  eligibility: 4,
+  tax: 5,
+  subscription: 6,
+  signature: 7,
+  harmonious_review: 8,
+  approved_to_fund: 9,
+  awaiting_funds: 10,
+  funded: 11,
+  accepted: 12,
+  closed: 13,
+  declined: 0,
+  cancelled: 0,
+};
+
+const STAGE_LABEL: Record<string, string> = {
+  started: "Started",
+  profile_selected: "Profile chosen",
+  verification: "Verification",
+  eligibility: "Eligibility",
+  tax: "Tax documentation",
+  subscription: "Subscription",
+  signature: "Signature",
+  harmonious_review: "Harmonious review",
+  approved_to_fund: "Approved to fund",
+  awaiting_funds: "Awaiting funds",
+  funded: "Funded",
+  accepted: "Accepted",
+  closed: "Closed / admitted",
+  declined: "Declined",
+  cancelled: "Cancelled",
+};
+
+/**
+ * Attach each investor's clients and funds to their list row. Pure: the
+ * server passes rows it already loaded; nothing is recalculated or stored.
+ * Investors with no fund keep their row with empty clients/funds.
+ */
+export function attachInvestorRelations(
+  profiles: { user_id: string; legal_name: string | null; email: string | null; investor_type: string | null }[],
+  onboardings: { investor_user_id: string | null; offering_id: string | null; stage: string | null }[],
+  offerings: { id: string; name: string; client_id: string | null }[],
+  clients: { id: string; name: string }[],
+): InvestorListRow[] {
+  const offeringById = new Map(offerings.map((o) => [o.id, o]));
+  const clientById = new Map(clients.map((c) => [c.id, c.name]));
+  const byInvestor = new Map<string, { funds: Map<string, InvestorFundLink>; bestStage: string | null }>();
+
+  for (const o of onboardings) {
+    if (!o.investor_user_id || !o.offering_id) continue;
+    const offering = offeringById.get(o.offering_id);
+    if (!offering) continue;
+    let entry = byInvestor.get(o.investor_user_id);
+    if (!entry) {
+      entry = { funds: new Map(), bestStage: null };
+      byInvestor.set(o.investor_user_id, entry);
+    }
+    if (!entry.funds.has(offering.id)) {
+      entry.funds.set(offering.id, {
+        fundId: offering.id,
+        fundName: offering.name,
+        clientId: offering.client_id,
+        clientName: offering.client_id ? (clientById.get(offering.client_id) ?? null) : null,
+      });
+    }
+    const rank = STAGE_RANK[o.stage ?? ""] ?? 0;
+    const best = STAGE_RANK[entry.bestStage ?? ""] ?? -1;
+    if (rank > best) entry.bestStage = o.stage;
+  }
+
+  return profiles.map((p) => {
+    const entry = byInvestor.get(p.user_id);
+    const funds = entry ? [...entry.funds.values()].sort((a, b) => a.fundName.localeCompare(b.fundName)) : [];
+    const clientMap = new Map<string, string>();
+    for (const f of funds) {
+      if (f.clientId && f.clientName) clientMap.set(f.clientId, f.clientName);
+    }
+    return {
+      id: p.user_id,
+      title: p.legal_name || p.email || "Unnamed person",
+      subtitle: p.email,
+      status: p.investor_type,
+      stage: entry?.bestStage ? (STAGE_LABEL[entry.bestStage] ?? entry.bestStage) : null,
+      clients: [...clientMap.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
+      funds,
+    };
+  });
+}
+
+/** Search matches the investor's name, email, client names and fund names. */
+export function investorListMatches(row: InvestorListRow, search: string): boolean {
+  const needle = search.trim().toLowerCase();
+  if (!needle) return true;
+  const hay = [row.title, row.subtitle, ...row.clients.map((c) => c.name), ...row.funds.map((f) => f.fundName)]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return hay.includes(needle);
+}
