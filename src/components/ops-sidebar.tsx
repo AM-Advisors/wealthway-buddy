@@ -192,7 +192,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   ] : [];
 
   const exact = (i: NavItem) => pathname === i.url;
-  const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" ? pathname === i.url : operationsNavItemIsActive(i.url, pathname);
+  const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
 
   const close = () => {
     setQuery("");
