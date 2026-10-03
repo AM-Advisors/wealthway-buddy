@@ -278,6 +278,8 @@ async function unsubscribeUrl(db: any, email: string) {
   return `${SITE}/unsubscribe/${data.token}`;
 }
 
+export async function unsubscribeUrlFor(email: string) { return unsubscribeUrl(await admin(), email); }
+
 export async function sendTestEmail(userId: string, id: string) {
   const { db } = await requireMarketing(userId);
   const { data: e } = await db.from("marketing_emails").select("*").eq("id", id).maybeSingle();
@@ -298,6 +300,7 @@ export async function unsubscribeByToken(token: string) {
   if (!data.unsubscribed_at) {
     await db.from("email_unsubscribes").update({ unsubscribed_at: new Date().toISOString() }).eq("token", token);
     await db.from("crm_contacts").update({ consent: "unsubscribed", consent_recorded_at: new Date().toISOString(), consent_note: "Unsubscribed via email link" }).ilike("email", data.email);
+    await (await import("@/lib/email-flows.server")).onUnsubscribe(data.email);
   }
   return { ok: true as const };
 }
@@ -349,7 +352,9 @@ export async function runDue() {
       if (unsub.has(to)) { await db.from("marketing_email_sends").insert({ email_id: e.id, recipient: to, status: "skipped_unsubscribed" }); continue; }
       try {
         const url = await unsubscribeUrl(db, to);
-        await pub.sendMarketingEmail(to, e.subject, renderEmailHtml(e, url), renderEmailText(e, url), url, `${e.id}:${to}`);
+        const { trackMarketingHtml } = await import("@/lib/email-tracking.server");
+        const html = await trackMarketingHtml(renderEmailHtml(e, url), to, `mk:${e.id}`, url);
+        await pub.sendMarketingEmail(to, e.subject, html, renderEmailText(e, url), url, `${e.id}:${to}`);
         await db.from("marketing_email_sends").insert({ email_id: e.id, recipient: to, status: "sent" });
       } catch (err) {
         failed++;

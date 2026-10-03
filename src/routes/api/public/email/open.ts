@@ -36,6 +36,8 @@ export const Route = createFileRoute("/api/public/email/open")({
 
           const userAgent = (request.headers.get("user-agent") ?? "").slice(0, 300);
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { recordMarketingEvent } = await import("@/lib/email-tracking.server");
+          if (await recordMarketingEvent(supabaseAdmin, pixel.template, pixel.recipient, "open", request)) return pixelResponse();
           await supabaseAdmin.from("email_opens").insert({
             recipient: pixel.recipient,
             template: pixel.template,

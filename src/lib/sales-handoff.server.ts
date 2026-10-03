@@ -61,6 +61,7 @@ export async function handoffSignedQuote(quoteId: string) {
       subject: `New client signed: ${client.legal_name}`,
     }).select("id").single();
     if (t) await db.from("inbox_messages").insert({ thread_id: t.id, sender_id: q.owner_user_id, sender_side: "harmonious", body });
+    await (await import("@/lib/email-flows.server")).onClientSigned(client.id, (q as any).deal_id ?? null);
     await db.from("sales_quote_events").insert({ quote_id: q.id, event: "handed_off", actor_id: null, note: created ? "Draft fund created; Operations notified" : "Operations notified" });
   } catch (e) {
     // Release the claim so the next load retries; record why.

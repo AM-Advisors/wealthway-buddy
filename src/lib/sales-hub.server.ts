@@ -198,6 +198,7 @@ export async function logOutreach(userId: string, d: { contactId: string; channe
     visibility: d.visibility, source: d.source ?? "logged", delivery_status: d.deliveryStatus ?? null, provider_ref: d.providerRef ?? null, created_by: userId,
   });
   if (error) throw new Error("Couldn't save that outreach.");
+  if (d.direction === "inbound") await (await import("@/lib/email-flows.server")).onReply(c.id);
   if (d.direction === "inbound" && /^\s*(stop|unsubscribe|stopall|cancel)\s*$/i.test(d.body ?? "") && (d.channel === "text" || d.channel === "whatsapp")) {
     await db.from("sales_channel_optouts").upsert({ contact_id: c.id, channel: d.channel, recorded_by: userId, note: "Replied STOP" }, { onConflict: "contact_id,channel", ignoreDuplicates: true });
   }
@@ -324,6 +325,7 @@ export async function moveStage(userId: string, d: { dealId: string; stage: Sale
   if (d.amountCents != null) patch.amount_cents = d.amountCents;
   const { error } = await db.from("crm_deals").update(patch).eq("id", deal.id);
   if (error) throw new Error("Couldn't update the stage.");
+  await (await import("@/lib/email-flows.server")).onStageChange(deal.id, d.stage);
   await db.from("sales_stage_events").insert({ deal_id: deal.id, from_stage: from, to_stage: d.stage, connected_via: d.connectedVia ?? null, follow_up_at: d.followUpAt ?? null, loss_reason: d.lossReason ?? null, note: d.note ?? null, actor_id: userId });
   return { ok: true };
 }
