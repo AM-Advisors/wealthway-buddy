@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getSalesDashboard } from "@/lib/sales-hub.functions";
-import { SALES_STAGES, CONNECT_CHANNELS } from "@/lib/sales-model";
+import { SALES_STAGES, CONNECT_CHANNELS, QUOTE_STATUS_LABEL } from "@/lib/sales-model";
 import { Bars, Donut, Panel, PeriodFilter, Stat, channelLabel, money, pct, stageLabel, usePeriod } from "@/components/sales/sales-ui";
 import { OutreachFeed, type OutreachFilter } from "@/components/sales/outreach-feed";
 
@@ -76,6 +76,28 @@ function SalesDashboard() {
               <Bars data={d.byOwner.map((x: any) => ({ name: x.label, key: x.key, value: x.count }))} onSelect={(k) => open(`Outreach by ${d.byOwner.find((o: any) => o.key === k)?.label ?? "rep"}`, { ownerId: k })} />
             </Panel>
           </div>
+
+          <Panel title="Quote status" action={<Button asChild size="sm" variant="outline"><Link to="/sales/quotes">All quotes</Link></Button>}>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+              {(d.quoteStatus ?? []).map((x: any) => (
+                <div key={x.status} className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">{QUOTE_STATUS_LABEL[x.status] ?? x.status}</div>
+                  <div className="text-xl font-semibold text-foreground">{x.count}</div>
+                  <div className="text-xs text-muted-foreground">{money(x.cents)}</div>
+                </div>
+              ))}
+            </div>
+            {(d.recentQuotes ?? []).length > 0 && (
+              <ul className="mt-3 divide-y text-sm">
+                {d.recentQuotes.map((q: any) => (
+                  <li key={q.id} className="flex justify-between gap-2 py-2">
+                    <Link to="/sales/quotes/$id" params={{ id: q.id }} className="text-foreground hover:underline">Q-{q.number} · {q.title}</Link>
+                    <span className="text-muted-foreground">{QUOTE_STATUS_LABEL[q.status] ?? q.status} · {money(q.cents)} · {q.owner}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
 
           {drill && (
             <Panel title={drill.label} action={<Button size="sm" variant="ghost" onClick={() => setDrill(null)}>Close</Button>}>
