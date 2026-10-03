@@ -6968,6 +6968,33 @@ export type Database = {
           },
         ]
       }
+      commission_rate_versions: {
+        Row: {
+          created_at: string
+          effective_at: string
+          id: string
+          rates: Json
+          reason: string
+          set_by: string
+        }
+        Insert: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          rates: Json
+          reason: string
+          set_by: string
+        }
+        Update: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          rates?: Json
+          reason?: string
+          set_by?: string
+        }
+        Relationships: []
+      }
       commitment_events: {
         Row: {
           amount_cents: number
@@ -32596,6 +32623,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           baseline_cents: number
+          bdr_user_id: string | null
           client_id: string | null
           contact_id: string | null
           created_at: string
@@ -32627,6 +32655,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           baseline_cents?: number
+          bdr_user_id?: string | null
           client_id?: string | null
           contact_id?: string | null
           created_at?: string
@@ -32658,6 +32687,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           baseline_cents?: number
+          bdr_user_id?: string | null
           client_id?: string | null
           contact_id?: string | null
           created_at?: string

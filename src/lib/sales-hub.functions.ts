@@ -117,3 +117,14 @@ export const draftQuoteFromSow = createServerFn({ method: "POST" }).middleware([
 
 export const getCroDashboard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => period.parse(d))
   .handler(async ({ data, context }) => { const r = range(data); return { ...(await (await S()).croDashboard(context.userId, r.from, r.to)), range: r }; });
+
+const C = () => import("@/lib/commissions.server");
+const rates = z.object({ ae: z.number(), ae_cap_table: z.number(), sales_manager: z.number(), cro: z.number(), ceo: z.number(), bdr: z.number() });
+export const getCommissions = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => period.parse(d))
+  .handler(async ({ data, context }) => { const r = range(data); return { ...(await (await C()).commissionReport(context.userId, r.from, r.to)), range: r }; });
+export const saveCommissionRates = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ rates, reason: z.string().trim().min(3).max(500) }).parse(d))
+  .handler(async ({ data, context }) => (await C()).setCommissionRates(context.userId, data.rates, data.reason));
+export const saveQuoteBdr = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ quoteId: z.string().uuid(), bdrId: z.string().uuid().nullable() }).parse(d))
+  .handler(async ({ data, context }) => (await C()).setQuoteBdr(context.userId, data.quoteId, data.bdrId));
