@@ -172,12 +172,11 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const salesItems: NavItem[] = showSales ? [
     ...(isSalesLeader ? [{ id: "sales-cro", title: "CRO dashboard", url: "/sales/cro", icon: "report" }] : []),
     { id: "sales-dashboard", title: "Sales dashboard", url: "/sales/dashboard", icon: "report" },
-    { id: "sales", title: "Pipeline", url: "/sales", icon: "briefcase" },
+    { id: "sales", title: "Pipeline & pricing", url: "/sales", icon: "briefcase" },
     { id: "sales-outreach", title: "Outreach", url: "/sales/outreach", icon: "people" },
     { id: "sales-quotes", title: "Quotes", url: "/sales/quotes", icon: "document" },
     { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" },
     { id: "sales-team", title: "Sales team", url: "/sales/team", icon: "people" },
-    ...(isSalesLeader ? [{ id: "sales-pricing", title: "Pricing approvals", url: "/admin/pricing-approvals", icon: "check" }] : []),
   ] : [];
   const showAm = staffRoles.some((r) => AM_ROLES.includes(r));
   const amItems: NavItem[] = showAm ? [
