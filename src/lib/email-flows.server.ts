@@ -239,7 +239,7 @@ export async function actOnFollowUp(userId: string, d: { enrollmentId: string; a
   if (!e || !(a.visible === null || a.visible.includes(e.owner_user_id))) throw new Error("Follow-up not found.");
   if (e.status !== "active") throw new Error("This contact is no longer in the flow.");
   if (d.action === "stop") { await stopWhere(db, (q: any) => q.eq("id", e.id), "Stopped by rep"); return { ok: true }; }
-  const steps = await db.from("email_flow_steps").select("*").eq("flow_id", e.flow_id).order("position").then((r: any) => (r.data ?? []) as any[]);
+  const steps: any[] = ((await db.from("email_flow_steps").select("*").eq("flow_id", e.flow_id).order("position")).data ?? []) as any[];
   const step = steps.find((s) => s.position === e.next_step);
   if (!step) { await db.from("email_flow_enrollments").update({ status: "completed", next_due_at: null }).eq("id", e.id); return { ok: true }; }
   const { data: c } = await db.from("crm_contacts").select("*").eq("id", e.contact_id).maybeSingle();
