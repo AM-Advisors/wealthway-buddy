@@ -37,7 +37,8 @@ const FOLDERS: { id: Folder; label: string; icon: typeof Inbox }[] = [
   { id: "archive", label: "Archive", icon: Archive }, { id: "trash", label: "Trash", icon: Trash2 },
 ];
 const STATUS_LABEL: Record<string, string> = { open: "Open", in_progress: "In progress", waiting: "Waiting on client", resolved: "Resolved" };
-type Compose = { to: string; cc: string; subject: string; body: string; threadId?: string; inReplyTo?: string; references?: string; draftId?: string };
+type Compose = { to: string; cc: string; subject: string; body: string; threadId?: string | undefined; inReplyTo?: string | undefined; references?: string | undefined; draftId?: string | undefined };
+type Msg = { id: string; from: string; to: string; cc: string; subject: string; date: string; messageId: string; references: string; body: string; labels: string[] };
 
 const shortDate = (d: string) => { const t = Date.parse(d); if (Number.isNaN(t)) return ""; const x = new Date(t); return x.toDateString() === new Date().toDateString() ? x.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : x.toLocaleDateString(); };
 const nameOf = (from: string) => from.replace(/<[^>]+>/, "").replace(/"/g, "").trim() || from;
@@ -209,13 +210,13 @@ function ThreadView({ mailbox, threadId, folder, staff, me, onBack, onChanged, o
     onSuccess: (_, a) => { toast.success({ archive: "Archived", inbox: "Moved to inbox", trash: "Moved to trash", untrash: "Restored", unread: "Marked unread", star: "Starred", unstar: "Unstarred" }[a]); onChanged(); if (a !== "star" && a !== "unstar") onBack(); else qc.invalidateQueries({ queryKey: ["mail-thread", mailbox, threadId] }); },
     onError: (e) => toast.error((e as Error).message),
   });
-  const msgs = q.data?.thread.messages ?? [];
+  const msgs: Msg[] = (q.data?.thread.messages ?? []) as Msg[];
   const last = msgs[msgs.length - 1];
   const labels = new Set(msgs.flatMap((m) => m.labels));
   const reply = (all: boolean) => {
     if (!last) return;
     const subj = last.subject.match(/^re:/i) ? last.subject : `Re: ${last.subject}`;
-    const quoted = `\n\nOn ${last.date}, ${last.from} wrote:\n${last.body.split("\n").map((l) => `> ${l}`).join("\n")}`;
+    const quoted = `\n\nOn ${last.date}, ${last.from} wrote:\n${last.body.split("\n").map((l: string) => `> ${l}`).join("\n")}`;
     onReply({ to: last.from, cc: all ? [last.to, last.cc].filter(Boolean).join(", ") : "", subject: subj, body: quoted, threadId, inReplyTo: last.messageId || undefined, references: last.references || undefined });
   };
   return (
