@@ -17,7 +17,7 @@ export const COLOR_CLS: Record<string, { band: string; dot: string }> = {
   violet: { band: "bg-chart-5/20 border-chart-5 text-foreground", dot: "bg-chart-5" },
   green: { band: "bg-chart-1/20 border-chart-1 text-foreground", dot: "bg-chart-1" },
 };
-export const colorOf = (c?: string | null) => COLOR_CLS[c ?? "teal"] ?? COLOR_CLS.teal!;
+export const colorOf = (c?: string | null) => COLOR_CLS[c ?? "teal"] ?? COLOR_CLS["teal"]!;
 
 const startOfWeek = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - x.getDay()); return x; };
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
