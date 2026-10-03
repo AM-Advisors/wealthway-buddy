@@ -75,6 +75,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const salesOnly = !session?.operations;
   const capabilities = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const [query, setQuery] = useState("");
+  const [clientsOpen, setClientsOpen] = useState(() => pathname.startsWith("/ops/clients"));
   const index = useMemo(() => opsSearchIndex(capabilities), [capabilities]);
   const results = query.trim() ? searchOpsIndex(index, query) : null;
 
