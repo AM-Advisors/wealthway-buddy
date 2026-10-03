@@ -217,6 +217,7 @@ import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_aut
 import { Route as AuthenticatedOpsDocumentTemplatesRouteImport } from './routes/_authenticated/ops.document-templates'
 import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authenticated/ops.documents'
 import { Route as AuthenticatedOpsEmailHealthRouteImport } from './routes/_authenticated/ops.email-health'
+import { Route as AuthenticatedOpsEmployeesRouteImport } from './routes/_authenticated/ops.employees'
 import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes/_authenticated/ops.formation-reference'
@@ -321,6 +322,8 @@ import { Route as AuthenticatedOpsContractsCompareRouteImport } from './routes/_
 import { Route as AuthenticatedOpsContractsPermissionsRouteImport } from './routes/_authenticated/ops.contracts.permissions'
 import { Route as AuthenticatedOpsContractsSowTemplatesRouteImport } from './routes/_authenticated/ops.contracts.sow-templates'
 import { Route as AuthenticatedOpsContractsStandardRouteImport } from './routes/_authenticated/ops.contracts.standard'
+import { Route as AuthenticatedOpsDashboardsTeamRouteImport } from './routes/_authenticated/ops.dashboards.$team'
+import { Route as AuthenticatedOpsEmployeesUserIdRouteImport } from './routes/_authenticated/ops.employees_.$userId'
 import { Route as AuthenticatedOpsFundManagerFundIdRouteImport } from './routes/_authenticated/ops.fund-manager.$fundId'
 import { Route as AuthenticatedOpsFundSetupIndexRouteImport } from './routes/_authenticated/ops.fund-setup.index'
 import { Route as AuthenticatedOpsFundSetupFundIdRouteImport } from './routes/_authenticated/ops.fund-setup.$fundId'
@@ -1530,6 +1533,12 @@ const AuthenticatedOpsEmailHealthRoute =
     path: '/ops/email-health',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsEmployeesRoute =
+  AuthenticatedOpsEmployeesRouteImport.update({
+    id: '/ops/employees',
+    path: '/ops/employees',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFinancialReviewsRoute =
   AuthenticatedOpsFinancialReviewsRouteImport.update({
     id: '/ops/financial-reviews',
@@ -2138,6 +2147,18 @@ const AuthenticatedOpsContractsStandardRoute =
     path: '/ops/contracts/standard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsDashboardsTeamRoute =
+  AuthenticatedOpsDashboardsTeamRouteImport.update({
+    id: '/ops/dashboards/$team',
+    path: '/ops/dashboards/$team',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsEmployeesUserIdRoute =
+  AuthenticatedOpsEmployeesUserIdRouteImport.update({
+    id: '/ops/employees_/$userId',
+    path: '/ops/employees/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFundManagerFundIdRoute =
   AuthenticatedOpsFundManagerFundIdRouteImport.update({
     id: '/ops/fund-manager/$fundId',
@@ -2586,6 +2607,7 @@ export interface FileRoutesByFullPath {
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
+  '/ops/employees': typeof AuthenticatedOpsEmployeesRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
@@ -2688,6 +2710,8 @@ export interface FileRoutesByFullPath {
   '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/ops/dashboards/$team': typeof AuthenticatedOpsDashboardsTeamRoute
+  '/ops/employees/$userId': typeof AuthenticatedOpsEmployeesUserIdRoute
   '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
@@ -2934,6 +2958,7 @@ export interface FileRoutesByTo {
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
+  '/ops/employees': typeof AuthenticatedOpsEmployeesRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
@@ -3035,6 +3060,8 @@ export interface FileRoutesByTo {
   '/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/ops/dashboards/$team': typeof AuthenticatedOpsDashboardsTeamRoute
+  '/ops/employees/$userId': typeof AuthenticatedOpsEmployeesUserIdRoute
   '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
@@ -3290,6 +3317,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/_authenticated/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/_authenticated/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
+  '/_authenticated/ops/employees': typeof AuthenticatedOpsEmployeesRoute
   '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
@@ -3392,6 +3420,8 @@ export interface FileRoutesById {
   '/_authenticated/ops/contracts/permissions': typeof AuthenticatedOpsContractsPermissionsRoute
   '/_authenticated/ops/contracts/sow-templates': typeof AuthenticatedOpsContractsSowTemplatesRoute
   '/_authenticated/ops/contracts/standard': typeof AuthenticatedOpsContractsStandardRoute
+  '/_authenticated/ops/dashboards/$team': typeof AuthenticatedOpsDashboardsTeamRoute
+  '/_authenticated/ops/employees_/$userId': typeof AuthenticatedOpsEmployeesUserIdRoute
   '/_authenticated/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/_authenticated/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
@@ -3647,6 +3677,7 @@ export interface FileRouteTypes {
     | '/ops/document-templates'
     | '/ops/documents'
     | '/ops/email-health'
+    | '/ops/employees'
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
@@ -3749,6 +3780,8 @@ export interface FileRouteTypes {
     | '/ops/contracts/permissions'
     | '/ops/contracts/sow-templates'
     | '/ops/contracts/standard'
+    | '/ops/dashboards/$team'
+    | '/ops/employees/$userId'
     | '/ops/fund-manager/$fundId'
     | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
@@ -3995,6 +4028,7 @@ export interface FileRouteTypes {
     | '/ops/document-templates'
     | '/ops/documents'
     | '/ops/email-health'
+    | '/ops/employees'
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
@@ -4096,6 +4130,8 @@ export interface FileRouteTypes {
     | '/ops/contracts/permissions'
     | '/ops/contracts/sow-templates'
     | '/ops/contracts/standard'
+    | '/ops/dashboards/$team'
+    | '/ops/employees/$userId'
     | '/ops/fund-manager/$fundId'
     | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
@@ -4350,6 +4386,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/document-templates'
     | '/_authenticated/ops/documents'
     | '/_authenticated/ops/email-health'
+    | '/_authenticated/ops/employees'
     | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/formation-reference'
@@ -4452,6 +4489,8 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/contracts/permissions'
     | '/_authenticated/ops/contracts/sow-templates'
     | '/_authenticated/ops/contracts/standard'
+    | '/_authenticated/ops/dashboards/$team'
+    | '/_authenticated/ops/employees_/$userId'
     | '/_authenticated/ops/fund-manager/$fundId'
     | '/_authenticated/ops/fund-setup/$fundId'
     | '/_authenticated/ops/fund/$fundId'
@@ -6021,6 +6060,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsEmailHealthRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/employees': {
+      id: '/_authenticated/ops/employees'
+      path: '/ops/employees'
+      fullPath: '/ops/employees'
+      preLoaderRoute: typeof AuthenticatedOpsEmployeesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/financial-reviews': {
       id: '/_authenticated/ops/financial-reviews'
       path: '/ops/financial-reviews'
@@ -6749,6 +6795,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsContractsStandardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/dashboards/$team': {
+      id: '/_authenticated/ops/dashboards/$team'
+      path: '/ops/dashboards/$team'
+      fullPath: '/ops/dashboards/$team'
+      preLoaderRoute: typeof AuthenticatedOpsDashboardsTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/employees_/$userId': {
+      id: '/_authenticated/ops/employees_/$userId'
+      path: '/ops/employees/$userId'
+      fullPath: '/ops/employees/$userId'
+      preLoaderRoute: typeof AuthenticatedOpsEmployeesUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/fund-manager/$fundId': {
       id: '/_authenticated/ops/fund-manager/$fundId'
       path: '/ops/fund-manager/$fundId'
@@ -7457,6 +7517,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsDocumentTemplatesRoute: typeof AuthenticatedOpsDocumentTemplatesRoute
   AuthenticatedOpsDocumentsRoute: typeof AuthenticatedOpsDocumentsRoute
   AuthenticatedOpsEmailHealthRoute: typeof AuthenticatedOpsEmailHealthRoute
+  AuthenticatedOpsEmployeesRoute: typeof AuthenticatedOpsEmployeesRoute
   AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsFormationReferenceRoute: typeof AuthenticatedOpsFormationReferenceRoute
@@ -7514,6 +7575,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsContractsPermissionsRoute: typeof AuthenticatedOpsContractsPermissionsRoute
   AuthenticatedOpsContractsSowTemplatesRoute: typeof AuthenticatedOpsContractsSowTemplatesRoute
   AuthenticatedOpsContractsStandardRoute: typeof AuthenticatedOpsContractsStandardRoute
+  AuthenticatedOpsDashboardsTeamRoute: typeof AuthenticatedOpsDashboardsTeamRoute
+  AuthenticatedOpsEmployeesUserIdRoute: typeof AuthenticatedOpsEmployeesUserIdRoute
   AuthenticatedOpsFundManagerFundIdRoute: typeof AuthenticatedOpsFundManagerFundIdRoute
   AuthenticatedOpsFundSetupFundIdRoute: typeof AuthenticatedOpsFundSetupFundIdRoute
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
@@ -7709,6 +7772,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsDocumentTemplatesRoute,
   AuthenticatedOpsDocumentsRoute: AuthenticatedOpsDocumentsRoute,
   AuthenticatedOpsEmailHealthRoute: AuthenticatedOpsEmailHealthRoute,
+  AuthenticatedOpsEmployeesRoute: AuthenticatedOpsEmployeesRoute,
   AuthenticatedOpsFinancialReviewsRoute: AuthenticatedOpsFinancialReviewsRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsFormationReferenceRoute:
@@ -7786,6 +7850,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsContractsSowTemplatesRoute,
   AuthenticatedOpsContractsStandardRoute:
     AuthenticatedOpsContractsStandardRoute,
+  AuthenticatedOpsDashboardsTeamRoute: AuthenticatedOpsDashboardsTeamRoute,
+  AuthenticatedOpsEmployeesUserIdRoute: AuthenticatedOpsEmployeesUserIdRoute,
   AuthenticatedOpsFundManagerFundIdRoute:
     AuthenticatedOpsFundManagerFundIdRoute,
   AuthenticatedOpsFundSetupFundIdRoute: AuthenticatedOpsFundSetupFundIdRoute,
