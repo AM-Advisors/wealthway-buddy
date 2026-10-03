@@ -126,6 +126,12 @@ export async function dashboard(userId: string, from: string, to: string) {
     byChannel: count((r) => r.channel).map((x) => ({ ...x, label: x.key })),
     byService: count((r) => r.service_key).map((x) => ({ ...x, label: svc.get(x.key) ?? (x.key === "unassigned" ? "No service" : x.key) })),
     stageCounts, viaCounts, revenue: revenue(deals, quotes, from, to), perRep, stale,
+    quoteStatus: ["draft", "pending_approval", "approved", "sent", "signed", "rejected", "lost"].map((st) => {
+      const qs = quotes.filter((q: any) => q.status === st);
+      return { status: st, count: qs.length, cents: qs.reduce((t: number, q: any) => t + Number(q.total_cents ?? 0), 0) };
+    }),
+    recentQuotes: [...quotes].sort((x: any, y: any) => String(y.updated_at ?? y.created_at).localeCompare(String(x.updated_at ?? x.created_at))).slice(0, 8)
+      .map((q: any) => ({ id: q.id, title: q.title, number: q.quote_number, status: q.status, cents: Number(q.total_cents ?? 0), owner: nm.get(q.owner_user_id) ?? "" })),
   };
 }
 

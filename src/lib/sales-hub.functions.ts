@@ -106,3 +106,11 @@ export const reviseSalesQuote = createServerFn({ method: "POST" }).middleware([r
 export const markSalesQuoteLost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid(), reason: z.string().min(1).max(500) }).parse(d))
   .handler(async ({ data, context }) => (await Q()).markLost(context.userId, data));
+
+export const listSowsForQuote = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).sowsForQuote(context.userId, data.clientId));
+
+export const draftQuoteFromSow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ sowId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).quoteFromSow(context.userId, data.sowId));

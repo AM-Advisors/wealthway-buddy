@@ -83,9 +83,11 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   if (!d.lines.length) throw new Error("Add at least one service.");
   const { loadBaseline } = await import("@/lib/commercial-pricing.server");
   const base = await loadBaseline(d.clientId ?? null);
-  const baseline = new Map(base.lines.map((l: any) => [l.serviceKey, l.baselineCents]));
-  // Baseline always comes from the live rate card, never from the browser.
-  const priced = priceQuote(d.lines.map((l) => ({ ...l, quantity: Math.max(0, Number(l.quantity) || 0), unitCents: Math.max(0, Math.round(l.unitCents)), baselineUnitCents: baseline.get(l.serviceKey) ?? l.unitCents })));
+  const card = new Map(base.lines.map((l: any) => [l.serviceKey, l]));
+  const unknown = d.lines.find((l) => !card.has(l.serviceKey));
+  if (unknown) throw new Error(`"${unknown.label || unknown.serviceKey}" isn't on the current rate card.`);
+  // Baseline and label always come from the live rate card, never from the browser.
+  const priced = priceQuote(d.lines.map((l) => { const c: any = card.get(l.serviceKey); return { serviceKey: l.serviceKey, label: c.label, quantity: Math.max(0, Number(l.quantity) || 0), unitCents: Math.max(0, Math.round(l.unitCents)), baselineUnitCents: c.baselineCents }; }));
   const db = await admin();
   const now = new Date().toISOString();
   let id = d.id ?? null;
@@ -207,4 +209,33 @@ export async function markLost(userId: string, d: { id: string; reason: string }
     await db.from("sales_stage_events").insert({ deal_id: q.deal_id, to_stage: "contract_lost", loss_reason: d.reason, actor_id: userId });
   }
   return { ok: true };
+}
+
+/** SOWs a quote can be drafted from (client-scoped). */
+export async function sowsForQuote(userId: string, clientId: string) {
+  await salesActor(userId);
+  const db = await admin();
+  const { data } = await db.from("client_sows").select("id, title, status, created_at").eq("client_id", clientId).order("created_at", { ascending: false }).limit(50);
+  return (data ?? []) as any[];
+}
+
+/** Draft a quote from an existing SOW's services, re-priced against the live rate card. */
+export async function quoteFromSow(userId: string, sowId: string) {
+  const db = await admin();
+  const { data: sow } = await db.from("client_sows").select("id, client_id, title, generated_lines").eq("id", sowId).maybeSingle();
+  if (!sow) throw new Error("SOW not found.");
+  const { loadBaseline } = await import("@/lib/commercial-pricing.server");
+  const card = new Map((await loadBaseline(sow.client_id)).lines.map((l: any) => [l.serviceKey, l]));
+  const src = Array.isArray(sow.generated_lines) ? (sow.generated_lines as any[]) : [];
+  const lines = src.map((l) => {
+    const key = l.service_key ?? l.serviceKey ?? l.key; const c: any = card.get(key);
+    if (!c) return null;
+    const qty = Number(l.quantity ?? 1) || 1;
+    const unit = Number(l.unit_cents ?? l.unitCents ?? (l.amount_cents != null ? Number(l.amount_cents) / qty : c.baselineCents));
+    return { serviceKey: key, label: c.label, quantity: qty, unitCents: Math.round(unit), baselineUnitCents: c.baselineCents };
+  }).filter(Boolean) as QuoteLineInput[];
+  if (!lines.length) throw new Error("This SOW has no services that match the current rate card.");
+  const r = await saveQuote(userId, { title: `${sow.title ?? "SOW"} quote`, clientId: sow.client_id, notes: `Drafted from SOW "${sow.title ?? sow.id}"`, lines });
+  await event(r.id, "drafted_from_sow", userId, sow.title ?? null);
+  return r;
 }
