@@ -11,6 +11,7 @@ describe("sales model", () => {
   it("limits BDRs to early stages", () => {
     expect(canMoveToStage(["bdr"], "meeting_set")).toBe(true);
     expect(canMoveToStage(["bdr"], "quoted")).toBe(false);
+    expect(canMoveToStage(["bdr"], "contract_lost")).toBe(false);
     expect(canMoveToStage(["account_executive"], "contract_won")).toBe(true);
   });
   it("prices quotes and flags discounts", () => {
