@@ -19,6 +19,8 @@ const TEAM_BY_ROLE: Record<string, HarmoniousTeam[]> = {
   executive: ["management"],
   super_admin: ["management"],
   sales: ["sales"],
+  account_executive: ["sales"],
+  bdr: ["sales"],
   sales_management: ["sales", "management"],
   cro: ["sales", "management"],
   account_manager: ["sales"],

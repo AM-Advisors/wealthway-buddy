@@ -165,7 +165,7 @@ export async function staffOwners(userId: string) {
   const a = await crmActor(userId);
   if (!canReassign(a)) return [];
   const db = await admin();
-  const { data } = await db.from("user_roles").select("user_id, role").in("role", ["sales", "sales_management", "super_admin", "admin", "operations", "client_success"]);
+  const { data } = await db.from("user_roles").select("user_id, role").in("role", ["sales", "account_executive", "bdr", "sales_management", "cro", "super_admin", "admin", "operations", "client_success"]);
   const ids = [...new Set(((data ?? []) as any[]).map((r) => r.user_id))];
   const nm = await names(ids);
   return ids.map((id) => ({ id, name: nm.get(id) ?? id })).sort((x, y) => x.name.localeCompare(y.name));
