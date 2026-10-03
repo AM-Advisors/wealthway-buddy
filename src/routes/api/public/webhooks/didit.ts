@@ -78,6 +78,22 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
           return new Response("storage error", { status: 500 });
         }
 
+        // Account-level identity checks (portal access gate) are handled separately.
+        {
+          const acct = await import("@/lib/account-kyc.server");
+          const check = await acct.accountCheckByProviderRef(body["vendor_data"] ? String(body["vendor_data"]) : null, sessionId);
+          if (check) {
+            try {
+              const { fetchDiditSessionDecision } = await import("@/lib/didit.server");
+              const decision = (sessionId ? await fetchDiditSessionDecision(sessionId) : null) ?? body;
+              await acct.applyAccountDecision(check, decision);
+            } catch (e) {
+              console.error("[didit] account check processing failed", (e as Error).message);
+            }
+            return Response.json({ ok: true, account: true });
+          }
+        }
+
         let applicationId: string | null = null;
         let processingError: string | null = null;
 
