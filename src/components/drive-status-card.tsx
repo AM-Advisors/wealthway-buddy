@@ -104,6 +104,9 @@ export function DriveStatusCard({ offeringId }: { offeringId: string }) {
             <Button size="sm" onClick={() => mutation.mutate(undefined)} disabled={mutation.isPending}>
               {fundStatus === "not_connected" ? "Create Fund Records Folder" : fundStatus === "needs_attention" ? "Retry" : "Sync Fund Records"}
             </Button>
+            <Button size="sm" variant="outline" onClick={() => investorMutation.mutate()} disabled={investorMutation.isPending}>
+              {investorMutation.isPending ? "Syncing investor records…" : "Create & Sync Investor Records"}
+            </Button>
             {conflict && (
               <>
                 <Input value={linkId} onChange={(e) => setLinkId(e.target.value.trim())} placeholder="Existing folder ID to link" className="h-9 w-full sm:w-64" />
