@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getQuoteCatalog, listSalesQuotes, saveSalesQuote } from "@/lib/sales-hub.functions";
+import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
 import { Panel, money } from "@/components/sales/sales-ui";
 
@@ -39,6 +39,7 @@ function QuotesPage() {
       </div>
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {building && <QuoteBuilder onCancel={() => setBuilding(false)} />}
+      {q.data?.canDraft && <FromSow />}
       <Panel title="All quotes">
         <Table>
           <TableHeader><TableRow><TableHead>Quote</TableHead><TableHead>Client</TableHead><TableHead>Owner</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
@@ -57,6 +58,34 @@ function QuotesPage() {
         </Table>
       </Panel>
     </main>
+  );
+}
+
+function FromSow() {
+  const nav = useNavigate();
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [sowId, setSowId] = useState<string | null>(null);
+  const cat = useServerFn(getQuoteCatalog);
+  const c = useQuery({ queryKey: ["quote-catalog", null], queryFn: () => cat({ data: { clientId: null } }) });
+  const sowFn = useServerFn(listSowsForQuote);
+  const sows = useQuery({ queryKey: ["quote-sows", clientId], enabled: !!clientId, queryFn: () => sowFn({ data: { clientId: clientId! } }) });
+  const draft = useServerFn(draftQuoteFromSow);
+  const m = useMutation({ mutationFn: () => draft({ data: { sowId: sowId! } }), onSuccess: (r) => { toast.success("Quote drafted from SOW"); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); }, onError: (e: Error) => toast.error(e.message) });
+  return (
+    <Panel title="Draft a quote from an SOW">
+      <div className="flex flex-wrap gap-2">
+        <Select value={clientId ?? ""} onValueChange={(v) => { setClientId(v); setSowId(null); }}>
+          <SelectTrigger className="w-64"><SelectValue placeholder="Client" /></SelectTrigger>
+          <SelectContent>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={sowId ?? ""} onValueChange={setSowId} disabled={!clientId}>
+          <SelectTrigger className="w-72"><SelectValue placeholder={clientId && sows.data && !sows.data.length ? "No SOWs for this client" : "SOW"} /></SelectTrigger>
+          <SelectContent>{(sows.data ?? []).map((s: any) => <SelectItem key={s.id} value={s.id}>{s.title} · {s.status}</SelectItem>)}</SelectContent>
+        </Select>
+        <Button onClick={() => m.mutate()} disabled={!sowId || m.isPending}>Draft quote</Button>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">Services are copied from the SOW and re-checked against the current rate card.</p>
+    </Panel>
   );
 }
 
