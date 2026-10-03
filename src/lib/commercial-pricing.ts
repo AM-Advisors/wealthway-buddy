@@ -6,11 +6,11 @@
  * account-management facts and never feed Fund Setup or investor readiness.
  */
 
-export const SALES_ROLES = ["sales", "sales_management"] as const;
+export const SALES_ROLES = ["sales", "sales_management", "cro"] as const;
 /** May approve discounts and set Client Pricing. Never ordinary Sales. */
-export const PRICING_AUTHORITY_ROLES = ["sales_management", "super_admin"] as const;
+export const PRICING_AUTHORITY_ROLES = ["sales_management", "cro", "executive", "super_admin"] as const;
 /** May view the Sales area (commercial data only). */
-export const COMMERCIAL_VIEW_ROLES = ["sales", "sales_management", "super_admin", "admin", "executive", "finance", "client_success", "legal"] as const;
+export const COMMERCIAL_VIEW_ROLES = ["sales", "sales_management", "cro", "account_manager", "super_admin", "admin", "executive", "finance", "client_success", "legal"] as const;
 
 export type CatalogItem = {
   serviceKey: string;

@@ -20,6 +20,8 @@ const TEAM_BY_ROLE: Record<string, HarmoniousTeam[]> = {
   super_admin: ["management"],
   sales: ["sales"],
   sales_management: ["sales", "management"],
+  cro: ["sales", "management"],
+  account_manager: ["sales"],
 };
 
 export type StaffProfile = {

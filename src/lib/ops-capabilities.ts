@@ -239,6 +239,8 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     id: "administration", title: "Administration", url: "/ops/areas/administration", icon: "settings", group: "admin", queues: ["administration"],
     screens: [
       { title: "Client setup options", url: "/admin/client-setup", description: "White-label branding per client", step: "Reference" },
+      { title: "Harmonious roles", url: "/ops/roles", description: "Super admin, CEO, CRO, Sales and Account Manager roles", step: "Start" },
+      { title: "Account management", url: "/account-manager", description: "Account Managers and their client books", step: "Reference" },
       { title: "Access Control", url: "/ops/access-control", description: "Invite people, roles, permissions and access audit", step: "Start" },
       { title: "Compliance & Controls", url: "/ops/compliance", description: "Controls, evidence, access reviews, privacy, vendors, risks, incidents", step: "Review" },
       { title: "Operations team", url: "/ops/team", description: "Staff and their roles", step: "Reference" },

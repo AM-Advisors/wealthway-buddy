@@ -32965,6 +32965,36 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_role_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          reason: string
+          role: string
+          target_user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          role: string
+          target_user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          role?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       standard_agreement_components: {
         Row: {
           component_key: string
@@ -35904,6 +35934,8 @@ export type Database = {
         | "beneficial_owner"
         | "sales"
         | "sales_management"
+        | "cro"
+        | "account_manager"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -36386,6 +36418,8 @@ export const Constants = {
         "beneficial_owner",
         "sales",
         "sales_management",
+        "cro",
+        "account_manager",
       ],
       assisted_draft_status: [
         "awaiting_client_review",
