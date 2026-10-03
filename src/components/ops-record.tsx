@@ -410,11 +410,30 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-function InvestorListTable({ records }: { records: InvestorListRow[] }) {
+function ClientAccessMenu({ id, archived, test }: { id: string; archived: boolean; test: boolean }) {
+  const qc = useQueryClient();
+  const arch = useServerFn(setClientArchived), flag = useServerFn(setTestDemoFlag);
+  const run = async (fn: () => Promise<any>, msg: string) => { try { await fn(); toast.success(msg); await qc.invalidateQueries(); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } };
+  return (
+    <span className="flex gap-1">
+      <Button size="sm" variant="ghost" onClick={() => { const reason = window.prompt(archived ? "Reason for restoring this client" : "Reason for archiving this client (people keep their own access until revoked)"); if (reason && reason.trim().length >= 3) void run(() => arch({ data: { clientId: id, archive: !archived, reason } }), archived ? "Client restored." : "Client archived."); }}>{archived ? "Restore" : "Archive"}</Button>
+      <Button size="sm" variant="ghost" onClick={() => run(() => flag({ data: { kind: "client", id, value: !test } }), test ? "Unmarked test/demo." : "Marked test/demo.")}>{test ? "Unmark test" : "Mark test"}</Button>
+    </span>
+  );
+}
+
+function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
+  const emails = all.map((r) => (r.subtitle && r.subtitle.includes("@") ? r.subtitle : "")).filter(Boolean) as string[];
+  const access = useAccessStatus(emails);
+  const [show, setShow] = useState<"current" | "archived" | "test">("current");
+  const acc = (r: InvestorListRow) => (r.subtitle ? access.data?.[r.subtitle.toLowerCase()] : undefined);
+  const records = all.filter((r) => show === "archived" ? acc(r)?.status === "archived" : show === "test" ? acc(r)?.isTestDemo : acc(r)?.status !== "archived");
+  const tabs = access.data ? <div className="mb-2 flex gap-1">{(["current", "archived", "test"] as const).map((v) => <button key={v} onClick={() => setShow(v)} className={`rounded border px-3 py-1 text-xs ${show === v ? "bg-primary text-primary-foreground" : ""}`}>{v === "current" ? "Current" : v === "archived" ? "Archived" : "Test/Demo"}</button>)}</div> : null;
   if (!records.length) {
-    return <p className="text-sm text-muted-foreground">No investors match.</p>;
+    return <div>{tabs}<p className="text-sm text-muted-foreground">No investors match.</p></div>;
   }
   return (
+    <div>{tabs}
     <div className="rounded-md border">
       <UiTable>
         <TableHeader>
@@ -435,6 +454,7 @@ function InvestorListTable({ records }: { records: InvestorListRow[] }) {
                   {row.title}
                 </Link>
                 {row.subtitle ? <div className="text-xs text-muted-foreground">{row.subtitle}</div> : null}
+                <AccessBadge info={acc(row)} />
               </TableCell>
               <TableCell>
                 {row.clients.length
@@ -464,11 +484,14 @@ function InvestorListTable({ records }: { records: InvestorListRow[] }) {
                 <Button asChild size="sm" variant="outline">
                   <Link to={recordPath("investor", row.id) as any}>Open</Link>
                 </Button>
+                {access.data && row.subtitle?.includes("@") ? <PeopleActions email={row.subtitle} name={row.title} info={acc(row)}
+                  context={row.funds.length === 1 ? null : null} /> : null}
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </UiTable>
+    </div>
     </div>
   );
 }
@@ -518,6 +541,23 @@ export function OpsRecordList({ type }: { type: OpsRecordType }) {
       {type === "investor" && !query.isPending && !query.error ? (
         <InvestorListTable records={records} />
       ) : (
+        <ClientGrid type={type} records={records} />
+      )}
+    </div>
+  );
+}
+
+function ClientGrid({ type, records: all }: { type: OpsRecordType; records: any[] }) {
+  const [show, setShow] = useState<"current" | "archived" | "test">("current");
+  const dir = useQuery({ queryKey: ["people-directory-clients"], queryFn: useServerFn(getPeopleDirectory), enabled: type === "client", retry: false });
+  const meta = new Map(((dir.data?.clients ?? []) as any[]).map((c) => [c.id, c]));
+  const records = type !== "client" ? all : all.filter((r) => {
+    const m = meta.get(r.id);
+    return show === "archived" ? m?.status === "archived" : show === "test" ? m?.is_test_demo : m?.status !== "archived";
+  });
+  return (
+    <div className="space-y-2">
+      {type === "client" && dir.data ? <div className="flex gap-1">{(["current", "archived", "test"] as const).map((v) => <button key={v} onClick={() => setShow(v)} className={`rounded border px-3 py-1 text-xs ${show === v ? "bg-primary text-primary-foreground" : ""}`}>{v === "current" ? "Current" : v === "archived" ? "Archived" : "Test/Demo"}</button>)}</div> : null}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {records.map((item: any) => (
             <Card key={item.id}>
@@ -527,14 +567,16 @@ export function OpsRecordList({ type }: { type: OpsRecordType }) {
               </CardHeader>
               <CardContent className="flex items-center justify-between">
                 {item.status ? <Badge variant="secondary">{item.status}</Badge> : <span />}
-                <Button asChild size="sm" variant="outline">
-                  <Link to={recordPath(type, item.id) as any}>Open</Link>
-                </Button>
+                <span className="flex items-center gap-1">
+                  {type === "client" && dir.data ? <ClientAccessMenu id={item.id} archived={meta.get(item.id)?.status === "archived"} test={!!meta.get(item.id)?.is_test_demo} /> : null}
+                  <Button asChild size="sm" variant="outline">
+                    <Link to={recordPath(type, item.id) as any}>Open</Link>
+                  </Button>
+                </span>
               </CardContent>
             </Card>
           ))}
         </div>
-      )}
     </div>
   );
 }
