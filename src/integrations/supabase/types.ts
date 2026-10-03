@@ -13779,6 +13779,200 @@ export type Database = {
           },
         ]
       }
+      email_flow_enrollments: {
+        Row: {
+          contact_id: string
+          created_at: string
+          deal_id: string | null
+          enrolled_by: string | null
+          enrolled_via: string
+          flow_id: string
+          id: string
+          next_due_at: string | null
+          next_step: number
+          owner_user_id: string | null
+          status: string
+          stop_reason: string | null
+          stopped_at: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          deal_id?: string | null
+          enrolled_by?: string | null
+          enrolled_via: string
+          flow_id: string
+          id?: string
+          next_due_at?: string | null
+          next_step?: number
+          owner_user_id?: string | null
+          status?: string
+          stop_reason?: string | null
+          stopped_at?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          deal_id?: string | null
+          enrolled_by?: string | null
+          enrolled_via?: string
+          flow_id?: string
+          id?: string
+          next_due_at?: string | null
+          next_step?: number
+          owner_user_id?: string | null
+          status?: string
+          stop_reason?: string | null
+          stopped_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_flow_enrollments_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_flow_enrollments_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "email_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_flow_sends: {
+        Row: {
+          enrollment_id: string
+          id: string
+          outcome: string
+          position: number
+          recipient: string
+          sent_at: string
+          sent_by: string
+          step_id: string
+          subject: string
+        }
+        Insert: {
+          enrollment_id: string
+          id?: string
+          outcome?: string
+          position: number
+          recipient: string
+          sent_at?: string
+          sent_by: string
+          step_id: string
+          subject: string
+        }
+        Update: {
+          enrollment_id?: string
+          id?: string
+          outcome?: string
+          position?: number
+          recipient?: string
+          sent_at?: string
+          sent_by?: string
+          step_id?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_flow_sends_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "email_flow_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_flow_sends_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "email_flow_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_flow_steps: {
+        Row: {
+          body: string
+          created_at: string
+          delay_days: number
+          flow_id: string
+          id: string
+          position: number
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          delay_days?: number
+          flow_id: string
+          id?: string
+          position: number
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delay_days?: number
+          flow_id?: string
+          id?: string
+          position?: number
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_flow_steps_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "email_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_flows: {
+        Row: {
+          audience: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          trigger_kind: string
+          trigger_stage: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          trigger_kind?: string
+          trigger_stage?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          trigger_kind?: string
+          trigger_stage?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_link_clicks: {
         Row: {
           clicked_at: string
@@ -24701,6 +24895,45 @@ export type Database = {
           display_name?: string | null
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      marketing_email_events: {
+        Row: {
+          email_id: string | null
+          flow_send_id: string | null
+          id: string
+          ip_hash: string | null
+          kind: string
+          occurred_at: string
+          recipient: string
+          source: string
+          url: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          email_id?: string | null
+          flow_send_id?: string | null
+          id?: string
+          ip_hash?: string | null
+          kind: string
+          occurred_at?: string
+          recipient: string
+          source: string
+          url?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          email_id?: string | null
+          flow_send_id?: string | null
+          id?: string
+          ip_hash?: string | null
+          kind?: string
+          occurred_at?: string
+          recipient?: string
+          source?: string
+          url?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
