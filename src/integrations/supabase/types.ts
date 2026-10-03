@@ -33330,6 +33330,33 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_activity_events: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          label: string | null
+          path: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          path?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          path?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       staff_capability_grants: {
         Row: {
           capability: string | null
