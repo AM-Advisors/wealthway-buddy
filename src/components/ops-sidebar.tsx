@@ -186,6 +186,8 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(leader ? [
       { id: "invites", title: "Invites & access", url: "/ops/access-control", icon: "shield" },
       { id: "roles", title: "Roles", url: "/ops/roles", icon: "check" },
+      { id: "people-all", title: "People: All users", url: "/ops/people", icon: "people" },
+      { id: "people-test", title: "Test & Demo users", url: "/ops/people/test-demo", icon: "people" },
     ] : []),
   ];
 
