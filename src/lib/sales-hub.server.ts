@@ -45,7 +45,7 @@ export async function salesTeam(a: Actor) {
     .sort((x, y) => x.name.localeCompare(y.name));
 }
 
-async function visibleOutreach(a: Actor, f: { from?: string; to?: string; ownerId?: string; channel?: string; serviceKey?: string; contactId?: string; limit?: number }) {
+async function visibleOutreach(a: Actor, f: { from?: string | undefined; to?: string | undefined; ownerId?: string | undefined; channel?: string | undefined; serviceKey?: string | undefined; contactId?: string | undefined; limit?: number | undefined }) {
   const db = await admin();
   let q = db.from("sales_outreach").select("*").order("occurred_at", { ascending: false }).limit(f.limit ?? 5000);
   if (f.from) q = q.gte("occurred_at", f.from);
@@ -296,7 +296,7 @@ export async function moveStage(userId: string, d: { dealId: string; stage: Sale
   return { ok: true };
 }
 
-export async function repOverview(userId: string, repId: string, from: string, to: string) {
+export async function repOverview(userId: string, repId: string, from: string, to: string): Promise<any> {
   const a = await salesActor(userId);
   if (!canSee(a, repId)) throw new Error("You can only see your own overview.");
   const db = await admin();
