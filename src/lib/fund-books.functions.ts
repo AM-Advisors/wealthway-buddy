@@ -54,7 +54,7 @@ export const saveStatementDraftFn = createServerFn({ method: "POST" }).middlewar
     const st = f.statements; const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
     const notes = [
       "Built from the fund's books (platform draft).",
-      `Balance sheet: cash ${usd(st.balanceSheet.cashCents)}, investments ${usd(st.balanceSheet.investmentsCents)}, total assets ${usd(st.balanceSheet.totalAssetsCents)}, partners' capital ${usd(st.balanceSheet.partnersCapitalCents)}.`,
+      `Balance sheet: cash ${usd(st.balanceSheet.cashCents)}, investments ${usd(st.balanceSheet.investmentsCents)}, total assets ${usd(st.balanceSheet.totalAssetsCents)}, liabilities ${usd(st.balanceSheet.liabilitiesCents)}, partners' capital ${usd(st.balanceSheet.partnersCapitalCents)}.`,
       `Income statement: income ${usd(st.incomeStatement.incomeCents)}, expenses ${usd(st.incomeStatement.expensesCents)}, net income ${usd(st.incomeStatement.netIncomeCents)}, unrealized ${usd(st.incomeStatement.unrealizedGainCents)}.`,
       `Changes in capital: opening ${usd(st.changesInCapital.openingCents)}, contributions ${usd(st.changesInCapital.contributionsCents)}, distributions ${usd(st.changesInCapital.distributionsCents)}, closing ${usd(st.changesInCapital.closingCents)}.`,
     ].join("\n");
@@ -62,3 +62,14 @@ export const saveStatementDraftFn = createServerFn({ method: "POST" }).middlewar
     await pk.savePackage(context.userId, { offeringId: data.fundId, periodType: data.periodType, periodStart: data.start, periodEnd: data.end, notes });
     return { ok: true };
   });
+
+export const listLiabilitiesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+  .handler(async ({ data, context }) => (await srv()).listLiabilities(context.userId, data.fundId) as Promise<any[]>);
+
+export const addLiabilityFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ description: z.string().trim().min(1).max(200), kind: z.enum(["accrued_expense", "payable", "loan", "management_fee_payable", "other"]), amountCents: z.number().int().min(1).max(1e13), incurredOn: date, note: z.string().max(2000).nullable() }).parse)
+  .handler(async ({ data, context }) => (await srv()).addLiability(context.userId, data.fundId, data));
+
+export const settleLiabilityFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ id: uuid, settledOn: date }).parse)
+  .handler(async ({ data, context }) => (await srv()).settleLiability(context.userId, data.fundId, data.id, data.settledOn));

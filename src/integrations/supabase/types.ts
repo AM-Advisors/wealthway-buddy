@@ -16911,6 +16911,56 @@ export type Database = {
           },
         ]
       }
+      fund_liabilities: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          incurred_on: string
+          kind: string
+          note: string | null
+          offering_id: string
+          settled_by: string | null
+          settled_on: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          incurred_on: string
+          kind?: string
+          note?: string | null
+          offering_id: string
+          settled_by?: string | null
+          settled_on?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          incurred_on?: string
+          kind?: string
+          note?: string | null
+          offering_id?: string
+          settled_by?: string | null
+          settled_on?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_liabilities_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_managers: {
         Row: {
           created_at: string
