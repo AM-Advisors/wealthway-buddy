@@ -7,7 +7,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 
 const engine = () => import("@/lib/investor-onboarding.server");
 
@@ -292,7 +292,7 @@ export const startInvestmentVerificationFn = createServerFn({ method: "POST" })
 // ------------------------------------------- onboard.harmonious.co portal
 
 export const claimOnboardInvitationFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .inputValidator(z.object({ reference: z.string().regex(/^[A-Za-z0-9]{16,64}$/) }).parse)
   .handler(async ({ data, context }) => (await engine()).claimOnboardInvitation(context.userId, data.reference));
 
