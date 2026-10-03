@@ -45,6 +45,7 @@ function EmployeesPage() {
           <p className="mt-2 text-sm text-muted-foreground">{d?.canAssignManagers ? "Everyone at Harmonious. Assign managers so they can see their team's activity." : "You and the people who report to you."}</p>
         </div>
         <div className="flex gap-3 text-sm">
+          <Link to="/ops/mailboxes" className="text-primary hover:underline">Mailboxes</Link>
           <Link to="/ops/access-control" className="text-primary hover:underline">Invite & access</Link>
           <Link to="/ops/roles" className="text-primary hover:underline">Roles</Link>
         </div>
