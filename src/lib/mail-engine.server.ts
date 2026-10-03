@@ -43,8 +43,8 @@ async function ok(res: Response, what: string) {
 
 async function batchGet(call: Caller, paths: string[]): Promise<any[]> {
   const out: any[] = [];
-  for (let i = 0; i < paths.length; i += 50) {
-    const chunk = paths.slice(i, i + 50);
+  for (let i = 0; i < paths.length; i += 10) {
+    const chunk = paths.slice(i, i + 10);
     const boundary = `b${crypto.randomUUID().replace(/-/g, "")}`;
     const body = chunk.map((p, j) => `--${boundary}\r\nContent-Type: application/http\r\nContent-ID: <i${j}>\r\n\r\nGET ${p}\r\n\r\n`).join("") + `--${boundary}--`;
     const res = await ok(await call("/batch/gmail/v1", { method: "POST", headers: { "Content-Type": `multipart/mixed; boundary=${boundary}` }, body }), "batch");

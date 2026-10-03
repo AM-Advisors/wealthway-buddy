@@ -7,6 +7,6 @@
 - [ ] Manager account map
 - [ ] Stuck-fund alerts
 - [ ] Client 360 timeline
-- [ ] Finance dashboard: revenue by client/month, invoices, payments, pending quotes, team activity
-- [ ] Full per-employee inbox: threads, read, reply, compose, drafts, trash, archive
-- [ ] Group inbox ticketing: assign employees, auto-assign client's assigned staff, track progress
+- [x] Finance dashboard: revenue by client/month, invoices, payments, pending quotes, team activity
+- [x] Full per-employee inbox: threads, read, reply, compose, drafts, trash, archive
+- [x] Group inbox ticketing: assign employees, auto-assign client's assigned staff, track progress
