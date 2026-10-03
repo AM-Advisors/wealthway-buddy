@@ -187,7 +187,7 @@ function groupKey(envKey: string): string {
   return key;
 }
 
-async function groupCall(envKey: string, path: string, init?: RequestInit): Promise<Response> {
+export async function groupCall(envKey: string, path: string, init?: RequestInit): Promise<Response> {
   const lovable = process.env["LOVABLE_API_KEY"];
   if (!lovable) throw new Error("LOVABLE_API_KEY is not configured");
   const headers = new Headers(init?.headers);

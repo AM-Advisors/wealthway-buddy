@@ -24200,6 +24200,104 @@ export type Database = {
         }
         Relationships: []
       }
+      mail_ticket_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+          ticket_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+          ticket_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mail_ticket_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "mail_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mail_tickets: {
+        Row: {
+          assigned_how: string | null
+          assignee_user_id: string | null
+          client_id: string | null
+          created_at: string
+          from_email: string | null
+          id: string
+          last_message_at: string | null
+          mailbox_id: string
+          resolved_at: string | null
+          status: string
+          subject: string
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_how?: string | null
+          assignee_user_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          from_email?: string | null
+          id?: string
+          last_message_at?: string | null
+          mailbox_id: string
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_how?: string | null
+          assignee_user_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          from_email?: string | null
+          id?: string
+          last_message_at?: string | null
+          mailbox_id?: string
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mail_tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mail_tickets_mailbox_id_fkey"
+            columns: ["mailbox_id"]
+            isOneToOne: false
+            referencedRelation: "staff_group_mailboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       management_fee_terms: {
         Row: {
           basis: string
