@@ -210,12 +210,23 @@ export async function sendOutreach(userId: string, d: { contactId: string; chann
   if (d.channel === "email") {
     if (!c.email) throw new Error("This contact has no email address.");
     if (c.consent === "unsubscribed") throw new Error("This contact has unsubscribed from email.");
-    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    let res;
-    try {
-      res = await sendTemplateEmail("crm-campaign", c.email, { templateData: { subject: d.subject || "Following up", body: d.body, fundName: null } });
-    } catch (e) { console.error("Sales email failed", e); throw new Error("The email couldn't be sent. Please try again."); }
-    if (!res.sent) throw new Error("This address is on the do-not-email list.");
+    // Send from the rep's own connected Google inbox when they have one;
+    // otherwise fall back to the shared Harmonious sender.
+    const { sendGmailAsUser } = await import("@/lib/gmail.server");
+    const gmailId = await sendGmailAsUser(userId, { to: c.email, subject: d.subject || "Following up", body: d.body }).catch((e) => {
+      console.error("Gmail outreach send failed", e);
+      return null;
+    });
+    if (gmailId) {
+      providerRef = gmailId;
+    } else {
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      let res;
+      try {
+        res = await sendTemplateEmail("crm-campaign", c.email, { templateData: { subject: d.subject || "Following up", body: d.body, fundName: null } });
+      } catch (e) { console.error("Sales email failed", e); throw new Error("The email couldn't be sent. Please try again."); }
+      if (!res.sent) throw new Error("This address is on the do-not-email list.");
+    }
   } else {
     if (!c.phone) throw new Error("This contact has no phone number.");
     const lovable = process.env["LOVABLE_API_KEY"];

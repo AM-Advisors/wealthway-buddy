@@ -180,6 +180,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const teamItems: NavItem[] = salesOnly ? [] : [
     ...(leader ? [{ id: "dash-leadership", title: "Leadership dashboard", url: "/ops/dashboards/leadership", icon: "report" }] : []),
     { id: "employees", title: "Employees & activity", url: "/ops/employees", icon: "people" },
+    { id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" },
     ...(leader ? [
       { id: "invites", title: "Invites & access", url: "/ops/access-control", icon: "shield" },
       { id: "roles", title: "Roles", url: "/ops/roles", icon: "check" },
