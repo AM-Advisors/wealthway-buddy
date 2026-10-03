@@ -28,6 +28,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -73,6 +74,16 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { session } = useClientWorkspace();
   const sections = getNavigation(session as never, "operations", pathname).operations;
   const salesOnly = !session?.operations;
+  const staffRoles = session?.staffRoles ?? [];
+  // The Commercial section: Sales and Account Management. Visible to
+  // commercial staff and leadership; the backend re-checks every page.
+  const commercialRoles = ["sales", "sales_management", "cro", "account_manager", "client_success", "executive", "super_admin"];
+  const showCommercial = salesOnly || staffRoles.some((r) => commercialRoles.includes(r));
+  const commercialItems = [
+    { id: "sales", title: "Sales", url: "/sales", icon: "briefcase" },
+    { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" },
+    { id: "account-manager", title: "Account management", url: "/account-manager", icon: "people" },
+  ];
   const capabilities = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const [query, setQuery] = useState("");
   const [clientsOpen, setClientsOpen] = useState(() => pathname.startsWith("/ops/clients"));
