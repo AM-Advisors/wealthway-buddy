@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { getMyPortfolioValue } from "@/lib/cap-table.functions";
 import { DiligenceRoom } from "@/components/diligence-room";
 import { DocumentsStep } from "@/components/steps/documents-step";
+import { InvestorSharePanel } from "@/components/investor-share-panel";
 import { InvestorReportingCenter } from "@/components/investor-reporting-center";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,10 +19,11 @@ import {
   InvestorFundStatusPanel,
 } from "@/components/investor-fund-panels";
 
-type Tab = "overview" | "documents" | "deal-room" | "payments" | "taxes" | "messages" | "updates";
+type Tab = "overview" | "my-share" | "documents" | "deal-room" | "payments" | "taxes" | "messages" | "updates";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "overview", label: "Overview" },
+  { value: "my-share", label: "My Share" },
   { value: "documents", label: "Documents" },
   { value: "deal-room", label: "Deal room" },
   { value: "payments", label: "Payments" },
@@ -97,6 +99,7 @@ function InvestorFund() {
           ) : null}
           <InvestorFundStatusPanel offeringId={offeringId} />
         </TabsContent>
+        <TabsContent value="my-share" className="mt-4"><InvestorSharePanel offeringId={offeringId} /></TabsContent>
         <TabsContent value="documents" className="mt-4"><DocumentsStep offeringId={offeringId} /></TabsContent>
         <TabsContent value="deal-room" className="mt-4"><DiligenceRoom offeringId={offeringId} /></TabsContent>
         <TabsContent value="payments" className="mt-4"><FundCapitalCallsPanel offeringId={offeringId} /></TabsContent>
