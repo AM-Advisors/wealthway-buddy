@@ -149,7 +149,11 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
   const today = new Date().toISOString().slice(0, 10);
   const q = async (table: string, cols: string, f?: (b: any) => any) => { let b = db.from(table).select(cols).limit(5000); if (f) b = f(b); const { data } = await b; return (data ?? []) as any[]; };
 
+  const { testDemoIds, isTestRow } = await import("@/lib/user-access.server");
+  const td = await testDemoIds();
+  const real = (xs: any[]) => xs.filter((r) => !isTestRow(td, r));
   const staff = await allStaff(db);
+  for (const id of [...staff.keys()]) if (td.users.has(id)) staff.delete(id);
   const members = [...staff.entries()].filter(([, r]) => team === "leadership" || TEAMS[team].roles.some((x) => r.includes(x))).map(([id]) => id);
   const since = new Date(Date.now() - 864e5).toISOString();
   const active = members.length ? await q("staff_activity_events", "user_id", (b) => b.in("user_id", members).gte("created_at", since)) : [];
@@ -157,9 +161,9 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
 
   const ops = async () => {
     const [setups, onb, closes] = await Promise.all([
-      q("fund_setups", "id, launched_at, created_at"),
-      q("investor_onboardings", "id, stage, closed_at, removed_at", (b) => b.is("removed_at", null).is("closed_at", null)),
-      q("fund_close_requests", "id, status"),
+      q("fund_setups", "id, launched_at, created_at, client_id"),
+      q("investor_onboardings", "id, stage, closed_at, removed_at, investor_user_id, person_id", (b) => b.is("removed_at", null).is("closed_at", null)),
+      q("fund_close_requests", "id, status, client_id"),
     ]);
     const inSetup = setups.filter((s) => !s.launched_at);
     return {
@@ -174,7 +178,7 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
   };
   const finance = async () => {
     const [inv, recs, exc, k1, rev] = await Promise.all([
-      q("invoices", "id, status, due_date, total_cents"),
+      q("invoices", "id, status, due_date, total_cents, client_id"),
       q("bank_reconciliations", "id, status"),
       q("accounting_exceptions", "id, kind, resolved_at", (b) => b.is("resolved_at", null)),
       q("k1_forms", "id, status"),
@@ -193,10 +197,10 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
   };
   const compliance = async () => {
     const [kyc, holds, filings, closes] = await Promise.all([
-      q("account_identity_checks", "id, status"),
+      q("account_identity_checks", "id, status, user_id"),
       q("compliance_holds", "id, status"),
       q("fund_regulatory_filings", "id, filing_type, created_at", (b) => b.is("removed_at", null).gte("created_at", new Date(Date.now() - 30 * 864e5).toISOString())),
-      q("fund_close_requests", "id, status"),
+      q("fund_close_requests", "id, status, client_id"),
     ]);
     return {
       stats: [

@@ -295,13 +295,16 @@ export async function fundRecord(context: any, data: { id: string }) {
 
     const [setup, onboardings, positions, client] = await Promise.all([
       s.from("fund_setups").select("stage, launch_state, investment_strategy, target_size_cents, domicile").eq("offering_id", data.id).maybeSingle(),
-      s.from("investor_onboardings").select("accepted_amount_cents, funded_amount_cents").eq("offering_id", data.id),
-      s.from("investor_positions").select("id").eq("offering_id", data.id).eq("status", "active"),
+      s.from("investor_onboardings").select("accepted_amount_cents, funded_amount_cents, investor_user_id, person_id").eq("offering_id", data.id),
+      s.from("investor_positions").select("id, investor_user_id").eq("offering_id", data.id).eq("status", "active"),
       fund.client_id
         ? s.from("clients").select("id, name").eq("id", fund.client_id).maybeSingle()
         : Promise.resolve({ data: null, error: null }),
     ]);
-    const onboardingRows = rows(onboardings);
+    const { testDemoIds, isTestRow } = await import("@/lib/user-access.server");
+    const td = await testDemoIds();
+    const onboardingRows = rows(onboardings).filter((r: any) => !isTestRow(td, r));
+    const realPositions = rows(positions).filter((r: any) => !isTestRow(td, r));
 
     return {
       capabilities,
@@ -321,7 +324,7 @@ export async function fundRecord(context: any, data: { id: string }) {
         clientName: (client as any)?.data?.name ?? null,
         acceptedCents: sum(onboardingRows, "accepted_amount_cents"),
         fundedCents: sum(onboardingRows, "funded_amount_cents"),
-        investorCount: rows(positions).length,
+        investorCount: realPositions.length,
       },
     };
 }
