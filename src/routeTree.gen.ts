@@ -266,6 +266,7 @@ import { Route as ApiPublicLoginAttemptRouteImport } from './routes/api/public/l
 import { Route as ApiPublicPlaidWebhookRouteImport } from './routes/api/public/plaid-webhook'
 import { Route as InvestorFundOfferingIdRouteImport } from './routes/investor.fund.$offeringId'
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
+import { Route as OauthGoogleReturnRouteImport } from './routes/oauth/google/return'
 import { Route as OnboardIOnboardingIdRouteImport } from './routes/onboard.i.$onboardingId'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
@@ -1812,6 +1813,11 @@ const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
   path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthGoogleReturnRoute = OauthGoogleReturnRouteImport.update({
+  id: '/oauth/google/return',
+  path: '/oauth/google/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardIOnboardingIdRoute = OnboardIOnboardingIdRouteImport.update({
   id: '/onboard/i/$onboardingId',
   path: '/onboard/i/$onboardingId',
@@ -2655,6 +2661,7 @@ export interface FileRoutesByFullPath {
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/client/': typeof AuthenticatedClientIndexRoute
@@ -3006,6 +3013,7 @@ export interface FileRoutesByTo {
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/client': typeof AuthenticatedClientIndexRoute
@@ -3365,6 +3373,7 @@ export interface FileRoutesById {
   '/api/public/plaid-webhook': typeof ApiPublicPlaidWebhookRoute
   '/investor/fund/$offeringId': typeof InvestorFundOfferingIdRoute
   '/lovable/email/events': typeof LovableEmailEventsRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
@@ -3725,6 +3734,7 @@ export interface FileRouteTypes {
     | '/api/public/plaid-webhook'
     | '/investor/fund/$offeringId'
     | '/lovable/email/events'
+    | '/oauth/google/return'
     | '/onboard/i/$onboardingId'
     | '/admin/'
     | '/client/'
@@ -4076,6 +4086,7 @@ export interface FileRouteTypes {
     | '/api/public/plaid-webhook'
     | '/investor/fund/$offeringId'
     | '/lovable/email/events'
+    | '/oauth/google/return'
     | '/onboard/i/$onboardingId'
     | '/admin'
     | '/client'
@@ -4434,6 +4445,7 @@ export interface FileRouteTypes {
     | '/api/public/plaid-webhook'
     | '/investor/fund/$offeringId'
     | '/lovable/email/events'
+    | '/oauth/google/return'
     | '/onboard/i/$onboardingId'
     | '/_authenticated/admin/'
     | '/_authenticated/client/'
@@ -4586,6 +4598,7 @@ export interface RootRouteChildren {
   ApiPublicLoginAttemptRoute: typeof ApiPublicLoginAttemptRoute
   ApiPublicPlaidWebhookRoute: typeof ApiPublicPlaidWebhookRoute
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
+  OauthGoogleReturnRoute: typeof OauthGoogleReturnRoute
   OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
@@ -6403,6 +6416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/google/return': {
+      id: '/oauth/google/return'
+      path: '/oauth/google/return'
+      fullPath: '/oauth/google/return'
+      preLoaderRoute: typeof OauthGoogleReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboard/i/$onboardingId': {
       id: '/onboard/i/$onboardingId'
       path: '/onboard/i/$onboardingId'
@@ -7947,6 +7967,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLoginAttemptRoute: ApiPublicLoginAttemptRoute,
   ApiPublicPlaidWebhookRoute: ApiPublicPlaidWebhookRoute,
   LovableEmailEventsRoute: LovableEmailEventsRoute,
+  OauthGoogleReturnRoute: OauthGoogleReturnRoute,
   OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
