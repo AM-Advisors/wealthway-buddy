@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 import { randomToken, recordSecurityEvent, sha256, trackDeviceAndAlert } from "./account-security.server";
 
 const EVENT_TYPES = [
@@ -47,7 +47,7 @@ async function isRevoked(userId: string, iat: number | undefined) {
 
 /** Records a security event for the signed-in user; returns signOut if this session was revoked. */
 export const logSecurityEvent = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .inputValidator((d) => logSchema.parse(d))
   .handler(async ({ data, context }) => {
     const claims = context.claims as { email?: string; iat?: number; session_id?: string };
@@ -76,7 +76,7 @@ export const logSecurityEvent = createServerFn({ method: "POST" })
 
 /** The signed-in user's devices and recent sign-in / security history. */
 export const getMySecurity = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => {
     const [{ data: devices }, { data: events }] = await Promise.all([
       context.supabase
@@ -102,7 +102,7 @@ export const getMySecurity = createServerFn({ method: "GET" })
 
 /** Signs out every other session of the caller (native session revocation). */
 export const signOutOtherSessions = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.auth.admin.signOut(bearer(), "others");
@@ -116,7 +116,7 @@ export const signOutOtherSessions = createServerFn({ method: "POST" })
 
 /** Issues 10 fresh single-use recovery codes (shown once). Requires a verified second step. */
 export const generateRecoveryCodes = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => {
     const claims = context.claims as { aal?: string };
     if (claims.aal !== "aal2") throw new Error("Verify your second step first.");
@@ -142,7 +142,7 @@ export const generateRecoveryCodes = createServerFn({ method: "POST" })
 
 /** Uses a recovery code: removes the lost second-step methods so the user enrolls new ones. */
 export const useRecoveryCode = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .inputValidator((d) => z.object({ code: z.string().trim().min(6).max(20) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -219,7 +219,7 @@ export const listSecurityActivity = createServerFn({ method: "POST" })
   });
 
 export const requestMfaReset = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .inputValidator((d) =>
     z
       .object({
