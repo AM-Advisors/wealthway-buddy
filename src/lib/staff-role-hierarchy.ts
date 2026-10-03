@@ -2,7 +2,7 @@
  * Harmonious leadership & commercial role hierarchy (pure).
  * Decides who may assign which managed role. Server re-checks every change.
  */
-export const MANAGED_ROLES = ["super_admin", "executive", "cro", "sales_management", "account_executive", "bdr", "sales", "account_manager", "marketing_manager", "marketing_specialist"] as const;
+export const MANAGED_ROLES = ["super_admin", "executive", "cro", "sales_management", "account_executive", "bdr", "sales", "account_manager", "marketing_manager", "marketing_specialist", "leadership"] as const;
 export type ManagedRole = (typeof MANAGED_ROLES)[number];
 
 export const MANAGED_ROLE_LABEL: Record<ManagedRole, string> = {
@@ -16,6 +16,7 @@ export const MANAGED_ROLE_LABEL: Record<ManagedRole, string> = {
   account_manager: "Account Manager",
   marketing_manager: "Marketing Manager",
   marketing_specialist: "Marketing Specialist",
+  leadership: "Leadership",
 };
 
 export const MANAGED_ROLE_SEES: Record<ManagedRole, string> = {
@@ -29,15 +30,16 @@ export const MANAGED_ROLE_SEES: Record<ManagedRole, string> = {
   account_manager: "Their assigned clients: funds, tasks and health",
   marketing_manager: "Marketing: create, approve and schedule posts and emails; channels",
   marketing_specialist: "Marketing: create posts and emails and submit them for approval",
+  leadership: "Read-only view of everything: dashboards, people, activity and audit; changes nothing",
 };
 
 /** Higher number = more authority. */
 export const ROLE_RANK: Record<ManagedRole, number> = {
-  super_admin: 100, executive: 90, cro: 80, sales_management: 70, account_executive: 30, bdr: 20, sales: 10, account_manager: 10, marketing_manager: 40, marketing_specialist: 15,
+  super_admin: 100, executive: 90, cro: 80, sales_management: 70, account_executive: 30, bdr: 20, sales: 10, account_manager: 10, marketing_manager: 40, marketing_specialist: 15, leadership: 50,
 };
 
 /** Roles that need an Individual account classification. */
-export const PRIVILEGED_MANAGED: readonly ManagedRole[] = ["super_admin", "executive", "cro", "sales_management"];
+export const PRIVILEGED_MANAGED: readonly ManagedRole[] = ["super_admin", "executive", "cro", "sales_management", "leadership"];
 
 export function actorRank(roles: readonly string[]): number {
   return Math.max(0, ...roles.map((r) => ROLE_RANK[r as ManagedRole] ?? 0));
@@ -65,4 +67,10 @@ export function assignmentProblem(args: {
 /** Leadership that sees every Sales rep and every Account Manager's book. */
 export function seesWholeTeam(roles: readonly string[]): boolean {
   return actorRank(roles) >= 70 || roles.includes("admin");
+}
+
+/** True when the only authority these roles carry is the view-only Leadership role. */
+export function isReadOnlyLeader(roles: readonly string[]): boolean {
+  return roles.includes("leadership") && actorRank(roles.filter((r) => r !== "leadership")) === 0
+    && !roles.some((r) => ["admin", "operations", "finance", "tax", "legal", "compliance", "fund_administration", "client_success"].includes(r));
 }

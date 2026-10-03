@@ -42,6 +42,7 @@ export const OPS_STAFF_ROLES = [
   "finance",
   "client_success",
   "executive",
+  "leadership",
 ] as const;
 
 const caps = (areas: readonly OpsArea[], actions: readonly OpsAction[]): OpsCapability[] =>
@@ -84,6 +85,7 @@ const ROLE_GRANTS: Record<string, OpsCapability[]> = {
     ...caps(["onboarding"], SEE_PREPARE),
   ],
   executive: caps(ALL_AREAS, SEE_ONLY),
+  leadership: caps(ALL_AREAS, SEE_ONLY),
 };
 
 /** Whether this person may open Operations at all. */
@@ -234,7 +236,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     ],
   },
   {
-    id: "administration", title: "Administration", url: "/ops/areas/administration", icon: "settings", group: "admin", queues: ["administration"],
+    id: "administration", title: "Leadership", url: "/ops/areas/administration", icon: "settings", group: "admin", queues: ["administration"],
     screens: [
       { title: "Client setup options", url: "/admin/client-setup", description: "White-label branding per client", step: "Reference" },
       { title: "Harmonious roles", url: "/ops/roles", description: "Super admin, CEO, CRO, Sales and Account Manager roles", step: "Start" },

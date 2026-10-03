@@ -12,7 +12,7 @@ async function scope(userId: string) {
   const db = await admin();
   const { data: r } = await db.from("user_roles").select("role").eq("user_id", userId);
   const roles = ((r ?? []) as any[]).map((x) => String(x.role));
-  const team = seesWholeTeam(roles) || roles.includes("executive");
+  const team = seesWholeTeam(roles) || roles.includes("executive") || roles.includes("leadership");
   if (!team && !roles.some((x) => ["account_manager", "client_success"].includes(x))) throw new Error("Account Management access only.");
   let clientIds: string[] | null = null;
   if (!team) {

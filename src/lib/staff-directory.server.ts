@@ -26,6 +26,8 @@ async function rolesOf(db: any, userId: string): Promise<string[]> {
 }
 
 export const isLeader = (roles: string[]) => roles.some((r) => LEADERSHIP.includes(r));
+/** Leaders plus the view-only Leadership role: may see, never change. */
+export const isLeaderViewer = (roles: string[]) => isLeader(roles) || roles.includes("leadership");
 
 async function allStaff(db: any) {
   const { data } = await db.from("user_roles").select("user_id, role").in("role", STAFF_ROLE_SET);
@@ -57,7 +59,7 @@ async function viewerScope(viewer: string) {
   if (!staff.has(viewer)) throw new Error("Only Harmonious staff can view employees.");
   const managerOf = await lines(db);
   const leader = isLeader(roles);
-  const visible = leader ? new Set(staff.keys()) : new Set([viewer, ...downline(managerOf, viewer)]);
+  const visible = isLeaderViewer(roles) ? new Set(staff.keys()) : new Set([viewer, ...downline(managerOf, viewer)]);
   return { db, roles, staff, managerOf, leader, visible };
 }
 
@@ -142,7 +144,7 @@ const countBy = (rows: any[], key: string) => rows.reduce<Record<string, number>
 export async function teamDashboard(viewer: string, team: TeamKey) {
   const db = await admin();
   const roles = await rolesOf(db, viewer);
-  const leader = isLeader(roles);
+  const leader = isLeaderViewer(roles);
   if (!leader && !TEAMS[team].roles.some((r) => roles.includes(r))) throw new Error(`Only the ${TEAMS[team].title} team and leadership can view this dashboard.`);
   const today = new Date().toISOString().slice(0, 10);
   const q = async (table: string, cols: string, f?: (b: any) => any) => { let b = db.from(table).select(cols).limit(5000); if (f) b = f(b); const { data } = await b; return (data ?? []) as any[]; };
@@ -225,7 +227,7 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
 export async function financeOverview(viewer: string) {
   const db = await admin();
   const roles = await rolesOf(db, viewer);
-  if (!isLeader(roles) && !TEAMS.finance.roles.some((r) => roles.includes(r))) throw new Error("Only the Accounting & Finance team and leadership can view this dashboard.");
+  if (!isLeaderViewer(roles) && !TEAMS.finance.roles.some((r) => roles.includes(r))) throw new Error("Only the Accounting & Finance team and leadership can view this dashboard.");
   const yearAgo = new Date(); yearAgo.setMonth(yearAgo.getMonth() - 11, 1);
   const startMonth = yearAgo.toISOString().slice(0, 7);
   const [{ data: inv }, { data: quotes }, { data: clients }] = await Promise.all([
