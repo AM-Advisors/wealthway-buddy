@@ -5,7 +5,7 @@ export const FUND_SETUP_PRICE_ID = "fund_setup_fee_onetime";
 export type PayItem = { key: string; name: string; cents: number; source: "setup_fee" | "sow" | "rate_card" };
 
 /** Roles whose approval makes a client's custom price binding: CEO (executive), CRO (sales_management), super_admin. */
-export const PRICE_APPROVER_ROLES = ["executive", "sales_management", "super_admin"];
+export const PRICE_APPROVER_ROLES = ["executive", "cro", "sales_management", "super_admin"];
 
 /**
  * Prices each a la carte key: the most recent published Harmonious rate card, unless the client has a
