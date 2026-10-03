@@ -251,6 +251,8 @@ import { Route as AuthenticatedProfessionalVerificationRouteImport } from './rou
 import { Route as AuthenticatedProfileProfileIdRouteImport } from './routes/_authenticated/profile_.$profileId'
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
 import { Route as AuthenticatedSalesDashboardRouteImport } from './routes/_authenticated/sales_.dashboard'
+import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authenticated/sales_.outreach'
+import { Route as AuthenticatedSalesTeamRouteImport } from './routes/_authenticated/sales_.team'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicCrmUnsubscribeRouteImport } from './routes/api/public/crm-unsubscribe'
@@ -1719,6 +1721,17 @@ const AuthenticatedSalesDashboardRoute =
     path: '/sales/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSalesOutreachRoute =
+  AuthenticatedSalesOutreachRouteImport.update({
+    id: '/sales_/outreach',
+    path: '/sales/outreach',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesTeamRoute = AuthenticatedSalesTeamRouteImport.update({
+  id: '/sales_/team',
+  path: '/sales/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   id: '/api/public/cap-claim',
   path: '/api/public/cap-claim',
@@ -2565,6 +2578,8 @@ export interface FileRoutesByFullPath {
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
+  '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -2905,6 +2920,8 @@ export interface FileRoutesByTo {
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
+  '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -3253,6 +3270,8 @@ export interface FileRoutesById {
   '/_authenticated/profile_/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
   '/_authenticated/sales_/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/_authenticated/sales_/outreach': typeof AuthenticatedSalesOutreachRoute
+  '/_authenticated/sales_/team': typeof AuthenticatedSalesTeamRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -3602,6 +3621,8 @@ export interface FileRouteTypes {
     | '/profile/$profileId'
     | '/sales/crm'
     | '/sales/dashboard'
+    | '/sales/outreach'
+    | '/sales/team'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -3942,6 +3963,8 @@ export interface FileRouteTypes {
     | '/profile/$profileId'
     | '/sales/crm'
     | '/sales/dashboard'
+    | '/sales/outreach'
+    | '/sales/team'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -4289,6 +4312,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profile_/$profileId'
     | '/_authenticated/sales_/crm'
     | '/_authenticated/sales_/dashboard'
+    | '/_authenticated/sales_/outreach'
+    | '/_authenticated/sales_/team'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -6157,6 +6182,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales_/outreach': {
+      id: '/_authenticated/sales_/outreach'
+      path: '/sales/outreach'
+      fullPath: '/sales/outreach'
+      preLoaderRoute: typeof AuthenticatedSalesOutreachRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales_/team': {
+      id: '/_authenticated/sales_/team'
+      path: '/sales/team'
+      fullPath: '/sales/team'
+      preLoaderRoute: typeof AuthenticatedSalesTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/cap-claim': {
       id: '/api/public/cap-claim'
       path: '/api/public/cap-claim'
@@ -7318,6 +7357,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileProfileIdRoute: typeof AuthenticatedProfileProfileIdRoute
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
   AuthenticatedSalesDashboardRoute: typeof AuthenticatedSalesDashboardRoute
+  AuthenticatedSalesOutreachRoute: typeof AuthenticatedSalesOutreachRoute
+  AuthenticatedSalesTeamRoute: typeof AuthenticatedSalesTeamRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
@@ -7560,6 +7601,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileProfileIdRoute: AuthenticatedProfileProfileIdRoute,
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
   AuthenticatedSalesDashboardRoute: AuthenticatedSalesDashboardRoute,
+  AuthenticatedSalesOutreachRoute: AuthenticatedSalesOutreachRoute,
+  AuthenticatedSalesTeamRoute: AuthenticatedSalesTeamRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
