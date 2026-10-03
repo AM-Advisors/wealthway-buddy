@@ -8,6 +8,7 @@ export const SESSIONS = {
   staff: process.env["E2E_STAFF_SESSION"],
   manager: process.env["E2E_MANAGER_SESSION"],
   investor: process.env["E2E_INVESTOR_SESSION"],
+  unverified: process.env["E2E_UNVERIFIED_SESSION"],
 } as const;
 
 export function refuseProduction() {

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 
 const srv = () => import("@/lib/fund-onboarding-link.server");
 const offering = z.object({ offeringId: z.string().uuid() });
@@ -26,5 +26,5 @@ export const setFundLinkEnabledFn = createServerFn({ method: "POST" }).middlewar
 export const resolveFundLinkFn = createServerFn({ method: "POST" }).inputValidator(token.parse)
   .handler(async ({ data }) => (await srv()).resolvePublicLink(data.token, await callerHash()));
 
-export const startFromFundLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(token.parse)
+export const startFromFundLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified]).inputValidator(token.parse)
   .handler(async ({ data, context }) => (await srv()).startFromLink(context.userId, data.token, await callerHash()));

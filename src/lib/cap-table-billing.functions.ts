@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { CAP_TABLE_TIERS, priceIdFor } from "@/lib/cap-table-tiers";
 
 const STAFF = ["admin", "super_admin", "operations", "client_success", "executive"];

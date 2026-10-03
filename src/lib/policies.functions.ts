@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 
 /** Everyone signing in accepts the current privacy notice, terms of use,
  *  fee schedule and electronic-records consent before using the platform. */
@@ -31,7 +31,7 @@ export const CAP_POLICY_KINDS = [
 
 /** Current published version of each policy, plus whatever this person still owes. */
 export const getPolicyStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => {
     const { data: docs } = await context.supabase
       .from("policy_documents")
@@ -70,7 +70,7 @@ export const getPolicyStatus = createServerFn({ method: "GET" })
 
 /** The CapTable notice and terms, and whichever of them this person still owes. */
 export const getCapTablePolicyStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => {
     const { data: docs } = await context.supabase
       .from("policy_documents")
@@ -113,7 +113,7 @@ export const getCapTablePolicyStatus = createServerFn({ method: "GET" })
 
 
 export const acceptPolicies = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .inputValidator((d: unknown) =>
     z
       .object({ documentIds: z.array(z.string().uuid()).min(1), signerName: z.string().min(2).max(200) })
@@ -159,7 +159,7 @@ export const acceptPolicies = createServerFn({ method: "POST" })
 /* ------------------------------------------------------------- super admin */
 
 export const listPolicyDocuments = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => {
     const canManage = await isSuperAdmin(context);
     const { data } = await context.supabase

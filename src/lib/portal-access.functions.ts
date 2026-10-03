@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 
 const emailSchema = z.object({ email: z.string().trim().email().max(255) });
 
@@ -66,7 +66,7 @@ export interface PortalAccess {
  * email, then reports whether this person is allowed inside.
  */
 export const getPortalAccess = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }): Promise<PortalAccess> => {
     const { supabase, userId, claims } = context;
     const email = String((claims as any)?.email ?? "").toLowerCase() || null;

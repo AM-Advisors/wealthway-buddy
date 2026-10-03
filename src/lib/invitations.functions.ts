@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuth } from "@/lib/require-auth";
 import { INVITABLE_ROLES, type InvitationRole } from "@/lib/invitation-role";
 
 const invitationRoleSchema = z.enum(INVITABLE_ROLES);
