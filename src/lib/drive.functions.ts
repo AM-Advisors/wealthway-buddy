@@ -139,7 +139,7 @@ export const syncAllInvestorDrive = createServerFn({ method: "POST" })
       .select("investment_profile_id")
       .eq("offering_id", data.offeringId)
       .not("investment_profile_id", "is", null);
-    const profileIds = [...new Set((onboardings ?? []).map((o: any) => o.investment_profile_id as string))];
+    const profileIds: string[] = [...new Set<string>((onboardings ?? []).map((o: any) => o.investment_profile_id as string))];
     if (!profileIds.length) return { total: 0, synced: 0, failed: 0, results: [] as { profileId: string; label: string; status: string; error: string | null }[] };
     const { data: profiles } = await s.from("investment_profiles").select("id,display_label,legal_name").in("id", profileIds);
     const drive = await import("@/lib/drive.server");
