@@ -110,7 +110,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   return (
     <Sidebar collapsible="icon" data-testid="ops-sidebar">
       <SidebarHeader>
-        <Link to={salesOnly ? "/sales" : "/ops"} aria-label="Harmonious Operations" data-testid="brand-logo" className="flex items-center px-2 py-1">
+        <Link to={salesOnly ? (isSalesLeader ? "/sales/cro" : "/sales") : "/ops"} aria-label="Harmonious Operations" data-testid="brand-logo" className="flex items-center px-2 py-1">
           {collapsed ? (
             <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (
