@@ -114,3 +114,6 @@ export const listSowsForQuote = createServerFn({ method: "GET" }).middleware([re
 export const draftQuoteFromSow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ sowId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).quoteFromSow(context.userId, data.sowId));
+
+export const getCroDashboard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => period.parse(d))
+  .handler(async ({ data, context }) => { const r = range(data); return { ...(await (await S()).croDashboard(context.userId, r.from, r.to)), range: r }; });

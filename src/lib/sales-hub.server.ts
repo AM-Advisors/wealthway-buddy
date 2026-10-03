@@ -416,3 +416,42 @@ export async function lossReasons(userId: string, from: string, to: string) {
   for (const e of (data ?? []) as any[]) { const k = String(e.loss_reason ?? "Unspecified").trim(); m.set(k, (m.get(k) ?? 0) + 1); }
   return [...m.entries()].map(([reason, count]) => ({ reason, count })).sort((x, y) => y.count - x.count);
 }
+
+/** CRO home: team dashboard + targets + quoting-engine queues. Leadership only. */
+export async function croDashboard(userId: string, from: string, to: string) {
+  const a = await salesActor(userId);
+  if (!a.roles.some((r) => ["cro", "sales_management", "super_admin", "executive"].includes(r))) throw new Error("The CRO dashboard is for Sales leadership.");
+  const base = await dashboard(userId, from, to);
+  const db = await admin();
+  const quotes = await visibleQuotes(a);
+  const ids = base.perRep.map((r) => r.id);
+  const { data: tg } = ids.length ? await db.from("sales_targets").select("user_id, revenue_target_cents, outreach_target, period_start").in("user_id", ids).lte("period_start", to.slice(0, 10)).gte("period_end", from.slice(0, 10)).order("period_start", { ascending: false }) : { data: [] };
+  const target = new Map<string, any>();
+  for (const t of (tg ?? []) as any[]) if (!target.has(t.user_id)) target.set(t.user_id, t);
+  const deals = await visibleDeals(a);
+  const nm = new Map(base.perRep.map((r) => [r.id, r.name]));
+  const perRep = base.perRep.map((r) => {
+    const t = target.get(r.id);
+    const mine = deals.filter((d) => d.owner_user_id === r.id);
+    const stages: Record<string, number> = {};
+    for (const d of mine) stages[d.s] = (stages[d.s] ?? 0) + 1;
+    const last = mine.map((d) => d.updated_at).sort().pop() ?? null;
+    return { ...r, stages, lastActivity: last, revenueTargetCents: t ? Number(t.revenue_target_cents ?? 0) : null, outreachTarget: t?.outreach_target ?? null };
+  });
+  const q = (st: string) => quotes.filter((x: any) => x.status === st).map((x: any) => ({
+    id: x.id, number: x.quote_number, title: x.title, cents: Number(x.total_cents ?? 0), owner: nm.get(x.owner_user_id) ?? "",
+    needsExec: !!x.needs_exec_approval, validUntil: x.valid_until, signedAt: x.signed_at, onboardedAt: x.onboarded_at, onboardingError: x.onboarding_error, fundId: x.onboarded_offering_id,
+  }));
+  const soon = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+  const totals = {
+    revenueTargetCents: perRep.reduce((s, r) => s + (r.revenueTargetCents ?? 0), 0),
+    outreachTarget: perRep.reduce((s, r) => s + (r.outreachTarget ?? 0), 0),
+  };
+  return {
+    ...base, perRep, totals,
+    canApprove: a.roles.some((r) => ["cro", "executive", "super_admin", "sales_management"].includes(r)),
+    pendingApproval: q("pending_approval"), awaitingSignature: q("sent"),
+    signed: q("signed").sort((x, y) => String(y.signedAt).localeCompare(String(x.signedAt))).slice(0, 10),
+    expiring: [...q("sent"), ...q("approved")].filter((x) => x.validUntil && x.validUntil <= soon),
+  };
+}
