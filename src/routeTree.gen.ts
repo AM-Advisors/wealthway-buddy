@@ -321,6 +321,7 @@ import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/ema
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
+import { Route as ApiPublicIrsEfileAckRouteImport } from './routes/api/public/irs-efile/ack'
 import { Route as ApiPublicMercuryOnboardingRouteImport } from './routes/api/public/mercury/onboarding'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
@@ -2123,6 +2124,11 @@ const ApiPublicHooksInvoiceRemindersRoute =
     path: '/api/public/hooks/invoice-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIrsEfileAckRoute = ApiPublicIrsEfileAckRouteImport.update({
+  id: '/api/public/irs-efile/ack',
+  path: '/api/public/irs-efile/ack',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMercuryOnboardingRoute =
   ApiPublicMercuryOnboardingRouteImport.update({
     id: '/api/public/mercury/onboarding',
@@ -2577,6 +2583,7 @@ export interface FileRoutesByFullPath {
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
+  '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -2908,6 +2915,7 @@ export interface FileRoutesByTo {
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
+  '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -3249,6 +3257,7 @@ export interface FileRoutesById {
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
+  '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
@@ -3590,6 +3599,7 @@ export interface FileRouteTypes {
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
+    | '/api/public/irs-efile/ack'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -3921,6 +3931,7 @@ export interface FileRouteTypes {
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
+    | '/api/public/irs-efile/ack'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -4261,6 +4272,7 @@ export interface FileRouteTypes {
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
+    | '/api/public/irs-efile/ack'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
@@ -4348,6 +4360,7 @@ export interface RootRouteChildren {
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
+  ApiPublicIrsEfileAckRoute: typeof ApiPublicIrsEfileAckRoute
   ApiPublicMercuryOnboardingRoute: typeof ApiPublicMercuryOnboardingRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
@@ -6544,6 +6557,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksInvoiceRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/irs-efile/ack': {
+      id: '/api/public/irs-efile/ack'
+      path: '/api/public/irs-efile/ack'
+      fullPath: '/api/public/irs-efile/ack'
+      preLoaderRoute: typeof ApiPublicIrsEfileAckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mercury/onboarding': {
       id: '/api/public/mercury/onboarding'
       path: '/api/public/mercury/onboarding'
@@ -7535,6 +7555,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
+  ApiPublicIrsEfileAckRoute: ApiPublicIrsEfileAckRoute,
   ApiPublicMercuryOnboardingRoute: ApiPublicMercuryOnboardingRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,

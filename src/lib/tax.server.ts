@@ -717,6 +717,10 @@ export async function transitionEntityReturn(
     detail: note ? { note } : {},
     actorUserId: userId,
   });
+  if (to === "ready_to_file") {
+    const r = await (await import("@/lib/irs-efile.server")).maybeTransmit1065(returnId, userId);
+    return { ...data, efile: r };
+  }
   return data;
 }
 
@@ -872,6 +876,13 @@ export async function transitionK1(userId: string, k1Id: string, to: string) {
     toStatus: to,
     actorUserId: userId,
   });
+  if (to === "final") {
+    // Tax team finalized it: deliver to the investor now, then file the 1065 if every K-1 is final.
+    const ef = await import("@/lib/irs-efile.server");
+    await ef.deliverK1(k1Id, userId);
+    if (k1.return_id) await ef.maybeTransmit1065(k1.return_id, userId);
+    return (await db().from("k1_forms").select("*").eq("id", k1Id).single()).data;
+  }
   return data;
 }
 
