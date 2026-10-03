@@ -953,6 +953,13 @@
       "when": 1791002982803,
       "tag": "0135_sales_quote_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 136,
+      "version": "7",
+      "when": 1791003419992,
+      "tag": "0136_staff_invite_individual_classification",
+      "breakpoints": true
     }
   ]
 }
