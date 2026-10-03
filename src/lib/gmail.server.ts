@@ -240,7 +240,7 @@ export async function sendFromGroupMailbox(userId: string, mailboxId: string, op
     throw new Error("The email couldn't be sent from that mailbox. Please try again.");
   }
   const { logActivity } = await import("@/lib/staff-directory.server");
-  await logActivity(userId, { kind: "email", path: "/ops/mailboxes", label: `Sent from ${box.label} to ${opts.to}` }).catch(() => {});
+  await logActivity(userId, "action", "/ops/mailboxes", `Sent from ${box.label} to ${opts.to}`).catch(() => {});
 }
 
 export async function listGroupMailboxThreads(userId: string, mailboxId: string): Promise<GmailThreadRow[]> {
