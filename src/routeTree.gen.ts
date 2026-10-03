@@ -199,6 +199,7 @@ import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_auth
 import { Route as AuthenticatedManagerUpdatesRouteImport } from './routes/_authenticated/manager.updates'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
+import { Route as AuthenticatedMarketingPostsRouteImport } from './routes/_authenticated/marketing_.posts'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
 import { Route as AuthenticatedMyFundsFundIdRouteImport } from './routes/_authenticated/my-funds.$fundId'
 import { Route as AuthenticatedMyPortfolioOfferingIdRouteImport } from './routes/_authenticated/my-portfolio_.$offeringId'
@@ -313,6 +314,7 @@ import { Route as AuthenticatedManagerCountersignSignerIdRouteImport } from './r
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './routes/_authenticated/manager.fund-setup.$requestId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
+import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_authenticated/marketing_.posts_.$id'
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
 import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
@@ -1430,6 +1432,12 @@ const AuthenticatedManagerWiresRoute =
     path: '/manager/wires',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingPostsRoute =
+  AuthenticatedMarketingPostsRouteImport.update({
+    id: '/marketing_/posts',
+    path: '/marketing/posts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMyFundsIndexRoute =
   AuthenticatedMyFundsIndexRouteImport.update({
     id: '/my-funds/',
@@ -2095,6 +2103,12 @@ const AuthenticatedManagerFundFundIdRoute =
     path: '/manager/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingPostsIdRoute =
+  AuthenticatedMarketingPostsIdRouteImport.update({
+    id: '/marketing_/posts_/$id',
+    path: '/marketing/posts/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsAreasAreaRoute =
   AuthenticatedOpsAreasAreaRouteImport.update({
     id: '/ops/areas/$area',
@@ -2622,6 +2636,7 @@ export interface FileRoutesByFullPath {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -2734,6 +2749,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -2978,6 +2994,7 @@ export interface FileRoutesByTo {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -3089,6 +3106,7 @@ export interface FileRoutesByTo {
   '/manager/countersign/$signerId': typeof AuthenticatedManagerCountersignSignerIdRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
+  '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -3342,6 +3360,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/_authenticated/marketing_/posts': typeof AuthenticatedMarketingPostsRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/_authenticated/my-portfolio_/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -3454,6 +3473,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/_authenticated/marketing_/posts_/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/_authenticated/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -3707,6 +3727,7 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/posts'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
@@ -3819,6 +3840,7 @@ export interface FileRouteTypes {
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
     | '/manager/fund/$fundId'
+    | '/marketing/posts/$id'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -4063,6 +4085,7 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/posts'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
@@ -4174,6 +4197,7 @@ export interface FileRouteTypes {
     | '/manager/countersign/$signerId'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
+    | '/marketing/posts/$id'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -4426,6 +4450,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/updates'
     | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
+    | '/_authenticated/marketing_/posts'
     | '/_authenticated/my-funds/$fundId'
     | '/_authenticated/my-portfolio_/$offeringId'
     | '/_authenticated/onboarding/accreditation'
@@ -4538,6 +4563,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund-setup/$requestId'
     | '/_authenticated/manager/fund/$fundId'
+    | '/_authenticated/marketing_/posts_/$id'
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/clients/$clientId'
     | '/_authenticated/ops/clients/founders'
@@ -5998,6 +6024,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerWiresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/posts': {
+      id: '/_authenticated/marketing_/posts'
+      path: '/marketing/posts'
+      fullPath: '/marketing/posts'
+      preLoaderRoute: typeof AuthenticatedMarketingPostsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/my-funds/': {
       id: '/_authenticated/my-funds/'
       path: '/my-funds'
@@ -6794,6 +6827,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/fund/$fundId'
       fullPath: '/manager/fund/$fundId'
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/posts_/$id': {
+      id: '/_authenticated/marketing_/posts_/$id'
+      path: '/marketing/posts/$id'
+      fullPath: '/marketing/posts/$id'
+      preLoaderRoute: typeof AuthenticatedMarketingPostsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/areas/$area': {
@@ -7599,6 +7639,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerUpdatesRoute: typeof AuthenticatedManagerUpdatesRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
+  AuthenticatedMarketingPostsRoute: typeof AuthenticatedMarketingPostsRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
   AuthenticatedMyPortfolioOfferingIdRoute: typeof AuthenticatedMyPortfolioOfferingIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
@@ -7665,6 +7706,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundSetupRequestIdRoute: typeof AuthenticatedManagerFundSetupRequestIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  AuthenticatedMarketingPostsIdRoute: typeof AuthenticatedMarketingPostsIdRoute
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
   AuthenticatedOpsClientsFoundersRoute: typeof AuthenticatedOpsClientsFoundersRoute
@@ -7852,6 +7894,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerUpdatesRoute: AuthenticatedManagerUpdatesRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
+  AuthenticatedMarketingPostsRoute: AuthenticatedMarketingPostsRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
   AuthenticatedMyPortfolioOfferingIdRoute:
     AuthenticatedMyPortfolioOfferingIdRoute,
@@ -7936,6 +7979,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundSetupRequestIdRoute,
   AuthenticatedManagerFundFundIdRoute:
     AuthenticatedManagerFundFundIdRouteWithChildren,
+  AuthenticatedMarketingPostsIdRoute: AuthenticatedMarketingPostsIdRoute,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
   AuthenticatedOpsClientsFoundersRoute: AuthenticatedOpsClientsFoundersRoute,
