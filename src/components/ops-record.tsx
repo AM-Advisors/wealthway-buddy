@@ -6,7 +6,10 @@ import { ClientFundsPanel, ClientOverviewActions, ClientPeoplePanel, ClientServi
 import { useEffect, useMemo, useState } from "react";
 
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { AccessBadge, PeopleActions, useAccessStatus } from "@/components/people-actions";
+import { getPeopleDirectory, setClientArchived, setTestDemoFlag } from "@/lib/user-access.functions";
 import { useServerFn } from "@tanstack/react-start";
 
 import { Badge } from "@/components/ui/badge";
@@ -485,7 +488,7 @@ function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
                   <Link to={recordPath("investor", row.id) as any}>Open</Link>
                 </Button>
                 {access.data && row.subtitle?.includes("@") ? <PeopleActions email={row.subtitle} name={row.title} info={acc(row)}
-                  context={row.funds.length === 1 ? null : null} /> : null}
+                  /> : null}
               </TableCell>
             </TableRow>
           ))}
