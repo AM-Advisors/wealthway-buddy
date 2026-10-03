@@ -35,7 +35,15 @@ export function normalizeStage(stage: string | null | undefined): SalesStage {
   if (s === "lost") return "contract_lost";
   if (s === "proposal" || s === "quote") return "quoted";
   if (s === "qualified" || s === "contacted") return "connected";
+  if (s === "meeting") return "meeting_set";
+  if (s === "committed") return "contract_sent";
   return "outreach";
+}
+
+/** Legacy crm_deals.stage kept in step for the existing Contacts & deals page. */
+export function legacyStage(stage: SalesStage): string {
+  return ({ outreach: "lead", connected: "contacted", meeting_set: "meeting", meeting_held: "meeting", quoted: "proposal",
+    contract_sent: "committed", contract_won: "won", contract_lost: "lost", contact_later: "lead" } as const)[stage];
 }
 
 export const ALL_SCOPE_ROLES = ["cro", "executive", "super_admin", "admin"];
