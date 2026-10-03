@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table as UiTable, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   getOpsClientRecord,
   getOpsClientTab,
@@ -416,7 +416,7 @@ function InvestorListTable({ records }: { records: InvestorListRow[] }) {
   }
   return (
     <div className="rounded-md border">
-      <Table>
+      <UiTable>
         <TableHeader>
           <TableRow>
             <TableHead>Investor</TableHead>
@@ -468,7 +468,7 @@ function InvestorListTable({ records }: { records: InvestorListRow[] }) {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </UiTable>
     </div>
   );
 }
