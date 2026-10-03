@@ -252,5 +252,5 @@ export async function testDemoIds() {
 
 /** True when a row belongs to a test/demo client, user or person. */
 export function isTestRow(t: { users: Set<string>; persons: Set<string>; clients: Set<string> }, r: any) {
-  return (r.client_id && t.clients.has(r.client_id)) || (r.investor_user_id && t.users.has(r.investor_user_id)) || (r.owner_user_id && t.users.has(r.owner_user_id)) || (r.person_id && t.persons.has(r.person_id));
+  return (r.client_id && t.clients.has(r.client_id)) || (r.investor_user_id && t.users.has(r.investor_user_id)) || (r.owner_user_id && t.users.has(r.owner_user_id)) || (r.user_id && t.users.has(r.user_id)) || (r.person_id && t.persons.has(r.person_id));
 }
