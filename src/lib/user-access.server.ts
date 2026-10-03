@@ -108,7 +108,8 @@ export async function directory(viewer: string) {
     ...((fi.data ?? []) as any[]).map((i) => ({ table: "fund_invitations", id: i.id, email: i.email, name: i.invited_name, type: String(i.invite_role ?? i.role ?? "").includes("investor") ? "Investor" : "Fund Manager", invitedBy: names.get(i.invited_by) ?? "", sentAt: i.created_at, lastSent: i.last_sent_at ?? i.created_at, isTestDemo: i.is_test_demo })),
   ];
   const { data: clients } = await db.from("clients").select("id, name, status, is_test_demo").order("name");
-  return { people, invites, clients: clients ?? [] };
+  const canManage = (await rolesOf(db, viewer)).some((x) => ACCESS_MANAGERS.includes(x));
+  return {canManage,  people, invites, clients: clients ?? [] };
 }
 
 /** Quick status lookup for list pages (by emails). */

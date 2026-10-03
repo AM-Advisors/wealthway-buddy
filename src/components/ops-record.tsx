@@ -571,7 +571,7 @@ function ClientGrid({ type, records: all }: { type: OpsRecordType; records: any[
               <CardContent className="flex items-center justify-between">
                 {item.status ? <Badge variant="secondary">{item.status}</Badge> : <span />}
                 <span className="flex items-center gap-1">
-                  {type === "client" && dir.data ? <ClientAccessMenu id={item.id} archived={meta.get(item.id)?.status === "archived"} test={!!meta.get(item.id)?.is_test_demo} /> : null}
+                  {type === "client" && (dir.data as any)?.canManage ? <ClientAccessMenu id={item.id} archived={meta.get(item.id)?.status === "archived"} test={!!meta.get(item.id)?.is_test_demo} /> : null}
                   <Button asChild size="sm" variant="outline">
                     <Link to={recordPath(type, item.id) as any}>Open</Link>
                   </Button>
