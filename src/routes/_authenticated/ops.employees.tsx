@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/ops/employees")({
   component: EmployeesPage,
 });
 
-export const when = (s: string | null) => (s ? new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Never");
+const when = (s: string | null) => (s ? new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Never");
 
 function EmployeesPage() {
   const load = useServerFn(getEmployees);
