@@ -34,6 +34,7 @@ import { Route as SpvRouteImport } from './routes/spv'
 import { Route as SpvsRouteImport } from './routes/spvs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAccessRouteImport } from './routes/_authenticated/access'
+import { Route as AuthenticatedAccountManagerRouteImport } from './routes/_authenticated/account-manager'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedApplyRouteImport } from './routes/_authenticated/apply'
@@ -222,6 +223,7 @@ import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticated/ops.queue'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
+import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticated/ops.roles'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStatementsRouteImport } from './routes/_authenticated/ops.statements'
 import { Route as AuthenticatedOpsSystemStatusRouteImport } from './routes/_authenticated/ops.system-status'
@@ -474,6 +476,12 @@ const AuthenticatedAccessRoute = AuthenticatedAccessRouteImport.update({
   path: '/access',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAccountManagerRoute =
+  AuthenticatedAccountManagerRouteImport.update({
+    id: '/account-manager',
+    path: '/account-manager',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
   id: '/accounts',
   path: '/accounts',
@@ -1544,6 +1552,11 @@ const AuthenticatedOpsReportingRoute =
     path: '/ops/reporting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsRolesRoute = AuthenticatedOpsRolesRouteImport.update({
+  id: '/ops/roles',
+  path: '/ops/roles',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
   id: '/ops/ss4',
   path: '/ops/ss4',
@@ -2314,6 +2327,7 @@ export interface FileRoutesByFullPath {
   '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
   '/access': typeof AuthenticatedAccessRoute
+  '/account-manager': typeof AuthenticatedAccountManagerRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/apply': typeof AuthenticatedApplyRoute
@@ -2496,6 +2510,7 @@ export interface FileRoutesByFullPath {
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
+  '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -2653,6 +2668,7 @@ export interface FileRoutesByTo {
   '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
   '/access': typeof AuthenticatedAccessRoute
+  '/account-manager': typeof AuthenticatedAccountManagerRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/apply': typeof AuthenticatedApplyRoute
@@ -2830,6 +2846,7 @@ export interface FileRoutesByTo {
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
+  '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -2990,6 +3007,7 @@ export interface FileRoutesById {
   '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/access': typeof AuthenticatedAccessRoute
+  '/_authenticated/account-manager': typeof AuthenticatedAccountManagerRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/apply': typeof AuthenticatedApplyRoute
@@ -3172,6 +3190,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
+  '/_authenticated/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/_authenticated/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -3333,6 +3352,7 @@ export interface FileRouteTypes {
     | '/spvs'
     | '/terms'
     | '/access'
+    | '/account-manager'
     | '/accounts'
     | '/activity'
     | '/apply'
@@ -3515,6 +3535,7 @@ export interface FileRouteTypes {
     | '/ops/queue'
     | '/ops/readiness'
     | '/ops/reporting'
+    | '/ops/roles'
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
@@ -3672,6 +3693,7 @@ export interface FileRouteTypes {
     | '/spvs'
     | '/terms'
     | '/access'
+    | '/account-manager'
     | '/accounts'
     | '/activity'
     | '/apply'
@@ -3849,6 +3871,7 @@ export interface FileRouteTypes {
     | '/ops/queue'
     | '/ops/readiness'
     | '/ops/reporting'
+    | '/ops/roles'
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
@@ -4008,6 +4031,7 @@ export interface FileRouteTypes {
     | '/spvs'
     | '/terms'
     | '/_authenticated/access'
+    | '/_authenticated/account-manager'
     | '/_authenticated/accounts'
     | '/_authenticated/activity'
     | '/_authenticated/apply'
@@ -4190,6 +4214,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/queue'
     | '/_authenticated/ops/readiness'
     | '/_authenticated/ops/reporting'
+    | '/_authenticated/ops/roles'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/statements'
     | '/_authenticated/ops/system-status'
@@ -4559,6 +4584,13 @@ declare module '@tanstack/react-router' {
       path: '/access'
       fullPath: '/access'
       preLoaderRoute: typeof AuthenticatedAccessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/account-manager': {
+      id: '/_authenticated/account-manager'
+      path: '/account-manager'
+      fullPath: '/account-manager'
+      preLoaderRoute: typeof AuthenticatedAccountManagerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/accounts': {
@@ -5877,6 +5909,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsReportingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/roles': {
+      id: '/_authenticated/ops/roles'
+      path: '/ops/roles'
+      fullPath: '/ops/roles'
+      preLoaderRoute: typeof AuthenticatedOpsRolesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/ss4': {
       id: '/_authenticated/ops/ss4'
       path: '/ops/ss4'
@@ -7031,6 +7070,7 @@ const AuthenticatedManagerFundFundIdRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccessRoute: typeof AuthenticatedAccessRoute
+  AuthenticatedAccountManagerRoute: typeof AuthenticatedAccountManagerRoute
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedApplyRoute: typeof AuthenticatedApplyRoute
@@ -7185,6 +7225,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsQueueRoute: typeof AuthenticatedOpsQueueRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
+  AuthenticatedOpsRolesRoute: typeof AuthenticatedOpsRolesRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStatementsRoute: typeof AuthenticatedOpsStatementsRoute
   AuthenticatedOpsSystemStatusRoute: typeof AuthenticatedOpsSystemStatusRoute
@@ -7243,6 +7284,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccessRoute: AuthenticatedAccessRoute,
+  AuthenticatedAccountManagerRoute: AuthenticatedAccountManagerRoute,
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedApplyRoute: AuthenticatedApplyRoute,
@@ -7421,6 +7463,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsQueueRoute: AuthenticatedOpsQueueRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
+  AuthenticatedOpsRolesRoute: AuthenticatedOpsRolesRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStatementsRoute: AuthenticatedOpsStatementsRoute,
   AuthenticatedOpsSystemStatusRoute: AuthenticatedOpsSystemStatusRoute,

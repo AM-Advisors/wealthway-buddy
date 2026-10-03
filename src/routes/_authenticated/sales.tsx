@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { decidePricingRequest, getSalesOverview, priceFund, saveClientPricing } from "@/lib/commercial-pricing.functions";
 import { COMMERCIAL_STATUS_LABEL } from "@/lib/commercial-pricing";
 import { SalesOverviewTab } from "@/components/sales-overview-tab";
+import { SalesPipelineTab } from "@/components/sales-pipeline-tab";
 
 export const Route = createFileRoute("/_authenticated/sales")({
   head: () => ({
@@ -44,6 +45,7 @@ function SalesPage() {
         <Tabs defaultValue="overview">
           <TabsList className="flex-wrap">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
             <TabsTrigger value="clients">Clients</TabsTrigger>
             <TabsTrigger value="requests">Fund Requests</TabsTrigger>
             <TabsTrigger value="funds">Pricing</TabsTrigger>
@@ -52,6 +54,7 @@ function SalesPage() {
             <TabsTrigger value="history">Pricing History</TabsTrigger>
           </TabsList>
           <TabsContent value="overview"><SalesOverviewTab /></TabsContent>
+          <TabsContent value="pipeline"><SalesPipelineTab /></TabsContent>
           <TabsContent value="clients"><Rows items={d.clients} render={(c: any) => (<><span>{c.name} <span className="text-xs text-muted-foreground">· {c.funds} funds</span></span>{c.msaFollowUp ? <Badge variant="outline">MSA Follow-Up Required</Badge> : <Badge variant="secondary">MSA on file</Badge>}</>)} /></TabsContent>
           <TabsContent value="requests"><Rows items={d.fundRequests} empty="No fund requests." render={(r: any) => (<><span>{r.name} <span className="text-xs text-muted-foreground">· {r.clientName ?? "No client"}</span></span><Badge variant="outline">{r.status}</Badge></>)} /></TabsContent>
           <TabsContent value="funds"><FundPricing d={d} /></TabsContent>
