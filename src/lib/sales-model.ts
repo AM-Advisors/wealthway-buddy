@@ -63,7 +63,7 @@ export function canMoveToStage(roles: readonly string[], stage: SalesStage): boo
   const scope = salesScope(roles);
   if (scope === "none") return false;
   if (scope === "own" && roles.includes("bdr") && !roles.some((r) => ["account_executive", "sales", "account_manager"].includes(r))) {
-    return ["outreach", "connected", "meeting_set", "contact_later", "contract_lost"].includes(stage);
+    return ["outreach", "connected", "meeting_set", "contact_later"].includes(stage);
   }
   return true;
 }

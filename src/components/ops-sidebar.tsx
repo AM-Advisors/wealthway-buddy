@@ -79,7 +79,9 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   // commercial staff and leadership; the backend re-checks every page.
   const commercialRoles = ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager", "client_success", "executive", "super_admin"];
   const showCommercial = salesOnly || staffRoles.some((r) => commercialRoles.includes(r));
+  const isSalesLeader = staffRoles.some((r) => ["cro", "sales_management", "executive", "super_admin"].includes(r));
   const commercialItems = [
+    ...(isSalesLeader ? [{ id: "sales-cro", title: "CRO dashboard", url: "/sales/cro", icon: "briefcase" }] : []),
     { id: "sales-dashboard", title: "Sales dashboard", url: "/sales/dashboard", icon: "briefcase" },
     { id: "sales", title: "Sales", url: "/sales", icon: "briefcase" },
     { id: "sales-outreach", title: "Outreach", url: "/sales/outreach", icon: "people" },
@@ -108,7 +110,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   return (
     <Sidebar collapsible="icon" data-testid="ops-sidebar">
       <SidebarHeader>
-        <Link to={salesOnly ? "/sales" : "/ops"} aria-label="Harmonious Operations" data-testid="brand-logo" className="flex items-center px-2 py-1">
+        <Link to={salesOnly ? (isSalesLeader ? "/sales/cro" : "/sales") : "/ops"} aria-label="Harmonious Operations" data-testid="brand-logo" className="flex items-center px-2 py-1">
           {collapsed ? (
             <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
           ) : (

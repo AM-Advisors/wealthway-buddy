@@ -250,6 +250,7 @@ import { Route as AuthenticatedProfessionalTaxRouteImport } from './routes/_auth
 import { Route as AuthenticatedProfessionalVerificationRouteImport } from './routes/_authenticated/professional.verification'
 import { Route as AuthenticatedProfileProfileIdRouteImport } from './routes/_authenticated/profile_.$profileId'
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
+import { Route as AuthenticatedSalesCroRouteImport } from './routes/_authenticated/sales_.cro'
 import { Route as AuthenticatedSalesDashboardRouteImport } from './routes/_authenticated/sales_.dashboard'
 import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authenticated/sales_.outreach'
 import { Route as AuthenticatedSalesQuotesRouteImport } from './routes/_authenticated/sales_.quotes'
@@ -1717,6 +1718,11 @@ const AuthenticatedSalesCrmRoute = AuthenticatedSalesCrmRouteImport.update({
   path: '/sales/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSalesCroRoute = AuthenticatedSalesCroRouteImport.update({
+  id: '/sales_/cro',
+  path: '/sales/cro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSalesDashboardRoute =
   AuthenticatedSalesDashboardRouteImport.update({
     id: '/sales_/dashboard',
@@ -2591,6 +2597,7 @@ export interface FileRoutesByFullPath {
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
+  '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
@@ -2935,6 +2942,7 @@ export interface FileRoutesByTo {
   '/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/profile/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
+  '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
@@ -3287,6 +3295,7 @@ export interface FileRoutesById {
   '/_authenticated/professional/verification': typeof AuthenticatedProfessionalVerificationRoute
   '/_authenticated/profile_/$profileId': typeof AuthenticatedProfileProfileIdRoute
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
+  '/_authenticated/sales_/cro': typeof AuthenticatedSalesCroRoute
   '/_authenticated/sales_/dashboard': typeof AuthenticatedSalesDashboardRoute
   '/_authenticated/sales_/outreach': typeof AuthenticatedSalesOutreachRoute
   '/_authenticated/sales_/quotes': typeof AuthenticatedSalesQuotesRoute
@@ -3640,6 +3649,7 @@ export interface FileRouteTypes {
     | '/professional/verification'
     | '/profile/$profileId'
     | '/sales/crm'
+    | '/sales/cro'
     | '/sales/dashboard'
     | '/sales/outreach'
     | '/sales/quotes'
@@ -3984,6 +3994,7 @@ export interface FileRouteTypes {
     | '/professional/verification'
     | '/profile/$profileId'
     | '/sales/crm'
+    | '/sales/cro'
     | '/sales/dashboard'
     | '/sales/outreach'
     | '/sales/quotes'
@@ -4335,6 +4346,7 @@ export interface FileRouteTypes {
     | '/_authenticated/professional/verification'
     | '/_authenticated/profile_/$profileId'
     | '/_authenticated/sales_/crm'
+    | '/_authenticated/sales_/cro'
     | '/_authenticated/sales_/dashboard'
     | '/_authenticated/sales_/outreach'
     | '/_authenticated/sales_/quotes'
@@ -6201,6 +6213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales_/cro': {
+      id: '/_authenticated/sales_/cro'
+      path: '/sales/cro'
+      fullPath: '/sales/cro'
+      preLoaderRoute: typeof AuthenticatedSalesCroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sales_/dashboard': {
       id: '/_authenticated/sales_/dashboard'
       path: '/sales/dashboard'
@@ -7396,6 +7415,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
   AuthenticatedProfileProfileIdRoute: typeof AuthenticatedProfileProfileIdRoute
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
+  AuthenticatedSalesCroRoute: typeof AuthenticatedSalesCroRoute
   AuthenticatedSalesDashboardRoute: typeof AuthenticatedSalesDashboardRoute
   AuthenticatedSalesOutreachRoute: typeof AuthenticatedSalesOutreachRoute
   AuthenticatedSalesQuotesRoute: typeof AuthenticatedSalesQuotesRoute
@@ -7642,6 +7662,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
   AuthenticatedProfileProfileIdRoute: AuthenticatedProfileProfileIdRoute,
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
+  AuthenticatedSalesCroRoute: AuthenticatedSalesCroRoute,
   AuthenticatedSalesDashboardRoute: AuthenticatedSalesDashboardRoute,
   AuthenticatedSalesOutreachRoute: AuthenticatedSalesOutreachRoute,
   AuthenticatedSalesQuotesRoute: AuthenticatedSalesQuotesRoute,
