@@ -946,6 +946,13 @@
       "when": 1791001661589,
       "tag": "0134_crm_deals_sales_stage",
       "breakpoints": true
+    },
+    {
+      "idx": 135,
+      "version": "7",
+      "when": 1791002982803,
+      "tag": "0135_sales_quote_onboarding",
+      "breakpoints": true
     }
   ]
 }

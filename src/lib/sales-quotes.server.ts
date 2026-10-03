@@ -19,6 +19,12 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
   return { versionId, lines: lines.map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
 }
 
+/** Called after a client signs an SOW: mark its sent quote signed and hand off. */
+export async function syncQuotesForSow(sowId: string) {
+  const { data } = await (await admin()).from("sales_quotes").select("*").eq("sow_id", sowId).in("status", ["sent", "signed"]);
+  await syncFromAgreements((data ?? []) as any[]);
+}
+
 /** Pull SOW signature/execution back onto the quote so status is never stale. */
 async function syncFromAgreements(quotes: any[]) {
   const sowIds = quotes.filter((q) => q.sow_id && q.status === "sent").map((q) => q.sow_id);
@@ -37,6 +43,8 @@ async function syncFromAgreements(quotes: any[]) {
     }
     q.status = "signed"; q.signed_at = at;
   }
+  const { handoffSignedQuote } = await import("@/lib/sales-handoff.server");
+  for (const q of quotes) if (q.status === "signed" && !q.onboarded_at) await handoffSignedQuote(q.id);
   return quotes;
 }
 

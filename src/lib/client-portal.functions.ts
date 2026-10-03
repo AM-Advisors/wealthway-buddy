@@ -253,6 +253,11 @@ export const signClientSow = createServerFn({ method: "POST" })
       _user_agent: agent,
     } as any);
     if (error) throw new Error(error.message);
+    // Hand a signed sales quote off to Operations right away (never blocks signing).
+    try {
+      const { syncQuotesForSow } = await import("@/lib/sales-quotes.server");
+      await syncQuotesForSow(data.sowId);
+    } catch (e) { console.error("quote hand-off after signing failed", e); }
     return { ok: true };
   });
 
