@@ -32,7 +32,7 @@ function scoped(q: any, ids: string[] | null, col = "client_id") {
 export async function amDashboard(userId: string) {
   const { db, team, clientIds } = await scope(userId);
   const [clients, offers, setups, invoices, requests, threads, quotes, sows] = await Promise.all([
-    scoped(db.from("clients").select("id, name, legal_name, updated_at"), clientIds, "id").limit(2000),
+    scoped(db.from("clients").select("id, name, legal_name, updated_at").not("is_test_demo", "is", true).neq("status", "archived"), clientIds, "id").limit(2000),
     scoped(db.from("offerings").select("id, client_id, name"), clientIds).limit(5000),
     scoped(db.from("fund_setups").select("offering_id, client_id, launch_state, stage, updated_at"), clientIds).limit(5000),
     scoped(db.from("invoices").select("id, client_id, status, due_date, total_cents, paid_on, voided_at"), clientIds).is("paid_on", null).is("voided_at", null).limit(5000),
