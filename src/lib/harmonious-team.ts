@@ -59,7 +59,7 @@ export function eligibleFor(role: TeamRole, roles: readonly string[]): boolean {
 /** Who may change each assignment. Super Users manage all three. */
 export function canManageRole(role: TeamRole, actorRoles: readonly string[]): boolean {
   if (actorRoles.includes("super_admin")) return true;
-  const salesMgmt = actorRoles.includes("sales_management");
+  const salesMgmt = actorRoles.some((r) => ["sales_management", "cro", "executive"].includes(r));
   const opsLead = actorRoles.some((r) => ["admin", "executive"].includes(r));
   if (role === "sales") return salesMgmt;
   if (role === "account_manager") return salesMgmt || opsLead;
