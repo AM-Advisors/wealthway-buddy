@@ -95,20 +95,42 @@ export async function listRecords(context: any, data: { type: OpsRecordType; sea
       if (like) q = q.ilike("name", like);
       return { records: rows(await q).map((c: any) => ({ id: c.id, title: c.name, subtitle: c.legal_name, status: c.entity_type })) };
     }
-    let q = s
+    // Investors: name/email/type plus the clients and funds they belong to.
+    // Search runs after the join so client and fund names match too.
+    const { data: profileRows, error: profileError } = await s
       .from("profiles")
       .select("user_id, legal_name, email, investor_type")
       .order("legal_name")
-      .limit(100);
-    if (like) q = q.ilike("legal_name", like);
-    return {
-      records: rows(await q).map((p: any) => ({
-        id: p.user_id,
-        title: p.legal_name || p.email || "Unnamed person",
-        subtitle: p.email,
-        status: p.investor_type,
-      })),
-    };
+      .limit(500);
+    if (profileError) throw new Error(profileError.message);
+    const profiles = profileRows ?? [];
+    const userIds = profiles.map((p: any) => p.user_id);
+
+    const { data: onboardingRows, error: onboardingError } = userIds.length
+      ? await s
+          .from("investor_onboardings")
+          .select("investor_user_id, offering_id, stage")
+          .in("investor_user_id", userIds)
+      : { data: [], error: null };
+    if (onboardingError) throw new Error(onboardingError.message);
+    const onboardings = onboardingRows ?? [];
+
+    const offeringIds = [...new Set(onboardings.map((o: any) => o.offering_id).filter(Boolean))];
+    const { data: offeringRows, error: offeringError } = offeringIds.length
+      ? await s.from("offerings").select("id, name, client_id").in("id", offeringIds)
+      : { data: [], error: null };
+    if (offeringError) throw new Error(offeringError.message);
+    const offerings = offeringRows ?? [];
+
+    const clientIds = [...new Set(offerings.map((o: any) => o.client_id).filter(Boolean))];
+    const { data: clientRows, error: clientError } = clientIds.length
+      ? await s.from("clients").select("id, name").in("id", clientIds)
+      : { data: [], error: null };
+    if (clientError) throw new Error(clientError.message);
+
+    let records = attachInvestorRelations(profiles, onboardings, offerings, clientRows ?? []);
+    if (data.search) records = records.filter((r) => investorListMatches(r, data.search!));
+    return { records: records.slice(0, 100) };
 }
 
 /* --------------------------------------------------------------- client 360 */
