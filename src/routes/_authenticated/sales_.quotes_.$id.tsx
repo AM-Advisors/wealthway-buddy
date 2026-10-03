@@ -39,11 +39,14 @@ function QuotePage() {
   const [note, setNote] = useState("");
   const done = (msg: string) => () => { toast.success(msg); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); qc.invalidateQueries({ queryKey: ["sales-quotes"] }); };
   const err = (e: Error) => toast.error(e.message);
-  const submit = useMutation({ mutationFn: useServerFn(submitSalesQuote).bind(null, { data: { id } } as any) as any, onSuccess: done("Sent for approval"), onError: err });
+  const submitFn = useServerFn(submitSalesQuote);
+  const submit = useMutation({ mutationFn: () => submitFn({ data: { id } }), onSuccess: done("Sent for approval"), onError: err });
   const decideFn = useServerFn(decideSalesQuote);
   const decide = useMutation({ mutationFn: (approve: boolean) => decideFn({ data: { id, approve, note: note || null } }), onSuccess: done("Decision saved"), onError: err });
-  const draft = useMutation({ mutationFn: useServerFn(draftQuoteAgreements).bind(null, { data: { id } } as any) as any, onSuccess: done("SOW drafted"), onError: err });
-  const sent = useMutation({ mutationFn: useServerFn(markSalesQuoteSent).bind(null, { data: { id } } as any) as any, onSuccess: done("Marked sent"), onError: err });
+  const draftFn = useServerFn(draftQuoteAgreements);
+  const draft = useMutation({ mutationFn: () => draftFn({ data: { id } }), onSuccess: done("SOW drafted"), onError: err });
+  const sentFn = useServerFn(markSalesQuoteSent);
+  const sent = useMutation({ mutationFn: () => sentFn({ data: { id } }), onSuccess: done("Marked sent"), onError: err });
   const reviseFn = useServerFn(reviseSalesQuote);
   const revise = useMutation({ mutationFn: () => reviseFn({ data: { id } }), onSuccess: (r) => { toast.success("New version created"); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); }, onError: err });
   const lostFn = useServerFn(markSalesQuoteLost);
@@ -85,14 +88,14 @@ function QuotePage() {
       <Panel title="Next step">
         <div className="flex flex-wrap items-center gap-2">
           {d.canEdit && !editing && <Button variant="outline" onClick={() => setEditing(true)}>Edit</Button>}
-          {d.canEdit && <Button onClick={() => submit.mutate(undefined as any)} disabled={submit.isPending}>Submit for approval</Button>}
+          {d.canEdit && <Button onClick={() => submit.mutate()} disabled={submit.isPending}>Submit for approval</Button>}
           {s === "pending_approval" && (d.canApprove ? (
             <><Input className="max-w-xs" placeholder="Note (required to request changes)" value={note} onChange={(e) => setNote(e.target.value)} />
               <Button onClick={() => decide.mutate(true)} disabled={decide.isPending}>Approve</Button>
               <Button variant="outline" onClick={() => decide.mutate(false)} disabled={decide.isPending}>Request changes</Button></>
           ) : <span className="text-sm text-muted-foreground">{d.approvalBlocker}</span>)}
-          {s === "approved" && !d.quote.sow_id && <Button onClick={() => draft.mutate(undefined as any)} disabled={draft.isPending}>Create SOW{d.quote.msa_id ? "" : " and MSA"} drafts</Button>}
-          {s === "approved" && d.quote.sow_id && <><span className="text-sm text-muted-foreground">SOW draft created. Operations reviews and sends it for signature from the agreements queue.</span><Button onClick={() => sent.mutate(undefined as any)} disabled={sent.isPending}>Mark sent to client</Button></>}
+          {s === "approved" && !d.quote.sow_id && <Button onClick={() => draft.mutate()} disabled={draft.isPending}>Create SOW{d.quote.msa_id ? "" : " and MSA"} drafts</Button>}
+          {s === "approved" && d.quote.sow_id && <><span className="text-sm text-muted-foreground">SOW draft created. Operations reviews and sends it for signature from the agreements queue.</span><Button onClick={() => sent.mutate()} disabled={sent.isPending}>Mark sent to client</Button></>}
           {s === "sent" && <span className="text-sm text-muted-foreground">Waiting for the client to sign. This updates automatically once the SOW is signed.</span>}
           {s === "signed" && <span className="text-sm text-foreground">Signed {d.quote.signed_at ? new Date(d.quote.signed_at).toLocaleDateString() : ""}. Counted as revenue closed.</span>}
           {!["signed", "superseded"].includes(s) && <Button variant="ghost" onClick={() => revise.mutate()} disabled={revise.isPending}>New version</Button>}
