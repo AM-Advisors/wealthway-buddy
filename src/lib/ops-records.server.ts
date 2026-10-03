@@ -12,7 +12,9 @@ import { requireOperations } from "@/lib/ops-access.functions";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import {
   RECORD_AREA,
+  attachInvestorRelations,
   bankingDetailVisible,
+  investorListMatches,
   canOpenRecord,
   maskAccount,
   redactActivity,
