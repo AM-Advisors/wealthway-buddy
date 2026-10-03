@@ -235,6 +235,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const showMk = staffRoles.some((r) => MK_ROLES.includes(r));
   const mkItems: NavItem[] = showMk ? [
     { id: "mk-dashboard", title: "Marketing dashboard", url: "/marketing", icon: "report" },
+    { id: "mk-campaigns", title: "Campaigns", url: "/marketing/campaigns", icon: "report" },
     { id: "mk-calendar", title: "Calendar", url: "/marketing/calendar", icon: "tasks" },
     { id: "mk-posts", title: "Social posts", url: "/marketing/posts", icon: "document" },
     { id: "mk-emails", title: "Emails", url: "/marketing/emails", icon: "document" },

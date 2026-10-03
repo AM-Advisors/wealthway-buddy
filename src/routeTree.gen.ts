@@ -201,6 +201,7 @@ import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_au
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
 import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_authenticated/marketing_.audiences'
 import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
+import { Route as AuthenticatedMarketingCampaignsRouteImport } from './routes/_authenticated/marketing_.campaigns'
 import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
 import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_authenticated/marketing_.imports'
@@ -322,6 +323,7 @@ import { Route as AuthenticatedManagerCountersignSignerIdRouteImport } from './r
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './routes/_authenticated/manager.fund-setup.$requestId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
+import { Route as AuthenticatedMarketingCampaignsIdRouteImport } from './routes/_authenticated/marketing_.campaigns_.$id'
 import { Route as AuthenticatedMarketingEmailsIdRouteImport } from './routes/_authenticated/marketing_.emails_.$id'
 import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_authenticated/marketing_.posts_.$id'
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
@@ -1454,6 +1456,12 @@ const AuthenticatedMarketingCalendarRoute =
     path: '/marketing/calendar',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingCampaignsRoute =
+  AuthenticatedMarketingCampaignsRouteImport.update({
+    id: '/marketing_/campaigns',
+    path: '/marketing/campaigns',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingChannelsRoute =
   AuthenticatedMarketingChannelsRouteImport.update({
     id: '/marketing_/channels',
@@ -2158,6 +2166,12 @@ const AuthenticatedManagerFundFundIdRoute =
     path: '/manager/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingCampaignsIdRoute =
+  AuthenticatedMarketingCampaignsIdRouteImport.update({
+    id: '/marketing_/campaigns_/$id',
+    path: '/marketing/campaigns/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingEmailsIdRoute =
   AuthenticatedMarketingEmailsIdRouteImport.update({
     id: '/marketing_/emails_/$id',
@@ -2705,6 +2719,7 @@ export interface FileRoutesByFullPath {
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
+  '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
@@ -2824,6 +2839,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
@@ -3073,6 +3089,7 @@ export interface FileRoutesByTo {
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
+  '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
@@ -3191,6 +3208,7 @@ export interface FileRoutesByTo {
   '/manager/countersign/$signerId': typeof AuthenticatedManagerCountersignSignerIdRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
+  '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
@@ -3449,6 +3467,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
   '/_authenticated/marketing_/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
+  '/_authenticated/marketing_/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
   '/_authenticated/marketing_/imports': typeof AuthenticatedMarketingImportsRoute
@@ -3568,6 +3587,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/_authenticated/marketing_/campaigns_/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/_authenticated/marketing_/emails_/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/_authenticated/marketing_/posts_/$id': typeof AuthenticatedMarketingPostsIdRoute
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
@@ -3826,6 +3846,7 @@ export interface FileRouteTypes {
     | '/manager/wires'
     | '/marketing/audiences'
     | '/marketing/calendar'
+    | '/marketing/campaigns'
     | '/marketing/channels'
     | '/marketing/emails'
     | '/marketing/imports'
@@ -3945,6 +3966,7 @@ export interface FileRouteTypes {
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
     | '/manager/fund/$fundId'
+    | '/marketing/campaigns/$id'
     | '/marketing/emails/$id'
     | '/marketing/posts/$id'
     | '/ops/areas/$area'
@@ -4194,6 +4216,7 @@ export interface FileRouteTypes {
     | '/manager/wires'
     | '/marketing/audiences'
     | '/marketing/calendar'
+    | '/marketing/campaigns'
     | '/marketing/channels'
     | '/marketing/emails'
     | '/marketing/imports'
@@ -4312,6 +4335,7 @@ export interface FileRouteTypes {
     | '/manager/countersign/$signerId'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
+    | '/marketing/campaigns/$id'
     | '/marketing/emails/$id'
     | '/marketing/posts/$id'
     | '/ops/areas/$area'
@@ -4569,6 +4593,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/wires'
     | '/_authenticated/marketing_/audiences'
     | '/_authenticated/marketing_/calendar'
+    | '/_authenticated/marketing_/campaigns'
     | '/_authenticated/marketing_/channels'
     | '/_authenticated/marketing_/emails'
     | '/_authenticated/marketing_/imports'
@@ -4688,6 +4713,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund-setup/$requestId'
     | '/_authenticated/manager/fund/$fundId'
+    | '/_authenticated/marketing_/campaigns_/$id'
     | '/_authenticated/marketing_/emails_/$id'
     | '/_authenticated/marketing_/posts_/$id'
     | '/_authenticated/ops/areas/$area'
@@ -6166,6 +6192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingCalendarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/campaigns': {
+      id: '/_authenticated/marketing_/campaigns'
+      path: '/marketing/campaigns'
+      fullPath: '/marketing/campaigns'
+      preLoaderRoute: typeof AuthenticatedMarketingCampaignsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/channels': {
       id: '/_authenticated/marketing_/channels'
       path: '/marketing/channels'
@@ -7013,6 +7046,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/campaigns_/$id': {
+      id: '/_authenticated/marketing_/campaigns_/$id'
+      path: '/marketing/campaigns/$id'
+      fullPath: '/marketing/campaigns/$id'
+      preLoaderRoute: typeof AuthenticatedMarketingCampaignsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/emails_/$id': {
       id: '/_authenticated/marketing_/emails_/$id'
       path: '/marketing/emails/$id'
@@ -7839,6 +7879,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
   AuthenticatedMarketingAudiencesRoute: typeof AuthenticatedMarketingAudiencesRoute
   AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
+  AuthenticatedMarketingCampaignsRoute: typeof AuthenticatedMarketingCampaignsRoute
   AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
   AuthenticatedMarketingImportsRoute: typeof AuthenticatedMarketingImportsRoute
@@ -7911,6 +7952,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundSetupRequestIdRoute: typeof AuthenticatedManagerFundSetupRequestIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  AuthenticatedMarketingCampaignsIdRoute: typeof AuthenticatedMarketingCampaignsIdRoute
   AuthenticatedMarketingEmailsIdRoute: typeof AuthenticatedMarketingEmailsIdRoute
   AuthenticatedMarketingPostsIdRoute: typeof AuthenticatedMarketingPostsIdRoute
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
@@ -8103,6 +8145,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
   AuthenticatedMarketingAudiencesRoute: AuthenticatedMarketingAudiencesRoute,
   AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,
+  AuthenticatedMarketingCampaignsRoute: AuthenticatedMarketingCampaignsRoute,
   AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
   AuthenticatedMarketingImportsRoute: AuthenticatedMarketingImportsRoute,
@@ -8193,6 +8236,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundSetupRequestIdRoute,
   AuthenticatedManagerFundFundIdRoute:
     AuthenticatedManagerFundFundIdRouteWithChildren,
+  AuthenticatedMarketingCampaignsIdRoute:
+    AuthenticatedMarketingCampaignsIdRoute,
   AuthenticatedMarketingEmailsIdRoute: AuthenticatedMarketingEmailsIdRoute,
   AuthenticatedMarketingPostsIdRoute: AuthenticatedMarketingPostsIdRoute,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
