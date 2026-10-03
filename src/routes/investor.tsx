@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { clearStoredClientContext } from "@/lib/client-context-storage";
 import { PolicyGate } from "@/components/policy-gate";
+import { AccountKycGate } from "@/components/account-kyc-gate";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -56,7 +57,9 @@ function InvestorLayout() {
       </header>
       <main className="flex-1">
         <PolicyGate onSignOut={signOut}>
-          <Outlet />
+          <AccountKycGate onSignOut={signOut}>
+            <Outlet />
+          </AccountKycGate>
         </PolicyGate>
       </main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">

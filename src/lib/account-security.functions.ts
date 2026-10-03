@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
 import { randomToken, recordSecurityEvent, sha256, trackDeviceAndAlert } from "./account-security.server";
 
 const EVENT_TYPES = [

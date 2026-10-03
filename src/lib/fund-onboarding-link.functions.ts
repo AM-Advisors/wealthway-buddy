@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+import { requireSupabaseAuthUnverified as requireSupabaseAuth } from "@/lib/require-auth";
 
 const srv = () => import("@/lib/fund-onboarding-link.server");
 const offering = z.object({ offeringId: z.string().uuid() });

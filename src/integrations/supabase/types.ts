@@ -242,6 +242,104 @@ export type Database = {
         }
         Relationships: []
       }
+      account_identity_check_events: {
+        Row: {
+          actor_user_id: string | null
+          check_id: string
+          created_at: string
+          event: string
+          from_status: string | null
+          id: string
+          note: string | null
+          to_status: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          check_id: string
+          created_at?: string
+          event: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          check_id?: string
+          created_at?: string
+          event?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_identity_check_events_check_id_fkey"
+            columns: ["check_id"]
+            isOneToOne: false
+            referencedRelation: "account_identity_checks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_identity_checks: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          decision_summary: Json
+          id: string
+          person_id: string | null
+          provider: string
+          session_id: string | null
+          session_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          vendor_data: string
+          warnings: Json
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          decision_summary?: Json
+          id?: string
+          person_id?: string | null
+          provider?: string
+          session_id?: string | null
+          session_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vendor_data: string
+          warnings?: Json
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          decision_summary?: Json
+          id?: string
+          person_id?: string | null
+          provider?: string
+          session_id?: string | null
+          session_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vendor_data?: string
+          warnings?: Json
+        }
+        Relationships: []
+      }
       accounting_exceptions: {
         Row: {
           bank_transaction_id: string | null
