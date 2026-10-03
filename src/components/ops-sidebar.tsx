@@ -28,6 +28,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -73,6 +74,16 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { session } = useClientWorkspace();
   const sections = getNavigation(session as never, "operations", pathname).operations;
   const salesOnly = !session?.operations;
+  const staffRoles = session?.staffRoles ?? [];
+  // The Commercial section: Sales and Account Management. Visible to
+  // commercial staff and leadership; the backend re-checks every page.
+  const commercialRoles = ["sales", "sales_management", "cro", "account_manager", "client_success", "executive", "super_admin"];
+  const showCommercial = salesOnly || staffRoles.some((r) => commercialRoles.includes(r));
+  const commercialItems = [
+    { id: "sales", title: "Sales", url: "/sales", icon: "briefcase" },
+    { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" },
+    { id: "account-manager", title: "Account management", url: "/account-manager", icon: "people" },
+  ];
   const capabilities = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const [query, setQuery] = useState("");
   const [clientsOpen, setClientsOpen] = useState(() => pathname.startsWith("/ops/clients"));
@@ -80,7 +91,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const results = query.trim() ? searchOpsIndex(index, query) : null;
 
   const groups = [
-    sections.filter((s) => s.id === "home" || s.id === "sales" || s.id === "sales-crm" || GROUP_OF.get(s.id) === "records"),
+    sections.filter((s) => s.id === "home" || GROUP_OF.get(s.id) === "records"),
     sections.filter((s) => GROUP_OF.get(s.id) === "work"),
     sections.filter((s) => GROUP_OF.get(s.id) === "admin"),
   ].filter((g) => g.length > 0);
@@ -178,6 +189,37 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarGroup>
             </div>
           ))
+        )}
+        {!results && showCommercial && (
+          <>
+            <SidebarSeparator />
+            <SidebarGroup>
+              {!collapsed && <SidebarGroupLabel>Commercial</SidebarGroupLabel>}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {commercialItems.map((item) => {
+                    const Icon = ICONS[item.icon] ?? Briefcase;
+                    const active = pathname === item.url || pathname.startsWith(item.url + "/");
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active}
+                          tooltip={item.title}
+                          className="data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_2px_0_0_var(--color-sidebar-primary)]"
+                        >
+                          <Link to={item.url as never} aria-current={active ? "page" : undefined} onClick={close} className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="truncate">{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
         )}
         {!results && (
           <SidebarGroup>
