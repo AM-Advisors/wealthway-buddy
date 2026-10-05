@@ -192,9 +192,10 @@ async function* pages(key: string | null, mk: (after?: string) => string, max = 
 export async function hubspotStatus(userId: string) {
   await requireMarketing(userId);
   const key = await getConnectionKeyForUser(userId, HUBSPOT_CONNECTOR_ID);
+  const shared = hubspotSharedConfigured();
   const db = await admin();
   const { data: runs } = await db.from("import_runs").select("provider, result, created_at").order("created_at", { ascending: false }).limit(10);
-  return { connected: !!key, configured: !!process.env["HUBSPOT_APP_USER_CONNECTOR_CLIENT_API_KEY"], runs: runs ?? [] };
+  return { connected: !!key || shared, shared, personal: !!key, configured: !!process.env["HUBSPOT_APP_USER_CONNECTOR_CLIENT_API_KEY"] || shared, runs: runs ?? [] };
 }
 
 export type HubspotPart = "contacts" | "deals" | "email_history" | "marketing_emails";
