@@ -202,8 +202,8 @@ export type HubspotPart = "contacts" | "deals" | "email_history" | "marketing_em
 
 export async function importHubspot(userId: string, parts: HubspotPart[]) {
   const { db } = await requireMarketing(userId);
-  const key = await getConnectionKeyForUser(userId, HUBSPOT_CONNECTOR_ID);
-  if (!key) return { connected: false as const };
+  const key = await getConnectionKeyForUser(userId, HUBSPOT_CONNECTOR_ID) ?? null;
+  if (!key && !hubspotSharedConfigured()) return { connected: false as const };
   const result: Record<string, any> = {};
   try {
     const contactIdByHs = new Map<string, string>();
