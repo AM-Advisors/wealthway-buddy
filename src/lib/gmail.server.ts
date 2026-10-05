@@ -49,7 +49,17 @@ const b64 = (s: string) =>
   Buffer.from(s, "utf8").toString("base64");
 const mimeHeader = (v: string) => (/^[\x00-\x7F]*$/.test(v) ? v : `=?UTF-8?B?${b64(v)}?=`);
 
-export function createRawEmail(opts: { to: string; subject: string; body: string; from?: string }): string {
+export function createRawEmail(opts: { to: string; subject: string; body: string; from?: string; html?: string | undefined }): string {
+  if (opts.html) {
+    const b = `hm_${Math.random().toString(36).slice(2)}`;
+    const lines = [
+      `To: ${opts.to}`, ...(opts.from ? [`From: ${opts.from}`] : []), `Subject: ${mimeHeader(opts.subject)}`, "MIME-Version: 1.0",
+      `Content-Type: multipart/alternative; boundary="${b}"`, "",
+      `--${b}`, 'Content-Type: text/plain; charset="UTF-8"', "", opts.body, "",
+      `--${b}`, 'Content-Type: text/html; charset="UTF-8"', "", opts.html, "", `--${b}--`,
+    ];
+    return b64(lines.join("\r\n")).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
   const lines = [
     `To: ${opts.to}`,
     ...(opts.from ? [`From: ${opts.from}`] : []),
@@ -88,7 +98,7 @@ export async function gmailStatusForUser(userId: string): Promise<GmailStatus> {
 }
 
 /** Send an email from the employee's own Gmail. Returns the Gmail message id. */
-export async function sendGmailAsUser(userId: string, opts: { to: string; subject: string; body: string }): Promise<string | null> {
+export async function sendGmailAsUser(userId: string, opts: { to: string; subject: string; body: string; html?: string | undefined }): Promise<string | null> {
   const key = await getConnectionKeyForUser(userId, GMAIL_CONNECTOR_ID);
   if (!key) return null;
   const res = await callAsAppUser({

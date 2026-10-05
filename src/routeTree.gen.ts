@@ -370,6 +370,7 @@ import { Route as ApiPublicMercuryOnboardingRouteImport } from './routes/api/pub
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
 import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/packet/$token'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicProposalViewRouteImport } from './routes/api/public/proposal/view'
 import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
@@ -2449,6 +2450,11 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicProposalViewRoute = ApiPublicProposalViewRouteImport.update({
+  id: '/api/public/proposal/view',
+  path: '/api/public/proposal/view',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
   id: '/api/public/security/revoke',
   path: '/api/public/security/revoke',
@@ -2930,6 +2936,7 @@ export interface FileRoutesByFullPath {
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -3306,6 +3313,7 @@ export interface FileRoutesByTo {
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -3692,6 +3700,7 @@ export interface FileRoutesById {
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
   '/api/public/packet/$token': typeof ApiPublicPacketTokenRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
@@ -4078,6 +4087,7 @@ export interface FileRouteTypes {
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/payments/webhook'
+    | '/api/public/proposal/view'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -4454,6 +4464,7 @@ export interface FileRouteTypes {
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/payments/webhook'
+    | '/api/public/proposal/view'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -4839,6 +4850,7 @@ export interface FileRouteTypes {
     | '/api/public/notify/drain'
     | '/api/public/packet/$token'
     | '/api/public/payments/webhook'
+    | '/api/public/proposal/view'
     | '/api/public/security/revoke'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
@@ -4931,6 +4943,7 @@ export interface RootRouteChildren {
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
   ApiPublicPacketTokenRoute: typeof ApiPublicPacketTokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicProposalViewRoute: typeof ApiPublicProposalViewRoute
   ApiPublicSecurityRevokeRoute: typeof ApiPublicSecurityRevokeRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
@@ -7466,6 +7479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/proposal/view': {
+      id: '/api/public/proposal/view'
+      path: '/api/public/proposal/view'
+      fullPath: '/api/public/proposal/view'
+      preLoaderRoute: typeof ApiPublicProposalViewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/security/revoke': {
       id: '/api/public/security/revoke'
       path: '/api/public/security/revoke'
@@ -8523,6 +8543,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
   ApiPublicPacketTokenRoute: ApiPublicPacketTokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicProposalViewRoute: ApiPublicProposalViewRoute,
   ApiPublicSecurityRevokeRoute: ApiPublicSecurityRevokeRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,

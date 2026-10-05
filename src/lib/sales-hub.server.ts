@@ -209,7 +209,7 @@ export async function logOutreach(userId: string, d: { contactId: string; channe
   return { ok: true };
 }
 
-export async function sendOutreach(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; subject?: string | null | undefined; body: string; serviceKey?: string | null | undefined; visibility: "team" | "private" }) {
+export async function sendOutreach(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; subject?: string | null | undefined; body: string; html?: string | undefined; serviceKey?: string | null | undefined; visibility: "team" | "private" }) {
   const a = await salesActor(userId);
   const c = await loadContact(a, d.contactId);
   const db = await admin();
@@ -222,7 +222,7 @@ export async function sendOutreach(userId: string, d: { contactId: string; chann
     // Send from the rep's own connected Google inbox when they have one;
     // otherwise fall back to the shared Harmonious sender.
     const { sendGmailAsUser } = await import("@/lib/gmail.server");
-    const gmailId = await sendGmailAsUser(userId, { to: c.email, subject: d.subject || "Following up", body: d.body }).catch((e) => {
+    const gmailId = await sendGmailAsUser(userId, { to: c.email, subject: d.subject || "Following up", body: d.body, html: d.html }).catch((e) => {
       console.error("Gmail outreach send failed", e);
       return null;
     });

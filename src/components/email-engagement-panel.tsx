@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Panel, Stat } from "@/components/sales/sales-ui";
@@ -50,6 +51,17 @@ export function MarketingEngagementPanel() {
               <tr key={m.id}><td className="py-2">{m.name}</td><td>{m.sent}</td><td>{m.uniqueOpens} ({pct(m.uniqueOpens, m.sent)})</td><td>{m.uniqueClicks} ({pct(m.uniqueClicks, m.sent)})</td><td>{m.forwards}</td></tr>))}</tbody>
           </table></div>
         )}
+      </Panel>
+      <Panel title="Proposals, RFPs & RFQs sent by Sales">
+        {(d.proposals ?? []).length === 0 ? <p className="text-sm text-muted-foreground">No proposals emailed in the last 30 days.</p> : (
+          <div className="overflow-x-auto"><table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Document</th><th>Rep</th><th>Sent</th><th>Read?</th><th>Opens</th><th>Clicks</th><th>Likely forwarded</th><th>Last activity</th></tr></thead>
+            <tbody className="divide-y">{d.proposals.map((p) => (
+              <tr key={p.id}><td className="py-2"><Link to="/sales/documents/$id" params={{ id: p.id }} className="text-primary hover:underline">{p.title}</Link></td><td>{p.owner}</td><td>{new Date(p.sentAt).toLocaleDateString()}</td>
+                <td>{p.opened || p.clicks > 0 ? "Yes" : "Not yet"}</td><td>{p.opens}</td><td>{p.clicks}</td><td>{p.forwards}</td><td>{p.lastActivityAt ? new Date(p.lastActivityAt).toLocaleString() : "-"}</td></tr>))}</tbody>
+          </table></div>
+        )}
+        <p className="mt-2 text-xs text-muted-foreground">Opens can be missed when an email app blocks images; a click on "View" always counts as read. Forwards are an estimate.</p>
       </Panel>
     </div>
   );

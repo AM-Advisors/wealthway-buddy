@@ -24934,6 +24934,7 @@ export type Database = {
           kind: string
           occurred_at: string
           recipient: string
+          sales_document_id: string | null
           source: string
           url: string | null
           user_agent: string | null
@@ -24946,6 +24947,7 @@ export type Database = {
           kind: string
           occurred_at?: string
           recipient: string
+          sales_document_id?: string | null
           source: string
           url?: string | null
           user_agent?: string | null
@@ -24958,6 +24960,7 @@ export type Database = {
           kind?: string
           occurred_at?: string
           recipient?: string
+          sales_document_id?: string | null
           source?: string
           url?: string | null
           user_agent?: string | null
@@ -32603,6 +32606,7 @@ export type Database = {
           recipient_email: string | null
           recipient_name: string | null
           sent_at: string | null
+          sent_to: string | null
           source_file_name: string | null
           source_path: string | null
           source_text: string | null
@@ -32628,6 +32632,7 @@ export type Database = {
           recipient_email?: string | null
           recipient_name?: string | null
           sent_at?: string | null
+          sent_to?: string | null
           source_file_name?: string | null
           source_path?: string | null
           source_text?: string | null
@@ -32653,6 +32658,7 @@ export type Database = {
           recipient_email?: string | null
           recipient_name?: string | null
           sent_at?: string | null
+          sent_to?: string | null
           source_file_name?: string | null
           source_path?: string | null
           source_text?: string | null
