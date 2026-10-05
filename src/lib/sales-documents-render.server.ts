@@ -75,7 +75,7 @@ export async function renderDocx(doc: any, sections: Section[], draft: boolean):
     if (s.question) children.push(new Paragraph({ children: [new TextRun({ text: `Question: ${s.question}`, italics: true, color: "666666", font: "Poppins" })] }));
     for (const line of (s.body || "").split("\n")) {
       const bullet = line.startsWith("- ");
-      children.push(new Paragraph({ bullet: bullet ? { level: 0 } : undefined, children: [new TextRun({ text: bullet ? line.slice(2) : line, color: "221F20", font: "Poppins", size: 21 })] }));
+      children.push(new Paragraph({ ...(bullet ? { bullet: { level: 0 } } : {}), children: [new TextRun({ text: bullet ? line.slice(2) : line, color: "221F20", font: "Poppins", size: 21 })] }));
     }
   }
   const d = new Document({ sections: [{ footers: { default: new Footer({ children: [new Paragraph({ children: [new TextRun({ text: "Harmonious | harmonious.co", color: "142647", size: 16, font: "Poppins" })] })] }) }, children }] });

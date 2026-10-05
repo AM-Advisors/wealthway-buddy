@@ -199,6 +199,7 @@ import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_auth
 import { Route as AuthenticatedManagerUpdatesRouteImport } from './routes/_authenticated/manager.updates'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
 import { Route as AuthenticatedManagerWiresRouteImport } from './routes/_authenticated/manager.wires'
+import { Route as AuthenticatedMarketingAssistsRouteImport } from './routes/_authenticated/marketing_.assists'
 import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_authenticated/marketing_.audiences'
 import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
 import { Route as AuthenticatedMarketingCampaignsRouteImport } from './routes/_authenticated/marketing_.campaigns'
@@ -270,6 +271,7 @@ import { Route as AuthenticatedSalesCommissionsRouteImport } from './routes/_aut
 import { Route as AuthenticatedSalesCrmRouteImport } from './routes/_authenticated/sales_.crm'
 import { Route as AuthenticatedSalesCroRouteImport } from './routes/_authenticated/sales_.cro'
 import { Route as AuthenticatedSalesDashboardRouteImport } from './routes/_authenticated/sales_.dashboard'
+import { Route as AuthenticatedSalesDocumentsRouteImport } from './routes/_authenticated/sales_.documents'
 import { Route as AuthenticatedSalesFollowUpsRouteImport } from './routes/_authenticated/sales_.follow-ups'
 import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authenticated/sales_.outreach'
 import { Route as AuthenticatedSalesQuotesRouteImport } from './routes/_authenticated/sales_.quotes'
@@ -355,6 +357,7 @@ import { Route as AuthenticatedOpsInvestorsIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './routes/_authenticated/ops.investors.$investorId'
 import { Route as AuthenticatedOpsPeopleTestDemoRouteImport } from './routes/_authenticated/ops.people_.test-demo'
 import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from './routes/_authenticated/professional.acting.$delegationId'
+import { Route as AuthenticatedSalesDocumentsIdRouteImport } from './routes/_authenticated/sales_.documents_.$id'
 import { Route as AuthenticatedSalesQuotesIdRouteImport } from './routes/_authenticated/sales_.quotes_.$id'
 import { Route as AuthenticatedSalesRepsIdRouteImport } from './routes/_authenticated/sales_.reps.$id'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
@@ -1448,6 +1451,12 @@ const AuthenticatedManagerWiresRoute =
     path: '/manager/wires',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingAssistsRoute =
+  AuthenticatedMarketingAssistsRouteImport.update({
+    id: '/marketing_/assists',
+    path: '/marketing/assists',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingAudiencesRoute =
   AuthenticatedMarketingAudiencesRouteImport.update({
     id: '/marketing_/audiences',
@@ -1860,6 +1869,12 @@ const AuthenticatedSalesDashboardRoute =
   AuthenticatedSalesDashboardRouteImport.update({
     id: '/sales_/dashboard',
     path: '/sales/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesDocumentsRoute =
+  AuthenticatedSalesDocumentsRouteImport.update({
+    id: '/sales_/documents',
+    path: '/sales/documents',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSalesFollowUpsRoute =
@@ -2362,6 +2377,12 @@ const AuthenticatedProfessionalActingDelegationIdRoute =
     path: '/acting/$delegationId',
     getParentRoute: () => AuthenticatedProfessionalRoute,
   } as any)
+const AuthenticatedSalesDocumentsIdRoute =
+  AuthenticatedSalesDocumentsIdRouteImport.update({
+    id: '/sales_/documents_/$id',
+    path: '/sales/documents/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSalesQuotesIdRoute =
   AuthenticatedSalesQuotesIdRouteImport.update({
     id: '/sales_/quotes_/$id',
@@ -2745,6 +2766,7 @@ export interface FileRoutesByFullPath {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/assists': typeof AuthenticatedMarketingAssistsRoute
   '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
@@ -2813,6 +2835,7 @@ export interface FileRoutesByFullPath {
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/documents': typeof AuthenticatedSalesDocumentsRoute
   '/sales/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
@@ -2894,6 +2917,7 @@ export interface FileRoutesByFullPath {
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
+  '/sales/documents/$id': typeof AuthenticatedSalesDocumentsIdRoute
   '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -3119,6 +3143,7 @@ export interface FileRoutesByTo {
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/marketing/assists': typeof AuthenticatedMarketingAssistsRoute
   '/marketing/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
@@ -3187,6 +3212,7 @@ export interface FileRoutesByTo {
   '/sales/crm': typeof AuthenticatedSalesCrmRoute
   '/sales/cro': typeof AuthenticatedSalesCroRoute
   '/sales/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/sales/documents': typeof AuthenticatedSalesDocumentsRoute
   '/sales/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
@@ -3267,6 +3293,7 @@ export interface FileRoutesByTo {
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
+  '/sales/documents/$id': typeof AuthenticatedSalesDocumentsIdRoute
   '/sales/quotes/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -3501,6 +3528,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
   '/_authenticated/manager/wires': typeof AuthenticatedManagerWiresRoute
+  '/_authenticated/marketing_/assists': typeof AuthenticatedMarketingAssistsRoute
   '/_authenticated/marketing_/audiences': typeof AuthenticatedMarketingAudiencesRoute
   '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/_authenticated/marketing_/campaigns': typeof AuthenticatedMarketingCampaignsRoute
@@ -3569,6 +3597,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/crm': typeof AuthenticatedSalesCrmRoute
   '/_authenticated/sales_/cro': typeof AuthenticatedSalesCroRoute
   '/_authenticated/sales_/dashboard': typeof AuthenticatedSalesDashboardRoute
+  '/_authenticated/sales_/documents': typeof AuthenticatedSalesDocumentsRoute
   '/_authenticated/sales_/follow-ups': typeof AuthenticatedSalesFollowUpsRoute
   '/_authenticated/sales_/outreach': typeof AuthenticatedSalesOutreachRoute
   '/_authenticated/sales_/quotes': typeof AuthenticatedSalesQuotesRoute
@@ -3650,6 +3679,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/_authenticated/ops/people_/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
   '/_authenticated/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
+  '/_authenticated/sales_/documents_/$id': typeof AuthenticatedSalesDocumentsIdRoute
   '/_authenticated/sales_/quotes_/$id': typeof AuthenticatedSalesQuotesIdRoute
   '/_authenticated/sales_/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
@@ -3884,6 +3914,7 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/assists'
     | '/marketing/audiences'
     | '/marketing/calendar'
     | '/marketing/campaigns'
@@ -3952,6 +3983,7 @@ export interface FileRouteTypes {
     | '/sales/crm'
     | '/sales/cro'
     | '/sales/dashboard'
+    | '/sales/documents'
     | '/sales/follow-ups'
     | '/sales/outreach'
     | '/sales/quotes'
@@ -4033,6 +4065,7 @@ export interface FileRouteTypes {
     | '/ops/investors/$investorId'
     | '/ops/people/test-demo'
     | '/professional/acting/$delegationId'
+    | '/sales/documents/$id'
     | '/sales/quotes/$id'
     | '/sales/reps/$id'
     | '/api/public/email/click'
@@ -4258,6 +4291,7 @@ export interface FileRouteTypes {
     | '/manager/updates'
     | '/manager/valuations'
     | '/manager/wires'
+    | '/marketing/assists'
     | '/marketing/audiences'
     | '/marketing/calendar'
     | '/marketing/campaigns'
@@ -4326,6 +4360,7 @@ export interface FileRouteTypes {
     | '/sales/crm'
     | '/sales/cro'
     | '/sales/dashboard'
+    | '/sales/documents'
     | '/sales/follow-ups'
     | '/sales/outreach'
     | '/sales/quotes'
@@ -4406,6 +4441,7 @@ export interface FileRouteTypes {
     | '/ops/investors/$investorId'
     | '/ops/people/test-demo'
     | '/professional/acting/$delegationId'
+    | '/sales/documents/$id'
     | '/sales/quotes/$id'
     | '/sales/reps/$id'
     | '/api/public/email/click'
@@ -4639,6 +4675,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/updates'
     | '/_authenticated/manager/valuations'
     | '/_authenticated/manager/wires'
+    | '/_authenticated/marketing_/assists'
     | '/_authenticated/marketing_/audiences'
     | '/_authenticated/marketing_/calendar'
     | '/_authenticated/marketing_/campaigns'
@@ -4707,6 +4744,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/crm'
     | '/_authenticated/sales_/cro'
     | '/_authenticated/sales_/dashboard'
+    | '/_authenticated/sales_/documents'
     | '/_authenticated/sales_/follow-ups'
     | '/_authenticated/sales_/outreach'
     | '/_authenticated/sales_/quotes'
@@ -4788,6 +4826,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/investors/$investorId'
     | '/_authenticated/ops/people_/test-demo'
     | '/_authenticated/professional/acting/$delegationId'
+    | '/_authenticated/sales_/documents_/$id'
     | '/_authenticated/sales_/quotes_/$id'
     | '/_authenticated/sales_/reps/$id'
     | '/api/public/email/click'
@@ -6230,6 +6269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerWiresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/assists': {
+      id: '/_authenticated/marketing_/assists'
+      path: '/marketing/assists'
+      fullPath: '/marketing/assists'
+      preLoaderRoute: typeof AuthenticatedMarketingAssistsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/audiences': {
       id: '/_authenticated/marketing_/audiences'
       path: '/marketing/audiences'
@@ -6725,6 +6771,13 @@ declare module '@tanstack/react-router' {
       path: '/sales/dashboard'
       fullPath: '/sales/dashboard'
       preLoaderRoute: typeof AuthenticatedSalesDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales_/documents': {
+      id: '/_authenticated/sales_/documents'
+      path: '/sales/documents'
+      fullPath: '/sales/documents'
+      preLoaderRoute: typeof AuthenticatedSalesDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/sales_/follow-ups': {
@@ -7321,6 +7374,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/professional/acting/$delegationId'
       preLoaderRoute: typeof AuthenticatedProfessionalActingDelegationIdRouteImport
       parentRoute: typeof AuthenticatedProfessionalRoute
+    }
+    '/_authenticated/sales_/documents_/$id': {
+      id: '/_authenticated/sales_/documents_/$id'
+      path: '/sales/documents/$id'
+      fullPath: '/sales/documents/$id'
+      preLoaderRoute: typeof AuthenticatedSalesDocumentsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/sales_/quotes_/$id': {
       id: '/_authenticated/sales_/quotes_/$id'
@@ -7957,6 +8017,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerUpdatesRoute: typeof AuthenticatedManagerUpdatesRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
   AuthenticatedManagerWiresRoute: typeof AuthenticatedManagerWiresRoute
+  AuthenticatedMarketingAssistsRoute: typeof AuthenticatedMarketingAssistsRoute
   AuthenticatedMarketingAudiencesRoute: typeof AuthenticatedMarketingAudiencesRoute
   AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
   AuthenticatedMarketingCampaignsRoute: typeof AuthenticatedMarketingCampaignsRoute
@@ -8011,6 +8072,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
   AuthenticatedSalesCroRoute: typeof AuthenticatedSalesCroRoute
   AuthenticatedSalesDashboardRoute: typeof AuthenticatedSalesDashboardRoute
+  AuthenticatedSalesDocumentsRoute: typeof AuthenticatedSalesDocumentsRoute
   AuthenticatedSalesFollowUpsRoute: typeof AuthenticatedSalesFollowUpsRoute
   AuthenticatedSalesOutreachRoute: typeof AuthenticatedSalesOutreachRoute
   AuthenticatedSalesQuotesRoute: typeof AuthenticatedSalesQuotesRoute
@@ -8058,6 +8120,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
   AuthenticatedOpsPeopleTestDemoRoute: typeof AuthenticatedOpsPeopleTestDemoRoute
+  AuthenticatedSalesDocumentsIdRoute: typeof AuthenticatedSalesDocumentsIdRoute
   AuthenticatedSalesQuotesIdRoute: typeof AuthenticatedSalesQuotesIdRoute
   AuthenticatedSalesRepsIdRoute: typeof AuthenticatedSalesRepsIdRoute
   AuthenticatedAdminContractsIndexRoute: typeof AuthenticatedAdminContractsIndexRoute
@@ -8227,6 +8290,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerUpdatesRoute: AuthenticatedManagerUpdatesRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
   AuthenticatedManagerWiresRoute: AuthenticatedManagerWiresRoute,
+  AuthenticatedMarketingAssistsRoute: AuthenticatedMarketingAssistsRoute,
   AuthenticatedMarketingAudiencesRoute: AuthenticatedMarketingAudiencesRoute,
   AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,
   AuthenticatedMarketingCampaignsRoute: AuthenticatedMarketingCampaignsRoute,
@@ -8286,6 +8350,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
   AuthenticatedSalesCroRoute: AuthenticatedSalesCroRoute,
   AuthenticatedSalesDashboardRoute: AuthenticatedSalesDashboardRoute,
+  AuthenticatedSalesDocumentsRoute: AuthenticatedSalesDocumentsRoute,
   AuthenticatedSalesFollowUpsRoute: AuthenticatedSalesFollowUpsRoute,
   AuthenticatedSalesOutreachRoute: AuthenticatedSalesOutreachRoute,
   AuthenticatedSalesQuotesRoute: AuthenticatedSalesQuotesRoute,
@@ -8355,6 +8420,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsInvestorsInvestorIdRoute:
     AuthenticatedOpsInvestorsInvestorIdRoute,
   AuthenticatedOpsPeopleTestDemoRoute: AuthenticatedOpsPeopleTestDemoRoute,
+  AuthenticatedSalesDocumentsIdRoute: AuthenticatedSalesDocumentsIdRoute,
   AuthenticatedSalesQuotesIdRoute: AuthenticatedSalesQuotesIdRoute,
   AuthenticatedSalesRepsIdRoute: AuthenticatedSalesRepsIdRoute,
   AuthenticatedAdminContractsIndexRoute: AuthenticatedAdminContractsIndexRoute,
