@@ -232,6 +232,7 @@ import { Route as AuthenticatedOpsEmployeesRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes/_authenticated/ops.formation-reference'
+import { Route as AuthenticatedOpsHubspotTicketsRouteImport } from './routes/_authenticated/ops.hubspot-tickets'
 import { Route as AuthenticatedOpsMailRouteImport } from './routes/_authenticated/ops.mail'
 import { Route as AuthenticatedOpsMailboxesRouteImport } from './routes/_authenticated/ops.mailboxes'
 import { Route as AuthenticatedOpsMessagesRouteImport } from './routes/_authenticated/ops.messages'
@@ -1648,6 +1649,12 @@ const AuthenticatedOpsFormationReferenceRoute =
     path: '/ops/formation-reference',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsHubspotTicketsRoute =
+  AuthenticatedOpsHubspotTicketsRouteImport.update({
+    id: '/ops/hubspot-tickets',
+    path: '/ops/hubspot-tickets',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsMailRoute = AuthenticatedOpsMailRouteImport.update({
   id: '/ops/mail',
   path: '/ops/mail',
@@ -2803,6 +2810,7 @@ export interface FileRoutesByFullPath {
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/ops/hubspot-tickets': typeof AuthenticatedOpsHubspotTicketsRoute
   '/ops/mail': typeof AuthenticatedOpsMailRoute
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
@@ -3181,6 +3189,7 @@ export interface FileRoutesByTo {
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/ops/hubspot-tickets': typeof AuthenticatedOpsHubspotTicketsRoute
   '/ops/mail': typeof AuthenticatedOpsMailRoute
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
@@ -3567,6 +3576,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
+  '/_authenticated/ops/hubspot-tickets': typeof AuthenticatedOpsHubspotTicketsRoute
   '/_authenticated/ops/mail': typeof AuthenticatedOpsMailRoute
   '/_authenticated/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
@@ -3954,6 +3964,7 @@ export interface FileRouteTypes {
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
+    | '/ops/hubspot-tickets'
     | '/ops/mail'
     | '/ops/mailboxes'
     | '/ops/messages'
@@ -4332,6 +4343,7 @@ export interface FileRouteTypes {
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
+    | '/ops/hubspot-tickets'
     | '/ops/mail'
     | '/ops/mailboxes'
     | '/ops/messages'
@@ -4717,6 +4729,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/formation-reference'
+    | '/_authenticated/ops/hubspot-tickets'
     | '/_authenticated/ops/mail'
     | '/_authenticated/ops/mailboxes'
     | '/_authenticated/ops/messages'
@@ -6513,6 +6526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFormationReferenceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/hubspot-tickets': {
+      id: '/_authenticated/ops/hubspot-tickets'
+      path: '/ops/hubspot-tickets'
+      fullPath: '/ops/hubspot-tickets'
+      preLoaderRoute: typeof AuthenticatedOpsHubspotTicketsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/mail': {
       id: '/_authenticated/ops/mail'
       path: '/ops/mail'
@@ -8068,6 +8088,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsFormationReferenceRoute: typeof AuthenticatedOpsFormationReferenceRoute
+  AuthenticatedOpsHubspotTicketsRoute: typeof AuthenticatedOpsHubspotTicketsRoute
   AuthenticatedOpsMailRoute: typeof AuthenticatedOpsMailRoute
   AuthenticatedOpsMailboxesRoute: typeof AuthenticatedOpsMailboxesRoute
   AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
@@ -8346,6 +8367,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsFormationReferenceRoute:
     AuthenticatedOpsFormationReferenceRoute,
+  AuthenticatedOpsHubspotTicketsRoute: AuthenticatedOpsHubspotTicketsRoute,
   AuthenticatedOpsMailRoute: AuthenticatedOpsMailRoute,
   AuthenticatedOpsMailboxesRoute: AuthenticatedOpsMailboxesRoute,
   AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,

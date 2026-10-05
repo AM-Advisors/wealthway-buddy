@@ -1058,6 +1058,13 @@
       "when": 1791225415916,
       "tag": "0150_proposal_email_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1791240704026,
+      "tag": "0151_hubspot_ops_tickets",
+      "breakpoints": true
     }
   ]
 }

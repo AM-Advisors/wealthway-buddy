@@ -20225,6 +20225,102 @@ export type Database = {
         }
         Relationships: []
       }
+      hubspot_ops_tickets: {
+        Row: {
+          client_id: string | null
+          company_names: string[]
+          content: string | null
+          hubspot_created_at: string | null
+          hubspot_id: string
+          hubspot_updated_at: string | null
+          id: string
+          imported_at: string
+          imported_by: string | null
+          kind: string
+          offering_id: string | null
+          owner_name: string | null
+          pipeline_id: string
+          pipeline_label: string
+          priority: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          review_reason: string | null
+          stage_closed: boolean
+          stage_id: string | null
+          stage_label: string | null
+          stage_order: number | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          client_id?: string | null
+          company_names?: string[]
+          content?: string | null
+          hubspot_created_at?: string | null
+          hubspot_id: string
+          hubspot_updated_at?: string | null
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          kind: string
+          offering_id?: string | null
+          owner_name?: string | null
+          pipeline_id: string
+          pipeline_label: string
+          priority?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_reason?: string | null
+          stage_closed?: boolean
+          stage_id?: string | null
+          stage_label?: string | null
+          stage_order?: number | null
+          status: string
+          subject: string
+        }
+        Update: {
+          client_id?: string | null
+          company_names?: string[]
+          content?: string | null
+          hubspot_created_at?: string | null
+          hubspot_id?: string
+          hubspot_updated_at?: string | null
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          kind?: string
+          offering_id?: string | null
+          owner_name?: string | null
+          pipeline_id?: string
+          pipeline_label?: string
+          priority?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_reason?: string | null
+          stage_closed?: boolean
+          stage_id?: string | null
+          stage_label?: string | null
+          stage_order?: number | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hubspot_ops_tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hubspot_ops_tickets_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_check_results: {
         Row: {
           check_kind: Database["public"]["Enums"]["identity_check_kind"]
