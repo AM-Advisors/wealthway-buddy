@@ -135,13 +135,18 @@ export async function getDocument(userId: string, id: string) {
   const { data: versions } = await db.from("sales_document_versions").select("version, source, created_by, created_at").eq("document_id", id).order("version", { ascending: false });
   const { data: events } = await db.from("sales_document_events").select("event, actor_id, detail, created_at").eq("document_id", id).order("created_at", { ascending: false }).limit(100);
   const quoteLines = doc.quote_id ? ((await db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents").eq("quote_id", doc.quote_id).order("sort_order")).data ?? []) : [];
+  const { data: evs } = await db.from("marketing_email_events").select("kind, ip_hash, user_agent, occurred_at").eq("sales_document_id", id).order("occurred_at", { ascending: true }).limit(2000);
+  const E = (evs ?? []) as any[];
+  const engagement = { opens: E.filter((e) => e.kind === "open").length, clicks: E.filter((e) => e.kind === "click").length,
+    firstOpenedAt: E.find((e) => e.kind === "open")?.occurred_at ?? null, lastActivityAt: E.length ? E[E.length - 1].occurred_at : null,
+    devices: new Set(E.map((e) => `${e.ip_hash ?? ""}|${e.user_agent ?? ""}`)).size };
   const { names } = await import("@/lib/sales-hub.server");
   const ids = [doc.owner_user_id, doc.approved_by, ...((versions ?? []) as any[]).map((v) => v.created_by), ...((events ?? []) as any[]).map((e) => e.actor_id), ...a.assists.flatMap((x) => [x.requested_by, x.assignee_user_id])].filter(Boolean);
   const nm = await names(ids);
   const n = (x: string | null) => (x ? nm.get(x) ?? "Team member" : null);
   return {
     doc: { ...doc, source_text: doc.source_text ? String(doc.source_text).slice(0, 2000) : null, ownerName: n(doc.owner_user_id), approvedByName: n(doc.approved_by) },
-    sections, quoteLines,
+    sections, quoteLines, engagement,
     versions: ((versions ?? []) as any[]).map((v) => ({ ...v, byName: n(v.created_by) })),
     events: ((events ?? []) as any[]).map((e) => ({ ...e, byName: n(e.actor_id) })),
     assists: a.assists.map((x) => ({ ...x, requestedByName: n(x.requested_by), assigneeName: n(x.assignee_user_id) })),
@@ -295,9 +300,23 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
   if (!a.isOwner || a.doc.status !== "approved") throw new Error("Only an approved document can be sent, by its owner.");
   if (!a.doc.contact_id) throw new Error("Link a contact with an email address before sending.");
   const sections = await approvedSections(a);
+  const { data: contact } = await a.db.from("crm_contacts").select("email").eq("id", a.doc.contact_id).maybeSingle();
+  if (!contact?.email) throw new Error("This contact has no email address.");
+  const recipient = String(contact.email).toLowerCase();
+  const key = `prop:${id}`;
+  const { signProposalView, buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
+  const view = await signProposalView(id, a.doc.approved_version ?? a.doc.current_version);
+  const link = await buildTrackedUrl({ url: view, recipient, template: key, label: "View document" });
+  const pixel = await buildOpenPixelUrl({ recipient, template: key });
+  const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const para = (t: string) => esc(t).split(/\n{2,}/).map((p) => `<p style="margin:0 0 12px">${p.replace(/\n/g, "<br/>")}</p>`).join("");
+  const html = `<!doctype html><html><body style="font-family:Poppins,Arial,sans-serif;color:#221F20;line-height:1.5">${para(d.message)}`
+    + `<p style="margin:20px 0"><a href="${link}" style="background:#142647;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none">View ${esc(a.doc.title)}</a></p>`
+    + sections.map((s) => `<h3 style="color:#142647;font-family:Rubik,Arial,sans-serif;margin:20px 0 6px">${esc(s.title)}</h3>${s.question ? `<p style="color:#666"><em>Question: ${esc(s.question)}</em></p>` : ""}${para(s.body || "")}`).join("")
+    + `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body></html>`;
   const { sendOutreach } = await import("@/lib/sales-hub.server");
-  await sendOutreach(userId, { contactId: a.doc.contact_id, channel: "email", subject: d.subject, body: `${d.message}\n\n---\n${a.doc.title}\n\n${sectionsText(sections)}`, visibility: "team" });
-  await a.db.from("sales_documents").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id);
+  await sendOutreach(userId, { contactId: a.doc.contact_id, channel: "email", subject: d.subject, body: `${d.message}\n\nView the full document: ${link}\n\n---\n${a.doc.title}\n\n${sectionsText(sections)}`, html, visibility: "team" });
+  await a.db.from("sales_documents").update({ status: "sent", sent_at: new Date().toISOString(), sent_to: recipient, updated_at: new Date().toISOString() }).eq("id", id);
   await event(a.db, id, userId, "sent", { version: a.doc.approved_version });
   return { ok: true };
 }

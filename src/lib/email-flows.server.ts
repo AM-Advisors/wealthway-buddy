@@ -303,7 +303,7 @@ export async function marketingEngagement(userId: string) {
   if (!roles.some((r) => MARKETING_ACCESS.includes(r) || r === "leadership")) throw new Error("Only the Marketing team can view this.");
   const since = new Date(Date.now() - 30 * 864e5).toISOString();
   const [{ data: ev }, { data: sends }, { data: fsends }, { data: emails }, { count: unsubs }] = await Promise.all([
-    db.from("marketing_email_events").select("recipient, kind, ip_hash, user_agent, occurred_at, email_id, flow_send_id, url").gte("occurred_at", since).limit(50000),
+    db.from("marketing_email_events").select("recipient, kind, ip_hash, user_agent, occurred_at, email_id, flow_send_id, sales_document_id, url").gte("occurred_at", since).limit(50000),
     db.from("marketing_email_sends").select("email_id, recipient, status").eq("status", "sent").gte("created_at", since).limit(50000),
     db.from("email_flow_sends").select("id, recipient, sent_at").eq("outcome", "sent").gte("sent_at", since).limit(20000),
     db.from("marketing_emails").select("id, name, sent_at").gte("sent_at", since).order("sent_at", { ascending: false }).limit(50),
@@ -326,7 +326,19 @@ export async function marketingEngagement(userId: string) {
     return { id: m.id, name: m.name, sentAt: m.sent_at, sent, ...s, forwardedKeys: undefined };
   });
   const flowSum = summarize(E.filter((e) => e.flow_send_id));
+  const { data: docs } = await db.from("sales_documents").select("id, title, kind, owner_user_id, client_id, sent_at, status").not("sent_at", "is", null).gte("sent_at", since).order("sent_at", { ascending: false }).limit(100);
+  const { testDemoIds } = await import("@/lib/user-access.server");
+  const td: any = await testDemoIds().catch(() => ({ clients: new Set() }));
+  const D = ((docs ?? []) as any[]).filter((x) => !x.client_id || !td.clients?.has?.(x.client_id));
+  const { names } = await import("@/lib/sales-hub.server");
+  const owners = await names(D.map((x) => x.owner_user_id));
+  const proposals = D.map((x) => {
+    const evs = E.filter((e: any) => e.sales_document_id === x.id); const s = summarize(evs);
+    return { id: x.id, title: x.title, kind: x.kind, owner: owners.get(x.owner_user_id) ?? "-", sentAt: x.sent_at, status: x.status,
+      opened: s.uniqueOpens > 0, opens: s.opens, clicks: s.clicks, forwards: s.forwards, lastActivityAt: evs.length ? evs.map((e) => e.occurred_at).sort().at(-1) : null };
+  });
   return {
+    proposals,
     totals: { delivered, uniqueOpens: all.uniqueOpens, uniqueClicks: all.uniqueClicks, opens: all.opens, clicks: all.clicks, likelyForwards: all.forwards, replies: replies ?? 0, unsubscribes: unsubs ?? 0 },
     flows: { sent: (fsends ?? []).length, uniqueOpens: flowSum.uniqueOpens, uniqueClicks: flowSum.uniqueClicks },
     byDay: Object.entries(byDay).sort().map(([day, v]) => ({ day, ...v })),
