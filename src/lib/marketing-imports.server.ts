@@ -81,7 +81,7 @@ async function upsertClickupContact(db: any, t: any, body: string, actorId: stri
 
 async function importClickupSource(db: any, src: any, actorId: string) {
   const listIds = src.kind === "list" ? [src.ref_id] : (await listsInSpace(src.ref_id)).map((l) => l.id);
-  const r = { tasks: 0, created: 0, updated: 0, skipped: 0 };
+  const r = { tasks: 0, created: 0, updated: 0, skipped: 0, contacts: 0 };
   for (const listId of listIds) {
     for (let page = 0; page < 20; page++) {
       const { tasks, last_page } = await cu(`/list/${listId}/task?page=${page}&include_closed=true&subtasks=false`);
