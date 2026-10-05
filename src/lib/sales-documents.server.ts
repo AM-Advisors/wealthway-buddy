@@ -102,7 +102,7 @@ export async function createOptions(userId: string) {
   return { deals: d.data ?? [], contacts: c.data ?? [], quotes: q.data ?? [], clients: cl.data ?? [] };
 }
 
-export async function createDocument(userId: string, d: { kind: DocKind; direction: DocDirection; title: string; dealId?: string | null; contactId?: string | null; clientId?: string | null; quoteId?: string | null; recipientName?: string | null; recipientEmail?: string | null; dueDate?: string | null }) {
+export async function createDocument(userId: string, d: { kind: DocKind; direction: DocDirection; title: string; dealId?: string | null | undefined; contactId?: string | null | undefined; clientId?: string | null | undefined; quoteId?: string | null | undefined; recipientName?: string | null | undefined; recipientEmail?: string | null | undefined; dueDate?: string | null | undefined }) {
   const db = await admin();
   const roles = await rolesOf(userId);
   if (!roles.some((r) => SALES_DOC_ROLES.includes(r) && r !== "leadership")) throw new Error("Only Sales staff can create proposals.");
