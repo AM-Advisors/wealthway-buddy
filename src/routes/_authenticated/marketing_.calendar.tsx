@@ -6,7 +6,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChannelChip, MkPage, mkHead } from "@/components/marketing-ui";
 import { STATUS_LABEL } from "@/lib/marketing-model";
-import { getMarketingCalendar } from "@/lib/marketing.functions";
+import { decideMarketingEmail, decideMarketingPost, getMarketingCalendar } from "@/lib/marketing.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/marketing_/calendar")({
   head: mkHead("Marketing calendar", "Calendar of scheduled and published social posts and emails."),
@@ -16,12 +17,31 @@ export const Route = createFileRoute("/_authenticated/marketing_/calendar")({
 const FILTERS = ["all", "linkedin", "facebook", "instagram", "email"] as const;
 const startOfWeek = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - x.getDay()); return x; };
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+type Action = "submit" | "approve" | "reject";
+
+/** Quick approval actions on a calendar item. The server enforces roles and author ≠ approver. */
+function ItemActions({ it, busy, run }: { it: any; busy: boolean; run: (it: any, a: Action) => void }) {
+  const btn = "rounded border px-1 py-0.5 text-[10px] font-medium disabled:opacity-50";
+  if (it.status === "draft" || it.status === "rejected")
+    return <div className="mt-1 flex gap-1"><button className={`${btn} hover:bg-muted`} disabled={busy} onClick={() => run(it, "submit")}>Submit</button></div>;
+  if (it.status === "submitted" && it.canApprove)
+    return (
+      <div className="mt-1 flex flex-wrap gap-1">
+        <button className={`${btn} border-primary bg-primary text-primary-foreground`} disabled={busy} onClick={() => run(it, "approve")}>Approve & send</button>
+        <button className={`${btn} hover:bg-muted`} disabled={busy} onClick={() => run(it, "reject")}>Send back</button>
+      </div>
+    );
+  if (it.status === "submitted") return <div className="mt-1 text-[10px] text-muted-foreground">Waiting for another approver</div>;
+  return null;
+}
 
 function CalendarPage() {
   const [view, setView] = useState<"month" | "week">("month");
   const [anchor, setAnchor] = useState(() => new Date());
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const load = useServerFn(getMarketingCalendar);
+  const decidePost = useServerFn(decideMarketingPost), decideEmail = useServerFn(decideMarketingEmail);
+  const [busy, setBusy] = useState<string | null>(null);
 
   const days = useMemo(() => {
     const first = view === "month" ? startOfWeek(new Date(anchor.getFullYear(), anchor.getMonth(), 1)) : startOfWeek(anchor);
@@ -30,6 +50,17 @@ function CalendarPage() {
   }, [anchor, view]);
   const from = days[0]!.toISOString(), to = new Date(days[days.length - 1]!.getTime() + 864e5).toISOString();
   const q = useQuery({ queryKey: ["mk-cal", from, to], queryFn: () => load({ data: { from, to } }), retry: false });
+  const run = async (it: any, action: Action) => {
+    setBusy(it.id);
+    try {
+      const fn = it.kind === "post" ? decidePost : decideEmail;
+      await fn({ data: { id: it.id, action } });
+      toast.success(action === "submit" ? "Sent for approval" : action === "approve" ? "Approved — it goes live at its scheduled time" : "Sent back to the author");
+      await q.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally { setBusy(null); }
+  };
 
   const byDay = useMemo(() => {
     const m = new Map<string, any[]>();
@@ -71,11 +102,14 @@ function CalendarPage() {
             <div key={d.toISOString()} className={`${view === "week" ? "min-h-64" : "min-h-28"} border-b border-r p-1 ${out ? "bg-muted/40" : "bg-card"}`}>
               <div className={`mb-1 text-xs ${dayKey(d) === today ? "font-bold text-primary" : "text-muted-foreground"}`}>{d.getDate()}</div>
               <div className="space-y-1">{items.map((it) => (
-                <Link key={it.kind + it.id} to={it.kind === "post" ? "/marketing/posts/$id" : "/marketing/emails/$id"} params={{ id: it.id }} className="block rounded border bg-background p-1 text-[11px] hover:border-primary" title={STATUS_LABEL[it.status] ?? it.status}>
-                  <span className="flex flex-wrap gap-0.5">{it.channels.map((c: string) => <ChannelChip key={c} c={c} />)}</span>
-                  <span className="mt-0.5 block truncate">{new Date(it.at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} {it.title}</span>
-                  <span className="block text-muted-foreground">{STATUS_LABEL[it.status] ?? it.status}</span>
-                </Link>))}</div>
+                <div key={it.kind + it.id} className="rounded border bg-background p-1 text-[11px] hover:border-primary">
+                  <Link to={it.kind === "post" ? "/marketing/posts/$id" : "/marketing/emails/$id"} params={{ id: it.id }} className="block" title={STATUS_LABEL[it.status] ?? it.status}>
+                    <span className="flex flex-wrap items-center gap-0.5">{it.channels.map((c: string) => <ChannelChip key={c} c={c} />)}{it.source === "clickup" && <span className="rounded bg-muted px-1 text-[9px] text-muted-foreground">ClickUp</span>}</span>
+                    <span className="mt-0.5 block truncate">{new Date(it.at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} {it.title}</span>
+                    <span className="block text-muted-foreground">{STATUS_LABEL[it.status] ?? it.status}</span>
+                  </Link>
+                  <ItemActions it={it} busy={busy === it.id} run={run} />
+                </div>))}</div>
             </div>
           );
         })}
