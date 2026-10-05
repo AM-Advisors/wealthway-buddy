@@ -83,16 +83,15 @@ function HubspotCard() {
     <Card>
       <CardHeader>
         <CardTitle>HubSpot</CardTitle>
-        <CardDescription>Each person connects their own HubSpot login. Harmonious only reads from HubSpot — it never changes anything there.</CardDescription>
+        <CardDescription>Harmonious reads from HubSpot — it never changes anything there. Your Harmonious portal connection covers everyone; each person can also connect their own HubSpot login if they want their own view.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {s && !s.configured && <p className="text-sm text-muted-foreground">HubSpot setup isn't finished for this app yet. Once it is, the Connect button will work.</p>}
         <div className="flex flex-wrap items-center gap-2">
           {needsReconnect && <p className="w-full text-sm text-destructive">Your HubSpot access needs to be renewed.</p>}
-          {!s?.connected || needsReconnect
-            ? <Button onClick={connect} disabled={busy || !s?.configured}>{needsReconnect ? "Reconnect HubSpot" : "Connect HubSpot"}</Button>
-            : <><span className="text-sm font-medium">Connected</span>
-              <Button variant="outline" size="sm" disabled={busy} onClick={async () => { await disconnect({}); await qc.invalidateQueries({ queryKey: ["hs-status"] }); toast.success("HubSpot disconnected."); }}>Disconnect</Button></>}
+          {s?.connected
+            ? <><span className="text-sm font-medium">Connected{s?.shared && !s?.personal ? " via the Harmonious portal connection" : ""}</span>
+              {s?.personal && <Button variant="outline" size="sm" disabled={busy} onClick={async () => { await disconnect({}); await qc.invalidateQueries({ queryKey: ["hs-status"] }); toast.success("Your HubSpot connection was removed."); }}>Disconnect mine</Button></>}
+            : <Button onClick={connect} disabled={busy}>{needsReconnect ? "Reconnect HubSpot" : "Connect HubSpot"}</Button>}
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {PARTS.map((p) => (
