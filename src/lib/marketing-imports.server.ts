@@ -156,11 +156,13 @@ export async function syncDueClickup() {
   return { synced };
 }
 
-/* ---------------- HubSpot (each user's own connection) ---------------- */
+/* ---------------- HubSpot (per-user connection, else the shared portal connection) ---------------- */
 class Reconnect extends Error {}
-async function hsGet(key: string, path: string) {
-  const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: HUBSPOT_CONNECTOR_ID, path, requiredScopes: HUBSPOT_SCOPES });
-  if (await appUserReconnectRequired(res)) throw new Reconnect("Your HubSpot access needs to be renewed.");
+async function hsGet(key: string | null, path: string) {
+  const res = key
+    ? await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: HUBSPOT_CONNECTOR_ID, path, requiredScopes: HUBSPOT_SCOPES })
+    : await hsSharedGet(path);
+  if (key && await appUserReconnectRequired(res)) throw new Reconnect("Your HubSpot access needs to be renewed.");
   if (!res.ok) {
     const body = await res.text();
     console.error(`HubSpot request failed [${res.status}]: ${body}`);
@@ -168,7 +170,16 @@ async function hsGet(key: string, path: string) {
   }
   return res.json() as Promise<any>;
 }
-async function* pages(key: string, mk: (after?: string) => string, max = 50) {
+async function hsSharedGet(path: string) {
+  const lov = process.env["LOVABLE_API_KEY"];
+  const hsKey = process.env["HUBSPOT_API_KEY"];
+  if (!lov || !hsKey) throw new Error("HubSpot isn't connected — connect HubSpot on the Imports page first.");
+  return fetch(`${GATEWAY_BASE_URL}/${HUBSPOT_CONNECTOR_ID}${path.startsWith("/") ? path : `/${path}`}`, {
+    headers: { Authorization: `Bearer ${lov}`, "X-Connection-Api-Key": hsKey },
+  });
+}
+export function hubspotSharedConfigured() { return !!process.env["HUBSPOT_API_KEY"]; }
+async function* pages(key: string | null, mk: (after?: string) => string, max = 50) {
   let after: string | undefined;
   for (let i = 0; i < max; i++) {
     const j = await hsGet(key, mk(after));
