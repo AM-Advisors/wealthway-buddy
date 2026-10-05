@@ -42,6 +42,7 @@ function ItemActions({ it, busy, run }: { it: any; busy: boolean; run: (it: any,
         <button className={`${btn} hover:bg-muted`} disabled={busy} onClick={() => run(it, "submit")}>Submit</button>
       </div>
     );
+  if (it.status === "submitted" && it.canApprove)
     return (
       <div className="mt-1 flex flex-wrap gap-1">
         <button className={`${btn} border-primary bg-primary text-primary-foreground`} disabled={busy} onClick={() => run(it, "approve")}>Approve & send</button>
