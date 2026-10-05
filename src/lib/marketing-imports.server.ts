@@ -68,6 +68,17 @@ function classify(task: any) {
   return { isEmail: isEmail && !channels.length, channels: [...channels] };
 }
 
+/** Every ClickUp task also becomes a Sales contact (one per task, keyed on the task id). Only name/email/tags are refreshed; consent and ownership are never overwritten. */
+async function upsertClickupContact(db: any, t: any, body: string, actorId: string, r: any) {
+  const email = (body.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? null)?.toLowerCase() ?? null;
+  const tags = ["clickup", ...((t.tags ?? []) as any[]).map((x) => String(x.name).toLowerCase())].slice(0, 20);
+  const fields = { full_name: String(t.name).slice(0, 200), tags, updated_at: new Date().toISOString(), ...(email ? { email } : {}) };
+  const { data: ex } = await db.from("crm_contacts").select("id").eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
+  if (ex) { await db.from("crm_contacts").update(fields).eq("id", ex.id); return; }
+  const { error } = await db.from("crm_contacts").insert({ ...fields, scope: "harmonious", owner_user_id: actorId, created_by: actorId, source: "ClickUp", consent: "unknown", external_source: "clickup", external_id: String(t.id) });
+  if (!error) r.contacts = (r.contacts ?? 0) + 1; else console.error("clickup contact", t.id, error.message);
+}
+
 async function importClickupSource(db: any, src: any, actorId: string) {
   const listIds = src.kind === "list" ? [src.ref_id] : (await listsInSpace(src.ref_id)).map((l) => l.id);
   const r = { tasks: 0, created: 0, updated: 0, skipped: 0 };
@@ -79,6 +90,7 @@ async function importClickupSource(db: any, src: any, actorId: string) {
         const at = t.due_date ? new Date(Number(t.due_date)).toISOString() : t.start_date ? new Date(Number(t.start_date)).toISOString() : null;
         const body = String(t.text_content ?? t.description ?? "").slice(0, 60000);
         const { isEmail, channels } = classify(t);
+        await upsertClickupContact(db, t, body, actorId, r);
         const table = isEmail ? "marketing_emails" : "marketing_posts";
         const { data: existing } = await db.from(table).select("id, status").eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
         if (existing && existing.status !== "draft") { r.skipped++; continue; }
