@@ -33,12 +33,9 @@ async function roles(userId: string) {
   const { data } = await db.from("user_roles").select("role").eq("user_id", userId);
   return ((data ?? []) as any[]).map((r) => String(r.role));
 }
-async function requireViewer(userId: string) {
-  const db = await admin();
-  const { data } = await db.rpc("is_any_staff_user", { _user_id: userId }).then((r: any) => r, () => ({ data: null }));
-  const r = await roles(userId);
-  if (data !== true && !r.some((x) => [...MANAGERS, "leadership", "finance", "account_manager"].includes(x)) && !r.length) throw new Error("Forbidden: Harmonious staff only.");
-  if (!r.length) throw new Error("Forbidden: Harmonious staff only.");
+async function requireViewer(context: any) {
+  const { requireStaff } = await import("@/lib/fund-integrity.server");
+  await requireStaff(context);
 }
 async function requireManager(userId: string) {
   if (!(await roles(userId)).some((r) => MANAGERS.includes(r))) throw new Error("Only Super Admins and Operations leads can import or resolve HubSpot tickets.");
@@ -141,8 +138,9 @@ export async function importOpsTickets(userId: string) {
   return r;
 }
 
-export async function listOpsTickets(userId: string) {
-  await requireViewer(userId);
+export async function listOpsTickets(context: any) {
+  await requireViewer(context);
+  const userId = context.userId as string;
   const db = await admin();
   const { data } = await db.from("hubspot_ops_tickets").select("*").order("stage_order", { ascending: true, nullsFirst: false }).order("hubspot_updated_at", { ascending: false }).limit(3000);
   const rows = (data ?? []) as any[];
