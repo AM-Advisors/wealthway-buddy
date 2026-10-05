@@ -279,7 +279,7 @@ export async function actOnFollowUp(userId: string, d: { enrollmentId: string; a
 }
 
 /* ---------------- Engagement ---------------- */
-type Ev = { recipient: string; kind: string; ip_hash: string | null; user_agent: string | null; occurred_at: string; email_id: string | null; flow_send_id: string | null; url: string | null };
+type Ev = { recipient: string; kind: string; ip_hash: string | null; user_agent: string | null; occurred_at: string; email_id: string | null; flow_send_id: string | null; sales_document_id?: string | null; url: string | null };
 const fp = (e: Ev) => PROXY_UA.test(e.user_agent ?? "") ? "proxy" : `${e.ip_hash ?? "?"}|${(e.user_agent ?? "").slice(0, 60)}`;
 
 /** Per message+recipient: more than one distinct non-proxy device/location ⇒ "likely forwarded" (estimate). */
@@ -319,7 +319,7 @@ export async function marketingEngagement(userId: string) {
   const byDay: Record<string, { opens: number; clicks: number }> = {};
   for (const e of E) { const d = e.occurred_at.slice(0, 10); byDay[d] ??= { opens: 0, clicks: 0 }; byDay[d][e.kind === "open" ? "opens" : "clicks"]++; }
   const links: Record<string, number> = {};
-  for (const e of E) if (e.kind === "click" && e.url) links[e.url] = (links[e.url] ?? 0) + 1;
+  for (const e of E) if (e.kind === "click" && e.url && !e.sales_document_id) links[e.url] = (links[e.url] ?? 0) + 1;
   const perEmail = ((emails ?? []) as any[]).map((m) => {
     const s = summarize(E.filter((e) => e.email_id === m.id));
     const sent = ((sends ?? []) as any[]).filter((x) => x.email_id === m.id).length;

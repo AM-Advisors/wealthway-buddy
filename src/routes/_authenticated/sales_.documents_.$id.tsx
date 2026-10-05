@@ -182,6 +182,17 @@ function Editor() {
             )}
           </Panel>
 
+          {doc.sent_at && (
+            <Panel title="Prospect engagement">
+              <p className="text-sm">{d.engagement.opens > 0 || d.engagement.clicks > 0 ? "Read" : "Not opened yet"}</p>
+              <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                <li>Opens: {d.engagement.opens} · Clicks on View: {d.engagement.clicks}</li>
+                {d.engagement.firstOpenedAt && <li>First opened {new Date(d.engagement.firstOpenedAt).toLocaleString()}</li>}
+                {d.engagement.lastActivityAt && <li>Last activity {new Date(d.engagement.lastActivityAt).toLocaleString()}</li>}
+                {d.engagement.devices > 1 && <li>Seen on {d.engagement.devices} devices/locations (likely forwarded - estimate)</li>}
+              </ul>
+            </Panel>
+          )}
           <Panel title="History">
             <ul className="max-h-80 space-y-1 overflow-auto text-xs">
               {d.events.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> {e.byName}: {e.event.replace(/_/g, " ")}</li>)}
