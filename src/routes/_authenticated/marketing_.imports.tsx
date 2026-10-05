@@ -88,10 +88,11 @@ function HubspotCard() {
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           {needsReconnect && <p className="w-full text-sm text-destructive">Your HubSpot access needs to be renewed.</p>}
-          {s?.connected
-            ? <><span className="text-sm font-medium">Connected{s?.shared && !s?.personal ? " via the Harmonious portal connection" : ""}</span>
-              {s?.personal && <Button variant="outline" size="sm" disabled={busy} onClick={async () => { await disconnect({}); await qc.invalidateQueries({ queryKey: ["hs-status"] }); toast.success("Your HubSpot connection was removed."); }}>Disconnect mine</Button></>}
-            : <Button onClick={connect} disabled={busy}>{needsReconnect ? "Reconnect HubSpot" : "Connect HubSpot"}</Button>}
+          {s?.connected && <>
+            <span className="text-sm font-medium">Connected{s?.shared && !s?.personal ? " via the Harmonious portal connection" : ""}</span>
+            {s?.personal && <Button variant="outline" size="sm" disabled={busy} onClick={async () => { await disconnect({}); await qc.invalidateQueries({ queryKey: ["hs-status"] }); toast.success("Your HubSpot connection was removed."); }}>Disconnect mine</Button>}
+          </>}
+          {!s?.connected && <Button onClick={connect} disabled={busy}>{needsReconnect ? "Reconnect HubSpot" : "Connect HubSpot"}</Button>}
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {PARTS.map((p) => (
