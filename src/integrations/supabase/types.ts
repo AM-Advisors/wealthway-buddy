@@ -32461,6 +32461,207 @@ export type Database = {
           },
         ]
       }
+      sales_document_assist_requests: {
+        Row: {
+          assignee_user_id: string | null
+          created_at: string
+          document_id: string
+          due_date: string | null
+          id: string
+          note: string
+          requested_by: string
+          return_note: string | null
+          sections: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_user_id?: string | null
+          created_at?: string
+          document_id: string
+          due_date?: string | null
+          id?: string
+          note: string
+          requested_by: string
+          return_note?: string | null
+          sections?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_user_id?: string | null
+          created_at?: string
+          document_id?: string
+          due_date?: string | null
+          id?: string
+          note?: string
+          requested_by?: string
+          return_note?: string | null
+          sections?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_document_assist_requests_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "sales_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_document_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          detail: Json
+          document_id: string
+          event: string
+          id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          detail?: Json
+          document_id: string
+          event: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          detail?: Json
+          document_id?: string
+          event?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_document_events_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "sales_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_document_versions: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_id: string
+          id: string
+          sections: Json
+          source: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          document_id: string
+          id?: string
+          sections: Json
+          source?: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          id?: string
+          sections?: Json
+          source?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "sales_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_documents: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approved_version: number | null
+          client_id: string | null
+          contact_id: string | null
+          created_at: string
+          current_version: number
+          deal_id: string | null
+          direction: string
+          due_date: string | null
+          id: string
+          kind: string
+          owner_user_id: string
+          quote_id: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          sent_at: string | null
+          source_file_name: string | null
+          source_path: string | null
+          source_text: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_version?: number | null
+          client_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          current_version?: number
+          deal_id?: string | null
+          direction: string
+          due_date?: string | null
+          id?: string
+          kind: string
+          owner_user_id: string
+          quote_id?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          source_file_name?: string | null
+          source_path?: string | null
+          source_text?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_version?: number | null
+          client_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          current_version?: number
+          deal_id?: string | null
+          direction?: string
+          due_date?: string | null
+          id?: string
+          kind?: string
+          owner_user_id?: string
+          quote_id?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          source_file_name?: string | null
+          source_path?: string | null
+          source_text?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sales_outreach: {
         Row: {
           body: string | null
