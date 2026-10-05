@@ -1051,6 +1051,13 @@
       "when": 1791224338230,
       "tag": "0149_sales_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 150,
+      "version": "7",
+      "when": 1791225415916,
+      "tag": "0150_proposal_email_tracking",
+      "breakpoints": true
     }
   ]
 }
