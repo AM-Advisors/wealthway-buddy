@@ -406,8 +406,8 @@ export async function dashboard(userId: string) {
   // ClickUp content flow: Write → Approve → Send → Track, per imported task.
   const cuP = P.filter((p) => p.external_source === "clickup"), cuE = E.filter((e) => e.external_source === "clickup");
   const stage = (s: string) => (s === "draft" || s === "rejected" ? "write" : s === "submitted" ? "approve" : s === "approved" || s === "scheduled" ? "send" : s === "published" || s === "sent" ? "live" : s === "failed" ? "failed" : "other");
-  const flowCounts = { write: 0, approve: 0, send: 0, live: 0, failed: 0 } as Record<string, number>;
-  for (const x of [...cuP, ...cuE]) { const k = stage(x.status); if (k in flowCounts) flowCounts[k]! += 1; }
+  const flowCounts: { write: number; approve: number; send: number; live: number; failed: number } = { write: 0, approve: 0, send: 0, live: 0, failed: 0 };
+  for (const x of [...cuP, ...cuE]) { const k = stage(x.status); if (k in flowCounts) flowCounts[k as keyof typeof flowCounts] += 1; }
   const liveEmails = cuE.filter((e) => e.status === "sent").sort((a, b) => (b.sent_at ?? "").localeCompare(a.sent_at ?? "")).slice(0, 25);
   const ids = liveEmails.map((e) => e.id);
   const engagement = new Map<string, { opens: number; clicks: number; readers: Set<string> }>();

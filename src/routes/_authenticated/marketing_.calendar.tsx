@@ -26,7 +26,7 @@ function FlowSteps({ status }: { status: string }) {
   const at = stepOf(status);
   if (at < 0) return null;
   return (
-    <div className="mt-1 flex gap-0.5" title={`Step ${at + 1} of 4: ${STEPS[at]}`}>
+    <div className="mt-1 flex gap-0.5" title={`Step ${at + 1} of 4: ${(STEPS as readonly string[])[at]}`}>
       {STEPS.map((s, i) => <span key={s} className={`h-1 flex-1 rounded ${i <= at ? "bg-primary" : "bg-muted"}`} />)}
     </div>
   );
