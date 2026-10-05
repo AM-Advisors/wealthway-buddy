@@ -79,9 +79,35 @@ async function upsertClickupContact(db: any, t: any, body: string, actorId: stri
   if (!error) r.contacts = (r.contacts ?? 0) + 1; else console.error("clickup contact", t.id, error.message);
 }
 
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const CAMPAIGN_COLORS = ["#5DC6D1", "#142647", "#E8A33D", "#7B61FF", "#3FA36B", "#D9534F"];
+
+// One auto campaign per ClickUp due-date month, found again by its notes marker.
+async function clickupCampaignFor(db: any, at: string | null, actorId: string, cache: Map<string, string | null>) {
+  if (!at) return null;
+  const d = new Date(at);
+  const y = d.getUTCFullYear(), m = d.getUTCMonth();
+  const key = `${y}-${String(m + 1).padStart(2, "0")}`;
+  if (cache.has(key)) return cache.get(key)!;
+  const marker = `clickup:auto:${key}`;
+  const { data: ex } = await db.from("marketing_campaigns").select("id").eq("notes", marker).maybeSingle();
+  let id: string | null = ex?.id ?? null;
+  if (!id) {
+    const last = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0, 10);
+    const { data: ins } = await db.from("marketing_campaigns").insert({
+      name: `ClickUp content — ${MONTHS[m]} ${y}`, theme: "Content calendar", goal: "Imported from the ClickUp Content Calendar",
+      starts_on: `${key}-01`, ends_on: last, color: CAMPAIGN_COLORS[m % CAMPAIGN_COLORS.length], notes: marker, created_by: actorId,
+    }).select("id").single();
+    id = ins?.id ?? null;
+  }
+  cache.set(key, id);
+  return id;
+}
+
 async function importClickupSource(db: any, src: any, actorId: string) {
   const listIds = src.kind === "list" ? [src.ref_id] : (await listsInSpace(src.ref_id)).map((l) => l.id);
   const r = { tasks: 0, created: 0, updated: 0, skipped: 0, contacts: 0 };
+  const campaigns = new Map<string, string | null>();
   for (const listId of listIds) {
     for (let page = 0; page < 20; page++) {
       const { tasks, last_page } = await cu(`/list/${listId}/task?page=${page}&include_closed=true&subtasks=false`);
@@ -92,11 +118,12 @@ async function importClickupSource(db: any, src: any, actorId: string) {
         const { isEmail, channels } = classify(t);
         await upsertClickupContact(db, t, body, actorId, r);
         const table = isEmail ? "marketing_emails" : "marketing_posts";
-        const { data: existing } = await db.from(table).select("id, status").eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
+        const { data: existing } = await db.from(table).select("id, status, campaign_id").eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
         if (existing && existing.status !== "draft") { r.skipped++; continue; }
+        const campaign_id = existing?.campaign_id ?? (await clickupCampaignFor(db, at, actorId, campaigns));
         const row = isEmail
-          ? { name: String(t.name).slice(0, 200), subject: String(t.name).slice(0, 200), blocks: body ? [{ type: "text", text: body }] : [], scheduled_at: at }
-          : { title: String(t.name).slice(0, 200), body, channels, scheduled_at: at };
+          ? { name: String(t.name).slice(0, 200), subject: String(t.name).slice(0, 200), blocks: body ? [{ type: "text", text: body }] : [], scheduled_at: at, campaign_id }
+          : { title: String(t.name).slice(0, 200), body, channels, scheduled_at: at, campaign_id };
         if (existing) {
           await db.from(table).update({ ...row, external_url: t.url ?? null, updated_at: new Date().toISOString() }).eq("id", existing.id);
           r.updated++;
