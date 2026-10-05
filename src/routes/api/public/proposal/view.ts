@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/public/proposal/view")({
           const { renderPdf } = await import("@/lib/sales-documents-render.server");
           const bytes = await renderPdf(doc, ver.sections ?? [], false);
           const name = String(doc.title).replace(/[^\w -]/g, "").trim() || "document";
-          return new Response(bytes, { status: 200, headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${name}.pdf"`, "Cache-Control": "private, no-store" } });
+          return new Response(bytes as unknown as BodyInit, { status: 200, headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${name}.pdf"`, "Cache-Control": "private, no-store" } });
         } catch (e) {
           console.error("proposal view failed", e);
           return notFound();
