@@ -19,12 +19,29 @@ const startOfWeek = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0)
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 type Action = "submit" | "approve" | "reject";
 
+const STEPS = ["Write", "Approve", "Send", "Live"] as const;
+const stepOf = (s: string) => (s === "draft" || s === "rejected" ? 0 : s === "submitted" ? 1 : s === "approved" || s === "scheduled" ? 2 : s === "published" || s === "sent" ? 3 : -1);
+/** Write → Approve → Send → Live progress for a calendar item. */
+function FlowSteps({ status }: { status: string }) {
+  const at = stepOf(status);
+  if (at < 0) return null;
+  return (
+    <div className="mt-1 flex gap-0.5" title={`Step ${at + 1} of 4: ${STEPS[at]}`}>
+      {STEPS.map((s, i) => <span key={s} className={`h-1 flex-1 rounded ${i <= at ? "bg-primary" : "bg-muted"}`} />)}
+    </div>
+  );
+}
+
 /** Quick approval actions on a calendar item. The server enforces roles and author ≠ approver. */
 function ItemActions({ it, busy, run }: { it: any; busy: boolean; run: (it: any, a: Action) => void }) {
   const btn = "rounded border px-1 py-0.5 text-[10px] font-medium disabled:opacity-50";
   if (it.status === "draft" || it.status === "rejected")
-    return <div className="mt-1 flex gap-1"><button className={`${btn} hover:bg-muted`} disabled={busy} onClick={() => run(it, "submit")}>Submit</button></div>;
-  if (it.status === "submitted" && it.canApprove)
+    return (
+      <div className="mt-1 flex gap-1">
+        <Link to={it.kind === "post" ? "/marketing/posts/$id" : "/marketing/emails/$id"} params={{ id: it.id }} className={`${btn} hover:bg-muted`}>Write</Link>
+        <button className={`${btn} hover:bg-muted`} disabled={busy} onClick={() => run(it, "submit")}>Submit</button>
+      </div>
+    );
     return (
       <div className="mt-1 flex flex-wrap gap-1">
         <button className={`${btn} border-primary bg-primary text-primary-foreground`} disabled={busy} onClick={() => run(it, "approve")}>Approve & send</button>

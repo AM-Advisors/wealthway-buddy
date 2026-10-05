@@ -386,8 +386,8 @@ export async function dashboard(userId: string) {
   const { db, canApprove } = await requireMarketing(userId);
   const now = new Date(), week = new Date(Date.now() + 7 * 864e5).toISOString(), month = new Date(Date.now() - 30 * 864e5).toISOString();
   const [posts, emails, sends] = await Promise.all([
-    db.from("marketing_posts").select("id, title, status, channels, scheduled_at, published_at, author_id").limit(2000),
-    db.from("marketing_emails").select("id, name, status, scheduled_at, sent_at, author_id").limit(2000),
+    db.from("marketing_posts").select("id, title, status, channels, scheduled_at, published_at, author_id, external_source").limit(2000),
+    db.from("marketing_emails").select("id, name, status, scheduled_at, sent_at, author_id, external_source").limit(2000),
     db.from("marketing_email_sends").select("status").gte("created_at", month).limit(50000),
   ]);
   const P = (posts.data ?? []) as any[], E = (emails.data ?? []) as any[], S = (sends.data ?? []) as any[];
@@ -402,6 +402,33 @@ export async function dashboard(userId: string) {
   ];
   const byChannel: Record<string, number> = { LinkedIn: 0, Facebook: 0, Instagram: 0 };
   for (const p of P.filter((p) => p.status === "published" && p.published_at >= month)) for (const c of p.channels) byChannel[c === "linkedin" ? "LinkedIn" : c === "facebook" ? "Facebook" : "Instagram"]! += 1;
+
+  // ClickUp content flow: Write → Approve → Send → Track, per imported task.
+  const cuP = P.filter((p) => p.external_source === "clickup"), cuE = E.filter((e) => e.external_source === "clickup");
+  const stage = (s: string) => (s === "draft" || s === "rejected" ? "write" : s === "submitted" ? "approve" : s === "approved" || s === "scheduled" ? "send" : s === "published" || s === "sent" ? "live" : s === "failed" ? "failed" : "other");
+  const flowCounts = { write: 0, approve: 0, send: 0, live: 0, failed: 0 } as Record<string, number>;
+  for (const x of [...cuP, ...cuE]) { const k = stage(x.status); if (k in flowCounts) flowCounts[k]! += 1; }
+  const liveEmails = cuE.filter((e) => e.status === "sent").sort((a, b) => (b.sent_at ?? "").localeCompare(a.sent_at ?? "")).slice(0, 25);
+  const ids = liveEmails.map((e) => e.id);
+  const engagement = new Map<string, { opens: number; clicks: number; readers: Set<string> }>();
+  const sentCount = new Map<string, number>();
+  if (ids.length) {
+    const [ev, sd] = await Promise.all([
+      db.from("marketing_email_events").select("email_id, kind, recipient").in("email_id", ids).limit(50000),
+      db.from("marketing_email_sends").select("email_id, status").in("email_id", ids).eq("status", "sent").limit(50000),
+    ]);
+    for (const r of (ev.data ?? []) as any[]) {
+      const m = engagement.get(r.email_id) ?? { opens: 0, clicks: 0, readers: new Set<string>() };
+      if (r.kind === "open") m.opens++; else if (r.kind === "click") m.clicks++;
+      m.readers.add(r.recipient); engagement.set(r.email_id, m);
+    }
+    for (const r of (sd.data ?? []) as any[]) sentCount.set(r.email_id, (sentCount.get(r.email_id) ?? 0) + 1);
+  }
+  const clickupFlow = {
+    counts: flowCounts,
+    emails: liveEmails.map((e) => { const m = engagement.get(e.id); return { id: e.id, title: e.name, sentAt: e.sent_at, delivered: sentCount.get(e.id) ?? 0, opens: m?.opens ?? 0, clicks: m?.clicks ?? 0, readers: m?.readers.size ?? 0 }; }),
+    posts: cuP.filter((p) => p.status === "published").sort((a, b) => (b.published_at ?? "").localeCompare(a.published_at ?? "")).slice(0, 25).map((p) => ({ id: p.id, title: p.title, at: p.published_at, channels: p.channels as string[] })),
+  };
   return {
     canApprove,
     now: now.toISOString(),
@@ -413,7 +440,7 @@ export async function dashboard(userId: string) {
       unsubscribes30: unsubs ?? 0,
       failed: P.filter((p) => p.status === "failed").length + E.filter((e) => e.status === "failed").length,
     },
-    upcoming, waiting,
+    upcoming, waiting, clickupFlow,
     byChannel: Object.entries(byChannel).map(([name, value]) => ({ name, value })),
   };
 }
