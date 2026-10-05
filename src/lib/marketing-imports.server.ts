@@ -156,11 +156,13 @@ export async function syncDueClickup() {
   return { synced };
 }
 
-/* ---------------- HubSpot (each user's own connection) ---------------- */
+/* ---------------- HubSpot (per-user connection, else the shared portal connection) ---------------- */
 class Reconnect extends Error {}
-async function hsGet(key: string, path: string) {
-  const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: HUBSPOT_CONNECTOR_ID, path, requiredScopes: HUBSPOT_SCOPES });
-  if (await appUserReconnectRequired(res)) throw new Reconnect("Your HubSpot access needs to be renewed.");
+async function hsGet(key: string | null, path: string) {
+  const res = key
+    ? await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: HUBSPOT_CONNECTOR_ID, path, requiredScopes: HUBSPOT_SCOPES })
+    : await hsSharedGet(path);
+  if (key && await appUserReconnectRequired(res)) throw new Reconnect("Your HubSpot access needs to be renewed.");
   if (!res.ok) {
     const body = await res.text();
     console.error(`HubSpot request failed [${res.status}]: ${body}`);
@@ -168,7 +170,16 @@ async function hsGet(key: string, path: string) {
   }
   return res.json() as Promise<any>;
 }
-async function* pages(key: string, mk: (after?: string) => string, max = 50) {
+async function hsSharedGet(path: string) {
+  const lov = process.env["LOVABLE_API_KEY"];
+  const hsKey = process.env["HUBSPOT_API_KEY"];
+  if (!lov || !hsKey) throw new Error("HubSpot isn't connected — connect HubSpot on the Imports page first.");
+  return fetch(`${GATEWAY_BASE_URL}/${HUBSPOT_CONNECTOR_ID}${path.startsWith("/") ? path : `/${path}`}`, {
+    headers: { Authorization: `Bearer ${lov}`, "X-Connection-Api-Key": hsKey },
+  });
+}
+export function hubspotSharedConfigured() { return !!process.env["HUBSPOT_API_KEY"]; }
+async function* pages(key: string | null, mk: (after?: string) => string, max = 50) {
   let after: string | undefined;
   for (let i = 0; i < max; i++) {
     const j = await hsGet(key, mk(after));
@@ -181,17 +192,18 @@ async function* pages(key: string, mk: (after?: string) => string, max = 50) {
 export async function hubspotStatus(userId: string) {
   await requireMarketing(userId);
   const key = await getConnectionKeyForUser(userId, HUBSPOT_CONNECTOR_ID);
+  const shared = hubspotSharedConfigured();
   const db = await admin();
   const { data: runs } = await db.from("import_runs").select("provider, result, created_at").order("created_at", { ascending: false }).limit(10);
-  return { connected: !!key, configured: !!process.env["HUBSPOT_APP_USER_CONNECTOR_CLIENT_API_KEY"], runs: runs ?? [] };
+  return { connected: !!key || shared, shared, personal: !!key, configured: !!process.env["HUBSPOT_APP_USER_CONNECTOR_CLIENT_API_KEY"] || shared, runs: runs ?? [] };
 }
 
 export type HubspotPart = "contacts" | "deals" | "email_history" | "marketing_emails";
 
 export async function importHubspot(userId: string, parts: HubspotPart[]) {
   const { db } = await requireMarketing(userId);
-  const key = await getConnectionKeyForUser(userId, HUBSPOT_CONNECTOR_ID);
-  if (!key) return { connected: false as const };
+  const key = await getConnectionKeyForUser(userId, HUBSPOT_CONNECTOR_ID) ?? null;
+  if (!key && !hubspotSharedConfigured()) return { connected: false as const };
   const result: Record<string, any> = {};
   try {
     const contactIdByHs = new Map<string, string>();
