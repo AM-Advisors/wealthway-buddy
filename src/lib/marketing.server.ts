@@ -369,14 +369,16 @@ export async function runDue() {
 
 /* ---------- Calendar & dashboard ---------- */
 export async function calendar(userId: string, from: string, to: string) {
-  const { db } = await requireMarketing(userId);
+  const { db, canApprove } = await requireMarketing(userId);
   const [{ data: posts }, { data: emails }] = await Promise.all([
-    db.from("marketing_posts").select("id, title, status, channels, scheduled_at, published_at, campaign_id").or(`and(scheduled_at.gte.${from},scheduled_at.lt.${to}),and(published_at.gte.${from},published_at.lt.${to})`),
-    db.from("marketing_emails").select("id, name, status, scheduled_at, sent_at, campaign_id").or(`and(scheduled_at.gte.${from},scheduled_at.lt.${to}),and(sent_at.gte.${from},sent_at.lt.${to})`),
+    db.from("marketing_posts").select("id, title, status, channels, scheduled_at, published_at, campaign_id, author_id, external_source").or(`and(scheduled_at.gte.${from},scheduled_at.lt.${to}),and(published_at.gte.${from},published_at.lt.${to})`),
+    db.from("marketing_emails").select("id, name, status, scheduled_at, sent_at, campaign_id, author_id, external_source").or(`and(scheduled_at.gte.${from},scheduled_at.lt.${to}),and(sent_at.gte.${from},sent_at.lt.${to})`),
   ]);
+  // Display hint only — decidePost/decideEmail re-check role and maker-checker server-side.
+  const mayApprove = (a: string | null) => !!canApprove && a !== userId;
   return [
-    ...((posts ?? []) as any[]).map((p) => ({ kind: "post" as const, id: p.id, title: p.title, status: p.status, channels: p.channels as string[], at: p.published_at ?? p.scheduled_at, campaignId: p.campaign_id as string | null })),
-    ...((emails ?? []) as any[]).map((e) => ({ kind: "email" as const, id: e.id, title: e.name, status: e.status, channels: ["email"], at: e.sent_at ?? e.scheduled_at, campaignId: e.campaign_id as string | null })),
+    ...((posts ?? []) as any[]).map((p) => ({ kind: "post" as const, id: p.id, title: p.title, status: p.status, channels: p.channels as string[], at: p.published_at ?? p.scheduled_at, campaignId: p.campaign_id as string | null, source: p.external_source as string | null, canApprove: mayApprove(p.author_id) })),
+    ...((emails ?? []) as any[]).map((e) => ({ kind: "email" as const, id: e.id, title: e.name, status: e.status, channels: ["email"], at: e.sent_at ?? e.scheduled_at, campaignId: e.campaign_id as string | null, source: e.external_source as string | null, canApprove: mayApprove(e.author_id) })),
   ].filter((x) => x.at);
 }
 
