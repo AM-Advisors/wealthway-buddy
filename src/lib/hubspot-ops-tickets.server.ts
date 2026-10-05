@@ -83,11 +83,11 @@ export async function importOpsTickets(userId: string) {
   try { let after: string | undefined; for (let i = 0; i < 10; i++) { const j = await hs(path.owners(after)); for (const o of j.results ?? []) owners.set(String(o.id), [o.firstName, o.lastName].filter(Boolean).join(" ") || o.email); after = j.paging?.next?.after; if (!after) break; } } catch (e) { console.warn("owners", e); }
 
   const [{ data: clients }, { data: funds }] = await Promise.all([
-    db.from("clients").select("id, legal_name, display_name").limit(5000),
+    db.from("clients").select("id, name, legal_name, dba_name").limit(5000),
     db.from("offerings").select("id,name,legal_entity_name").is("consolidated_into", null).limit(5000),
   ]);
   const clientByName = new Map<string, string>();
-  for (const c of (clients ?? []) as any[]) for (const n of [c.legal_name, c.display_name]) if (n) clientByName.set(norm(n), c.id);
+  for (const c of (clients ?? []) as any[]) for (const n of [c.name, c.legal_name, c.dba_name]) if (n) clientByName.set(norm(n), c.id);
   const fundRefs: FundRef[] = ((funds ?? []) as any[]).map((f) => ({ id: f.id, name: f.name, legalName: f.legal_entity_name }));
   const companyName = new Map<string, string>();
 
@@ -146,15 +146,15 @@ export async function listOpsTickets(context: any) {
   const rows = (data ?? []) as any[];
   const ids = [...new Set(rows.flatMap((r) => [r.client_id, r.offering_id]).filter(Boolean))];
   const [{ data: cs }, { data: fs }] = await Promise.all([
-    db.from("clients").select("id, legal_name").in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]),
+    db.from("clients").select("id, name").in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]),
     db.from("offerings").select("id, name").in("id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]),
   ]);
-  const cn = new Map(((cs ?? []) as any[]).map((c) => [c.id, c.legal_name]));
+  const cn = new Map(((cs ?? []) as any[]).map((c) => [c.id, c.name]));
   const fn = new Map(((fs ?? []) as any[]).map((f) => [f.id, f.name]));
   const canManage = (await roles(userId)).some((r) => MANAGERS.includes(r));
-  const { data: allClients } = canManage ? await db.from("clients").select("id, legal_name").order("legal_name").limit(2000) : { data: [] };
+  const { data: allClients } = canManage ? await db.from("clients").select("id, name").order("name").limit(2000) : { data: [] };
   return {
-    canManage, clients: (allClients ?? []) as { id: string; legal_name: string }[],
+    canManage, clients: (allClients ?? []) as { id: string; name: string }[],
     tickets: rows.map((r) => ({ ...r, client_name: r.client_id ? cn.get(r.client_id) ?? null : null, fund_name: r.offering_id ? fn.get(r.offering_id) ?? null : null })),
   };
 }
