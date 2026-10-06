@@ -1,10 +1,11 @@
+import { COPY_RULES, IMAGE_RULES } from "@/lib/marketing-brand";
 /** Marketing AI helpers (copy + images) through the Lovable AI gateway. Server-only. */
 const URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const TEXT_MODEL = "openai/gpt-6-astra";
 const IMAGE_MODEL = "google/gemini-3.1-flash-image";
 
-const VOICE = "You write for Harmonious (harmonious.co), a fund administration and back-office platform for venture funds, SPVs and their investors. Voice: clear, confident, warm, professional; no hype, no emojis unless asked, no guaranteed returns or investment advice, no specific performance claims. Never invent facts, clients, numbers or quotes.";
+const VOICE = "You write for Harmonious (harmonious.co), a fund administration and back-office platform for venture funds, SPVs and their investors. Voice: clear, confident, warm, professional; no hype, no emojis unless asked, no guaranteed returns or investment advice, no specific performance claims. Never invent facts, clients, numbers or quotes. " + COPY_RULES;
 
 function key() {
   const k = process.env["LOVABLE_API_KEY"];
@@ -53,7 +54,7 @@ export async function generateImage(prompt: string): Promise<{ base64: string; c
     body: JSON.stringify({
       model: IMAGE_MODEL,
       modalities: ["image", "text"],
-      messages: [{ role: "user", content: `Create a polished social media graphic for Harmonious, a fund administration company. Brand colors navy #142647, teal #5DC6D1, white. Clean, modern, professional, no text unless asked. ${prompt}` }],
+      messages: [{ role: "user", content: `Create a polished social media graphic for Harmonious, a fund administration company. ${IMAGE_RULES} No text unless asked. ${prompt}` }],
     }),
   });
   await check(res);

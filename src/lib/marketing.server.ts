@@ -106,6 +106,8 @@ export async function decidePost(userId: string, id: string, action: "submit" | 
     if (p.status !== "draft" && p.status !== "rejected") throw new Error("Only drafts can be submitted.");
     const probs = postProblems({ title: p.title, body: p.body, channels: p.channels, imageCount: (p.image_paths ?? []).length });
     if (probs.length) throw new Error(probs.join(" "));
+    const brand = (await import("@/lib/marketing-brand")).brandProblems(`${p.title}\n${p.body}`);
+    if (brand.length) throw new Error(brand.join(" "));
     const missing = await missingChannels(db, p.channels);
     if (missing.length) throw new Error(`Connect ${missing.join(", ")} on the Channels page first.`);
     await db.from("marketing_posts").update({ status: "submitted", updated_at: new Date().toISOString() }).eq("id", id);
