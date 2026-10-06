@@ -133,10 +133,41 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       const { bootstrapFundSetup } = await import("@/lib/fund-setup.server");
       const setup = await bootstrapFundSetup(context.userId, {
         offeringId, clientId: data.clientId, structure: prefill.structure,
-        legalFundName: prefill.legal_fund_name, displayName: prefill.display_name,
+        legalFundName: null, displayName: prefill.display_name,
       });
       const { structure: _s, ...rest } = prefill;
       await db.from("fund_setups").update(rest).eq("id", (setup as any).id);
+
+      // Enter once: fee terms the client typed go to the Fund's fee terms (same rules as the Team tab).
+      const pct = (v: string) => { const m = String(v ?? "").match(/-?\d+(?:\.\d+)?/); return m ? Number(m[0]) : null; };
+      const cls = (r.classes ?? []).filter((c) => c.name || c.fee || c.carry || c.hurdle);
+      const feePct = pct(r.management_fee) ?? (cls[0] ? pct(cls[0].fee) : null);
+      const carryPct = pct(r.carried_interest) ?? (cls[0] ? pct(cls[0].carry) : null);
+      const hurdlePct = pct(r.preferred_return) ?? (cls[0] ? pct(cls[0].hurdle) : null);
+      if (feePct != null || carryPct != null || hurdlePct != null) {
+        try {
+          const { setFees } = await import("@/lib/fund-tabs.server");
+          const notes = ["From the client's fund request.", ...cls.map((c) => `${c.name || "Class"}: fee ${c.fee || "-"}, carry ${c.carry || "-"}, hurdle ${c.hurdle || "-"}`)].join(" ");
+          await setFees(context.userId, offeringId, { managementFeePct: feePct, managementFeeBasis: "", carryPct, hurdlePct, notes });
+        } catch (e: any) { console.warn("Fee terms kept on request only:", e?.message); }
+      }
+
+      // Enter once: managers and signatory go onto the Fund's Team tab as unclaimed contacts.
+      const people = [
+        ...(r.managers ?? []).filter((p) => p.name?.trim()).map((p) => ({ ...p, role: "gp" })),
+        ...(r.signatory?.name?.trim() ? [{ ...r.signatory, role: "manager" }] : []),
+      ];
+      const seen = new Set<string>();
+      const rows = people.filter((p) => { const k = (p.email || p.name).trim().toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+        .map((p) => ({
+          offering_id: offeringId, full_name: p.name.trim(), email: p.email?.trim().toLowerCase() || null,
+          company: p.title?.trim() || null, team_role: p.role, permissions: ["view"], created_by: context.userId, added_as: "client_request",
+        }));
+      if (rows.length) {
+        const { error } = await db.from("fund_team_members").insert(rows as any);
+        if (error) console.warn("Team contacts kept on request only:", error.message);
+      }
+
       // SS-4 answers prefill EIN & SS-4 for Operations review; also kept on the request. Never filed.
       const { ss4For } = await import("@/lib/fund-request-model");
       const ss4 = ss4For(r);
@@ -144,7 +175,13 @@ export const submitFundRequest = createServerFn({ method: "POST" })
         const { error } = await context.supabase.rpc("save_offering_entity_details", {
           p_offering_id: offeringId, p_has_ein: false, p_ein: "", p_ss4: ss4 as any,
         });
-        if (error) console.warn("SS-4 prefill kept on request only:", error.message);
+        if (error) {
+          console.warn("SS-4 prefill kept on request only:", error.message);
+          await db.from("staff_tasks").insert({
+            title: `SS-4 answers not saved for ${r.fund_name}`, description: "The client's SS-4 answers are on the fund request. Copy them into EIN & SS-4.",
+            priority: "high", status: "open", created_by: context.userId, team: "operations", offering_id: offeringId, client_id: data.clientId,
+          } as any).then(() => undefined, () => undefined);
+        }
       }
     }
 

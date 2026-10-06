@@ -236,6 +236,10 @@ export async function bootstrapFundSetup(
   return setup;
 }
 
+function normalizeEntityType(v: string): string {
+  return v.includes("Series") ? "Series LLC" : v.includes("Master") ? "Master LLC" : v.includes("GP") ? "GP" : v.includes("LP") ? "LP" : v.includes("LLC") ? "LLC" : v;
+}
+
 export async function updateFundInformation(
   userId: string,
   setupId: string,
@@ -267,13 +271,24 @@ export async function updateFundInformation(
     "notes",
   ];
   const update: Record<string, unknown> = { updated_at: nowIso() };
-  for (const key of allowed) if (key in patch) update[key] = patch[key];
+  // Legal name is canonical on the Fund and changes only through changeLegalName.
+  for (const key of allowed) if (key in patch && key !== "legal_fund_name") update[key] = patch[key];
   const { data } = await db()
     .from("fund_setups")
     .update(update)
     .eq("id", setupId)
     .select("*")
     .single();
+  // Keep the Fund record (the single source other screens read) in step.
+  const mirror: Record<string, unknown> = {};
+  if ("domicile" in update) mirror["state_formed"] = update["domicile"] || null;
+  if ("target_size_cents" in update) mirror["target_raise_cents"] = update["target_size_cents"] ?? null;
+  if ("min_investment_cents" in update && update["min_investment_cents"] != null) mirror["min_investment_cents"] = update["min_investment_cents"];
+  if ("formation_date" in update) mirror["date_formed"] = update["formation_date"] || null;
+  if ("entity_type" in update && update["entity_type"]) mirror["entity_type"] = normalizeEntityType(String(update["entity_type"]));
+  if (Object.keys(mirror).length && (data as any)?.offering_id) {
+    await db().from("offerings").update(mirror).eq("id", (data as any).offering_id);
+  }
   await recordEvent({
     setupId,
     subjectTable: "fund_setups",

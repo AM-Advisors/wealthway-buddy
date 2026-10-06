@@ -239,7 +239,6 @@ export function setupPrefillFor(r: FundRequest) {
   return {
     structure: (kind?.structure ?? "other") as FundStructure,
     display_name: r.fund_name.trim() || null,
-    legal_fund_name: r.legal_name.trim() || null,
     domicile: r.jurisdiction || null,
     entity_type: r.vehicle_structure || null,
     formation_date: r.already_formed === "yes" && r.date_formed ? r.date_formed : null,
