@@ -91,6 +91,8 @@ import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/res
 import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
+import { Route as SolutionsFundOfFundsRouteImport } from './routes/solutions.fund-of-funds'
+import { Route as SolutionsSpvRouteImport } from './routes/solutions.spv'
 import { Route as UnsubscribeTokenRouteImport } from './routes/unsubscribe.$token'
 import { Route as AuthenticatedAccountManagerClientsRouteImport } from './routes/_authenticated/account-manager_.clients'
 import { Route as AuthenticatedAccountManagerHandoffsRouteImport } from './routes/_authenticated/account-manager_.handoffs'
@@ -378,6 +380,7 @@ import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/pa
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicProposalViewRouteImport } from './routes/api/public/proposal/view'
 import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
+import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -820,6 +823,16 @@ const SharesTokenRoute = SharesTokenRouteImport.update({
 const SolutionsIndexRoute = SolutionsIndexRouteImport.update({
   id: '/solutions/',
   path: '/solutions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsFundOfFundsRoute = SolutionsFundOfFundsRouteImport.update({
+  id: '/solutions/fund-of-funds',
+  path: '/solutions/fund-of-funds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsSpvRoute = SolutionsSpvRouteImport.update({
+  id: '/solutions/spv',
+  path: '/solutions/spv',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeTokenRoute = UnsubscribeTokenRouteImport.update({
@@ -2500,6 +2513,11 @@ const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
   path: '/api/public/security/revoke',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSlackEventsRoute = ApiPublicSlackEventsRouteImport.update({
+  id: '/api/public/slack/events',
+  path: '/api/public/slack/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksBoxSignRoute =
   ApiPublicWebhooksBoxSignRouteImport.update({
     id: '/api/public/webhooks/box-sign',
@@ -2704,6 +2722,8 @@ export interface FileRoutesByFullPath {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
+  '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
@@ -2984,6 +3004,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -3091,6 +3112,8 @@ export interface FileRoutesByTo {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
+  '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth': typeof AuthIndexRoute
   '/investor': typeof InvestorIndexRoute
@@ -3367,6 +3390,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -3480,6 +3504,8 @@ export interface FileRoutesById {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
+  '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
@@ -3760,6 +3786,7 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -3873,6 +3900,8 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/solutions/fund-of-funds'
+    | '/solutions/spv'
     | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
@@ -4153,6 +4182,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -4260,6 +4290,8 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/solutions/fund-of-funds'
+    | '/solutions/spv'
     | '/unsubscribe/$token'
     | '/auth'
     | '/investor'
@@ -4536,6 +4568,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -4648,6 +4681,8 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/solutions/fund-of-funds'
+    | '/solutions/spv'
     | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
@@ -4928,6 +4963,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -4997,6 +5033,8 @@ export interface RootRouteChildren {
   ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
   ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  SolutionsFundOfFundsRoute: typeof SolutionsFundOfFundsRoute
+  SolutionsSpvRoute: typeof SolutionsSpvRoute
   UnsubscribeTokenRoute: typeof UnsubscribeTokenRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   SolutionsIndexRoute: typeof SolutionsIndexRoute
@@ -5022,6 +5060,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicProposalViewRoute: typeof ApiPublicProposalViewRoute
   ApiPublicSecurityRevokeRoute: typeof ApiPublicSecurityRevokeRoute
+  ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -5601,6 +5640,20 @@ declare module '@tanstack/react-router' {
       path: '/solutions'
       fullPath: '/solutions/'
       preLoaderRoute: typeof SolutionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/fund-of-funds': {
+      id: '/solutions/fund-of-funds'
+      path: '/solutions/fund-of-funds'
+      fullPath: '/solutions/fund-of-funds'
+      preLoaderRoute: typeof SolutionsFundOfFundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/spv': {
+      id: '/solutions/spv'
+      path: '/solutions/spv'
+      fullPath: '/solutions/spv'
+      preLoaderRoute: typeof SolutionsSpvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe/$token': {
@@ -7612,6 +7665,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSecurityRevokeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/slack/events': {
+      id: '/api/public/slack/events'
+      path: '/api/public/slack/events'
+      fullPath: '/api/public/slack/events'
+      preLoaderRoute: typeof ApiPublicSlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/box-sign': {
       id: '/api/public/webhooks/box-sign'
       path: '/api/public/webhooks/box-sign'
@@ -8651,6 +8711,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
   ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,
   SharesTokenRoute: SharesTokenRoute,
+  SolutionsFundOfFundsRoute: SolutionsFundOfFundsRoute,
+  SolutionsSpvRoute: SolutionsSpvRoute,
   UnsubscribeTokenRoute: UnsubscribeTokenRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   SolutionsIndexRoute: SolutionsIndexRoute,
@@ -8676,6 +8738,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicProposalViewRoute: ApiPublicProposalViewRoute,
   ApiPublicSecurityRevokeRoute: ApiPublicSecurityRevokeRoute,
+  ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
