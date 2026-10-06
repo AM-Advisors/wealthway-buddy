@@ -27,6 +27,8 @@ export const Route = createFileRoute("/solutions/")({
 const SOLUTIONS = [
   { to: "/fund-administration", title: "Fund administration", body: "Fund setup, investor onboarding, capital activity, financial statements and reviewed investor reporting." },
   { to: "/spvs", title: "SPV administration", body: "Stand up an SPV, onboard its investors, collect signatures and track funding against the bank." },
+  { to: "/solutions/spv", title: "SPV lifecycle guide", body: "The three-tier SPV capital flow, six core services and why managers run SPVs on Harmonious. Downloadable guide and collateral." },
+  { to: "/solutions/fund-of-funds", title: "Fund of Funds administration", body: "Three-tier operating model, look-through accounting, capital calls and K-1 aggregation. Downloadable guide." },
   { to: "/cap-table", title: "Cap table management", body: "Shares, classes, certificates and holder access, with corrections kept as a clear history." },
   { to: "/platform", title: "Investor onboarding", body: "About you, identity verification, signing and funding in four clear steps, with a separate investing profile for each entity." },
 ] as const;
