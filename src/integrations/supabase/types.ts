@@ -13240,6 +13240,51 @@ export type Database = {
         }
         Relationships: []
       }
+      drive_document_requirement_assignments: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          document_id: string
+          id: string
+          note: string | null
+          offering_id: string
+          requirement_key: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          document_id: string
+          id?: string
+          note?: string | null
+          offering_id: string
+          requirement_key: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          note?: string | null
+          offering_id?: string
+          requirement_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_document_requirement_assignments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "drive_imported_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_document_requirement_assignments_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drive_exceptions: {
         Row: {
           attempts: number
