@@ -12,14 +12,18 @@ async function fail(res: Response, what: string): Promise<never> {
   throw new Error(`${what} failed [${res.status}]: ${body.slice(0, 400)}`);
 }
 
+function linkedinKey() {
+  return process.env["LINKEDIN_API_KEY"] ?? process.env["LINKEDIN_API_KEY_1"];
+}
+
 function linkedinHeaders(extra: Record<string, string> = {}) {
   const lovable = process.env["LOVABLE_API_KEY"];
-  const li = process.env["LINKEDIN_API_KEY"];
+  const li = linkedinKey();
   if (!lovable || !li) throw new Error("LinkedIn isn't connected yet.");
   return { Authorization: `Bearer ${lovable}`, "X-Connection-Api-Key": li, "LinkedIn-Version": "202405", "X-Restli-Protocol-Version": "2.0.0", ...extra };
 }
 
-export function linkedinConfigured() { return !!process.env["LINKEDIN_API_KEY"]; }
+export function linkedinConfigured() { return !!linkedinKey(); }
 export function metaConfigured() { return !!process.env["META_PAGE_ACCESS_TOKEN"]; }
 
 async function linkedinImage(orgUrn: string, imageUrl: string): Promise<string | null> {
