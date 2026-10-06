@@ -24,7 +24,7 @@ export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([r
       d.from("fund_close_filings").select("id, close_request_id, filing_type, jurisdiction, status, investor_count, amount_cents, fee_cents, fee_needs_review, is_amendment, confirmation_number, filed_on, prepared_at").eq("offering_id", data.fundId).order("prepared_at", { ascending: false }),
       d.from("fund_regulatory_filings").select("id, filing_type, filing_kind, state, filing_date, accession_number, notes").eq("offering_id", data.fundId).is("removed_at", null),
       d.from("fund_franchise_fees").select("*").eq("offering_id", data.fundId).is("removed_at", null).order("due_date", { ascending: true, nullsFirst: false }),
-      d.from("fund_close_requests").select("id, target_close_date, created_at").eq("offering_id", data.fundId),
+      d.from("fund_close_requests").select("id, target_date, created_at").eq("offering_id", data.fundId),
     ]);
     const filings = [
       ...((closeF ?? []) as any[]).map((f) => ({
@@ -37,7 +37,7 @@ export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([r
         investors: null, amountCents: null, feeCents: null, feeNeedsReview: false, filedOn: f.filing_date, confirmation: f.accession_number,
       })),
     ];
-    const reqDate = new Map(((reqs ?? []) as any[]).map((r) => [r.id, r.target_close_date || String(r.created_at).slice(0, 10)]));
+    const reqDate = new Map(((reqs ?? []) as any[]).map((r) => [r.id, r.target_date || String(r.created_at).slice(0, 10)]));
     const cal: CalendarItem[] = [];
     const formDs = ((closeF ?? []) as any[]).filter((f) => f.filing_type === "form_d");
     for (const f of formDs) {

@@ -177,10 +177,11 @@ export async function recordMarketingEvent(db: any, key: string | null, recipien
   const id = key.slice(key.indexOf(":") + 1);
   const ip = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
   const hash = ip ? b64url(new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(`${ip}|${process.env["EMAIL_TRACKING_SECRET"] ?? ""}`)))).slice(0, 22) : null;
-  await db.from("marketing_email_events").insert({
+  const { error } = await db.from("marketing_email_events").insert({
     source: key.startsWith("mk:") ? "campaign" : key.startsWith("prop:") ? "proposal" : "flow", sales_document_id: key.startsWith("prop:") ? id : null, email_id: key.startsWith("mk:") ? id : null, flow_send_id: key.startsWith("flow:") ? id : null,
     recipient, kind, url: url ?? null, ip_hash: hash, user_agent: (request.headers.get("user-agent") ?? "").slice(0, 300),
   });
+  if (error) console.error("marketing email event not saved", error.message);
   return true;
 }
 

@@ -56,10 +56,10 @@ export const getOfferingPacket = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     if (!offering) throw new Error("That fund no longer exists.");
 
-    const [{ data: documents }, { data: wireRow }, { data: links }] = await Promise.all([
+    const [{ data: documents, error: docsError }, { data: wireRow }, { data: links }] = await Promise.all([
       supabase
         .from("offering_documents")
-        .select("id, title, doc_type, requires_signature, sort_order, updated_at")
+        .select("id, title, doc_type, requires_signature, sort_order, updated_at:file_updated_at")
         .eq("offering_id", data.fundId)
         .order("sort_order", { ascending: true }),
       supabase.rpc("get_wire_instructions", { p_offering_id: data.fundId }).maybeSingle(),
@@ -72,6 +72,7 @@ export const getOfferingPacket = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false }),
     ]);
 
+    if (docsError) throw new Error(docsError.message);
     return {
       offering,
       documents: documents ?? [],
