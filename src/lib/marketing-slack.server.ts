@@ -41,7 +41,7 @@ export async function notifyPostSubmitted(postId: string, submitterId: string) {
     const paths: string[] = p.image_paths ?? [];
     const { data: urls } = paths.length ? await db.storage.from("marketing-assets").createSignedUrls(paths.slice(0, 3), 7 * 86400) : { data: [] };
     const text = String(p.body ?? "").slice(0, 2800);
-    const chans = (p.channels ?? []).map((c: string) => c[0].toUpperCase() + c.slice(1)).join(", ") || "—";
+    const chans = (p.channels ?? []).map((c: string) => c.charAt(0).toUpperCase() + c.slice(1)).join(", ") || "—";
     const blocks: any[] = [
       { type: "section", text: { type: "mrkdwn", text: `${MENTIONS.map((u) => `<@${u}>`).join(" ")} a post is ready for approval${prof ? ` (submitted by ${prof.legal_name || prof.email})` : ""}.` } },
       { type: "section", fields: [{ type: "mrkdwn", text: `*Title*\n${p.title}` }, { type: "mrkdwn", text: `*Channels*\n${chans}` }] },
@@ -67,7 +67,7 @@ export function verifySlackSignature(raw: string, ts: string | null, sig: string
 }
 
 export async function handleReaction(ev: any) {
-  const name = String(ev?.reaction ?? "").split("::")[0];
+  const name = String(ev?.reaction ?? "").split("::")[0] ?? "";
   const action = APPROVE.has(name) ? "approve" : REJECT.has(name) ? "reject" : null;
   if (!action || ev?.item?.type !== "message") return;
   const db = await admin();
