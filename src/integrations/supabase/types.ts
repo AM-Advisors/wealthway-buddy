@@ -11799,10 +11799,13 @@ export type Database = {
           batch_number: number
           cancel_reason: string | null
           cancelled_at: string | null
+          cash_amount_cents: number | null
           completed_at: string | null
           created_at: string
           currency: string
+          custodian_cost_cents: number | null
           declared_amount_cents: number
+          distribution_kind: string
           distribution_type: string
           economic_snapshot: Json | null
           economic_snapshot_at: string | null
@@ -11810,8 +11813,13 @@ export type Database = {
           effective_date: string | null
           executed_at: string | null
           executed_by: string | null
+          fee_approved_at: string | null
+          fee_approved_by: string | null
+          fee_note: string | null
+          fee_quoted_by: string | null
           final_approved_at: string | null
           final_approved_by: string | null
+          harmonious_fee_cents: number | null
           id: string
           manager_approved_at: string | null
           manager_approved_by: string | null
@@ -11829,6 +11837,12 @@ export type Database = {
           reserve_cents: number
           reviewed_at: string | null
           reviewed_by: string | null
+          share_class: string | null
+          share_count: number | null
+          share_custodian: string | null
+          share_is_public: boolean | null
+          share_issuer: string | null
+          share_price_cents: number | null
           source_bank_account_id: string | null
           source_detail: Json
           source_proceeds: string | null
@@ -11853,10 +11867,13 @@ export type Database = {
           batch_number: number
           cancel_reason?: string | null
           cancelled_at?: string | null
+          cash_amount_cents?: number | null
           completed_at?: string | null
           created_at?: string
           currency?: string
+          custodian_cost_cents?: number | null
           declared_amount_cents?: number
+          distribution_kind?: string
           distribution_type?: string
           economic_snapshot?: Json | null
           economic_snapshot_at?: string | null
@@ -11864,8 +11881,13 @@ export type Database = {
           effective_date?: string | null
           executed_at?: string | null
           executed_by?: string | null
+          fee_approved_at?: string | null
+          fee_approved_by?: string | null
+          fee_note?: string | null
+          fee_quoted_by?: string | null
           final_approved_at?: string | null
           final_approved_by?: string | null
+          harmonious_fee_cents?: number | null
           id?: string
           manager_approved_at?: string | null
           manager_approved_by?: string | null
@@ -11883,6 +11905,12 @@ export type Database = {
           reserve_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          share_class?: string | null
+          share_count?: number | null
+          share_custodian?: string | null
+          share_is_public?: boolean | null
+          share_issuer?: string | null
+          share_price_cents?: number | null
           source_bank_account_id?: string | null
           source_detail?: Json
           source_proceeds?: string | null
@@ -11907,10 +11935,13 @@ export type Database = {
           batch_number?: number
           cancel_reason?: string | null
           cancelled_at?: string | null
+          cash_amount_cents?: number | null
           completed_at?: string | null
           created_at?: string
           currency?: string
+          custodian_cost_cents?: number | null
           declared_amount_cents?: number
+          distribution_kind?: string
           distribution_type?: string
           economic_snapshot?: Json | null
           economic_snapshot_at?: string | null
@@ -11918,8 +11949,13 @@ export type Database = {
           effective_date?: string | null
           executed_at?: string | null
           executed_by?: string | null
+          fee_approved_at?: string | null
+          fee_approved_by?: string | null
+          fee_note?: string | null
+          fee_quoted_by?: string | null
           final_approved_at?: string | null
           final_approved_by?: string | null
+          harmonious_fee_cents?: number | null
           id?: string
           manager_approved_at?: string | null
           manager_approved_by?: string | null
@@ -11937,6 +11973,12 @@ export type Database = {
           reserve_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          share_class?: string | null
+          share_count?: number | null
+          share_custodian?: string | null
+          share_is_public?: boolean | null
+          share_issuer?: string | null
+          share_price_cents?: number | null
           source_bank_account_id?: string | null
           source_detail?: Json
           source_proceeds?: string | null
@@ -12200,12 +12242,45 @@ export type Database = {
           },
         ]
       }
+      distribution_file_access: {
+        Row: {
+          actor_user_id: string
+          batch_id: string
+          created_at: string
+          file_kind: string
+          id: string
+        }
+        Insert: {
+          actor_user_id: string
+          batch_id: string
+          created_at?: string
+          file_kind: string
+          id?: string
+        }
+        Update: {
+          actor_user_id?: string
+          batch_id?: string
+          created_at?: string
+          file_kind?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_file_access_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       distribution_lines: {
         Row: {
           accounting_state: string
           approval_state: string
           batch_id: string
           capital_account_cents: number
+          cash_cents: number | null
           characterization: Json
           commitment_cents: number
           contributed_cents: number
@@ -12239,6 +12314,9 @@ export type Database = {
           payment_state: string
           position_id: string | null
           reconciliation_state: string
+          share_destination: string | null
+          share_value_cents: number | null
+          shares_allocated: number | null
           updated_at: string
           withholding_cents: number
         }
@@ -12247,6 +12325,7 @@ export type Database = {
           approval_state?: string
           batch_id: string
           capital_account_cents?: number
+          cash_cents?: number | null
           characterization?: Json
           commitment_cents?: number
           contributed_cents?: number
@@ -12280,6 +12359,9 @@ export type Database = {
           payment_state?: string
           position_id?: string | null
           reconciliation_state?: string
+          share_destination?: string | null
+          share_value_cents?: number | null
+          shares_allocated?: number | null
           updated_at?: string
           withholding_cents?: number
         }
@@ -12288,6 +12370,7 @@ export type Database = {
           approval_state?: string
           batch_id?: string
           capital_account_cents?: number
+          cash_cents?: number | null
           characterization?: Json
           commitment_cents?: number
           contributed_cents?: number
@@ -12321,6 +12404,9 @@ export type Database = {
           payment_state?: string
           position_id?: string | null
           reconciliation_state?: string
+          share_destination?: string | null
+          share_value_cents?: number | null
+          shares_allocated?: number | null
           updated_at?: string
           withholding_cents?: number
         }
@@ -12738,6 +12824,60 @@ export type Database = {
             columns: ["payment_id"]
             isOneToOne: false
             referencedRelation: "distribution_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_share_transfers: {
+        Row: {
+          actor_user_id: string
+          batch_id: string
+          confirmation_ref: string | null
+          created_at: string
+          custodian: string | null
+          distribution_line_id: string
+          event: string
+          id: string
+          note: string | null
+          shares: number
+        }
+        Insert: {
+          actor_user_id: string
+          batch_id: string
+          confirmation_ref?: string | null
+          created_at?: string
+          custodian?: string | null
+          distribution_line_id: string
+          event: string
+          id?: string
+          note?: string | null
+          shares: number
+        }
+        Update: {
+          actor_user_id?: string
+          batch_id?: string
+          confirmation_ref?: string | null
+          created_at?: string
+          custodian?: string | null
+          distribution_line_id?: string
+          event?: string
+          id?: string
+          note?: string | null
+          shares?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_share_transfers_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_share_transfers_distribution_line_id_fkey"
+            columns: ["distribution_line_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_lines"
             referencedColumns: ["id"]
           },
         ]
