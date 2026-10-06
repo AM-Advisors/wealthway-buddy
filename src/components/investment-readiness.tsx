@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertCircle, Check, ChevronDown, Circle, Inbox, Search } from "lucide-react";
 import { fundReadinessFn, investmentReadinessFn, readinessQueueFn } from "@/lib/investor-onboarding.functions";
 import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
+import { getFundWireInstructions } from "@/lib/wire-instructions.functions";
 import { ViewAsPicker } from "@/components/view-as";
 import { OWNER_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -236,6 +237,50 @@ function FilterChips<T extends string>({ value, options, labels, counts, onChang
 }
 
 /** Fund → Readiness: operations dashboard over the same engine. */
+const WIRE_LABELS: [string, string][] = [
+  ["bank_name", "Receiving bank"],
+  ["account_name", "Account name"],
+  ["routing_number", "Routing number"],
+  ["account_number", "Account number"],
+  ["swift", "SWIFT"],
+  ["bank_address", "Bank address"],
+  ["memo", "Memo / reference"],
+];
+
+function WireInstructionsCard({ fundId }: { fundId: string }) {
+  const load = useServerFn(getFundWireInstructions);
+  const q = useQuery({ queryKey: ["fund-wire-instructions", fundId], queryFn: () => load({ data: { offering_id: fundId } }), retry: false });
+  if (q.isPending) return <Skeleton className="h-24 w-full rounded-xl" />;
+  if (q.isError) return null;
+  const d = q.data as any;
+  const rows = WIRE_LABELS.filter(([k]) => String(d.details?.[k] ?? "").trim() !== "");
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="font-heading text-sm font-semibold">Bank &amp; wire instructions</h3>
+          <p className="text-xs text-muted-foreground">
+            {d.hasAny ? `Where investors send funds. Updated ${ago(d.updated_at)}.` : "No wire instructions saved yet."}
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/manager/fund-banking/$fundId" params={{ fundId }}>{d.hasAny ? "View in Banking" : "Add in Banking"}</Link>
+        </Button>
+      </div>
+      {d.hasAny ? (
+        <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map(([k, label]) => (
+            <div key={k}>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+              <dd className="text-sm font-medium">{String(d.details[k])}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </div>
+  );
+}
+
 export function FundReadiness({ fundId, viewAs = false }: { fundId: string; viewAs?: boolean }) {
   const load = useServerFn(fundReadinessFn);
   const loadAs = useServerFn(viewAsFundFn);
@@ -263,6 +308,7 @@ export function FundReadiness({ fundId, viewAs = false }: { fundId: string; view
         </div>
         {!viewAs && d.viewer === "staff" ? <ViewAsPicker offeringId={fundId} label="View client perspective" /> : null}
       </div>
+      <WireInstructionsCard fundId={fundId} />
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
         {(["all", "ready", "needs_investor", "needs_harmonious", "blocked"] as Bucket[]).map((b) => (
           <div key={b} className="bg-card p-4">
