@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -80,7 +81,7 @@ export function FundSetupPhase3({ offeringId, onChanged }: { offeringId: string;
   const load = useServerFn(phase3OverviewFn);
   const q = useQuery({ queryKey: ["fund-setup-p3", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const refresh = () => {
-    qc.invalidateQueries({ queryKey: ["fund-setup-p3", offeringId] });
+    void invalidateFund(qc, offeringId);
     onChanged?.();
   };
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;

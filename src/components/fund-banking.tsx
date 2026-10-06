@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -105,7 +106,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
       toast.success("Banking details saved. The change is recorded in the fund's history.");
       setConfirmAccount("");
       void queryClient.invalidateQueries({ queryKey: ["managed-wire-instructions"] });
-      void queryClient.invalidateQueries({ queryKey: ["fund-page", fundId] });
+      void invalidateFund(queryClient, fundId);
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "Could not save those details."),
@@ -117,7 +118,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
     onSuccess: () => {
       toast.success("Sent to Harmonious. Operations will follow up with next steps.");
       setBankNote("");
-      void queryClient.invalidateQueries({ queryKey: ["fund-entity", fundId] });
+      void invalidateFund(queryClient, fundId);
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "Could not send that request."),

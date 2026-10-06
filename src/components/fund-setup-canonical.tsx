@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { ServiceProvidersSection } from "@/components/fund-setup-extras";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -53,7 +54,7 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(getFundSetupOverview);
   const q = useQuery({ queryKey: ["fund-setup-canonical", offeringId], queryFn: () => load({ data: { offeringId } }) });
-  const refresh = () => qc.invalidateQueries({ queryKey: ["fund-setup-canonical", offeringId] });
+  const refresh = () => invalidateFund(qc, offeringId);
 
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading fund setup…</p>;
   if (q.error || !q.data) return <p className="text-sm text-destructive">Fund setup couldn't be loaded.</p>;

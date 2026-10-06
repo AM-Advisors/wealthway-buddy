@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -93,7 +94,7 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
   const save = useServerFn(saveTeamMemberFn);
   const remove = useServerFn(removeTeamMemberFn);
   const [f, setF] = useState({ fullName: member.full_name ?? "", email: member.email ?? "", phone: member.phone ?? "", company: member.company ?? "", teamRole: member.team_role, permissions: new Set<string>(member.permissions ?? []) });
-  const done = () => { qc.invalidateQueries({ queryKey: ["fund-team", fundId] }); onClose(); };
+  const done = () => { invalidateFund(qc, fundId); onClose(); };
   const m = useMutation({
     mutationFn: () => save({ data: { fundId, id: member.id ?? null, fullName: f.fullName, email: f.email, phone: f.phone, company: f.company, teamRole: f.teamRole, permissions: [...f.permissions] as any } }),
     onSuccess: () => { toast.success("Saved"); done(); }, onError: (e: Error) => toast.error(e.message),
@@ -152,12 +153,12 @@ function FeesCard({ fundId, d }: { fundId: string; d: any }) {
   const [f, setF] = useState({ mgmt: a?.management_fee_pct?.toString() ?? "", basis: a?.management_fee_basis ?? "Committed capital", carry: a?.carry_pct?.toString() ?? "", hurdle: a?.hurdle_pct?.toString() ?? "", notes: "" });
   const m = useMutation({
     mutationFn: () => set({ data: { fundId, managementFeePct: toPct(f.mgmt), managementFeeBasis: f.basis, carryPct: toPct(f.carry), hurdlePct: toPct(f.hurdle), notes: f.notes } }),
-    onSuccess: (r) => { toast.success(r.applied ? "Fees updated" : "Sent to Harmonious for approval"); qc.invalidateQueries({ queryKey: ["fund-team", fundId] }); },
+    onSuccess: (r) => { toast.success(r.applied ? "Fees updated" : "Sent to Harmonious for approval"); invalidateFund(qc, fundId); },
     onError: (e: Error) => toast.error(e.message),
   });
   const dm = useMutation({
     mutationFn: (approve: boolean) => decide({ data: { feeId: d.pendingFee.id, approve } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["fund-team", fundId] }), onError: (e: Error) => toast.error(e.message),
+    onSuccess: () => invalidateFund(qc, fundId), onError: (e: Error) => toast.error(e.message),
   });
   return (
     <Card>
