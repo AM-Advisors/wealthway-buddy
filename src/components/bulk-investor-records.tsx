@@ -76,7 +76,10 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
         <p className="text-sm text-muted-foreground">Upload an Excel file or CSV, or paste a Google Sheets link. Columns like {BULK_COLUMNS.join(", ")} are matched automatically (a single "Name" column is split into first and last). You'll see a preview first; nothing is saved and no one is emailed until you confirm.</p></CardHeader>
       <CardContent className="space-y-3">
         {!p ? <>
-          <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="Choose Excel or CSV file" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} className="text-sm" />
+          <div className="flex flex-wrap items-center gap-3">
+            <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="Choose Excel or CSV file" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} className="text-sm" />
+            <Button variant="outline" size="sm" onClick={() => void downloadTemplate()}>Download template</Button>
+          </div>
           <div className="flex flex-wrap gap-2"><Input className="min-w-64 flex-1" placeholder="Google Sheets link (shared: anyone with the link can view)" value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} /><Button variant="outline" onClick={onSheet} disabled={busy || !sheetUrl.trim()}>Load sheet</Button></div>
           <Textarea aria-label="CSV content" rows={5} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder="first_name,last_name,email,profile_type,amount" />
           <Button onClick={run} disabled={busy || !csv.trim()}>{busy ? "Checking…" : "Preview"}</Button>
