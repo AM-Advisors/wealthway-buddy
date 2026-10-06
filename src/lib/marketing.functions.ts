@@ -102,3 +102,21 @@ export const marketingGenerateImage = createServerFn({ method: "POST" }).middlew
 export const unsubscribeEmail = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ token: z.string().regex(/^[a-f0-9]{20,80}$/) }).parse(d))
   .handler(async ({ data }) => (await srv()).unsubscribeByToken(data.token));
+
+export const marketingSuggestPostLayout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ title: z.string().max(300), body: z.string().trim().min(10).max(5000) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await (await srv()).requireMarketing(context.userId);
+    const { suggestPostLayout } = await import("@/lib/marketing-ai.server");
+    return suggestPostLayout(data.title, data.body);
+  });
+
+/** Returns a data URL (not stored) so the browser can render it under the layout. */
+export const marketingBackgroundArt = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ theme: z.string().trim().min(3).max(2000) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await (await srv()).requireMarketing(context.userId);
+    const { generateBackground } = await import("@/lib/marketing-ai.server");
+    const img = await generateBackground(data.theme);
+    return { dataUrl: `data:${img.contentType};base64,${img.base64}` };
+  });
