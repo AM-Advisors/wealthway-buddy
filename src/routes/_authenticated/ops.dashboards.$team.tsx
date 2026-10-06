@@ -6,6 +6,25 @@ import { Bars, Panel, Stat } from "@/components/sales/sales-ui";
 import { AmPage, money } from "@/components/account-management-ui";
 import { getTeamDashboard, getFinanceOverview } from "@/lib/staff-directory.functions";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+
+function Drill({ s, onClose }: { s: any; onClose: () => void }) {
+  return (
+    <Panel title={`${s.label} (${s.value})`} action={<div className="flex gap-3 text-sm">{s.to && <Link to={s.to} search={s.search ?? {}} className="text-primary underline">Open full list</Link>}<button onClick={onClose} className="text-muted-foreground underline">Close</button></div>}>
+      {s.items.length ? (
+        <ul className="divide-y text-sm">
+          {s.items.map((it: any, i: number) => (
+            <li key={i} className="flex items-center justify-between gap-3 py-2">
+              <div className="min-w-0"><div className="truncate font-medium text-foreground">{it.label}</div>{it.sub && <div className="text-xs text-muted-foreground">{it.sub}</div>}</div>
+              {it.fundId && <Link to="/ops/fund-setup/$fundId" params={{ fundId: it.fundId }} className="shrink-0 text-primary underline">Open</Link>}
+            </li>
+          ))}
+          {s.value > s.items.length && <li className="py-2 text-xs text-muted-foreground">Showing the first {s.items.length}. Open the full list for the rest.</li>}
+        </ul>
+      ) : <p className="text-sm text-muted-foreground">Nothing here right now.</p>}
+    </Panel>
+  );
+}
 
 const TEAMS = ["operations", "finance", "compliance", "marketing", "leadership"] as const;
 type Team = (typeof TEAMS)[number];
@@ -34,6 +53,7 @@ function TeamDashboard() {
   const load = useServerFn(getTeamDashboard);
   const q = useQuery({ queryKey: ["team-dashboard", team], queryFn: () => load({ data: { team: team as Team } }), retry: false, enabled: valid });
   const d = q.data;
+  const [open, setOpen] = useState<string | null>(null);
   if (!valid) return <AmPage title="Dashboard not found" intro="Choose a team dashboard from the menu."><span /></AmPage>;
   return (
     <AmPage title={d ? `${d.title} dashboard` : "Dashboard"} intro="Read-only overview. Nothing here changes any work.">
@@ -42,13 +62,16 @@ function TeamDashboard() {
       {d && (<>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Stat label="Team members" value={d.teamStats.members} hint={`${d.teamStats.activeToday} active in the last 24h`} />
-          {d.stats.map((s) => {
-            const card = <Stat label={s.label} value={s.value} {...("cents" in s && typeof s.cents === "number" ? { hint: money(s.cents) } : {})} />;
-            return "to" in s && typeof s.to === "string"
+          {d.stats.map((s: any) => {
+            const hint = typeof s.cents === "number" ? { hint: money(s.cents) } : {};
+            if (Array.isArray(s.items)) return <div key={s.label} className={open === s.label ? "[&>button]:border-primary" : ""}><Stat label={s.label} value={s.value} {...hint} onClick={() => setOpen(open === s.label ? null : s.label)} /></div>;
+            const card = <Stat label={s.label} value={s.value} {...hint} />;
+            return typeof s.to === "string"
               ? <Link key={s.label} to={s.to} className="block rounded-lg transition hover:[&>div]:border-primary">{card}</Link>
               : <div key={s.label}>{card}</div>;
           })}
         </div>
+        {(() => { const s: any = open && d.stats.find((x: any) => x.label === open); return s ? <Drill s={s} onClose={() => setOpen(null)} /> : null; })()}
         <div className="grid gap-4 lg:grid-cols-2">
           {d.charts.map((c) => (
             <Panel key={c.title} title={c.title}>
