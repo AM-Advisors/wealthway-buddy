@@ -22,10 +22,10 @@ export const Route = createFileRoute("/_authenticated/ops/agreements")({
   component: Page,
 });
 
-const STAGE: Record<string, string> = { draft: "Draft", in_review: "Sent to client", client_signed: "Client signed", executed: "Signed by both", amended: "Amended" };
+const STAGE: Record<string, string> = { draft: "Draft", in_review: "Awaiting client signature", client_signed: "Awaiting Harmonious countersignature", executed: "Active", amended: "Amended" };
 
 function followUp(a: any): string | null {
-  if (a.executedAt) return null;
+  if (a.executedAt || a.legacyActivation) return null;
   if (a.openChanges) return `${a.openChanges} open change request${a.openChanges === 1 ? "" : "s"}`;
   if (a.stage === "in_review") return "Waiting on client signature";
   if (a.stage === "client_signed") return "Waiting on Harmonious countersignature";
@@ -67,7 +67,7 @@ function Page() {
                   <div className="font-medium text-foreground">{a.title}</div>
                   <div className="text-xs text-muted-foreground">{a.clientName}{a.effectiveDate ? ` · effective ${a.effectiveDate}` : ""}{a.pricingVersion ? ` · pricing ${a.pricingVersion}` : ""}</div>
                 </div>
-                <Badge variant={a.executedAt ? "default" : "secondary"}>{STAGE[a.stage] ?? a.stage}</Badge>
+                <Badge variant={a.executedAt ? "default" : "secondary"}>{a.legacyActivation ? "Active before two-party signing" : STAGE[a.stage] ?? a.stage}</Badge>
               </div>
               <div className="text-sm">
                 <span className="text-muted-foreground">Funds covered: </span>

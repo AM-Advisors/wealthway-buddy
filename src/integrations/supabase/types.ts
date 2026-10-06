@@ -6352,6 +6352,7 @@ export type Database = {
           generated_lines: Json
           governing_document_id: string | null
           id: string
+          legacy_activation: boolean
           locked: boolean
           msa_version_id: string | null
           notes: string | null
@@ -6404,6 +6405,7 @@ export type Database = {
           generated_lines?: Json
           governing_document_id?: string | null
           id?: string
+          legacy_activation?: boolean
           locked?: boolean
           msa_version_id?: string | null
           notes?: string | null
@@ -6456,6 +6458,7 @@ export type Database = {
           generated_lines?: Json
           governing_document_id?: string | null
           id?: string
+          legacy_activation?: boolean
           locked?: boolean
           msa_version_id?: string | null
           notes?: string | null

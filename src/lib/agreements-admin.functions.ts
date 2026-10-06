@@ -201,6 +201,7 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
         createdAt: s.created_at as string,
         funds: ((links ?? []) as any[]).filter((l) => l.sow_id === s.id).map((l) => ({ id: l.offering_id as string, name: (offName.get(l.offering_id) as string) ?? "Fund", status: l.status as string })),
         salesOwnerId: salesOwner.get(s.client_id) ?? null,
+        legacyActivation: Boolean(s.legacy_activation),
       })),
       changes: changes.map((c) => ({
         id: c.id as string,
@@ -449,6 +450,7 @@ export const countersignSow = createServerFn({ method: "POST" })
       .eq("sow_id", data.sowId);
     const clientSignature = ((signatures ?? []) as any[]).find((s) => s.side === "client");
     if (!clientSignature) throw new Error("The client has not signed this agreement yet.");
+    if ((sow as any).created_by && (sow as any).created_by === who.userId) throw new Error("Someone other than the person who drafted this agreement must countersign it.");
 
     const now = new Date().toISOString();
     await context.supabase.from("agreement_signatures").insert({
@@ -833,4 +835,54 @@ export const askSalesAboutAgreement = createServerFn({ method: "POST" })
     });
     await audit(context, who, { action: "sow.sales_asked", clientId: (sow as any).client_id, target: (sow as any).title });
     return { taskId: t.id, assigned: !!(owner as any)?.user_id };
+  });
+
+/** Harmonious countersigns a client-signed MSA; only then is it active. */
+export const countersignMsa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ agreementId: z.string().uuid(), signerName: z.string().min(2), signerTitle: z.string().min(1), typedSignature: z.string().min(2) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const who = await requireSign(context);
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: ag } = await db.from("client_msa_agreements").select("*").eq("id", data.agreementId).maybeSingle();
+    if (!ag) throw new Error("Agreement not found.");
+    if ((ag as any).executed_at) return { ok: true, alreadyExecuted: true } as const;
+    const { data: sigs } = await db.from("agreement_signatures").select("*").eq("msa_agreement_id", data.agreementId);
+    const client = ((sigs ?? []) as any[]).find((x) => x.side === "client");
+    if (!client) throw new Error("The client has not signed this agreement yet.");
+    const { data: version } = await db.from("msa_versions").select("id, version, effective_date").eq("id", (ag as any).msa_version_id).maybeSingle();
+    const now = new Date().toISOString();
+    const { error } = await db.from("agreement_signatures").insert({
+      scope: "msa", client_id: (ag as any).client_id, msa_agreement_id: data.agreementId, side: "harmonious", company: HARMONIOUS_LEGAL_NAME,
+      signer_name: data.signerName, signer_title: data.signerTitle, signer_email: who.email, signer_user_id: who.userId,
+      typed_signature: data.typedSignature, version_label: (version as any)?.version ?? null,
+    });
+    if (error) throw new Error(error.message);
+    const { data: sections } = await db.from("msa_sections").select("section_no, title, body").eq("msa_version_id", (ag as any).msa_version_id).order("sort_order");
+    await db.from("agreement_executions").insert({
+      scope: "msa", client_id: (ag as any).client_id, msa_agreement_id: data.agreementId,
+      snapshot: { version: (version as any)?.version, effectiveDate: (version as any)?.effective_date, sections: sections ?? [],
+        signatures: [{ side: "client", name: client.signer_name, title: client.signer_title, signedAt: client.signed_at }, { side: "harmonious", name: data.signerName, title: data.signerTitle, signedAt: now }] } as any,
+    });
+    await db.from("client_msa_agreements").update({ status: "executed", executed_at: now }).eq("id", data.agreementId);
+    await audit(context, who, { action: "msa.executed", clientId: (ag as any).client_id, target: (version as any)?.version ?? "MSA", next: { countersignedBy: data.signerName, executedAt: now } });
+    return { ok: true, alreadyExecuted: false } as const;
+  });
+
+/** MSAs waiting on a Harmonious countersignature (client already signed). */
+export const listMsasAwaitingCountersign = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const who = await requireStaff(context);
+    const scope = await agreementScope(who);
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await db.from("client_msa_agreements").select("id, client_id, status, client_approved_at, executed_at, msa_version_id").order("created_at", { ascending: false });
+    const list = ((rows ?? []) as any[]).filter((r) => !scope || scope.clients.has(r.client_id));
+    const cIds = [...new Set(list.map((r) => r.client_id))];
+    const { data: clients } = cIds.length ? await db.from("clients").select("id, name, legal_name").in("id", cIds) : { data: [] as any[] };
+    const name = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.legal_name || c.name]));
+    return {
+      canSign: who.canSign,
+      msas: list.map((r) => ({ id: r.id as string, clientName: (name.get(r.client_id) as string) ?? "-", status: r.executed_at ? "executed" : r.client_approved_at ? "client_signed" : "awaiting_client", clientSignedAt: r.client_approved_at as string | null, executedAt: r.executed_at as string | null })),
+    };
   });
