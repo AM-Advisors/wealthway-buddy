@@ -6,7 +6,7 @@ import { AlertCircle, Check, ChevronDown, Circle, Inbox, Search } from "lucide-r
 import { fundReadinessFn, investmentReadinessFn, readinessQueueFn } from "@/lib/investor-onboarding.functions";
 import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
 import { getFundWireInstructions } from "@/lib/wire-instructions.functions";
-import { getStaffFundSetup } from "@/lib/staff-funds.functions";
+import { getFundLaunchSteps } from "@/lib/fund-launch.functions";
 import { fundSetupSummary } from "@/lib/fund-launch-summary";
 import { ViewAsPicker } from "@/components/view-as";
 import { OWNER_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
@@ -249,21 +249,38 @@ const WIRE_LABELS: [string, string][] = [
   ["memo", "Memo / reference"],
 ];
 
-/** Fund launch status + setup %, from the same Fund Setup data (query key shared, so it refreshes together). */
+/** Fund launch status, setup % and steps — same tasks/conditions and math as Fund Setup (fundSetupSummary). */
 function FundLaunchCard({ fundId, readyCount, total }: { fundId: string; readyCount: number; total: number }) {
-  const get = useServerFn(getStaffFundSetup);
-  const q = useQuery({ queryKey: ["staff-fund-setup", fundId], queryFn: () => get({ data: { offeringId: fundId } }), retry: false });
-  const d = q.data as any;
-  if (!d || !d.hasSetup || !d.canSeeOperations) return null;
+  const get = useServerFn(getFundLaunchSteps);
+  const q = useQuery({ queryKey: ["fund-launch-steps", fundId], queryFn: () => get({ data: { offeringId: fundId } }), retry: false });
+  const d = q.data;
+  if (!d || !d.hasSetup) return null;
   const s = fundSetupSummary(d);
+  const steps = [
+    ...d.tasks.map((t) => ({ id: t.id, label: t.label, done: t.status === "complete", kind: "Setup task" })),
+    ...d.conditions.map((c) => ({ id: c.id, label: c.label, done: c.satisfied, kind: "Launch condition" })),
+  ];
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Fund launch</p>
-        <p className="font-heading text-lg font-semibold capitalize">{s.launchLabel}</p>
-        <p className="text-sm text-muted-foreground">Setup {s.percent}% complete · {s.openTasks} setup tasks and {s.openConditions} launch conditions open · {readyCount} of {total} investors ready</p>
+    <div className="rounded-xl border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Fund launch</p>
+          <p className="font-heading text-lg font-semibold capitalize">{s.launchLabel}</p>
+          <p className="text-sm text-muted-foreground">Setup {s.percent}% complete · {s.openTasks} setup tasks and {s.openConditions} launch conditions open · {readyCount} of {total} investors ready</p>
+        </div>
+        {d.isStaff && <Link className="text-sm underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "setup" }}>Open Fund Setup</Link>}
       </div>
-      <Link className="text-sm underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "setup" }}>Open Fund Setup</Link>
+      {steps.length > 0 && (
+        <ul className="mt-3 grid gap-1 sm:grid-cols-2">
+          {steps.map((x) => (
+            <li key={x.id} className="flex items-center gap-2 text-sm">
+              <span className={cn("inline-block h-2 w-2 rounded-full", x.done ? "bg-primary" : "bg-muted-foreground/40")} />
+              <span className={x.done ? "text-muted-foreground line-through" : ""}>{x.label}</span>
+              <span className="text-xs text-muted-foreground">· {x.kind}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
