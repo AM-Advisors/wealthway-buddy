@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ImagePlus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,13 +59,31 @@ function PostEditor() {
   const locked = ["publishing", "published", "sending", "sent"].includes(status);
   const problems = postProblems({ title, body, channels, imageCount: images.length });
 
+  const saved = q.data?.post;
+  const savedPaths = (saved?.image_paths ?? []).join("|");
+  const curPaths = images.map((i) => i.path).join("|");
+  const dirty = !isNew && !!saved && (saved.title !== title || saved.body !== body || saved.channels.join() !== channels.join() || savedPaths !== curPaths || toLocalInput(saved.scheduled_at) !== when);
+  // Images save straight away on drafts so the Calendar and Submit always see them.
+  const imgSaving = useRef(false);
+  useEffect(() => {
+    if (isNew || !saved || savedPaths === curPaths || imgSaving.current) return;
+    if (!(saved.status === "draft" || saved.status === "rejected")) return;
+    imgSaving.current = true;
+    save({ data: { id, title: saved.title, body: saved.body, channels: saved.channels, imagePaths: images.map((i) => i.path), scheduledAt: saved.scheduled_at ? new Date(saved.scheduled_at).toISOString() : null } })
+      .then(() => q.refetch()).catch((e) => toast.error((e as Error).message)).finally(() => { imgSaving.current = false; });
+  }, [curPaths, savedPaths]);
+
   const saveM = useMutation({
     mutationFn: () => save({ data: { id: isNew ? null : id, title, body, channels, imagePaths: images.map((i) => i.path), scheduledAt: fromLocalInput(when) } }),
     onSuccess: (r) => { toast.success(status !== "draft" && !isNew ? "Saved — back to draft for re-approval" : "Saved"); qc.invalidateQueries({ queryKey: ["mk-posts"] }); if (isNew) nav({ to: "/marketing/posts/$id", params: { id: r.id } }); else q.refetch(); },
     onError: (e) => toast.error((e as Error).message),
   });
   const decideM = useMutation({
-    mutationFn: (action: "submit" | "approve" | "reject") => decide({ data: { id, action, note: note || null } }),
+    mutationFn: async (action: "submit" | "approve" | "reject") => {
+      // Submit checks the saved post, so save what's on screen first.
+      if (action === "submit") await save({ data: { id, title, body, channels, imagePaths: images.map((i) => i.path), scheduledAt: fromLocalInput(when) } });
+      return decide({ data: { id, action, note: note || null } });
+    },
     onSuccess: (_r, a) => { toast.success(a === "submit" ? "Sent for approval" : a === "approve" ? "Approved and scheduled" : "Sent back to the author"); setNote(""); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -128,7 +146,7 @@ function PostEditor() {
           <div className="max-w-xs"><Label htmlFor="w">Publish at</Label><Input id="w" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} disabled={locked} /><p className="mt-1 text-xs text-muted-foreground">Leave empty to publish as soon as it's approved.</p></div>
 
           {!locked && <div className="flex flex-wrap gap-2">
-            <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>{saveM.isPending ? "Saving…" : "Save"}</Button>
+            <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>{saveM.isPending ? "Saving…" : "Save"}</Button>{dirty && <span className="self-center text-xs text-muted-foreground">Unsaved changes</span>}
             {!isNew && (status === "draft" || status === "rejected") && <Button variant="secondary" onClick={() => decideM.mutate("submit")} disabled={decideM.isPending || problems.length > 0}>Submit for approval</Button>}
           </div>}
           {!locked && problems.length > 0 && <ul className="list-disc pl-5 text-xs text-muted-foreground">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}

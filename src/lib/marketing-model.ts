@@ -32,7 +32,7 @@ export function postProblems(p: { title: string; body: string; channels: string[
   if (!p.title.trim()) out.push("Add a title.");
   if (!p.body.trim()) out.push("Write the post text.");
   if (!p.channels.length) out.push("Pick at least one channel.");
-  if (p.channels.includes("instagram") && p.imageCount === 0) out.push("Instagram posts need an image.");
+  if (p.channels.includes("instagram") && p.imageCount === 0) out.push("Instagram posts need an image. Add one and save the post.");
   for (const c of p.channels as Channel[]) if (CHANNEL_LIMIT[c] && p.body.length > CHANNEL_LIMIT[c]) out.push(`${CHANNEL_LABEL[c]} allows ${CHANNEL_LIMIT[c]} characters.`);
   return out;
 }
