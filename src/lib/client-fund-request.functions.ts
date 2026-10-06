@@ -282,6 +282,7 @@ export const getClientHome = createServerFn({ method: "GET" })
       bySetup.set(t.setup_id, c);
     }
     const setupFor = new Map(((setups ?? []) as any[]).map((s) => [s.offering_id, s]));
+    const launchPct = await (await import("@/lib/fund-launch-percent.server")).fundLaunchPercents(ids as string[]);
     let investors = 0, commit = 0, funded = 0;
     const perFund = new Map<string, number>();
     for (const o of (onbs ?? []) as any[]) {
@@ -298,7 +299,7 @@ export const getClientHome = createServerFn({ method: "GET" })
         const c = s ? bySetup.get(s.id) : undefined;
         return {
           id: String(f.id), name: String(f.name), isOpen: !!f.is_open, investors: perFund.get(f.id) ?? 0,
-          percent: c && c.total ? Math.round((c.done / c.total) * 100) : null, harmoniousPending: c?.harmonious ?? 0,
+          percent: launchPct.get(f.id) ?? null, harmoniousPending: c?.harmonious ?? 0,
         };
       }),
       requests: ((reqs ?? []) as any[])
