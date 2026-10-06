@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/ops/fund-setup/")({
     { name: "twitter:card", content: "summary" },
     { name: "robots", content: "noindex" },
   ] }),
-  validateSearch: (s: Record<string, unknown>): { view?: "setup" | "stuck" } => (s.view === "setup" || s.view === "stuck" ? { view: s.view } : {}),
+  validateSearch: (s: Record<string, unknown>): { view?: "setup" | "stuck" } => (s["view"] === "setup" || s["view"] === "stuck" ? { view: s["view"] as "setup" | "stuck" } : {}),
   component: FundSetupRegister,
 });
 

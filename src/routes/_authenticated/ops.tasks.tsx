@@ -81,7 +81,7 @@ function NewTask({ staff }: { staff: { id: string; name: string }[] }) {
   const [team, setTeam] = useState("operations"); const [due, setDue] = useState("");
   const [busy, setBusy] = useState(false);
   const submit = async () => {
-    if (!title.trim()) return toast.error("Give the task a title.");
+    if (!title.trim()) { toast.error("Give the task a title."); return; }
     setBusy(true);
     try {
       await create({ data: { title, description: desc || null, priority: priority as any, team, assignee: assignee === UNASSIGNED ? null : assignee, dueDate: due || null } });
