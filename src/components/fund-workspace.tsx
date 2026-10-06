@@ -12,6 +12,7 @@ import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
 import { CloseRequestReview } from "@/components/close-request-review";
 import { FundPayments } from "@/components/fund-payments";
+import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Clock } from "lucide-react";
@@ -140,9 +141,11 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
           <TabsTrigger value="assets">Assets</TabsTrigger>
           <TabsTrigger value="closes">Closes</TabsTrigger>
           <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
+          <TabsTrigger value="distributions">Distributions</TabsTrigger>
         </TabsList>
 
         {extraTabs.map((x) => <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
+        <TabsContent value="distributions"><FundDistributions fundId={fundId} mode={mode} /></TabsContent>
         <TabsContent value="todos" className="space-y-4">
           {staff && <HarmoniousTodos steps={steps as any} onSetup={() => onTab("setup")} />}
           <TodosTab fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done) as any} />
