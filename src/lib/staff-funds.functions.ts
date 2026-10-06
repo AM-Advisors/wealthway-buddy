@@ -30,7 +30,7 @@ export const listStaffFunds = createServerFn({ method: "GET" })
     const [{ data: funds, error }, { data: clients, error: clientError }, { data: setups, error: setupError }] = await Promise.all([
       db.from("offerings").select("id,name,summary,fund_type,client_id,consolidated_into,created_at").order("name").limit(5000),
       db.from("clients").select("id,name").limit(5000),
-      canSeeOperations ? db.from("fund_setups").select("offering_id,stage,launch_state").limit(5000) : Promise.resolve({ data: [], error: null }),
+      canSeeOperations ? db.from("fund_setups").select("offering_id,stage,launch_state,launched_at,created_at").limit(5000) : Promise.resolve({ data: [], error: null }),
     ]);
     if (error || clientError || setupError) throw new Error("Unable to load funds.");
     const names = new Map((clients ?? []).map((c) => [c.id, c.name]));
@@ -41,6 +41,8 @@ export const listStaffFunds = createServerFn({ method: "GET" })
       retired: !!f.consolidated_into, setupStage: setupByFund.get(f.id)?.stage ?? null,
       launchState: setupByFund.get(f.id)?.launch_state ?? null,
       createdAt: f.created_at,
+      inSetup: setupByFund.has(f.id) && !(setupByFund.get(f.id) as any)?.launched_at,
+      setupCreatedAt: (setupByFund.get(f.id) as any)?.created_at ?? null,
     })) };
   });
 
