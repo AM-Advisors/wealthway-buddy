@@ -8,6 +8,7 @@ import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
 import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
+import { fundSetupSummary } from "@/lib/fund-launch-summary";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
   head: () => ({ meta: [
@@ -37,9 +38,11 @@ function FundSetupDetail() {
       <section className="space-y-3 border-t pt-6" aria-label="Entity formation and launch">
         <h2 className="font-heading text-xl font-semibold">Entity formation &amp; launch</h2>
         {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
-          <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Launch: {d.launchState ?? "Not ready"}</p>
-          <p className="text-sm text-muted-foreground">{d.tasks.filter((t) => t.status !== "complete").length} setup tasks and {d.conditions.filter((c) => !c.satisfied).length} launch conditions still to complete. {d.approvalCount} launch approvals recorded.</p>
-          <p className="text-sm">Fund launch: {d.launchState ?? "Not ready"} · <Link className="underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "investors" }}>Investor readiness for each investor</Link></p>
+          {(() => { const s = fundSetupSummary(d); return <>
+          <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Setup {s.percent}% complete · Launch: <span className="capitalize">{s.launchLabel}</span></p>
+          <p className="text-sm text-muted-foreground">{s.openTasks} setup tasks and {s.openConditions} launch conditions still to complete. {d.approvalCount} launch approvals recorded.</p>
+          </>; })()}
+          <p className="text-sm"><Link className="underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "investors" }}>Investor readiness for each investor</Link></p>
           {d.canUseCanonical
             ? <p className="text-sm text-muted-foreground">Each required item is listed inside its Fund Setup section below.</p>
             : <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={false} onChanged={() => q.refetch()} />}

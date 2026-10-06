@@ -6,6 +6,8 @@ import { AlertCircle, Check, ChevronDown, Circle, Inbox, Search } from "lucide-r
 import { fundReadinessFn, investmentReadinessFn, readinessQueueFn } from "@/lib/investor-onboarding.functions";
 import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
 import { getFundWireInstructions } from "@/lib/wire-instructions.functions";
+import { getStaffFundSetup } from "@/lib/staff-funds.functions";
+import { fundSetupSummary } from "@/lib/fund-launch-summary";
 import { ViewAsPicker } from "@/components/view-as";
 import { OWNER_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -247,6 +249,25 @@ const WIRE_LABELS: [string, string][] = [
   ["memo", "Memo / reference"],
 ];
 
+/** Fund launch status + setup %, from the same Fund Setup data (query key shared, so it refreshes together). */
+function FundLaunchCard({ fundId, readyCount, total }: { fundId: string; readyCount: number; total: number }) {
+  const get = useServerFn(getStaffFundSetup);
+  const q = useQuery({ queryKey: ["staff-fund-setup", fundId], queryFn: () => get({ data: { offeringId: fundId } }), retry: false });
+  const d = q.data as any;
+  if (!d || !d.hasSetup || !d.canSeeOperations) return null;
+  const s = fundSetupSummary(d);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
+      <div>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">Fund launch</p>
+        <p className="font-heading text-lg font-semibold capitalize">{s.launchLabel}</p>
+        <p className="text-sm text-muted-foreground">Setup {s.percent}% complete · {s.openTasks} setup tasks and {s.openConditions} launch conditions open · {readyCount} of {total} investors ready</p>
+      </div>
+      <Link className="text-sm underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "setup" }}>Open Fund Setup</Link>
+    </div>
+  );
+}
+
 function WireInstructionsCard({ fundId }: { fundId: string }) {
   const load = useServerFn(getFundWireInstructions);
   const q = useQuery({ queryKey: ["fund-wire-instructions", fundId], queryFn: () => load({ data: { offering_id: fundId } }), retry: false });
@@ -308,6 +329,7 @@ export function FundReadiness({ fundId, viewAs = false }: { fundId: string; view
         </div>
         {!viewAs && d.viewer === "staff" ? <ViewAsPicker offeringId={fundId} label="View client perspective" /> : null}
       </div>
+      {!viewAs && <FundLaunchCard fundId={fundId} readyCount={counts.ready} total={counts.all} />}
       <WireInstructionsCard fundId={fundId} />
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
         {(["all", "ready", "needs_investor", "needs_harmonious", "blocked"] as Bucket[]).map((b) => (
