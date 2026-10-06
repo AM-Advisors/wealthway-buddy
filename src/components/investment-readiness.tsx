@@ -264,7 +264,7 @@ function WireInstructionsCard({ fundId }: { fundId: string }) {
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/manager/fund/$fundId" params={{ fundId }} search={{ tab: "banking" }}>{d.hasAny ? "View in Banking" : "Add in Banking"}</Link>
+          <Link to="/manager/fund-banking/$fundId" params={{ fundId }}>{d.hasAny ? "View in Banking" : "Add in Banking"}</Link>
         </Button>
       </div>
       {d.hasAny ? (
