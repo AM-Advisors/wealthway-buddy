@@ -37,6 +37,18 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
       await loadRows(XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: "" }));
     } catch (e) { toast.error((e as Error).message); }
   };
+  const downloadTemplate = async () => {
+    const XLSX = await import("xlsx");
+    const ws = XLSX.utils.aoa_to_sheet([
+      [...BULK_COLUMNS],
+      ["Jane", "Smith", "jane@example.com", "individual", "100000", "", "555-123-4567", "", "123 Main St, Denver, CO 80202"],
+      ["", "", "invest@acmellc.com", "entity", "250000", "", "", "Acme Ventures LLC", "45 Oak Ave, Austin, TX 78701"],
+    ]);
+    ws["!cols"] = BULK_COLUMNS.map(() => ({ wch: 18 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Investors");
+    XLSX.writeFile(wb, "investor-import-template.xlsx");
+  };
   const onSheet = async () => {
     setBusy(true);
     try {
@@ -64,7 +76,10 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
         <p className="text-sm text-muted-foreground">Upload an Excel file or CSV, or paste a Google Sheets link. Columns like {BULK_COLUMNS.join(", ")} are matched automatically (a single "Name" column is split into first and last). You'll see a preview first; nothing is saved and no one is emailed until you confirm.</p></CardHeader>
       <CardContent className="space-y-3">
         {!p ? <>
-          <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="Choose Excel or CSV file" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} className="text-sm" />
+          <div className="flex flex-wrap items-center gap-3">
+            <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="Choose Excel or CSV file" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} className="text-sm" />
+            <Button variant="outline" size="sm" onClick={() => void downloadTemplate()}>Download template</Button>
+          </div>
           <div className="flex flex-wrap gap-2"><Input className="min-w-64 flex-1" placeholder="Google Sheets link (shared: anyone with the link can view)" value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} /><Button variant="outline" onClick={onSheet} disabled={busy || !sheetUrl.trim()}>Load sheet</Button></div>
           <Textarea aria-label="CSV content" rows={5} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder="first_name,last_name,email,profile_type,amount" />
           <Button onClick={run} disabled={busy || !csv.trim()}>{busy ? "Checking…" : "Preview"}</Button>
