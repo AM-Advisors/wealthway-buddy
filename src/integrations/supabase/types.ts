@@ -24870,6 +24870,42 @@ export type Database = {
         }
         Relationships: []
       }
+      linkedin_oauth: {
+        Row: {
+          access_token: string
+          connected_at: string
+          connected_by: string | null
+          expires_at: string | null
+          id: boolean
+          organizations: Json
+          refresh_expires_at: string | null
+          refresh_token: string | null
+          scopes: string | null
+        }
+        Insert: {
+          access_token: string
+          connected_at?: string
+          connected_by?: string | null
+          expires_at?: string | null
+          id?: boolean
+          organizations?: Json
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          scopes?: string | null
+        }
+        Update: {
+          access_token?: string
+          connected_at?: string
+          connected_by?: string | null
+          expires_at?: string | null
+          id?: boolean
+          organizations?: Json
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          scopes?: string | null
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
