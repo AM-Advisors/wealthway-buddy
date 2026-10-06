@@ -20746,11 +20746,13 @@ export type Database = {
         Row: {
           addressed_email: string | null
           channel: string
-          client_id: string
+          client_id: string | null
           created_at: string
           created_by: string
           id: string
           last_message_at: string
+          participant_kind: string | null
+          participant_user_id: string | null
           rep_user_id: string | null
           started_side: string
           subject: string
@@ -20758,11 +20760,13 @@ export type Database = {
         Insert: {
           addressed_email?: string | null
           channel: string
-          client_id: string
+          client_id?: string | null
           created_at?: string
           created_by: string
           id?: string
           last_message_at?: string
+          participant_kind?: string | null
+          participant_user_id?: string | null
           rep_user_id?: string | null
           started_side?: string
           subject: string
@@ -20770,11 +20774,13 @@ export type Database = {
         Update: {
           addressed_email?: string | null
           channel?: string
-          client_id?: string
+          client_id?: string | null
           created_at?: string
           created_by?: string
           id?: string
           last_message_at?: string
+          participant_kind?: string | null
+          participant_user_id?: string | null
           rep_user_id?: string | null
           started_side?: string
           subject?: string
