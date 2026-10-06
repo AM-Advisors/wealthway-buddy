@@ -72,9 +72,10 @@ function PostEditor() {
     onSuccess: (r) => setBody(r.text), onError: (e) => toast.error((e as Error).message),
   });
   const imgM = useMutation({
-    mutationFn: () => genImg({ data: { prompt: imgPrompt } }),
+    mutationFn: (prompt: string) => genImg({ data: { prompt } }),
     onSuccess: (r) => { setImages((x) => [...x, r]); setImgPrompt(""); }, onError: (e) => toast.error((e as Error).message),
   });
+  const postTextPrompt = `Create a brand image for this social media post. Post title: ${title || "Untitled"}. Post text: ${body.slice(0, 1200)}`;
   const onFile = async (f: File | undefined) => {
     if (!f) return;
     try { const r = await upload({ data: { fileName: f.name, contentType: f.type, base64: await fileToBase64(f) } }); setImages((x) => [...x, r]); }
@@ -114,7 +115,8 @@ function PostEditor() {
             {!locked && (<div className="mt-3 space-y-2">
               <MarketingDrivePicker kind="image" label="Pick from Google Drive" onPick={async (a) => { try { const r = await fromDrive({ data: { assetId: a.id } }); setImages((x) => [...x, r]); } catch (e) { toast.error((e as Error).message); } }} />
               <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary"><ImagePlus className="h-4 w-4" />Upload image<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} /></label>
-              <div className="flex gap-2"><Input value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Describe an image for AI to create" /><Button variant="outline" onClick={() => imgM.mutate()} disabled={imgM.isPending || imgPrompt.trim().length < 3}><Wand2 className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create"}</Button></div>
+              <div className="flex gap-2"><Input value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Describe an image for AI to create" /><Button variant="outline" onClick={() => imgM.mutate(imgPrompt)} disabled={imgM.isPending || imgPrompt.trim().length < 3}><Wand2 className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create"}</Button></div>
+              <Button variant="outline" size="sm" onClick={() => imgM.mutate(postTextPrompt)} disabled={imgM.isPending || body.trim().length < 10}><Sparkles className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create image from post text"}</Button>
               <p className="text-xs text-muted-foreground">The first image is used on every channel.</p>
             </div>)}
           </Panel>
