@@ -69,7 +69,7 @@ function PostEditor() {
     if (isNew || !saved || savedPaths === curPaths || imgSaving.current) return;
     if (!(saved.status === "draft" || saved.status === "rejected")) return;
     imgSaving.current = true;
-    save({ data: { id, title: saved.title, body: saved.body, channels: saved.channels, imagePaths: images.map((i) => i.path), scheduledAt: saved.scheduled_at } })
+    save({ data: { id, title: saved.title, body: saved.body, channels: saved.channels, imagePaths: images.map((i) => i.path), scheduledAt: saved.scheduled_at ? new Date(saved.scheduled_at).toISOString() : null } })
       .then(() => q.refetch()).catch((e) => toast.error((e as Error).message)).finally(() => { imgSaving.current = false; });
   }, [curPaths, savedPaths]);
 
