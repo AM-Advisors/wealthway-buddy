@@ -13,3 +13,4 @@
 
 - [ ] Slack: notify #team-marketing on post submit + reaction approvals (needs publish + Slack app provisioning)
 - [x] SPV & Fund of Funds solutions/resources pages with downloadable guides (brand: navy #002856, cyan #5dc6d1, no pricing/offshore)
+- [x] Collateral Studio + brand rules for AI marketing images/copy
