@@ -66,6 +66,32 @@ export const listManagedWireInstructions = createServerFn({ method: "GET" })
     };
   });
 
+const maskAccount = (value: string) => {
+  const digits = value.replace(/\s+/g, "");
+  if (!digits) return "";
+  return digits.length <= 4 ? digits : `••••${digits.slice(-4)}`;
+};
+
+export const getFundWireInstructions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    const { isAdmin, offeringIds } = await managedOfferingIds(context.supabase, context.userId);
+    if (!isAdmin && !(offeringIds ?? []).includes(data.offering_id)) {
+      throw new Error("Wire instructions are available to Harmonious staff and managers of this fund.");
+    }
+
+    const { data: row, error } = await context.supabase
+      .rpc("get_wire_instructions", { p_offering_id: data.offering_id })
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+
+    const details = ((row as any)?.details ?? {}) as Record<string, string>;
+    const masked = { ...details, account_number: maskAccount(String(details.account_number ?? "")) };
+    const hasAny = Object.values(masked).some((v) => String(v ?? "").trim() !== "");
+    return { details: masked, updated_at: (row as any)?.updated_at ?? null, hasAny };
+  });
+
 export const saveManagedWireInstructions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => wireSchema.parse(data))
