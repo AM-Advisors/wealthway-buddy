@@ -173,6 +173,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   ];
   const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Compliance & Controls", url: "/ops/compliance" }].filter((x) => allowedUrls.has(x.url));
   if (leader || has("compliance", "legal")) regulatorySub.unshift({ title: "Compliance dashboard", url: "/ops/dashboards/compliance" });
+  if (!salesOnly) opsItems.push({ id: "ops-agreements", title: "My agreements", url: "/ops/agreements", icon: "document" });
   if (regulatorySub.length) opsItems.push({ id: "regulatory", title: "Regulatory & filings", url: regulatorySub[0]!.url, icon: "shield", sub: regulatorySub });
   const financeItems: NavItem[] = salesOnly ? [] : [
     ...(leader || has("finance", "tax", "fund_administration") ? [{ id: "dash-finance", title: "Finance dashboard", url: "/ops/dashboards/finance", icon: "report" }] : []),
@@ -231,6 +232,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "am-clients", title: "My clients", url: "/account-manager/clients", icon: "briefcase" },
     { id: "am-handoffs", title: "New client hand-offs", url: "/account-manager/handoffs", icon: "tasks" },
     { id: "am-renewals", title: "Renewals & expansion", url: "/account-manager/renewals", icon: "money" },
+    { id: "am-agreements", title: "Client agreements", url: "/ops/agreements", icon: "document" },
     ...(!salesOnly ? [
       { id: "am-requests", title: "Service requests", url: "/admin/signoff", icon: "check" },
       { id: "am-invoices", title: "Invoices & payments", url: "/admin/invoices", icon: "tax" },
