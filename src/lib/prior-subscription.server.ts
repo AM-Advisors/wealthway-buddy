@@ -92,7 +92,7 @@ async function onboardingIn(offeringId: string, onboardingId: string) {
   if (!data || data.offering_id !== offeringId) throw new Error("That investor isn't in this fund.");
 }
 
-export async function recordPrior(userId: string, input: { offeringId: string; onboardingId: string; commitmentCents: number; fundedCents: number; signedOn: string; evidenceItemIds: string[]; reason?: string | null }) {
+export async function recordPrior(userId: string, input: { offeringId: string; onboardingId: string; commitmentCents: number; fundedCents: number; signedOn: string; evidenceItemIds: string[]; reason?: string | null | undefined }) {
   await requireManager(userId);
   await onboardingIn(input.offeringId, input.onboardingId);
   if (input.fundedCents > input.commitmentCents) throw new Error("Funded amount can't be more than the commitment.");
@@ -114,7 +114,7 @@ export async function recordPrior(userId: string, input: { offeringId: string; o
   return { ok: true };
 }
 
-export async function decidePrior(userId: string, input: { offeringId: string; priorId: string; confirm: boolean; note?: string | null }) {
+export async function decidePrior(userId: string, input: { offeringId: string; priorId: string; confirm: boolean; note?: string | null | undefined }) {
   await requireManager(userId);
   const db = await admin();
   const { data: p } = await db.from("prior_subscriptions").select("id, onboarding_id, offering_id, recorded_by").eq("id", input.priorId).maybeSingle();
