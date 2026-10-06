@@ -425,39 +425,6 @@ async function notifyCountersign(clientId: string, label: string, actor: string)
   } catch (e) { console.error("countersign task failed", e); }
 }
 
-async function _unusedMsaExecution() {
-  return;
-  const context: any = null, data: any = null, version: any = null, who: any = null, agreement: any = null, now = "";
-
-    const { data: sections } = await context.supabase
-      .from("msa_sections")
-      .select("section_no, title, body")
-      .eq("msa_version_id", version.id)
-      .order("sort_order");
-
-    await context.supabase.from("agreement_executions").insert({
-      scope: "msa",
-      client_id: data.clientId,
-      msa_agreement_id: (agreement as any).id,
-      snapshot: {
-        version: version.version,
-        effectiveDate: version.effective_date,
-        sections: sections ?? [],
-        signedBy: data.signerName,
-        signedTitle: data.signerTitle,
-        signedAt: now,
-      } as any,
-    });
-
-    await audit(context, who, {
-      action: "msa.executed",
-      clientId: data.clientId,
-      target: version.version,
-      next: { signer: data.signerName, version: version.version },
-    });
-
-    return { ok: true, alreadyExecuted: false } as const;
-  });
 
 /* ------------------------------------------------------------ fund request */
 
@@ -1075,5 +1042,6 @@ export const signSow = createServerFn({ method: "POST" })
       next: { signer: data.signerName },
     });
 
+    await notifyCountersign((sow as any).client_id, String((sow as any).title ?? "SOW"), who.userId);
     return { ok: true, alreadySigned: false } as const;
   });
