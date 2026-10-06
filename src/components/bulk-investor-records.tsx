@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { bulkCancelFn, bulkCommitFn, bulkPreviewFn } from "@/lib/investor-record.functions";
+import { bulkCancelFn, bulkCommitFn, bulkPreviewFn, fetchGoogleSheetCsvFn } from "@/lib/investor-record.functions";
+import { rowsToBulkCsv } from "@/lib/bulk-sheet-normalize";
+import { Input } from "@/components/ui/input";
 import { BULK_CLASS_LABELS, BULK_COLUMNS, type BulkClass } from "@/lib/investor-record-model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +25,27 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
   const [decisions, setDecisions] = useState<Record<string, "keep" | "use_imported" | "later">>({});
   const [busy, setBusy] = useState(false);
 
-  const onFile = async (file?: File) => { if (file) setCsv(await file.text()); };
+  const [sheetUrl, setSheetUrl] = useState("");
+  const gsheet = useServerFn(fetchGoogleSheetCsvFn);
+  const loadRows = async (rows: unknown[][]) => { const out = rowsToBulkCsv(rows); setCsv(out); toast.success(`Loaded ${out.split("\n").length - 1} rows. Check them, then Preview.`); };
+  const onFile = async (file?: File) => {
+    if (!file) return;
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]!]!;
+      await loadRows(XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: false, defval: "" }));
+    } catch (e) { toast.error((e as Error).message); }
+  };
+  const onSheet = async () => {
+    setBusy(true);
+    try {
+      const { csv: text } = await gsheet({ data: { url: sheetUrl.trim() } });
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(text, { type: "string" });
+      await loadRows(XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[wb.SheetNames[0]!]!, { header: 1, raw: false, defval: "" }));
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
   const run = async () => { setBusy(true); try { setP((await preview({ data: { offeringId: fundId, csv } })) as Preview); setDecisions({}); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   const confirm = async () => {
     if (!p) return; setBusy(true);
@@ -39,10 +61,11 @@ export function BulkInvestorRecords({ fundId, isStaff }: { fundId: string; isSta
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">Bulk Add Investors</CardTitle>
-        <p className="text-sm text-muted-foreground">Upload a CSV with columns: {BULK_COLUMNS.join(", ")}. You'll see a preview first; nothing is saved and no one is emailed until you confirm.</p></CardHeader>
+        <p className="text-sm text-muted-foreground">Upload an Excel file or CSV, or paste a Google Sheets link. Columns like {BULK_COLUMNS.join(", ")} are matched automatically (a single "Name" column is split into first and last). You'll see a preview first; nothing is saved and no one is emailed until you confirm.</p></CardHeader>
       <CardContent className="space-y-3">
         {!p ? <>
-          <input type="file" accept=".csv,text/csv" aria-label="Choose CSV file" onChange={(e) => onFile(e.target.files?.[0])} className="text-sm" />
+          <input type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" aria-label="Choose Excel or CSV file" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} className="text-sm" />
+          <div className="flex flex-wrap gap-2"><Input className="min-w-64 flex-1" placeholder="Google Sheets link (shared: anyone with the link can view)" value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} /><Button variant="outline" onClick={onSheet} disabled={busy || !sheetUrl.trim()}>Load sheet</Button></div>
           <Textarea aria-label="CSV content" rows={5} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder="first_name,last_name,email,profile_type,amount" />
           <Button onClick={run} disabled={busy || !csv.trim()}>{busy ? "Checking…" : "Preview"}</Button>
         </> : <>
