@@ -91,6 +91,8 @@ import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/res
 import { Route as ResourcesRegD506bVs506cRouteImport } from './routes/resources.reg-d-506b-vs-506c'
 import { Route as SharesTokenRouteImport } from './routes/shares.$token'
 import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
+import { Route as SolutionsFundOfFundsRouteImport } from './routes/solutions.fund-of-funds'
+import { Route as SolutionsSpvRouteImport } from './routes/solutions.spv'
 import { Route as UnsubscribeTokenRouteImport } from './routes/unsubscribe.$token'
 import { Route as AuthenticatedAccountManagerClientsRouteImport } from './routes/_authenticated/account-manager_.clients'
 import { Route as AuthenticatedAccountManagerHandoffsRouteImport } from './routes/_authenticated/account-manager_.handoffs'
@@ -821,6 +823,16 @@ const SharesTokenRoute = SharesTokenRouteImport.update({
 const SolutionsIndexRoute = SolutionsIndexRouteImport.update({
   id: '/solutions/',
   path: '/solutions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsFundOfFundsRoute = SolutionsFundOfFundsRouteImport.update({
+  id: '/solutions/fund-of-funds',
+  path: '/solutions/fund-of-funds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsSpvRoute = SolutionsSpvRouteImport.update({
+  id: '/solutions/spv',
+  path: '/solutions/spv',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeTokenRoute = UnsubscribeTokenRouteImport.update({
@@ -2710,6 +2722,8 @@ export interface FileRoutesByFullPath {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
+  '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
@@ -3098,6 +3112,8 @@ export interface FileRoutesByTo {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
+  '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth': typeof AuthIndexRoute
   '/investor': typeof InvestorIndexRoute
@@ -3488,6 +3504,8 @@ export interface FileRoutesById {
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
   '/shares/$token': typeof SharesTokenRoute
+  '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
+  '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
@@ -3882,6 +3900,8 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/solutions/fund-of-funds'
+    | '/solutions/spv'
     | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
@@ -4270,6 +4290,8 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/solutions/fund-of-funds'
+    | '/solutions/spv'
     | '/unsubscribe/$token'
     | '/auth'
     | '/investor'
@@ -4659,6 +4681,8 @@ export interface FileRouteTypes {
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
     | '/shares/$token'
+    | '/solutions/fund-of-funds'
+    | '/solutions/spv'
     | '/unsubscribe/$token'
     | '/auth/'
     | '/investor/'
@@ -5009,6 +5033,8 @@ export interface RootRouteChildren {
   ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
   ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
   SharesTokenRoute: typeof SharesTokenRoute
+  SolutionsFundOfFundsRoute: typeof SolutionsFundOfFundsRoute
+  SolutionsSpvRoute: typeof SolutionsSpvRoute
   UnsubscribeTokenRoute: typeof UnsubscribeTokenRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   SolutionsIndexRoute: typeof SolutionsIndexRoute
@@ -5614,6 +5640,20 @@ declare module '@tanstack/react-router' {
       path: '/solutions'
       fullPath: '/solutions/'
       preLoaderRoute: typeof SolutionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/fund-of-funds': {
+      id: '/solutions/fund-of-funds'
+      path: '/solutions/fund-of-funds'
+      fullPath: '/solutions/fund-of-funds'
+      preLoaderRoute: typeof SolutionsFundOfFundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/spv': {
+      id: '/solutions/spv'
+      path: '/solutions/spv'
+      fullPath: '/solutions/spv'
+      preLoaderRoute: typeof SolutionsSpvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe/$token': {
@@ -8671,6 +8711,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
   ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,
   SharesTokenRoute: SharesTokenRoute,
+  SolutionsFundOfFundsRoute: SolutionsFundOfFundsRoute,
+  SolutionsSpvRoute: SolutionsSpvRoute,
   UnsubscribeTokenRoute: UnsubscribeTokenRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   SolutionsIndexRoute: SolutionsIndexRoute,
