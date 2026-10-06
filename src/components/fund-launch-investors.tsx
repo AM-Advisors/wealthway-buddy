@@ -1,5 +1,5 @@
 /** Step 4 of a Drive migration: launch checklist, prior (off-platform) subscriptions, and manual invites. */
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -51,8 +51,8 @@ export function FundLaunchInvestors({ fundId, items }: { fundId: string; items: 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="text-left text-xs text-muted-foreground"><th className="w-8" /><th>Investor</th><th>Commitment</th><th>Prior subscription</th><th>Progress</th><th /></tr></thead>
-              <tbody className="divide-y">{d.investors.map((i) => (<>
-                <tr key={i.onboardingId}>
+              <tbody className="divide-y">{d.investors.map((i) => (<Fragment key={i.onboardingId}>
+                <tr>
                   <td>{d.canManage && d.launched && !i.invited && !i.joined && <Checkbox checked={sel.includes(i.onboardingId)} onCheckedChange={(v) => setSel((x) => v ? [...x, i.onboardingId] : x.filter((y) => y !== i.onboardingId))} aria-label={`Select ${i.name}`} />}</td>
                   <td className="py-2"><div className="font-medium text-foreground">{i.name}</div><div className="text-xs text-muted-foreground">{i.email ?? "No email"}</div></td>
                   <td>{usd(i.commitmentCents)}</td>
@@ -67,7 +67,7 @@ export function FundLaunchInvestors({ fundId, items }: { fundId: string; items: 
                   </td>
                 </tr>
                 {open === i.onboardingId && <tr key={`${i.onboardingId}-f`}><td colSpan={6}><PriorForm fundId={fundId} inv={i} evidence={evidence} onDone={() => { setOpen(null); refresh(); }} /></td></tr>}
-              </>))}</tbody>
+              </Fragment>))}</tbody>
             </table>
           </div>
         )}
