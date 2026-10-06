@@ -23,7 +23,7 @@ export async function getCollateral(userId: string, id: string) {
   return data;
 }
 
-export async function saveCollateral(userId: string, d: { id?: string | null; template: string; title: string; content: unknown }) {
+export async function saveCollateral(userId: string, d: { id?: string | null | undefined; template: string; title: string; content: unknown }) {
   const { db, roles } = await requireMarketing(userId);
   if (LEADERSHIP_ONLY(roles)) throw new Error("Leadership is view-only.");
   const fields = { template: d.template, title: d.title.slice(0, 200), content: d.content, updated_at: new Date().toISOString() };
