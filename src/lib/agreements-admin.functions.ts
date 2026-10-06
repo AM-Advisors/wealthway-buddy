@@ -201,6 +201,7 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
         createdAt: s.created_at as string,
         funds: ((links ?? []) as any[]).filter((l) => l.sow_id === s.id).map((l) => ({ id: l.offering_id as string, name: (offName.get(l.offering_id) as string) ?? "Fund", status: l.status as string })),
         salesOwnerId: salesOwner.get(s.client_id) ?? null,
+        legacyActivation: Boolean(s.legacy_activation),
       })),
       changes: changes.map((c) => ({
         id: c.id as string,

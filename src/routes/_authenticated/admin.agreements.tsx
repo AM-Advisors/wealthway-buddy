@@ -23,6 +23,7 @@ import {
   updatePricingLine,
 } from "@/lib/agreements-admin.functions";
 import { getSowWorkspace } from "@/lib/agreements.functions";
+import { countersignMsa, listMsasAwaitingCountersign } from "@/lib/agreements-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/agreements")({
   head: () => ({
@@ -81,8 +82,9 @@ function AdminAgreementsPage() {
       <p className="mb-6 mt-2 text-sm text-muted-foreground">
         Every client engagement runs on the master services agreement plus a statement of work per
         fund. Executed agreements keep the pricing they were signed on.
-        {!data.access.canManage && " You have read-only access."}
+        {!data.access.canManage && " You have read-only access."} An agreement is active only after the client signs and then Harmonious countersigns.
       </p>
+      <MsaCountersignPanel />
 
       <Tabs defaultValue="agreements">
         <TabsList>
@@ -548,5 +550,46 @@ function AgreementDetail({
         </div>
       )}
     </div>
+  );
+}
+
+function MsaCountersignPanel() {
+  const load = useServerFn(listMsasAwaitingCountersign);
+  const sign = useServerFn(countersignMsa);
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["msa-countersign"], queryFn: () => load(), retry: false });
+  const [open, setOpen] = useState<string | null>(null);
+  const [f, setF] = useState({ name: "", title: "", sig: "" });
+  const waiting = (q.data?.msas ?? []).filter((m) => m.status === "client_signed");
+  if (!waiting.length) return null;
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="text-base">MSAs waiting on Harmonious countersignature ({waiting.length})</CardTitle>
+        <CardDescription>The client has signed. {q.data?.canSign ? "Countersign to make it active." : "A CEO, Super Admin or Legal signer must countersign."}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {waiting.map((m) => (
+          <div key={m.id} className="rounded-md border p-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-auto font-medium">{m.clientName}</span>
+              <Badge variant="secondary">Client signed {m.clientSignedAt ? new Date(m.clientSignedAt).toLocaleDateString("en-US") : ""}</Badge>
+              {q.data?.canSign && <Button size="sm" onClick={() => setOpen(open === m.id ? null : m.id)}><PenLine className="mr-1 h-4 w-4" />Countersign</Button>}
+            </div>
+            {open === m.id && (
+              <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                <Input placeholder="Name" aria-label="Signer name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+                <Input placeholder="Title" aria-label="Signer title" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+                <Input placeholder="Type your full name to sign" aria-label="Typed signature" value={f.sig} onChange={(e) => setF({ ...f, sig: e.target.value })} />
+                <Button disabled={f.name.trim().length < 2 || !f.title.trim() || f.sig.trim().length < 2} onClick={async () => {
+                  try { await sign({ data: { agreementId: m.id, signerName: f.name.trim(), signerTitle: f.title.trim(), typedSignature: f.sig.trim() } }); toast.success("MSA countersigned and active."); setOpen(null); void qc.invalidateQueries({ queryKey: ["msa-countersign"] }); }
+                  catch (e) { toast.error((e as Error).message); }
+                }}>Sign</Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }

@@ -54,7 +54,7 @@ function MsaPage() {
         },
       }),
     onSuccess: () => {
-      toast.success("Master services agreement executed.");
+      toast.success("Signed. Harmonious will countersign to make it active.");
       queryClient.invalidateQueries({ queryKey: ["agreements-home"] });
       queryClient.invalidateQueries({ queryKey: ["msa-workspace", clientId] });
       navigate({ to: "/client/agreements" });
@@ -65,6 +65,7 @@ function MsaPage() {
   if (isLoading || !data) return <Skeleton className="h-64 w-full" />;
 
   const executed = Boolean(data.agreement?.executedAt);
+  const clientSigned = !executed && data.agreement?.status === "client_signed";
   const allRead = data.sections.every((s) => read[s.id]);
   const canSign =
     allRead && confirmed && name.trim().length > 1 && title.trim() && signature.trim().length > 1;
@@ -85,7 +86,7 @@ function MsaPage() {
           </p>
         </div>
         <Badge variant={executed ? "secondary" : "default"}>
-          {executed ? "Executed" : "Review needed"}
+          {executed ? "Active - signed by both" : clientSigned ? "Waiting on Harmonious countersignature" : "Review needed"}
         </Badge>
       </div>
 
@@ -110,7 +111,7 @@ function MsaPage() {
               <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                 {section.body}
               </p>
-              {!executed && (
+              {!executed && !clientSigned && (
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={Boolean(read[section.id])}
@@ -158,7 +159,7 @@ function MsaPage() {
         </Card>
       )}
 
-      {!executed && (
+      {!executed && !clientSigned && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Sign</CardTitle>

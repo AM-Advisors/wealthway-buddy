@@ -23,7 +23,7 @@ const STAGE_LABEL: Record<string, string> = {
   in_review: "Ready for your review",
   changes_requested: "Change requested",
   client_signed: "Waiting on Harmonious countersignature",
-  executed: "Executed",
+  executed: "Active - signed by both",
 };
 
 function AgreementsHome() {
