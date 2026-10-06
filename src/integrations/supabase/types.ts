@@ -25906,6 +25906,30 @@ export type Database = {
           },
         ]
       }
+      marketing_slack_messages: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          post_id: string
+          ts: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          id?: string
+          post_id: string
+          ts: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          ts?: string
+        }
+        Relationships: []
+      }
       message_reads: {
         Row: {
           last_read_at: string
