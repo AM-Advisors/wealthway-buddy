@@ -25234,6 +25234,48 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaign_assets: {
+        Row: {
+          added_by: string
+          asset_id: string
+          campaign_id: string
+          created_at: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          added_by: string
+          asset_id: string
+          campaign_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          added_by?: string
+          asset_id?: string
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaign_assets_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_drive_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_campaign_assets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_campaigns: {
         Row: {
           archived_at: string | null
@@ -25300,6 +25342,60 @@ export type Database = {
           display_name?: string | null
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      marketing_drive_assets: {
+        Row: {
+          cached_modified_at: string | null
+          created_at: string
+          drive_file_id: string
+          drive_modified_at: string | null
+          folder_path: string
+          id: string
+          kind: string
+          mime_type: string
+          name: string
+          removed_at: string | null
+          size_bytes: number | null
+          storage_path: string | null
+          synced_at: string
+          theme: string | null
+          web_view_link: string | null
+        }
+        Insert: {
+          cached_modified_at?: string | null
+          created_at?: string
+          drive_file_id: string
+          drive_modified_at?: string | null
+          folder_path?: string
+          id?: string
+          kind: string
+          mime_type: string
+          name: string
+          removed_at?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          synced_at?: string
+          theme?: string | null
+          web_view_link?: string | null
+        }
+        Update: {
+          cached_modified_at?: string | null
+          created_at?: string
+          drive_file_id?: string
+          drive_modified_at?: string | null
+          folder_path?: string
+          id?: string
+          kind?: string
+          mime_type?: string
+          name?: string
+          removed_at?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          synced_at?: string
+          theme?: string | null
+          web_view_link?: string | null
         }
         Relationships: []
       }
@@ -25384,6 +25480,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          attachment_asset_ids: string[]
           audience_id: string | null
           author_id: string
           blocks: Json
@@ -25405,6 +25502,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          attachment_asset_ids?: string[]
           audience_id?: string | null
           author_id: string
           blocks?: Json
@@ -25426,6 +25524,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          attachment_asset_ids?: string[]
           audience_id?: string | null
           author_id?: string
           blocks?: Json
@@ -25727,6 +25826,82 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_share_links: {
+        Row: {
+          asset_id: string
+          audience: string
+          created_at: string
+          created_by: string
+          id: string
+          recipient_email: string | null
+          recipient_name: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          token: string
+        }
+        Insert: {
+          asset_id: string
+          audience: string
+          created_at?: string
+          created_by: string
+          id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          token: string
+        }
+        Update: {
+          asset_id?: string
+          audience?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_share_links_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_drive_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_share_views: {
+        Row: {
+          id: string
+          link_id: string
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          link_id: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          link_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_share_views_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_share_links"
             referencedColumns: ["id"]
           },
         ]
