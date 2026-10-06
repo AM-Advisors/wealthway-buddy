@@ -329,6 +329,7 @@ export function FundReadiness({ fundId, viewAs = false }: { fundId: string; view
         </div>
         {!viewAs && d.viewer === "staff" ? <ViewAsPicker offeringId={fundId} label="View client perspective" /> : null}
       </div>
+      {!viewAs && <FundLaunchCard fundId={fundId} readyCount={counts.ready} total={counts.all} />}
       <WireInstructionsCard fundId={fundId} />
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
         {(["all", "ready", "needs_investor", "needs_harmonious", "blocked"] as Bucket[]).map((b) => (
