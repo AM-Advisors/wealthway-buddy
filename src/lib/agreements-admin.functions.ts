@@ -433,7 +433,7 @@ export const countersignSow = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    const who = await requireAuthority(context);
+    const who = await requireSign(context);
 
     const { data: sow } = await context.supabase
       .from("client_sows")
@@ -641,7 +641,7 @@ export const executeAmendment = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ context, data }) => {
-    const who = await requireAuthority(context);
+    const who = await requireSign(context);
     const { data: amendment } = await context.supabase
       .from("sow_amendments")
       .select("*")
@@ -712,6 +712,13 @@ export const getAgreementDocument = createServerFn({ method: "GET" })
       .eq("id", data.sowId)
       .maybeSingle();
     if (!sow) throw new Error("Agreement not found.");
+    {
+      const who = await whoIs(context);
+      if (who.isStaff) {
+        const scope = await agreementScope(who);
+        if (scope && !scope.clients.has((sow as any).client_id) && !scope.sowsCreated.has((sow as any).id)) throw new Error("This agreement isn't for a client or fund you're assigned to.");
+      }
+    }
 
     const [{ data: client }, { data: sections }, { data: snapshot }, { data: signatures }] =
       await Promise.all([
@@ -804,4 +811,26 @@ export const getAgreementDocument = createServerFn({ method: "GET" })
     </body></html>`;
 
     return { html, filename: `${(sow as any).title.replace(/[^\w-]+/g, "-")}.html` };
+  });
+
+/** Read-only staff: ask the client's Sales owner to change an agreement (creates a task). */
+export const askSalesAboutAgreement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ sowId: z.string().uuid(), note: z.string().trim().min(3).max(2000) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const who = await requireStaff(context);
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: sow } = await db.from("client_sows").select("id, client_id, title").eq("id", data.sowId).maybeSingle();
+    if (!sow) throw new Error("Agreement not found.");
+    const scope = await agreementScope(who);
+    if (scope && !scope.clients.has((sow as any).client_id) && !scope.sowsCreated.has((sow as any).id)) throw new Error("This agreement isn't for a client you're assigned to.");
+    const { data: owner } = await db.from("client_team_assignments").select("user_id").eq("client_id", (sow as any).client_id).eq("team_role", "sales").maybeSingle();
+    const { data: client } = await db.from("clients").select("name, legal_name").eq("id", (sow as any).client_id).maybeSingle();
+    const { createTask } = await import("./staff-tasks.server");
+    const t = await createTask(who.userId, {
+      title: `Agreement question: ${(client as any)?.legal_name || (client as any)?.name || "client"} - ${(sow as any).title}`,
+      description: data.note, priority: "normal", team: "sales", assignee: (owner as any)?.user_id ?? null,
+    });
+    await audit(context, who, { action: "sow.sales_asked", clientId: (sow as any).client_id, target: (sow as any).title });
+    return { taskId: t.id, assigned: !!(owner as any)?.user_id };
   });
