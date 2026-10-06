@@ -122,6 +122,7 @@ export async function decidePost(userId: string, id: string, action: "submit" | 
     }
   }
   await audit(db, "post", id, action === "submit" ? "submitted" : action === "approve" ? "approved" : "sent_back", userId, note);
+  if (action === "submit") await (await import("@/lib/marketing-slack.server")).notifyPostSubmitted(id, userId);
   if (action === "approve") await runDue().catch((e) => console.error("marketing run after approve", e));
   return { ok: true };
 }
