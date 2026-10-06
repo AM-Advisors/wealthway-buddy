@@ -1,3 +1,4 @@
+import { InvestorsTab } from "@/components/fund-tabs/investors-tab";
 import { CommercialAgreementCard } from "@/components/commercial-agreement-card";
 import { HarmoniousTeamCard } from "@/components/harmonious-team-card";
 import { ClientContractsPanel } from "@/components/client-contracts";
@@ -217,6 +218,11 @@ function summaryFor(type: OpsRecordType, record: any): { label: string; value: s
 }
 
 function TabBody({ type, id, tab }: { type: OpsRecordType; id: string; tab: string }) {
+  if (type === "fund" && tab === "investors") return <InvestorsTab fundId={id} />;
+  return <GenericTabBody type={type} id={id} tab={tab} />;
+}
+
+function GenericTabBody({ type, id, tab }: { type: OpsRecordType; id: string; tab: string }) {
   const load = useServerFn(TAB_FN[type] as any);
   const query = useQuery({
     queryKey: ["ops-record-tab", type, id, tab],

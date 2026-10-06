@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
+import { fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn } from "@/lib/fund-tabs.functions";
 import { reminderAllowed, reminderStep } from "@/lib/fund-health";
 import { toast } from "sonner";
@@ -17,6 +18,9 @@ import { fmtDate, usd } from "./shared";
 export function InvestorsTab({ fundId }: { fundId: string }) {
   const load = useServerFn(investorGridFn);
   const q = useQuery({ queryKey: ["fund-investor-grid", fundId], queryFn: () => load({ data: { fundId } }) });
+  const loadReady = useServerFn(fundReadinessFn);
+  const rq = useQuery({ queryKey: ["fund-readiness", fundId], queryFn: () => loadReady({ data: { offeringId: fundId } }), retry: false });
+  const ready = new Map(((rq.data?.rows ?? []) as any[]).map((x) => [x.onboardingId, x]));
   const [open, setOpen] = useState<string | null>(null);
   const [invite, setInvite] = useState(false);
   const rows = q.data ?? [];
@@ -58,7 +62,7 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="w-8 py-2"><span className="sr-only">Select for reminder</span></th><th className="py-2">Name</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><span className="sr-only">Select for reminder</span></th><th className="py-2">Name</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
@@ -74,6 +78,7 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
                     <td><Badge variant={r.kycOk ? "secondary" : "outline"} className="whitespace-nowrap capitalize">{r.kycLabel}</Badge></td>
                     <td><Badge variant={r.docs === "Signed" ? "secondary" : "outline"}>{r.docs}</Badge></td>
                     <td><Badge variant={r.wiring === "Funded" ? "secondary" : "outline"}>{r.wiring}</Badge></td>
+                    <td className="text-xs">{(() => { const x = ready.get(r.id); if (!x) return <span className="text-muted-foreground">-</span>; return x.closeReady ? <Badge variant="secondary">Ready</Badge> : <span title={x.nextAction?.label ?? ""}>{x.percentComplete ?? 0}% · {x.nextAction?.label ?? "In progress"}</span>; })()}</td>
                     <td className="whitespace-nowrap text-xs text-muted-foreground">{fmtDate(r.lastActivity)}</td>
                   </tr>
                 ))}

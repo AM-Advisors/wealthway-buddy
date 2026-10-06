@@ -39,6 +39,7 @@ function FundSetupDetail() {
         {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
           <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Launch: {d.launchState ?? "Not ready"}</p>
           <p className="text-sm text-muted-foreground">{d.tasks.filter((t) => t.status !== "complete").length} setup tasks and {d.conditions.filter((c) => !c.satisfied).length} launch conditions still to complete. {d.approvalCount} launch approvals recorded.</p>
+          <p className="text-sm">Fund launch: {d.launchState ?? "Not ready"} · <Link className="underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "investors" }}>Investor readiness for each investor</Link></p>
           {d.canUseCanonical
             ? <p className="text-sm text-muted-foreground">Each required item is listed inside its Fund Setup section below.</p>
             : <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={false} onChanged={() => q.refetch()} />}
