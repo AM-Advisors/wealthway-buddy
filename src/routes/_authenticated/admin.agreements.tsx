@@ -124,6 +124,7 @@ function AdminAgreementsPage() {
                   <AgreementDetail
                     sowId={a.id}
                     canManage={data.access.canManage}
+                    canSign={data.access.canSign}
                     onChanged={() => queryClient.invalidateQueries({ queryKey: ["agreement-queue"] })}
                   />
                 </CardContent>
@@ -196,10 +197,12 @@ function AdminAgreementsPage() {
 function AgreementDetail({
   sowId,
   canManage,
+  canSign,
   onChanged,
 }: {
   sowId: string;
   canManage: boolean;
+  canSign: boolean;
   onChanged: () => void;
 }) {
   const load = useServerFn(getSowWorkspace);
@@ -467,7 +470,7 @@ function AgreementDetail({
           </p>
         ))}
 
-        {canManage && clientSigned && !executed && (
+        {canSign && clientSigned && !executed && (
           <div className="mt-3 space-y-2 rounded-md border p-3">
             <p className="text-sm font-medium">Countersign to execute</p>
             <div className="grid gap-2 sm:grid-cols-3">

@@ -220,6 +220,7 @@ import { Route as AuthenticatedOnboardingKycRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsIndexRouteImport } from './routes/_authenticated/ops.index'
 import { Route as AuthenticatedOpsAccessControlRouteImport } from './routes/_authenticated/ops.access-control'
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
+import { Route as AuthenticatedOpsAgreementsRouteImport } from './routes/_authenticated/ops.agreements'
 import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsCloseRequestsRouteImport } from './routes/_authenticated/ops.close-requests'
@@ -1580,6 +1581,12 @@ const AuthenticatedOpsAccountingRoute =
     path: '/ops/accounting',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsAgreementsRoute =
+  AuthenticatedOpsAgreementsRouteImport.update({
+    id: '/ops/agreements',
+    path: '/ops/agreements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsAllocationsRoute =
   AuthenticatedOpsAllocationsRouteImport.update({
     id: '/ops/allocations',
@@ -2811,6 +2818,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/access-control': typeof AuthenticatedOpsAccessControlRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
@@ -3192,6 +3200,7 @@ export interface FileRoutesByTo {
   '/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/ops/access-control': typeof AuthenticatedOpsAccessControlRoute
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
@@ -3581,6 +3590,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding/kyc': typeof AuthenticatedOnboardingKycRoute
   '/_authenticated/ops/access-control': typeof AuthenticatedOpsAccessControlRoute
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
+  '/_authenticated/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
@@ -3971,6 +3981,7 @@ export interface FileRouteTypes {
     | '/onboarding/kyc'
     | '/ops/access-control'
     | '/ops/accounting'
+    | '/ops/agreements'
     | '/ops/allocations'
     | '/ops/banking'
     | '/ops/close-requests'
@@ -4352,6 +4363,7 @@ export interface FileRouteTypes {
     | '/onboarding/kyc'
     | '/ops/access-control'
     | '/ops/accounting'
+    | '/ops/agreements'
     | '/ops/allocations'
     | '/ops/banking'
     | '/ops/close-requests'
@@ -4740,6 +4752,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding/kyc'
     | '/_authenticated/ops/access-control'
     | '/_authenticated/ops/accounting'
+    | '/_authenticated/ops/agreements'
     | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/close-requests'
@@ -6467,6 +6480,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsAccountingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/agreements': {
+      id: '/_authenticated/ops/agreements'
+      path: '/ops/agreements'
+      fullPath: '/ops/agreements'
+      preLoaderRoute: typeof AuthenticatedOpsAgreementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/allocations': {
       id: '/_authenticated/ops/allocations'
       path: '/ops/allocations'
@@ -8115,6 +8135,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingKycRoute: typeof AuthenticatedOnboardingKycRoute
   AuthenticatedOpsAccessControlRoute: typeof AuthenticatedOpsAccessControlRoute
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
+  AuthenticatedOpsAgreementsRoute: typeof AuthenticatedOpsAgreementsRoute
   AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsCloseRequestsRoute: typeof AuthenticatedOpsCloseRequestsRoute
@@ -8394,6 +8415,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingKycRoute: AuthenticatedOnboardingKycRoute,
   AuthenticatedOpsAccessControlRoute: AuthenticatedOpsAccessControlRoute,
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
+  AuthenticatedOpsAgreementsRoute: AuthenticatedOpsAgreementsRoute,
   AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsCloseRequestsRoute: AuthenticatedOpsCloseRequestsRoute,

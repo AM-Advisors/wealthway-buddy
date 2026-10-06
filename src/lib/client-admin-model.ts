@@ -82,13 +82,19 @@ const ALL: ClientCapability[] = CLIENT_CAPABILITIES.map((c) => c.value);
 const CLIENT_ROLE_BASELINE: Record<string, ClientCapability[]> = {
   super_admin: ALL,
   admin: ALL,
-  operations: ["view_client", "edit_client", "manage_people", "manage_roles", "link_funds", "manage_services", "manage_sows"],
+  operations: ["view_client", "edit_client", "manage_people", "manage_roles", "link_funds", "manage_services"],
   client_success: ["view_client", "edit_client", "manage_people", "manage_roles", "manage_services"],
   finance: ["view_client", "manage_pricing", "approve_pricing"],
   legal: ["view_client", "manage_sows", "approve_terms"],
   compliance: ["view_client"],
-  executive: ["view_client"],
+  executive: ["view_client", "manage_sows", "approve_terms"],
   fund_administration: ["view_client"],
+  // Sales owns MSAs/SOWs; Sales leadership approves templates/terms (never their own draft).
+  sales: ["view_client", "manage_sows"],
+  account_executive: ["view_client", "manage_sows"],
+  bdr: ["view_client", "manage_sows"],
+  sales_management: ["view_client", "manage_sows", "approve_terms"],
+  cro: ["view_client", "manage_sows", "approve_terms"],
 };
 
 /**
