@@ -72,9 +72,10 @@ function PostEditor() {
     onSuccess: (r) => setBody(r.text), onError: (e) => toast.error((e as Error).message),
   });
   const imgM = useMutation({
-    mutationFn: () => genImg({ data: { prompt: imgPrompt } }),
+    mutationFn: (prompt: string) => genImg({ data: { prompt } }),
     onSuccess: (r) => { setImages((x) => [...x, r]); setImgPrompt(""); }, onError: (e) => toast.error((e as Error).message),
   });
+  const postTextPrompt = `Create a brand image for this social media post. Post title: ${title || "Untitled"}. Post text: ${body.slice(0, 1200)}`;
   const onFile = async (f: File | undefined) => {
     if (!f) return;
     try { const r = await upload({ data: { fileName: f.name, contentType: f.type, base64: await fileToBase64(f) } }); setImages((x) => [...x, r]); }
