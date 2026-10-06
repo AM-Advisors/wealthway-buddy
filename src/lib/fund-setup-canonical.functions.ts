@@ -257,7 +257,7 @@ export const setEinPathFn = createServerFn({ method: "POST" })
 
 export const recordEinFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, ein: z.string().trim().max(12), letterPath: z.string().min(3).max(400), received: z.boolean() }).parse)
+  .inputValidator(z.object({ offeringId: uuid, ein: z.string().trim().max(12), letterPath: z.string().min(3).max(400).nullish(), received: z.boolean() }).parse)
   .handler(async ({ data, context }) => (await p3()).recordEin(context.supabase, context.userId, data));
 
 export const saveSs4Fn = createServerFn({ method: "POST" })
