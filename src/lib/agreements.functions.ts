@@ -611,6 +611,11 @@ export const getSowWorkspace = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     if (!sow) throw new Error("Agreement not found.");
     await assertClientAccess(context, who, (sow as any).client_id);
+    {
+      const { data: rr } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+      const { assertAgreementVisibleToStaff } = await import("./agreement-scope.server");
+      await assertAgreementVisibleToStaff(context.userId, ((rr ?? []) as any[]).map((r) => String(r.role)), (sow as any).client_id, data.sowId);
+    }
 
     const [
       { data: client },
