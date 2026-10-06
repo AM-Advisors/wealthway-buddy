@@ -14,12 +14,6 @@ export const STAFF_ROLES = [
   "finance",
   "client_success",
   "executive",
-  "sales",
-  "account_executive",
-  "bdr",
-  "sales_management",
-  "cro",
-  "account_manager",
 ] as const;
 
 /** Roles allowed to change contractual scope, pricing or entitlements.
@@ -28,12 +22,10 @@ export const CONTRACT_ROLES = [
   "admin",
   "super_admin",
   "legal",
+  "client_success",
+  "compliance",
+  "finance",
   "executive",
-  "sales",
-  "account_executive",
-  "bdr",
-  "sales_management",
-  "cro",
 ] as const;
 
 export const SERVICE_CATEGORIES = [
