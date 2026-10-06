@@ -95,3 +95,11 @@ export const resolveRelatedPersonReviewFn = createServerFn({ method: "POST" })
     const { resolveRelatedPersonReview } = await import("@/lib/related-person.server");
     return resolveRelatedPersonReview({ ...data, actorUserId: context.userId });
   });
+
+export const readInvestorDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    onboardingId: uuid, fileName: z.string().max(200),
+    mimeType: z.enum(["application/pdf", "image/png", "image/jpeg", "image/webp"]),
+    base64: z.string().max(14_000_000),
+  }).parse)
+  .handler(async ({ data, context }) => (await (await import("@/lib/investor-document-ai.server")).readInvestorDocument(context.userId, data)) as unknown as { documentKind: string; summary: string; found: { label: string; value: string; suggested: boolean }[] });
