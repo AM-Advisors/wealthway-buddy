@@ -204,6 +204,7 @@ import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_a
 import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
 import { Route as AuthenticatedMarketingCampaignsRouteImport } from './routes/_authenticated/marketing_.campaigns'
 import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
+import { Route as AuthenticatedMarketingDriveRouteImport } from './routes/_authenticated/marketing_.drive'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
 import { Route as AuthenticatedMarketingFlowsRouteImport } from './routes/_authenticated/marketing_.flows'
 import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_authenticated/marketing_.imports'
@@ -1485,6 +1486,12 @@ const AuthenticatedMarketingChannelsRoute =
   AuthenticatedMarketingChannelsRouteImport.update({
     id: '/marketing_/channels',
     path: '/marketing/channels',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingDriveRoute =
+  AuthenticatedMarketingDriveRouteImport.update({
+    id: '/marketing_/drive',
+    path: '/marketing/drive',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingEmailsRoute =
@@ -2810,6 +2817,7 @@ export interface FileRoutesByFullPath {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
@@ -3193,6 +3201,7 @@ export interface FileRoutesByTo {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
@@ -3584,6 +3593,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/_authenticated/marketing_/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/_authenticated/marketing_/drive': typeof AuthenticatedMarketingDriveRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
   '/_authenticated/marketing_/flows': typeof AuthenticatedMarketingFlowsRoute
   '/_authenticated/marketing_/imports': typeof AuthenticatedMarketingImportsRoute
@@ -3976,6 +3986,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/campaigns'
     | '/marketing/channels'
+    | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
     | '/marketing/imports'
@@ -4359,6 +4370,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/campaigns'
     | '/marketing/channels'
+    | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
     | '/marketing/imports'
@@ -4749,6 +4761,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/calendar'
     | '/_authenticated/marketing_/campaigns'
     | '/_authenticated/marketing_/channels'
+    | '/_authenticated/marketing_/drive'
     | '/_authenticated/marketing_/emails'
     | '/_authenticated/marketing_/flows'
     | '/_authenticated/marketing_/imports'
@@ -6379,6 +6392,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/channels'
       fullPath: '/marketing/channels'
       preLoaderRoute: typeof AuthenticatedMarketingChannelsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/drive': {
+      id: '/_authenticated/marketing_/drive'
+      path: '/marketing/drive'
+      fullPath: '/marketing/drive'
+      preLoaderRoute: typeof AuthenticatedMarketingDriveRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing_/emails': {
@@ -8141,6 +8161,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
   AuthenticatedMarketingCampaignsRoute: typeof AuthenticatedMarketingCampaignsRoute
   AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
+  AuthenticatedMarketingDriveRoute: typeof AuthenticatedMarketingDriveRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
   AuthenticatedMarketingFlowsRoute: typeof AuthenticatedMarketingFlowsRoute
   AuthenticatedMarketingImportsRoute: typeof AuthenticatedMarketingImportsRoute
@@ -8418,6 +8439,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,
   AuthenticatedMarketingCampaignsRoute: AuthenticatedMarketingCampaignsRoute,
   AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
+  AuthenticatedMarketingDriveRoute: AuthenticatedMarketingDriveRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
   AuthenticatedMarketingFlowsRoute: AuthenticatedMarketingFlowsRoute,
   AuthenticatedMarketingImportsRoute: AuthenticatedMarketingImportsRoute,
