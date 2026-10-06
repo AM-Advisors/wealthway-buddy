@@ -64,3 +64,33 @@ export async function generateImage(prompt: string): Promise<{ base64: string; c
   if (!m) throw new Error("The AI helper didn't return an image.");
   return { contentType: m[1]!, base64: m[2]! };
 }
+
+/** Collateral-style layout text for a post image: headline, subtitle, up to 3 value points. */
+export async function suggestPostLayout(title: string, body: string): Promise<{ headline: string; subtitle: string; points: string[] }> {
+  const res = await fetch(RESPONSES_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: TEXT_MODEL,
+      reasoning: { effort: "low" },
+      instructions: `${VOICE}\nTurn this social post into text for a branded announcement graphic. headline: at most 8 words. subtitle: one sentence, at most 18 words. points: exactly 3 short value points, each at most 6 words. Plain text, no hashtags, no emojis.`,
+      input: `Post title: ${title}\n\nPost text:\n${body.slice(0, 3000)}`,
+      text: { format: { type: "json_schema", name: "post_layout", strict: true, schema: {
+        type: "object", additionalProperties: false, required: ["headline", "subtitle", "points"],
+        properties: { headline: { type: "string" }, subtitle: { type: "string" }, points: { type: "array", items: { type: "string" } } },
+      } } },
+    }),
+  });
+  await check(res);
+  const j: any = await res.json();
+  const raw = String(j?.output_text ?? (j?.output ?? []).flatMap((o: any) => o?.content ?? []).filter((c: any) => c?.type === "output_text").map((c: any) => c.text).join(""));
+  try {
+    const o = JSON.parse(raw);
+    return { headline: String(o.headline ?? ""), subtitle: String(o.subtitle ?? ""), points: (o.points ?? []).map(String).slice(0, 3) };
+  } catch { throw new Error("The AI helper returned nothing usable for that post."); }
+}
+
+/** Wordless background art for the brand layout. */
+export function generateBackground(theme: string) {
+  return generateImage(`Abstract institutional fintech background only. Absolutely no text, no letters, no numbers, no logos, no people's faces. Keep the center and lower half calm and dark so white text can sit on top. Theme: ${theme.slice(0, 400)}`);
+}
