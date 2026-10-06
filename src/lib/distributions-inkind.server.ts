@@ -17,18 +17,18 @@ export type InKindSetup = {
   offeringId: string;
   kind: DistributionKind;
   distributionType: DistributionType;
-  title?: string | null;
-  paymentDate?: string | null;
-  cashCents?: number | null;
-  shareIssuer?: string | null;
-  shareClass?: string | null;
-  shareCount?: number | null;
-  sharePriceCents?: number | null;
-  shareIsPublic?: boolean | null;
-  shareCustodian?: string | null;
-  harmoniousFeeCents?: number | null;
-  custodianCostCents?: number | null;
-  feeNote?: string | null;
+  title?: string | null | undefined;
+  paymentDate?: string | null | undefined;
+  cashCents?: number | null | undefined;
+  shareIssuer?: string | null | undefined;
+  shareClass?: string | null | undefined;
+  shareCount?: number | null | undefined;
+  sharePriceCents?: number | null | undefined;
+  shareIsPublic?: boolean | null | undefined;
+  shareCustodian?: string | null | undefined;
+  harmoniousFeeCents?: number | null | undefined;
+  custodianCostCents?: number | null | undefined;
+  feeNote?: string | null | undefined;
 };
 
 export async function setupDistribution(userId: string, input: InKindSetup) {
@@ -180,7 +180,7 @@ export async function distributionBankFile(userId: string, batchId: string) {
 }
 
 /** Record a custodian/transfer agent instruction or confirmation for one investor's shares. */
-export async function recordShareTransfer(userId: string, input: { lineId: string; event: "instructed" | "confirmed" | "failed"; confirmationRef?: string | null; note?: string | null }) {
+export async function recordShareTransfer(userId: string, input: { lineId: string; event: "instructed" | "confirmed" | "failed"; confirmationRef?: string | null | undefined; note?: string | null | undefined }) {
   const { data: line } = await db().from("distribution_lines").select("id, batch_id, offering_id, shares_allocated").eq("id", input.lineId).maybeSingle();
   if (!line) fail("That distribution line was not found.");
   const batch = await distributionBatchRow(String(line.batch_id));

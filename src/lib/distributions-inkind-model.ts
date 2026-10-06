@@ -12,7 +12,7 @@ export const DISTRIBUTION_KIND_LABELS: Record<DistributionKind, string> = {
 export const CASH_DISTRIBUTION_FEE_CENTS = 250_000;
 
 /** Fee rule: cash is the fixed standard fee (pre-approved); other kinds need an approved custom quote. */
-export function distributionFee(kind: DistributionKind, quote?: { harmoniousFeeCents?: number | null; custodianCostCents?: number | null }) {
+export function distributionFee(kind: DistributionKind, quote?: { harmoniousFeeCents?: number | null | undefined; custodianCostCents?: number | null | undefined }) {
   if (kind === "cash") return { harmoniousFeeCents: CASH_DISTRIBUTION_FEE_CENTS, custodianCostCents: 0, needsApproval: false };
   const h = Math.max(0, Math.round(quote?.harmoniousFeeCents ?? 0));
   const c = Math.max(0, Math.round(quote?.custodianCostCents ?? 0));
@@ -37,7 +37,7 @@ export function allocateShares(totalShares: number, weights: { key: string; weig
   return { allocations: raw.map((r) => ({ key: r.key, shares: r.base })), unallocated: left };
 }
 
-export function validateSetup(input: { kind: DistributionKind; cashCents?: number | null; shareCount?: number | null; sharePriceCents?: number | null; issuer?: string | null; custodian?: string | null }): string[] {
+export function validateSetup(input: { kind: DistributionKind; cashCents?: number | null | undefined; shareCount?: number | null | undefined; sharePriceCents?: number | null | undefined; issuer?: string | null | undefined; custodian?: string | null | undefined }): string[] {
   const p: string[] = [];
   if (input.kind !== "shares" && !(Number(input.cashCents) > 0)) p.push("Enter the cash amount to distribute.");
   if (input.kind !== "cash") {
