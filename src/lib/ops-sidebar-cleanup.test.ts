@@ -25,7 +25,7 @@ function session(kinds: string[], roles: string[] = ["admin"]): NavigationSessio
   };
 }
 
-const FIRST_LEVEL = ["Home", "Clients", "Funds & SPVs", "Investors", "Money", "Accounting & Reports", "Tax", "Companies", "Administration"];
+const FIRST_LEVEL = ["Home", "Clients", "Funds", "Investors", "Money", "Accounting & Reports", "Tax", "Companies", "Administration"];
 const SPECIALIST = ["Valuation review", "NAV review", "Investor allocations", "Financial reporting",
   "Performance reporting", "Investor reporting", "Banking requests", "EIN and SS-4"];
 
