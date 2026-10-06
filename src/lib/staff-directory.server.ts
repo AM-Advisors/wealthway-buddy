@@ -52,7 +52,7 @@ function downline(managerOf: Map<string, string | null>, root: string): Set<stri
 }
 
 /** Who the viewer may see: leadership sees all staff; others see themselves and everyone below them. */
-async function viewerScope(viewer: string) {
+export async function viewerScope(viewer: string) {
   const db = await admin();
   const roles = await rolesOf(db, viewer);
   const staff = await allStaff(db);
