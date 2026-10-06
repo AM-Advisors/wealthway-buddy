@@ -4,14 +4,14 @@
  * your reporting line's, and all for leaders. Every change appends to staff_task_events.
  * Tasks never grant access or gate other work.
  */
-import { viewerScope, isLeader } from "@/lib/staff-directory.server";
+import { viewerScope, isLeader, STAFF_ROLE_SET, TEAMS } from "@/lib/staff-directory.server";
 
 export const TASK_STATUSES = ["open", "in_progress", "blocked", "done", "cancelled"] as const;
 export const TASK_PRIORITIES = ["low", "normal", "high", "urgent"] as const;
 
 async function ctx(viewer: string) {
   const s = await viewerScope(viewer);
-  const canWrite = s.roles.some((r) => r !== "leadership" && r !== "investor") && !(s.roles.length && s.roles.every((r) => r === "leadership" || r === "investor"));
+  const canWrite = s.roles.some((r) => r !== "leadership" && STAFF_ROLE_SET.includes(r));
   return { ...s, canWrite };
 }
 
@@ -28,7 +28,7 @@ export async function listTasks(viewer: string) {
   if (error) throw new Error(error.message);
   const all = (data ?? []) as any[];
   const seeAll = leader || roles.includes("leadership");
-  const rows = all.filter((t) => seeAll || t.created_by === viewer || (t.assignee_user_id && visible.has(t.assignee_user_id)) || (!t.assignee_user_id && t.team && roles.some((r) => r.startsWith(t.team.slice(0, 4)))));
+  const rows = all.filter((t) => seeAll || t.created_by === viewer || (t.assignee_user_id && visible.has(t.assignee_user_id)) || (!t.assignee_user_id && t.team && ((TEAMS as any)[t.team]?.roles ?? []).some((r: string) => roles.includes(r))));
   const nm = await names(db, [...staff.keys(), ...rows.map((r) => r.created_by)]);
   const clientIds = [...new Set(rows.map((r) => r.client_id).filter(Boolean))];
   const { data: cl } = clientIds.length ? await db.from("clients").select("id, name").in("id", clientIds) : { data: [] };
