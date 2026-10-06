@@ -47,7 +47,7 @@ export async function notifyPostSubmitted(postId: string, submitterId: string) {
       { type: "section", fields: [{ type: "mrkdwn", text: `*Title*\n${p.title}` }, { type: "mrkdwn", text: `*Channels*\n${chans}` }] },
       { type: "section", text: { type: "mrkdwn", text: `*Post text*\n${text || "_(empty)_"}` } },
       ...((urls ?? []) as any[]).filter((u) => u.signedUrl).map((u, i) => ({ type: "image", image_url: u.signedUrl, alt_text: `${p.title} image ${i + 1}` })),
-      { type: "context", elements: [{ type: "mrkdwn", text: `React :white_check_mark: to approve or :x: to send back · <${SITE}/marketing/posts/${p.id}|Open in Harmonious>` }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: `Reply in this thread with "@Harmonious Marketing approve" or "@Harmonious Marketing send back" · <${SITE}/marketing/posts/${p.id}|Open in Harmonious>` }] },
     ];
     try { await slack("conversations.join", { channel: MARKETING_SLACK_CHANNEL }); } catch { /* may lack scope; bot may already be a member */ }
     const r = await slack("chat.postMessage", { channel: MARKETING_SLACK_CHANNEL, text: `Post ready for approval: ${p.title}`, blocks, unfurl_links: false });
@@ -66,16 +66,32 @@ export function verifySlackSignature(raw: string, ts: string | null, sig: string
   return a.length === b.length && timingSafeEqual(a, b) ? ("ok" as const) : ("invalid" as const);
 }
 
+// Slack user → Harmonious email for approvers (the managed Slack app can't read user emails).
+const SLACK_APPROVERS: Record<string, string> = { U04BP9Q4DHP: "alyssa@harmonious.co" };
+
+/** Thread reply mentioning the bot: "approve" or "send back"/"reject". */
+export async function handleMention(ev: any) {
+  const t = String(ev?.text ?? "").replace(/<@[A-Z0-9]+>/g, "").toLowerCase();
+  const action = /\bapprove|\bapproved|\blgtm\b/.test(t) ? "approve" : /send back|reject|\bdecline/.test(t) ? "reject" : null;
+  if (!ev?.thread_ts) return;
+  return decide({ user: ev.user, channel: ev.channel, ts: ev.thread_ts }, action);
+}
+
 export async function handleReaction(ev: any) {
   const name = String(ev?.reaction ?? "").split("::")[0] ?? "";
   const action = APPROVE.has(name) ? "approve" : REJECT.has(name) ? "reject" : null;
-  if (!action || ev?.item?.type !== "message") return;
+  if (ev?.item?.type !== "message") return;
+  return decide({ user: ev.user, channel: ev.item.channel, ts: ev.item.ts }, action);
+}
+
+async function decide(ev: { user: string; channel: string; ts: string }, action: "approve" | "reject" | null) {
   const db = await admin();
-  const { data: m } = await db.from("marketing_slack_messages").select("post_id, channel, ts").eq("channel", ev.item.channel).eq("ts", ev.item.ts).maybeSingle();
+  const { data: m } = await db.from("marketing_slack_messages").select("post_id, channel, ts").eq("channel", ev.channel).eq("ts", ev.ts).maybeSingle();
   if (!m) return;
   const reply = (t: string) => slack("chat.postMessage", { channel: m.channel, thread_ts: m.ts, text: t }).catch((e) => console.error(e));
-  let email: string | null = null;
-  try { email = (await slack("users.info", { user: ev.user })).user?.profile?.email ?? null; } catch (e) { console.error(e); }
+  if (!action) return reply(`<@${ev.user}> say "approve" or "send back" when you mention me.`);
+  let email: string | null = SLACK_APPROVERS[ev.user] ?? null;
+  if (!email) try { email = (await slack("users.info", { user: ev.user })).user?.profile?.email ?? null; } catch (e) { console.error(e); }
   if (!email) return reply(`<@${ev.user}> I couldn't match your Slack account to Harmonious. Please approve in the app.`);
   const { data: prof } = await db.from("profiles").select("user_id").ilike("email", email).maybeSingle();
   if (!prof) return reply(`<@${ev.user}> no Harmonious account uses ${email}. Please approve in the app.`);
