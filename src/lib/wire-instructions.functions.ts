@@ -87,7 +87,7 @@ export const getFundWireInstructions = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     const details = ((row as any)?.details ?? {}) as Record<string, string>;
-    const masked = { ...details, account_number: maskAccount(String(details.account_number ?? "")) };
+    const masked = { ...details, account_number: maskAccount(String(details["account_number"] ?? "")) };
     const hasAny = Object.values(masked).some((v) => String(v ?? "").trim() !== "");
     return { details: masked, updated_at: (row as any)?.updated_at ?? null, hasAny };
   });
