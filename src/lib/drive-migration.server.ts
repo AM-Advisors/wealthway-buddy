@@ -50,7 +50,7 @@ export async function folderSources(userId: string) {
   };
 }
 
-export async function searchFolders(userId: string, input: { query?: string | null; parentId?: string | null }) {
+export async function searchFolders(userId: string, input: { query?: string | null | undefined; parentId?: string | null | undefined }) {
   await requireViewer(userId);
   const { call, repositoryConfig } = await drive();
   const conds = [`mimeType='${FOLDER_MIME}'`, "trashed=false"];
