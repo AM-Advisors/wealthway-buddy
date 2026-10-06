@@ -43,7 +43,7 @@ export async function listTasks(viewer: string) {
 const log = (db: any, task: string, actor: string, kind: string, detail: Record<string, unknown>) =>
   db.from("staff_task_events").insert({ task_id: task, actor_user_id: actor, kind, detail });
 
-export async function createTask(viewer: string, d: { title: string; description?: string | null; priority: string; team?: string | null; assignee?: string | null; dueDate?: string | null }) {
+export async function createTask(viewer: string, d: { title: string; description?: string | null | undefined; priority: string; team?: string | null | undefined; assignee?: string | null | undefined; dueDate?: string | null | undefined }) {
   const { db, staff, canWrite } = await ctx(viewer);
   if (!canWrite) throw new Error("Your role can view tasks but not create them.");
   if (d.assignee && !staff.has(d.assignee)) throw new Error("Tasks can only be assigned to Harmonious staff.");
@@ -56,13 +56,13 @@ export async function createTask(viewer: string, d: { title: string; description
   return { id: data.id as string };
 }
 
-export async function updateTask(viewer: string, d: { id: string; status?: string; priority?: string; assignee?: string | null; dueDate?: string | null; note?: string | null }) {
+export async function updateTask(viewer: string, d: { id: string; status?: string | undefined; priority?: string | undefined; assignee?: string | null | undefined; dueDate?: string | null | undefined; note?: string | null | undefined }) {
   const { db, staff, canWrite } = await ctx(viewer);
   if (!canWrite) throw new Error("Your role can view tasks but not change them.");
   const { data: t } = await db.from("staff_tasks").select("*").eq("id", d.id).maybeSingle();
   if (!t) throw new Error("Task not found.");
-  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  const changes: Record<string, unknown> = {};
+  const patch: any = { updated_at: new Date().toISOString() };
+  const changes: any = {};
   if (d.status && d.status !== t.status) { patch.status = d.status; patch.completed_at = d.status === "done" ? new Date().toISOString() : null; changes.status = [t.status, d.status]; }
   if (d.priority && d.priority !== t.priority) { patch.priority = d.priority; changes.priority = [t.priority, d.priority]; }
   if (d.assignee !== undefined && d.assignee !== t.assignee_user_id) {
