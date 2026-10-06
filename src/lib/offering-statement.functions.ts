@@ -164,7 +164,10 @@ export const getOfferingStatementForEdit = createServerFn({ method: "GET" })
       statement.min_investment_cents = (fund.min_investment_cents as number) ?? null;
     }
 
-    return { funds, selected: fund, statement };
+    const { hasActive, pendingChange, ...fees } = await fundFees(selectedId);
+    Object.assign(statement, fees);
+
+    return { funds, selected: fund, statement, feeSource: { hasActive, pendingChange } };
   });
 
 /** Save the fund's offering terms, optionally publishing them to the diligence room. */
@@ -184,9 +187,12 @@ export const saveOfferingStatement = createServerFn({ method: "POST" })
       ? ((existing as any)?.published_at ?? new Date().toISOString())
       : null;
 
+    // Fees always come from the fund record; client-sent values are ignored.
+    const { hasActive: _a, pendingChange: _p, ...fees } = await fundFees(offering_id);
     const payload = {
       offering_id,
       ...fields,
+      ...fees,
       is_published,
       published_at: publishedAt,
       updated_by: context.userId,
@@ -212,5 +218,6 @@ export const getOfferingStatement = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (!row) return { statement: null };
-    return { statement: normalise(row) };
+    const { hasActive: _a, pendingChange: _p, ...fees } = await fundFees(data.offering_id);
+    return { statement: { ...normalise(row), ...fees } };
   });
