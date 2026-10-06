@@ -150,7 +150,6 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "My clients", url: "/staff", description: "Clients assigned to you", cap: "tasks", step: "Start" },
       { title: "Client onboarding", url: "/admin/onboarding", description: "Set up a new client", cap: "onboarding", step: "Start" },
       { title: "Entities and engagements", url: "/admin/entities", description: "Client entities and engagements", step: "Prepare" },
-      { title: "Agreements & SOW", url: "/admin/agreements", description: "Master agreements and statements of work", step: "Prepare" },
       { title: "Service requests & sign-off", url: "/admin/signoff", description: "Requests and documents waiting for sign-off", cap: "tasks", step: "Approve" },
       { title: "Messages", url: "/ops/messages", description: "Questions from fund managers and investors", cap: "tasks", step: "Track" },
       { title: "Rate card", url: "/admin/pricing", description: "Standard pricing schedules", step: "Reference" },

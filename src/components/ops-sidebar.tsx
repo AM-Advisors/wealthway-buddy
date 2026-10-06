@@ -218,6 +218,8 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "sales-outreach", title: "Outreach", url: "/sales/outreach", icon: "people" },
     { id: "sales-follow-ups", title: "Follow-ups & engagement", url: "/sales/follow-ups", icon: "tasks" },
     { id: "sales-quotes", title: "Quotes", url: "/sales/quotes", icon: "document" },
+    { id: "sales-agreements", title: "MSAs & SOWs", url: "/admin/agreements", icon: "document" },
+    { id: "sales-sow-templates", title: "SOW templates", url: "/ops/contracts/sow-templates", icon: "document" },
     { id: "sales-documents", title: "Proposals & RFPs", url: "/sales/documents", icon: "document" },
     { id: "sales-commissions", title: "Commissions", url: "/sales/commissions", icon: "report" },
     { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" },
