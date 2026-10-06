@@ -146,7 +146,7 @@ function PostEditor() {
           <div className="max-w-xs"><Label htmlFor="w">Publish at</Label><Input id="w" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} disabled={locked} /><p className="mt-1 text-xs text-muted-foreground">Leave empty to publish as soon as it's approved.</p></div>
 
           {!locked && <div className="flex flex-wrap gap-2">
-            <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>{saveM.isPending ? "Saving…" : "Save"}</Button>
+            <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>{saveM.isPending ? "Saving…" : "Save"}</Button>{dirty && <span className="self-center text-xs text-muted-foreground">Unsaved changes</span>}
             {!isNew && (status === "draft" || status === "rejected") && <Button variant="secondary" onClick={() => decideM.mutate("submit")} disabled={decideM.isPending || problems.length > 0}>Submit for approval</Button>}
           </div>}
           {!locked && problems.length > 0 && <ul className="list-disc pl-5 text-xs text-muted-foreground">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
