@@ -2,7 +2,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { assertStaff, computeReadinessFor } from "@/lib/investor-onboarding.server";
 import { fundMetrics, totals, type FundOnboardingFact } from "@/lib/ops-funds-model";
-import { setupCompletion } from "@/lib/fund-setup-canonical";
 
 const db = () => supabaseAdmin as any;
 
