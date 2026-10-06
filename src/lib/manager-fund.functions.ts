@@ -515,13 +515,12 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
 
     let setupStatus: { percent: number | null; stage: string | null; launchState: string | null } = { percent: null, stage: null, launchState: null };
     try {
-      const { data: detail } = await supabase.rpc("get_offering_entity_details", { p_offering_id: offeringId }).maybeSingle();
-      const { fundSetupOverview } = await import("@/lib/fund-setup-canonical.server");
-      const { setupCompletion } = await import("@/lib/fund-setup-canonical");
-      const overview = await fundSetupOverview(userId, offeringId, Boolean((detail as any)?.ein));
+      // Same setup % as Fund Setup and Readiness (blocking tasks + required launch conditions).
+      const { fundLaunchPercents } = await import("@/lib/fund-launch-percent.server");
+      const percents = await fundLaunchPercents([offeringId]);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: fs } = await (supabaseAdmin as any).from("fund_setups").select("stage, launch_state").eq("offering_id", offeringId).maybeSingle();
-      setupStatus = { percent: setupCompletion(overview.statuses), stage: fs?.stage ?? null, launchState: fs?.launch_state ?? null };
+      setupStatus = { percent: percents.get(offeringId) ?? null, stage: fs?.stage ?? null, launchState: fs?.launch_state ?? null };
     } catch {
       // Setup status is informational; the workspace still loads without it.
     }

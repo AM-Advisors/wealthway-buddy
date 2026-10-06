@@ -2,7 +2,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { assertStaff, computeReadinessFor } from "@/lib/investor-onboarding.server";
 import { fundMetrics, totals, type FundOnboardingFact } from "@/lib/ops-funds-model";
-import { setupCompletion } from "@/lib/fund-setup-canonical";
 
 const db = () => supabaseAdmin as any;
 
@@ -42,22 +41,10 @@ export async function opsFundsDashboard(userId: string, supabase: any) {
   const openTasks = ((tasks ?? []) as any[]).map((t) => ({ offeringId: t.offering_id, owner: t.owner }));
   const { agreementStatusForClients } = await import("@/lib/commercial-agreements.server");
   const agreements = await agreementStatusForClients(clientIds as string[]).catch(() => new Map());
-  // Use the same guarded Fund Setup overview as the individual fund screen.
-  // Keep EIN and all other setup details on the server; only return the percentage.
-  const { fundSetupOverview } = await import("@/lib/fund-setup-canonical.server");
-  const completion = new Map<string, number | null>();
-  for (let i = 0; i < offerings.length; i += 5) {
-    await Promise.all(offerings.slice(i, i + 5).map(async (o) => {
-      try {
-        const { data: detail, error } = await supabase.rpc("get_offering_entity_details", { p_offering_id: o.id }).maybeSingle();
-        if (error) throw error;
-        const overview = await fundSetupOverview(userId, o.id, Boolean(detail?.ein));
-        completion.set(o.id, setupCompletion(overview.statuses));
-      } catch {
-        completion.set(o.id, null);
-      }
-    }));
-  }
+  // Same setup % as Fund Setup and Readiness (blocking tasks + required launch conditions).
+  const { fundLaunchPercents } = await import("@/lib/fund-launch-percent.server");
+  const completion = await fundLaunchPercents(offerings.map((o) => o.id as string));
+  void supabase;
   const rows = offerings.map((o) => {
     const mgrs = ((managers ?? []) as any[]).filter((m) => m.offering_id === o.id).map((m) => ({ id: m.user_id as string, name: (name.get(m.user_id) ?? "Unnamed") as string }));
     const s = setup.get(o.id);
