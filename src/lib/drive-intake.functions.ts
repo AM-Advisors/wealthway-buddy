@@ -260,3 +260,57 @@ export const assignDriveRequirement = createServerFn({ method: "POST" })
     await s.logIntake(userId, "assign_requirement", "ok", { document_id: doc.id, offering_id: doc.offering_id, requirement: data.requirement });
     return { ok: true };
   });
+
+/** Fund documents investors receive in the offering packet. Identity, tax and bank files never go there. */
+const PACKET_CATEGORY: Record<string, "ppm" | "operating_agreement" | "subscription_agreement" | "other"> = {
+  ppm: "ppm",
+  operating_agreement: "operating_agreement",
+  subscription_agreement: "subscription_agreement",
+  side_letter: "other",
+  formation_certificate: "other",
+};
+
+/**
+ * Copies migrated Drive documents into the fund's Offering Documents as new
+ * versions awaiting review. Investors only see them after staff approve and
+ * activate the version (existing explicit-activation rule). Idempotent per file.
+ */
+export const linkDriveDocsToPacket = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: z.string().uuid(), documentIds: z.array(z.string().uuid()).max(100).optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const s = await import("@/lib/drive-intake.server");
+    const userId = await s.requireSuperAdmin(context, "link_to_packet");
+    const setup = await import("@/lib/offering-document-setup.server");
+    const client = await db();
+    let q = client.from("drive_imported_documents").select("id, offering_id, original_filename, storage_path, size_bytes, record_status").eq("offering_id", data.offeringId);
+    if (data.documentIds?.length) q = q.in("id", data.documentIds);
+    const { data: docs, error } = await q;
+    if (error) throw new Error(error.message);
+    const ids = ((docs ?? []) as any[]).map((d) => d.id);
+    const { data: asg } = ids.length ? await client.from("drive_document_requirement_assignments").select("document_id, requirement_key, created_at").in("document_id", ids).order("created_at", { ascending: false }) : { data: [] };
+    const req = new Map<string, string>();
+    for (const a of (asg ?? []) as any[]) if (!req.has(a.document_id)) req.set(a.document_id, a.requirement_key);
+
+    const linked: string[] = [];
+    const skipped: { fileName: string; reason: string }[] = [];
+    for (const d of (docs ?? []) as any[]) {
+      const category = PACKET_CATEGORY[req.get(d.id) ?? ""];
+      if (!category) { skipped.push({ fileName: d.original_filename, reason: "Not assigned to a packet document (PPM, operating agreement, subscription, side letter, formation)." }); continue; }
+      if (d.record_status === "historical") { skipped.push({ fileName: d.original_filename, reason: "Historical record, not a current document." }); continue; }
+      const path = `${d.offering_id}/drive/${d.id}-${String(d.original_filename).replace(/[^\w.\-]+/g, "_")}`;
+      const { data: already } = await client.from("offering_document_versions").select("id").eq("file_path", path).maybeSingle();
+      if (already) { skipped.push({ fileName: d.original_filename, reason: "Already linked." }); continue; }
+      const file = await client.storage.from(s.BUCKET).download(d.storage_path);
+      if (file.error || !file.data) { skipped.push({ fileName: d.original_filename, reason: "Could not read the Harmonious copy." }); continue; }
+      const up = await client.storage.from("offering-files").upload(path, file.data, { upsert: false, contentType: file.data.type || "application/pdf" });
+      if (up.error && !/exists/i.test(up.error.message)) { skipped.push({ fileName: d.original_filename, reason: up.error.message }); continue; }
+      const title = category === "other" ? String(d.original_filename).replace(/\.[^.]+$/, "") : undefined;
+      const { id: documentId } = await setup.createSetupDocument(userId, { offeringId: d.offering_id, category, title });
+      await setup.uploadDocumentVersion(userId, { documentId, filePath: path, fileName: d.original_filename, fileSizeBytes: Number(d.size_bytes ?? file.data.size) });
+      await client.from("offering_document_versions").update({ note: "From Google Drive migration" }).eq("file_path", path);
+      linked.push(d.original_filename);
+    }
+    await s.logIntake(userId, "link_to_packet", "ok", { offering_id: data.offeringId, linked: linked.length, skipped: skipped.length });
+    return { linked, skipped };
+  });

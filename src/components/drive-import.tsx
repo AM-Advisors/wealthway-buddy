@@ -12,6 +12,7 @@ import {
   importDriveFiles,
   listDriveImports,
   assignDriveRequirement,
+  linkDriveDocsToPacket,
   openDriveImport,
 } from "@/lib/drive-intake.functions";
 import {
@@ -273,6 +274,19 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
     try { await assign({ data: { documentId: id, requirement: requirement as any } }); toast.success(requirement === "none" ? "Unassigned." : `Assigned as ${requirementLabel(requirement)}.`); void qc.invalidateQueries({ queryKey: ["drive-imports", offeringId, investorUserId] }); }
     catch (e: any) { toast.error(e?.message ?? "Could not assign."); }
   };
+  const linkFn = useServerFn(linkDriveDocsToPacket);
+  const [linking, setLinking] = useState(false);
+  const linkPacket = async () => {
+    if (!offeringId) return;
+    setLinking(true);
+    try {
+      const r = await linkFn({ data: { offeringId } });
+      if (r.linked.length) toast.success(`Added ${r.linked.length} document(s) to the offering packet. Approve and activate them in Offering Documents so investors see them.`);
+      else toast.info(r.skipped[0]?.reason ? `Nothing new to add. ${r.skipped[0].reason}` : "Nothing new to add.");
+      void qc.invalidateQueries();
+    } catch (e: any) { toast.error(e?.message ?? "Could not add to the packet."); }
+    finally { setLinking(false); }
+  };
   const filled = new Set(rows.map((r: any) => r.requirement).filter(Boolean));
   const missing = offeringId ? DRIVE_REQUIREMENTS.filter((x) => x.required && !filled.has(x.key)) : [];
   return (
@@ -283,7 +297,10 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
           <p className="text-xs font-medium text-muted-foreground">{DRIVE_LABELS.imported.direction}</p>
           <CardDescription>{DRIVE_LABELS.imported.copy} Visible to Super Administrators only.</CardDescription>
         </div>
-        <DriveImportButton offeringId={offeringId} investorUserId={investorUserId} label="Import from Drive" />
+        <div className="flex flex-wrap gap-2">
+          {offeringId && rows.length ? <Button size="sm" variant="outline" disabled={linking} onClick={linkPacket}>{linking ? "Adding..." : "Add to offering packet"}</Button> : null}
+          <DriveImportButton offeringId={offeringId} investorUserId={investorUserId} label="Import from Drive" />
+        </div>
       </CardHeader>
       <CardContent className="space-y-2">
         {!rows.length ? <p className="text-sm text-muted-foreground">No documents imported yet.</p> : null}
