@@ -13,7 +13,8 @@ async function fail(res: Response, what: string): Promise<never> {
 }
 
 function linkedinKey() {
-  return process.env["LINKEDIN_API_KEY"] ?? process.env["LINKEDIN_API_KEY_1"];
+  // Prefer the Harmonious developer-app connection; fall back to the older managed one.
+  return process.env["LINKEDIN_API_KEY_1"] ?? process.env["LINKEDIN_API_KEY"];
 }
 
 function linkedinHeaders(extra: Record<string, string> = {}) {
@@ -41,7 +42,13 @@ async function linkedinImage(orgUrn: string, imageUrl: string): Promise<string |
 }
 
 export async function publishLinkedIn(orgId: string, text: string, imageUrl: string | null): Promise<string> {
-  const author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
+  let author: string;
+  if (!orgId || orgId === "me") {
+    // No company page set: post as the connected LinkedIn member.
+    const me = await fetch(`${GATEWAY}/linkedin/v2/userinfo`, { headers: linkedinHeaders() });
+    if (!me.ok) await fail(me, "LinkedIn profile");
+    author = `urn:li:person:${(await me.json()).sub}`;
+  } else author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
   const image = imageUrl ? await linkedinImage(author, imageUrl) : null;
   const res = await fetch(`${GATEWAY}/linkedin/rest/posts`, {
     method: "POST", headers: linkedinHeaders({ "Content-Type": "application/json" }),
