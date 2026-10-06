@@ -4,6 +4,7 @@ import { InvestorOnboardingJourney } from "@/components/investor-onboarding-jour
 import { InvestmentChecklist } from "@/components/investment-readiness";
 import { InvestmentOfferingDocuments } from "@/components/investment-offering-documents";
 import { ConfirmYourInformation } from "@/components/confirm-your-information";
+import { OnboardingBankDetails } from "@/components/onboarding-bank-details";
 
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
   head: () => ({
@@ -34,6 +35,7 @@ function InvestmentPage() {
       <ConfirmYourInformation onboardingId={onboardingId} />
       <InvestmentOfferingDocuments onboardingId={onboardingId} />
       <InvestmentChecklist onboardingId={onboardingId} />
+      <OnboardingBankDetails onboardingId={onboardingId} />
       <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={step} />
     </main>
   );
