@@ -568,7 +568,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             <CardTitle className="text-base">Verification events</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {eventsQuery.data?.events.length ? (
+            {eventsQuery.data?.events?.length ? (
               eventsQuery.data.events.map((e: any) => (
                 <div key={e.event_id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
                   <span>
@@ -1038,7 +1038,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
               <p className="text-sm text-muted-foreground">No email address on file yet.</p>
             ) : deliveryQuery.data?.error ? (
               <p className="text-sm text-muted-foreground">{deliveryQuery.data.error}</p>
-            ) : deliveryQuery.data?.events.length ? (
+            ) : deliveryQuery.data?.events?.length ? (
               <ul className="space-y-2 text-sm">
                 {deliveryQuery.data.events.map((ev, i) => (
                   <li
@@ -1162,7 +1162,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
             </div>
             {clicksQuery.data?.error ? (
               <p className="text-sm text-muted-foreground">{clicksQuery.data.error}</p>
-            ) : clicksQuery.data?.clicks.length ? (
+            ) : clicksQuery.data?.clicks?.length ? (
               <ul className="space-y-2 text-sm">
                 {clicksQuery.data.clicks.map((c) => (
                   <li

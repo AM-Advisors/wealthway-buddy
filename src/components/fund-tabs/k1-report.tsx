@@ -94,7 +94,7 @@ export function K1Report({ fundId }: { fundId: string }) {
         </Button>
         <div className="space-y-2">
           <h4 className="text-sm font-medium">K-1 reports</h4>
-          {!q.data?.drafts.length ? <p className="text-sm text-muted-foreground">No K-1 reports yet.</p> : (
+          {!q.data?.drafts?.length ? <p className="text-sm text-muted-foreground">No K-1 reports yet.</p> : (
             <div className="divide-y rounded-md border">{q.data.drafts.map((r: any) => <K1Row key={r.id} r={r} staff={staff} onDecide={(approve, note) => dm.mutate({ id: r.id, approve, note })} />)}</div>
           )}
         </div>
