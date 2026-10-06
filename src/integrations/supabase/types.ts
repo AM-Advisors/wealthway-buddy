@@ -25345,6 +25345,83 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_collateral: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          author_id: string
+          content: Json
+          created_at: string
+          export_path: string | null
+          id: string
+          status: string
+          template: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_id: string
+          content?: Json
+          created_at?: string
+          export_path?: string | null
+          id?: string
+          status?: string
+          template: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_id?: string
+          content?: Json
+          created_at?: string
+          export_path?: string | null
+          id?: string
+          status?: string
+          template?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_collateral_events: {
+        Row: {
+          action: string
+          actor_id: string
+          collateral_id: string
+          created_at: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          collateral_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          collateral_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_collateral_events_collateral_id_fkey"
+            columns: ["collateral_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_collateral"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_drive_assets: {
         Row: {
           cached_modified_at: string | null
