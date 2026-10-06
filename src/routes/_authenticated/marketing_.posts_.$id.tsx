@@ -12,6 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Panel } from "@/components/sales/sales-ui";
 import { MkPage, StatusBadge, fileToBase64, fmt, fromLocalInput, mkHead, toLocalInput } from "@/components/marketing-ui";
 import { CHANNELS, CHANNEL_LABEL, CHANNEL_LIMIT, postProblems, type Channel } from "@/lib/marketing-model";
+import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
+import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
 import { decideMarketingPost, getMarketingPost, marketingDraftCopy, marketingGenerateImage, saveMarketingPost, uploadMarketingAsset } from "@/lib/marketing.functions";
 
 export const Route = createFileRoute("/_authenticated/marketing_/posts_/$id")({
@@ -28,6 +30,7 @@ function PostEditor() {
   const save = useServerFn(saveMarketingPost);
   const decide = useServerFn(decideMarketingPost);
   const upload = useServerFn(uploadMarketingAsset);
+  const fromDrive = useServerFn(useMarketingDriveImage);
   const draft = useServerFn(marketingDraftCopy);
   const genImg = useServerFn(marketingGenerateImage);
   const q = useQuery({ queryKey: ["mk-post", id], queryFn: () => load({ data: { id } }), enabled: !isNew, retry: false });
@@ -109,6 +112,7 @@ function PostEditor() {
                 {!locked && <Button size="icon" variant="destructive" className="absolute right-1 top-1 h-7 w-7" onClick={() => setImages((x) => x.filter((_, j) => j !== i))} aria-label="Remove image"><Trash2 className="h-3.5 w-3.5" /></Button>}
               </div>))}</div>
             {!locked && (<div className="mt-3 space-y-2">
+              <MarketingDrivePicker kind="image" label="Pick from Google Drive" onPick={async (a) => { try { const r = await fromDrive({ data: { assetId: a.id } }); setImages((x) => [...x, r]); } catch (e) { toast.error((e as Error).message); } }} />
               <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary"><ImagePlus className="h-4 w-4" />Upload image<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} /></label>
               <div className="flex gap-2"><Input value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Describe an image for AI to create" /><Button variant="outline" onClick={() => imgM.mutate()} disabled={imgM.isPending || imgPrompt.trim().length < 3}><Wand2 className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create"}</Button></div>
               <p className="text-xs text-muted-foreground">The first image is used on every channel.</p>
