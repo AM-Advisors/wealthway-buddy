@@ -117,9 +117,11 @@ function investmentRow(i: InvestmentInput, actor: OnboardingActor) {
 export async function createInvestor(userId: string, input: {
   offeringId: string; personId?: string | null; profileId?: string | null; confirmedNew?: boolean;
   person: PersonInput; profile: ProfileInput; investment: InvestmentInput; related?: RelatedInput[]; source?: EntrySource;
+  /** Drive migration only: staff create records while the fund is still in setup. Nothing is sent. */
+  allowPreLaunch?: boolean;
 }) {
   const actor = await fundActor(userId, input.offeringId);
-  await launchedOffering(input.offeringId);
+  if (!input.allowPreLaunch) await launchedOffering(input.offeringId);
   const source: EntrySource = input.source ?? sourceFor(actor);
   const changes: Change[] = [];
 
