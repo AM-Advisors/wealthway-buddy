@@ -61,6 +61,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           mailingAddress: f['mailing'] ? { line1: f['mailing']! } : null,
         },
         profile: { type: f['profileType'] ?? "individual", subType: f['entityType'] || f['iraType'] || null, legalName: f['entityName'] || null, details },
+        taxId: (f['taxId'] ?? "").replace(/\D/g, "") || null,
         investment: {
           amountCents, commitmentCents: cents(f['commitment']), acceptedCents: isStaff ? cents(f['accepted']) : null,
           investmentDate: f['investmentDate'] || null, unitCount: f['units'] ? Number(f['units']) : null,
@@ -134,8 +135,9 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
               {type === "entity" || type === "trust" ? field("jurisdiction", "Jurisdiction") : null}
               {type === "trust" ? field("trustType", "Trust type") : null}
               {type === "ira" ? <>{field("custodianName", "Custodian")}{field("custodianAccountRef", "Custodian account reference (last 4 only)", { maxLength: 4 })}</> : null}
-              {type === "individual" || type === "joint" ? <p className="text-sm text-muted-foreground sm:col-span-2">No extra profile details needed. Add joint owners under Entity / Ownership.</p> : null}
-              <p className="text-xs text-muted-foreground sm:col-span-2">EINs, SSNs and tax forms are collected securely from the investor during onboarding, never entered here.</p>
+              {type === "individual" || type === "joint" ? <p className="text-sm text-muted-foreground sm:col-span-2">Add joint owners under Entity / Ownership.</p> : null}
+              {field("taxId", type === "entity" || type === "trust" ? "EIN / Tax ID (optional)" : "SSN / Tax ID (optional)", { inputMode: "numeric", autoComplete: "off", type: "password", placeholder: "9 digits" })}
+              <p className="text-xs text-muted-foreground sm:col-span-2">Stored encrypted. Only the last 4 digits are ever shown.</p>
             </div> : null}
             {section === "Entity / Ownership" ? <div className="space-y-2">
               {related.map((r, i) => <div key={i} className="grid gap-2 sm:grid-cols-5">
