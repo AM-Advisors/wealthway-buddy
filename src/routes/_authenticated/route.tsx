@@ -13,6 +13,7 @@ import { ClientWorkspaceProvider, useClientWorkspace } from "@/components/client
 import { PolicyGate } from "@/components/policy-gate";
 import { AccountKycGate } from "@/components/account-kyc-gate";
 import { PortalGate } from "@/components/portal-gate";
+import { SecurityGate } from "@/components/security-gate";
 import { PortalTopbar } from "@/components/portal-topbar";
 import { PortalFooter } from "@/components/portal-footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -58,9 +59,11 @@ function AuthenticatedLayout() {
               <PolicyGate onSignOut={signOut}>
                 <AccountKycGate onSignOut={signOut}>
                 <PortalGate onSignOut={signOut}>
-                  <OpsAreaGate>
-                    <Outlet />
-                  </OpsAreaGate>
+                  <SecurityGate onSignOut={signOut}>
+                    <OpsAreaGate>
+                      <Outlet />
+                    </OpsAreaGate>
+                  </SecurityGate>
                 </PortalGate>
                 </AccountKycGate>
               </PolicyGate>
