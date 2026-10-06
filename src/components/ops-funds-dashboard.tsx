@@ -99,27 +99,30 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
         <div className="rounded-xl border border-dashed px-6 py-12 text-center"><p className="font-heading font-semibold">No funds yet</p><p className="text-sm text-muted-foreground">Funds appear here once they are set up.</p></div>
       ) : (
         <div className="overflow-hidden rounded-xl border bg-card">
-          <div className="hidden grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_13rem] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground lg:grid">
-            <span>Fund</span><span>Client</span><span>Investors</span><span>Onboarding</span><span>Ready</span><span>Needs Attention</span><span>Next Close</span><span>Owner</span><span />
+          <div className="hidden grid-cols-[2fr_1.2fr_1fr_0.9fr_1.6fr_1fr_6rem] gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground lg:grid">
+            <span>Fund</span><span>Client</span><span>Setup</span><span>Investors</span><span>Next step</span><span>Owner</span><span />
           </div>
           {!shown.length ? <p className="px-4 py-6 text-sm text-muted-foreground">No funds match these filters.</p> : shown.map((f) => {
-            const lines = attentionLines(f.metrics);
+            const lines = attentionLines(f.metrics).filter((l) => !l.includes("ready"));
+            const pct = f.setupCompletion;
+            const stage = !f.isOpen ? "Closed" : pct != null && pct < 100 ? "In setup" : "Live";
+            const next = lines[0] ?? (pct != null && pct < 100 ? "Finish fund setup" : "—");
             return (
-              <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 lg:grid-cols-[1.6fr_1.1fr_0.7fr_0.8fr_0.6fr_1.5fr_0.7fr_0.9fr_13rem] lg:items-center">
-                <div className="min-w-0">
-                  <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}{!f.isOpen ? <span className="ml-2 text-xs font-normal text-muted-foreground">Closed</span> : null}{(f as any).agreement && (f as any).agreement !== "complete" ? <span className="block text-xs font-normal text-muted-foreground">Agreement: {(f as any).agreement === "follow_up" ? "Follow-up required" : "Setup needs review"}</span> : null}</Link>
-                  <p className="mt-1 text-xs text-muted-foreground">Fund Setup: {f.setupCompletion == null ? "Unavailable" : `${f.setupCompletion}% complete`}</p>
+              <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-muted/30 lg:grid-cols-[2fr_1.2fr_1fr_0.9fr_1.6fr_1fr_6rem] lg:items-center">
+                <div className="col-span-2 min-w-0 lg:col-span-1">
+                  <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}</Link>
+                  <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{stage}</span>
                 </div>
-                <span className="text-right text-muted-foreground lg:text-left">{f.clientName ?? "-"}</span>
-                <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.investors}</span>
-                <span className="text-right lg:text-left"><span className="lg:hidden text-muted-foreground">Onboarding </span>{f.metrics.onboarding}</span>
-                <span><span className="lg:hidden text-muted-foreground">Ready </span>{f.metrics.ready}</span>
-                <span className={cn("col-span-2 text-xs lg:col-span-1", f.metrics.blocked ? "text-destructive" : f.metrics.needsAttention ? "font-medium" : "text-muted-foreground")}>{lines.filter((l) => !l.includes("ready")).join(" · ") || "Nothing needs attention"}</span>
-                <span className="text-xs text-muted-foreground lg:text-sm lg:text-foreground"><span className="lg:hidden">Next close </span>{fmt(f.targetClose)}</span>
-                <span className="text-right text-xs text-muted-foreground lg:text-left lg:text-sm lg:text-foreground">{f.owner?.name ?? "Unassigned"}</span>
-                <span className="col-span-2 flex items-center justify-end gap-2 lg:col-span-1">
-                  <Link to="/ops/fund-manager/$fundId" params={{ fundId: f.id }} search={{ who: undefined }} className="text-xs font-medium text-primary hover:underline">View Fund Manager</Link>
-                  <ViewAsPicker offeringId={f.id} label="View as Fund Manager" />
+                <span className="text-muted-foreground">{f.clientName ?? "-"}</span>
+                <span className="flex items-center gap-2 text-right lg:text-left">
+                  <span className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-muted lg:inline-block"><span className="block h-full bg-primary" style={{ width: `${pct ?? 0}%` }} /></span>
+                  {pct == null ? "-" : `${pct}%`}
+                </span>
+                <span><span className="lg:hidden text-muted-foreground">Investors </span>{f.metrics.ready}/{f.metrics.investors} ready</span>
+                <span className={cn("text-right text-xs lg:text-left", f.metrics.blocked ? "text-destructive" : f.metrics.needsAttention ? "font-medium" : "text-muted-foreground")}>{next}</span>
+                <span className="text-xs text-muted-foreground lg:text-sm lg:text-foreground">{f.owner?.name ?? "Unassigned"}</span>
+                <span className="flex items-center justify-end gap-1">
+                  <ViewAsPicker offeringId={f.id} label="Preview" />
                   <RowActions f={f} />
                 </span>
               </div>
