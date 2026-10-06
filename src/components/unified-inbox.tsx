@@ -13,9 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClientInbox } from "@/components/client-inbox";
 import { SupportInbox } from "@/components/support-inbox";
-import { inboxOverviewFn, inboxThreadFn, replyInboxFn, startInboxThreadFn } from "@/lib/inbox.functions";
+import { inboxOverviewFn, inboxThreadFn, replyInboxFn, startDirectThreadFn, startInboxThreadFn } from "@/lib/inbox.functions";
 
-const CHANNEL_LABEL = { operations: "Harmonious Operations", sales: "Harmonious Sales", rep: "Dedicated representative" } as const;
+const CHANNEL_LABEL = { operations: "Harmonious Operations", sales: "Harmonious Sales", rep: "Dedicated representative", direct: "Direct" } as const;
+const KIND_LABEL = { team: "Team member", fund_manager: "Fund manager", investor: "Investor" } as const;
 
 export function useInboxUnread() {
   const fn = useServerFn(inboxOverviewFn);
@@ -41,8 +42,9 @@ export function UnifiedInbox() {
           <TabsTrigger value="support">{d?.isStaff ? "Investor & manager questions" : "Investment questions"}</TabsTrigger>
         </TabsList>
         <TabsContent value="conversations" className="space-y-4">
-          {d?.canStart && !composing && <Button onClick={() => { setComposing(true); setOpen(null); }}>New message</Button>}
-          {composing && d && <Compose data={d} onDone={(id) => { setComposing(false); if (id) setOpen(id); }} />}
+          {(d?.canStart || d?.isStaff) && !composing && <Button onClick={() => { setComposing(true); setOpen(null); }}>New message</Button>}
+          {composing && d && (d.isStaff ? <DirectCompose data={d} onDone={(id) => { setComposing(false); if (id) setOpen(id); }} /> : null)}
+          {composing && d && !d.isStaff && <Compose data={d} onDone={(id) => { setComposing(false); if (id) setOpen(id); }} />}
           {open ? (
             <Thread id={open} onBack={() => setOpen(null)} />
           ) : (
@@ -58,7 +60,7 @@ export function UnifiedInbox() {
                           <span className="min-w-0">
                             <span className={`block truncate ${t.unread ? "font-semibold" : ""}`}>{t.subject}</span>
                             <span className="block text-xs text-muted-foreground">
-                              {t.side === "harmonious" ? `${t.clientName} · ` : ""}{t.channel === "rep" ? t.repName : CHANNEL_LABEL[t.channel]} · {new Date(t.lastMessageAt).toLocaleString()}
+                              {t.channel === "direct" ? `${t.withName}${t.participantKind ? ` (${KIND_LABEL[t.participantKind as keyof typeof KIND_LABEL]})` : ""}` : <>{t.side === "harmonious" ? `${t.clientName} · ` : ""}{t.channel === "rep" ? t.repName : CHANNEL_LABEL[t.channel]}</>} · {new Date(t.lastMessageAt).toLocaleString()}
                             </span>
                           </span>
                           {t.unread && <Badge>New</Badge>}
@@ -120,6 +122,55 @@ function Compose({ data, onDone }: { data: any; onDone: (id?: string) => void })
         <div className="space-y-1"><Label>Message</Label><Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={5000} /></div>
         <div className="flex gap-2">
           <Button disabled={m.isPending || subject.trim().length < 2 || !body.trim() || !clientId} onClick={() => m.mutate()}>Send</Button>
+          <Button variant="outline" onClick={() => onDone()}>Cancel</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DirectCompose({ data, onDone }: { data: any; onDone: (id?: string) => void }) {
+  const qc = useQueryClient();
+  const start = useServerFn(startDirectThreadFn);
+  const [kind, setKind] = useState<keyof typeof KIND_LABEL>("team");
+  const [search, setSearch] = useState("");
+  const [userId, setUserId] = useState("");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const people = ((data.directory ?? []) as any[])
+    .filter((p) => p.kind === kind)
+    .filter((p) => !search.trim() || `${p.name} ${p.email}`.toLowerCase().includes(search.trim().toLowerCase()))
+    .slice(0, 200);
+  const m = useMutation({
+    mutationFn: () => start({ data: { userId, subject, body } }),
+    onSuccess: (r) => { qc.invalidateQueries({ queryKey: ["inbox"] }); toast.success("Message sent"); onDone(r.id); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-lg">New message</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-1"><Label>Send to</Label>
+          <Select value={kind} onValueChange={(v) => { setKind(v as keyof typeof KIND_LABEL); setUserId(""); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="team">A team member</SelectItem>
+              <SelectItem value="fund_manager">A fund manager</SelectItem>
+              <SelectItem value="investor">An investor</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1"><Label>Person</Label>
+          <Input placeholder="Search by name or email" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Select value={userId} onValueChange={setUserId}>
+            <SelectTrigger><SelectValue placeholder={people.length ? "Choose a person" : "No one found"} /></SelectTrigger>
+            <SelectContent>{people.map((p) => <SelectItem key={p.userId} value={p.userId}>{p.name}{p.email ? ` · ${p.email}` : ""}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1"><Label>Subject</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={200} /></div>
+        <div className="space-y-1"><Label>Message</Label><Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={5000} /></div>
+        <div className="flex gap-2">
+          <Button disabled={m.isPending || !userId || subject.trim().length < 2 || !body.trim()} onClick={() => m.mutate()}>Send</Button>
           <Button variant="outline" onClick={() => onDone()}>Cancel</Button>
         </div>
       </CardContent>
