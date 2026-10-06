@@ -78,7 +78,7 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
                     <td><Badge variant={r.kycOk ? "secondary" : "outline"} className="whitespace-nowrap capitalize">{r.kycLabel}</Badge></td>
                     <td><Badge variant={r.docs === "Signed" ? "secondary" : "outline"}>{r.docs}</Badge></td>
                     <td><Badge variant={r.wiring === "Funded" ? "secondary" : "outline"}>{r.wiring}</Badge></td>
-                    <td className="text-xs">{(() => { const x = ready.get(r.id); if (!x) return <span className="text-muted-foreground">-</span>; return x.closeReady ? <Badge variant="secondary">Ready</Badge> : <span title={x.nextAction?.label ?? ""}>{x.percentComplete ?? 0}% · {x.nextAction?.label ?? x.nextAction ?? "In progress"}</span>; })()}</td>
+                    <td className="text-xs">{(() => { const x = ready.get(r.id); if (!x) return <span className="text-muted-foreground">-</span>; return x.closeReady ? <Badge variant="secondary">Ready</Badge> : <span title={x.nextAction?.label ?? ""}>{x.percentComplete ?? 0}% · {x.nextAction?.label ?? "In progress"}</span>; })()}</td>
                     <td className="whitespace-nowrap text-xs text-muted-foreground">{fmtDate(r.lastActivity)}</td>
                   </tr>
                 ))}
