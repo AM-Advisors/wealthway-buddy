@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Panel } from "@/components/sales/sales-ui";
 import { MkPage, StatusBadge, fileToBase64, fmt, fromLocalInput, mkHead, toLocalInput } from "@/components/marketing-ui";
 import { emailProblems, renderEmailHtml, type EmailBlock } from "@/lib/marketing-model";
+import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
+import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
 import {
   decideMarketingEmail, getMarketingAudiences, getMarketingEmail, marketingDraftCopy, saveMarketingEmail, sendMarketingTestEmail, uploadMarketingAsset,
 } from "@/lib/marketing.functions";
@@ -38,6 +40,8 @@ function EmailEditor() {
   const test = useServerFn(sendMarketingTestEmail);
   const draft = useServerFn(marketingDraftCopy);
   const upload = useServerFn(uploadMarketingAsset);
+  const fromDrive = useServerFn(useMarketingDriveImage);
+  const [attachments, setAttachments] = useState<{ id: string; name: string }[]>([]);
   const q = useQuery({ queryKey: ["mk-email", id], queryFn: () => load({ data: { id } }), enabled: !isNew, retry: false });
   const aud = useQuery({ queryKey: ["mk-audiences"], queryFn: () => audFn(), retry: false });
 
@@ -54,7 +58,7 @@ function EmailEditor() {
   useEffect(() => {
     const e = q.data?.email;
     if (!e) return;
-    setName(e.name); setSubject(e.subject); setPreheader(e.preheader ?? ""); setBlocks(e.blocks ?? []); setAudienceId(e.audience_id); setWhen(toLocalInput(e.scheduled_at));
+    setName(e.name); setSubject(e.subject); setPreheader(e.preheader ?? ""); setBlocks(e.blocks ?? []); setAudienceId(e.audience_id); setWhen(toLocalInput(e.scheduled_at)); setAttachments((e.attachment_asset_ids ?? []).map((id: string) => ({ id, name: "Attached sheet" })));
   }, [q.data]);
 
   const status = q.data?.email.status ?? "draft";
@@ -65,7 +69,7 @@ function EmailEditor() {
   const move = (i: number, d: number) => setBlocks((x) => { const y = [...x]; const t = y[i + d]; if (!t) return x; y[i + d] = y[i]!; y[i] = t; return y; });
 
   const saveM = useMutation({
-    mutationFn: () => save({ data: { id: isNew ? null : id, name, subject, preheader: preheader || null, blocks, audienceId, scheduledAt: fromLocalInput(when) } }),
+    mutationFn: () => save({ data: { id: isNew ? null : id, name, subject, preheader: preheader || null, blocks, audienceId, scheduledAt: fromLocalInput(when), attachmentAssetIds: attachments.map((a) => a.id) } }),
     onSuccess: (r) => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["mk-emails"] }); if (isNew) nav({ to: "/marketing/emails/$id", params: { id: r.id } }); else q.refetch(); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -104,6 +108,12 @@ function EmailEditor() {
                 <SelectTrigger><SelectValue placeholder="Choose an audience" /></SelectTrigger>
                 <SelectContent>{(aud.data ?? []).map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name} ({a.members})</SelectItem>)}</SelectContent>
               </Select>
+              <div className="space-y-1 pt-2">
+                <div className="text-sm font-medium">Attachments (marketing sheets)</div>
+                {attachments.map((a) => <div key={a.id} className="flex items-center gap-2 text-xs"><span className="truncate">{a.name}</span>{!locked && <Button size="sm" variant="ghost" onClick={() => setAttachments((x) => x.filter((y) => y.id !== a.id))}>Remove</Button>}</div>)}
+                {!locked && attachments.length < 5 && <MarketingDrivePicker kind="sheet" label="Attach from Google Drive" onPick={(a) => setAttachments((x) => x.some((y) => y.id === a.id) ? x : [...x, { id: a.id, name: a.name }])} />}
+                <p className="text-xs text-muted-foreground">Sent as PDF attachments with the approved email. Changing attachments sends it back for approval.</p>
+              </div>
               {aud.data?.length === 0 && <Link to="/marketing/audiences" className="text-xs text-primary underline">Create an audience</Link>}
             </div>
           </div>
@@ -127,7 +137,7 @@ function EmailEditor() {
                 </div>
                 {b.type === "heading" && <Input value={b.text} onChange={(e) => setBlock(i, { ...b, text: e.target.value })} disabled={locked} />}
                 {b.type === "text" && <Textarea rows={4} value={b.text} onChange={(e) => setBlock(i, { ...b, text: e.target.value })} disabled={locked} />}
-                {b.type === "image" && (b.url ? <img src={b.url} alt="" className="max-h-40 rounded" /> : !locked && <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onChange={(e) => onImage(i, e.target.files?.[0])} className="text-sm" />)}
+                {b.type === "image" && (b.url ? <img src={b.url} alt="" className="max-h-40 rounded" /> : !locked && <div className="flex flex-wrap items-center gap-2"><input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onChange={(e) => onImage(i, e.target.files?.[0])} className="text-sm" /><MarketingDrivePicker kind="image" onPick={async (a) => { try { const r = await fromDrive({ data: { assetId: a.id } }); setBlock(i, { type: "image", url: r.url, alt: a.name }); } catch (e) { toast.error((e as Error).message); } }} /></div>)}
                 {b.type === "button" && <div className="grid grid-cols-2 gap-2"><Input value={b.text} onChange={(e) => setBlock(i, { ...b, text: e.target.value })} disabled={locked} /><Input value={b.href} onChange={(e) => setBlock(i, { ...b, href: e.target.value })} disabled={locked} placeholder="https://" /></div>}
               </div>))}</div>
             {!locked && <div className="mt-3 flex flex-wrap gap-1">{(Object.keys(NEW_BLOCK) as EmailBlock["type"][]).map((t) => <Button key={t} size="sm" variant="outline" onClick={() => setBlocks((x) => [...x, { ...NEW_BLOCK[t] }])} className="capitalize">+ {t}</Button>)}</div>}

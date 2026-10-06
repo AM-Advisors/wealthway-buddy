@@ -1,3 +1,5 @@
+import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
+import { addCampaignAsset, getCampaignAssets, removeCampaignAsset } from "@/lib/marketing-drive.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -23,6 +25,8 @@ function CampaignPage() {
   const nav = useNavigate();
   const q = useQuery({ queryKey: ["mk-campaign", id], queryFn: () => load({ data: { id } }), refetchInterval: 15000, retry: false });
   const load = useServerFn(getCampaign);
+  const mood = useServerFn(getCampaignAssets), addMood = useServerFn(addCampaignAsset), rmMood = useServerFn(removeCampaignAsset);
+  const moodQ = useQuery({ queryKey: ["mk-mood", id], queryFn: () => mood({ data: { campaignId: id } }), retry: false });
   const save = useServerFn(saveCampaign), archive = useServerFn(archiveCampaign), assign = useServerFn(assignToCampaign);
   const compose = useServerFn(composeCampaignEmail), decide = useServerFn(decideMarketingEmail);
   const [f, setF] = useState<any>(null);
@@ -96,6 +100,21 @@ function CampaignPage() {
 
         <div className="space-y-6">
           <CampaignCalendar focusId={id} />
+          <Card>
+            <CardHeader><CardTitle className="text-base">Images &amp; themes from Google Drive</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {(moodQ.data ?? []).map((m) => (
+                  <div key={m.id} className="overflow-hidden rounded border text-xs">
+                    <div className="flex aspect-square items-center justify-center bg-muted">{m.previewUrl ? <img src={m.previewUrl} alt={m.name} className="h-full w-full object-cover" /> : m.kind}</div>
+                    <div className="flex items-center gap-1 p-1"><span className="truncate">{m.name}</span><button className="ml-auto text-destructive" aria-label={`Remove ${m.name}`} onClick={async () => { await rmMood({ data: { id: m.id } }); void moodQ.refetch(); }}>×</button></div>
+                  </div>
+                ))}
+              </div>
+              {!(moodQ.data ?? []).length && <p className="text-sm text-muted-foreground">Pick images and theme folders from the Marketing Drive to plan this campaign.</p>}
+              <MarketingDrivePicker label="Add from Google Drive" onPick={async (a) => { try { await addMood({ data: { campaignId: id, assetId: a.id } }); void moodQ.refetch(); } catch (e) { toast.error((e as Error).message); } }} />
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader><CardTitle className="text-base">Emails in this campaign</CardTitle></CardHeader>
             <CardContent className="space-y-2">

@@ -68,6 +68,7 @@ export const saveMarketingEmail = createServerFn({ method: "POST" }).middleware(
   .inputValidator((d) => z.object({
     id: z.string().uuid().nullish(), name: z.string().max(200), subject: z.string().max(200), preheader: z.string().max(200).nullable(),
     blocks: z.array(block).max(60), audienceId: z.string().uuid().nullable(), scheduledAt: z.string().datetime().nullable(),
+    attachmentAssetIds: z.array(z.string().uuid()).max(5).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => (await srv()).saveEmail(context.userId, data));
 

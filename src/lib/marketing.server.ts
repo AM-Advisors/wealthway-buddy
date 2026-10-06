@@ -234,9 +234,9 @@ export async function getEmail(userId: string, id: string) {
   };
 }
 
-export async function saveEmail(userId: string, d: { id?: string | null | undefined; name: string; subject: string; preheader: string | null; blocks: EmailBlock[]; audienceId: string | null; scheduledAt: string | null }) {
+export async function saveEmail(userId: string, d: { id?: string | null | undefined; name: string; subject: string; preheader: string | null; blocks: EmailBlock[]; audienceId: string | null; scheduledAt: string | null; attachmentAssetIds?: string[] | undefined }) {
   const { db } = await requireMarketing(userId);
-  const fields = { name: d.name.slice(0, 200), subject: d.subject.slice(0, 200), preheader: d.preheader, blocks: d.blocks.slice(0, 60), audience_id: d.audienceId, scheduled_at: d.scheduledAt, updated_at: new Date().toISOString() };
+  const fields = { name: d.name.slice(0, 200), subject: d.subject.slice(0, 200), preheader: d.preheader, blocks: d.blocks.slice(0, 60), audience_id: d.audienceId, scheduled_at: d.scheduledAt, updated_at: new Date().toISOString(), ...(d.attachmentAssetIds ? { attachment_asset_ids: d.attachmentAssetIds.slice(0, 5) } : {}) };
   if (!d.id) {
     const { data, error } = await db.from("marketing_emails").insert({ ...fields, author_id: userId, status: "draft" }).select("id").single();
     if (error) throw new Error(error.message);
@@ -347,6 +347,7 @@ export async function runDue() {
     const already = new Set(((done ?? []) as any[]).map((d) => d.recipient));
     const list = ((members ?? []) as any[]).map((m) => m.email as string).filter((m) => !already.has(m));
     const unsub = await unsubscribedSet(db, list);
+    const files = await (await import("@/lib/marketing-drive.server")).attachmentsFor(db, e.attachment_asset_ids ?? []).catch((err) => { console.error("attachments", err); return []; });
     let failed = 0;
     for (const to of list) {
       if (unsub.has(to)) { await db.from("marketing_email_sends").insert({ email_id: e.id, recipient: to, status: "skipped_unsubscribed" }); continue; }
@@ -354,7 +355,7 @@ export async function runDue() {
         const url = await unsubscribeUrl(db, to);
         const { trackMarketingHtml } = await import("@/lib/email-tracking.server");
         const html = await trackMarketingHtml(renderEmailHtml(e, url), to, `mk:${e.id}`, url);
-        await pub.sendMarketingEmail(to, e.subject, html, renderEmailText(e, url), url, `${e.id}:${to}`);
+        await pub.sendMarketingEmail(to, e.subject, html, renderEmailText(e, url), url, `${e.id}:${to}`, undefined, files);
         await db.from("marketing_email_sends").insert({ email_id: e.id, recipient: to, status: "sent" });
       } catch (err) {
         failed++;

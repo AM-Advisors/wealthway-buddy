@@ -204,6 +204,7 @@ import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_a
 import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
 import { Route as AuthenticatedMarketingCampaignsRouteImport } from './routes/_authenticated/marketing_.campaigns'
 import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
+import { Route as AuthenticatedMarketingDriveRouteImport } from './routes/_authenticated/marketing_.drive'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
 import { Route as AuthenticatedMarketingFlowsRouteImport } from './routes/_authenticated/marketing_.flows'
 import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_authenticated/marketing_.imports'
@@ -369,6 +370,7 @@ import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/emai
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicIrsEfileAckRouteImport } from './routes/api/public/irs-efile/ack'
+import { Route as ApiPublicMTokenRouteImport } from './routes/api/public/m.$token'
 import { Route as ApiPublicMarketingRunRouteImport } from './routes/api/public/marketing/run'
 import { Route as ApiPublicMercuryOnboardingRouteImport } from './routes/api/public/mercury/onboarding'
 import { Route as ApiPublicNotifyDrainRouteImport } from './routes/api/public/notify/drain'
@@ -1486,6 +1488,12 @@ const AuthenticatedMarketingChannelsRoute =
     path: '/marketing/channels',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingDriveRoute =
+  AuthenticatedMarketingDriveRouteImport.update({
+    id: '/marketing_/drive',
+    path: '/marketing/drive',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingEmailsRoute =
   AuthenticatedMarketingEmailsRouteImport.update({
     id: '/marketing_/emails',
@@ -2450,6 +2458,11 @@ const ApiPublicIrsEfileAckRoute = ApiPublicIrsEfileAckRouteImport.update({
   path: '/api/public/irs-efile/ack',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMTokenRoute = ApiPublicMTokenRouteImport.update({
+  id: '/api/public/m/$token',
+  path: '/api/public/m/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMarketingRunRoute = ApiPublicMarketingRunRouteImport.update({
   id: '/api/public/marketing/run',
   path: '/api/public/marketing/run',
@@ -2804,6 +2817,7 @@ export interface FileRoutesByFullPath {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
@@ -2962,6 +2976,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/m/$token': typeof ApiPublicMTokenRoute
   '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
@@ -3186,6 +3201,7 @@ export interface FileRoutesByTo {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
@@ -3343,6 +3359,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/m/$token': typeof ApiPublicMTokenRoute
   '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
@@ -3576,6 +3593,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/_authenticated/marketing_/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/_authenticated/marketing_/drive': typeof AuthenticatedMarketingDriveRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
   '/_authenticated/marketing_/flows': typeof AuthenticatedMarketingFlowsRoute
   '/_authenticated/marketing_/imports': typeof AuthenticatedMarketingImportsRoute
@@ -3734,6 +3752,7 @@ export interface FileRoutesById {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/m/$token': typeof ApiPublicMTokenRoute
   '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
   '/api/public/notify/drain': typeof ApiPublicNotifyDrainRoute
@@ -3967,6 +3986,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/campaigns'
     | '/marketing/channels'
+    | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
     | '/marketing/imports'
@@ -4125,6 +4145,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/m/$token'
     | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
@@ -4349,6 +4370,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/campaigns'
     | '/marketing/channels'
+    | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
     | '/marketing/imports'
@@ -4506,6 +4528,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/m/$token'
     | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
@@ -4738,6 +4761,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/calendar'
     | '/_authenticated/marketing_/campaigns'
     | '/_authenticated/marketing_/channels'
+    | '/_authenticated/marketing_/drive'
     | '/_authenticated/marketing_/emails'
     | '/_authenticated/marketing_/flows'
     | '/_authenticated/marketing_/imports'
@@ -4896,6 +4920,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/m/$token'
     | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
     | '/api/public/notify/drain'
@@ -4989,6 +5014,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicIrsEfileAckRoute: typeof ApiPublicIrsEfileAckRoute
+  ApiPublicMTokenRoute: typeof ApiPublicMTokenRoute
   ApiPublicMarketingRunRoute: typeof ApiPublicMarketingRunRoute
   ApiPublicMercuryOnboardingRoute: typeof ApiPublicMercuryOnboardingRoute
   ApiPublicNotifyDrainRoute: typeof ApiPublicNotifyDrainRoute
@@ -6368,6 +6394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingChannelsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/drive': {
+      id: '/_authenticated/marketing_/drive'
+      path: '/marketing/drive'
+      fullPath: '/marketing/drive'
+      preLoaderRoute: typeof AuthenticatedMarketingDriveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/emails': {
       id: '/_authenticated/marketing_/emails'
       path: '/marketing/emails'
@@ -7523,6 +7556,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIrsEfileAckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/m/$token': {
+      id: '/api/public/m/$token'
+      path: '/api/public/m/$token'
+      fullPath: '/api/public/m/$token'
+      preLoaderRoute: typeof ApiPublicMTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/marketing/run': {
       id: '/api/public/marketing/run'
       path: '/api/public/marketing/run'
@@ -8121,6 +8161,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
   AuthenticatedMarketingCampaignsRoute: typeof AuthenticatedMarketingCampaignsRoute
   AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
+  AuthenticatedMarketingDriveRoute: typeof AuthenticatedMarketingDriveRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
   AuthenticatedMarketingFlowsRoute: typeof AuthenticatedMarketingFlowsRoute
   AuthenticatedMarketingImportsRoute: typeof AuthenticatedMarketingImportsRoute
@@ -8398,6 +8439,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,
   AuthenticatedMarketingCampaignsRoute: AuthenticatedMarketingCampaignsRoute,
   AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
+  AuthenticatedMarketingDriveRoute: AuthenticatedMarketingDriveRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
   AuthenticatedMarketingFlowsRoute: AuthenticatedMarketingFlowsRoute,
   AuthenticatedMarketingImportsRoute: AuthenticatedMarketingImportsRoute,
@@ -8626,6 +8668,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicIrsEfileAckRoute: ApiPublicIrsEfileAckRoute,
+  ApiPublicMTokenRoute: ApiPublicMTokenRoute,
   ApiPublicMarketingRunRoute: ApiPublicMarketingRunRoute,
   ApiPublicMercuryOnboardingRoute: ApiPublicMercuryOnboardingRoute,
   ApiPublicNotifyDrainRoute: ApiPublicNotifyDrainRoute,
