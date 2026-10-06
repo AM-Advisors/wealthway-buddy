@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/ops/hubspot-tickets")({
   component: Page,
 });
 
-const STATUS: Record<string, string> = { linked: "Linked to existing fund", created: "Draft fund created", needs_review: "Needs review", service_request: "Service request", dismissed: "Dismissed" };
+const STATUS: Record<string, string> = { linked: "Linked to existing fund", created: "Draft fund created", needs_review: "Needs review", service_request: "Service request", dismissed: "Dismissed", task: "Turned into a task" };
 
 function Page() {
   const fetchFn = useServerFn(getOpsTickets);
