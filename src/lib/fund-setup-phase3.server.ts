@@ -290,7 +290,7 @@ async function writeEntity(sb: any, offeringId: string, patch: { ein?: string; s
 }
 
 /** Records a real EIN (existing, or received from the IRS). An IRS letter is required. */
-export async function recordEin(sb: any, userId: string, input: { offeringId: string; ein: string; letterPath?: string | null; received: boolean }) {
+export async function recordEin(sb: any, userId: string, input: { offeringId: string; ein: string; letterPath?: string | null | undefined; received: boolean }) {
   await assertStaff(userId, input.offeringId);
   if (!validEin(input.ein)) throw new Error("Enter the 9-digit EIN.");
   if (input.letterPath && !input.letterPath.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
