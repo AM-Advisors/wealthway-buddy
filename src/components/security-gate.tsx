@@ -168,7 +168,7 @@ function MfaSetup({ onDone }: { onDone: () => void }) {
 
   async function startTotp() {
     setBusy(true);
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: `Authenticator ${Date.now()}` });
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", issuer: "Harmonious", friendlyName: `Authenticator ${Date.now()}` });
     setBusy(false);
     if (error || !data) { toast.error("Couldn't start authenticator setup."); return; }
     setTotp({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
