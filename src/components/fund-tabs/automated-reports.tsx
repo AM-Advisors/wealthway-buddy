@@ -124,7 +124,7 @@ export function AutomatedReports({ fundId, fundName }: { fundId: string; fundNam
 
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Reports</h4>
-          {!q.data?.drafts.length ? <p className="text-sm text-muted-foreground">No reports built yet.</p> : (
+          {!q.data?.drafts?.length ? <p className="text-sm text-muted-foreground">No reports built yet.</p> : (
             <div className="divide-y rounded-md border">
               {q.data.drafts.map((r: any) => <DraftRow key={r.id} r={r} staff={!!q.data?.staff} onDecide={(approve, note) => dm.mutate({ id: r.id, approve, note })} />)}
             </div>

@@ -95,7 +95,7 @@ function ManagerBoard({ offeringId }: { offeringId: string }) {
           guidance: guidance || undefined,
           category,
           is_required: true,
-          sort_order: (board.data?.questions.length ?? 0) + 1,
+          sort_order: (board.data?.questions?.length ?? 0) + 1,
         },
       }),
     onSuccess: () => {

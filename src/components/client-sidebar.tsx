@@ -89,11 +89,11 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const items = caps.data?.hasActive
     ? navigation.primary
     : navigation.primary.filter((i: { url: string }) => !capLinks.some((c) => i.url === c || i.url.startsWith(`${c}/`)));
-  const active = options.find((o) => o.id === activeId);
+  const active = (options ?? []).find((o) => o.id === activeId);
   const brand = useClientBrand(active?.kind === "company");
   const sharedFn = useServerFn(listMySharedFunds);
   const shared = useQuery({ queryKey: ["my-shared-funds"], queryFn: () => sharedFn(), staleTime: 60_000 });
-  const hasShared = (shared.data?.funds.length ?? 0) > 0;
+  const hasShared = (shared.data?.funds?.length ?? 0) > 0;
   const inbox = useInboxUnread();
 
   const isActive = (url: string) => {
