@@ -373,6 +373,7 @@ import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/emai
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicIrsEfileAckRouteImport } from './routes/api/public/irs-efile/ack'
+import { Route as ApiPublicLinkedinCallbackRouteImport } from './routes/api/public/linkedin/callback'
 import { Route as ApiPublicMTokenRouteImport } from './routes/api/public/m.$token'
 import { Route as ApiPublicMarketingRunRouteImport } from './routes/api/public/marketing/run'
 import { Route as ApiPublicMercuryOnboardingRouteImport } from './routes/api/public/mercury/onboarding'
@@ -2478,6 +2479,12 @@ const ApiPublicIrsEfileAckRoute = ApiPublicIrsEfileAckRouteImport.update({
   path: '/api/public/irs-efile/ack',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLinkedinCallbackRoute =
+  ApiPublicLinkedinCallbackRouteImport.update({
+    id: '/api/public/linkedin/callback',
+    path: '/api/public/linkedin/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMTokenRoute = ApiPublicMTokenRouteImport.update({
   id: '/api/public/m/$token',
   path: '/api/public/m/$token',
@@ -3004,6 +3011,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
   '/api/public/m/$token': typeof ApiPublicMTokenRoute
   '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
@@ -3391,6 +3399,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
   '/api/public/m/$token': typeof ApiPublicMTokenRoute
   '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
@@ -3788,6 +3797,7 @@ export interface FileRoutesById {
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
   '/api/public/m/$token': typeof ApiPublicMTokenRoute
   '/api/public/marketing/run': typeof ApiPublicMarketingRunRoute
   '/api/public/mercury/onboarding': typeof ApiPublicMercuryOnboardingRoute
@@ -4185,6 +4195,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/linkedin/callback'
     | '/api/public/m/$token'
     | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
@@ -4572,6 +4583,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/linkedin/callback'
     | '/api/public/m/$token'
     | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
@@ -4968,6 +4980,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
+    | '/api/public/linkedin/callback'
     | '/api/public/m/$token'
     | '/api/public/marketing/run'
     | '/api/public/mercury/onboarding'
@@ -5065,6 +5078,7 @@ export interface RootRouteChildren {
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicIrsEfileAckRoute: typeof ApiPublicIrsEfileAckRoute
+  ApiPublicLinkedinCallbackRoute: typeof ApiPublicLinkedinCallbackRoute
   ApiPublicMTokenRoute: typeof ApiPublicMTokenRoute
   ApiPublicMarketingRunRoute: typeof ApiPublicMarketingRunRoute
   ApiPublicMercuryOnboardingRoute: typeof ApiPublicMercuryOnboardingRoute
@@ -7629,6 +7643,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIrsEfileAckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/linkedin/callback': {
+      id: '/api/public/linkedin/callback'
+      path: '/api/public/linkedin/callback'
+      fullPath: '/api/public/linkedin/callback'
+      preLoaderRoute: typeof ApiPublicLinkedinCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/m/$token': {
       id: '/api/public/m/$token'
       path: '/api/public/m/$token'
@@ -8752,6 +8773,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicIrsEfileAckRoute: ApiPublicIrsEfileAckRoute,
+  ApiPublicLinkedinCallbackRoute: ApiPublicLinkedinCallbackRoute,
   ApiPublicMTokenRoute: ApiPublicMTokenRoute,
   ApiPublicMarketingRunRoute: ApiPublicMarketingRunRoute,
   ApiPublicMercuryOnboardingRoute: ApiPublicMercuryOnboardingRoute,

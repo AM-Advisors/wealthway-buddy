@@ -141,7 +141,7 @@ async function missingChannels(db: any, channels: string[]) {
 async function channelStatusInner(db: any) {
   const { linkedinConfigured, metaConfigured } = await import("@/lib/marketing-publish.server");
   const rows = await channelRows(db);
-  const li = linkedinConfigured(), meta = metaConfigured();
+  const li = await linkedinConfigured(), meta = metaConfigured();
   return [
     { channel: "linkedin", label: "LinkedIn", credential: li, accountRef: rows.get("linkedin")?.account_ref ?? null, displayName: rows.get("linkedin")?.display_name ?? null, ready: li && !!rows.get("linkedin")?.account_ref, refHint: "LinkedIn company page (organization) ID" },
     { channel: "facebook", label: "Facebook", credential: meta, accountRef: rows.get("facebook")?.account_ref ?? null, displayName: rows.get("facebook")?.display_name ?? null, ready: meta && !!rows.get("facebook")?.account_ref, refHint: "Facebook Page ID" },
@@ -158,6 +158,22 @@ export async function setChannel(userId: string, channel: string, accountRef: st
   if (!(CHANNELS as readonly string[]).includes(channel)) throw new Error("Unknown channel.");
   if (!/^[\w:.-]{3,80}$/.test(accountRef)) throw new Error("That account ID doesn't look right.");
   await db.from("marketing_channels").upsert({ channel, account_ref: accountRef, display_name: displayName, updated_by: userId, updated_at: new Date().toISOString() });
+  return { ok: true };
+}
+export async function linkedinStart(userId: string) {
+  const { canApprove } = await requireMarketing(userId);
+  if (!canApprove) throw new Error("Only a Marketing Manager or leadership can connect LinkedIn.");
+  return { url: (await import("@/lib/linkedin-direct.server")).authUrl(userId) };
+}
+export async function linkedinDirectStatus(userId: string) {
+  await requireMarketing(userId);
+  return (await import("@/lib/linkedin-direct.server")).directStatus();
+}
+export async function linkedinDisconnect(userId: string) {
+  const { db, canApprove } = await requireMarketing(userId);
+  if (!canApprove) throw new Error("Only a Marketing Manager or leadership can disconnect LinkedIn.");
+  await (await import("@/lib/linkedin-direct.server")).disconnectDirect();
+  await db.from("marketing_channels").delete().eq("channel", "linkedin");
   return { ok: true };
 }
 
@@ -324,7 +340,7 @@ export async function runDue() {
     let ok = 0;
     const { data: targets } = await db.from("marketing_post_targets").select("*").eq("post_id", p.id).neq("status", "published");
     for (const t of (targets ?? []) as any[]) {
-      const ref = ch.get(t.channel)?.account_ref || (t.channel === "linkedin" && pub.linkedinConfigured() ? "me" : null);
+      const ref = ch.get(t.channel)?.account_ref || null;
       try {
         if (!ref) throw new Error("Channel not connected.");
         const ext = t.channel === "linkedin" ? await pub.publishLinkedIn(ref, p.body, img ?? null)

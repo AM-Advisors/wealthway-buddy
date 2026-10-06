@@ -120,3 +120,10 @@ export const marketingBackgroundArt = createServerFn({ method: "POST" }).middlew
     const img = await generateBackground(data.theme);
     return { dataUrl: `data:${img.contentType};base64,${img.base64}` };
   });
+
+export const startLinkedInConnect = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await srv()).linkedinStart(context.userId));
+export const getLinkedInDirect = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await srv()).linkedinDirectStatus(context.userId));
+export const disconnectLinkedIn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await srv()).linkedinDisconnect(context.userId));
