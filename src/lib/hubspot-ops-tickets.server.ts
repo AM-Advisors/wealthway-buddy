@@ -108,7 +108,9 @@ export async function importOpsTickets(userId: string) {
       }
       const clientId = names.map((n) => clientByName.get(norm(n))).find(Boolean) ?? null;
       const subject = String(p.subject ?? "Untitled ticket").trim();
-      const isFund = String(p.hs_pipeline) === FUNDS_PIPELINE;
+      // Email-thread tickets (Re:/FW:, K-1 or tax requests) are questions about a fund, not a new fund.
+      const looksLikeEmail = /^(re|fw|fwd)\s*:/i.test(subject) || /\bk-?1s?\b|tax return|capital calls?$/i.test(subject);
+      const isFund = String(p.hs_pipeline) === FUNDS_PIPELINE && !looksLikeEmail;
       const row: any = {
         hubspot_id: String(t.id), pipeline_id: String(p.hs_pipeline ?? ""), pipeline_label: st?.pipeline ?? "Unknown pipeline",
         stage_id: p.hs_pipeline_stage ?? null, stage_label: st?.label ?? null, stage_order: st?.order ?? null, stage_closed: st?.closed ?? false,
