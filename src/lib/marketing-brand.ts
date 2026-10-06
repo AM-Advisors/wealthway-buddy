@@ -26,7 +26,7 @@ export const COPY_RULES =
 const OFFSHORE = /\b(offshore|cayman(?:\s+islands)?|bvi|british\s+virgin\s+islands)\b/i;
 // Prices/fees: "$2,500", "$99/mo", "fee of", "pricing", "per month" etc. Allows the "$24B+ AUA" proof point.
 const MONEY = /\$\s?\d[\d,]*(?:\.\d+)?(?!\s*[BbMm]\+?\s*(?:in\s+)?(?:AUA|assets|investable))(?:\s*(?:\/|per)\s*\w+)?/;
-const PRICE_WORDS = /\b(pricing|price[sd]?|fees?|cost[s]?|per\s+month|\/mo\b|discount)\b/i;
+const PRICE_WORDS = /\b(pricing|price list|our prices?|costs? (?:just|only|from)|per\s+month|discount|starting at)\b/i;
 
 /** Returns human-readable problems; empty when the text is clean. */
 export function brandProblems(text: string): string[] {
@@ -36,6 +36,6 @@ export function brandProblems(text: string): string[] {
   const m = text.match(MONEY);
   if (m) out.push(`Contains a price or amount ("${m[0].trim()}"). Remove pricing.`);
   const p = text.match(PRICE_WORDS);
-  if (p && !/management fees?\b|carried interest/i.test(p.input ?? "")) out.push(`Mentions "${p[0]}". Collateral and posts can't reference pricing or fees.`);
+  if (p) out.push(`Mentions "${p[0]}". Collateral and posts can't reference pricing or fees.`);
   return out;
 }
