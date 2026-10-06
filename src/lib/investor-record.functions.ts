@@ -28,6 +28,7 @@ export const createInvestorFn = createServerFn({ method: "POST" }).middleware([r
   .inputValidator(z.object({
     offeringId: uuid, personId: uuid.nullable().optional(), profileId: uuid.nullable().optional(), confirmedNew: z.boolean().optional(),
     person, profile: z.object({ type: z.string().max(40), subType: str, legalName: str, details }), investment, related: related.optional(),
+    taxId: z.string().regex(/^\d{9}$/, "The SSN / Tax ID must be 9 digits.").nullable().optional(),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).createInvestor(context.userId, data as any));
 

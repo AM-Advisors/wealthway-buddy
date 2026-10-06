@@ -117,11 +117,13 @@ function investmentRow(i: InvestmentInput, actor: OnboardingActor) {
 export async function createInvestor(userId: string, input: {
   offeringId: string; personId?: string | null; profileId?: string | null; confirmedNew?: boolean;
   person: PersonInput; profile: ProfileInput; investment: InvestmentInput; related?: RelatedInput[]; source?: EntrySource;
-  /** Drive migration only: staff create records while the fund is still in setup. Nothing is sent. */
+  /** Kept for callers; saving a record never requires a launched fund (nothing is sent). Invites stay launch-gated. */
   allowPreLaunch?: boolean;
+  /** Optional 9-digit SSN/ITIN/EIN; encrypted, only last 4 kept in plain. */
+  taxId?: string | null;
 }) {
   const actor = await fundActor(userId, input.offeringId);
-  if (!input.allowPreLaunch) await launchedOffering(input.offeringId);
+  if (input.taxId && !/^\d{9}$/.test(input.taxId)) fail("The SSN / Tax ID must be 9 digits.");
   const source: EntrySource = input.source ?? sourceFor(actor);
   const changes: Change[] = [];
 
@@ -167,6 +169,18 @@ export async function createInvestor(userId: string, input: {
     if (error) fail(error.message);
     profileId = pr.id;
     changes.push({ offeringId: input.offeringId, onboardingId: null, table: "investment_profiles", id: pr.id, field: "profile_type", from: null, to: type, source, actor: actor.userId });
+  }
+
+  // 2b. Optional tax ID: encrypted through the canonical store; only last 4 kept readable.
+  if (input.taxId) {
+    const { encryptTin } = await import("@/lib/irs-forms.server");
+    const enc = await encryptTin(input.taxId);
+    const { error: te } = await db().rpc("store_profile_tax_id", { _profile: profileId, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId } as any);
+    if (te) fail("The tax number couldn't be stored securely.");
+    const t = input.profile.type;
+    const taxType = t === "entity" || t === "trust" ? "ein" : input.taxId.startsWith("9") ? "itin" : "ssn";
+    await db().from("investment_profiles").update({ tax_id_type: taxType, tax_id_last4: input.taxId.slice(-4) } as any).eq("id", profileId);
+    changes.push({ offeringId: input.offeringId, onboardingId: null, table: "investment_profiles", id: profileId!, field: "tax_id", from: null, to: `•••${input.taxId.slice(-4)}`, source, actor: actor.userId });
   }
 
   // 3. Investment - converge onto any open record instead of duplicating.
