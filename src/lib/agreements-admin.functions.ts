@@ -20,19 +20,32 @@ const STAFF_ROLES = [
   "finance",
   "client_success",
   "executive",
+  "sales",
+  "account_executive",
+  "bdr",
+  "sales_management",
+  "cro",
+  "account_manager",
+  "leadership",
 ] as const;
 
+/** Sales owns MSAs/SOWs: only Sales roles plus CEO/Super Admin create, edit, send and amend. */
 const CONTRACT_ROLES = [
   "admin",
   "super_admin",
-  "legal",
-  "client_success",
-  "compliance",
-  "finance",
   "executive",
+  "sales",
+  "account_executive",
+  "bdr",
+  "sales_management",
+  "cro",
 ] as const;
+/** Countersigning for Harmonious stays with CEO, Super Admin and Legal. */
+const SIGN_ROLES = ["admin", "super_admin", "executive", "legal"] as const;
+/** Roles that see every agreement (read-only unless also in CONTRACT_ROLES). */
+const SEE_ALL_ROLES = ["admin", "super_admin", "executive", "legal", "finance", "leadership", "cro", "compliance"] as const;
 
-type Who = { userId: string; email: string; roles: string[]; isStaff: boolean; canManage: boolean };
+type Who = { userId: string; email: string; roles: string[]; isStaff: boolean; canManage: boolean; canSign: boolean };
 
 async function whoIs(context: any): Promise<Who> {
   const { data } = await context.supabase
@@ -45,8 +58,48 @@ async function whoIs(context: any): Promise<Who> {
     email: (context.claims?.email as string | undefined) ?? "",
     roles,
     isStaff: roles.some((r) => (STAFF_ROLES as readonly string[]).includes(r)),
-    canManage: roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r)),
+    canManage: roles.some((r) => (CONTRACT_ROLES as readonly string[]).includes(r)) && !(roles.length === 1 && roles[0] === "leadership"),
+    canSign: roles.some((r) => (SIGN_ROLES as readonly string[]).includes(r)),
   };
+}
+
+/**
+ * Which clients' agreements this staff member may see. null = all.
+ * Sales reps: clients they own as Sales or SOWs they created; Sales Managers: their reporting team's clients;
+ * Operations/Account Managers: clients (or funds) they are assigned to.
+ */
+async function agreementScope(who: Who): Promise<{ clients: Set<string>; offerings: Set<string>; sowsCreated: Set<string> } | null> {
+  if (who.roles.some((r) => (SEE_ALL_ROLES as readonly string[]).includes(r))) return null;
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  let people = new Set([who.userId]);
+  if (who.roles.includes("sales_management")) {
+    try {
+      const { viewerScope } = await import("./staff-directory.server");
+      people = (await viewerScope(who.userId)).visible;
+    } catch { /* fall back to self */ }
+  }
+  const ids = [...people];
+  const [{ data: ca }, { data: fo }, { data: own }] = await Promise.all([
+    db.from("client_team_assignments").select("client_id, team_role, user_id").in("user_id", ids),
+    db.from("fund_team_overrides").select("offering_id, user_id").in("user_id", ids),
+    db.from("client_sows").select("id, client_id").in("created_by", ids),
+  ]);
+  const clients = new Set<string>();
+  for (const a of (ca ?? []) as any[]) clients.add(a.client_id);
+  const offerings = new Set<string>(((fo ?? []) as any[]).map((f) => f.offering_id));
+  const sowsCreated = new Set<string>(((own ?? []) as any[]).map((r) => r.id));
+  for (const r of (own ?? []) as any[]) clients.add(r.client_id);
+  if (offerings.size) {
+    const { data: offs } = await db.from("offerings").select("id, client_id").in("id", [...offerings]);
+    for (const o of (offs ?? []) as any[]) if (o.client_id) clients.add(o.client_id);
+  }
+  return { clients, offerings, sowsCreated };
+}
+
+async function requireSign(context: any) {
+  const who = await whoIs(context);
+  if (!who.canSign) throw new Error("Forbidden: only the CEO, Super Admin or Legal can countersign for Harmonious.");
+  return who;
 }
 
 async function requireStaff(context: any) {
@@ -59,7 +112,7 @@ async function requireAuthority(context: any) {
   const who = await whoIs(context);
   if (!who.canManage) {
     throw new Error(
-      "Forbidden: contracting decisions need legal, compliance, finance, client success or admin authority.",
+      "Forbidden: MSAs and SOWs are managed by Sales. Ask the client's Sales owner.",
     );
   }
   return who;
@@ -95,8 +148,10 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const who = await requireStaff(context);
+    const scope = await agreementScope(who);
+    const { supabaseAdmin: adb } = await import("@/integrations/supabase/client.server");
 
-    const [{ data: sows }, { data: clients }, { data: changes }, { data: requests }, { data: snaps }] =
+    const [{ data: sowsAll }, { data: clients }, { data: changesAll }, { data: requestsAll }, { data: snaps }] =
       await Promise.all([
         context.supabase.from("client_sows").select("*").order("created_at", { ascending: false }),
         context.supabase.from("clients").select("id, name, legal_name"),
@@ -110,15 +165,29 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
         context.supabase.from("sow_pricing_snapshots").select("sow_id, version_label"),
       ]);
 
+    const inScope = (clientId: string, sowId?: string) => !scope || scope.clients.has(clientId) || (!!sowId && scope.sowsCreated.has(sowId));
+    const sows = ((sowsAll ?? []) as any[]).filter((s) => inScope(s.client_id, s.id));
+    const changes = ((changesAll ?? []) as any[]).filter((c) => inScope(c.client_id, c.sow_id));
+    const requests = ((requestsAll ?? []) as any[]).filter((r) => inScope(r.client_id));
+    const sowIds = sows.map((s) => s.id);
+    const [{ data: links }, { data: team }] = await Promise.all([
+      sowIds.length ? adb.from("client_sow_funds").select("sow_id, offering_id, status").in("sow_id", sowIds) : Promise.resolve({ data: [] as any[] }),
+      adb.from("client_team_assignments").select("client_id, team_role, user_id").in("client_id", [...new Set(sows.map((s) => s.client_id))].slice(0, 500)),
+    ]);
+    const offIds = [...new Set(((links ?? []) as any[]).map((l) => l.offering_id))];
+    const { data: offs } = offIds.length ? await adb.from("offerings").select("id, name").in("id", offIds) : { data: [] as any[] };
+    const offName = new Map(((offs ?? []) as any[]).map((o) => [o.id, o.name]));
+    const salesOwner = new Map<string, string>();
+    for (const t of (team ?? []) as any[]) if (t.team_role === "sales") salesOwner.set(t.client_id, t.user_id);
     const clientById = new Map(((clients ?? []) as any[]).map((c) => [c.id, c]));
     const snapBySow = new Map(((snaps ?? []) as any[]).map((s) => [s.sow_id, s.version_label]));
-    const openChanges = ((changes ?? []) as any[]).filter(
+    const openChanges = changes.filter(
       (c) => !["resolved", "declined", "approved"].includes(String(c.status)),
     );
 
     return {
-      access: { isStaff: who.isStaff, canManage: who.canManage },
-      agreements: ((sows ?? []) as any[]).map((s) => ({
+      access: { isStaff: who.isStaff, canManage: who.canManage, canSign: who.canSign, scoped: !!scope },
+      agreements: sows.map((s) => ({
         id: s.id as string,
         clientId: s.client_id as string,
         clientName: clientById.get(s.client_id)?.legal_name || clientById.get(s.client_id)?.name || "-",
@@ -130,8 +199,10 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
         pricingVersion: snapBySow.get(s.id) ?? null,
         openChanges: openChanges.filter((c) => c.sow_id === s.id).length,
         createdAt: s.created_at as string,
+        funds: ((links ?? []) as any[]).filter((l) => l.sow_id === s.id).map((l) => ({ id: l.offering_id as string, name: (offName.get(l.offering_id) as string) ?? "Fund", status: l.status as string })),
+        salesOwnerId: salesOwner.get(s.client_id) ?? null,
       })),
-      changes: ((changes ?? []) as any[]).map((c) => ({
+      changes: changes.map((c) => ({
         id: c.id as string,
         sowId: (c.sow_id as string) ?? null,
         clientId: c.client_id as string,
@@ -140,7 +211,7 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
         status: c.status as string,
         createdAt: c.created_at as string,
       })),
-      requests: ((requests ?? []) as any[]).map((r) => ({
+      requests: requests.map((r) => ({
         id: r.id as string,
         clientId: r.client_id as string,
         clientName: clientById.get(r.client_id)?.legal_name || clientById.get(r.client_id)?.name || "-",
