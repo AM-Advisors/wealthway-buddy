@@ -21,6 +21,7 @@ export const inboxOverviewFn = createServerFn({ method: "GET" })
       clients: clients.map((c) => ({ id: c.id as string, name: c.name as string })),
       reps: await s.repsFor(a.clientIds),
       isStaff: a.isStaff,
+      directory: await s.directory(a),
     };
   });
 
@@ -54,4 +55,14 @@ export const replyInboxFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const s = await srv();
     return s.reply(await s.inboxActor(context.userId), data.id, data.body);
+  });
+
+export const startDirectThreadFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ userId: z.string().uuid(), subject: z.string().trim().min(2).max(200), body: z.string().trim().min(1).max(5000) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const s = await srv();
+    return s.startDirect(await s.inboxActor(context.userId), data);
   });

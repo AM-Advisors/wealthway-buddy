@@ -4,7 +4,7 @@
  */
 import { staffProfile } from "@/lib/harmonious-staff";
 
-export type Channel = "operations" | "sales" | "rep";
+export type Channel = "operations" | "sales" | "rep" | "direct";
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -40,7 +40,10 @@ export async function inboxActor(userId: string) {
 }
 export type InboxActor = Awaited<ReturnType<typeof inboxActor>>;
 
-export function canSeeThread(a: InboxActor, t: { client_id: string; channel: Channel; rep_user_id: string | null; created_by?: string | null; addressed_email?: string | null }) {
+export function canSeeThread(a: InboxActor, t: { client_id: string | null; channel: Channel; rep_user_id: string | null; created_by?: string | null; addressed_email?: string | null; participant_user_id?: string | null }) {
+  // Direct conversations are private to the two people in them (no admin read-through).
+  if (t.channel === "direct") return t.created_by === a.userId || t.participant_user_id === a.userId ? (a.isStaff ? "harmonious" as const : "client" as const) : null;
+  if (!t.client_id) return null;
   // Client side: each person sees conversations they started or that Harmonious addressed to them.
   if (a.clientIds.includes(t.client_id) && (t.created_by === a.userId || (!!a.email && t.addressed_email?.toLowerCase() === a.email))) return "client" as const;
   if (a.isAdmin) return "harmonious" as const;
@@ -70,6 +73,7 @@ export async function listThreads(a: InboxActor) {
   const ors: string[] = [];
   if (a.clientIds.length) ors.push(`and(created_by.eq.${a.userId},client_id.in.(${a.clientIds.join(",")}))`);
   if (a.clientIds.length && a.email && /^[^,()"\s]+$/.test(a.email)) ors.push(`and(addressed_email.ilike.${a.email},client_id.in.(${a.clientIds.join(",")}))`);
+  ors.push(`participant_user_id.eq.${a.userId}`, `and(channel.eq.direct,created_by.eq.${a.userId})`);
   if (!a.isAdmin) {
     if (a.ops) ors.push("channel.eq.operations");
     if (a.sales) ors.push("channel.eq.sales");
@@ -82,16 +86,18 @@ export async function listThreads(a: InboxActor) {
   const ids = threads.map((t) => t.id);
   const [{ data: marks }, { data: clients }] = await Promise.all([
     ids.length ? d.from("inbox_read_markers").select("thread_id, read_at").eq("user_id", a.userId).in("thread_id", ids) : { data: [] },
-    threads.length ? d.from("clients").select("id, name").in("id", [...new Set(threads.map((t) => t.client_id))]) : { data: [] },
+    threads.some((t) => t.client_id) ? d.from("clients").select("id, name").in("id", [...new Set(threads.map((t) => t.client_id).filter(Boolean))]) : { data: [] },
   ]);
   const m = new Map(((marks ?? []) as any[]).map((r) => [r.thread_id, r.read_at]));
   const c = new Map(((clients ?? []) as any[]).map((r) => [r.id, r.name]));
-  const reps = await names([...new Set(threads.map((t) => t.rep_user_id).filter(Boolean))]);
+  const reps = await names([...new Set(threads.flatMap((t) => [t.rep_user_id, t.participant_user_id, t.channel === "direct" ? t.created_by : null]).filter(Boolean))]);
   return threads.map((t) => ({
     id: t.id as string,
     subject: t.subject as string,
     channel: t.channel as Channel,
-    clientName: (c.get(t.client_id) as string) ?? "Client",
+    clientName: t.client_id ? ((c.get(t.client_id) as string) ?? "Client") : null,
+    withName: t.channel === "direct" ? reps.get(t.participant_user_id === a.userId ? t.created_by : t.participant_user_id) ?? "Contact" : null,
+    participantKind: (t.participant_kind as string | null) ?? null,
     repName: t.rep_user_id ? reps.get(t.rep_user_id) ?? "Representative" : null,
     lastMessageAt: t.last_message_at as string,
     unread: !m.get(t.id) || new Date(m.get(t.id)) < new Date(t.last_message_at),
@@ -140,4 +146,50 @@ export async function reply(a: InboxActor, id: string, body: string) {
   await d.from("inbox_threads").update({ last_message_at: now }).eq("id", id);
   await d.from("inbox_read_markers").upsert({ user_id: a.userId, thread_id: id, read_at: now });
   return { ok: true };
+}
+
+export type DirectKind = "team" | "fund_manager" | "investor";
+const FM_ROLES = ["fund_manager", "client_gp", "client_signatory", "client_finance", "client_legal", "client_compliance", "client_readonly"];
+
+/** People a Harmonious staff member can message directly. Staff only; test/demo and blocked people are left out. */
+export async function directory(a: InboxActor) {
+  if (!a.isStaff) return [];
+  const d = await db();
+  const [{ data: roles }, { data: fms }] = await Promise.all([
+    d.from("user_roles").select("user_id, role").limit(50000),
+    d.from("fund_managers").select("user_id").limit(50000),
+  ]);
+  const byUser = new Map<string, string[]>();
+  for (const r of (roles ?? []) as any[]) byUser.set(r.user_id, [...(byUser.get(r.user_id) ?? []), String(r.role)]);
+  const fmSet = new Set(((fms ?? []) as any[]).map((r) => r.user_id as string));
+  const kindOf = new Map<string, DirectKind>();
+  for (const [uid, rs] of byUser) {
+    if (staffProfile(rs).isHarmoniousStaff) kindOf.set(uid, "team");
+    else if (fmSet.has(uid) || rs.some((r) => FM_ROLES.includes(r))) kindOf.set(uid, "fund_manager");
+    else if (rs.includes("investor")) kindOf.set(uid, "investor");
+  }
+  for (const uid of fmSet) if (!kindOf.has(uid)) kindOf.set(uid, "fund_manager");
+  kindOf.delete(a.userId);
+  const ids = [...kindOf.keys()];
+  if (!ids.length) return [];
+  const { data: profs } = await d.from("profiles").select("user_id, legal_name, email, is_test_demo").in("user_id", ids);
+  return ((profs ?? []) as any[])
+    .filter((p) => !p.is_test_demo)
+    .map((p) => ({ userId: p.user_id as string, name: (p.legal_name || p.email || "Unnamed") as string, email: (p.email as string) ?? "", kind: kindOf.get(p.user_id)! }))
+    .sort((x, y) => x.name.localeCompare(y.name));
+}
+
+export async function startDirect(a: InboxActor, input: { userId: string; subject: string; body: string }) {
+  if (!a.isStaff) throw new Error("Only Harmonious team members can start a direct conversation.");
+  const person = (await directory(a)).find((p) => p.userId === input.userId);
+  if (!person) throw new Error("That person can't be messaged.");
+  const d = await db();
+  const { data: t, error } = await d.from("inbox_threads").insert({
+    client_id: null, channel: "direct", participant_user_id: person.userId, participant_kind: person.kind,
+    subject: input.subject, created_by: a.userId, started_side: "harmonious",
+  }).select("id").single();
+  if (error) throw new Error("Could not start the conversation.");
+  await d.from("inbox_messages").insert({ thread_id: t.id, sender_id: a.userId, sender_side: "harmonious", body: input.body });
+  await d.from("inbox_read_markers").upsert({ user_id: a.userId, thread_id: t.id, read_at: new Date().toISOString() });
+  return { id: t.id as string };
 }
