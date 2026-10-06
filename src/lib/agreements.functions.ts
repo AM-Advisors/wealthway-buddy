@@ -25,16 +25,25 @@ const STAFF_ROLES = [
   "finance",
   "client_success",
   "executive",
+  "sales",
+  "account_executive",
+  "bdr",
+  "sales_management",
+  "cro",
+  "account_manager",
+  "leadership",
 ] as const;
 
+/** Sales owns MSAs/SOWs (see agreements-admin.functions.ts). */
 const CONTRACT_ROLES = [
   "admin",
   "super_admin",
-  "legal",
-  "client_success",
-  "compliance",
-  "finance",
   "executive",
+  "sales",
+  "account_executive",
+  "bdr",
+  "sales_management",
+  "cro",
 ] as const;
 
 type Who = {
