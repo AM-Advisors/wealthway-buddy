@@ -68,17 +68,20 @@ function PostEditor() {
   const dirty = !isNew && !!saved && (saved.title !== title || saved.body !== body || saved.channels.join() !== channels.join() || savedPaths !== curPaths || toLocalInput(saved.scheduled_at) !== when);
   // Images save straight away on drafts (one save per change, latest wins) so the Calendar and Submit see them.
   const imgSeq = useRef(0);
+  const imagesRef = useRef(images);
+  imagesRef.current = images;
   const setImagesAndSave = (f: (x: { path: string; url: string }[]) => { path: string; url: string }[]) => {
-    setImages((cur) => {
-      const next = f(cur);
+    const next = f(imagesRef.current);
+    imagesRef.current = next;
+    setImages(next);
+    {
       if (!isNew && saved && (saved.status === "draft" || saved.status === "rejected")) {
         const seq = ++imgSeq.current;
         void save({ data: { id, title: saved.title, body: saved.body, channels: saved.channels, imagePaths: next.map((i) => i.path), scheduledAt: saved.scheduled_at ? new Date(saved.scheduled_at).toISOString() : null } })
           .then(() => { if (seq === imgSeq.current) void q.refetch(); })
           .catch((e) => toast.error((e as Error).message));
       }
-      return next;
-    });
+    }
   };
 
   const saveM = useMutation({
