@@ -270,8 +270,8 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
   const [tin, setTin] = useState("");
   const submitEin = (received: boolean) =>
     run(async () => {
-      if (!file) throw new Error("Upload the IRS EIN letter.");
-      await record({ data: { offeringId, ein, letterPath: await uploadRestricted(offeringId, "ein-letter", file), received } });
+      await record({ data: { offeringId, ein, letterPath: file ? await uploadRestricted(offeringId, "ein-letter", file) : null, received } });
+      if (!file) toast.info("No EIN letter — a task was created to load a signed W-9.");
       setEin("");
       setFile(null);
     }, received ? "EIN received and recorded" : "EIN recorded");
@@ -315,7 +315,8 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
               {file ? file.name : "Upload EIN Letter"}
               <input type="file" accept="application/pdf,image/*" className="sr-only" onChange={(x) => setFile(x.target.files?.[0] ?? null)} />
             </Label>
-            <Button size="sm" disabled={busy || !ein || !file} onClick={() => submitEin(e.path === "harmonious")}>{e.path === "harmonious" ? "Record EIN received" : "Save EIN"}</Button>
+            <Button size="sm" disabled={busy || !ein} onClick={() => submitEin(e.path === "harmonious")}>{e.path === "harmonious" ? "Record EIN received" : "Save EIN"}</Button>
+            {!file && <p className="w-full text-xs text-muted-foreground">No letter? You can still save the EIN — a task will be created to load and sign a W-9.</p>}
           </div>
         )}
 

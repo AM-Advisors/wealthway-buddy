@@ -290,24 +290,36 @@ async function writeEntity(sb: any, offeringId: string, patch: { ein?: string; s
 }
 
 /** Records a real EIN (existing, or received from the IRS). An IRS letter is required. */
-export async function recordEin(sb: any, userId: string, input: { offeringId: string; ein: string; letterPath: string; received: boolean }) {
+export async function recordEin(sb: any, userId: string, input: { offeringId: string; ein: string; letterPath?: string | null | undefined; received: boolean }) {
   await assertStaff(userId, input.offeringId);
-  if (!validEin(input.ein)) throw new Error("Enter the 9-digit EIN exactly as it appears on the IRS letter.");
-  if (!input.letterPath.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
+  if (!validEin(input.ein)) throw new Error("Enter the 9-digit EIN.");
+  if (input.letterPath && !input.letterPath.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
   const o = await offering(input.offeringId);
   if (input.received && o.ein_workflow_status !== "submitted" && o.ein_workflow_status !== "needs_attention") {
     throw new Error("Mark the SS-4 as submitted before recording the EIN the IRS issued.");
   }
   const digits = input.ein.replace(/\D/g, "");
   await writeEntity(sb, input.offeringId, { ein: `${digits.slice(0, 2)}-${digits.slice(2)}` });
-  const letterId = await addControlledDoc(userId, input.offeringId, "ein_letter", "IRS EIN Letter", input.letterPath);
   const extras = await import("@/lib/fund-setup-extras.server");
-  const sid = await setupId(input.offeringId);
-  if (sid) await extras.linkEvidence(userId, sid, "ein_letter", null, letterId);
+  if (input.letterPath) {
+    const letterId = await addControlledDoc(userId, input.offeringId, "ein_letter", "IRS EIN Letter", input.letterPath);
+    const sid = await setupId(input.offeringId);
+    if (sid) await extras.linkEvidence(userId, sid, "ein_letter", null, letterId);
+  } else {
+    // No IRS letter: a signed W-9 is the substitute evidence. Create one open follow-up task (idempotent by title).
+    const title = "Upload signed W-9 (no EIN letter on file)";
+    const { data: existing } = await db().from("staff_tasks").select("id").eq("offering_id", input.offeringId).eq("title", title).neq("status", "done").limit(1);
+    if (!existing?.length) {
+      await db().from("staff_tasks").insert({
+        title, description: "The EIN was saved without the IRS EIN letter. Have the fund sign a W-9 and upload it to the fund's documents (or upload the EIN letter when available).",
+        priority: "high", status: "open", created_by: userId, team: "operations", offering_id: input.offeringId,
+      } as any).then(() => undefined, () => undefined);
+    }
+  }
   if (input.received) await db().from("offerings").update({ ein_workflow_status: "ein_received" }).eq("id", input.offeringId);
-  await activity(input.offeringId, userId, input.received ? "ein_received" : "ein_recorded", input.received ? "EIN received from the IRS and recorded" : "Existing EIN recorded with IRS letter", o.ein_workflow_status, input.received ? "ein_received" : o.ein_workflow_status);
+  await activity(input.offeringId, userId, input.received ? "ein_received" : "ein_recorded", input.letterPath ? (input.received ? "EIN received from the IRS and recorded" : "Existing EIN recorded with IRS letter") : "EIN recorded without IRS letter; signed W-9 requested", o.ein_workflow_status, input.received ? "ein_received" : o.ein_workflow_status);
   await extras.autoCompleteTasks(input.offeringId);
-  return { ok: true };
+  return { ok: true, w9Requested: !input.letterPath };
 }
 
 export async function saveSs4(sb: any, userId: string, input: { offeringId: string; answers: Record<string, unknown>; responsiblePersonId?: string | null | undefined; responsiblePartyTin?: string | null | undefined }) {
