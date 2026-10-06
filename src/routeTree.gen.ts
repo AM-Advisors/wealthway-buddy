@@ -246,6 +246,7 @@ import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStatementsRouteImport } from './routes/_authenticated/ops.statements'
 import { Route as AuthenticatedOpsSystemStatusRouteImport } from './routes/_authenticated/ops.system-status'
+import { Route as AuthenticatedOpsTasksRouteImport } from './routes/_authenticated/ops.tasks'
 import { Route as AuthenticatedOpsTaxRouteImport } from './routes/_authenticated/ops.tax'
 import { Route as AuthenticatedOpsTaxDocumentsRouteImport } from './routes/_authenticated/ops.tax-documents'
 import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authenticated/ops.tax-review'
@@ -1727,6 +1728,11 @@ const AuthenticatedOpsSystemStatusRoute =
     path: '/ops/system-status',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsTasksRoute = AuthenticatedOpsTasksRouteImport.update({
+  id: '/ops/tasks',
+  path: '/ops/tasks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOpsTaxRoute = AuthenticatedOpsTaxRouteImport.update({
   id: '/ops/tax',
   path: '/ops/tax',
@@ -2824,6 +2830,7 @@ export interface FileRoutesByFullPath {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
+  '/ops/tasks': typeof AuthenticatedOpsTasksRoute
   '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
@@ -3203,6 +3210,7 @@ export interface FileRoutesByTo {
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
+  '/ops/tasks': typeof AuthenticatedOpsTasksRoute
   '/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
@@ -3590,6 +3598,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/_authenticated/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
+  '/_authenticated/ops/tasks': typeof AuthenticatedOpsTasksRoute
   '/_authenticated/ops/tax': typeof AuthenticatedOpsTaxRoute
   '/_authenticated/ops/tax-documents': typeof AuthenticatedOpsTaxDocumentsRoute
   '/_authenticated/ops/tax-review': typeof AuthenticatedOpsTaxReviewRoute
@@ -3978,6 +3987,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
+    | '/ops/tasks'
     | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
@@ -4357,6 +4367,7 @@ export interface FileRouteTypes {
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
+    | '/ops/tasks'
     | '/ops/tax'
     | '/ops/tax-documents'
     | '/ops/tax-review'
@@ -4743,6 +4754,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/statements'
     | '/_authenticated/ops/system-status'
+    | '/_authenticated/ops/tasks'
     | '/_authenticated/ops/tax'
     | '/_authenticated/ops/tax-documents'
     | '/_authenticated/ops/tax-review'
@@ -6624,6 +6636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsSystemStatusRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/tasks': {
+      id: '/_authenticated/ops/tasks'
+      path: '/ops/tasks'
+      fullPath: '/ops/tasks'
+      preLoaderRoute: typeof AuthenticatedOpsTasksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/tax': {
       id: '/_authenticated/ops/tax'
       path: '/ops/tax'
@@ -8102,6 +8121,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStatementsRoute: typeof AuthenticatedOpsStatementsRoute
   AuthenticatedOpsSystemStatusRoute: typeof AuthenticatedOpsSystemStatusRoute
+  AuthenticatedOpsTasksRoute: typeof AuthenticatedOpsTasksRoute
   AuthenticatedOpsTaxRoute: typeof AuthenticatedOpsTaxRoute
   AuthenticatedOpsTaxDocumentsRoute: typeof AuthenticatedOpsTaxDocumentsRoute
   AuthenticatedOpsTaxReviewRoute: typeof AuthenticatedOpsTaxReviewRoute
@@ -8381,6 +8401,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStatementsRoute: AuthenticatedOpsStatementsRoute,
   AuthenticatedOpsSystemStatusRoute: AuthenticatedOpsSystemStatusRoute,
+  AuthenticatedOpsTasksRoute: AuthenticatedOpsTasksRoute,
   AuthenticatedOpsTaxRoute: AuthenticatedOpsTaxRoute,
   AuthenticatedOpsTaxDocumentsRoute: AuthenticatedOpsTaxDocumentsRoute,
   AuthenticatedOpsTaxReviewRoute: AuthenticatedOpsTaxReviewRoute,

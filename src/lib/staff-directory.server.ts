@@ -52,7 +52,7 @@ function downline(managerOf: Map<string, string | null>, root: string): Set<stri
 }
 
 /** Who the viewer may see: leadership sees all staff; others see themselves and everyone below them. */
-async function viewerScope(viewer: string) {
+export async function viewerScope(viewer: string) {
   const db = await admin();
   const roles = await rolesOf(db, viewer);
   const staff = await allStaff(db);
@@ -159,36 +159,47 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
   const active = members.length ? await q("staff_activity_events", "user_id", (b) => b.in("user_id", members).gte("created_at", since)) : [];
   const teamStats = { members: members.length, activeToday: new Set(active.map((a) => a.user_id)).size };
 
+  const clientNames = new Map(((await q("clients", "id, name")) as any[]).map((c) => [c.id, c.name]));
+  const age = (d: string) => `${Math.max(0, Math.floor((Date.now() - Date.parse(d)) / 864e5))} days`;
+  const fundItems = async (rows: any[]) => {
+    const ids = rows.map((r) => r.offering_id).filter(Boolean);
+    const offs = ids.length ? await q("offerings", "id, name", (b) => b.in("id", ids)) : [];
+    const on = new Map(offs.map((o) => [o.id, o.name]));
+    return rows.slice(0, 50).map((r) => ({ label: on.get(r.offering_id) ?? r.display_name ?? "Unnamed fund", sub: `${clientNames.get(r.client_id) ?? "No client"} · in setup ${age(r.created_at)}`, fundId: r.offering_id ?? null }));
+  };
+  const plain = (rows: any[], f: (r: any) => { label: string; sub?: string }) => rows.slice(0, 50).map((r) => ({ ...f(r), fundId: null as string | null }));
   const ops = async () => {
     const [setups, onb, closes] = await Promise.all([
-      q("fund_setups", "id, launched_at, created_at, client_id"),
+      q("fund_setups", "id, offering_id, display_name, launched_at, created_at, client_id"),
       q("investor_onboardings", "id, stage, closed_at, removed_at, investor_user_id, person_id", (b) => b.is("removed_at", null).is("closed_at", null)),
       q("fund_close_requests", "id, status, client_id"),
     ]);
     const inSetup = setups.filter((s) => !s.launched_at);
+    const stuck = inSetup.filter((s) => Date.now() - Date.parse(s.created_at) > 21 * 864e5);
     return {
       stats: [
-        { label: "Funds in setup", value: inSetup.length, to: "/ops/fund-setup" },
-        { label: "Stuck over 21 days", value: inSetup.filter((s) => Date.now() - Date.parse(s.created_at) > 21 * 864e5).length, to: "/ops/fund-setup" },
+        { label: "Funds in setup", value: inSetup.length, to: "/ops/fund-setup", search: { view: "setup" }, items: await fundItems(inSetup) },
+        { label: "Stuck over 21 days", value: stuck.length, to: "/ops/fund-setup", search: { view: "stuck" }, items: await fundItems(stuck) },
         { label: "Open investor onboardings", value: onb.length, to: "/admin/investor-onboarding" },
-        { label: "Close requests", value: closes.length, to: "/ops/close-requests" },
+        { label: "Close requests", value: closes.length, to: "/ops/close-requests", items: plain(closes, (r) => ({ label: clientNames.get(r.client_id) ?? "Close request", sub: String(r.status).replace(/_/g, " ") })) },
       ],
       charts: [{ title: "Investor onboardings by stage", data: countBy(onb, "stage") }, { title: "Close requests by status", data: countBy(closes, "status") }],
     };
   };
   const finance = async () => {
     const [inv, recs, exc, k1, rev] = await Promise.all([
-      q("invoices", "id, status, due_date, total_cents, client_id"),
+      q("invoices", "id, number, status, due_date, total_cents, client_id"),
       q("bank_reconciliations", "id, status"),
       q("accounting_exceptions", "id, kind, resolved_at", (b) => b.is("resolved_at", null)),
       q("k1_forms", "id, status"),
       q("financial_review_memos", "id, status"),
     ]);
     const unpaid = inv.filter((i) => !["paid", "void", "draft"].includes(String(i.status)));
+    const overdue = unpaid.filter((i) => i.due_date && i.due_date < today);
     return {
       stats: [
-        { label: "Unpaid invoices", value: unpaid.length, cents: unpaid.reduce((s, i) => s + Number(i.total_cents ?? 0), 0), to: "/admin/invoices" },
-        { label: "Overdue invoices", value: unpaid.filter((i) => i.due_date && i.due_date < today).length, to: "/admin/invoices" },
+        { label: "Unpaid invoices", value: unpaid.length, cents: unpaid.reduce((s, i) => s + Number(i.total_cents ?? 0), 0), to: "/admin/invoices", items: plain(unpaid, (i) => ({ label: `${i.number ?? "Invoice"} · ${clientNames.get(i.client_id) ?? "Client"}`, sub: `${String(i.status).replace(/_/g, " ")} · due ${i.due_date ?? "—"} · $${(Number(i.total_cents ?? 0) / 100).toLocaleString()}` })) },
+        { label: "Overdue invoices", value: overdue.length, to: "/admin/invoices", items: plain(overdue, (i) => ({ label: `${i.number ?? "Invoice"} · ${clientNames.get(i.client_id) ?? "Client"}`, sub: `due ${i.due_date} · $${(Number(i.total_cents ?? 0) / 100).toLocaleString()}` })) },
         { label: "Open accounting exceptions", value: exc.length, to: "/ops/financials" },
         { label: "K-1s not delivered", value: k1.filter((k) => !["delivered", "superseded"].includes(String(k.status))).length, to: "/ops/tax" },
       ],
@@ -198,14 +209,15 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
   const compliance = async () => {
     const [kyc, holds, filings, closes] = await Promise.all([
       q("account_identity_checks", "id, status, user_id"),
-      q("compliance_holds", "id, status"),
+      q("compliance_holds", "id, status, client_id, scope, reason"),
       q("fund_regulatory_filings", "id, filing_type, created_at", (b) => b.is("removed_at", null).gte("created_at", new Date(Date.now() - 30 * 864e5).toISOString())),
       q("fund_close_requests", "id, status, client_id"),
     ]);
+    const openHolds = holds.filter((h) => !["released", "resolved", "closed", "cleared"].includes(String(h.status)));
     return {
       stats: [
         { label: "Identity checks needing review", value: kyc.filter((k) => !["verified", "approved", "cleared"].includes(String(k.status))).length, to: "/admin/investor-onboarding" },
-        { label: "Compliance holds", value: holds.filter((h) => !["released", "resolved", "closed"].includes(String(h.status))).length, to: "/ops/compliance" },
+        { label: "Compliance holds", value: openHolds.length, to: "/ops/compliance", items: plain(openHolds, (h) => ({ label: `${clientNames.get(h.client_id) ?? "Hold"} · ${String(h.scope ?? "").replace(/_/g, " ")}`, sub: h.reason ?? String(h.status) })) },
         { label: "Filings recorded (30 days)", value: filings.length, to: "/ops/compliance" },
         { label: "Close requests", value: closes.length, to: "/ops/close-requests" },
       ],

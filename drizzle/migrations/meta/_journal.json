@@ -1072,6 +1072,13 @@
       "when": 1791299830469,
       "tag": "0152_marketing_email_events_proposal_source",
       "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1791303081418,
+      "tag": "0153_staff_tasks",
+      "breakpoints": true
     }
   ]
 }
