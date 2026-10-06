@@ -69,7 +69,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
 
       <div className="overflow-hidden rounded" style={{ width: w * scale, height: h * scale }}>
         <div ref={ref} style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: w, height: h }}>
-          <div style={{ ...wrap, fontFamily: "Poppins, sans-serif", width: w, height: h, position: "relative", overflow: "hidden", color: "#fff", boxSizing: "border-box", padding: land ? 56 : 80, display: "flex", flexDirection: "column",
+          <div data-collateral-page style={{ ...wrap, fontFamily: "Poppins, sans-serif", width: w, height: h, position: "relative", overflow: "hidden", color: "#fff", boxSizing: "border-box", padding: land ? 56 : 80, display: "flex", flexDirection: "column",
             background: `${bg ? `linear-gradient(180deg, rgba(0,40,86,0.55) 0%, rgba(0,20,51,0.92) 70%), url(${bg}) center/cover, ` : ""}radial-gradient(circle at 92% 4%, rgba(93,198,209,0.18), transparent 32%), linear-gradient(180deg, ${BRAND.navy} 0%, ${BRAND.midnight} 100%)` }}>
             <div style={{ color: BRAND.cyan, fontSize: 18, letterSpacing: 1.5, textTransform: "uppercase" }}>Harmonious</div>
             <div style={{ marginTop: land ? 24 : 90 }}>

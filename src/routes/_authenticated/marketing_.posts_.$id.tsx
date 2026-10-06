@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Panel } from "@/components/sales/sales-ui";
 import { MkPage, StatusBadge, fileToBase64, fmt, fromLocalInput, mkHead, toLocalInput } from "@/components/marketing-ui";
 import { CHANNELS, CHANNEL_LABEL, CHANNEL_LIMIT, postProblems, type Channel } from "@/lib/marketing-model";
+import { PostBrandLayout } from "@/components/marketing/post-brand-layout";
 import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
 import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
 import { decideMarketingPost, getMarketingPost, marketingDraftCopy, marketingGenerateImage, saveMarketingPost, uploadMarketingAsset } from "@/lib/marketing.functions";
@@ -43,6 +44,7 @@ function PostEditor() {
   const [brief, setBrief] = useState("");
   const [imgPrompt, setImgPrompt] = useState("");
   const [note, setNote] = useState("");
+  const [imgMode, setImgMode] = useState<"brand" | "free">("brand");
   const [preview, setPreview] = useState<Channel>("linkedin");
 
   useEffect(() => {
@@ -115,8 +117,11 @@ function PostEditor() {
             {!locked && (<div className="mt-3 space-y-2">
               <MarketingDrivePicker kind="image" label="Pick from Google Drive" onPick={async (a) => { try { const r = await fromDrive({ data: { assetId: a.id } }); setImages((x) => [...x, r]); } catch (e) { toast.error((e as Error).message); } }} />
               <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary"><ImagePlus className="h-4 w-4" />Upload image<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} /></label>
+              <div className="flex gap-2"><Button size="sm" variant={imgMode === "brand" ? "default" : "outline"} onClick={() => setImgMode("brand")}>Brand layout</Button><Button size="sm" variant={imgMode === "free" ? "default" : "outline"} onClick={() => setImgMode("free")}>Freeform (AI)</Button></div>
+              {imgMode === "brand" ? <PostBrandLayout title={title} body={body} onAdd={(r) => setImages((x) => [...x, r])} /> : <>
               <div className="flex gap-2"><Input value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Describe an image for AI to create" /><Button variant="outline" onClick={() => imgM.mutate(imgPrompt)} disabled={imgM.isPending || imgPrompt.trim().length < 3}><Wand2 className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create"}</Button></div>
               <Button variant="outline" size="sm" onClick={() => imgM.mutate(postTextPrompt)} disabled={imgM.isPending || body.trim().length < 10}><Sparkles className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create image from post text"}</Button>
+              </>}
               <p className="text-xs text-muted-foreground">The first image is used on every channel.</p>
             </div>)}
           </Panel>
