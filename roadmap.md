@@ -12,4 +12,4 @@
 - [x] Group inbox ticketing: assign employees, auto-assign client's assigned staff, track progress
 
 - [ ] Slack: notify #team-marketing on post submit + reaction approvals (needs publish + Slack app provisioning)
-- [ ] SPV & Fund of Funds solutions/resources pages with downloadable guides (brand: navy #002856, cyan #5dc6d1, no pricing/offshore)
+- [x] SPV & Fund of Funds solutions/resources pages with downloadable guides (brand: navy #002856, cyan #5dc6d1, no pricing/offshore)
