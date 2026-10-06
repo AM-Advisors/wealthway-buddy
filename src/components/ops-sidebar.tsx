@@ -185,6 +185,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     return ok.length ? [{ id, title, url: ok[0]!.url, icon, sub: ok }] : [];
   };
   const teamItems: NavItem[] = salesOnly ? [] : [
+    { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document" },
     { id: "employees", title: "Employees & activity", url: "/ops/employees", icon: "people" },
     { id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" },
     { id: "mail", title: "Mail", url: "/ops/mail", icon: "document" },
