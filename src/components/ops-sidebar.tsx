@@ -66,8 +66,8 @@ type NavItem = { id: string; title: string; url: string; icon: string; sub?: { t
 /** Key screens shown as sub-items under each Operations area (filtered by capability). */
 const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]> = {
   clients: [{ title: "Fund Managers", url: "/ops/clients/fund-managers", always: true }, { title: "Founders", url: "/ops/clients/founders", always: true }],
-  funds: [{ title: "Fund Setup", url: "/ops/fund-setup" }, { title: "HubSpot tickets", url: "/ops/hubspot-tickets" }, { title: "EIN / SS-4 queue", url: "/ops/ss4" }, { title: "Documents & signatures", url: "/ops/documents" }],
-  investors: [{ title: "Investor onboarding & KYC", url: "/admin/investor-onboarding" }, { title: "Readiness queue", url: "/ops/readiness" }],
+  funds: [{ title: "All funds", url: "/ops/funds" }, { title: "EIN / SS-4 queue", url: "/ops/ss4" }, { title: "Documents & signatures", url: "/ops/documents" }, { title: "HubSpot tickets", url: "/ops/hubspot-tickets" }],
+  investors: [{ title: "Investor onboarding & KYC", url: "/admin/investor-onboarding" }],
   capital: [{ title: "Banking", url: "/ops/banking" }, { title: "Distributions", url: "/ops/distributions" }, { title: "Capital calls & funding", url: "/admin/funding" }],
   accounting: [{ title: "NAV", url: "/ops/nav" }, { title: "Financial reviews", url: "/ops/financial-reviews" }, { title: "Financials", url: "/ops/financials" }],
 };

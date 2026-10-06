@@ -164,7 +164,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     ],
   },
   {
-    id: "funds", title: "Funds & SPVs", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund"], queues: ["funds", "regulatory", "documents"],
+    id: "funds", title: "Funds", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund"], queues: ["funds", "regulatory", "documents"],
     screens: [
       { title: "Fund Setup", url: "/ops/fund-setup", description: "Details, entity & EIN, Form D, banking, documents and launch", step: "Start" },
       { title: "EIN and SS-4 queue", url: "/ops/ss4", description: "EIN applications across all Funds", cap: "regulatory", step: "Prepare" },
