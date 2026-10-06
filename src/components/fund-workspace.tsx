@@ -177,7 +177,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
             </CardHeader>
             <CardContent className="space-y-3">
               {setup.percent != null && <Progress value={setup.percent} />}
-              <div className="space-y-1.5">
+              {mode === "harmonious" ? <p className="text-sm text-muted-foreground">Each step is listed and completed in its section on the <button type="button" className="underline" onClick={() => onTab?.("setup")}>Setup tab</button>.</p> : <div className="space-y-1.5">
                 {steps.map((s, i) => (
                   <div key={i} className="flex items-center gap-3 text-sm">
                     {s.done ? <CheckCircle2 className="size-4 text-primary" /> : <Clock className="size-4 text-muted-foreground" />}
@@ -185,7 +185,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
                     {!s.done && <Badge variant="outline" className="ml-auto">{s.status === "review" ? "Sent - Harmonious reviewing" : s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
                   </div>
                 ))}
-              </div>
+              </div>}
             </CardContent>
           </Card>
         </TabsContent>
