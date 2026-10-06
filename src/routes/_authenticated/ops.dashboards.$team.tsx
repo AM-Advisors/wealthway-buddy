@@ -1,5 +1,5 @@
 import { InvoicesBoard } from "@/components/invoices-board";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bars, Panel, Stat } from "@/components/sales/sales-ui";
@@ -42,7 +42,12 @@ function TeamDashboard() {
       {d && (<>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Stat label="Team members" value={d.teamStats.members} hint={`${d.teamStats.activeToday} active in the last 24h`} />
-          {d.stats.map((s) => <Stat key={s.label} label={s.label} value={s.value} {...("cents" in s && typeof s.cents === "number" ? { hint: money(s.cents) } : {})} />)}
+          {d.stats.map((s) => {
+            const card = <Stat label={s.label} value={s.value} {...("cents" in s && typeof s.cents === "number" ? { hint: money(s.cents) } : {})} />;
+            return "to" in s && typeof s.to === "string"
+              ? <Link key={s.label} to={s.to} className="block rounded-lg transition hover:[&>div]:border-primary">{card}</Link>
+              : <div key={s.label}>{card}</div>;
+          })}
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           {d.charts.map((c) => (

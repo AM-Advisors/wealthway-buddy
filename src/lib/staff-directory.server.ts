@@ -168,10 +168,10 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
     const inSetup = setups.filter((s) => !s.launched_at);
     return {
       stats: [
-        { label: "Funds in setup", value: inSetup.length },
-        { label: "Stuck over 21 days", value: inSetup.filter((s) => Date.now() - Date.parse(s.created_at) > 21 * 864e5).length },
-        { label: "Open investor onboardings", value: onb.length },
-        { label: "Close requests", value: closes.length },
+        { label: "Funds in setup", value: inSetup.length, to: "/ops/fund-setup" },
+        { label: "Stuck over 21 days", value: inSetup.filter((s) => Date.now() - Date.parse(s.created_at) > 21 * 864e5).length, to: "/ops/fund-setup" },
+        { label: "Open investor onboardings", value: onb.length, to: "/admin/investor-onboarding" },
+        { label: "Close requests", value: closes.length, to: "/ops/close-requests" },
       ],
       charts: [{ title: "Investor onboardings by stage", data: countBy(onb, "stage") }, { title: "Close requests by status", data: countBy(closes, "status") }],
     };
@@ -187,10 +187,10 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
     const unpaid = inv.filter((i) => !["paid", "void", "draft"].includes(String(i.status)));
     return {
       stats: [
-        { label: "Unpaid invoices", value: unpaid.length, cents: unpaid.reduce((s, i) => s + Number(i.total_cents ?? 0), 0) },
-        { label: "Overdue invoices", value: unpaid.filter((i) => i.due_date && i.due_date < today).length },
-        { label: "Open accounting exceptions", value: exc.length },
-        { label: "K-1s not delivered", value: k1.filter((k) => !["delivered", "superseded"].includes(String(k.status))).length },
+        { label: "Unpaid invoices", value: unpaid.length, cents: unpaid.reduce((s, i) => s + Number(i.total_cents ?? 0), 0), to: "/admin/invoices" },
+        { label: "Overdue invoices", value: unpaid.filter((i) => i.due_date && i.due_date < today).length, to: "/admin/invoices" },
+        { label: "Open accounting exceptions", value: exc.length, to: "/ops/financials" },
+        { label: "K-1s not delivered", value: k1.filter((k) => !["delivered", "superseded"].includes(String(k.status))).length, to: "/ops/tax" },
       ],
       charts: [{ title: "Bank reconciliations", data: countBy(recs, "status") }, { title: "K-1s by status", data: countBy(k1, "status") }, { title: "Financial reviews", data: countBy(rev, "status") }, { title: "Open exceptions by kind", data: countBy(exc, "kind") }],
     };
@@ -204,10 +204,10 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
     ]);
     return {
       stats: [
-        { label: "Identity checks needing review", value: kyc.filter((k) => !["verified", "approved", "cleared"].includes(String(k.status))).length },
-        { label: "Compliance holds", value: holds.filter((h) => !["released", "resolved", "closed"].includes(String(h.status))).length },
-        { label: "Filings recorded (30 days)", value: filings.length },
-        { label: "Close requests", value: closes.length },
+        { label: "Identity checks needing review", value: kyc.filter((k) => !["verified", "approved", "cleared"].includes(String(k.status))).length, to: "/admin/investor-onboarding" },
+        { label: "Compliance holds", value: holds.filter((h) => !["released", "resolved", "closed"].includes(String(h.status))).length, to: "/ops/compliance" },
+        { label: "Filings recorded (30 days)", value: filings.length, to: "/ops/compliance" },
+        { label: "Close requests", value: closes.length, to: "/ops/close-requests" },
       ],
       charts: [{ title: "Identity checks by status", data: countBy(kyc, "status") }, { title: "Holds by status", data: countBy(holds, "status") }, { title: "Recent filings by type", data: countBy(filings, "filing_type") }],
     };
