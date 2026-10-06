@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertCircle, Check, ChevronDown, Circle, Inbox, Search } from "lucide-react";
 import { fundReadinessFn, investmentReadinessFn, readinessQueueFn } from "@/lib/investor-onboarding.functions";
 import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
+import { getFundWireInstructions } from "@/lib/wire-instructions.functions";
 import { ViewAsPicker } from "@/components/view-as";
 import { OWNER_LABELS, type ReadinessStatus } from "@/lib/investment-readiness";
 import { Skeleton } from "@/components/ui/skeleton";
