@@ -236,7 +236,7 @@ export async function getEmail(userId: string, id: string) {
 
 export async function saveEmail(userId: string, d: { id?: string | null | undefined; name: string; subject: string; preheader: string | null; blocks: EmailBlock[]; audienceId: string | null; scheduledAt: string | null; attachmentAssetIds?: string[] | undefined }) {
   const { db } = await requireMarketing(userId);
-  const fields = { name: d.name.slice(0, 200), subject: d.subject.slice(0, 200), preheader: d.preheader, blocks: d.blocks.slice(0, 60), audience_id: d.audienceId, scheduled_at: d.scheduledAt, updated_at: new Date().toISOString() };
+  const fields = { name: d.name.slice(0, 200), subject: d.subject.slice(0, 200), preheader: d.preheader, blocks: d.blocks.slice(0, 60), audience_id: d.audienceId, scheduled_at: d.scheduledAt, updated_at: new Date().toISOString(), ...(d.attachmentAssetIds ? { attachment_asset_ids: d.attachmentAssetIds.slice(0, 5) } : {}) };
   if (!d.id) {
     const { data, error } = await db.from("marketing_emails").insert({ ...fields, author_id: userId, status: "draft" }).select("id").single();
     if (error) throw new Error(error.message);
