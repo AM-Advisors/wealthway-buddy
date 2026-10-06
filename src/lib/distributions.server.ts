@@ -1404,6 +1404,9 @@ async function refreshBatchTotals(batchId: string) {
 export async function finalApproveDistribution(userId: string, batchId: string) {
   const batch = await batchRow(batchId);
   const { actor } = await assertCan(userId, String(batch.offering_id), "final_approve");
+  if (String(batch.distribution_kind ?? "cash") !== "cash" && !batch.fee_approved_at) {
+    fail("The Harmonious fee quote for this share distribution must be approved by the CEO or CRO first.");
+  }
 
   const balance = await refreshBatchTotals(batchId);
   if (!balance.balances) {
