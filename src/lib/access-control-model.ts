@@ -18,7 +18,7 @@ import {
 
 export const ACCESS_AREAS: { id: OpsArea; label: string }[] = [
   { id: "clients", label: "Clients" },
-  { id: "funds", label: "Funds & SPVs" },
+  { id: "funds", label: "Funds" },
   { id: "companies", label: "Companies" },
   { id: "investors", label: "Investors" },
   { id: "onboarding", label: "Onboarding & Compliance" },

@@ -29,12 +29,10 @@ function RowActions({ f }: { f: any }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${f.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }}>Open Fund</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }}>View Investors</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/readiness" params={{ fundId: f.id }}>View Readiness</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }}>Open fund</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/ops/fund-setup/$fundId" params={{ fundId: f.id }}>Setup checklist</Link></DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }} search={{ add: "existing" } as never}>Add Existing Investor</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }} search={{ add: "invite" } as never}>Invite Investor</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }} search={{ add: "existing" } as never}>Add investor</Link></DropdownMenuItem>
         <DropdownMenuItem onClick={copy}>Copy Investor Onboarding Link</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -70,9 +68,15 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
   const metric: [string, number, boolean?][] = [["Active Funds", t.activeFunds], ["Investors Onboarding", t.onboarding], ["Ready to Close", t.ready], ["Needs Harmonious", t.needsHarmonious], ["Blocked", t.blocked, true]];
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold">Funds &amp; SPVs</h1>
-        <p className="text-sm text-muted-foreground">Which funds need attention, who is onboarding, and what's next.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold">Funds</h1>
+          <p className="text-sm text-muted-foreground">Every fund in one place — setup progress, investors and the next step.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm"><Link to="/ops/readiness">Investor work queue</Link></Button>
+          <Button asChild size="sm"><Link to="/ops/fund-setup" search={{ view: undefined }}>Set up new fund</Link></Button>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
         {metric.map(([l, v, warn]) => (
