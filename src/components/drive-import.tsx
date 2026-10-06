@@ -10,6 +10,7 @@ import {
   getDriveIntakeAccess,
   importDriveFiles,
   listDriveImports,
+  assignDriveRequirement,
   openDriveImport,
 } from "@/lib/drive-intake.functions";
 import {
@@ -264,6 +265,14 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
     } catch (e: any) { toast.error(e?.message ?? "Could not open."); }
   };
   const rows = q.data?.rows ?? [];
+  const assign = useServerFn(assignDriveRequirement);
+  const qc = useQueryClient();
+  const setReq = async (id: string, requirement: string) => {
+    try { await assign({ data: { documentId: id, requirement: requirement as any } }); toast.success(requirement === "none" ? "Unassigned." : `Assigned as ${requirementLabel(requirement)}.`); void qc.invalidateQueries({ queryKey: ["drive-imports", offeringId, investorUserId] }); }
+    catch (e: any) { toast.error(e?.message ?? "Could not assign."); }
+  };
+  const filled = new Set(rows.map((r: any) => r.requirement).filter(Boolean));
+  const missing = offeringId ? DRIVE_REQUIREMENTS.filter((x) => x.required && !filled.has(x.key)) : [];
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
@@ -276,6 +285,15 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
       </CardHeader>
       <CardContent className="space-y-2">
         {!rows.length ? <p className="text-sm text-muted-foreground">No documents imported yet.</p> : null}
+        {offeringId && rows.length ? (
+          <div className="rounded-md bg-muted/50 p-2 text-xs">
+            <span className="font-medium text-foreground">Required documents: </span>
+            {DRIVE_REQUIREMENTS.filter((x) => x.required).map((x) => (
+              <Badge key={x.key} variant={filled.has(x.key) ? "default" : "outline"} className="mr-1 mt-1">{filled.has(x.key) ? "✓ " : ""}{x.label}</Badge>
+            ))}
+            {missing.length ? <p className="mt-1 text-muted-foreground">{missing.length} still missing. Assign files below.</p> : <p className="mt-1 text-muted-foreground">All required documents are assigned.</p>}
+          </div>
+        ) : null}
         {rows.map((r: any) => (
           <div key={r.id} className="rounded-md border p-2 text-sm">
             <div className="flex flex-wrap items-center gap-2">
@@ -289,7 +307,14 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
               {r.fundName}{r.profileLabel ? ` · ${r.profileLabel}` : ""} · {r.recordStatus === "historical" ? "Historical record" : "Current document"} · {EXECUTION_LABELS[r.executionEvidence as keyof typeof EXECUTION_LABELS]}
             </p>
             <p className="text-xs text-muted-foreground">Source: Google Drive · Imported {new Date(r.importedAt).toLocaleString()} by {r.importedBy}</p>
-            <div className="mt-1 flex gap-2">
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <Select value={r.requirement ?? "none"} onValueChange={(v) => setReq(r.id, v)}>
+                <SelectTrigger className="h-8 w-60" aria-label={`Assign ${r.fileName} to a required document`}><SelectValue placeholder="Assign to required document" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not assigned</SelectItem>
+                  {DRIVE_REQUIREMENTS.map((x) => <SelectItem key={x.key} value={x.key}>{x.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
               <Button size="sm" variant="outline" onClick={() => go(r.id)}>Open Harmonious copy</Button>
               <Button size="sm" variant="ghost" onClick={() => go(r.id, true)}>Open original file</Button>
             </div>

@@ -179,6 +179,10 @@ export const listDriveImports = createServerFn({ method: "POST" })
       q = q.in("investment_profile_id", ids);
     }
     const { data: docs } = await q;
+    const docIds = (docs ?? []).map((d: any) => d.id);
+    const { data: asg } = docIds.length ? await client.from("drive_document_requirement_assignments").select("document_id, requirement_key, created_at").in("document_id", docIds).order("created_at", { ascending: false }) : { data: [] as any[] };
+    const reqByDoc = new Map<string, string>();
+    for (const a of (asg ?? []) as any[]) if (!reqByDoc.has(a.document_id)) reqByDoc.set(a.document_id, a.requirement_key);
     const users = [...new Set((docs ?? []).map((d: any) => d.imported_by))];
     const oIds = [...new Set((docs ?? []).map((d: any) => d.offering_id))];
     const pIds = [...new Set((docs ?? []).map((d: any) => d.investment_profile_id).filter(Boolean))];
@@ -207,6 +211,7 @@ export const listDriveImports = createServerFn({ method: "POST" })
           importedAt: d.imported_at,
           importedBy: who?.legal_name ?? who?.email ?? "Super Administrator",
           driveModifiedAt: d.drive_modified_at,
+          requirement: reqByDoc.get(d.id) && reqByDoc.get(d.id) !== "none" ? reqByDoc.get(d.id)! : null,
         };
       }),
     };
@@ -235,4 +240,23 @@ export const openDriveImport = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await s.logIntake(userId, "preview", "ok", { document_id: doc.id, offering_id: doc.offering_id });
     return { url: signed.signedUrl as string, message: null };
+  });
+
+/** Assign an imported Drive document to a required fund document (append-only; latest wins). */
+export const assignDriveRequirement = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    documentId: z.string().uuid(),
+    requirement: z.enum(["ein_letter","wire_instructions","ppm","operating_agreement","subscription_agreement","formation_certificate","lloa","investor_information","investor_kyc_form","w9","side_letter","other","none"]),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const s = await import("@/lib/drive-intake.server");
+    const userId = await s.requireSuperAdmin(context, "assign_requirement");
+    const client = await db();
+    const { data: doc } = await client.from("drive_imported_documents").select("id, offering_id").eq("id", data.documentId).maybeSingle();
+    if (!doc) throw new Error("Document not found.");
+    const { error } = await client.from("drive_document_requirement_assignments").insert({ document_id: doc.id, offering_id: doc.offering_id, requirement_key: data.requirement, assigned_by: userId });
+    if (error) throw new Error(error.message);
+    await s.logIntake(userId, "assign_requirement", "ok", { document_id: doc.id, offering_id: doc.offering_id, requirement: data.requirement });
+    return { ok: true };
   });
