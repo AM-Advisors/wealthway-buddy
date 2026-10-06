@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Link } from "@tanstack/react-router";
+import { DriveFolderPicker } from "@/components/drive-folder-picker";
 
 const LABEL: Record<string, string> = {
   connected: "Connected",
@@ -107,6 +109,8 @@ export function DriveStatusCard({ offeringId }: { offeringId: string }) {
             <Button size="sm" variant="outline" onClick={() => investorMutation.mutate()} disabled={investorMutation.isPending}>
               {investorMutation.isPending ? "Syncing investor records…" : "Create & Sync Investor Records"}
             </Button>
+            <DriveFolderPicker offeringId={offeringId} label="Choose or migrate a folder" onDone={() => void qc.invalidateQueries({ queryKey: ["fund-drive", offeringId] })} />
+            <Button asChild size="sm" variant="ghost"><Link to="/ops/fund-migrate/$fundId" params={{ fundId: offeringId }}>Migration review</Link></Button>
             {conflict && (
               <>
                 <Input value={linkId} onChange={(e) => setLinkId(e.target.value.trim())} placeholder="Existing folder ID to link" className="h-9 w-full sm:w-64" />
