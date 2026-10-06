@@ -378,6 +378,7 @@ import { Route as ApiPublicPacketTokenRouteImport } from './routes/api/public/pa
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicProposalViewRouteImport } from './routes/api/public/proposal/view'
 import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public/security/revoke'
+import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -2500,6 +2501,11 @@ const ApiPublicSecurityRevokeRoute = ApiPublicSecurityRevokeRouteImport.update({
   path: '/api/public/security/revoke',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSlackEventsRoute = ApiPublicSlackEventsRouteImport.update({
+  id: '/api/public/slack/events',
+  path: '/api/public/slack/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksBoxSignRoute =
   ApiPublicWebhooksBoxSignRouteImport.update({
     id: '/api/public/webhooks/box-sign',
@@ -2984,6 +2990,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -3367,6 +3374,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -3760,6 +3768,7 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/proposal/view': typeof ApiPublicProposalViewRoute
   '/api/public/security/revoke': typeof ApiPublicSecurityRevokeRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -4153,6 +4162,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -4536,6 +4546,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -4928,6 +4939,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/proposal/view'
     | '/api/public/security/revoke'
+    | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
     | '/lovable/email/transactional/preview'
@@ -5022,6 +5034,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicProposalViewRoute: typeof ApiPublicProposalViewRoute
   ApiPublicSecurityRevokeRoute: typeof ApiPublicSecurityRevokeRoute
+  ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -7612,6 +7625,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSecurityRevokeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/slack/events': {
+      id: '/api/public/slack/events'
+      path: '/api/public/slack/events'
+      fullPath: '/api/public/slack/events'
+      preLoaderRoute: typeof ApiPublicSlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/box-sign': {
       id: '/api/public/webhooks/box-sign'
       path: '/api/public/webhooks/box-sign'
@@ -8676,6 +8696,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicProposalViewRoute: ApiPublicProposalViewRoute,
   ApiPublicSecurityRevokeRoute: ApiPublicSecurityRevokeRoute,
+  ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
