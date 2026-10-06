@@ -31105,6 +31105,98 @@ export type Database = {
         }
         Relationships: []
       }
+      prior_subscription_decisions: {
+        Row: {
+          created_at: string
+          decided_by: string
+          decision: string
+          id: string
+          note: string | null
+          prior_subscription_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          note?: string | null
+          prior_subscription_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          note?: string | null
+          prior_subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prior_subscription_decisions_prior_subscription_id_fkey"
+            columns: ["prior_subscription_id"]
+            isOneToOne: true
+            referencedRelation: "prior_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prior_subscriptions: {
+        Row: {
+          commitment_cents: number
+          created_at: string
+          evidence_item_ids: string[]
+          funded_cents: number
+          id: string
+          offering_id: string
+          onboarding_id: string
+          reason: string | null
+          recorded_by: string
+          signed_on: string
+          version: number
+        }
+        Insert: {
+          commitment_cents: number
+          created_at?: string
+          evidence_item_ids?: string[]
+          funded_cents: number
+          id?: string
+          offering_id: string
+          onboarding_id: string
+          reason?: string | null
+          recorded_by: string
+          signed_on: string
+          version?: number
+        }
+        Update: {
+          commitment_cents?: number
+          created_at?: string
+          evidence_item_ids?: string[]
+          funded_cents?: number
+          id?: string
+          offering_id?: string
+          onboarding_id?: string
+          reason?: string | null
+          recorded_by?: string
+          signed_on?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prior_subscriptions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prior_subscriptions_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_credentials: {
         Row: {
           created_at: string

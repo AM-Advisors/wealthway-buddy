@@ -152,6 +152,8 @@ export interface ReadinessInput {
   requestedCloseDate?: string | null;
   /** When evaluating inside a Close Request: the amount that close expects. */
   closeAmountCents?: number | null;
+  /** A staff-confirmed (maker-checker) subscription signed and funded before Harmonious. Never reconciled money. */
+  priorSubscription?: { fundedCents: number; signedOn: string } | null;
 }
 
 export interface StageSummary {
@@ -217,6 +219,13 @@ function fromRequirement(r: RequirementResult): Pick<ReadinessItem, "status" | "
 
 function fundingItem(input: ReadinessInput, preFundingDone: boolean, blockingExceptions: number): ReadinessItem[] {
   const f = String(input.fundingStatus ?? "not_funded");
+  if (input.priorSubscription && !isReconciledFunding(f)) {
+    const base0 = { stage: "funding" as const, required: true, blocking: true, dependsOn: STAGE_DEPENDS.funding, automatic: true, status: "complete" as const, owner: null, action: null };
+    return [
+      { ...base0, key: "approved_to_fund", label: "Approved to receive funding instructions", source: REQUIREMENT_SOURCE["approved_to_fund"]!, reason: "Not needed: funded before Harmonious." },
+      { ...base0, key: "funding", label: "Funded (prior, off-platform)", source: "prior subscription (staff-confirmed)", reason: "Funded before Harmonious; not reconciled by Harmonious." },
+    ];
+  }
   const approved = Boolean(input.approvedToFundAt);
   const base = { stage: "funding" as const, required: true, blocking: true, dependsOn: STAGE_DEPENDS.funding, automatic: true };
   const approval: ReadinessItem = {
@@ -249,7 +258,12 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
   for (const r of input.requirements) {
     if (r.key === "funding") continue; // funding is modelled below from reconciliation
     const stage = REQUIREMENT_STAGE[r.key];
-    const m = fromRequirement(r);
+    let m = fromRequirement(r);
+    let reason = r.reason;
+    if (input.priorSubscription && stage === "subscription" && m.status !== "complete" && m.status !== "not_applicable") {
+      m = { status: "complete", owner: null, action: null };
+      reason = `Signed before Harmonious on ${input.priorSubscription.signedOn} (prior subscription confirmed).`;
+    }
     items.push({
       key: r.key,
       stage,
@@ -257,7 +271,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
       ...m,
       required: m.status !== "not_applicable",
       blocking: m.status !== "not_applicable",
-      reason: r.reason,
+      reason,
       source: REQUIREMENT_SOURCE[r.key] ?? "canonical record",
       dependsOn: STAGE_DEPENDS[stage],
       automatic: true,
@@ -286,7 +300,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     key: "acceptance",
     label: "Subscription accepted",
     source: REQUIREMENT_SOURCE["acceptance"]!,
-    ...(input.acceptedAt && (input.acceptedAmountCents ?? 0) > 0
+    ...((input.acceptedAt && (input.acceptedAmountCents ?? 0) > 0) || input.priorSubscription
       ? { status: "complete" as const, owner: null, action: null }
       : funded
         ? { status: "needs_harmonious" as const, owner: "harmonious" as const, action: "Accept subscription" }

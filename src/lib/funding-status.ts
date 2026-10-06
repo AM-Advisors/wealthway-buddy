@@ -82,3 +82,6 @@ export function canonicalFundingState(f: FundingFacts): CanonicalFundingState {
 export function reconciledFundedCents<T>(rows: readonly T[], status: (r: T) => string | null | undefined, amount: (r: T) => number | null | undefined): number {
   return rows.reduce((n, r) => (isReconciledFunding(status(r)) ? n + Number(amount(r) ?? 0) : n), 0);
 }
+
+/** Label for a staff-confirmed prior (off-platform) subscription. Never part of reconciled totals. */
+export const PRIOR_OFFPLATFORM_LABEL = "Funded (prior, off-platform)";

@@ -499,6 +499,7 @@ export async function decideSuggestion(userId: string, userClient: any, input: {
         person: { firstName: entity ? "Authorized" : parts[0], lastName: entity ? "Signer" : parts.slice(1).join(" ") || parts[0], email },
         profile: { type: input.investorType || (trust ? "trust" : entity ? "entity" : "individual"), ...(entity && !trust ? { subType: "other_entity" } : {}), legalName: String(v.name) },
         investment: { amountCents: cents, commitmentCents: cents },
+        allowPreLaunch: true,
       });
     } else throw new Error("Unknown suggestion.");
   } catch (e) {

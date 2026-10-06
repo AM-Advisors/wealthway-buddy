@@ -8,6 +8,7 @@ import {
   decideDriveSuggestion, aiSortDriveMigration, rescanDriveMigration,
 } from "@/lib/drive-migration.functions";
 import { DOCUMENT_TYPES } from "@/lib/drive-intake";
+import { FundLaunchInvestors } from "@/components/fund-launch-investors";
 import { DriveFolderPicker } from "@/components/drive-folder-picker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -180,6 +181,7 @@ function Migration({ d, refresh }: { d: any; refresh: () => void }) {
     </section>
 
     <Suggestions d={d} refresh={refresh} />
+    <FundLaunchInvestors fundId={d.fund?.id ?? d.migration.offering_id} items={d.items ?? []} />
   </>);
 }
 

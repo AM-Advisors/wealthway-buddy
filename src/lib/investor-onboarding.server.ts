@@ -1953,6 +1953,12 @@ export async function revealWireInstructions(userId: string, onboardingId: strin
 // ------------------------------------------------ investment readiness
 
 /** Read-only: compute the canonical readiness projection. Never writes anything. */
+async function confirmedPrior(onboardingId: string) {
+  const { confirmedPriorSubscription } = await import("@/lib/prior-subscription.server");
+  const p = await confirmedPriorSubscription(onboardingId);
+  return p ? { fundedCents: p.funded_cents, signedOn: p.signed_on } : null;
+}
+
 export async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
   const { computeReadiness } = await import("@/lib/investment-readiness");
   const facts = await gatherFacts(row);
@@ -1968,6 +1974,7 @@ export async function computeReadinessFor(row: any, closeAmountCents?: number | 
     exceptions: exceptions.map((e) => ({ severity: String(e.severity), owner: e.owner ?? null, type: e.exception_type ?? null })),
     requestedCloseDate: row.requested_close_date ?? null,
     closeAmountCents: closeAmountCents ?? null,
+    priorSubscription: await confirmedPrior(row.id),
   });
   return { result, facts };
 }
