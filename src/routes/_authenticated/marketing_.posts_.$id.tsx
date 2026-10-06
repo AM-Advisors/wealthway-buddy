@@ -47,13 +47,16 @@ function PostEditor() {
   const [imgMode, setImgMode] = useState<"brand" | "free">("brand");
   const [preview, setPreview] = useState<Channel>("linkedin");
 
+  // Fill the form once per post; refetches must never overwrite what's on screen.
+  const loadedFor = useRef<string | null>(null);
   useEffect(() => {
     const p = q.data?.post;
-    if (!p) return;
+    if (!p || loadedFor.current === id) return;
+    loadedFor.current = id;
     setTitle(p.title); setBody(p.body); setChannels(p.channels); setWhen(toLocalInput(p.scheduled_at));
     setImages((p.image_paths ?? []).map((path: string, i: number) => ({ path, url: q.data!.imageUrls[i] ?? "" })));
     if (p.channels[0]) setPreview(p.channels[0]);
-  }, [q.data]);
+  }, [q.data, id]);
 
   const status = q.data?.post.status ?? "draft";
   const locked = ["publishing", "published", "sending", "sent"].includes(status);
@@ -63,15 +66,20 @@ function PostEditor() {
   const savedPaths = (saved?.image_paths ?? []).join("|");
   const curPaths = images.map((i) => i.path).join("|");
   const dirty = !isNew && !!saved && (saved.title !== title || saved.body !== body || saved.channels.join() !== channels.join() || savedPaths !== curPaths || toLocalInput(saved.scheduled_at) !== when);
-  // Images save straight away on drafts so the Calendar and Submit always see them.
-  const imgSaving = useRef(false);
-  useEffect(() => {
-    if (isNew || !saved || savedPaths === curPaths || imgSaving.current) return;
-    if (!(saved.status === "draft" || saved.status === "rejected")) return;
-    imgSaving.current = true;
-    save({ data: { id, title: saved.title, body: saved.body, channels: saved.channels, imagePaths: images.map((i) => i.path), scheduledAt: saved.scheduled_at ? new Date(saved.scheduled_at).toISOString() : null } })
-      .then(() => q.refetch()).catch((e) => toast.error((e as Error).message)).finally(() => { imgSaving.current = false; });
-  }, [curPaths, savedPaths]);
+  // Images save straight away on drafts (one save per change, latest wins) so the Calendar and Submit see them.
+  const imgSeq = useRef(0);
+  const setImagesAndSave = (f: (x: { path: string; url: string }[]) => { path: string; url: string }[]) => {
+    setImages((cur) => {
+      const next = f(cur);
+      if (!isNew && saved && (saved.status === "draft" || saved.status === "rejected")) {
+        const seq = ++imgSeq.current;
+        void save({ data: { id, title: saved.title, body: saved.body, channels: saved.channels, imagePaths: next.map((i) => i.path), scheduledAt: saved.scheduled_at ? new Date(saved.scheduled_at).toISOString() : null } })
+          .then(() => { if (seq === imgSeq.current) void q.refetch(); })
+          .catch((e) => toast.error((e as Error).message));
+      }
+      return next;
+    });
+  };
 
   const saveM = useMutation({
     mutationFn: () => save({ data: { id: isNew ? null : id, title, body, channels, imagePaths: images.map((i) => i.path), scheduledAt: fromLocalInput(when) } }),
@@ -93,12 +101,12 @@ function PostEditor() {
   });
   const imgM = useMutation({
     mutationFn: (prompt: string) => genImg({ data: { prompt } }),
-    onSuccess: (r) => { setImages((x) => [...x, r]); setImgPrompt(""); }, onError: (e) => toast.error((e as Error).message),
+    onSuccess: (r) => { setImagesAndSave((x) => [...x, r]); setImgPrompt(""); }, onError: (e) => toast.error((e as Error).message),
   });
   const postTextPrompt = `Create a brand image for this social media post. Post title: ${title || "Untitled"}. Post text: ${body.slice(0, 1200)}`;
   const onFile = async (f: File | undefined) => {
     if (!f) return;
-    try { const r = await upload({ data: { fileName: f.name, contentType: f.type, base64: await fileToBase64(f) } }); setImages((x) => [...x, r]); }
+    try { const r = await upload({ data: { fileName: f.name, contentType: f.type, base64: await fileToBase64(f) } }); setImagesAndSave((x) => [...x, r]); }
     catch (e) { toast.error((e as Error).message); }
   };
 
@@ -130,13 +138,13 @@ function PostEditor() {
             <div className="grid grid-cols-3 gap-2">{images.map((im, i) => (
               <div key={im.path} className="relative">
                 <img src={im.url} alt="" className="aspect-square w-full rounded object-cover" />
-                {!locked && <Button size="icon" variant="destructive" className="absolute right-1 top-1 h-7 w-7" onClick={() => setImages((x) => x.filter((_, j) => j !== i))} aria-label="Remove image"><Trash2 className="h-3.5 w-3.5" /></Button>}
+                {!locked && <Button size="icon" variant="destructive" className="absolute right-1 top-1 h-7 w-7" onClick={() => setImagesAndSave((x) => x.filter((_, j) => j !== i))} aria-label="Remove image"><Trash2 className="h-3.5 w-3.5" /></Button>}
               </div>))}</div>
             {!locked && (<div className="mt-3 space-y-2">
-              <MarketingDrivePicker kind="image" label="Pick from Google Drive" onPick={async (a) => { try { const r = await fromDrive({ data: { assetId: a.id } }); setImages((x) => [...x, r]); } catch (e) { toast.error((e as Error).message); } }} />
+              <MarketingDrivePicker kind="image" label="Pick from Google Drive" onPick={async (a) => { try { const r = await fromDrive({ data: { assetId: a.id } }); setImagesAndSave((x) => [...x, r]); } catch (e) { toast.error((e as Error).message); } }} />
               <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary"><ImagePlus className="h-4 w-4" />Upload image<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} /></label>
               <div className="flex gap-2"><Button size="sm" variant={imgMode === "brand" ? "default" : "outline"} onClick={() => setImgMode("brand")}>Brand layout</Button><Button size="sm" variant={imgMode === "free" ? "default" : "outline"} onClick={() => setImgMode("free")}>Freeform (AI)</Button></div>
-              {imgMode === "brand" ? <PostBrandLayout title={title} body={body} onAdd={(r) => setImages((x) => [...x, r])} /> : <>
+              {imgMode === "brand" ? <PostBrandLayout title={title} body={body} onAdd={(r) => setImagesAndSave((x) => [...x, r])} /> : <>
               <div className="flex gap-2"><Input value={imgPrompt} onChange={(e) => setImgPrompt(e.target.value)} placeholder="Describe an image for AI to create" /><Button variant="outline" onClick={() => imgM.mutate(imgPrompt)} disabled={imgM.isPending || imgPrompt.trim().length < 3}><Wand2 className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create"}</Button></div>
               <Button variant="outline" size="sm" onClick={() => imgM.mutate(postTextPrompt)} disabled={imgM.isPending || body.trim().length < 10}><Sparkles className="mr-1 h-4 w-4" />{imgM.isPending ? "Creating…" : "Create image from post text"}</Button>
               </>}
