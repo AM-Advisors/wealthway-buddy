@@ -49,5 +49,5 @@ export const extractDriveMigration = createServerFn({ method: "POST" }).middlewa
   .handler(async ({ context, data }) => (await S()).extractNext(context.userId, data.migrationId));
 
 export const decideDriveSuggestion = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: uuid, accept: z.boolean(), note: z.string().max(500).nullable().optional(), investorType: z.string().max(40).nullable().optional() }).parse(d))
+  .inputValidator((d) => z.object({ id: uuid, accept: z.boolean(), note: z.string().max(500).nullable().optional(), investorType: z.enum(["individual", "joint", "entity", "trust", "ira"]).nullable().optional(), email: z.string().email().max(200).nullable().optional() }).parse(d))
   .handler(async ({ context, data }) => (await S()).decideSuggestion(context.userId, context.supabase, data));

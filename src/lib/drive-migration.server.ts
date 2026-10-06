@@ -451,7 +451,7 @@ export async function extractNext(userId: string, migrationId: string) {
 }
 
 // ---------------------------------------------------------------- decide suggestion
-export async function decideSuggestion(userId: string, userClient: any, input: { id: string; accept: boolean; note?: string | null; investorType?: string | null }) {
+export async function decideSuggestion(userId: string, userClient: any, input: { id: string; accept: boolean; note?: string | null | undefined; investorType?: string | null | undefined; email?: string | null | undefined }) {
   await requireManager(userId);
   const db = await admin();
   const { data: s } = await db.from("drive_migration_suggestions").select("*, drive_migrations(offering_id)").eq("id", input.id).maybeSingle();
@@ -489,12 +489,15 @@ export async function decideSuggestion(userId: string, userClient: any, input: {
     } else if (s.field === "investor") {
       const r = await import("@/lib/investor-record.server");
       const parts = String(v.name).trim().split(/\s+/);
-      const entity = /\b(llc|lp|trust|inc|corp|fund|partners|holdings|ltd)\b/i.test(String(v.name));
+      const trust = /\btrust\b/i.test(String(v.name));
+      const entity = trust || /\b(llc|lp|l\.p\.|inc|corp|fund|partners|holdings|ltd|capital|ventures)\b/i.test(String(v.name));
+      const email = (input.email || v.email || "").trim();
+      if (!email) throw new Error("Add the investor's email before accepting.");
       const cents = v.commitment_usd ? Math.round(Number(v.commitment_usd) * 100) : null;
       await r.createInvestor(userId, {
         offeringId,
-        person: { firstName: entity ? "Authorized" : parts[0], lastName: entity ? "Signer" : parts.slice(1).join(" ") || parts[0], ...(v.email ? { email: v.email } : {}) },
-        profile: { type: input.investorType || (entity ? "entity" : "individual"), legalName: String(v.name) },
+        person: { firstName: entity ? "Authorized" : parts[0], lastName: entity ? "Signer" : parts.slice(1).join(" ") || parts[0], email },
+        profile: { type: input.investorType || (trust ? "trust" : entity ? "entity" : "individual"), ...(entity && !trust ? { subType: "other_entity" } : {}), legalName: String(v.name) },
         investment: { amountCents: cents, commitmentCents: cents },
       });
     } else throw new Error("Unknown suggestion.");
