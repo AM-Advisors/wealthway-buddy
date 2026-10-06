@@ -12,46 +12,38 @@ async function fail(res: Response, what: string): Promise<never> {
   throw new Error(`${what} failed [${res.status}]: ${body.slice(0, 400)}`);
 }
 
-function linkedinKey() {
-  // Prefer the Harmonious developer-app connection; fall back to the older managed one.
-  return process.env["LINKEDIN_API_KEY_1"] ?? process.env["LINKEDIN_API_KEY"];
+export async function linkedinConfigured() {
+  const { directStatus } = await import("@/lib/linkedin-direct.server");
+  return (await directStatus()).connected;
 }
-
-function linkedinHeaders(extra: Record<string, string> = {}) {
-  const lovable = process.env["LOVABLE_API_KEY"];
-  const li = linkedinKey();
-  if (!lovable || !li) throw new Error("LinkedIn isn't connected yet.");
-  return { Authorization: `Bearer ${lovable}`, "X-Connection-Api-Key": li, "LinkedIn-Version": "202405", "X-Restli-Protocol-Version": "2.0.0", ...extra };
-}
-
-export function linkedinConfigured() { return !!linkedinKey(); }
 export function metaConfigured() { return !!process.env["META_PAGE_ACCESS_TOKEN"]; }
 
-async function linkedinImage(orgUrn: string, imageUrl: string): Promise<string | null> {
+const LI = "https://api.linkedin.com";
+
+async function linkedinImage(token: string, orgUrn: string, imageUrl: string): Promise<string | null> {
+  const { liHeaders } = await import("@/lib/linkedin-direct.server");
   try {
-    const init = await fetch(`${GATEWAY}/linkedin/rest/images?action=initializeUpload`, {
-      method: "POST", headers: linkedinHeaders({ "Content-Type": "application/json" }),
+    const init = await fetch(`${LI}/rest/images?action=initializeUpload`, {
+      method: "POST", headers: liHeaders(token, { "Content-Type": "application/json" }),
       body: JSON.stringify({ initializeUploadRequest: { owner: orgUrn } }),
     });
-    if (!init.ok) return null;
+    if (!init.ok) { console.error(`LinkedIn image init failed [${init.status}]: ${await init.text()}`); return null; }
     const v = (await init.json())?.value;
     const bytes = await (await fetch(imageUrl)).arrayBuffer();
-    const put = await fetch(v.uploadUrl, { method: "PUT", body: bytes });
+    const put = await fetch(v.uploadUrl, { method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: bytes });
     return put.ok ? String(v.image) : null;
   } catch (e) { console.error("LinkedIn image upload skipped", e); return null; }
 }
 
+/** Posts only as the Harmonious company page (never a personal profile). */
 export async function publishLinkedIn(orgId: string, text: string, imageUrl: string | null): Promise<string> {
-  let author: string;
-  if (!orgId || orgId === "me") {
-    // No company page set: post as the connected LinkedIn member.
-    const me = await fetch(`${GATEWAY}/linkedin/v2/userinfo`, { headers: linkedinHeaders() });
-    if (!me.ok) await fail(me, "LinkedIn profile");
-    author = `urn:li:person:${(await me.json()).sub}`;
-  } else author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
-  const image = imageUrl ? await linkedinImage(author, imageUrl) : null;
-  const res = await fetch(`${GATEWAY}/linkedin/rest/posts`, {
-    method: "POST", headers: linkedinHeaders({ "Content-Type": "application/json" }),
+  if (!orgId || orgId === "me") throw new Error("Set the LinkedIn company page in Marketing → Channels.");
+  const { accessToken, liHeaders } = await import("@/lib/linkedin-direct.server");
+  const token = await accessToken();
+  const author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
+  const image = imageUrl ? await linkedinImage(token, author, imageUrl) : null;
+  const res = await fetch(`${LI}/rest/posts`, {
+    method: "POST", headers: liHeaders(token, { "Content-Type": "application/json" }),
     body: JSON.stringify({
       author, commentary: text, visibility: "PUBLIC", lifecycleState: "PUBLISHED", isReshareDisabledByAuthor: false,
       distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
