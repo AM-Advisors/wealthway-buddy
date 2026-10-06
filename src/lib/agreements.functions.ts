@@ -406,8 +406,28 @@ export const signMsa = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     await context.supabase
       .from("client_msa_agreements")
-      .update({ status: "executed", client_approved_at: now, executed_at: now })
+      .update({ status: "client_signed", client_approved_at: now })
       .eq("id", (agreement as any).id);
+    await notifyCountersign(data.clientId, `MSA ${version.version}`, who.userId);
+    return { ok: true, alreadyExecuted: false } as const;
+  });
+
+/** Opens one countersign task per agreement for the client's Sales owner (or unassigned for CEO/Legal to pick up). */
+async function notifyCountersign(clientId: string, label: string, actor: string) {
+  try {
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: c } = await db.from("clients").select("name, legal_name").eq("id", clientId).maybeSingle();
+    const title = `Countersign: ${(c as any)?.legal_name || (c as any)?.name || "client"} - ${label}`;
+    const { data: dup } = await db.from("staff_tasks").select("id").eq("title", title).neq("status", "done").limit(1);
+    if ((dup ?? []).length) return;
+    const { data: owner } = await db.from("client_team_assignments").select("user_id").eq("client_id", clientId).eq("team_role", "sales").maybeSingle();
+    await db.from("staff_tasks").insert({ title, description: "The client has signed. A CEO, Super Admin or Legal signer must countersign on Sales -> MSAs & SOWs before it is active.", priority: "high", team: "sales", assignee_user_id: (owner as any)?.user_id ?? null, created_by: actor });
+  } catch (e) { console.error("countersign task failed", e); }
+}
+
+async function _unusedMsaExecution() {
+  return;
+  const context: any = null, data: any = null, version: any = null, who: any = null, agreement: any = null, now = "";
 
     const { data: sections } = await context.supabase
       .from("msa_sections")
