@@ -13672,6 +13672,240 @@ export type Database = {
           },
         ]
       }
+      drive_migration_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+          migration_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+          migration_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          migration_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_migration_events_migration_id_fkey"
+            columns: ["migration_id"]
+            isOneToOne: false
+            referencedRelation: "drive_migrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drive_migration_items: {
+        Row: {
+          action: string
+          category: string | null
+          created_at: string
+          document_id: string | null
+          document_type: string | null
+          drive_file_id: string
+          file_name: string
+          id: string
+          investor_name: string | null
+          migration_id: string
+          mime_type: string | null
+          onboarding_id: string | null
+          path: string | null
+          profile_id: string | null
+          result: string
+          result_message: string | null
+          size_bytes: number | null
+          suggested_category: string | null
+          suggested_reason: string | null
+          suggested_type: string | null
+          target_file_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          action?: string
+          category?: string | null
+          created_at?: string
+          document_id?: string | null
+          document_type?: string | null
+          drive_file_id: string
+          file_name: string
+          id?: string
+          investor_name?: string | null
+          migration_id: string
+          mime_type?: string | null
+          onboarding_id?: string | null
+          path?: string | null
+          profile_id?: string | null
+          result?: string
+          result_message?: string | null
+          size_bytes?: number | null
+          suggested_category?: string | null
+          suggested_reason?: string | null
+          suggested_type?: string | null
+          target_file_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          action?: string
+          category?: string | null
+          created_at?: string
+          document_id?: string | null
+          document_type?: string | null
+          drive_file_id?: string
+          file_name?: string
+          id?: string
+          investor_name?: string | null
+          migration_id?: string
+          mime_type?: string | null
+          onboarding_id?: string | null
+          path?: string | null
+          profile_id?: string | null
+          result?: string
+          result_message?: string | null
+          size_bytes?: number | null
+          suggested_category?: string | null
+          suggested_reason?: string | null
+          suggested_type?: string | null
+          target_file_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_migration_items_migration_id_fkey"
+            columns: ["migration_id"]
+            isOneToOne: false
+            referencedRelation: "drive_migrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drive_migration_suggestions: {
+        Row: {
+          created_at: string
+          current_value: Json | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          field: string
+          id: string
+          item_id: string | null
+          migration_id: string
+          proposed: Json
+          source_file_name: string | null
+          source_page: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: Json | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          field: string
+          id?: string
+          item_id?: string | null
+          migration_id: string
+          proposed: Json
+          source_file_name?: string | null
+          source_page?: number | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: Json | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          field?: string
+          id?: string
+          item_id?: string | null
+          migration_id?: string
+          proposed?: Json
+          source_file_name?: string | null
+          source_page?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_migration_suggestions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "drive_migration_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drive_migration_suggestions_migration_id_fkey"
+            columns: ["migration_id"]
+            isOneToOne: false
+            referencedRelation: "drive_migrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drive_migrations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          last_error: string | null
+          mode: string
+          offering_id: string
+          source_drive_id: string | null
+          source_folder_id: string
+          source_folder_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          mode: string
+          offering_id: string
+          source_drive_id?: string | null
+          source_folder_id: string
+          source_folder_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          mode?: string
+          offering_id?: string
+          source_drive_id?: string | null
+          source_folder_id?: string
+          source_folder_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_migrations_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drive_sync_events: {
         Row: {
           actor: string
