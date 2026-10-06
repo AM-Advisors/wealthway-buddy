@@ -171,6 +171,18 @@ export async function createInvestor(userId: string, input: {
     changes.push({ offeringId: input.offeringId, onboardingId: null, table: "investment_profiles", id: pr.id, field: "profile_type", from: null, to: type, source, actor: actor.userId });
   }
 
+  // 2b. Optional tax ID: encrypted through the canonical store; only last 4 kept readable.
+  if (input.taxId) {
+    const { encryptTin } = await import("@/lib/irs-forms.server");
+    const enc = await encryptTin(input.taxId);
+    const { error: te } = await db().rpc("store_profile_tax_id", { _profile: profileId, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId } as any);
+    if (te) fail("The tax number couldn't be stored securely.");
+    const t = input.profile.type;
+    const taxType = t === "entity" || t === "trust" ? "ein" : input.taxId.startsWith("9") ? "itin" : "ssn";
+    await db().from("investment_profiles").update({ tax_id_type: taxType, tax_id_last4: input.taxId.slice(-4) } as any).eq("id", profileId);
+    changes.push({ offeringId: input.offeringId, onboardingId: null, table: "investment_profiles", id: profileId!, field: "tax_id", from: null, to: `•••${input.taxId.slice(-4)}`, source, actor: actor.userId });
+  }
+
   // 3. Investment - converge onto any open record instead of duplicating.
   const { data: dupe } = await db().from("investor_onboardings").select("id").eq("offering_id", input.offeringId).eq("investment_profile_id", profileId)
     .is("removed_at", null).not("stage", "in", TERMINAL).limit(1);
