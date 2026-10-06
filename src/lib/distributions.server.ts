@@ -2892,3 +2892,6 @@ export async function distributionAuditTrail(userId: string, batchId: string) {
 export async function assertStaffForProviderIntake(userId: string) {
   return assertStaff(userId);
 }
+
+// Shared with distributions-inkind.server.ts (same authority, same destination reading).
+export { assertCan as distributionAuthority, roleForOffering as distributionRole, destinationFromRow, batchRow as distributionBatchRow };
