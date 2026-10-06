@@ -109,6 +109,29 @@ async function editableFunds(supabase: any, userId: string) {
   return (data ?? []) as any[];
 }
 
+const pctToBps = (v: unknown) =>
+  v === null || v === undefined || v === "" ? null : Math.round(Number(v) * 100);
+
+/** Fee/carry/pref are projections of the fund's active Fees record (fund_fee_terms). */
+async function fundFees(offeringId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await (supabaseAdmin as any)
+    .from("fund_fee_terms")
+    .select("status, management_fee_pct, carry_pct, hurdle_pct, created_at")
+    .eq("offering_id", offeringId)
+    .in("status", ["active", "pending_approval"])
+    .order("created_at", { ascending: false });
+  const rows = (data ?? []) as any[];
+  const active = rows.find((r) => r.status === "active") ?? null;
+  return {
+    management_fee_bps: pctToBps(active?.management_fee_pct),
+    carried_interest_bps: pctToBps(active?.carry_pct),
+    preferred_return_bps: pctToBps(active?.hurdle_pct),
+    hasActive: Boolean(active),
+    pendingChange: rows.some((r) => r.status === "pending_approval"),
+  };
+}
+
 /** Manager/admin view: the funds they run plus the offering statement for one of them. */
 export const getOfferingStatementForEdit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
