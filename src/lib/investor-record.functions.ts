@@ -103,3 +103,16 @@ export const readInvestorDocumentFn = createServerFn({ method: "POST" }).middlew
     base64: z.string().max(14_000_000),
   }).parse)
   .handler(async ({ data, context }) => (await (await import("@/lib/investor-document-ai.server")).readInvestorDocument(context.userId, data)) as unknown as { documentKind: string; summary: string; found: { label: string; value: string; suggested: boolean }[] });
+
+/** Reads a Google Sheet shared "anyone with the link" as CSV. Only docs.google.com sheet ids are fetched. */
+export const fetchGoogleSheetCsvFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ url: z.string().url().max(2000) }).parse)
+  .handler(async ({ data }) => {
+    const m = data.url.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]{20,})/);
+    if (!m) throw new Error("That isn't a Google Sheets link.");
+    const gid = data.url.match(/[#&?]gid=(\d+)/)?.[1];
+    const res = await fetch(`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gid ? `&gid=${gid}` : ""}`, { redirect: "follow" });
+    const text = await res.text();
+    if (!res.ok || /^\s*<(!doctype|html)/i.test(text)) throw new Error("Couldn't open that sheet. Set sharing to \"Anyone with the link can view\", or download it as Excel and upload the file.");
+    return { csv: text.slice(0, 500_000) };
+  });
