@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CollateralPages, overflowProblems } from "@/components/marketing/collateral-canvas";
@@ -77,6 +78,14 @@ function Studio() {
     const pdf = await makePdf(imgs, template === "social");
     pdf.save(`${slug}.pdf`);
   }, "Export ready.");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+  // Builds the exact PDF that export and sharing produce, and shows it in a viewer.
+  const previewPdf = () => run(async () => {
+    const pdf = await makePdf(await render(), template === "social");
+    setPreviewUrl(URL.createObjectURL(pdf.output("blob")));
+  }, "Preview ready.");
+
   const saveForSharing = () => run(async () => {
     if (!id) throw new Error("Save first.");
     const pdf = await makePdf(await render(), template === "social");
@@ -165,6 +174,7 @@ function Studio() {
           <section className="space-y-2 rounded-lg border border-border p-4">
             <h2 className="text-sm font-semibold">Export</h2>
             <div className="flex flex-wrap gap-2">
+              <Button size="sm" disabled={busy} onClick={previewPdf}>{busy ? "Rendering…" : "Preview PDF"}</Button>
               <Button size="sm" variant="outline" disabled={busy} onClick={() => exportFiles("pdf")}>PDF</Button>
               <Button size="sm" variant="outline" disabled={busy} onClick={() => exportFiles("jpg")}>JPEGs</Button>
               <Button size="sm" variant="outline" disabled={busy} onClick={() => exportFiles("md")}>Written guide</Button>
@@ -194,6 +204,19 @@ function Studio() {
           <div style={{ height: template === "social" ? 1600 * 0.45 : (4000 + 40) * 0.45 }} />
         </div>
       </div>
+      <Dialog open={!!previewUrl} onOpenChange={(o) => { if (!o) setPreviewUrl(null); }}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle>PDF preview</DialogTitle>
+            <DialogDescription>This is the same file that PDF export and sharing create. Check fonts, logo placement and page breaks.{issues.length ? " Brand checks still need fixing before export." : ""}</DialogDescription>
+          </DialogHeader>
+          {previewUrl && <iframe title="Collateral PDF preview" src={previewUrl} className="h-[75vh] w-full rounded-md border border-border bg-muted" />}
+          <div className="flex justify-end gap-2">
+            {previewUrl && <Button size="sm" variant="outline" asChild><a href={previewUrl} target="_blank" rel="noreferrer">Open in new tab</a></Button>}
+            <Button size="sm" disabled={busy || !!issues.length} onClick={() => exportFiles("pdf")}>Download PDF</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
