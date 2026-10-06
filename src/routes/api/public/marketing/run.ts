@@ -15,7 +15,13 @@ export const Route = createFileRoute("/api/public/marketing/run")({
         const result = await runDue();
         const { syncDueClickup } = await import("@/lib/marketing-imports.server");
         const clickup = await syncDueClickup().catch((e) => { console.error("clickup sync", e); return { synced: 0 }; });
-        return Response.json({ ...result, clickup });
+        // Marketing Drive library: refresh about hourly.
+        let drive: unknown = null;
+        if (new Date().getUTCMinutes() < 5) {
+          const { syncMarketingDrive } = await import("@/lib/marketing-drive.server");
+          drive = await syncMarketingDrive(null).catch((e) => { console.error("marketing drive sync", e); return { error: true }; });
+        }
+        return Response.json({ ...result, clickup, drive });
       },
     },
   },
