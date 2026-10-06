@@ -295,16 +295,23 @@ export function OfferingStatementEditor({ offeringId }: { offeringId?: string })
             </div>
             <div className="space-y-2">
               <Label htmlFor="os-fee">Management fee (%)</Label>
-              <Input id="os-fee" inputMode="decimal" {...field("management_fee")} />
+              <Input id="os-fee" readOnly disabled value={draft.management_fee || "Not set"} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="os-carry">Carried interest (%)</Label>
-              <Input id="os-carry" inputMode="decimal" {...field("carried_interest")} />
+              <Input id="os-carry" readOnly disabled value={draft.carried_interest || "Not set"} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="os-pref">Preferred return (%)</Label>
-              <Input id="os-pref" inputMode="decimal" {...field("preferred_return")} />
+              <Input id="os-pref" readOnly disabled value={draft.preferred_return || "Not set"} />
             </div>
+            <p className="text-xs text-muted-foreground sm:col-span-full">
+              Fee, carry and preferred return come from the fund's Fees record. Change them on the
+              fund's Team &amp; Fees tab.
+              {(data as any)?.feeSource?.pendingChange
+                ? " A fee change is waiting for approval; these show the approved terms until then."
+                : ""}
+            </p>
             <div className="space-y-2">
               <Label htmlFor="os-term">Fund term (years)</Label>
               <Input id="os-term" inputMode="decimal" {...field("fund_term_years")} />
