@@ -28,7 +28,7 @@ function ActivityPage() {
   const d = q.data;
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-10">
-      <Link to="/ops/employees" className="text-sm text-primary hover:underline">← Employees</Link>
+      <Link to="/ops/people-access" search={{ tab: "employees" }} className="text-sm text-primary hover:underline">← Employees</Link>
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {d && (<>

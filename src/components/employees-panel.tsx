@@ -37,8 +37,8 @@ export function EmployeesPage() {
         </div>
         <div className="flex gap-3 text-sm">
           <Link to="/ops/mailboxes" className="text-primary hover:underline">Mailboxes</Link>
-          <Link to="/ops/access-control" className="text-primary hover:underline">Invite & access</Link>
-          <Link to="/ops/roles" className="text-primary hover:underline">Roles</Link>
+          <Link to="/ops/people-access" search={{ tab: "access" }} className="text-primary hover:underline">Invite & access</Link>
+          <Link to="/ops/people-access" search={{ tab: "roles" }} className="text-primary hover:underline">Roles</Link>
         </div>
       </header>
       <Input placeholder="Search name, email or role" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
