@@ -1269,6 +1269,12 @@ export async function postFundingMatch(userId: string, matchId: string) {
     .eq("id", match.expected_funding_id)
     .maybeSingle();
 
+  // A contribution is effective when the money arrived, not when it was posted.
+  const { data: receipt } = match.bank_transaction_id
+    ? await db().from("bank_transactions").select("posted_on").eq("id", match.bank_transaction_id).maybeSingle()
+    : { data: null };
+  const receivedOn = receipt?.posted_on ? String(receipt.posted_on) : today();
+
   let commitmentEventId: string | null = null;
   if (expected?.position_id) {
     const { data: event } = await db()
@@ -1278,7 +1284,7 @@ export async function postFundingMatch(userId: string, matchId: string) {
         offering_id: match.offering_id,
         event_type: "contribution",
         amount_cents: Number(match.proposed_amount_cents),
-        effective_date: today(),
+        effective_date: receivedOn,
         source: "funding_match",
         source_ref: String(match.id),
         journal_entry_id: match.journal_entry_id,
