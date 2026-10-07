@@ -52,7 +52,7 @@ export function InvestorDistributions() {
   });
 
   const confirmM = useMutation({
-    mutationFn: (lineId: string) => confirm({ data: { lineId } }),
+    mutationFn: (v: { lineId: string; shareDestination?: string | null }) => confirm({ data: v }),
     onSuccess: () => {
       toast.success("Thank you - your confirmation has been recorded.");
       queryClient.invalidateQueries({ queryKey: ["my-distributions"] });
@@ -99,11 +99,10 @@ export function InvestorDistributions() {
                   {money(l.netCents)} net
                   {l.destinationEnding ? ` · to the account ending ${l.destinationEnding}` : ""}
                 </p>
+                {l.shares ? <p className="text-sm text-muted-foreground">{l.shares.toLocaleString()} shares{l.shareIssuer ? ` of ${l.shareIssuer}` : ""}{l.shareDestination ? ` · to ${l.shareDestination}` : ""}</p> : null}
                 {l.confirmationRequired ? (
-                  <Button size="sm" className="mt-2" onClick={() => confirmM.mutate(l.id)}>
-                    Confirm my details
-                  </Button>
-                ) : null}
+                  <ConfirmPayout line={l} busy={confirmM.isPending} onConfirm={(shareDestination) => confirmM.mutate({ lineId: l.id, shareDestination })} />
+                ) : l.kind && l.status !== "Completed" ? <p className="mt-1 text-xs text-muted-foreground">Payout details confirmed.</p> : null}
               </div>
             ))}
           </CardContent>
@@ -210,5 +209,23 @@ function PaymentDestinations() {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function ConfirmPayout({ line, busy, onConfirm }: { line: any; busy: boolean; onConfirm: (shareDestination: string | null) => void }) {
+  const [dest, setDest] = useState<string>(line.shareDestination ?? "");
+  const needsShares = !!line.shares && line.kind !== "cash";
+  const needsCash = line.kind !== "shares" && Number(line.netCents) > 0;
+  return (
+    <div className="mt-3 space-y-2 rounded-md bg-muted/40 p-3">
+      <p className="text-sm font-medium">Confirm where this distribution should go</p>
+      {needsCash && <p className="text-xs text-muted-foreground">Cash goes to your verified payout bank account below{line.destinationEnding ? ` (ending ${line.destinationEnding})` : ""}. To use a different account, add it below first.</p>}
+      {needsShares && (
+        <input aria-label="Brokerage or custodian account" className="h-9 w-full rounded-md border bg-background px-3 text-sm" placeholder="Brokerage / custodian and account number" value={dest} onChange={(e) => setDest(e.target.value)} />
+      )}
+      <Button size="sm" disabled={busy || (needsShares && dest.trim().length < 4)} onClick={() => onConfirm(needsShares ? dest.trim() : null)}>
+        I confirm these details are correct
+      </Button>
+    </div>
   );
 }
