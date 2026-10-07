@@ -191,6 +191,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   ];
   const teamItems: NavItem[] = salesOnly ? [] : [
     { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document" },
+    { id: "client-approvals", title: "Client approvals & requests", url: "/ops/client-approvals", icon: "document" },
     ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people", sub: peopleSub }] : []),
     ...(canSee("mailboxes", staffRoles) ? [{ id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" }] : []),
     { id: "mail", title: "Mail", url: "/ops/mail", icon: "document" },

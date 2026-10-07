@@ -1850,6 +1850,239 @@ export type Database = {
           },
         ]
       }
+      approval_decisions: {
+        Row: {
+          approval_id: string
+          certification_text: string | null
+          certified: boolean
+          comment: string | null
+          created_at: string
+          decision: string
+          id: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          approval_id: string
+          certification_text?: string | null
+          certified?: boolean
+          comment?: string | null
+          created_at?: string
+          decision: string
+          id?: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          approval_id?: string
+          certification_text?: string | null
+          certified?: boolean
+          comment?: string | null
+          created_at?: string
+          decision?: string
+          id?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_decisions_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          approval_id: string
+          client_visible: boolean
+          comment: string | null
+          created_at: string
+          detail: Json
+          fund_id: string
+          id: string
+          version: number | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          approval_id: string
+          client_visible?: boolean
+          comment?: string | null
+          created_at?: string
+          detail?: Json
+          fund_id: string
+          id?: string
+          version?: number | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          approval_id?: string
+          client_visible?: boolean
+          comment?: string | null
+          created_at?: string
+          detail?: Json
+          fund_id?: string
+          id?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
+      approvals: {
+        Row: {
+          approval_amount: number | null
+          approval_required_from: string
+          approval_type: string
+          approved_at: string | null
+          approved_by: string | null
+          calculation_summary: Json
+          client_visible_summary: string | null
+          created_at: string
+          currency: string
+          decision_notes: string | null
+          description: string | null
+          due_date: string | null
+          effective_date: string | null
+          fund_id: string
+          id: string
+          internal_notes: string | null
+          prepared_by: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          related_workflow_id: string | null
+          related_workflow_type: string | null
+          requested_at: string | null
+          requested_by: string | null
+          required_approver_count: number
+          reviewed_by: string | null
+          root_id: string | null
+          service_engagement_id: string | null
+          service_request_id: string | null
+          status: string
+          supersedes_id: string | null
+          supporting_documents: Json
+          task_id: string | null
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approval_amount?: number | null
+          approval_required_from?: string
+          approval_type: string
+          approved_at?: string | null
+          approved_by?: string | null
+          calculation_summary?: Json
+          client_visible_summary?: string | null
+          created_at?: string
+          currency?: string
+          decision_notes?: string | null
+          description?: string | null
+          due_date?: string | null
+          effective_date?: string | null
+          fund_id: string
+          id?: string
+          internal_notes?: string | null
+          prepared_by?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          related_workflow_id?: string | null
+          related_workflow_type?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          required_approver_count?: number
+          reviewed_by?: string | null
+          root_id?: string | null
+          service_engagement_id?: string | null
+          service_request_id?: string | null
+          status?: string
+          supersedes_id?: string | null
+          supporting_documents?: Json
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approval_amount?: number | null
+          approval_required_from?: string
+          approval_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          calculation_summary?: Json
+          client_visible_summary?: string | null
+          created_at?: string
+          currency?: string
+          decision_notes?: string | null
+          description?: string | null
+          due_date?: string | null
+          effective_date?: string | null
+          fund_id?: string
+          id?: string
+          internal_notes?: string | null
+          prepared_by?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          related_workflow_id?: string | null
+          related_workflow_type?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          required_approver_count?: number
+          reviewed_by?: string | null
+          root_id?: string | null
+          service_engagement_id?: string | null
+          service_request_id?: string | null
+          status?: string
+          supersedes_id?: string | null
+          supporting_documents?: Json
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approvals_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_service_engagement_id_fkey"
+            columns: ["service_engagement_id"]
+            isOneToOne: false
+            referencedRelation: "service_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_service_request_id_fkey"
+            columns: ["service_request_id"]
+            isOneToOne: false
+            referencedRelation: "fund_service_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "staff_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_valuations: {
         Row: {
           approved_at: string | null
@@ -17220,6 +17453,7 @@ export type Database = {
           id: string
           notes_client: string | null
           notes_internal: string | null
+          occurrence_key: string | null
           period_label: string | null
           report_status: string | null
           responsible_party: string
@@ -17229,6 +17463,7 @@ export type Database = {
           source_ref: string | null
           start_date: string | null
           status: string
+          task_created_at: string | null
           task_id: string | null
           task_lead_days: number
           title: string
@@ -17247,6 +17482,7 @@ export type Database = {
           id?: string
           notes_client?: string | null
           notes_internal?: string | null
+          occurrence_key?: string | null
           period_label?: string | null
           report_status?: string | null
           responsible_party?: string
@@ -17256,6 +17492,7 @@ export type Database = {
           source_ref?: string | null
           start_date?: string | null
           status?: string
+          task_created_at?: string | null
           task_id?: string | null
           task_lead_days?: number
           title: string
@@ -17274,6 +17511,7 @@ export type Database = {
           id?: string
           notes_client?: string | null
           notes_internal?: string | null
+          occurrence_key?: string | null
           period_label?: string | null
           report_status?: string | null
           responsible_party?: string
@@ -17283,6 +17521,7 @@ export type Database = {
           source_ref?: string | null
           start_date?: string | null
           status?: string
+          task_created_at?: string | null
           task_id?: string | null
           task_lead_days?: number
           title?: string
@@ -17386,6 +17625,35 @@ export type Database = {
             foreignKeyName: "fund_calendar_rules_fund_id_fkey"
             columns: ["fund_id"]
             isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_calendar_settings: {
+        Row: {
+          auto_task_generation: boolean
+          fund_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_task_generation?: boolean
+          fund_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_task_generation?: boolean
+          fund_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_calendar_settings_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: true
             referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
@@ -19940,6 +20208,121 @@ export type Database = {
           },
         ]
       }
+      fund_request_events: {
+        Row: {
+          actor_user_id: string | null
+          client_visible: boolean
+          created_at: string
+          detail: Json
+          fund_id: string
+          id: string
+          kind: string
+          request_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          client_visible?: boolean
+          created_at?: string
+          detail?: Json
+          fund_id: string
+          id?: string
+          kind: string
+          request_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          client_visible?: boolean
+          created_at?: string
+          detail?: Json
+          fund_id?: string
+          id?: string
+          kind?: string
+          request_id?: string
+        }
+        Relationships: []
+      }
+      fund_request_files: {
+        Row: {
+          category: string
+          created_at: string
+          file_name: string
+          fund_id: string
+          id: string
+          request_id: string
+          storage_path: string
+          uploaded_by: string | null
+          visibility: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          file_name: string
+          fund_id: string
+          id?: string
+          request_id: string
+          storage_path: string
+          uploaded_by?: string | null
+          visibility?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_name?: string
+          fund_id?: string
+          id?: string
+          request_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_request_files_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "fund_service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_request_messages: {
+        Row: {
+          author_side: string
+          author_user_id: string | null
+          body: string
+          created_at: string
+          id: string
+          request_id: string
+          visibility: string
+        }
+        Insert: {
+          author_side: string
+          author_user_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          request_id: string
+          visibility: string
+        }
+        Update: {
+          author_side?: string
+          author_user_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_request_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "fund_service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_requests: {
         Row: {
           client_id: string
@@ -20151,6 +20534,146 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "formation_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_service_requests: {
+        Row: {
+          assigned_team: string | null
+          assigned_to: string | null
+          client_notes: string | null
+          client_visibility: boolean
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          details: Json
+          due_date: string | null
+          entitlement_status: string
+          first_response_at: string | null
+          fund_id: string
+          id: string
+          internal_notes: string | null
+          irreversible: boolean
+          priority: string
+          related_workflow_id: string | null
+          related_workflow_type: string | null
+          request_type: string
+          requested_by: string | null
+          responsibility_status: string
+          review_task_id: string | null
+          service_engagement_id: string | null
+          sla_due_at: string | null
+          sla_hours: number | null
+          sla_paused_at: string | null
+          sla_paused_minutes: number
+          stage: number
+          status: string
+          submitted_at: string | null
+          task_id: string | null
+          title: string
+          updated_at: string
+          urgent_reason: string | null
+        }
+        Insert: {
+          assigned_team?: string | null
+          assigned_to?: string | null
+          client_notes?: string | null
+          client_visibility?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          details?: Json
+          due_date?: string | null
+          entitlement_status?: string
+          first_response_at?: string | null
+          fund_id: string
+          id?: string
+          internal_notes?: string | null
+          irreversible?: boolean
+          priority?: string
+          related_workflow_id?: string | null
+          related_workflow_type?: string | null
+          request_type: string
+          requested_by?: string | null
+          responsibility_status?: string
+          review_task_id?: string | null
+          service_engagement_id?: string | null
+          sla_due_at?: string | null
+          sla_hours?: number | null
+          sla_paused_at?: string | null
+          sla_paused_minutes?: number
+          stage?: number
+          status?: string
+          submitted_at?: string | null
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          urgent_reason?: string | null
+        }
+        Update: {
+          assigned_team?: string | null
+          assigned_to?: string | null
+          client_notes?: string | null
+          client_visibility?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          details?: Json
+          due_date?: string | null
+          entitlement_status?: string
+          first_response_at?: string | null
+          fund_id?: string
+          id?: string
+          internal_notes?: string | null
+          irreversible?: boolean
+          priority?: string
+          related_workflow_id?: string | null
+          related_workflow_type?: string | null
+          request_type?: string
+          requested_by?: string | null
+          responsibility_status?: string
+          review_task_id?: string | null
+          service_engagement_id?: string | null
+          sla_due_at?: string | null
+          sla_hours?: number | null
+          sla_paused_at?: string | null
+          sla_paused_minutes?: number
+          stage?: number
+          status?: string
+          submitted_at?: string | null
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          urgent_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_service_requests_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_service_requests_review_task_id_fkey"
+            columns: ["review_task_id"]
+            isOneToOne: false
+            referencedRelation: "staff_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_service_requests_service_engagement_id_fkey"
+            columns: ["service_engagement_id"]
+            isOneToOne: false
+            referencedRelation: "service_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_service_requests_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "staff_tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -40320,6 +40843,7 @@ export type Database = {
       }
       fund_dependency_preserved: { Args: { _tbl: string }; Returns: boolean }
       fund_setup_manager: { Args: { _setup_id: string }; Returns: boolean }
+      generate_due_calendar_tasks: { Args: never; Returns: number }
       get_bank_access_token: {
         Args: { p_offering_id: string }
         Returns: string

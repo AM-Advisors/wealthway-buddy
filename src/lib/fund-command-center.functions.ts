@@ -48,3 +48,7 @@ export const generateFundSchedule = createServerFn({ method: "POST" })
 export const generateFundDueTasks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth]).inputValidator((d) => fund.parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/fund-calendar.server")).generateDueTasks(context.userId, data.fundId));
+
+export const setFundAutoTasks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth]).inputValidator((d) => z.object({ fundId: z.string().uuid(), on: z.boolean() }).parse(d))
+  .handler(async ({ context, data }) => (await import("@/lib/fund-calendar.server")).setAutoTasks(context.userId, data.fundId, data.on));

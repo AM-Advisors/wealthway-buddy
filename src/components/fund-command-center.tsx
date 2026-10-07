@@ -10,7 +10,7 @@ import { HEALTH_LABEL, CATEGORY_HEALTH_LABEL, type Health, type CategoryHealth }
 import { serviceLevelLabel, fmtDate, titleCase } from "@/lib/service-engagement-labels";
 import { CALENDAR_CATEGORIES } from "@/lib/fund-calendar-templates";
 
-export type CommandTarget = "calendar" | "investors" | "capital";
+export type CommandTarget = "calendar" | "investors" | "capital" | "approvals" | "requests";
 
 const HEALTH_TONE: Record<Health | CategoryHealth, string> = {
   HEALTHY: "border-primary/30 bg-primary/5 text-primary", IN_PROGRESS: "border-primary/30 bg-primary/5 text-primary",
@@ -65,18 +65,22 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
             {lvl ? <p className="text-sm"><span className="font-semibold uppercase tracking-wide text-primary">{lvl.name}</span> <span className="text-muted-foreground">· {lvl.positioning}</span></p>
               : <p className="text-sm text-muted-foreground">Administration level not set yet</p>}
           </div>
+          <div className="flex items-start gap-3">
+          {onNavigate && <Button size="sm" onClick={() => onNavigate("requests")}>Request Service</Button>}
           <button type="button" onClick={() => setHealthOpen(!healthOpen)} aria-expanded={healthOpen} className="text-left">
             <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">Fund health</span>
             <Pill tone={HEALTH_TONE[d.health.overall]}>{HEALTH_LABEL[d.health.overall]}</Pill>
           </button>
+          </div>
         </div>
-        <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-6">
+        <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-7">
           <div><dt className="text-xs text-muted-foreground">Primary Administrator</dt><dd>{admin ?? (isCore ? "Harmonious Support Team" : "To be assigned")}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Relationship Lead</dt><dd>{lead ?? (isCore ? "Harmonious Support Team" : "To be assigned")}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Next report</dt><dd>{d.nextReport ? `${d.nextReport.title} · ${fmtDate(d.nextReport.due)}` : "None scheduled"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Next major deadline</dt><dd>{nextDeadline ? `${nextDeadline.title} · ${fmtDate(nextDeadline.due)}` : "None scheduled"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Open items</dt><dd>{d.openCount}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Approvals / Information</dt><dd>{d.counts.CLIENT_APPROVAL_REQUIRED} / {d.counts.CLIENT_INFORMATION_REQUIRED}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Approvals / Information</dt><dd>{Math.max(d.counts.CLIENT_APPROVAL_REQUIRED, d.approvalsAwaiting.length)} / {d.counts.CLIENT_INFORMATION_REQUIRED}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Open requests</dt><dd>{onNavigate ? <button className="underline" onClick={() => onNavigate("requests")}>{d.requests.open}</button> : d.requests.open}</dd></div>
         </dl>
         {d.internal && <p className="mt-3 rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">Staff only: {d.internal.internalOnly} internal-only open tasks · {d.internal.slaRisk} at SLA risk (due within 2 days)</p>}
       </section>
@@ -84,9 +88,18 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
       <div className="grid gap-4 lg:grid-cols-3">
         {/* 1. Your attention */}
         <Card title="Your attention" className="lg:col-span-2">
-          {d.attention.length ? (
+          {d.approvalsAwaiting.length || d.attention.length ? (
             <ul className="divide-y">
-              {d.attention.map((t) => (
+              {d.approvalsAwaiting.map((a) => (
+                <li key={a.id} className="flex flex-wrap items-center gap-2 py-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2"><span className="font-medium">{a.title}</span><ResponsibilityBadge status="CLIENT_APPROVAL_REQUIRED" /></div>
+                    <p className={cn("text-xs", a.due_date && a.due_date < d.today ? "text-destructive" : "text-muted-foreground")}>{a.amount != null ? `${Number(a.amount).toLocaleString("en-US", { style: "currency", currency: a.currency || "USD", maximumFractionDigits: 0 })} · ` : ""}{dueText(a.due_date, d.today)}</p>
+                  </div>
+                  {onNavigate && <Button size="sm" onClick={() => onNavigate("approvals")}>Review</Button>}
+                </li>
+              ))}
+              {d.attention.filter((t) => !d.approvalsAwaiting.some((a) => a.task_id === t.id)).map((t) => (
                 <li key={t.id} className="flex flex-wrap items-center gap-2 py-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2"><span className="font-medium">{t.title}</span><ResponsibilityBadge status={t.responsibility_status} /></div>
@@ -99,6 +112,7 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
               ))}
             </ul>
           ) : <Empty title="No action required" body="Your Harmonious team is handling all current administration items." />}
+          {d.requests.attention > 0 && onNavigate && <Button size="sm" variant="outline" className="mt-2" onClick={() => onNavigate("requests")}>{d.requests.attention} request(s) need your attention</Button>}
         </Card>
 
         {/* 2. Fund health */}
@@ -120,10 +134,10 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
       {/* 3. Responsibility counts */}
       <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Responsibility summary">
         {(["HARMONIOUS_HANDLING", "CLIENT_APPROVAL_REQUIRED", "CLIENT_INFORMATION_REQUIRED", "WAITING_ON_INVESTOR", "WAITING_ON_THIRD_PARTY"] as const).map((s) => (
-          <button key={s} type="button" onClick={() => setFilter(filter === s ? null : s)} aria-pressed={filter === s}
+          <button key={s} type="button" onClick={() => s === "CLIENT_APPROVAL_REQUIRED" && onNavigate ? onNavigate("approvals") : setFilter(filter === s ? null : s)} aria-pressed={filter === s}
             className={cn("rounded-xl border bg-card p-3 text-left hover:bg-muted", filter === s && "border-primary ring-1 ring-primary")}>
             <span className="block text-[11px] uppercase tracking-wide text-muted-foreground">{RESPONSIBILITY_LABEL[s]}</span>
-            <span className="text-2xl font-semibold">{d.counts[s]}</span>
+            <span className="text-2xl font-semibold">{s === "CLIENT_APPROVAL_REQUIRED" ? Math.max(d.counts[s], d.approvalsAwaiting.length) : d.counts[s]}</span>
           </button>
         ))}
       </section>
@@ -203,6 +217,11 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
             : <Empty title="Harmonious Support Team" body="Our support team handles your fund. A named team appears here once assigned." />}
           {onNavigate && <Button size="sm" variant="outline" className="mt-3" onClick={() => onNavigate("investors")}>View investors</Button>}
         </Card>
+        {d.activity.length > 0 && (
+          <Card title="Recent activity" className="lg:col-span-3">
+            <ul className="space-y-1 text-sm">{d.activity.map((a, i) => <li key={i} className="flex flex-wrap justify-between gap-2">{onNavigate ? <button className="text-left hover:underline" onClick={() => onNavigate(a.target)}>{a.text}</button> : <span>{a.text}</span>}<span className="text-xs text-muted-foreground">{fmtDate(a.at)}</span></li>)}</ul>
+          </Card>
+        )}
       </div>
     </div>
   );

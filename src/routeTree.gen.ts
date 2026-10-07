@@ -230,6 +230,7 @@ import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsAgreementsRouteImport } from './routes/_authenticated/ops.agreements'
 import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
+import { Route as AuthenticatedOpsClientApprovalsRouteImport } from './routes/_authenticated/ops.client-approvals'
 import { Route as AuthenticatedOpsCloseRequestsRouteImport } from './routes/_authenticated/ops.close-requests'
 import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authenticated/ops.compliance'
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
@@ -398,6 +399,7 @@ import { Route as AuthenticatedAdminClientsClientIdEntitiesRouteImport } from '.
 import { Route as AuthenticatedClientAgreementsSowSowIdRouteImport } from './routes/_authenticated/client.agreements.sow.$sowId'
 import { Route as AuthenticatedClientServicesRequestsRequestIdRouteImport } from './routes/_authenticated/client.services.requests.$requestId'
 import { Route as AuthenticatedManagerFundFundIdIndexRouteImport } from './routes/_authenticated/manager.fund.$fundId.index'
+import { Route as AuthenticatedManagerFundFundIdApprovalsRouteImport } from './routes/_authenticated/manager.fund.$fundId.approvals'
 import { Route as AuthenticatedManagerFundFundIdAssetsRouteImport } from './routes/_authenticated/manager.fund.$fundId.assets'
 import { Route as AuthenticatedManagerFundFundIdCalendarRouteImport } from './routes/_authenticated/manager.fund.$fundId.calendar'
 import { Route as AuthenticatedManagerFundFundIdCapTableRouteImport } from './routes/_authenticated/manager.fund.$fundId.cap-table'
@@ -406,6 +408,7 @@ import { Route as AuthenticatedManagerFundFundIdDocumentsRouteImport } from './r
 import { Route as AuthenticatedManagerFundFundIdInvestorsRouteImport } from './routes/_authenticated/manager.fund.$fundId.investors'
 import { Route as AuthenticatedManagerFundFundIdOnboardingLinkRouteImport } from './routes/_authenticated/manager.fund.$fundId.onboarding-link'
 import { Route as AuthenticatedManagerFundFundIdReadinessRouteImport } from './routes/_authenticated/manager.fund.$fundId.readiness'
+import { Route as AuthenticatedManagerFundFundIdRequestsRouteImport } from './routes/_authenticated/manager.fund.$fundId.requests'
 import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './routes/_authenticated/manager.fund.$fundId.settings'
 import { Route as AuthenticatedManagerFundFundIdSideLettersRouteImport } from './routes/_authenticated/manager.fund.$fundId.side-letters'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
@@ -1652,6 +1655,12 @@ const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   path: '/ops/banking',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsClientApprovalsRoute =
+  AuthenticatedOpsClientApprovalsRouteImport.update({
+    id: '/ops/client-approvals',
+    path: '/ops/client-approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsCloseRequestsRoute =
   AuthenticatedOpsCloseRequestsRouteImport.update({
     id: '/ops/close-requests',
@@ -2628,6 +2637,12 @@ const AuthenticatedManagerFundFundIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedManagerFundFundIdApprovalsRoute =
+  AuthenticatedManagerFundFundIdApprovalsRouteImport.update({
+    id: '/approvals',
+    path: '/approvals',
+    getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
+  } as any)
 const AuthenticatedManagerFundFundIdAssetsRoute =
   AuthenticatedManagerFundFundIdAssetsRouteImport.update({
     id: '/assets',
@@ -2674,6 +2689,12 @@ const AuthenticatedManagerFundFundIdReadinessRoute =
   AuthenticatedManagerFundFundIdReadinessRouteImport.update({
     id: '/readiness',
     path: '/readiness',
+    getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
+  } as any)
+const AuthenticatedManagerFundFundIdRequestsRoute =
+  AuthenticatedManagerFundFundIdRequestsRouteImport.update({
+    id: '/requests',
+    path: '/requests',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
 const AuthenticatedManagerFundFundIdSettingsRoute =
@@ -2934,6 +2955,7 @@ export interface FileRoutesByFullPath {
   '/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -3107,6 +3129,7 @@ export interface FileRoutesByFullPath {
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
+  '/manager/fund/$fundId/approvals': typeof AuthenticatedManagerFundFundIdApprovalsRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/manager/fund/$fundId/calendar': typeof AuthenticatedManagerFundFundIdCalendarRoute
   '/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
@@ -3115,6 +3138,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
   '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
+  '/manager/fund/$fundId/requests': typeof AuthenticatedManagerFundFundIdRequestsRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -3332,6 +3356,7 @@ export interface FileRoutesByTo {
   '/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -3504,6 +3529,7 @@ export interface FileRoutesByTo {
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
+  '/manager/fund/$fundId/approvals': typeof AuthenticatedManagerFundFundIdApprovalsRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/manager/fund/$fundId/calendar': typeof AuthenticatedManagerFundFundIdCalendarRoute
   '/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
@@ -3512,6 +3538,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
   '/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
+  '/manager/fund/$fundId/requests': typeof AuthenticatedManagerFundFundIdRequestsRoute
   '/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -3738,6 +3765,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
+  '/_authenticated/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
   '/_authenticated/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/_authenticated/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -3911,6 +3939,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
   '/_authenticated/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
+  '/_authenticated/manager/fund/$fundId/approvals': typeof AuthenticatedManagerFundFundIdApprovalsRoute
   '/_authenticated/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
   '/_authenticated/manager/fund/$fundId/calendar': typeof AuthenticatedManagerFundFundIdCalendarRoute
   '/_authenticated/manager/fund/$fundId/cap-table': typeof AuthenticatedManagerFundFundIdCapTableRoute
@@ -3919,6 +3948,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/investors': typeof AuthenticatedManagerFundFundIdInvestorsRoute
   '/_authenticated/manager/fund/$fundId/onboarding-link': typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   '/_authenticated/manager/fund/$fundId/readiness': typeof AuthenticatedManagerFundFundIdReadinessRoute
+  '/_authenticated/manager/fund/$fundId/requests': typeof AuthenticatedManagerFundFundIdRequestsRoute
   '/_authenticated/manager/fund/$fundId/settings': typeof AuthenticatedManagerFundFundIdSettingsRoute
   '/_authenticated/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -4145,6 +4175,7 @@ export interface FileRouteTypes {
     | '/ops/agreements'
     | '/ops/allocations'
     | '/ops/banking'
+    | '/ops/client-approvals'
     | '/ops/close-requests'
     | '/ops/compliance'
     | '/ops/distributions'
@@ -4318,6 +4349,7 @@ export interface FileRouteTypes {
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/client/services/requests/$requestId'
+    | '/manager/fund/$fundId/approvals'
     | '/manager/fund/$fundId/assets'
     | '/manager/fund/$fundId/calendar'
     | '/manager/fund/$fundId/cap-table'
@@ -4326,6 +4358,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/investors'
     | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
+    | '/manager/fund/$fundId/requests'
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/side-letters'
     | '/manager/fund/$fundId/team'
@@ -4543,6 +4576,7 @@ export interface FileRouteTypes {
     | '/ops/agreements'
     | '/ops/allocations'
     | '/ops/banking'
+    | '/ops/client-approvals'
     | '/ops/close-requests'
     | '/ops/compliance'
     | '/ops/distributions'
@@ -4715,6 +4749,7 @@ export interface FileRouteTypes {
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
     | '/client/services/requests/$requestId'
+    | '/manager/fund/$fundId/approvals'
     | '/manager/fund/$fundId/assets'
     | '/manager/fund/$fundId/calendar'
     | '/manager/fund/$fundId/cap-table'
@@ -4723,6 +4758,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/investors'
     | '/manager/fund/$fundId/onboarding-link'
     | '/manager/fund/$fundId/readiness'
+    | '/manager/fund/$fundId/requests'
     | '/manager/fund/$fundId/settings'
     | '/manager/fund/$fundId/side-letters'
     | '/manager/fund/$fundId/team'
@@ -4948,6 +4984,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/agreements'
     | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
+    | '/_authenticated/ops/client-approvals'
     | '/_authenticated/ops/close-requests'
     | '/_authenticated/ops/compliance'
     | '/_authenticated/ops/distributions'
@@ -5121,6 +5158,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
     | '/_authenticated/client/services/requests/$requestId'
+    | '/_authenticated/manager/fund/$fundId/approvals'
     | '/_authenticated/manager/fund/$fundId/assets'
     | '/_authenticated/manager/fund/$fundId/calendar'
     | '/_authenticated/manager/fund/$fundId/cap-table'
@@ -5129,6 +5167,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/investors'
     | '/_authenticated/manager/fund/$fundId/onboarding-link'
     | '/_authenticated/manager/fund/$fundId/readiness'
+    | '/_authenticated/manager/fund/$fundId/requests'
     | '/_authenticated/manager/fund/$fundId/settings'
     | '/_authenticated/manager/fund/$fundId/side-letters'
     | '/_authenticated/manager/fund/$fundId/team'
@@ -6759,6 +6798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsBankingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/client-approvals': {
+      id: '/_authenticated/ops/client-approvals'
+      path: '/ops/client-approvals'
+      fullPath: '/ops/client-approvals'
+      preLoaderRoute: typeof AuthenticatedOpsClientApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/close-requests': {
       id: '/_authenticated/ops/close-requests'
       path: '/ops/close-requests'
@@ -7935,6 +7981,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdIndexRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/manager/fund/$fundId/approvals': {
+      id: '/_authenticated/manager/fund/$fundId/approvals'
+      path: '/approvals'
+      fullPath: '/manager/fund/$fundId/approvals'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdApprovalsRouteImport
+      parentRoute: typeof AuthenticatedManagerFundFundIdRoute
+    }
     '/_authenticated/manager/fund/$fundId/assets': {
       id: '/_authenticated/manager/fund/$fundId/assets'
       path: '/assets'
@@ -7989,6 +8042,13 @@ declare module '@tanstack/react-router' {
       path: '/readiness'
       fullPath: '/manager/fund/$fundId/readiness'
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdReadinessRouteImport
+      parentRoute: typeof AuthenticatedManagerFundFundIdRoute
+    }
+    '/_authenticated/manager/fund/$fundId/requests': {
+      id: '/_authenticated/manager/fund/$fundId/requests'
+      path: '/requests'
+      fullPath: '/manager/fund/$fundId/requests'
+      preLoaderRoute: typeof AuthenticatedManagerFundFundIdRequestsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
     '/_authenticated/manager/fund/$fundId/settings': {
@@ -8253,6 +8313,7 @@ const AuthenticatedProfessionalRouteWithChildren =
   )
 
 interface AuthenticatedManagerFundFundIdRouteChildren {
+  AuthenticatedManagerFundFundIdApprovalsRoute: typeof AuthenticatedManagerFundFundIdApprovalsRoute
   AuthenticatedManagerFundFundIdAssetsRoute: typeof AuthenticatedManagerFundFundIdAssetsRoute
   AuthenticatedManagerFundFundIdCalendarRoute: typeof AuthenticatedManagerFundFundIdCalendarRoute
   AuthenticatedManagerFundFundIdCapTableRoute: typeof AuthenticatedManagerFundFundIdCapTableRoute
@@ -8261,6 +8322,7 @@ interface AuthenticatedManagerFundFundIdRouteChildren {
   AuthenticatedManagerFundFundIdInvestorsRoute: typeof AuthenticatedManagerFundFundIdInvestorsRoute
   AuthenticatedManagerFundFundIdOnboardingLinkRoute: typeof AuthenticatedManagerFundFundIdOnboardingLinkRoute
   AuthenticatedManagerFundFundIdReadinessRoute: typeof AuthenticatedManagerFundFundIdReadinessRoute
+  AuthenticatedManagerFundFundIdRequestsRoute: typeof AuthenticatedManagerFundFundIdRequestsRoute
   AuthenticatedManagerFundFundIdSettingsRoute: typeof AuthenticatedManagerFundFundIdSettingsRoute
   AuthenticatedManagerFundFundIdSideLettersRoute: typeof AuthenticatedManagerFundFundIdSideLettersRoute
   AuthenticatedManagerFundFundIdTeamRoute: typeof AuthenticatedManagerFundFundIdTeamRoute
@@ -8271,6 +8333,8 @@ interface AuthenticatedManagerFundFundIdRouteChildren {
 
 const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundIdRouteChildren =
   {
+    AuthenticatedManagerFundFundIdApprovalsRoute:
+      AuthenticatedManagerFundFundIdApprovalsRoute,
     AuthenticatedManagerFundFundIdAssetsRoute:
       AuthenticatedManagerFundFundIdAssetsRoute,
     AuthenticatedManagerFundFundIdCalendarRoute:
@@ -8287,6 +8351,8 @@ const AuthenticatedManagerFundFundIdRouteChildren: AuthenticatedManagerFundFundI
       AuthenticatedManagerFundFundIdOnboardingLinkRoute,
     AuthenticatedManagerFundFundIdReadinessRoute:
       AuthenticatedManagerFundFundIdReadinessRoute,
+    AuthenticatedManagerFundFundIdRequestsRoute:
+      AuthenticatedManagerFundFundIdRequestsRoute,
     AuthenticatedManagerFundFundIdSettingsRoute:
       AuthenticatedManagerFundFundIdSettingsRoute,
     AuthenticatedManagerFundFundIdSideLettersRoute:
@@ -8465,6 +8531,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAgreementsRoute: typeof AuthenticatedOpsAgreementsRoute
   AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
+  AuthenticatedOpsClientApprovalsRoute: typeof AuthenticatedOpsClientApprovalsRoute
   AuthenticatedOpsCloseRequestsRoute: typeof AuthenticatedOpsCloseRequestsRoute
   AuthenticatedOpsComplianceRoute: typeof AuthenticatedOpsComplianceRoute
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
@@ -8753,6 +8820,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsAgreementsRoute: AuthenticatedOpsAgreementsRoute,
   AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
+  AuthenticatedOpsClientApprovalsRoute: AuthenticatedOpsClientApprovalsRoute,
   AuthenticatedOpsCloseRequestsRoute: AuthenticatedOpsCloseRequestsRoute,
   AuthenticatedOpsComplianceRoute: AuthenticatedOpsComplianceRoute,
   AuthenticatedOpsDistributionsRoute: AuthenticatedOpsDistributionsRoute,

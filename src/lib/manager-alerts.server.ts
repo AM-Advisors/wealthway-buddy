@@ -111,6 +111,11 @@ function buildEmail(
   const progress = fundProgressMessage(row, offeringName);
   if (progress) return { ...progress, details: [{ label: "Fund", value: offeringName }, ...progress.details] };
 
+  if (row.event_kind === "client_work_update") {
+    const meta = row.metadata ?? {};
+    return { headline: `${String(meta["headline"] ?? "Update")} - ${offeringName}`, intro: String(meta["intro"] ?? ""), details: [{ label: "Fund", value: offeringName }] };
+  }
+
   if (row.event_kind === "application_created") {
     return {
       headline: `New application - ${offeringName}`,

@@ -6,6 +6,8 @@ import {
   ArrowLeft,
   Building2,
   CalendarDays,
+  CheckSquare,
+  Inbox,
   FileText,
   Settings,
   Link2,
@@ -25,6 +27,8 @@ import { cn } from "@/lib/utils";
 const groups = [
   { label: "Fund", items: [
     { slug: "", label: "Command Center", icon: Building2 },
+    { slug: "approvals", label: "Approvals", icon: CheckSquare },
+    { slug: "requests", label: "Requests", icon: Inbox },
     { slug: "calendar", label: "Calendar", icon: CalendarDays },
     { slug: "settings", label: "Setup & Settings", icon: Settings },
     { slug: "team", label: "Team", icon: UserCog },
