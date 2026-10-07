@@ -65,8 +65,8 @@ export function parseWixPost(html: string): ParsedWixPost | null {
   const titleTag = html.match(/<title>([^<]*)<\/title>/)?.[1];
   const ogTitle = meta("og:title");
   let hero: string | null = null, heroAlt = "";
-  const first = body.match(/^\s*(?:<figure>\s*)?<img src="([^"]+)" alt="([^"]*)"[^>]*\/>\s*(?:<\/figure>)?/);
-  if (first) { hero = decode(first[1]!); heroAlt = decode(first[2]!); body = body.slice(first[0].length).trim(); }
+  const first = body.match(/^(?:\s*<br \/>)*\s*(?:<figure>\s*)?<img src="([^"]+)" alt="([^"]*)"[^>]*\/>\s*(?:<\/figure>)?/);
+  if (first) { hero = decode(first[1]!); heroAlt = decode(first[2]!); body = body.slice(first[0].length).replace(/^(\s*<br \/>)+/, "").trim(); }
   const ogImg = meta("og:image");
   if (!hero && ogImg?.startsWith("https://")) hero = cleanWixImage(ogImg);
   const title = ogTitle || (titleTag ? decode(titleTag).replace(/\s*\|.*$/, "") : "");

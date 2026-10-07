@@ -79,7 +79,7 @@ export async function importBatch(userId: string, slugs: string[]) {
   const { db } = await requireMarketing(userId);
   const results: { slug: string; ok: boolean; message: string }[] = [];
   for (const slug of slugs.slice(0, 5)) {
-    if (!WIX_ARTICLE_SLUGS.includes(slug)) { results.push({ slug, ok: false, message: "Not a known Classroom address." }); continue; }
+    if (!(WIX_ARTICLE_SLUGS as readonly string[]).includes(slug)) { results.push({ slug, ok: false, message: "Not a known Classroom address." }); continue; }
     try {
       const { data: existing } = await db.from("classroom_articles").select("id").eq("slug", slug).maybeSingle();
       if (existing) { results.push({ slug, ok: true, message: "Already imported - left unchanged." }); continue; }
@@ -193,7 +193,7 @@ export async function aiNew(userId: string, d: { topic: string; audience: string
   if (!CATS.includes(d.category)) throw new Error("Pick a valid category.");
   if (!/^[a-z0-9-]{3,120}$/.test(d.slug)) throw new Error("Web address must be lowercase letters, numbers and hyphens.");
   const { data: clash } = await db.from("classroom_articles").select("id").eq("slug", d.slug).maybeSingle();
-  if (clash || WIX_ARTICLE_SLUGS.includes(d.slug)) throw new Error("That web address is already used by another article.");
+  if (clash || (WIX_ARTICLE_SLUGS as readonly string[]).includes(d.slug)) throw new Error("That web address is already used by another article.");
   const o = await aiArticle(`Topic: ${d.topic}\nAudience: ${d.audience || "fund managers and founders"}\nKey points to cover: ${d.points || "(writer's choice)"}`, "Write a new educational article on this topic.");
   const { data: art, error } = await db.from("classroom_articles").insert({ slug: d.slug, source: "new", category: d.category, status: "draft", created_by: userId, original_path: `/post/${d.slug}` }).select("id").single();
   if (error) throw new Error(error.message);
