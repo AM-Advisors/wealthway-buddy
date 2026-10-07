@@ -33,7 +33,7 @@ const OPEN_APPROVAL = ["DRAFT", "INTERNAL_REVIEW", "AWAITING_APPROVAL", "CHANGES
 const CLOSED_CAPITAL = ["closed", "cancelled", "superseded", "completed", "CLOSED", "CANCELLED", "SUPERSEDED", "COMPLETED"];
 
 /** Loads every source once and returns all Operations views. Restricted fields are omitted unless the role allows them. */
-export async function loadOperations(uid: string, opts: { includeTest?: boolean } = {}) {
+export async function loadOperations(uid: string, opts: { includeTest?: boolean | undefined } = {}) {
   const scope = await staffScope(uid);
   const roles: string[] = scope.roles;
   const canEconomics = has(roles, ECONOMICS_ROLES);
@@ -333,7 +333,7 @@ export async function dailyDigest(uid: string) {
 
 /* ---------------- Writes ---------------- */
 
-export async function bulkAction(uid: string, d: { action: string; items: { kind: string; id: string; ref?: string; type?: string; fundId?: string | null; title?: string }[]; value?: string | null }) {
+export async function bulkAction(uid: string, d: { action: string; items: { kind: string; id: string; ref?: string | undefined; type?: string | undefined; fundId?: string | undefined | null; title?: string | undefined }[]; value?: string | undefined | null }) {
   const s = await staffScope(uid);
   if (d.items.length > 200) throw new Error("Select at most 200 items at a time.");
   const db = await admin();
@@ -359,7 +359,7 @@ export async function bulkAction(uid: string, d: { action: string; items: { kind
   return { done, skipped };
 }
 
-export async function setExceptionStatus(uid: string, d: { type: string; ref: string; fundId?: string | null; title: string; status: "ACKNOWLEDGED" | "IN_PROGRESS" | "RESOLVED" | "DISMISSED"; resolution?: string | null }) {
+export async function setExceptionStatus(uid: string, d: { type: string; ref: string; fundId?: string | undefined | null; title: string; status: "ACKNOWLEDGED" | "IN_PROGRESS" | "RESOLVED" | "DISMISSED"; resolution?: string | undefined | null }) {
   await staffScope(uid);
   if ((d.status === "RESOLVED" || d.status === "DISMISSED") && (!d.resolution || d.resolution.trim().length < 5)) throw new Error("Add a short resolution note.");
   const db = await admin();
@@ -372,7 +372,7 @@ export async function setExceptionStatus(uid: string, d: { type: string; ref: st
 }
 
 /** Client-action follow-ups: records a reminder/follow-up/escalation. Never sends anything automatically. */
-export async function clientActionStep(uid: string, d: { taskId: string; step: "reminder" | "follow_up" | "escalate"; date?: string | null; note?: string | null }) {
+export async function clientActionStep(uid: string, d: { taskId: string; step: "reminder" | "follow_up" | "escalate"; date?: string | undefined | null; note?: string | undefined | null }) {
   await staffScope(uid);
   const db = await admin();
   const now = new Date().toISOString();
@@ -386,7 +386,7 @@ export async function clientActionStep(uid: string, d: { taskId: string; step: "
   return { ok: true, note: d.step === "reminder" ? "Reminder logged. Send it to the client from the task or your mailbox — nothing is sent automatically." : null };
 }
 
-export async function setServiceReviewStatus(uid: string, d: { id: string; status: string; note?: string | null; ownerUserId?: string | null }) {
+export async function setServiceReviewStatus(uid: string, d: { id: string; status: string; note?: string | undefined | null; ownerUserId?: string | undefined | null }) {
   await staffScope(uid);
   if (!["REVIEW_REQUIRED", "IN_REVIEW", "CLIENT_DISCUSSION", "QUOTE_PREPARED", "RESOLVED", "NO_CHANGE"].includes(d.status)) throw new Error("Unknown status.");
   const db = await admin();
