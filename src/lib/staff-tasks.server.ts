@@ -144,7 +144,7 @@ export async function setResponsibility(viewer: string, d: {
 export async function listClientFundTasks(viewer: string, fundId: string) {
   const { assertFund } = await import("@/lib/fund-tabs.server");
   await assertFund(viewer, fundId);
-  const { db } = await ctx(viewer).catch(async () => ({ db: (await import("@/integrations/supabase/client.server")).supabaseAdmin as any }));
+  const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
   const { data } = await db.from("staff_tasks")
     .select("id, title, status, priority, due_date, sla_due_date, responsibility_status, waiting_on_type, responsibility_note_client, related_investor_id, approval_type, approval_amount, approval_due_date, information_request_type, requested_information, updated_at")
     .eq("offering_id", fundId).eq("client_visibility", true).order("due_date", { ascending: true, nullsFirst: false }).limit(500);
