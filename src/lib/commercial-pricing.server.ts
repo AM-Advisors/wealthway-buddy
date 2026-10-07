@@ -12,7 +12,7 @@ export async function loadBaseline(clientId: string | null) {
     .order("effective_date", { ascending: false }).limit(1).maybeSingle();
   if (!version) return { versionId: null as string | null, lines: [] };
   const { data: items } = await db.from("pricing_items")
-    .select("service_key, label, amount_cents, pricing_model, pass_through").eq("version_id", version.id).order("sort_order");
+    .select("service_key, label, amount_cents, pricing_model, pass_through").eq("version_id", version.id).eq("available_for_new_quotes", true).order("sort_order");
   const seen = new Set<string>();
   const catalog: CatalogItem[] = ((items ?? []) as any[]).filter((i) => !seen.has(i.service_key) && seen.add(i.service_key))
     .map((i) => ({ serviceKey: i.service_key, label: i.label, amountCents: Number(i.amount_cents ?? 0), pricingModel: i.pricing_model ?? null, passThrough: Boolean(i.pass_through) }));

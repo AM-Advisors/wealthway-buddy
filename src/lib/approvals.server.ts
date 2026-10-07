@@ -5,7 +5,7 @@
  * material changes create a new version and supersede the old one. Every action is in append-only approval_events.
  * Approval never moves money: payments/distributions stay in their separate controlled workflows.
  */
-import { approvalType, requiredApprovers, CLIENT_VISIBLE_APPROVAL_STATUSES } from "@/lib/approval-types";
+import { approvalType, requiredApproversByPolicy, CLIENT_VISIBLE_APPROVAL_STATUSES } from "@/lib/approval-types";
 import { staffWriter } from "@/lib/fund-calendar.server";
 import { notifyFundManagers } from "@/lib/client-work-notify.server";
 
@@ -17,6 +17,12 @@ async function isFundManager(db: any, uid: string, fundId: string) {
   const { data } = await db.from("fund_managers").select("id").eq("user_id", uid).eq("offering_id", fundId).maybeSingle();
   return !!data;
 }
+/** Approver count from configurable approval_policies (client-specific override first). */
+async function approversFor(db: any, type: string, amount: number | null | undefined, fundId: string) {
+  const [{ data: pol }, { data: f }] = await Promise.all([db.from("approval_policies").select("*").eq("active", true), db.from("offerings").select("client_id").eq("id", fundId).maybeSingle()]);
+  return requiredApproversByPolicy(type, amount, (pol ?? []) as any, f?.client_id ?? null).approvers;
+}
+
 async function names(db: any, ids: (string | null | undefined)[]) {
   const u = [...new Set(ids.filter(Boolean))] as string[];
   if (!u.length) return new Map<string, string>();
@@ -123,7 +129,7 @@ export async function createApproval(uid: string, d: ApprovalInput) {
     approval_type: d.type, title: d.title, description: d.description || null, approval_amount: d.amount ?? null,
     effective_date: d.effectiveDate || null, due_date: d.dueDate || null, client_visible_summary: d.summary || null,
     calculation_summary: d.calculation ?? [], supporting_documents: d.documents ?? [], internal_notes: d.internalNotes || null,
-    prepared_by: uid, requested_by: uid, status: "DRAFT", required_approver_count: requiredApprovers(d.type, d.amount),
+    prepared_by: uid, requested_by: uid, status: "DRAFT", required_approver_count: await approversFor(db, d.type, d.amount, d.fundId),
   }).select("*").single();
   if (error) throw new Error(error.message);
   if (taskId) await db.from("staff_tasks").update({ related_workflow_id: a.id, approval_record_id: a.id, approval_status: "DRAFT" }).eq("id", taskId);
@@ -215,7 +221,7 @@ export async function revise(uid: string, d: ApprovalInput & { id: string; reaso
     client_visible_summary: d.summary ?? a.client_visible_summary, calculation_summary: d.calculation ?? a.calculation_summary,
     supporting_documents: d.documents ?? a.supporting_documents, internal_notes: d.internalNotes ?? a.internal_notes,
     prepared_by: uid, requested_by: uid, status: "DRAFT", version: a.version + 1, supersedes_id: a.id, root_id: a.root_id,
-    required_approver_count: requiredApprovers(a.approval_type, d.amount !== undefined ? d.amount : a.approval_amount),
+    required_approver_count: await approversFor(db, a.approval_type, d.amount !== undefined ? d.amount : a.approval_amount, a.fund_id),
   }).select("*").single();
   if (error) throw new Error(error.message);
   await log(db, n, uid, "version_created", d.reason.trim(), true, { from_version: a.version });

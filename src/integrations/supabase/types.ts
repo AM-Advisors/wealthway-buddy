@@ -1933,6 +1933,54 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_policies: {
+        Row: {
+          active: boolean
+          approval_type: string
+          authorized_signer_required: boolean
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          second_approver_required: boolean
+          step_up_required: boolean
+          threshold_amount: number | null
+        }
+        Insert: {
+          active?: boolean
+          approval_type: string
+          authorized_signer_required?: boolean
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          second_approver_required?: boolean
+          step_up_required?: boolean
+          threshold_amount?: number | null
+        }
+        Update: {
+          active?: boolean
+          approval_type?: string
+          authorized_signer_required?: boolean
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          second_approver_required?: boolean
+          step_up_required?: boolean
+          threshold_amount?: number | null
+        }
+        Relationships: []
+      }
       approvals: {
         Row: {
           approval_amount: number | null
@@ -29949,6 +29997,185 @@ export type Database = {
           },
         ]
       }
+      ops_exception_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json | null
+          event: string
+          exception_id: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          event: string
+          exception_id: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          event?: string
+          exception_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ops_exception_events_exception_id_fkey"
+            columns: ["exception_id"]
+            isOneToOne: false
+            referencedRelation: "ops_exceptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ops_exceptions: {
+        Row: {
+          assigned_team: string | null
+          assigned_user_id: string | null
+          detected_at: string
+          due_date: string | null
+          exception_type: string
+          follow_up_date: string | null
+          fund_id: string | null
+          id: string
+          related_record_id: string | null
+          related_record_type: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source_ref: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_team?: string | null
+          assigned_user_id?: string | null
+          detected_at?: string
+          due_date?: string | null
+          exception_type: string
+          follow_up_date?: string | null
+          fund_id?: string | null
+          id?: string
+          related_record_id?: string | null
+          related_record_type?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source_ref: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_team?: string | null
+          assigned_user_id?: string | null
+          detected_at?: string
+          due_date?: string | null
+          exception_type?: string
+          follow_up_date?: string | null
+          fund_id?: string | null
+          id?: string
+          related_record_id?: string | null
+          related_record_type?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source_ref?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ops_saved_views: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          user_id: string
+          view: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name: string
+          user_id: string
+          view: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          user_id?: string
+          view?: string
+        }
+        Relationships: []
+      }
+      ops_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      ops_settings_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          key: string
+          new_value: Json | null
+          old_value: Json | null
+          reason: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          key: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          key?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       partnership_return_details: {
         Row: {
           answers: Json
@@ -32814,15 +33041,19 @@ export type Database = {
       pricing_items: {
         Row: {
           amount_cents: number | null
+          available_for_new_quotes: boolean
           category: string
           condition: string | null
           created_at: string
+          historical: boolean
           id: string
           label: string
           pass_through: boolean
           pricing_model: string
           pricing_tiers: Json | null
           rate_bps: number | null
+          retired_at: string | null
+          retired_reason: string | null
           service_key: string | null
           sort_order: number
           unit: string | null
@@ -32830,15 +33061,19 @@ export type Database = {
         }
         Insert: {
           amount_cents?: number | null
+          available_for_new_quotes?: boolean
           category?: string
           condition?: string | null
           created_at?: string
+          historical?: boolean
           id?: string
           label: string
           pass_through?: boolean
           pricing_model?: string
           pricing_tiers?: Json | null
           rate_bps?: number | null
+          retired_at?: string | null
+          retired_reason?: string | null
           service_key?: string | null
           sort_order?: number
           unit?: string | null
@@ -32846,15 +33081,19 @@ export type Database = {
         }
         Update: {
           amount_cents?: number | null
+          available_for_new_quotes?: boolean
           category?: string
           condition?: string | null
           created_at?: string
+          historical?: boolean
           id?: string
           label?: string
           pass_through?: boolean
           pricing_model?: string
           pricing_tiers?: Json | null
           rate_bps?: number | null
+          retired_at?: string | null
+          retired_reason?: string | null
           service_key?: string | null
           sort_order?: number
           unit?: string | null
@@ -36672,6 +36911,92 @@ export type Database = {
           },
         ]
       }
+      service_review_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event: string
+          from_status: string | null
+          id: string
+          note: string | null
+          review_id: string
+          to_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          review_id: string
+          to_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          review_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_review_events_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "service_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_reviews: {
+        Row: {
+          created_at: string
+          fund_id: string
+          id: string
+          owner_user_id: string | null
+          reason: string
+          resolution: string | null
+          service_engagement_id: string | null
+          source_ref: string
+          status: string
+          trigger_type: string
+          updated_at: string
+          usage_detail: Json | null
+        }
+        Insert: {
+          created_at?: string
+          fund_id: string
+          id?: string
+          owner_user_id?: string | null
+          reason: string
+          resolution?: string | null
+          service_engagement_id?: string | null
+          source_ref: string
+          status?: string
+          trigger_type: string
+          updated_at?: string
+          usage_detail?: Json | null
+        }
+        Update: {
+          created_at?: string
+          fund_id?: string
+          id?: string
+          owner_user_id?: string | null
+          reason?: string
+          resolution?: string | null
+          service_engagement_id?: string | null
+          source_ref?: string
+          status?: string
+          trigger_type?: string
+          updated_at?: string
+          usage_detail?: Json | null
+        }
+        Relationships: []
+      }
       service_sla_policies: {
         Row: {
           active: boolean
@@ -37796,9 +38121,12 @@ export type Database = {
           created_by: string | null
           description: string | null
           due_date: string | null
+          escalated_at: string | null
+          follow_up_date: string | null
           id: string
           information_request_type: string | null
           information_required: boolean
+          last_reminder_at: string | null
           offering_id: string | null
           prepared_by: string | null
           priority: string
@@ -37831,6 +38159,7 @@ export type Database = {
           waiting_on_entity_id: string | null
           waiting_on_name: string | null
           waiting_on_type: string | null
+          waiting_since: string | null
         }
         Insert: {
           approval_amount?: number | null
@@ -37847,9 +38176,12 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           due_date?: string | null
+          escalated_at?: string | null
+          follow_up_date?: string | null
           id?: string
           information_request_type?: string | null
           information_required?: boolean
+          last_reminder_at?: string | null
           offering_id?: string | null
           prepared_by?: string | null
           priority?: string
@@ -37882,6 +38214,7 @@ export type Database = {
           waiting_on_entity_id?: string | null
           waiting_on_name?: string | null
           waiting_on_type?: string | null
+          waiting_since?: string | null
         }
         Update: {
           approval_amount?: number | null
@@ -37898,9 +38231,12 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           due_date?: string | null
+          escalated_at?: string | null
+          follow_up_date?: string | null
           id?: string
           information_request_type?: string | null
           information_required?: boolean
+          last_reminder_at?: string | null
           offering_id?: string | null
           prepared_by?: string | null
           priority?: string
@@ -37933,6 +38269,7 @@ export type Database = {
           waiting_on_entity_id?: string | null
           waiting_on_name?: string | null
           waiting_on_type?: string | null
+          waiting_since?: string | null
         }
         Relationships: [
           {
@@ -37957,6 +38294,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      staff_time_entries: {
+        Row: {
+          approval_id: string | null
+          created_at: string
+          fund_id: string | null
+          id: string
+          minutes: number
+          note: string | null
+          request_id: string | null
+          service_engagement_id: string | null
+          task_id: string | null
+          user_id: string
+          work_date: string
+          workflow_id: string | null
+          workflow_type: string | null
+        }
+        Insert: {
+          approval_id?: string | null
+          created_at?: string
+          fund_id?: string | null
+          id?: string
+          minutes: number
+          note?: string | null
+          request_id?: string | null
+          service_engagement_id?: string | null
+          task_id?: string | null
+          user_id: string
+          work_date?: string
+          workflow_id?: string | null
+          workflow_type?: string | null
+        }
+        Update: {
+          approval_id?: string | null
+          created_at?: string
+          fund_id?: string | null
+          id?: string
+          minutes?: number
+          note?: string | null
+          request_id?: string | null
+          service_engagement_id?: string | null
+          task_id?: string | null
+          user_id?: string
+          work_date?: string
+          workflow_id?: string | null
+          workflow_type?: string | null
+        }
+        Relationships: []
       }
       standard_agreement_components: {
         Row: {
