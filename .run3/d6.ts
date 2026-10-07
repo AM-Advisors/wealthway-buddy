@@ -1,6 +1,6 @@
 import { N, U, step, db } from "./lib";
 const ds = await import("@/lib/distributions.server");
-const B = "ae61d9aa-7c81-4778-8fa3-e4a167ed574f";
+const B = "a50204b1-aa68-469b-a95e-1d75b8fceaa3";
 const d = await db();
 const BA = (await d.from("bank_accounts").select("id").eq("offering_id", N).single()).data.id;
 const { data: lines } = await d.from("distribution_lines").select("id,display_name,investor_user_id,net_cents").eq("batch_id", B);
