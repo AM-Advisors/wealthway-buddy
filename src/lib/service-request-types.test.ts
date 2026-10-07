@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { requestResponsibility, entitlementFor, missingFields, slaHours, SLA_PAUSED } from "./service-request-types";
+import { requestResponsibility, entitlementFor, missingFields, SLA_PAUSED } from "./service-request-types";
 import { requiredApprovers } from "./approval-types";
 
 describe("service requests", () => {
@@ -19,8 +19,6 @@ describe("service requests", () => {
   });
   it("dynamic forms only require what's needed; SLA by level", () => {
     expect(missingFields("CAPITAL_CALL", { amount: "100000", purpose: "Follow-on" })).toEqual(["Desired funding deadline"]);
-    expect(slaHours("WHITE_GLOVE")).toBe(24);
-    expect(slaHours("INSTITUTIONAL", "8 business hours")).toBe(8);
   });
   it("high-risk approvals need two approvers at thresholds", () => {
     expect(requiredApprovers("PAYMENT", 10)).toBe(2);

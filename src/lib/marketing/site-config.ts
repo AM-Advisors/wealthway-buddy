@@ -274,9 +274,6 @@ export interface PricingSection {
 export const PRICING: PricingSection[] = [
   { id: "spvs", title: "SPVs", items: [
     { name: "New fund or SPV setup", description: "One-time setup fee, paid when the request is sent. Investor Onboarding included for SPVs.", kind: "fixed", amountUsd: 2500, unit: "one-time", approved: true },
-    { name: "SPV raising under $250,000", description: "SPV fee based on the amount raised.", kind: "fixed", amountUsd: 5000, unit: "per SPV", approved: true },
-    { name: "SPV raising $250,000 to $1,000,000", description: "SPV fee based on the amount raised.", kind: "fixed", amountUsd: 7500, unit: "per SPV", approved: true },
-    { name: "SPV raising over $1,000,000", description: "SPV fee based on the amount raised.", kind: "fixed", amountUsd: 10000, unit: "per SPV", approved: true },
   ] },
   { id: "fund_administration", title: "Fund Administration", items: [
     { name: "Fund administration", description: "Capital accounts, statements, wire-instruction management and deadline tracking included. Priced from your statement of work.", kind: "custom", approved: true },
@@ -323,18 +320,6 @@ export const COMPARISON_PAGES: ComparisonPage[] = [
 ];
 
 /** Raise-based SPV fee tiers shown publicly (mirrors the current rate card). */
-export const SPV_RAISE_TIERS = [
-  { maxUsd: 250_000, feeUsd: 5000, label: "Under $250,000" },
-  { maxUsd: 1_000_000, feeUsd: 7500, label: "$250,000 to $1,000,000" },
-  { maxUsd: 5_000_000, feeUsd: 12500, label: "$1,000,000 to $5,000,000" },
-  { maxUsd: 10_000_000, feeUsd: 15000, label: "$5,000,000 to $10,000,000" },
-] as const;
-
-/** Returns the priced tier, or null when the raise is $10,000,000+ (custom quote). */
-export function spvFeeForRaise(raiseUsd: number) {
-  return SPV_RAISE_TIERS.find((t) => raiseUsd < t.maxUsd) ?? null;
-}
-
 export type CalcItem = { key: string; name: string; kind: "count" | "toggle" | "custom"; amountUsd?: number; unit?: "one-time" | "year" | "month"; note?: string };
 
 /** Basic, fixed-price add-ons the public calculator totals; everything else is quoted. */

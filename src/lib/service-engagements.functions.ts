@@ -75,6 +75,8 @@ const Upsert = z.object({
   reporting_frequency: z.enum(["MONTHLY", "QUARTERLY", "ANNUAL", "CUSTOM"]).nullable().optional(),
   nav_frequency: z.enum(["MONTHLY", "QUARTERLY", "ANNUAL", "CUSTOM"]).nullable().optional(),
   response_sla: z.string().max(200).nullable().optional(),
+  sla_initial_response_hours: z.number().positive().max(10000).nullable().optional(),
+  sla_resolution_target_hours: z.number().positive().max(100000).nullable().optional(),
   investor_limit: z.number().int().min(0).nullable().optional(),
   investment_limit: z.number().int().min(0).nullable().optional(),
   entity_limit: z.number().int().min(0).nullable().optional(),
@@ -212,6 +214,18 @@ export const getFundServices = createServerFn({ method: "GET" })
   });
 
 /** Public pricing (current versions only). */
+/** Current SPV transaction (raise-based, one-time) pricing bands — the single public source. */
+export const getPublicSpvTransactionPricing = createServerFn({ method: "GET" }).handler(async () => {
+  const { createClient } = await import("@supabase/supabase-js");
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  const c = createClient(process.env["SUPABASE_URL"]!, key, {
+    auth: { persistSession: false },
+    global: { fetch: (input, init) => { const h = new Headers(init?.headers); if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); } },
+  });
+  const { data } = await c.from("spv_transaction_pricing").select("id, label, min_raise_usd, max_raise_usd, fee_usd, sort_order").eq("is_current", true).order("sort_order");
+  return ((data ?? []) as any[]).map((b) => ({ id: b.id as string, label: b.label as string, min_raise_usd: Number(b.min_raise_usd), max_raise_usd: b.max_raise_usd == null ? null : Number(b.max_raise_usd), fee_usd: b.fee_usd == null ? null : Number(b.fee_usd), sort_order: Number(b.sort_order) }));
+});
+
 export const getPublicServicePricing = createServerFn({ method: "GET" }).handler(async () => {
   const { createClient } = await import("@supabase/supabase-js");
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
