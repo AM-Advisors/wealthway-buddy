@@ -50,7 +50,7 @@ async function pilotRow(pilotId: string) {
   return data;
 }
 
-async function event(p: { pilotId: string | null; offeringId: string; event: string; from?: string | null; to?: string | null; detail?: Record<string, unknown>; actor: string }) {
+async function event(p: { pilotId: string | null; offeringId: string; event: string; from?: string | null | undefined; to?: string | null | undefined; detail?: Record<string, unknown>; actor: string }) {
   await db().from("financial_pilot_events").insert({
     pilot_id: p.pilotId,
     offering_id: p.offeringId,
@@ -126,7 +126,7 @@ export async function candidateFactorSuggestion(userId: string, offeringId: stri
   return suggestedFactors(offeringId);
 }
 
-export async function recordCandidateScore(userId: string, input: { offeringId: string; factors: CandidateFactors; note?: string | null }) {
+export async function recordCandidateScore(userId: string, input: { offeringId: string; factors: CandidateFactors; note?: string | null | undefined }) {
   await staff(userId);
   const r = scoreCandidate(input.factors);
   await db().from("financial_pilot_candidate_scores").insert({
@@ -299,7 +299,7 @@ export async function pilotReadiness(userId: string, offeringId: string) {
   return { pilot: pilot ?? null, readiness, facts, opening, harmonious, variances, signoffs, decisions, events, openingRows, materiality };
 }
 
-export async function transitionPilot(userId: string, input: { pilotId: string; to: PilotStatus; reason: string; periodLabel?: string | null; periodStart?: string | null; periodEnd?: string | null }) {
+export async function transitionPilot(userId: string, input: { pilotId: string; to: PilotStatus; reason: string; periodLabel?: string | null | undefined; periodStart?: string | null | undefined; periodEnd?: string | null | undefined }) {
   await staff(userId);
   const p = await pilotRow(input.pilotId);
   if (input.to === "cutover_approved") fail("Cutover is recorded only through the cutover decision.");
@@ -339,7 +339,7 @@ export async function transitionPilot(userId: string, input: { pilotId: string; 
 
 /* ---------------- Opening data, variances, materiality ---------------- */
 
-export async function addOpeningBalance(userId: string, input: { pilotId: string; category: string; label?: string | null; positionId?: string | null; officialCents: number; sourceDocument: string }) {
+export async function addOpeningBalance(userId: string, input: { pilotId: string; category: string; label?: string | null | undefined; positionId?: string | null | undefined; officialCents: number; sourceDocument: string }) {
   await staff(userId);
   const p = await pilotRow(input.pilotId);
   if (!["selected", "opening_data"].includes(p.status)) fail("Opening balances are entered after the fund is selected and before the parallel period starts.");
@@ -350,7 +350,7 @@ export async function addOpeningBalance(userId: string, input: { pilotId: string
   return { ok: true };
 }
 
-export async function raiseVariance(userId: string, input: { pilotId: string; kind: "variance" | "migration_exception"; periodLabel: string; metric: string; positionId?: string | null; component?: string | null; officialCents: number; harmoniousCents: number; source: string; cause?: string | null; ownerUserId?: string | null }) {
+export async function raiseVariance(userId: string, input: { pilotId: string; kind: "variance" | "migration_exception"; periodLabel: string; metric: string; positionId?: string | null | undefined; component?: string | null | undefined; officialCents: number; harmoniousCents: number; source: string; cause?: string | null | undefined; ownerUserId?: string | null | undefined }) {
   await staff(userId);
   const p = await pilotRow(input.pilotId);
   const { data: tol } = await db().from("financial_pilot_materiality").select("tolerance_cents").eq("pilot_id", p.id).eq("metric", input.metric).order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -399,7 +399,7 @@ export async function setMateriality(userId: string, input: { pilotId: string; m
 
 /* ---------------- Sign-off & decision ---------------- */
 
-export async function signOffPilot(userId: string, input: { pilotId: string; role: SignoffRole; confirmations: Record<string, boolean>; note?: string | null }) {
+export async function signOffPilot(userId: string, input: { pilotId: string; role: SignoffRole; confirmations: Record<string, boolean>; note?: string | null | undefined }) {
   const roles = await staff(userId);
   const p = await pilotRow(input.pilotId);
   if (p.status !== "parallel_closed") fail("Sign-off happens after the parallel close is complete.");
