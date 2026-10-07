@@ -179,7 +179,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
           console.warn("SS-4 prefill kept on request only:", error.message);
           await db.from("staff_tasks").insert({
             title: `SS-4 answers not saved for ${r.fund_name}`, description: "The client's SS-4 answers are on the fund request. Copy them into EIN & SS-4.",
-            priority: "high", status: "open", created_by: context.userId, team: "operations", offering_id: offeringId, client_id: data.clientId,
+            priority: "high", status: "open", created_by: context.userId, team: "operations", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "client_fund_request", offering_id: offeringId, client_id: data.clientId,
           } as any).then(() => undefined, () => undefined);
         }
       }

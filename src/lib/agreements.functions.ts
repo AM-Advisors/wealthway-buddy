@@ -421,7 +421,7 @@ async function notifyCountersign(clientId: string, label: string, actor: string)
     const { data: dup } = await db.from("staff_tasks").select("id").eq("title", title).neq("status", "done").limit(1);
     if ((dup ?? []).length) return;
     const { data: owner } = await db.from("client_team_assignments").select("user_id").eq("client_id", clientId).eq("team_role", "sales").maybeSingle();
-    await db.from("staff_tasks").insert({ title, description: "The client has signed. A CEO, Super Admin or Legal signer must countersign on Sales -> MSAs & SOWs before it is active.", priority: "high", team: "sales", assignee_user_id: (owner as any)?.user_id ?? null, created_by: actor });
+    await db.from("staff_tasks").insert({ title, description: "The client has signed. A CEO, Super Admin or Legal signer must countersign on Sales -> MSAs & SOWs before it is active.", priority: "high", team: "sales", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "agreement_countersign", source: "workflow", assignee_user_id: (owner as any)?.user_id ?? null, created_by: actor });
   } catch (e) { console.error("countersign task failed", e); }
 }
 

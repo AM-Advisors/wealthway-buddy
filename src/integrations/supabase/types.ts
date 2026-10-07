@@ -17175,6 +17175,222 @@ export type Database = {
           },
         ]
       }
+      fund_calendar_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          fund_id: string
+          id: string
+          item_id: string | null
+          kind: string
+          rule_id: string | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          fund_id: string
+          id?: string
+          item_id?: string | null
+          kind: string
+          rule_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          fund_id?: string
+          id?: string
+          item_id?: string | null
+          kind?: string
+          rule_id?: string | null
+        }
+        Relationships: []
+      }
+      fund_calendar_items: {
+        Row: {
+          category: string
+          client_visibility: boolean
+          created_at: string
+          created_by: string | null
+          due_date: string
+          fund_id: string
+          generate_task: boolean
+          id: string
+          notes_client: string | null
+          notes_internal: string | null
+          period_label: string | null
+          report_status: string | null
+          responsible_party: string
+          responsible_team: string | null
+          rule_id: string | null
+          source: string
+          source_ref: string | null
+          start_date: string | null
+          status: string
+          task_id: string | null
+          task_lead_days: number
+          title: string
+          updated_at: string
+          workflow_id: string | null
+          workflow_type: string | null
+        }
+        Insert: {
+          category: string
+          client_visibility?: boolean
+          created_at?: string
+          created_by?: string | null
+          due_date: string
+          fund_id: string
+          generate_task?: boolean
+          id?: string
+          notes_client?: string | null
+          notes_internal?: string | null
+          period_label?: string | null
+          report_status?: string | null
+          responsible_party?: string
+          responsible_team?: string | null
+          rule_id?: string | null
+          source?: string
+          source_ref?: string | null
+          start_date?: string | null
+          status?: string
+          task_id?: string | null
+          task_lead_days?: number
+          title: string
+          updated_at?: string
+          workflow_id?: string | null
+          workflow_type?: string | null
+        }
+        Update: {
+          category?: string
+          client_visibility?: boolean
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          fund_id?: string
+          generate_task?: boolean
+          id?: string
+          notes_client?: string | null
+          notes_internal?: string | null
+          period_label?: string | null
+          report_status?: string | null
+          responsible_party?: string
+          responsible_team?: string | null
+          rule_id?: string | null
+          source?: string
+          source_ref?: string | null
+          start_date?: string | null
+          status?: string
+          task_id?: string | null
+          task_lead_days?: number
+          title?: string
+          updated_at?: string
+          workflow_id?: string | null
+          workflow_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_calendar_items_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_calendar_items_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "fund_calendar_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_calendar_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: true
+            referencedRelation: "staff_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_calendar_rules: {
+        Row: {
+          active: boolean
+          annual_day: number | null
+          annual_month: number | null
+          cadence: string
+          category: string
+          client_visibility: boolean
+          created_at: string
+          created_by: string | null
+          due_day_offset: number
+          feature_key: string | null
+          fund_id: string
+          generate_task: boolean
+          id: string
+          responsible_party: string
+          responsible_team: string | null
+          source: string
+          task_lead_days: number
+          template_key: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          annual_day?: number | null
+          annual_month?: number | null
+          cadence: string
+          category: string
+          client_visibility?: boolean
+          created_at?: string
+          created_by?: string | null
+          due_day_offset?: number
+          feature_key?: string | null
+          fund_id: string
+          generate_task?: boolean
+          id?: string
+          responsible_party?: string
+          responsible_team?: string | null
+          source?: string
+          task_lead_days?: number
+          template_key?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          annual_day?: number | null
+          annual_month?: number | null
+          cadence?: string
+          category?: string
+          client_visibility?: boolean
+          created_at?: string
+          created_by?: string | null
+          due_day_offset?: number
+          feature_key?: string | null
+          fund_id?: string
+          generate_task?: boolean
+          id?: string
+          responsible_party?: string
+          responsible_team?: string | null
+          source?: string
+          task_lead_days?: number
+          template_key?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_calendar_rules_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_client_reassignments: {
         Row: {
           from_client_id: string | null

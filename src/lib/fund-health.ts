@@ -1,51 +1,51 @@
 /**
- * Pure fund health projections. Read-only: nothing here changes state.
+ * Fund Health — derived, conservative, never manually set. Categories appear only when backed by data;
+ * absence of data is "No data", never "Healthy".
  */
-export const STUCK_AFTER_DAYS = 7;
-export const DEADLINE_WINDOW_DAYS = 14;
+import { daysOverdue, isOpenTask } from "@/lib/responsibility";
 
-const DAY = 86_400_000;
+export type Health = "HEALTHY" | "ATTENTION_NEEDED" | "ACTION_REQUIRED" | "NO_DATA";
+export type CategoryHealth = "HEALTHY" | "IN_PROGRESS" | "ATTENTION_NEEDED" | "ACTION_REQUIRED" | "WAITING" | "NO_DATA";
 
-export type CalendarLike = { date: string; title: string; done?: boolean };
+export const HEALTH_LABEL: Record<Health, string> = { HEALTHY: "Healthy", ATTENTION_NEEDED: "Attention Needed", ACTION_REQUIRED: "Action Required", NO_DATA: "No Data" };
+export const CATEGORY_HEALTH_LABEL: Record<CategoryHealth, string> = { HEALTHY: "Healthy", IN_PROGRESS: "In Progress", ATTENTION_NEEDED: "Attention Needed", ACTION_REQUIRED: "Action Required", WAITING: "Waiting", NO_DATA: "No Data" };
 
-/** Next not-done calendar item on or after today. */
-export function nextDeadline(items: CalendarLike[], now = new Date()): CalendarLike | null {
-  const today = new Date(now.toISOString().slice(0, 10)).getTime();
-  return (
-    items
-      .filter((i) => !i.done && i.date && new Date(i.date).getTime() >= today)
-      .sort((a, b) => a.date.localeCompare(b.date))[0] ?? null
-  );
+type Task = { status: string; priority?: string | null; due_date?: string | null; responsibility_status?: string | null };
+type Item = { status: string; due_date: string; category: string; responsible_party?: string | null };
+
+const CLIENT = new Set(["CLIENT_APPROVAL_REQUIRED", "CLIENT_INFORMATION_REQUIRED"]);
+const WAIT = new Set(["WAITING_ON_INVESTOR", "WAITING_ON_THIRD_PARTY"]);
+const openItem = (i: Item) => i.status === "SCHEDULED" || i.status === "IN_PROGRESS";
+const itemOverdue = (i: Item, today: string) => openItem(i) && i.due_date < today ? Math.round((Date.parse(today) - Date.parse(i.due_date)) / 86_400_000) : 0;
+
+/** "Materially overdue" = client action 3+ days late, or an urgent/high item past due. */
+const MATERIAL_DAYS = 3;
+
+function grade(entries: { overdue: number; party: string | null | undefined; high: boolean; inProgress: boolean }[]): CategoryHealth {
+  if (!entries.length) return "NO_DATA";
+  if (entries.some((e) => e.overdue >= MATERIAL_DAYS && CLIENT.has(String(e.party))) || entries.some((e) => e.overdue > 0 && e.high)) return "ACTION_REQUIRED";
+  if (entries.some((e) => e.overdue > 0)) return "ATTENTION_NEEDED";
+  if (entries.some((e) => WAIT.has(String(e.party)))) return "WAITING";
+  if (entries.some((e) => e.inProgress)) return "IN_PROGRESS";
+  return "HEALTHY";
 }
 
-export type StuckFlag = { kind: "no_progress" | "deadline_soon"; label: string };
-
-/** Flags a fund with no activity for STUCK_AFTER_DAYS or a deadline within DEADLINE_WINDOW_DAYS. */
-export function stuckFlags(
-  input: { lastActivityAt: string | null; nextDeadlineDate: string | null; open?: boolean },
-  now = new Date(),
-): StuckFlag[] {
-  const flags: StuckFlag[] = [];
-  if (input.lastActivityAt) {
-    const days = Math.floor((now.getTime() - new Date(input.lastActivityAt).getTime()) / DAY);
-    if (days >= STUCK_AFTER_DAYS) flags.push({ kind: "no_progress", label: `No progress in ${days} days` });
+export function fundHealth(tasks: Task[], items: Item[], capital: { overdue: boolean } | null, today = new Date().toISOString().slice(0, 10)) {
+  const openTasks = tasks.filter(isOpenTask);
+  const taskEntries = openTasks.map((t) => ({ overdue: daysOverdue(t, today), party: t.responsibility_status, high: t.priority === "high" || t.priority === "urgent", inProgress: t.status === "in_progress" }));
+  const categories: { key: string; label: string; health: CategoryHealth }[] = [];
+  if (tasks.length) categories.push({ key: "ITEMS", label: "Open items", health: grade(taskEntries) });
+  const byCat = new Map<string, Item[]>();
+  for (const i of items) if (i.status !== "CANCELLED") byCat.set(i.category, [...(byCat.get(i.category) ?? []), i]);
+  for (const [cat, list] of byCat) {
+    const open = list.filter(openItem);
+    const h = open.length ? grade(open.map((i) => ({ overdue: itemOverdue(i, today), party: i.responsible_party, high: false, inProgress: i.status === "IN_PROGRESS" }))) : "HEALTHY";
+    categories.push({ key: cat, label: cat.charAt(0) + cat.slice(1).toLowerCase(), health: h });
   }
-  if (input.nextDeadlineDate) {
-    const days = Math.ceil((new Date(input.nextDeadlineDate).getTime() - now.getTime()) / DAY);
-    if (days >= 0 && days <= DEADLINE_WINDOW_DAYS) flags.push({ kind: "deadline_soon", label: `Deadline in ${days} day${days === 1 ? "" : "s"}` });
-  }
-  return flags;
-}
-
-/** Reminder spacing per investor. */
-export const REMINDER_COOLDOWN_DAYS = 3;
-export function reminderAllowed(lastSentAt: string | null, now = new Date()): boolean {
-  if (!lastSentAt) return true;
-  return now.getTime() - new Date(lastSentAt).getTime() >= REMINDER_COOLDOWN_DAYS * DAY;
-}
-/** Stages where a reminder is useful (Verification, Sign, Fund). */
-export function reminderStep(stage: string, docs: string, wiring: string): "verification" | "sign" | "fund" | null {
-  if (docs === "Signed") return /funded|reconciled/i.test(wiring) ? null : "fund";
-  if (docs === "Out for signature" || stage === "signature") return "sign";
-  return "verification";
+  if (capital) categories.push({ key: "CAPITAL_ACTIVITY", label: "Capital activity", health: capital.overdue ? "ATTENTION_NEEDED" : "IN_PROGRESS" });
+  const tracked = categories.filter((c) => c.health !== "NO_DATA");
+  const overall: Health = !tracked.length ? "NO_DATA"
+    : tracked.some((c) => c.health === "ACTION_REQUIRED") ? "ACTION_REQUIRED"
+    : tracked.some((c) => c.health === "ATTENTION_NEEDED") ? "ATTENTION_NEEDED" : "HEALTHY";
+  return { overall, categories };
 }
