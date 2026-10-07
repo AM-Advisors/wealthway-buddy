@@ -31,10 +31,10 @@ describe("pilot readiness", () => {
     expect(evaluateReadiness({ ...ready, serviceEngagement: false }).level).toBe("READY_WITH_EXCEPTIONS");
   });
   it("flags one person holding maker and checker roles", () => {
-    const s = { ...staff, accounting_reviewer: staff['accounting_preparer'] };
+    const s = { ...staff, accounting_reviewer: staff["accounting_preparer"]! };
     expect(segregationConflicts(s)).toHaveLength(1);
     expect(evaluateReadiness({ ...ready, staff: s }).level).toBe("NOT_READY");
-    expect(segregationConflicts({ ...staff, finance_payout: staff['distribution_reviewer'] })).toHaveLength(1);
+    expect(segregationConflicts({ ...staff, finance_payout: staff["distribution_reviewer"]! })).toHaveLength(1);
   });
 });
 
