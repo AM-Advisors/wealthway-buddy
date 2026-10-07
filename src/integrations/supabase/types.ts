@@ -25102,6 +25102,48 @@ export type Database = {
         }
         Relationships: []
       }
+      locked_edit_requests: {
+        Row: {
+          action: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          note: string | null
+          payload: Json
+          requested_by: string
+          resource_key: string
+          status: string
+          summary: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          note?: string | null
+          payload: Json
+          requested_by: string
+          resource_key: string
+          status?: string
+          summary?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          note?: string | null
+          payload?: Json
+          requested_by?: string
+          resource_key?: string
+          status?: string
+          summary?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
@@ -32713,6 +32755,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      record_locks: {
+        Row: {
+          locked_at: string
+          locked_by: string | null
+          resource_key: string
+        }
+        Insert: {
+          locked_at?: string
+          locked_by?: string | null
+          resource_key: string
+        }
+        Update: {
+          locked_at?: string
+          locked_by?: string | null
+          resource_key?: string
+        }
+        Relationships: []
       }
       record_retention: {
         Row: {

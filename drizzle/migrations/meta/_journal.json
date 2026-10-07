@@ -1170,6 +1170,13 @@
       "when": 1791334418598,
       "tag": "0166_iso_gdpr_controls_privacy_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 167,
+      "version": "7",
+      "when": 1791334764785,
+      "tag": "0167_record_locks_edit_requests",
+      "breakpoints": true
     }
   ]
 }
