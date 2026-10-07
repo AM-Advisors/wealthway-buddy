@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  addControlMapping, addManualEvidence, collectRbacEvidence, createAccessReview, decideAccessReview, getCompliance,
-  recordControlStatus, reviewEvidence, saveControlVersion, saveRecord,
+  addControlMapping, addManualEvidence, collectRbacEvidence, createAccessReview, decideAccessReview, downloadEvidenceDocument, getCompliance,
+  recordControlStatus, registerEvidenceDocument, reviewEvidence, saveControlVersion, saveRecord,
 } from "@/lib/compliance-controls.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { CONTROL_STATUSES, CONTROL_TYPES, EVIDENCE_QUERIES, FREQUENCIES, PRIVACY_KINDS, REGISTERS, registerPermissions, STATUS_LABEL } from "@/lib/compliance-model";
 
 type Data = { perms: string[]; me: string; staff: { id: string; label: string }[]; dashboard: any; controls: any[]; evidence: any[]; requirements: any[]; reviews: any[]; records: any[]; recordHistory: any[]; providers: any[]; report: any[] };
@@ -200,21 +201,56 @@ function Evidence({ d }: { d: Data }) {
   const collect = useServerFn(collectRbacEvidence);
   const manual = useServerFn(addManualEvidence);
   const review = useServerFn(reviewEvidence);
+  const registerDoc = useServerFn(registerEvidenceDocument);
+  const downloadDoc = useServerFn(downloadEvidenceDocument);
   const [qk, setQk] = useState<string>("super_admins");
   const [ps, setPs] = useState(quarterStart()); const [pe, setPe] = useState(today());
   const [m, setM] = useState({ control_key: d.controls[0]?.control_key ?? "", evidence_type: "", source: "", artifact_reference: "", note: "" });
+  const [doc, setDoc] = useState({ control_key: d.controls[0]?.control_key ?? "", framework: "SOC 2", evidence_type: "", source: "", note: "" });
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const can = (p: string) => d.perms.includes(p);
   const name = (id: string | null) => d.staff.find((s) => s.id === id)?.label ?? (id ? "Unknown" : "-");
+  const uploadDoc = async () => {
+    if (!file) { toast.error("Choose a file first."); return; }
+    if (file.size > 50 * 1024 * 1024) { toast.error("Files must be under 50 MB."); return; }
+    setBusy(true);
+    try {
+      const path = `evidence/${doc.control_key}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const { error } = await supabase.storage.from("compliance-evidence").upload(path, file);
+      if (error) throw new Error(error.message);
+      await act(() => registerDoc({ data: { ...doc, framework: doc.framework as any, period_start: ps || null, period_end: pe || null, file_path: path } }), "Evidence document saved");
+      setFile(null); setDoc({ ...doc, evidence_type: "", source: "", note: "" });
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Upload failed."); }
+    finally { setBusy(false); }
+  };
+  const download = async (id: string) => {
+    try { const r = await downloadDoc({ data: { evidence_id: id } }); window.open((r as any).url, "_blank", "noopener"); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Could not download."); }
+  };
   return (
     <div className="space-y-4">
       {can("administration.evidence.collect") && (
-        <Card><CardHeader className="pb-2"><CardTitle className="text-base">Generate evidence from Access Control (read-only)</CardTitle></CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-2">
+        <Card><CardHeader className="pb-2"><CardTitle className="text-base">Upload an evidence document (SOC 2, ISO 27001, GDPR)</CardTitle></CardHeader>
+          <CardContent className="grid gap-2 md:grid-cols-3">
+            <select className={sel} value={doc.control_key} onChange={(e) => setDoc({ ...doc, control_key: e.target.value })}>{d.controls.map((c: any) => <option key={c.control_key}>{c.control_key}</option>)}</select>
+            <select className={sel} value={doc.framework} onChange={(e) => setDoc({ ...doc, framework: e.target.value })}>{["SOC 2", "ISO 27001", "GDPR", "Other"].map((f) => <option key={f}>{f}</option>)}</select>
+            <Input placeholder="Document type (e.g. SOC 2 Type I report)" value={doc.evidence_type} onChange={(e) => setDoc({ ...doc, evidence_type: e.target.value })} />
+            <Input placeholder="Source (e.g. auditor firm name)" value={doc.source} onChange={(e) => setDoc({ ...doc, source: e.target.value })} />
+            <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <Input placeholder="Note" value={doc.note} onChange={(e) => setDoc({ ...doc, note: e.target.value })} />
+            <div className="flex items-center gap-2 md:col-span-3">
+              <Input type="date" className="w-40" value={ps} onChange={(e) => setPs(e.target.value)} /><Input type="date" className="w-40" value={pe} onChange={(e) => setPe(e.target.value)} />
+              <Button size="sm" disabled={busy || !file || !doc.evidence_type || !doc.source} onClick={uploadDoc}>{busy ? "Uploading…" : "Upload document"}</Button>
+              <span className="text-xs text-muted-foreground">Stored privately; a second person still reviews it before it counts as accepted evidence.</span>
+            </div>
+          </CardContent>
+          <CardContent className="flex flex-wrap items-center gap-2 border-t pt-3">
+            <span className="text-sm font-medium">Generate evidence from Access Control (read-only):</span>
             <select className={sel} value={qk} onChange={(e) => setQk(e.target.value)}>{Object.entries(EVIDENCE_QUERIES).map(([k, v]) => <option key={k} value={k}>{v.label} ({v.control})</option>)}</select>
-            <Input type="date" className="w-40" value={ps} onChange={(e) => setPs(e.target.value)} /><Input type="date" className="w-40" value={pe} onChange={(e) => setPe(e.target.value)} />
-            <Button size="sm" onClick={() => act(() => collect({ data: { query: qk as any, period_start: ps, period_end: pe } }), "Evidence collected")}>Collect</Button>
+            <Button size="sm" variant="outline" onClick={() => act(() => collect({ data: { query: qk as any, period_start: ps, period_end: pe } }), "Evidence collected")}>Collect</Button>
           </CardContent>
           <CardContent className="grid gap-2 border-t pt-3 md:grid-cols-3">
             <select className={sel} value={m.control_key} onChange={(e) => setM({ ...m, control_key: e.target.value })}>{d.controls.map((c: any) => <option key={c.control_key}>{c.control_key}</option>)}</select>
