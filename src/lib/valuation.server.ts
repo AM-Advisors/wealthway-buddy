@@ -614,6 +614,9 @@ export async function decideValuation(
   if ((input.action === "return" || input.action === "reject") && (input.reason ?? "").trim().length < 4) {
     fail("Say why this valuation is being returned or rejected.");
   }
+  if (to === "approved" && String(valuation.prepared_by ?? "") === userId) {
+    fail("Maker/checker: the person who prepared a valuation cannot approve it.");
+  }
 
   const now = new Date().toISOString();
   const patch: Record<string, unknown> = { status: to, updated_at: now };
