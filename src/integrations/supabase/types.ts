@@ -7297,6 +7297,7 @@ export type Database = {
           control_key: string
           created_at: string
           evidence_type: string
+          file_path: string | null
           fingerprint: string | null
           id: string
           period_end: string | null
@@ -7315,6 +7316,7 @@ export type Database = {
           control_key: string
           created_at?: string
           evidence_type: string
+          file_path?: string | null
           fingerprint?: string | null
           id?: string
           period_end?: string | null
@@ -7333,6 +7335,7 @@ export type Database = {
           control_key?: string
           created_at?: string
           evidence_type?: string
+          file_path?: string | null
           fingerprint?: string | null
           id?: string
           period_end?: string | null
