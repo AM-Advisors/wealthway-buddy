@@ -7,7 +7,7 @@ const { data: lines } = await d.from("distribution_lines").select("id,display_na
 for (const l of lines ?? []) {
   const nm = l.display_name;
   const chk: any = await step(`${nm}: execution check`, () => ds.distributionExecutionCheck(U.prep, l.id));
-  if ((chk?.blockers ?? []).some((b: any) => /confirm/i.test(JSON.stringify(b)))) await step(`${nm}: investor confirms destination`, () => ds.investorConfirmDistribution(l.investor_user_id, l.id));
+  if ((chk?.blockers ?? []).length) await step(`${nm}: investor confirms destination`, () => ds.investorConfirmDistribution(l.investor_user_id, l.id));
   const ref = `QA3-DIST1-${nm.slice(-1)}`;
   const pay: any = await step(`${nm}: record manually initiated transfer (preparer; app sends no money)`, () => ds.executeDistributionPayment(U.prep, { lineId: l.id, provider: "manual_bank", externalReference: ref }));
   const pid = pay?.paymentId ?? pay?.id ?? pay?.payment?.id;
