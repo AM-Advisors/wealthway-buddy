@@ -251,6 +251,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "mk-channels", title: "Channels", url: "/marketing/channels", icon: "check" },
     { id: "mk-drive", title: "Drive & sheets", url: "/marketing/drive", icon: "document" },
     { id: "mk-collateral", title: "Collateral Studio", url: "/marketing/collateral", icon: "document" },
+    { id: "mk-classroom", title: "Classroom", url: "/marketing/classroom", icon: "document" },
     { id: "mk-imports", title: "Imports", url: "/marketing/imports", icon: "document" },
   ] : [];
 
