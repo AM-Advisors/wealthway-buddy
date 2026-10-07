@@ -274,6 +274,9 @@ export interface PricingSection {
 export const PRICING: PricingSection[] = [
   { id: "spvs", title: "SPVs", items: [
     { name: "New fund or SPV setup", description: "One-time setup fee, paid when the request is sent. Investor Onboarding included for SPVs.", kind: "fixed", amountUsd: 2500, unit: "one-time", approved: true },
+    { name: "SPV raising under $250,000", description: "Formation and administration for the life of the SPV.", kind: "fixed", amountUsd: 5000, unit: "per SPV", approved: true },
+    { name: "SPV raising $250,000 to $1,000,000", description: "Formation and administration for the life of the SPV.", kind: "fixed", amountUsd: 7500, unit: "per SPV", approved: true },
+    { name: "SPV raising over $1,000,000", description: "Formation and administration for the life of the SPV.", kind: "fixed", amountUsd: 10000, unit: "per SPV", approved: true },
   ] },
   { id: "fund_administration", title: "Fund Administration", items: [
     { name: "Fund administration", description: "Capital accounts, statements, wire-instruction management and deadline tracking included. Priced from your statement of work.", kind: "custom", approved: true },
@@ -317,4 +320,32 @@ export interface ComparisonPage {
 export const COMPARISON_PAGES: ComparisonPage[] = [
   { slug: "carta-alternative", competitor: "Carta", published: false },
   { slug: "pulley-alternative", competitor: "Pulley", published: false },
+];
+
+/** Raise-based SPV fee tiers shown publicly (mirrors the current rate card). */
+export const SPV_RAISE_TIERS = [
+  { maxUsd: 250_000, feeUsd: 5000, label: "Under $250,000" },
+  { maxUsd: 1_000_000, feeUsd: 7500, label: "$250,000 to $1,000,000" },
+  { maxUsd: null, feeUsd: 10000, label: "Over $1,000,000" },
+] as const;
+
+export function spvFeeForRaise(raiseUsd: number) {
+  return SPV_RAISE_TIERS.find((t) => t.maxUsd == null || raiseUsd < t.maxUsd)!;
+}
+
+export type CalcItem = { key: string; name: string; kind: "count" | "toggle" | "custom"; amountUsd?: number; unit?: "one-time" | "year" | "month"; note?: string };
+
+/** Basic, fixed-price add-ons the public calculator totals; everything else is quoted. */
+export const CALCULATOR_ITEMS: CalcItem[] = [
+  { key: "capital_call", name: "Capital calls", kind: "count", amountUsd: 2000, unit: "one-time", note: "$2,000 per call" },
+  { key: "additional_close", name: "Additional closes", kind: "count", amountUsd: 2000, unit: "one-time", note: "$2,000 per close" },
+  { key: "additional_asset", name: "Additional assets", kind: "count", amountUsd: 2000, unit: "one-time", note: "$2,000 per asset" },
+  { key: "de_management_llc", name: "Delaware Management LLC", kind: "toggle", amountUsd: 2000, unit: "year" },
+  { key: "de_master_llc", name: "Delaware Master LLC", kind: "toggle", amountUsd: 2500, unit: "year" },
+  { key: "k1_tax", name: "K-1 / 1065 tax after the first tax year", kind: "toggle", amountUsd: 2500, unit: "year" },
+  { key: "white_label", name: "White-label portal", kind: "toggle", amountUsd: 100, unit: "month" },
+  { key: "fund_admin", name: "Fund administration (non-SPV)", kind: "custom" },
+  { key: "investor_onboarding", name: "Investor Onboarding for non-SPV funds", kind: "custom" },
+  { key: "state_tax", name: "State returns and 1042-S", kind: "custom" },
+  { key: "audit_support", name: "Audit, valuation or other services", kind: "custom" },
 ];
