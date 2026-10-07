@@ -734,49 +734,62 @@ export async function calculateAllocations(
     position.distributionsCents = distributionShare.get(position.positionId) ?? 0;
   }
 
-  // ---- management fees from versioned terms, traced per investor
+  // ---- management fees from structured terms: investor > class > fund, approved + effective only
   const termRows = await feeTermsFor(offeringId);
   const perPositionFees: Record<string, number> = {};
   const feeRecords: any[] = [];
   if (termRows.length > 0) {
-    for (const position of inputs) {
-      const row =
-        termRows.find((t) => t.position_id === position.positionId) ??
-        termRows.find((t) => t.class_id && t.class_id === position.classId) ??
-        termRows.find((t) => !t.position_id && !t.class_id) ??
-        null;
-      if (!row) {
-        perPositionFees[position.positionId] = 0;
-        continue;
-      }
-      const term = toFeeTerm(row);
-      const basisAmount =
-        term.basis === "committed_capital"
-          ? position.commitmentCents
-          : term.basis === "invested_capital"
-            ? position.contributedToDateCents
-            : term.basis === "net_asset_value"
-              ? position.beginningCapitalCents
-              : term.basis === "cost_basis"
-                ? position.contributedToDateCents
-                : 0;
-      const fee = managementFee(term, basisAmount, period);
-      perPositionFees[position.positionId] = fee.netFeeCents;
+    const { computeFeeRun, TERM_CONFLICT_MESSAGE } = await import("@/lib/economic-terms");
+    const structured = termRows.map((row) => ({
+      ...toFeeTerm(row),
+      id: row.id,
+      classId: row.class_id ?? null,
+      positionId: row.position_id ?? null,
+      version: Number(row.version ?? 1),
+      approvalStatus: row.approval_status ?? "approved",
+      sourceDocument: row.source_document ?? null,
+      sideLetterId: row.side_letter_id ?? null,
+    }));
+    const feeRun = computeFeeRun(
+      structured,
+      inputs.map((p) => ({
+        positionId: p.positionId,
+        classId: p.classId ?? null,
+        commitmentCents: p.commitmentCents,
+        contributedToDateCents: p.contributedToDateCents,
+        beginningCapitalCents: p.beginningCapitalCents,
+      })),
+      period,
+    );
+    if (feeRun.blocked) {
+      fail(
+        `${TERM_CONFLICT_MESSAGE}: ${feeRun.conflicts.length} investor(s) have two differing active fee terms at the same level.`,
+      );
+    }
+    for (const line of feeRun.lines) {
+      perPositionFees[line.positionId] = line.netFeeCents;
+      if (!line.sourceTermId) continue;
       feeRecords.push({
         offering_id: offeringId,
-        position_id: position.positionId,
-        term_id: row.id,
+        position_id: line.positionId,
+        term_id: line.sourceTermId,
         period_start: period.start,
         period_end: period.end,
-        basis: fee.basis,
-        basis_amount_cents: fee.basisAmountCents,
-        rate_bps: fee.rateBps,
-        gross_fee_cents: fee.grossFeeCents,
-        waiver_cents: fee.waiverCents,
-        offset_cents: fee.offsetCents,
-        net_fee_cents: fee.netFeeCents,
+        basis: line.basis,
+        basis_amount_cents: line.basisAmountCents,
+        rate_bps: line.effectiveRateBps,
+        gross_fee_cents: line.grossFeeCents,
+        waiver_cents: line.waiverCents,
+        offset_cents: line.offsetCents,
+        net_fee_cents: line.netFeeCents,
         ledger_fee_cents: handoff.managementFeesCents,
-        inputs: { frequency: term.frequency, startsOn: term.startsOn, stepDowns: term.stepDowns },
+        inputs: {
+          appliedLevel: line.appliedLevel,
+          fundDefaultBps: line.fundDefaultBps,
+          classBps: line.classBps,
+          investorOverrideBps: line.investorOverrideBps,
+          sourceDocument: line.sourceDocument,
+        },
       });
     }
   }
