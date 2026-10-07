@@ -89,7 +89,7 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
         .optional(),
     }).parse,
   )
-  .handler(async ({ data, context }) => __auto(await (await engine()).saveFundSetupFields(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
+  .handler(async ({ data, context }) => __auto(await (await import("@/lib/record-locks.server")).lockedSave("fund_fields", context as any, data, async () => (await engine()).saveFundSetupFields(context.userId, data)), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const previewLegalNameChangeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -108,14 +108,14 @@ export const changeLegalNameFn = createServerFn({ method: "POST" })
       reason: z.string().max(500).nullish(),
     }).parse,
   )
-  .handler(async ({ data, context }) => __auto(await (await engine()).changeLegalName(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
+  .handler(async ({ data, context }) => __auto(await (await import("@/lib/record-locks.server")).lockedSave("legal_name", context as any, data, async () => (await engine()).changeLegalName(context.userId, data)), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const saveFundEconomicsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({ offeringId: uuid, terms, classes: z.array(fundClass).max(20), changeReason: z.string().max(500).nullish() }).parse,
   )
-  .handler(async ({ data, context }) => __auto(await (await engine()).saveFundEconomics(context.userId, data as any), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
+  .handler(async ({ data, context }) => __auto(await (await import("@/lib/record-locks.server")).lockedSave("economics", context as any, data, async () => (await engine()).saveFundEconomics(context.userId, data as any)), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const assignInvestmentClassFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -259,7 +259,7 @@ export const setEinPathFn = createServerFn({ method: "POST" })
 export const recordEinFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, ein: z.string().trim().max(12), letterPath: z.string().min(3).max(400).nullish(), received: z.boolean() }).parse)
-  .handler(async ({ data, context }) => __auto(await (await p3()).recordEin(context.supabase, context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
+  .handler(async ({ data, context }) => __auto(await (await import("@/lib/record-locks.server")).lockedSave("ein", context as any, data, async () => (await p3()).recordEin(context.supabase, context.userId, data)), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const uploadSignedW9Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -296,7 +296,7 @@ export const saveAdministrationFn = createServerFn({ method: "POST" })
       blueSky: filing,
     }).parse,
   )
-  .handler(async ({ data, context }) => __auto(await (await p3()).saveAdministration(context.userId, data as any), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
+  .handler(async ({ data, context }) => __auto(await (await import("@/lib/record-locks.server")).lockedSave("administration", context as any, data, async () => (await p3()).saveAdministration(context.userId, data as any)), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const classAssignmentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

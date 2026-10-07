@@ -69,23 +69,10 @@ export const updateClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ clientId: uuid, patch: clientPatch }).parse(d))
   .handler(async ({ data, context }) => {
-    const { clientGate, audit } = await import("@/lib/client-admin.server");
-    const { db, userId } = await clientGate(context, "edit_client");
-    const { data: before } = await db.from("clients").select("*").eq("id", data.clientId).maybeSingle();
-    if (!before) throw new Error("Client not found.");
-    const patch: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(data.patch)) patch[k] = v === "" ? null : v;
-    const changes = diffClient(before, patch);
-    if (!changes.length) return { ok: true, changed: 0 };
-    const clean = Object.fromEntries(changes.map((c) => [c.field, c.after]));
-    const { error } = await db.from("clients").update(clean).eq("id", data.clientId);
-    if (error) throw new Error(error.message);
-    await audit(db, {
-      actor: userId, clientId: data.clientId, action: "client_edited",
-      before: Object.fromEntries(changes.map((c) => [c.field, c.before])),
-      after: clean,
-    });
-    return { ok: true, changed: changes.length };
+    const { clientGate, applyUpdateClient } = await import("@/lib/client-admin.server");
+    await clientGate(context, "edit_client");
+    const { lockedSave } = await import("@/lib/record-locks.server");
+    return lockedSave("client", context as any, data, () => applyUpdateClient(context, data));
   });
 
 /* --------------------------------------------------------- people */

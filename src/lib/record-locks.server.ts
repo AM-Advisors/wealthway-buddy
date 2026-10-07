@@ -68,8 +68,8 @@ export async function listLockedEdits(userId: string) {
   const db = await admin();
   const { data } = await db.from("locked_edit_requests").select("id, action, resource_key, summary, payload, requested_by, status, created_at, decided_at, note").order("created_at", { ascending: false }).limit(200);
   const ids = [...new Set(((data ?? []) as any[]).map((r) => r.requested_by))];
-  const { data: profs } = ids.length ? await db.from("profiles").select("id, full_name, email").in("id", ids) : { data: [] };
-  const names = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.full_name || p.email || "Unknown"]));
+  const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
+  const names = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Unknown"]));
   return ((data ?? []) as any[]).map((r) => ({ ...r, label: LOCKED_ACTIONS[r.action]?.label ?? r.action, requester: names.get(r.requested_by) ?? "Unknown", mine: r.requested_by === userId, payload: undefined, details: r.summary }));
 }
 

@@ -286,3 +286,20 @@ export async function ensureDraftSow(
   });
   return { outcome: before ? ("updated_draft" as const) : ("created_draft" as const), sowId, preview };
 }
+
+/** Apply a client metadata edit (used directly and when a locked edit is approved). */
+export async function applyUpdateClient(context: any, data: { clientId: string; patch: Record<string, unknown> }) {
+  const { diffClient } = await import("@/lib/client-admin-model");
+  const { db, userId } = await clientGate(context, "edit_client");
+  const { data: before } = await db.from("clients").select("*").eq("id", data.clientId).maybeSingle();
+  if (!before) throw new Error("Client not found.");
+  const patch: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(data.patch)) patch[k] = v === "" ? null : v;
+  const changes = diffClient(before, patch as any);
+  if (!changes.length) return { ok: true, changed: 0 };
+  const clean = Object.fromEntries(changes.map((c: any) => [c.field, c.after]));
+  const { error } = await db.from("clients").update(clean).eq("id", data.clientId);
+  if (error) throw new Error(error.message);
+  await audit(db, { actor: userId, clientId: data.clientId, action: "client_edited", before: Object.fromEntries(changes.map((c: any) => [c.field, c.before])), after: clean });
+  return { ok: true, changed: changes.length };
+}
