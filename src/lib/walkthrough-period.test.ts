@@ -33,13 +33,13 @@ describe("Walkthrough Phase 2B - first operating period", () => {
 
   it("investor funding behaviours are real, not all perfect", () => {
     const f = Object.fromEntries(r.match.funding.map((x) => [x.positionId, x]));
-    expect(f.northwind!.status).toBe("satisfied");
-    expect(f.cedar!.deposits).toBe(2);
-    expect(f.atlas).toMatchObject({ status: "partially_funded", outstandingCents: $(200_000) });
-    expect(f.kestrel!.late).toBe(true);
-    expect(f.juniper!.status).toBe("outstanding");
-    expect(f.erik!.status).toBe("outstanding");
-    expect(f.ada).toMatchObject({ contributionCents: $(300_000), overpaymentCents: $(50) });
+    expect(f["northwind"]!.status).toBe("satisfied");
+    expect(f["cedar"]!.deposits).toBe(2);
+    expect(f["atlas"]).toMatchObject({ status: "partially_funded", outstandingCents: $(200_000) });
+    expect(f["kestrel"]!.late).toBe(true);
+    expect(f["juniper"]!.status).toBe("outstanding");
+    expect(f["erik"]!.status).toBe("outstanding");
+    expect(f["ada"]).toMatchObject({ contributionCents: $(300_000), overpaymentCents: $(50) });
     expect(r.nav.overpaymentsHeldCents).toBe($(50));
   });
 
