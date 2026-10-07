@@ -210,3 +210,11 @@ export async function autoCompleteTasks(offeringId: string) {
   // Fund managers hear about completed steps (and service moves) straight away.
   await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
 }
+
+/** Re-run setup auto-completion after a save, resolving the fund from a fee row or offering document when needed. */
+export async function autoCompleteAfterSave(ref: { offeringId?: string; feeId?: string; documentId?: string }) {
+  let id = ref.offeringId ?? null;
+  if (!id && ref.feeId) id = ((await db().from("fund_fee_terms").select("offering_id").eq("id", ref.feeId).maybeSingle()).data as any)?.offering_id ?? null;
+  if (!id && ref.documentId) id = ((await db().from("offering_documents").select("offering_id").eq("id", ref.documentId).maybeSingle()).data as any)?.offering_id ?? null;
+  if (id) await autoCompleteTasks(id);
+}

@@ -6,6 +6,7 @@ const srv = () => import("@/lib/fund-tabs.server");
 const fund = z.object({ fundId: z.string().uuid() });
 const uuid = z.string().uuid();
 
+const __auto = async <T,>(r: T, ref: { offeringId?: string; feeId?: string; documentId?: string }) => { await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave(ref); return r; };
 export const investorGridFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorGrid(data.fundId); });
 
@@ -49,10 +50,10 @@ export const removeTeamMemberFn = createServerFn({ method: "POST" }).middleware(
 const pct = z.number().min(0).max(100).nullable();
 export const setFeesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(fund.extend({ managementFeePct: pct, managementFeeBasis: z.string().max(200), carryPct: pct, hurdlePct: pct, notes: z.string().max(2000) }).parse)
-  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.setFees(context.userId, data.fundId, data); });
+  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return __auto(await s.setFees(context.userId, data.fundId, data), { offeringId: data.fundId }); });
 
 export const decideFeesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(z.object({ feeId: uuid, approve: z.boolean() }).parse)
-  .handler(async ({ data, context }) => (await srv()).decideFees(context.userId, data.feeId, data.approve));
+  .handler(async ({ data, context }) => __auto(await (await srv()).decideFees(context.userId, data.feeId, data.approve), { feeId: data.feeId }));
 
 export const listFundFilesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.listFiles(data.fundId); });
