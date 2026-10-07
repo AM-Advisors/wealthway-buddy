@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { getServiceEngagementDetail, listServiceEngagements, saveServiceEngagement, setEngagementEntitlement } from "@/lib/service-engagements.functions";
+import { levelsFor } from "@/lib/service-ladders";
 import { serviceLevelLabel, titleCase, usd, fmtDate } from "@/lib/service-engagement-labels";
 
-const LEVELS = ["CORE", "FUND_ADMINISTRATION", "WHITE_GLOVE", "INSTITUTIONAL"];
 const PRODUCTS = ["SPV_ADMINISTRATION", "FUND_ADMINISTRATION", "CAP_TABLE", "TAX", "REGULATORY", "ENTITY_MANAGEMENT", "PAYMASTER", "REGISTERED_AGENT", "DEAL_ROOM", "BANKING", "OTHER"];
 const STATUSES = ["PROPOSED", "PENDING_AGREEMENT", "ACTIVE", "PAUSED", "CANCELLATION_PENDING", "CANCELLED", "EXPIRED"];
 const BILLING = ["ANNUAL", "QUARTERLY", "MONTHLY", "ONE_TIME", "CUSTOM"];
@@ -44,7 +44,7 @@ export function ServiceEngagementsAdmin() {
             {d.rows.map((r: any) => (
               <tr key={r.id} className="border-t">
                 <td className="p-2">{r.offerings?.name ?? "—"}<div className="text-xs text-muted-foreground">{r.clients?.name ?? ""}</div></td>
-                <td className="p-2">{serviceLevelLabel(r.service_level).name}<div className="text-xs text-muted-foreground">{titleCase(r.service_product)}</div></td>
+                <td className="p-2">{serviceLevelLabel(r.service_level, r.service_product).name}<div className="text-xs text-muted-foreground">{titleCase(r.service_product)}</div></td>
                 <td className="p-2"><Badge variant="outline">{titleCase(r.service_status)}</Badge></td>
                 <td className="p-2">{r.included_at_no_charge ? "Included" : usd(r.contracted_annual_value)}{r.pricing_type !== "CURRENT" ? <div className="text-xs text-muted-foreground">{titleCase(r.pricing_type)}</div> : null}</td>
                 <td className="p-2">{titleCase(r.billing_frequency)}</td>
@@ -103,8 +103,8 @@ function EngagementForm({ initial, data, onClose }: { initial: any; data: any; o
       <div className="flex items-center justify-between"><h2 className="text-lg">{f.id ? "Edit engagement" : "New engagement"}</h2><Button variant="ghost" size="sm" onClick={onClose}>Close</Button></div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Sel label="Fund" value={f.fund_id} options={data.funds.map((x: any) => x.id)} labels={fundLabels} onChange={(v) => set("fund_id", v)} />
-        <Sel label="Service product" value={f.service_product} options={PRODUCTS} onChange={(v) => set("service_product", v)} />
-        <Sel label="Service level" value={f.service_level} options={LEVELS} labels={Object.fromEntries(LEVELS.map((l) => [l, serviceLevelLabel(l).name]))} onChange={(v) => set("service_level", v)} />
+        <Sel label="Service product" value={f.service_product} options={PRODUCTS} onChange={(v) => setF((p: any) => ({ ...p, service_product: v, service_level: levelsFor(v).includes(p.service_level) ? p.service_level : levelsFor(v)[0] }))} />
+        <Sel label="Service level" value={f.service_level} options={levelsFor(f.service_product)} labels={Object.fromEntries(levelsFor(f.service_product).map((l) => [l, serviceLevelLabel(l, f.service_product).name]))} onChange={(v) => set("service_level", v)} />
         <Sel label="Status" value={f.service_status} options={STATUSES} onChange={(v) => set("service_status", v)} />
         <Sel label="Billing frequency" value={f.billing_frequency} options={BILLING} onChange={(v) => set("billing_frequency", v)} />
         <Sel label="Pricing type" value={f.pricing_type} options={PRICING} onChange={(v) => set("pricing_type", v)} />

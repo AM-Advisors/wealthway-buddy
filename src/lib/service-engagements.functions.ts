@@ -59,7 +59,7 @@ const Upsert = z.object({
   id: z.string().uuid().optional(),
   fund_id: z.string().uuid().nullable().optional(),
   service_product: z.string().min(2).max(60),
-  service_level: z.enum(["CORE", "FUND_ADMINISTRATION", "WHITE_GLOVE", "INSTITUTIONAL"]),
+  service_level: z.enum(["CORE", "PLUS", "FUND_ADMINISTRATION", "WHITE_GLOVE", "INSTITUTIONAL"]),
   service_status: z.enum(["PROPOSED", "PENDING_AGREEMENT", "ACTIVE", "PAUSED", "CANCELLATION_PENDING", "CANCELLED", "EXPIRED"]).optional(),
   billing_frequency: z.enum(["ANNUAL", "QUARTERLY", "MONTHLY", "ONE_TIME", "CUSTOM"]).nullable().optional(),
   contracted_annual_value: z.number().min(0).nullable().optional(),
@@ -104,6 +104,8 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
     const { id, ...fields } = data;
     const prior = id ? (await d.from("service_engagements").select("*").eq("id", id).maybeSingle()).data : null;
     if (id && !prior) throw new Error("Engagement not found.");
+    const ladders = await import("@/lib/service-ladders");
+    if (!ladders.isValidCombination(fields.service_product, fields.service_level)) throw new Error(`That level isn't offered for ${ladders.isLadderProduct(fields.service_product) ? ladders.SERVICE_LADDERS[fields.service_product].label : "this product"}.`);
     const { data: price } = await d.from("service_pricing_versions").select("*")
       .eq("service_product", fields.service_product).eq("service_level", fields.service_level).eq("is_current", true).maybeSingle();
 
@@ -128,7 +130,7 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
     const overrideChanged = !prior || isOverride && (prior.pricing_type !== fields.pricing_type || Number(prior.contracted_annual_value) !== Number(row.contracted_annual_value) || prior.grandfathered !== fields.grandfathered);
     if (isOverride && overrideChanged) assertPricingOverrideAllowed(isAdmin, fields);
     // Core is included with SPV pricing; every other level is billed (fixes Core → paid upgrades staying "included").
-    row.included_at_no_charge = fields.service_level === "CORE";
+    row.included_at_no_charge = (await import("@/lib/service-ladders")).isIncludedAtNoCharge(fields.service_product, fields.service_level);
 
     if (prior) {
       const { error } = await d.from("service_engagements").update(row).eq("id", id);
