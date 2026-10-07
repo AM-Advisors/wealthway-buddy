@@ -415,7 +415,7 @@ export async function syncServiceReviews(uid: string) {
   return { checked: rows.length };
 }
 
-export async function updateOpsSetting(uid: string, d: { key: string; value: any; reason: string }) {
+export async function updateOpsSetting(uid: string, d: { key: string; value?: unknown; reason: string }) {
   const s = await staffScope(uid);
   if (!has(s.roles, SETTINGS_ADMIN)) throw new Error("Only a Harmonious Admin can change Operations settings.");
   if (!["workload_weights", "capacity_thresholds", "service_limit_thresholds"].includes(d.key)) throw new Error("Unknown setting.");

@@ -37,7 +37,7 @@ export const opsSyncServiceReviews = createServerFn({ method: "POST" })
 
 export const opsUpdateSetting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ key: z.string(), value: z.any(), reason: z.string().max(1000) }).parse(d))
+  .inputValidator((d) => z.object({ key: z.string(), value: z.unknown().refine((v) => v !== undefined), reason: z.string().max(1000) }).parse(d))
   .handler(async ({ context, data }) => (await srv()).updateOpsSetting(context.userId, data));
 
 export const opsSavedViews = createServerFn({ method: "GET" })
