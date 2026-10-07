@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/marketing_/posts")({
   component: Posts,
 });
 
-const FILTERS = [["all", "All"], ["draft", "Drafts"], ["submitted", "Waiting"], ["scheduled", "Scheduled"], ["published", "Published"], ["failed", "Failed"]] as const;
+const FILTERS = [["all", "All"], ["draft", "Drafts"], ["submitted", "Awaiting approval"], ["scheduled", "Scheduled"], ["published", "Published"], ["failed", "Failed"]] as const;
 
 function Posts() {
   const load = useServerFn(getMarketingPosts);
