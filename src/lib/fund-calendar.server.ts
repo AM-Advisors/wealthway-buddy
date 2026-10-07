@@ -24,11 +24,12 @@ export async function listCalendar(uid: string, fundId: string) {
   const db = await admin();
   let q = db.from("fund_calendar_items").select(staff ? STAFF_COLS : CLIENT_COLS).eq("fund_id", fundId).neq("status", "CANCELLED").order("due_date").limit(1000);
   if (!staff) q = q.eq("client_visibility", true);
-  const [{ data: items }, rules] = await Promise.all([
+  const [{ data: items }, rules, { data: setting }] = await Promise.all([
     q,
     staff ? db.from("fund_calendar_rules").select("*").eq("fund_id", fundId).order("created_at") : Promise.resolve({ data: [] }),
+    staff ? db.from("fund_calendar_settings").select("auto_task_generation").eq("fund_id", fundId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
-  return { staff, items: (items ?? []) as any[], rules: ((rules as any).data ?? []) as any[] };
+  return { staff, items: (items ?? []) as any[], rules: ((rules as any).data ?? []) as any[], autoTasks: staff ? (setting as any)?.auto_task_generation ?? true : null };
 }
 
 export async function calendarHistory(uid: string, itemId: string) {
@@ -157,4 +158,14 @@ export async function generateDueTasks(uid: string, fundId: string, today = new 
     await db.from("fund_calendar_items").update({ task_id: taskId, updated_at: new Date().toISOString() }).eq("id", i.id).is("task_id", null);
   }
   return { created };
+}
+
+/** Staff-only switch for the daily automatic task generation (default On). Fund managers cannot change it. */
+export async function setAutoTasks(uid: string, fundId: string, on: boolean) {
+  await staffWriter(uid);
+  const db = await admin();
+  const { error } = await db.from("fund_calendar_settings").upsert({ fund_id: fundId, auto_task_generation: on, updated_by: uid, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+  await db.from("fund_calendar_events").insert({ fund_id: fundId, actor_user_id: uid, kind: on ? "auto_tasks_on" : "auto_tasks_off", detail: {} });
+  return { ok: true };
 }
