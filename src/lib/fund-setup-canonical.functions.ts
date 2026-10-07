@@ -278,7 +278,7 @@ export const saveSs4Fn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { responsible_party_tin: _drop, ...answers } = data.answers as Record<string, unknown>;
-    return (await p3()).saveSs4(context.supabase, context.userId, { ...data, answers });
+    return __auto(await (await p3()).saveSs4(context.supabase, context.userId, { ...data, answers }), { offeringId: data.offeringId });
   });
 
 export const setEinStatusFn = createServerFn({ method: "POST" })
