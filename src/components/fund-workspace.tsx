@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FundServicesTab } from "@/components/fund-services-tab";
 import { FundCommandCenter } from "@/components/fund-command-center";
 import { FundCalendar } from "@/components/fund-calendar";
+import { FundApprovals } from "@/components/fund-approvals";
+import { FundRequests } from "@/components/fund-requests";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
 import { CloseRequestReview } from "@/components/close-request-review";
@@ -59,7 +61,7 @@ function EinField({ fundId }: { fundId: string }) {
   return <div><dt className="text-xs text-muted-foreground">EIN</dt><dd>{body}</dd></div>;
 }
 
-export const FUND_TABS = ["overview", "calendar", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory"] as const;
+export const FUND_TABS = ["overview", "approvals", "requests", "calendar", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory"] as const;
 export type FundTab = (typeof FUND_TABS)[number];
 type Tab = FundTab;
 export type FundWorkspaceMode = "client" | "harmonious";
@@ -136,6 +138,8 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsList className="h-auto flex-wrap justify-start">
           {extraTabs.map((x) => <TabsTrigger key={x.value} value={x.value}>{x.label}</TabsTrigger>)}
           <TabsTrigger value="overview">Command Center</TabsTrigger>
+          <TabsTrigger value="approvals">Approvals</TabsTrigger>
+          <TabsTrigger value="requests">Requests</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="todos">To dos{steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length ? ` (${steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length})` : ""}</TabsTrigger>
           <TabsTrigger value="details">Fund Details</TabsTrigger>
@@ -160,6 +164,8 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>
         <TabsContent value="overview"><FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} /></TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
+        <TabsContent value="approvals"><FundApprovals fundId={fundId} /></TabsContent>
+        <TabsContent value="requests"><FundRequests fundId={fundId} /></TabsContent>
         <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>

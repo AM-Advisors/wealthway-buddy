@@ -21,6 +21,6 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
 function Overview() {
   const { fundId } = Route.useParams();
   const navigate = useNavigate();
-  const go = (t: "calendar" | "investors" | "capital") => navigate({ to: t === "calendar" ? "/manager/fund/$fundId/calendar" : t === "investors" ? "/manager/fund/$fundId/investors" : "/manager/fund/$fundId/transactions", params: { fundId } });
+  const go = (t: "calendar" | "investors" | "capital" | "approvals" | "requests") => navigate({ to: ({ calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
   return <div className="space-y-6"><FundCommandCenter fundId={fundId} onNavigate={go} /><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><FormationRecordCard offeringId={fundId} /><ManagerCloseSheets offeringId={fundId} /><ManagerFundHome offeringId={fundId} embedded /></div>;
 }

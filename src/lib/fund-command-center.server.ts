@@ -24,12 +24,23 @@ export async function commandCenter(uid: string, fundId: string) {
   let cq = db.from("fund_calendar_items").select("id, title, category, due_date, status, report_status, responsible_party, period_label, task_id, client_visibility").eq("fund_id", fundId).neq("status", "CANCELLED").gte("due_date", from).lte("due_date", to).order("due_date").limit(1000);
   if (!staff) { tq = tq.eq("client_visibility", true); cq = cq.eq("client_visibility", true); }
 
-  const [{ data: fund }, { data: engs }, { data: tasksRaw }, { data: itemsRaw }, { data: calls }] = await Promise.all([
+  const [{ data: fund }, { data: engs }, { data: tasksRaw }, { data: itemsRaw }, { data: calls }, { data: apprRaw }, { data: reqRaw }, { data: aEv }, { data: rEv }] = await Promise.all([
     db.from("offerings").select("id, name, legal_entity_name").eq("id", fundId).maybeSingle(),
     db.from("service_engagements").select(`service_product, service_level, service_status, ${TEAM.map((t) => t[0]).join(", ")}`).eq("fund_id", fundId).not("service_status", "in", "(CANCELLED,EXPIRED)").order("created_at", { ascending: false }).limit(1),
     tq, cq,
     db.from("capital_calls").select("id, title, call_number, due_date, status, total_called_cents, total_received_cents, superseded_at, closed_at").eq("offering_id", fundId).is("superseded_at", null).is("closed_at", null).not("status", "in", "(cancelled,closed,draft,superseded)").order("due_date", { ascending: false }).limit(3),
+    db.from("approvals").select("id, title, approval_type, approval_amount, currency, due_date, status, task_id").eq("fund_id", fundId).eq("status", "AWAITING_APPROVAL"),
+    db.from("fund_service_requests").select("id, status, responsibility_status, client_visibility").eq("fund_id", fundId).not("status", "in", "(COMPLETED,CANCELLED,DRAFT)"),
+    db.from("approval_events").select("action, created_at, approval_id, approvals(title)").eq("fund_id", fundId).eq("client_visible", true).in("action", ["approval_requested", "approved", "changes_requested", "workflow_completed"]).order("created_at", { ascending: false }).limit(8),
+    db.from("fund_request_events").select("kind, created_at, request_id, detail, fund_service_requests(title)").eq("fund_id", fundId).eq("client_visible", true).in("kind", ["submitted", "submitted_by_staff", "client_provided_information", "cancelled"]).order("created_at", { ascending: false }).limit(8),
   ]);
+  const approvalsAwaiting = (apprRaw ?? []) as any[];
+  const openRequests = ((reqRaw ?? []) as any[]).filter((r) => staff || r.client_visibility);
+  const ACT: Record<string, string> = { approval_requested: "Approval requested", approved: "Approved", changes_requested: "Changes requested", workflow_completed: "Completed", submitted: "Request submitted", submitted_by_staff: "Request opened", client_provided_information: "Information provided", cancelled: "Request cancelled" };
+  const activity = [
+    ...((aEv ?? []) as any[]).map((e) => ({ at: e.created_at, text: `${ACT[e.action]}: ${e.approvals?.title ?? "Approval"}`, target: "approvals" as const })),
+    ...((rEv ?? []) as any[]).map((e) => ({ at: e.created_at, text: `${ACT[e.kind]}: ${e.fund_service_requests?.title ?? "Request"}`, target: "requests" as const })),
+  ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8);
   const tasks = (tasksRaw ?? []) as any[]; const items = (itemsRaw ?? []) as any[];
   const eng = ((engs ?? []) as any[])[0] ?? null;
 
@@ -85,7 +96,9 @@ export async function commandCenter(uid: string, fundId: string) {
     counts: responsibilityCounts(open), openCount: open.length, attention,
     handling: open.filter((t) => t.responsibility_status === "HARMONIOUS_HANDLING").sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999")),
     waiting: open.filter((t) => t.responsibility_status === "WAITING_ON_INVESTOR" || t.responsibility_status === "WAITING_ON_THIRD_PARTY"),
-    tasks: shaped, deadlines, capital, nextReport,
+    tasks: shaped, deadlines, capital, nextReport, activity,
+    approvalsAwaiting: approvalsAwaiting.map((a) => ({ id: a.id, title: a.title, type: a.approval_type, amount: a.approval_amount, currency: a.currency, due_date: a.due_date, task_id: a.task_id })),
+    requests: { open: openRequests.length, attention: openRequests.filter((r) => r.status === "WAITING_ON_CLIENT" || r.status === "READY_FOR_APPROVAL").length },
     health: fundHealth(tasks, items, capital.length ? { overdue: capitalOverdue } : null, today),
     internal: staff ? {
       internalOnly: tasks.filter((t) => isOpenTask(t) && !t.client_visibility).length,

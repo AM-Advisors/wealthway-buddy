@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getFundCalendar, saveCalendarItem, saveCalendarRule, generateFundSchedule, generateFundDueTasks, getCalendarItemHistory } from "@/lib/fund-command-center.functions";
+import { getFundCalendar, setFundAutoTasks, saveCalendarItem, saveCalendarRule, generateFundSchedule, generateFundDueTasks, getCalendarItemHistory } from "@/lib/fund-command-center.functions";
 import { CALENDAR_CATEGORIES, type CalendarCategory } from "@/lib/fund-calendar-templates";
 import { RESPONSIBILITY_LABEL, RESPONSIBILITY_STATUSES } from "@/lib/responsibility";
 import { ResponsibilityBadge } from "@/components/responsibility-badge";
@@ -18,7 +18,7 @@ export function FundCalendar({ fundId }: { fundId: string }) {
   const load = useServerFn(getFundCalendar);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["fund-calendar", fundId], queryFn: () => load({ data: { fundId } }) });
-  const gen = useServerFn(generateFundSchedule); const due = useServerFn(generateFundDueTasks);
+  const gen = useServerFn(generateFundSchedule); const due = useServerFn(generateFundDueTasks); const auto = useServerFn(setFundAutoTasks);
   const [cat, setCat] = useState<"ALL" | CalendarCategory>("ALL");
   const [past, setPast] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -41,6 +41,7 @@ export function FundCalendar({ fundId }: { fundId: string }) {
         </select>
         <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={past} onChange={(e) => setPast(e.target.checked)} /> Show completed / past</label>
         {staff && <div className="ml-auto flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => auto({ data: { fundId, on: !q.data!.autoTasks } }), () => `Automatic task generation turned ${q.data!.autoTasks ? "off" : "on"}.`)}>Automatic Task Generation: {q.data!.autoTasks ? "On" : "Off"}</Button>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => gen({ data: { fundId } }), (r) => `Schedule updated: ${r.rulesAdded} rules added, ${r.itemsCreated} dates added, ${r.tasksCreated} tasks created.`)}>Build schedule from services</Button>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => due({ data: { fundId } }), (r) => `${r.created} task(s) created.`)}>Create due tasks</Button>
           <Button size="sm" variant="ghost" onClick={() => setShowRules(!showRules)}>{showRules ? "Hide" : "Recurring"} rules ({q.data!.rules.length})</Button>
