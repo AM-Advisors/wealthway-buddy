@@ -6,7 +6,7 @@ import { ResponsibilityBadge } from "@/components/responsibility-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RESPONSIBILITY_LABEL, RESPONSIBILITY_CLIENT_EXPLANATION, asResponsibility, type ResponsibilityStatus } from "@/lib/responsibility";
-import { HEALTH_LABEL, CATEGORY_HEALTH_LABEL, type Health, type CategoryHealth } from "@/lib/fund-health";
+import { HEALTH_LABEL, CATEGORY_HEALTH_LABEL, type Health, type CategoryHealth } from "@/lib/fund-command-health";
 import { serviceLevelLabel, fmtDate, titleCase } from "@/lib/service-engagement-labels";
 import { CALENDAR_CATEGORIES } from "@/lib/fund-calendar-templates";
 

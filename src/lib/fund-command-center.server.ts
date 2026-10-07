@@ -3,7 +3,7 @@
  * Clients get client-visible tasks/items only, no internal notes, no third-party names. Staff additionally
  * receive internal counts (internal tasks, SLA risk). Read-only: never changes state.
  */
-import { fundHealth } from "@/lib/fund-health";
+import { fundHealth } from "@/lib/fund-command-health";
 import { responsibilityCounts, waitingOnDetail, daysOverdue, isOpenTask } from "@/lib/responsibility";
 
 const TEAM = [
