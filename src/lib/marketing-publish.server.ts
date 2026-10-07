@@ -63,15 +63,42 @@ export async function publishLinkedIn(orgId: string, text: string, imageUrl: str
   return res.headers.get("x-restli-id") || res.headers.get("x-linkedin-id") || "posted";
 }
 
-export function metaConfigured() { return !!process.env["META_PAGE_ACCESS_TOKEN"]; }
+export function metaConfigured() { return !!process.env["META_PAGE_ACCESS_TOKEN"]?.trim(); }
 function metaToken() {
-  const t = process.env["META_PAGE_ACCESS_TOKEN"];
+  // Strip stray whitespace/quotes picked up when the token was copied.
+  const t = process.env["META_PAGE_ACCESS_TOKEN"]?.trim().replace(/^["']|["']$/g, "");
   if (!t) throw new Error("Facebook/Instagram isn't connected yet.");
   return t;
 }
 
+/**
+ * The saved token may be a Page token or a (system) user token that manages the page.
+ * Posting needs the Page token, so when the saved token can list pages we swap in the
+ * matching page's token. `id` may be a Facebook page id or its Instagram business id.
+ */
+async function metaTarget(id: string): Promise<{ token: string; id: string }> {
+  const saved = metaToken();
+  try {
+    const r = await fetch(`${GRAPH}/me/accounts?${new URLSearchParams({ access_token: saved, fields: "id,access_token,instagram_business_account", limit: "100" })}`);
+    if (r.ok) {
+      const pages: any[] = (await r.json()).data ?? [];
+      const byPage = pages.find((p) => p.id === id);
+      if (byPage?.access_token) return { token: byPage.access_token, id };
+      const byIg = pages.find((p) => p.instagram_business_account?.id === id);
+      if (byIg?.access_token) return { token: byIg.access_token, id };
+      // A single managed page with Instagram: use it when the configured id isn't recognised.
+      const withIg = pages.filter((p) => p.instagram_business_account?.id && p.access_token);
+      if (withIg.length === 1 && !pages.some((p) => p.id === id)) {
+        return { token: withIg[0].access_token, id: withIg[0].instagram_business_account.id };
+      }
+    }
+  } catch { /* fall back to the saved token as-is */ }
+  return { token: saved, id };
+}
+
 export async function publishFacebook(pageId: string, text: string, imageUrl: string | null): Promise<string> {
-  const p = new URLSearchParams({ access_token: metaToken() });
+  const { token } = await metaTarget(pageId);
+  const p = new URLSearchParams({ access_token: token });
   let url: string;
   if (imageUrl) { p.set("url", imageUrl); p.set("caption", text); url = `${GRAPH}/${encodeURIComponent(pageId)}/photos`; }
   else { p.set("message", text); url = `${GRAPH}/${encodeURIComponent(pageId)}/feed`; }
@@ -81,9 +108,9 @@ export async function publishFacebook(pageId: string, text: string, imageUrl: st
   return String(j.post_id ?? j.id);
 }
 
-export async function publishInstagram(igId: string, text: string, imageUrl: string | null): Promise<string> {
+export async function publishInstagram(configuredId: string, text: string, imageUrl: string | null): Promise<string> {
   if (!imageUrl) throw new Error("Instagram posts need an image.");
-  const token = metaToken();
+  const { token, id: igId } = await metaTarget(configuredId);
   const c = await fetch(`${GRAPH}/${encodeURIComponent(igId)}/media`, { method: "POST", body: new URLSearchParams({ image_url: imageUrl, caption: text, access_token: token }) });
   if (!c.ok) await fail(c, "Instagram media");
   const creation = (await c.json()).id;
