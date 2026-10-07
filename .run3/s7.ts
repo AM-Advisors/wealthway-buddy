@@ -1,0 +1,11 @@
+import { N, U, step } from "./lib";
+const cc = await import("@/lib/capital-calls.server");
+const a5 = await import("@/lib/accounting-phase5.server");
+await step("posting into locked July is blocked", () => a5.draftManualEntry(U.prep, { offeringId: N, entryDate: "2026-07-31", memo: "[QA] late July entry", lines: [ { accountId: "e5d16479-2b97-46b7-aa7e-0f4ac07f685d", debitCents: 100, creditCents: 0 }, { accountId: "8d667388-bb1f-4ae8-bd70-bd921a8173b3", debitCents: 0, creditCents: 100 } ] }), true);
+await step("call 2 legacy ambiguous fixed_amount rejected (M1)", () => cc.prepareCapitalCall(U.mgr, { offeringId: N, callType: "whole_fund" as any, basis: "fixed_amount" as any, fixedAmountCents: 100_000_000, noticeDate: "2026-08-01", dueDate: "2026-08-15", title: "[QA] Capital call 2 (ambiguous)" }), true);
+await step("call 2 wrong confirmed aggregate rejected", () => cc.prepareCapitalCall(U.mgr, { offeringId: N, callType: "whole_fund" as any, basis: "fund_total" as any, totalAmountCents: 100_000_000, allocationBasis: "commitment_pro_rata", confirmedAggregateCents: 400_000_000, noticeDate: "2026-08-01", dueDate: "2026-08-15", title: "[QA] Capital call 2 (bad confirm)" }), true);
+const c: any = await step("call 2 prepare: fund total $1M pro rata (manager)", () => cc.prepareCapitalCall(U.mgr, { offeringId: N, callType: "whole_fund" as any, basis: "fund_total" as any, totalAmountCents: 100_000_000, allocationBasis: "commitment_pro_rata", confirmedAggregateCents: 100_000_000, noticeDate: "2026-08-01", dueDate: "2026-08-15", title: "[QA] Capital call 2", purpose: "[QA] Follow-on reserve" }));
+const C = c.callId;
+await step("call 2 request (manager)", () => cc.requestCapitalCall(U.mgr, C));
+await step("call 2 review (reviewer)", () => cc.reviewCapitalCall(U.rev, C));
+await step("call 2 publish (approver)", () => cc.publishCapitalCall(U.appr, C));

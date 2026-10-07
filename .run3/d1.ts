@@ -1,0 +1,10 @@
+import { N, U, step, db } from "./lib";
+const ds = await import("@/lib/distributions.server");
+const JULY_RUN = "3f6e6ad8-29e3-4464-a7e3-9bd0e7d95186";
+const b: any = await step("distribution $500k return of capital proposed on July basis (preparer)", () => ds.proposeDistribution(U.prep, { offeringId: N, distributionType: "return_of_capital" as any, declaredAmountCents: 50_000_000, title: "[QA] Distribution 1", purpose: "[QA] Return of capital", recordDate: "2026-08-20", effectiveDate: "2026-08-25", paymentDate: "2026-08-28", allocationRunId: JULY_RUN }));
+const d = await db();
+const id = b?.batchId ?? b?.id ?? b?.batch?.id;
+const row = (await d.from("distribution_batches").select("id,status,basis_source,basis_as_of,basis_stale,basis_stale_detail,total_gross_cents").eq("id", id).single()).data;
+console.log("BATCH", JSON.stringify(row));
+const { data: lines } = await d.from("distribution_lines").select("id,display_name,gross_cents,withholding_cents,net_cents,withholding_status").eq("batch_id", id);
+console.log("LINES", JSON.stringify(lines));

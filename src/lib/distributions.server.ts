@@ -1563,7 +1563,7 @@ export async function approveStaleBasis(userId: string, batchId: string, reason:
 export async function finalApproveDistribution(userId: string, batchId: string) {
   const batch = await batchRow(batchId);
   if (batch.basis_stale && !batch.basis_override_by) {
-    fail(`STALE ALLOCATION BASIS: ${(batch.basis_stale_detail as any)?.reason ?? "capital activity exists after the basis date."} Select a newer basis or have a reviewer approve the older one with a reason.`);
+    fail(`${(batch.basis_stale_detail as any)?.reason ?? "STALE ALLOCATION BASIS: capital activity exists after the basis date."} Select a newer basis or have a reviewer approve the older one with a reason.`);
   }
   const { actor } = await assertCan(userId, String(batch.offering_id), "final_approve");
   if (String(batch.distribution_kind ?? "cash") !== "cash" && !batch.fee_approved_at) {

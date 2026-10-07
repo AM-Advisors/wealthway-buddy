@@ -282,6 +282,11 @@ export async function prepareCapitalCall(
     includeOnly: input.includeOnly ?? null,
   });
   if (computed.problems.length > 0) fail(computed.problems[0]!);
+  // Run 3: any confirmed aggregate supplied must equal what the call will actually request.
+  const computedTotal = computed.lines.reduce((t: number, l: any) => t + Number(l.calledCents ?? l.called_cents ?? 0), 0);
+  if (input.confirmedAggregateCents != null && Math.round(input.confirmedAggregateCents) !== computedTotal) {
+    fail(`The confirmed total (${(input.confirmedAggregateCents / 100).toFixed(2)}) does not match the call total (${(computedTotal / 100).toFixed(2)}).`);
+  }
 
   const { data: latest } = await db()
     .from("capital_calls")
