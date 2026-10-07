@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsSuperAdmin } from "@/lib/use-is-super-admin";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/ops/locked-edits")({
 });
 
 function LockedEditsPage() {
+  const isSuper = useIsSuperAdmin();
   const qc = useQueryClient();
   const list = useServerFn(listLockedEditsFn);
   const decide = useServerFn(decideLockedEditFn);
@@ -65,7 +67,7 @@ function LockedEditsPage() {
           <CardContent className="space-y-3">
             <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-muted p-3 text-xs">{r.details}</pre>
             {r.note && <p className="text-xs text-muted-foreground">Note: {r.note}</p>}
-            {r.status === "pending" && (r.mine ? (
+            {r.status === "pending" && (r.mine && !isSuper ? (
               <p className="text-xs text-muted-foreground">You requested this change, so another person must approve it.</p>
             ) : (
               <div className="flex gap-2">

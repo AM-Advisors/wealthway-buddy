@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsSuperAdmin } from "@/lib/use-is-super-admin";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -187,6 +188,7 @@ function ManualEntryCard({ offeringId, accounts, onDone }: { offeringId: string;
 const INBOUND_LABEL: Record<string, string> = { drafted: "Draft created", skipped_duplicate: "Already brought in", skipped_ours: "Came from our ledger", needs_mapping: "Needs mapping", unbalanced: "Not balanced", closed_period: "Closed period" };
 
 export function QuickBooksPanel() {
+  const isSuper = useIsSuperAdmin();
   const { fundId, picker } = useAccountingFund();
   const load = useServerFn(qboViewFn);
   const q = useQuery({ queryKey: ["acct5-qbo", fundId], queryFn: () => load({ data: { offeringId: fundId } }), enabled: !!fundId });
@@ -293,8 +295,8 @@ export function QuickBooksPanel() {
                     {b.decision ? <Badge variant={b.decision.decision === "approved" ? "secondary" : "outline"}>{b.decision.decision === "approved" ? `Approved by ${b.decision.by ?? "-"}` : `Declined: ${b.decision.reason ?? ""}`}</Badge> : <Badge variant="outline">Waiting for approval</Badge>}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {!b.decision && !b.mine && <><Button size="sm" onClick={() => decideM.mutate({ batchId: b.id, decision: "approved" })}>Approve & download</Button><Button size="sm" variant="ghost" onClick={() => { const r = window.prompt("Why decline this batch?"); if (r?.trim()) decideM.mutate({ batchId: b.id, decision: "declined", reason: r }); }}>Decline…</Button></>}
-                    {!b.decision && b.mine && <span className="text-xs text-muted-foreground">Another team member must approve this batch.</span>}
+                    {!b.decision && (!b.mine || isSuper) && <><Button size="sm" onClick={() => decideM.mutate({ batchId: b.id, decision: "approved" })}>Approve & download</Button><Button size="sm" variant="ghost" onClick={() => { const r = window.prompt("Why decline this batch?"); if (r?.trim()) decideM.mutate({ batchId: b.id, decision: "declined", reason: r }); }}>Decline…</Button></>}
+                    {!b.decision && b.mine && !isSuper && <span className="text-xs text-muted-foreground">Another team member must approve this batch.</span>}
                     {b.decision?.decision === "approved" && <Button size="sm" variant="outline" onClick={async () => { try { const r = await dl({ data: { offeringId: fundId, batchId: b.id } }); download(`quickbooks-batch-${b.id.slice(0, 8)}.csv`, r.csv); } catch (e) { toast.error(errMsg(e)); } }}>Download file</Button>}
                   </div>
                   {b.decision?.decision === "approved" && (
@@ -422,6 +424,7 @@ function SheetBody({ kind, snapshot }: { kind: string; snapshot: any }) {
 }
 
 export function CloseSheetsPanel() {
+  const isSuper = useIsSuperAdmin();
   const { fundId, picker } = useAccountingFund();
   const load = useServerFn(listCloseSheetsFn);
   const q = useQuery({ queryKey: ["acct5-close", fundId], queryFn: () => load({ data: { offeringId: fundId } }), enabled: !!fundId });
@@ -480,8 +483,8 @@ export function CloseSheetsPanel() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <SheetBody kind={s.kind} snapshot={v.snapshot} />
-                  {!v.decision && !v.mine && <div className="flex gap-2"><Button size="sm" onClick={() => decideM.mutate({ versionId: v.id, decision: "approved" })}>Sign off</Button><Button size="sm" variant="ghost" onClick={() => { const r = window.prompt("Why return this sheet?"); if (r?.trim()) decideM.mutate({ versionId: v.id, decision: "returned", reason: r }); }}>Return…</Button></div>}
-                  {!v.decision && v.mine && <p className="text-xs text-muted-foreground">Another team member must sign this off.</p>}
+                  {!v.decision && (!v.mine || isSuper) && <div className="flex gap-2"><Button size="sm" onClick={() => decideM.mutate({ versionId: v.id, decision: "approved" })}>Sign off</Button><Button size="sm" variant="ghost" onClick={() => { const r = window.prompt("Why return this sheet?"); if (r?.trim()) decideM.mutate({ versionId: v.id, decision: "returned", reason: r }); }}>Return…</Button></div>}
+                  {!v.decision && v.mine && !isSuper && <p className="text-xs text-muted-foreground">Another team member must sign this off.</p>}
                   {v.decision && <Button size="sm" variant="ghost" onClick={() => prepM.mutate({ kind: s.kind, key: s.key, approvalDeadline: v.approvalDeadline })}>Start new version</Button>}
                   {s.versions.length > 1 && <p className="text-xs text-muted-foreground">{s.versions.length - 1} earlier version(s) kept.</p>}
                 </CardContent>
