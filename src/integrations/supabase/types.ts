@@ -35213,6 +35213,250 @@ export type Database = {
           },
         ]
       }
+      service_engagement_entitlements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          engagement_id: string
+          feature_key: string
+          frequency_override: string | null
+          id: string
+          limit_override: number | null
+          mode: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          engagement_id: string
+          feature_key: string
+          frequency_override?: string | null
+          id?: string
+          limit_override?: number | null
+          mode: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          engagement_id?: string
+          feature_key?: string
+          frequency_override?: string | null
+          id?: string
+          limit_override?: number | null
+          mode?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_engagement_entitlements_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "service_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_engagement_entitlements_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "service_features"
+            referencedColumns: ["feature_key"]
+          },
+        ]
+      }
+      service_engagement_events: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          engagement_id: string
+          field: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          engagement_id: string
+          field: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          engagement_id?: string
+          field?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_engagement_events_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "service_engagements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_engagements: {
+        Row: {
+          accounting_lead_user_id: string | null
+          billing_frequency: string | null
+          client_engagement_id: string | null
+          client_id: string | null
+          compliance_coordinator_user_id: string | null
+          contract_end_date: string | null
+          contract_start_date: string | null
+          contracted_annual_value: number | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          effective_date: string | null
+          entity_limit: number | null
+          fund_id: string | null
+          grandfathered: boolean
+          id: string
+          included_at_no_charge: boolean
+          investment_limit: number | null
+          investor_limit: number | null
+          nav_frequency: string | null
+          notes_internal: string | null
+          pricing_override_reason: string | null
+          pricing_type: string
+          pricing_version_id: string | null
+          primary_administrator_user_id: string | null
+          recurring_invoice_amount: number | null
+          relationship_lead_user_id: string | null
+          renewal_date: string | null
+          renewal_type: string | null
+          reporting_frequency: string | null
+          response_sla: string | null
+          secondary_administrator_user_id: string | null
+          service_level: string
+          service_product: string
+          service_status: string
+          tax_coordinator_user_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          accounting_lead_user_id?: string | null
+          billing_frequency?: string | null
+          client_engagement_id?: string | null
+          client_id?: string | null
+          compliance_coordinator_user_id?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          contracted_annual_value?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          effective_date?: string | null
+          entity_limit?: number | null
+          fund_id?: string | null
+          grandfathered?: boolean
+          id?: string
+          included_at_no_charge?: boolean
+          investment_limit?: number | null
+          investor_limit?: number | null
+          nav_frequency?: string | null
+          notes_internal?: string | null
+          pricing_override_reason?: string | null
+          pricing_type?: string
+          pricing_version_id?: string | null
+          primary_administrator_user_id?: string | null
+          recurring_invoice_amount?: number | null
+          relationship_lead_user_id?: string | null
+          renewal_date?: string | null
+          renewal_type?: string | null
+          reporting_frequency?: string | null
+          response_sla?: string | null
+          secondary_administrator_user_id?: string | null
+          service_level: string
+          service_product: string
+          service_status?: string
+          tax_coordinator_user_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          accounting_lead_user_id?: string | null
+          billing_frequency?: string | null
+          client_engagement_id?: string | null
+          client_id?: string | null
+          compliance_coordinator_user_id?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          contracted_annual_value?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          effective_date?: string | null
+          entity_limit?: number | null
+          fund_id?: string | null
+          grandfathered?: boolean
+          id?: string
+          included_at_no_charge?: boolean
+          investment_limit?: number | null
+          investor_limit?: number | null
+          nav_frequency?: string | null
+          notes_internal?: string | null
+          pricing_override_reason?: string | null
+          pricing_type?: string
+          pricing_version_id?: string | null
+          primary_administrator_user_id?: string | null
+          recurring_invoice_amount?: number | null
+          relationship_lead_user_id?: string | null
+          renewal_date?: string | null
+          renewal_type?: string | null
+          reporting_frequency?: string | null
+          response_sla?: string | null
+          secondary_administrator_user_id?: string | null
+          service_level?: string
+          service_product?: string
+          service_status?: string
+          tax_coordinator_user_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_engagements_client_engagement_id_fkey"
+            columns: ["client_engagement_id"]
+            isOneToOne: false
+            referencedRelation: "client_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_engagements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_engagements_fund_id_fkey"
+            columns: ["fund_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_engagements_pricing_version_id_fkey"
+            columns: ["pricing_version_id"]
+            isOneToOne: false
+            referencedRelation: "service_pricing_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_entitlements: {
         Row: {
           approved_at: string | null
@@ -35317,6 +35561,36 @@ export type Database = {
           },
         ]
       }
+      service_features: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          description: string | null
+          feature_key: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          feature_key: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          feature_key?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       service_groups: {
         Row: {
           active: boolean
@@ -35340,6 +35614,38 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      service_level_entitlements: {
+        Row: {
+          created_at: string
+          feature_key: string
+          id: string
+          service_level: string
+          service_product: string
+        }
+        Insert: {
+          created_at?: string
+          feature_key: string
+          id?: string
+          service_level: string
+          service_product: string
+        }
+        Update: {
+          created_at?: string
+          feature_key?: string
+          id?: string
+          service_level?: string
+          service_product?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_level_entitlements_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "service_features"
+            referencedColumns: ["feature_key"]
+          },
+        ]
       }
       service_package_items: {
         Row: {
@@ -35419,6 +35725,57 @@ export type Database = {
           sort_order?: number
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      service_pricing_versions: {
+        Row: {
+          annual_price: number | null
+          created_at: string
+          created_by: string | null
+          display_label: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_current: boolean
+          monthly_price: number | null
+          quarterly_price: number | null
+          service_level: string
+          service_product: string
+          starting_price: number | null
+          version_name: string
+        }
+        Insert: {
+          annual_price?: number | null
+          created_at?: string
+          created_by?: string | null
+          display_label?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_current?: boolean
+          monthly_price?: number | null
+          quarterly_price?: number | null
+          service_level: string
+          service_product: string
+          starting_price?: number | null
+          version_name: string
+        }
+        Update: {
+          annual_price?: number | null
+          created_at?: string
+          created_by?: string | null
+          display_label?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_current?: boolean
+          monthly_price?: number | null
+          quarterly_price?: number | null
+          service_level?: string
+          service_product?: string
+          starting_price?: number | null
+          version_name?: string
         }
         Relationships: []
       }
@@ -36573,6 +36930,7 @@ export type Database = {
         Row: {
           assignee_user_id: string | null
           client_id: string | null
+          client_visibility: boolean
           completed_at: string | null
           created_at: string
           created_by: string | null
@@ -36581,6 +36939,10 @@ export type Database = {
           id: string
           offering_id: string | null
           priority: string
+          responsible_party_type: string | null
+          responsible_team: string | null
+          responsible_user_id: string | null
+          service_engagement_id: string | null
           source: string
           source_ref: string | null
           status: string
@@ -36591,6 +36953,7 @@ export type Database = {
         Insert: {
           assignee_user_id?: string | null
           client_id?: string | null
+          client_visibility?: boolean
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -36599,6 +36962,10 @@ export type Database = {
           id?: string
           offering_id?: string | null
           priority?: string
+          responsible_party_type?: string | null
+          responsible_team?: string | null
+          responsible_user_id?: string | null
+          service_engagement_id?: string | null
           source?: string
           source_ref?: string | null
           status?: string
@@ -36609,6 +36976,7 @@ export type Database = {
         Update: {
           assignee_user_id?: string | null
           client_id?: string | null
+          client_visibility?: boolean
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -36617,6 +36985,10 @@ export type Database = {
           id?: string
           offering_id?: string | null
           priority?: string
+          responsible_party_type?: string | null
+          responsible_team?: string | null
+          responsible_user_id?: string | null
+          service_engagement_id?: string | null
           source?: string
           source_ref?: string | null
           status?: string
@@ -36637,6 +37009,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_tasks_service_engagement_id_fkey"
+            columns: ["service_engagement_id"]
+            isOneToOne: false
+            referencedRelation: "service_engagements"
             referencedColumns: ["id"]
           },
         ]

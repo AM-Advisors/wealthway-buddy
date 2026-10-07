@@ -254,6 +254,7 @@ import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticated/ops.roles'
 import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
+import { Route as AuthenticatedOpsServiceEngagementsRouteImport } from './routes/_authenticated/ops.service-engagements'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStatementsRouteImport } from './routes/_authenticated/ops.statements'
 import { Route as AuthenticatedOpsSystemStatusRouteImport } from './routes/_authenticated/ops.system-status'
@@ -1789,6 +1790,12 @@ const AuthenticatedOpsSecurityComplianceRoute =
     path: '/ops/security-compliance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsServiceEngagementsRoute =
+  AuthenticatedOpsServiceEngagementsRouteImport.update({
+    id: '/ops/service-engagements',
+    path: '/ops/service-engagements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
   id: '/ops/ss4',
   path: '/ops/ss4',
@@ -2944,6 +2951,7 @@ export interface FileRoutesByFullPath {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
+  '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -3340,6 +3348,7 @@ export interface FileRoutesByTo {
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
+  '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -3744,6 +3753,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
+  '/_authenticated/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/_authenticated/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -4149,6 +4159,7 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/security-compliance'
+    | '/ops/service-engagements'
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
@@ -4545,6 +4556,7 @@ export interface FileRouteTypes {
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/security-compliance'
+    | '/ops/service-engagements'
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
@@ -4948,6 +4960,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/roles'
     | '/_authenticated/ops/security-compliance'
+    | '/_authenticated/ops/service-engagements'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/statements'
     | '/_authenticated/ops/system-status'
@@ -6901,6 +6914,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsSecurityComplianceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/service-engagements': {
+      id: '/_authenticated/ops/service-engagements'
+      path: '/ops/service-engagements'
+      fullPath: '/ops/service-engagements'
+      preLoaderRoute: typeof AuthenticatedOpsServiceEngagementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/ss4': {
       id: '/_authenticated/ops/ss4'
       path: '/ops/ss4'
@@ -8446,6 +8466,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsRolesRoute: typeof AuthenticatedOpsRolesRoute
   AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
+  AuthenticatedOpsServiceEngagementsRoute: typeof AuthenticatedOpsServiceEngagementsRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStatementsRoute: typeof AuthenticatedOpsStatementsRoute
   AuthenticatedOpsSystemStatusRoute: typeof AuthenticatedOpsSystemStatusRoute
@@ -8736,6 +8757,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsRolesRoute: AuthenticatedOpsRolesRoute,
   AuthenticatedOpsSecurityComplianceRoute:
     AuthenticatedOpsSecurityComplianceRoute,
+  AuthenticatedOpsServiceEngagementsRoute:
+    AuthenticatedOpsServiceEngagementsRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStatementsRoute: AuthenticatedOpsStatementsRoute,
   AuthenticatedOpsSystemStatusRoute: AuthenticatedOpsSystemStatusRoute,
