@@ -14,7 +14,10 @@ import {
   assignDriveRequirement,
   linkDriveDocsToPacket,
   openDriveImport,
+  listDriveDocumentInvestors,
+  setDriveDocumentDetails,
 } from "@/lib/drive-intake.functions";
+import { FUND_DOCUMENT_KINDS, SIGNATURE_STATUSES, SIGNER_ROLES, SUGGESTED_SUBSCRIPTION_BOXES, TAX_FORMS, detailsLabel, detailsProblems, type DocumentDetails, type SignatureBox } from "@/lib/drive-document-details";
 import {
   DOCUMENT_TYPES,
   EXECUTION_LABELS,
@@ -319,6 +322,9 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
               <span className="font-medium">{r.fileName}</span>
               <Badge variant="outline">{documentTypeLabel(r.category, r.documentType) ?? r.documentType}</Badge>
               <Badge variant="secondary">{CLASSIFICATION_LABELS[r.classification as keyof typeof CLASSIFICATION_LABELS]}</Badge>
+              {r.details ? <Badge>{detailsLabel(r.details)}</Badge> : null}
+              {r.details?.signatureStatus ? <Badge variant="outline">{SIGNATURE_STATUSES[r.details.signatureStatus as keyof typeof SIGNATURE_STATUSES]}</Badge> : null}
+              {r.details?.sharedProfileId ? <Badge variant="secondary">In investor's files</Badge> : null}
               {r.version > 1 ? <Badge variant="outline">v{r.version}</Badge> : null}
               {r.reviewState === "evidence_received_needs_review" ? <Badge variant="destructive">Evidence received - needs review</Badge> : null}
             </div>
@@ -334,6 +340,7 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
                   {DRIVE_REQUIREMENTS.map((x) => <SelectItem key={x.key} value={x.key}>{x.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <DocumentDetailsButton row={r} onSaved={() => void qc.invalidateQueries({ queryKey: ["drive-imports", offeringId, investorUserId] })} />
               <Button size="sm" variant="outline" onClick={() => go(r.id)}>Open Harmonious copy</Button>
               <Button size="sm" variant="ghost" onClick={() => go(r.id, true)}>Open original file</Button>
             </div>
@@ -341,5 +348,103 @@ export function DriveImportsCard({ offeringId, investorUserId }: { offeringId?: 
         ))}
       </CardContent>
     </Card>
+  );
+}
+
+const EMPTY: DocumentDetails = { group: "fund_document", kind: "", otherName: null, signatureStatus: null, signatureBoxes: [], sharedProfileId: null };
+
+/** Mark exactly what a file is: a fund document (with signature state) or a tax deliverable. */
+function DocumentDetailsButton({ row, onSaved }: { row: any; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [d, setD] = useState<DocumentDetails>(row.details ?? EMPTY);
+  const [saving, setSaving] = useState(false);
+  const invFn = useServerFn(listDriveDocumentInvestors);
+  const saveFn = useServerFn(setDriveDocumentDetails);
+  const inv = useQuery({ queryKey: ["drive-doc-investors", row.offeringId], queryFn: () => invFn({ data: { offeringId: row.offeringId } }), enabled: open && Boolean(row.offeringId) });
+  const isSub = d.group === "fund_document" && d.kind === "subscription_agreement";
+  const investorPick = (d.group === "tax_deliverable" && d.kind === "investor_k1") || (isSub && d.signatureStatus === "signed_by_investor") || d.sharedProfileId;
+  const problems = detailsProblems(d);
+  const setBox = (i: number, patch: Partial<SignatureBox>) => setD({ ...d, signatureBoxes: d.signatureBoxes.map((b, j) => (j === i ? { ...b, ...patch } : b)) });
+  const save = async () => {
+    setSaving(true);
+    try { await saveFn({ data: d }); toast.success("Document details saved."); setOpen(false); onSaved(); }
+    catch (e: any) { toast.error(e?.message ?? "Could not save."); }
+    finally { setSaving(false); }
+  };
+  return (
+    <>
+      <Button size="sm" variant="secondary" onClick={() => { setD(row.details ?? EMPTY); setOpen(true); }}>{row.details ? "Edit details" : "Set document details"}</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Document details</DialogTitle>
+            <DialogDescription>{row.fileName}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="flex gap-2">
+              <Button size="sm" variant={d.group === "fund_document" ? "default" : "outline"} onClick={() => setD({ ...EMPTY, group: "fund_document" })}>Fund Documents</Button>
+              <Button size="sm" variant={d.group === "tax_deliverable" ? "default" : "outline"} onClick={() => setD({ ...EMPTY, group: "tax_deliverable" })}>Tax deliverable</Button>
+            </div>
+            {d.group === "fund_document" ? (
+              <>
+                <Select value={d.kind} onValueChange={(v) => setD({ ...d, kind: v, signatureStatus: null, signatureBoxes: [] })}>
+                  <SelectTrigger aria-label="Document type"><SelectValue placeholder="Choose document type" /></SelectTrigger>
+                  <SelectContent>{Object.entries(FUND_DOCUMENT_KINDS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select>
+                {d.kind === "other" ? <Input placeholder="Name this document" value={d.otherName ?? ""} onChange={(e) => setD({ ...d, otherName: e.target.value })} /> : null}
+                {isSub ? (
+                  <Select value={d.signatureStatus ?? ""} onValueChange={(v) => setD({ ...d, signatureStatus: v as any, signatureBoxes: v === "template" && !d.signatureBoxes.length ? SUGGESTED_SUBSCRIPTION_BOXES : d.signatureBoxes })}>
+                    <SelectTrigger aria-label="Signature status"><SelectValue placeholder="Signature status" /></SelectTrigger>
+                    <SelectContent>{Object.entries(SIGNATURE_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                  </Select>
+                ) : null}
+                {isSub && d.signatureStatus === "template" ? (
+                  <div className="space-y-2 rounded-md border p-2">
+                    <p className="font-medium">Signature boxes</p>
+                    <p className="text-xs text-muted-foreground">We've suggested an investor signature and a fund manager acceptance. Set the page each box goes on, and add or remove boxes.</p>
+                    {d.signatureBoxes.map((b, i) => (
+                      <div key={i} className="flex flex-wrap items-center gap-2">
+                        <Select value={b.role} onValueChange={(v) => setBox(i, { role: v as any })}>
+                          <SelectTrigger className="h-8 w-36" aria-label="Who signs"><SelectValue /></SelectTrigger>
+                          <SelectContent>{Object.entries(SIGNER_ROLES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Input className="h-8 w-44" value={b.label} onChange={(e) => setBox(i, { label: e.target.value })} aria-label="Box label" />
+                        <Input className="h-8 w-20" type="number" min={1} value={b.page} onChange={(e) => setBox(i, { page: Math.max(1, Number(e.target.value) || 1) })} aria-label="Page" />
+                        <label className="flex items-center gap-1 text-xs"><Checkbox checked={b.dateField} onCheckedChange={(c) => setBox(i, { dateField: Boolean(c) })} />Date</label>
+                        <Button size="sm" variant="ghost" onClick={() => setD({ ...d, signatureBoxes: d.signatureBoxes.filter((_, j) => j !== i) })}>Remove</Button>
+                      </div>
+                    ))}
+                    <Button size="sm" variant="outline" onClick={() => setD({ ...d, signatureBoxes: [...d.signatureBoxes, { role: "investor", label: "Signature", page: 1, dateField: true }] })}>Add signature box</Button>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <Select value={d.kind} onValueChange={(v) => setD({ ...d, kind: v })}>
+                <SelectTrigger aria-label="Tax form"><SelectValue placeholder="Which tax form?" /></SelectTrigger>
+                <SelectContent>{Object.entries(TAX_FORMS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+              </Select>
+            )}
+            {investorPick ? (
+              <div className="space-y-1">
+                <p className="font-medium">Add to this investor's files</p>
+                <Select value={d.sharedProfileId ?? "none"} onValueChange={(v) => setD({ ...d, sharedProfileId: v === "none" ? null : v })}>
+                  <SelectTrigger aria-label="Investor"><SelectValue placeholder="Choose investor" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Don't share</SelectItem>
+                    {(inv.data?.investors ?? []).map((x: { id: string; label: string }) => <SelectItem key={x.id} value={x.id}>{x.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">The investor will see and download this file in their documents. Only that investor sees it.</p>
+              </div>
+            ) : null}
+            {problems.length ? <p className="text-xs text-destructive">{problems[0]}</p> : null}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button disabled={saving || problems.length > 0} onClick={save}>{saving ? "Saving..." : "Save details"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
