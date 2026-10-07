@@ -17862,6 +17862,62 @@ export type Database = {
           },
         ]
       }
+      fund_manager_submissions: {
+        Row: {
+          doc_kind: string | null
+          file_name: string | null
+          file_path: string | null
+          id: string
+          offering_id: string
+          payload: Json
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          section: string
+          status: string
+          submitted_at: string
+          submitted_by: string
+        }
+        Insert: {
+          doc_kind?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          offering_id: string
+          payload?: Json
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          section: string
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+        }
+        Update: {
+          doc_kind?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          offering_id?: string
+          payload?: Json
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          section?: string
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_manager_submissions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_managers: {
         Row: {
           created_at: string

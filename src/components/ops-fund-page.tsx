@@ -1,3 +1,4 @@
+import { FundManagerSetupLoader } from "@/components/fund-manager-setup-loader";
 import { FundSignoffQueue } from "@/components/signoff-board";
 import { Link } from "@tanstack/react-router";
 import { OpsRecordPage } from "@/components/ops-record";
@@ -66,6 +67,6 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
       headerExtra={<>
         <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
       </>}
-      extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6">{setupBody}</div> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }]} />}
+      extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6"><FundManagerSetupLoader offeringId={fundId} />{setupBody}</div> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }]} />}
   </main>;
 }
