@@ -9,7 +9,7 @@ const LEGAL = [
   { href: "/terms", label: "Terms of Service" },
   { href: "/cap-table-privacy", label: "CapTable Privacy Notice" },
   { href: "/cap-table-terms", label: "CapTable Terms of Service" },
-  { href: "/security", label: "Security" },
+  { href: "/data-security", label: "Security" },
 ];
 
 /** Shared footer for public marketing pages. Columns come from the site config. */

@@ -24,7 +24,7 @@ export const PUBLIC_PAGES: SitemapEntry[] = [
   { path: "/contactus", changefreq: "yearly", priority: "0.5" },
   { path: "/privacy", changefreq: "yearly", priority: "0.2" },
   { path: "/terms", changefreq: "yearly", priority: "0.2" },
-  { path: "/security", changefreq: "yearly", priority: "0.4" },
+  { path: "/data-security", changefreq: "yearly", priority: "0.4" },
   { path: "/cap-table-privacy", changefreq: "yearly", priority: "0.2" },
   { path: "/cap-table-terms", changefreq: "yearly", priority: "0.2" },
 ];
