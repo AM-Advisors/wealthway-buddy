@@ -134,7 +134,7 @@ export async function decideQuote(userId: string, d: { id: string; approve: bool
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", d.id).maybeSingle();
   if (!q || q.status !== "pending_approval") throw new Error("This quote isn't awaiting approval.");
-  const problem = quoteApprovalProblem({ actorId: userId, actorRoles: a.roles, createdBy: q.created_by, needsExec: q.needs_exec_approval });
+  const problem = quoteApprovalProblem({ actorId: userId, actorRoles: a.roles, createdBy: q.created_by === userId && d.approve && quoteApprovalProblem({ actorId: userId, actorRoles: a.roles, createdBy: "", needsExec: q.needs_exec_approval }) === null && (await (await import("@/lib/self-approval.server")).selfApprove(userId, "sales_quote", [q.id])) ? "" : q.created_by, needsExec: q.needs_exec_approval });
   if (problem) throw new Error(problem);
   if (!d.approve && !d.note?.trim()) throw new Error("Say what needs to change.");
   const now = new Date().toISOString();

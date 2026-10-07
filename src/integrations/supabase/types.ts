@@ -34301,6 +34301,33 @@ export type Database = {
         }
         Relationships: []
       }
+      self_approval_overrides: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          reason: string
+          record_ids: string[]
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          reason: string
+          record_ids?: string[]
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          record_ids?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_catalog: {
         Row: {
           active: boolean
@@ -38783,6 +38810,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      sod_override_active: { Args: { _ids: string[] }; Returns: boolean }
       store_offering_rp_identifier: {
         Args: {
           _actor: string

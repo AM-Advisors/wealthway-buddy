@@ -1,4 +1,5 @@
 import { invalidateFund } from "@/lib/fund-query-keys";
+import { useIsSuperAdmin } from "@/lib/use-is-super-admin";
 import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -111,6 +112,7 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
 }
 
 function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Data; offeringId: string; onChanged: () => void }) {
+  const isSuper = useIsSuperAdmin();
   const upload = useServerFn(uploadDocumentVersionFn);
   const approve = useServerFn(approveDocumentVersionFn);
   const setUsage = useServerFn(setDocumentUsageFn);
@@ -202,7 +204,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           {doc.changeRequests.map((r) => (
             <div key={r.id} className="flex flex-wrap items-center justify-between gap-2">
               <span>{new Date(r.requestedAt).toLocaleDateString()} · {r.fileName} · {ROLLOUT_LABELS[r.scope]}{r.note ? ` · "${r.note}"` : ""} · <span className="capitalize">{r.status}</span>{r.decisionNote ? ` (${r.decisionNote})` : ""}</span>
-              {data.canEdit && r.status === "pending" && (r.mine ? <span className="text-muted-foreground">Another team member must decide</span> : (
+              {data.canEdit && r.status === "pending" && (r.mine && !isSuper ? <span className="text-muted-foreground">Another team member must decide</span> : (
                 <span className="flex gap-1">
                   <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => decide({ data: { id: r.id, decision: "accept" } }), "Added as a new version - review, set signature blocks and approve").then(() => setOpen(true))}>Accept as new version</Button>
                   <Button size="sm" variant="ghost" disabled={busy} onClick={() => { const note = window.prompt("Reason for declining"); if (note) void run(() => decide({ data: { id: r.id, decision: "decline", note } }), "Request declined"); }}>Decline</Button>

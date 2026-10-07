@@ -121,7 +121,7 @@ export const decidePricingRequest = createServerFn({ method: "POST" })
     const { data: req } = await db.from("pricing_approval_requests").select("*").eq("id", data.requestId).maybeSingle();
     if (!req) throw new Error("Request not found.");
     if (req.status !== "pending") throw new Error("This request has already been decided.");
-    assertCanDecide(roles, context.userId, req.requested_by);
+    assertCanDecide(roles, context.userId, req.requested_by === context.userId && data.approve && (await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "pricing_request", [req.id])) ? "" : req.requested_by);
     if (data.approve && !data.scope) throw new Error("Choose This Fund Only or Client Pricing - Future Funds.");
     const now = new Date().toISOString();
     const { error } = await db.from("pricing_approval_requests").update({

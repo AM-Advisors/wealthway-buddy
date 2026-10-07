@@ -74,7 +74,7 @@ export async function review(sb: any, userId: string, input: { id: string; decis
   if (!s) throw new Error("Submission not found.");
   const a = await actorFor(userId, s.offering_id);
   if (!a.isStaff) forbid("only Harmonious reviews fund manager submissions.");
-  if (s.submitted_by === userId) forbid("someone other than the submitter must review it.");
+  if (s.submitted_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "manager_submission", [s.id]))) forbid("someone other than the submitter must review it.");
   if (s.status !== "submitted") throw new Error("This submission was already handled.");
   if (input.decision === "return" && !input.note?.trim()) throw new Error("Tell the fund manager what to fix.");
   if (input.decision === "approve") await apply(sb, userId, s);

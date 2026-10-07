@@ -76,7 +76,7 @@ export const decideK1ReportFn = createServerFn({ method: "POST" }).middleware([r
     const d = await s.db();
     const { data: r } = await d.from("fund_report_drafts").select("*").eq("id", data.id).eq("kind", "k1").maybeSingle();
     if (!r || (r as any).status !== "submitted") throw new Error("This K-1 report isn't waiting for review.");
-    if ((r as any).submitted_by === context.userId) throw new Error("A different person must review figures you entered.");
+    if ((r as any).submitted_by === context.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "k1_report", [data.id]))) throw new Error("A different person must review figures you entered.");
     if (!data.approve && !data.note?.trim()) throw new Error("Add a note explaining what to fix.");
     const rep = r as any; const now = new Date().toISOString();
     let recorded = 0, skipped = 0;

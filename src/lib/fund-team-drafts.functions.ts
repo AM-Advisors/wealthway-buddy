@@ -150,7 +150,7 @@ export const reviewFundDraft = createServerFn({ method: "POST" })
     const { data: ex } = await db.from("fund_team_drafts").select("offering_id, status, author_user_id").eq("id", data.draftId).maybeSingle();
     if (!ex || ex.status !== "submitted") throw new Error("Only submitted drafts can be reviewed.");
     if (!(await isManagerOf(db, context.userId, ex.offering_id))) throw new Error("Forbidden: you do not manage that fund.");
-    if (ex.author_user_id === context.userId) throw new Error("You can't review your own draft.");
+    if (ex.author_user_id === context.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "team_draft", [data.draftId]))) throw new Error("You can't review your own draft.");
     if (data.decision === "returned" && !data.note?.trim()) throw new Error("Add a note so the assistant knows what to change.");
     await db
       .from("fund_team_drafts")

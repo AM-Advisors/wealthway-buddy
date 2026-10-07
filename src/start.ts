@@ -2,6 +2,7 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "./lib/auth-attach";
+import { selfApprovalMiddleware } from "./lib/self-approval-client";
 import { canonicalRedirect } from "./lib/host-routing";
 
 /**
@@ -53,5 +54,5 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [canonicalHostMiddleware, errorMiddleware, csrfMiddleware],
-  functionMiddleware: [attachSupabaseAuth],
+  functionMiddleware: [attachSupabaseAuth, selfApprovalMiddleware],
 }));

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useIsSuperAdmin } from "@/lib/use-is-super-admin";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -97,6 +98,7 @@ function CreateFromFund({ funds }: { funds: { id: string; name: string }[] }) {
 type T = Awaited<ReturnType<typeof listTemplatesFn>>["templates"][number];
 
 function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[] }) {
+  const isSuper = useIsSuperAdmin();
   const qc = useQueryClient();
   const decide = useServerFn(decideTemplateVersionFn);
   const addVersion = useServerFn(addTemplateVersionFn);
@@ -141,7 +143,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
               </div>
               {v.note ? <p className="text-xs text-muted-foreground">Change: {v.note}</p> : null}
               {v.decidedBy ? <p className="text-xs text-muted-foreground">{STATUS[v.status]} by {v.decidedBy} on {new Date(v.decidedAt!).toLocaleDateString()}{v.decisionNote ? ` - "${v.decisionNote}"` : ""}</p> : null}
-              {v.status === "pending_approval" && (v.mine ? (
+              {v.status === "pending_approval" && (v.mine && !isSuper ? (
                 <p className="text-xs text-muted-foreground">You added this version, so a different Harmonious team member must approve it.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">

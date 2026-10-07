@@ -157,7 +157,7 @@ export async function decideFees(uid: string, feeId: string, approve: boolean) {
   const d = await db();
   const { data: f } = await d.from("fund_fee_terms").select("*").eq("id", feeId).maybeSingle();
   if (!f || f.status !== "pending_approval") throw new Error("That fee change is no longer waiting for approval.");
-  if (f.requested_by === uid) throw new Error("Someone other than the requester must decide this change.");
+  if (f.requested_by === uid && !(await (await import("@/lib/self-approval.server")).selfApprove(uid, "fee_terms", [feeId]))) throw new Error("Someone other than the requester must decide this change.");
   const now = new Date().toISOString();
   if (approve) await d.from("fund_fee_terms").update({ status: "superseded" }).eq("offering_id", f.offering_id).eq("status", "active");
   await d.from("fund_fee_terms").update({ status: approve ? "active" : "rejected", decided_by: uid, decided_at: now }).eq("id", feeId);

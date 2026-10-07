@@ -44,6 +44,10 @@ export async function lockedSave<T>(actionKey: keyof typeof LOCKED_ACTIONS, ctx:
     await db.from("record_locks").upsert({ resource_key: key, locked_by: ctx.userId }, { onConflict: "resource_key", ignoreDuplicates: true });
     return r;
   }
+  const sa = await import("@/lib/self-approval.server");
+  if (await sa.isSuperAdmin(ctx.userId) && await sa.selfApprove(ctx.userId, `locked_save_${String(actionKey)}`, [payload?.offeringId, payload?.onboardingId, payload?.clientId])) {
+    return apply();
+  }
   await db.from("locked_edit_requests").update({ status: "withdrawn", decided_at: new Date().toISOString(), note: "Replaced by a newer request" })
     .eq("resource_key", key).eq("action", actionKey).eq("requested_by", ctx.userId).eq("status", "pending");
   const { data: req, error } = await db.from("locked_edit_requests")
@@ -78,7 +82,7 @@ export async function decideLockedEdit(ctx: Ctx, input: { requestId: string; dec
   const db = await admin();
   const { data: req } = await db.from("locked_edit_requests").select("*").eq("id", input.requestId).maybeSingle();
   if (!req || req.status !== "pending") throw new Error("This request is no longer pending.");
-  if (req.requested_by === ctx.userId) throw new Error("Someone other than the requester must approve this change.");
+  if (req.requested_by === ctx.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(ctx.userId, "locked_edit", [req.id]))) throw new Error("Someone other than the requester must approve this change.");
   const now = new Date().toISOString();
   if (input.decision === "reject") {
     await db.from("locked_edit_requests").update({ status: "rejected", decided_by: ctx.userId, decided_at: now, note: input.note ?? null }).eq("id", req.id).eq("status", "pending");

@@ -222,7 +222,7 @@ export async function decideMark(uid: string, fundId: string, valuationId: strin
   const d = await db();
   const { data: v } = await d.from("portfolio_valuations").select("id, asset_id, status, prepared_by").eq("id", valuationId).eq("offering_id", fundId).maybeSingle();
   if (!v || (v as any).status !== "review") throw new Error("This value isn't waiting for approval.");
-  if ((v as any).prepared_by === uid) throw new Error("A different person must approve a value you entered.");
+  if ((v as any).prepared_by === uid && !(await (await import("@/lib/self-approval.server")).selfApprove(uid, "valuation", [valuationId]))) throw new Error("A different person must approve a value you entered.");
   const now = new Date().toISOString();
   if (!approve) { await d.from("portfolio_valuations").update({ status: "returned", reviewed_by: uid, reviewed_at: now, decision_reason: note }).eq("id", valuationId); return { ok: true }; }
   const { data: eff } = await d.from("portfolio_valuations").select("id").eq("asset_id", (v as any).asset_id).eq("status", "effective");

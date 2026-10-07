@@ -109,7 +109,7 @@ export async function decideTemplateVersion(userId: string, input: { templateId:
   const { data: v } = await db().from("document_template_versions").select("id, status, created_by").eq("template_id", input.templateId).eq("version", input.version).maybeSingle();
   if (!v) throw new Error("That version was not found.");
   if (v.status !== "pending_approval") throw new Error("That version has already been decided.");
-  if (v.created_by === userId) forbid("a different Harmonious team member must approve a version you added.");
+  if (v.created_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "template_version", [v.id]))) forbid("a different Harmonious team member must approve a version you added.");
   if (input.decision === "reject" && !input.note?.trim()) throw new Error("Give a reason for rejecting.");
   const { error } = await db().from("document_template_versions").update({ status: input.decision === "approve" ? "approved" : "rejected", decided_by: userId, decided_at: now(), decision_note: input.note || null }).eq("id", v.id).eq("status", "pending_approval");
   if (error) throw new Error(error.message);
