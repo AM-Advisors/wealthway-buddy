@@ -348,7 +348,7 @@ export async function bulkAction(uid: string, d: { action: string; items: { kind
       if (d.action === "follow_up") patch.follow_up_date = d.value || null;
       const { error } = await db.from("staff_tasks").update(patch).eq("id", it.id);
       if (error) { skipped.push(it.title ?? it.id); continue; }
-      await db.from("staff_task_events").insert({ task_id: it.id, actor_id: uid, event: `bulk_${d.action}`, detail: { value: d.value ?? null } }).then(() => null, () => null);
+      await db.from("staff_task_events").insert({ task_id: it.id, actor_user_id: uid, kind: `bulk_${d.action}`, detail: { value: d.value ?? null } }).then(() => null, () => null);
       done++;
     } else if (it.kind === "exception" && d.action === "acknowledge") {
       const { data: row } = await db.from("ops_exceptions").upsert({ exception_type: it.type, source_ref: it.ref ?? it.id, fund_id: it.fundId ?? null, title: it.title ?? "Exception", status: "ACKNOWLEDGED", updated_at: new Date().toISOString() }, { onConflict: "exception_type,source_ref" }).select("id").single();
@@ -382,7 +382,7 @@ export async function clientActionStep(uid: string, d: { taskId: string; step: "
   if (d.step === "escalate") { patch.escalated_at = now; patch.priority = "high"; }
   const { error } = await db.from("staff_tasks").update(patch).eq("id", d.taskId);
   if (error) throw new Error(error.message);
-  await db.from("staff_task_events").insert({ task_id: d.taskId, actor_id: uid, event: `client_${d.step}`, detail: { note: d.note ?? null, date: d.date ?? null } }).then(() => null, () => null);
+  await db.from("staff_task_events").insert({ task_id: d.taskId, actor_user_id: uid, kind: `client_${d.step}`, detail: { note: d.note ?? null, date: d.date ?? null } }).then(() => null, () => null);
   return { ok: true, note: d.step === "reminder" ? "Reminder logged. Send it to the client from the task or your mailbox — nothing is sent automatically." : null };
 }
 
