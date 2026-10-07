@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { CALCULATOR_ITEMS, SPV_RAISE_TIERS, spvFeeForRaise } from "@/lib/marketing/site-config";
+import { useQuery } from "@tanstack/react-query";
+import { CALCULATOR_ITEMS } from "@/lib/marketing/site-config";
+import { getPublicServicePricing, getPublicSpvTransactionPricing } from "@/lib/service-engagements.functions";
+import { bandForRaise } from "@/lib/spv-transaction-pricing";
+
+const SPV_LEVELS = [{ level: "CORE", name: "SPV Core" }, { level: "PLUS", name: "SPV Plus" }, { level: "WHITE_GLOVE", name: "SPV White Glove" }];
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
 const INCLUDED_INVESTORS = 20;
@@ -18,14 +23,22 @@ export function PricingCalculator() {
   const [on, setOn] = useState<Record<string, boolean>>({});
 
   const raiseUsd = Math.max(0, Number(raise.replace(/[^\d.]/g, "")) || 0);
-  const tier = spvFeeForRaise(raiseUsd);
+  const bandsQ = useQuery({ queryKey: ["public-spv-transaction-pricing"], queryFn: () => getPublicSpvTransactionPricing(), staleTime: 300_000 });
+  const levelsQ = useQuery({ queryKey: ["public-service-pricing"], queryFn: () => getPublicServicePricing(), staleTime: 300_000 });
+  const bands = bandsQ.data ?? [];
+  const band = bandForRaise(bands, raiseUsd);
+  const tier = band && band.fee_usd != null ? { label: band.label, feeUsd: band.fee_usd } : null;
+  const [level, setLevel] = useState("CORE");
+  const lp = levelsQ.data?.find((p) => p.service_product === "SPV_ADMINISTRATION" && p.service_level === level);
+  const levelAnnual = level === "CORE" ? 0 : Number(lp?.annual_price ?? lp?.starting_price ?? 0);
+  const levelName = SPV_LEVELS.find((l) => l.level === level)!.name;
   const investorCount = Math.max(0, Number(investors.replace(/[^\d]/g, "")) || 0);
   const extraInvestors = Math.max(0, investorCount - INCLUDED_INVESTORS);
   const investorFee = extraInvestors * EXTRA_INVESTOR_USD;
 
   const totals = useMemo(() => {
     let oneTime = 2500 + (tier?.feeUsd ?? 0) + investorFee;
-    let yearly = 0;
+    let yearly = levelAnnual;
     const custom: string[] = [];
     for (const i of CALCULATOR_ITEMS) {
       if (i.kind === "count") oneTime += (counts[i.key] ?? 0) * (i.amountUsd ?? 0);
@@ -36,7 +49,7 @@ export function PricingCalculator() {
       } else if (i.kind === "custom" && on[i.key]) custom.push(i.name);
     }
     return { oneTime, yearly, custom };
-  }, [tier, investorFee, counts, on]);
+  }, [tier, investorFee, counts, on, levelAnnual]);
 
   return (
     <section className="mt-12 rounded-xl border bg-card p-6" aria-labelledby="calc-title">
@@ -49,15 +62,20 @@ export function PricingCalculator() {
             <label htmlFor="raise" className="text-sm font-medium">How much is the SPV raising?</label>
             <Input id="raise" inputMode="numeric" className="mt-2 max-w-xs" value={raise ? Number(raise).toLocaleString("en-US") : ""} onChange={(e) => setRaise(e.target.value.replace(/[^\d]/g, ""))} />
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              {SPV_RAISE_TIERS.map((t) => (
-                <span key={t.label} className={`rounded-full border px-3 py-1 ${t === tier ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-                  {t.label}: {usd(t.feeUsd)}
+              {bands.map((t) => (
+                <span key={t.id} className={`rounded-full border px-3 py-1 ${t.id === band?.id ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                  {t.label}: {t.fee_usd == null ? "Custom" : usd(t.fee_usd)}
                 </span>
               ))}
-              <span className={`rounded-full border px-3 py-1 ${tier == null ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-                $10,000,000+: Custom
-              </span>
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="spv-level" className="text-sm font-medium">Service level (optional)</label>
+            <select id="spv-level" value={level} onChange={(e) => setLevel(e.target.value)} className="mt-2 block h-10 w-full max-w-xs rounded-md border bg-background px-3 text-sm">
+              {SPV_LEVELS.map((l) => <option key={l.level} value={l.level}>{l.name}</option>)}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">Plus and White Glove are added to the SPV fee each year.</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -114,12 +132,15 @@ export function PricingCalculator() {
         </div>
 
         <aside className="h-fit rounded-lg bg-muted/50 p-5 text-sm">
-          <div className="flex justify-between"><span>Setup fee</span><span>{usd(2500)}</span></div>
-          <div className="mt-2 flex justify-between"><span>SPV ({tier ? tier.label : "$10,000,000+"})</span><span>{tier ? usd(tier.feeUsd) : "Custom"}</span></div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">One-time / transaction fees</p>
+          <div className="mt-2 flex justify-between"><span>Setup fee</span><span>{usd(2500)}</span></div>
+          <div className="mt-2 flex justify-between"><span>SPV Administration ({band?.label ?? "—"})</span><span>{tier ? usd(tier.feeUsd) : "Custom"}</span></div>
           <div className="mt-2 flex justify-between"><span>Management fee / carry</span><span>{mgmtFee || "0"}% / {carry || "0"}%</span></div>
           <div className="mt-2 flex justify-between"><span>Investors ({investorCount})</span><span>{investorFee ? usd(investorFee) : "Included"}</span></div>
           <div className="mt-4 flex justify-between border-t pt-3 text-base font-medium"><span>One-time estimate</span><span>{usd(totals.oneTime)}{tier == null ? " + custom" : ""}</span></div>
-          <div className="mt-2 flex justify-between"><span>Ongoing per year</span><span>{usd(totals.yearly)}</span></div>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Annual recurring fees</p>
+          <div className="mt-2 flex justify-between"><span>{levelName}</span><span>{level === "CORE" ? "Included" : `+${usd(levelAnnual)}/year${lp?.annual_price ? "" : " starting"}`}</span></div>
+          <div className="mt-2 flex justify-between font-medium"><span>Ongoing per year</span><span>{usd(totals.yearly)}</span></div>
           {totals.custom.length ? <p className="mt-4 text-xs text-muted-foreground">Plus custom pricing for: {totals.custom.join(", ")}.</p> : null}
           <p className="mt-4 text-xs text-muted-foreground">State filing fees are billed at cost.</p>
         </aside>
