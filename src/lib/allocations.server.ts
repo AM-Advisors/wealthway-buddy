@@ -1028,6 +1028,11 @@ export async function decideAllocationRun(
   if (action === "review") {
     const problem = allocationSegregationError(people, userId, "review");
     if (problem) fail(problem);
+    // The recorded independent reviewer is permanent for this version; a later
+    // reviewer cannot overwrite it (revise the run to start a new version).
+    if (run.reviewed_by && run.reviewed_by !== userId) {
+      fail("This allocation run already has a recorded independent reviewer. Revise it to start a new version.");
+    }
     return moveRun(userId, runId, "manager_review", {
       reviewed_by: userId,
       reviewed_at: nowIso(),

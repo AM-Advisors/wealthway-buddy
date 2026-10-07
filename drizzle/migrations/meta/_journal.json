@@ -1331,6 +1331,13 @@
       "when": 1791374696956,
       "tag": "0189_payout_sent_date_and_financial_pilot",
       "breakpoints": true
+    },
+    {
+      "idx": 190,
+      "version": "7",
+      "when": 1791376203082,
+      "tag": "0190_atomic_distribution_payment_posting",
+      "breakpoints": true
     }
   ]
 }

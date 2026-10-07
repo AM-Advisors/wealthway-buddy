@@ -1625,3 +1625,16 @@ export function payoutSentDateError(sentOn: string | null | undefined, todayIso:
 export function periodRefusesDate(status: string | null | undefined): boolean {
   return status === "closed" || status === "locked";
 }
+
+
+/**
+ * Lines that cannot reach final approval: every cash payee must have an
+ * approved destination bound to the line and independently verified. Share-only
+ * distributions and zero-net lines need no cash destination.
+ */
+export function payoutDestinationBlockers<
+  L extends { net_cents?: number | string | null; payment_instruction_id?: string | null; destination_verified?: boolean | null },
+>(distributionKind: string, lines: L[]): L[] {
+  if (distributionKind === "shares") return [];
+  return lines.filter((l) => Number(l.net_cents ?? 0) > 0 && (!l.payment_instruction_id || l.destination_verified !== true));
+}
