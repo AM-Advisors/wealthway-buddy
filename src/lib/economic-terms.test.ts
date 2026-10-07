@@ -50,13 +50,13 @@ describe("economic term precedence", () => {
   it("side letter beats class beats fund", () => {
     const run = computeFeeRun(TERMS, POSITIONS, Q1);
     const by = Object.fromEntries(run.lines.map((l) => [l.positionId, l]));
-    expect(by.northwind!.effectiveRateBps).toBe(125);
-    expect(by.northwind!.appliedLevel).toBe("investor");
-    expect(by.northwind!.netFeeCents).toBe(1_562_500); // $15,625
-    expect(by.cedar!.netFeeCents).toBe(2_000_000); // $20,000 at 2.0%
-    expect(by.harbor!.netFeeCents).toBe(750_000); // $7,500 at 1.5%
-    expect(by.juniper!.netFeeCents).toBe(1_250_000);
-    expect(by.unclassed!.appliedLevel).toBe("fund");
+    expect(by["northwind"]!.effectiveRateBps).toBe(125);
+    expect(by["northwind"]!.appliedLevel).toBe("investor");
+    expect(by["northwind"]!.netFeeCents).toBe(1_562_500); // $15,625
+    expect(by["cedar"]!.netFeeCents).toBe(2_000_000); // $20,000 at 2.0%
+    expect(by["harbor"]!.netFeeCents).toBe(750_000); // $7,500 at 1.5%
+    expect(by["juniper"]!.netFeeCents).toBe(1_250_000);
+    expect(by["unclassed"]!.appliedLevel).toBe("fund");
     expect(run.blocked).toBe(false);
   });
 
