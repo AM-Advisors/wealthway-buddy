@@ -326,11 +326,13 @@ export const COMPARISON_PAGES: ComparisonPage[] = [
 export const SPV_RAISE_TIERS = [
   { maxUsd: 250_000, feeUsd: 5000, label: "Under $250,000" },
   { maxUsd: 1_000_000, feeUsd: 7500, label: "$250,000 to $1,000,000" },
-  { maxUsd: null, feeUsd: 10000, label: "Over $1,000,000" },
+  { maxUsd: 5_000_000, feeUsd: 12500, label: "$1,000,000 to $5,000,000" },
+  { maxUsd: 10_000_000, feeUsd: 15000, label: "$5,000,000 to $10,000,000" },
 ] as const;
 
+/** Returns the priced tier, or null when the raise is $10,000,000+ (custom quote). */
 export function spvFeeForRaise(raiseUsd: number) {
-  return SPV_RAISE_TIERS.find((t) => t.maxUsd == null || raiseUsd < t.maxUsd)!;
+  return SPV_RAISE_TIERS.find((t) => raiseUsd < t.maxUsd) ?? null;
 }
 
 export type CalcItem = { key: string; name: string; kind: "count" | "toggle" | "custom"; amountUsd?: number; unit?: "one-time" | "year" | "month"; note?: string };
@@ -338,14 +340,14 @@ export type CalcItem = { key: string; name: string; kind: "count" | "toggle" | "
 /** Basic, fixed-price add-ons the public calculator totals; everything else is quoted. */
 export const CALCULATOR_ITEMS: CalcItem[] = [
   { key: "capital_call", name: "Capital calls", kind: "count", amountUsd: 2000, unit: "one-time", note: "$2,000 per call" },
-  { key: "additional_close", name: "Additional closes", kind: "count", amountUsd: 2000, unit: "one-time", note: "$2,000 per close" },
+  { key: "additional_close", name: "Additional closes", kind: "count", amountUsd: 2500, unit: "one-time", note: "$2,500 per close" },
+  { key: "additional_class", name: "Additional classes", kind: "count", amountUsd: 2500, unit: "one-time", note: "$2,500 per class" },
   { key: "additional_asset", name: "Additional assets", kind: "count", amountUsd: 2000, unit: "one-time", note: "$2,000 per asset" },
   { key: "de_management_llc", name: "Delaware Management LLC", kind: "toggle", amountUsd: 2000, unit: "year" },
   { key: "de_master_llc", name: "Delaware Master LLC", kind: "toggle", amountUsd: 2500, unit: "year" },
   { key: "k1_tax", name: "K-1 / 1065 tax after the first tax year", kind: "toggle", amountUsd: 2500, unit: "year" },
   { key: "white_label", name: "White-label portal", kind: "toggle", amountUsd: 100, unit: "month" },
-  { key: "fund_admin", name: "Fund administration (non-SPV)", kind: "custom" },
-  { key: "investor_onboarding", name: "Investor Onboarding for non-SPV funds", kind: "custom" },
+  { key: "white_glove", name: "White glove service", kind: "custom" },
   { key: "state_tax", name: "State returns and 1042-S", kind: "custom" },
   { key: "audit_support", name: "Audit, valuation or other services", kind: "custom" },
 ];

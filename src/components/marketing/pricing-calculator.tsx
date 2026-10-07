@@ -5,18 +5,26 @@ import { Input } from "@/components/ui/input";
 import { CALCULATOR_ITEMS, SPV_RAISE_TIERS, spvFeeForRaise } from "@/lib/marketing/site-config";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
+const INCLUDED_INVESTORS = 20;
+const EXTRA_INVESTOR_USD = 50;
 
 /** Public estimate: raise-based SPV fee plus basic fixed add-ons. Custom items are flagged for a quote. */
 export function PricingCalculator() {
   const [raise, setRaise] = useState("500000");
+  const [mgmtFee, setMgmtFee] = useState("2");
+  const [carry, setCarry] = useState("20");
+  const [investors, setInvestors] = useState("10");
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [on, setOn] = useState<Record<string, boolean>>({});
 
   const raiseUsd = Math.max(0, Number(raise.replace(/[^\d.]/g, "")) || 0);
   const tier = spvFeeForRaise(raiseUsd);
+  const investorCount = Math.max(0, Number(investors.replace(/[^\d]/g, "")) || 0);
+  const extraInvestors = Math.max(0, investorCount - INCLUDED_INVESTORS);
+  const investorFee = extraInvestors * EXTRA_INVESTOR_USD;
 
   const totals = useMemo(() => {
-    let oneTime = 2500 + tier.feeUsd;
+    let oneTime = 2500 + (tier?.feeUsd ?? 0) + investorFee;
     let yearly = 0;
     const custom: string[] = [];
     for (const i of CALCULATOR_ITEMS) {
@@ -28,7 +36,7 @@ export function PricingCalculator() {
       } else if (i.kind === "custom" && on[i.key]) custom.push(i.name);
     }
     return { oneTime, yearly, custom };
-  }, [tier, counts, on]);
+  }, [tier, investorFee, counts, on]);
 
   return (
     <section className="mt-12 rounded-xl border bg-card p-6" aria-labelledby="calc-title">
@@ -46,6 +54,25 @@ export function PricingCalculator() {
                   {t.label}: {usd(t.feeUsd)}
                 </span>
               ))}
+              <span className={`rounded-full border px-3 py-1 ${tier == null ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                $10,000,000+: Custom
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label htmlFor="mgmt-fee" className="text-sm font-medium">Management fee (%)</label>
+              <Input id="mgmt-fee" inputMode="decimal" className="mt-2" value={mgmtFee} onChange={(e) => setMgmtFee(e.target.value.replace(/[^\d.]/g, ""))} />
+            </div>
+            <div>
+              <label htmlFor="carry" className="text-sm font-medium">Carried interest (%)</label>
+              <Input id="carry" inputMode="decimal" className="mt-2" value={carry} onChange={(e) => setCarry(e.target.value.replace(/[^\d.]/g, ""))} />
+            </div>
+            <div>
+              <label htmlFor="investors" className="text-sm font-medium">Number of investors</label>
+              <Input id="investors" inputMode="numeric" className="mt-2" value={investors} onChange={(e) => setInvestors(e.target.value.replace(/[^\d]/g, ""))} />
+              <p className="mt-1 text-xs text-muted-foreground">{INCLUDED_INVESTORS} included, then {usd(EXTRA_INVESTOR_USD)} per additional investor.</p>
             </div>
           </div>
 
@@ -88,11 +115,13 @@ export function PricingCalculator() {
 
         <aside className="h-fit rounded-lg bg-muted/50 p-5 text-sm">
           <div className="flex justify-between"><span>Setup fee</span><span>{usd(2500)}</span></div>
-          <div className="mt-2 flex justify-between"><span>SPV ({tier.label})</span><span>{usd(tier.feeUsd)}</span></div>
-          <div className="mt-4 flex justify-between border-t pt-3 text-base font-medium"><span>One-time estimate</span><span>{usd(totals.oneTime)}</span></div>
+          <div className="mt-2 flex justify-between"><span>SPV ({tier ? tier.label : "$10,000,000+"})</span><span>{tier ? usd(tier.feeUsd) : "Custom"}</span></div>
+          <div className="mt-2 flex justify-between"><span>Management fee / carry</span><span>{mgmtFee || "0"}% / {carry || "0"}%</span></div>
+          <div className="mt-2 flex justify-between"><span>Investors ({investorCount})</span><span>{investorFee ? usd(investorFee) : "Included"}</span></div>
+          <div className="mt-4 flex justify-between border-t pt-3 text-base font-medium"><span>One-time estimate</span><span>{usd(totals.oneTime)}{tier == null ? " + custom" : ""}</span></div>
           <div className="mt-2 flex justify-between"><span>Ongoing per year</span><span>{usd(totals.yearly)}</span></div>
           {totals.custom.length ? <p className="mt-4 text-xs text-muted-foreground">Plus custom pricing for: {totals.custom.join(", ")}.</p> : null}
-          <p className="mt-4 text-xs text-muted-foreground">Investor Onboarding is included with SPVs. State filing fees are billed at cost.</p>
+          <p className="mt-4 text-xs text-muted-foreground">State filing fees are billed at cost.</p>
         </aside>
       </div>
     </section>
