@@ -1601,6 +1601,14 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
     for (const g of gate) identityBlockers.push(`${l.display_name ?? "Investor"}: ${g.reason}`);
   }
   if (identityBlockers.length > 0) fail(identityBlockers.join(" "));
+  // Run 3: every cash payee must have an approved, verified destination bound to
+  // their line before final approval; afterwards destinations are frozen.
+  const noDestination = ((approvalLines ?? []) as any[]).filter(
+    (l) => Number(l.net_cents ?? 0) > 0 && String(batch.distribution_kind ?? "cash") !== "shares" && (!l.payment_instruction_id || !l.destination_verified),
+  );
+  if (noDestination.length > 0) {
+    fail(`PAYMENT DESTINATION REQUIRED: ${noDestination.map((l) => l.display_name ?? "Investor").join(", ")} must confirm an approved, verified payout destination before final approval.`);
+  }
 
   const snapshot = economicSnapshotFor(batch, (approvalLines ?? []) as any[]);
   const frozenHash = snapshotHash(snapshot);
