@@ -19,6 +19,8 @@ await step(`${label} NAV publish (approver)`, () => nav.publishNav(U.appr, nid))
 const run: any = process.argv[5] ? { run: { id: process.argv[5] } } : await step(`${label} allocations calculate (preparer)`, () => al.calculateAllocations(U.prep, { navId: nid }));
 const rid = run?.run?.id ?? run?.runId ?? run?.id;
 if (process.argv[6] === "fixup") await step(`${label} return run from manager_review (no reviewer recorded)`, () => al.decideAllocationRun(U.rev, rid, "return", "[QA] reached manager review without a recorded reviewer"));
+await step(`${label} allocations submit (preparer)`, () => al.submitAllocationRun(U.prep, rid));
+await step(`${label} skip to manager review without reviewer is blocked`, () => al.decideAllocationRun(U.prep, rid, "manager_review"), true);
 await step(`${label} allocations review (reviewer)`, () => al.decideAllocationRun(U.rev, rid, "review"));
 await step(`${label} manager acknowledges allocations`, () => al.managerRespondToAllocations(U.mgr, rid, "acknowledge", "[QA] reviewed"));
 await step(`${label} allocations approve (approver)`, () => al.decideAllocationRun(U.appr, rid, "approve"));

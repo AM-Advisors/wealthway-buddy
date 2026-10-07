@@ -1034,6 +1034,8 @@ export async function decideAllocationRun(
     });
   }
   if (action === "manager_review") {
+    // Run 3 fix: manager review is only reachable after an independent reviewer.
+    if (!run.reviewed_by) fail("An independent Harmonious reviewer must review this run before it goes to the manager.");
     return moveRun(userId, runId, "manager_review", {});
   }
   if (action === "approve") {
