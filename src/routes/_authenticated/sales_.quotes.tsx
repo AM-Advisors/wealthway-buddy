@@ -156,7 +156,13 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       <Table className="mt-3">
         <TableHeader><TableRow><TableHead>Service</TableHead><TableHead className="w-24">Qty</TableHead><TableHead className="w-36">Price ($)</TableHead><TableHead className="text-right">Rate card</TableHead><TableHead className="text-right">Line</TableHead><TableHead /></TableRow></TableHeader>
         <TableBody>
-          {lines.map((l, i) => (
+          {(["one_time", "annual", "event"] as FeeGroup[]).flatMap((g) => {
+            const model = (k: string) => (c.data?.lines ?? []).find((x: any) => x.serviceKey === k)?.pricingModel;
+            const rows = lines.map((l, i) => ({ l, i })).filter(({ l }) => feeGroup(l.serviceKey, model(l.serviceKey)) === g);
+            if (!rows.length) return [];
+            const sub = rows.reduce((s, { l }) => s + l.quantity * l.unitCents, 0);
+            return [<TableRow key={`h-${g}`}><TableCell colSpan={4} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}{g === "annual" ? "/yr" : ""}</TableCell><TableCell className="bg-muted/40" /></TableRow>,
+              ...rows.map(({ l, i }) => (
             <TableRow key={i}>
               <TableCell>{l.label}</TableCell>
               <TableCell><Input inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
@@ -165,7 +171,8 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}</TableCell>
               <TableCell><Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button></TableCell>
             </TableRow>
-          ))}
+          ))];
+          })}
         </TableBody>
       </Table>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
