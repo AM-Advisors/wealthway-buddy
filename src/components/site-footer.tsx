@@ -52,6 +52,9 @@ export function SiteFooter() {
                 <Link to={l.href} className="hover:text-brand-white">{l.label}</Link>
               </li>
             ))}
+            <li>
+              <a href="/.well-known/trust.html" className="hover:text-brand-white">Security &amp; Trust Center</a>
+            </li>
           </ul>
         </div>
       </div>

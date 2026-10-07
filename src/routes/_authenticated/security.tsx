@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { RecoveryCodes } from "@/components/security-gate";
+import { PrivacyRequestsCard } from "@/components/privacy-requests-card";
 import { generateRecoveryCodes, getMySecurity, signOutOtherSessions } from "@/lib/account-security.functions";
 
 export const Route = createFileRoute("/_authenticated/security")({
@@ -174,6 +175,7 @@ function SecurityPage() {
           ))}
         </CardContent>
       </Card>
+      <PrivacyRequestsCard />
     </div>
   );
 }
