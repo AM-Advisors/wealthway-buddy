@@ -1,26 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { AccessControlCenter } from "@/components/access-control-center";
-
+// Combined into People & Access; kept so saved links keep working.
 export const Route = createFileRoute("/_authenticated/ops/access-control")({
-  head: () => ({
-    meta: [
-      { title: "Access Control - Harmonious Operations" },
-      { name: "description", content: "Who can do what across Harmonious, and why: people, roles, permission matrix and access audit." },
-      { property: "og:title", content: "Access Control - Harmonious Operations" },
-      { property: "og:description", content: "A read-only view of every person's effective access and its source." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
-  validateSearch: (s: Record<string, unknown>): { tab?: string } => (typeof s["tab"] === "string" ? { tab: s["tab"] } : {}),
-  component: AccessControlPage,
-
+  beforeLoad: () => { throw redirect({ to: "/ops/people-access", search: { tab: "access" }, replace: true }); },
 });
-
-function AccessControlPage() {
-  const { tab } = Route.useSearch();
-  const navigate = Route.useNavigate();
-  return <AccessControlCenter tab={tab ?? "people"} onTabChange={(t) => navigate({ search: { tab: t }, replace: true })} />;
-}
