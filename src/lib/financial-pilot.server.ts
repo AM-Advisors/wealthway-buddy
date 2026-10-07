@@ -316,7 +316,7 @@ export async function transitionPilot(userId: string, input: { pilotId: string; 
     const r = evaluateReadiness(facts);
     if (r.level === "NOT_READY") fail(`NOT READY: ${r.items.filter((i) => i.critical && !i.ok).map((i) => i.label).join("; ")}`);
     if (!input.periodStart || !input.periodEnd) fail("Choose the parallel accounting period.");
-    Object.assign(patch, { period_label: input.periodLabel ?? input.periodStart.slice(0, 7), period_start: input.periodStart, period_end: input.periodEnd });
+    Object.assign(patch, { period_label: input.periodLabel ?? String(input.periodStart).slice(0, 7), period_start: input.periodStart, period_end: input.periodEnd });
   }
   if (input.to === "parallel_closed") {
     const key = String(p.period_label ?? "");
